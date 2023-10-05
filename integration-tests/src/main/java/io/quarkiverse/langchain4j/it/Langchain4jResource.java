@@ -20,13 +20,26 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+
 @Path("/langchain4j")
 @ApplicationScoped
 public class Langchain4jResource {
-    // add some rest methods here
+
+    private final ChatLanguageModel chatLanguageModel;
+
+    public Langchain4jResource(ChatLanguageModel chatLanguageModel) {
+        this.chatLanguageModel = chatLanguageModel;
+    }
 
     @GET
     public String hello() {
         return "Hello langchain4j";
+    }
+
+    @GET
+    @Path("chat")
+    public String chat() {
+        return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");
     }
 }
