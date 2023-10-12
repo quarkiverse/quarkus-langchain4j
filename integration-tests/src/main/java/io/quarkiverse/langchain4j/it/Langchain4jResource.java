@@ -17,7 +17,6 @@
 package io.quarkiverse.langchain4j.it;
 
 import java.util.Collections;
-import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -25,9 +24,8 @@ import jakarta.ws.rs.Path;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import io.quarkiverse.langchain4j.ChatCompletionRequest;
-import io.quarkiverse.langchain4j.ChatMessage;
 import io.quarkiverse.langchain4j.OpenAiClient;
 import io.smallrye.mutiny.Uni;
 
@@ -57,19 +55,15 @@ public class Langchain4jResource {
     @GET
     @Path("client")
     public Uni<String> client() {
-        ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel("gpt-3.5-turbo");
-        ChatMessage message = new ChatMessage();
-        message.setRole("user");
-        message.setContent("When was the nobel prize for economics first awarded?");
-        message.setName("testing");
-        request.setMessages(List.of(message));
-        request.setLogitBias(Collections.emptyMap());
-        request.setMaxTokens(100);
-        request.setUser("testing");
-        request.setPresencePenalty(0d);
-        request.setFrequencyPenalty(0d);
-        return openAiClient.createChatCompletion(request).map(r -> r.getChoices().get(0).getMessage().getContent());
+        ChatCompletionRequest request = ChatCompletionRequest.builder()
+                .model("gpt-3.5-turbo")
+                .logitBias(Collections.emptyMap())
+                .maxTokens(100)
+                .user("testing")
+                .presencePenalty(0d)
+                .frequencyPenalty(0d)
+                .addUserMessage("When was the nobel prize for economics first awarded?").build();
+        return openAiClient.createChatCompletion(request).map(r -> r.choices().get(0).message().content());
     }
 
 }

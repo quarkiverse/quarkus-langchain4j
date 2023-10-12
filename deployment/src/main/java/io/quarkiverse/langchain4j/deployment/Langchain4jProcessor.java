@@ -22,6 +22,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 class Langchain4jProcessor {
@@ -35,6 +36,11 @@ class Langchain4jProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
+        producer.produce(new IndexDependencyBuildItem("dev.ai4j", "openai4j"));
     }
 
     @BuildStep
