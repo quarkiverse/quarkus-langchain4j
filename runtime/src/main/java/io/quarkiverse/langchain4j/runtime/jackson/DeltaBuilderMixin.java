@@ -2,10 +2,10 @@ package io.quarkiverse.langchain4j.runtime.jackson;
 
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.ai4j.openai4j.chat.Delta;
 import io.quarkus.jackson.JacksonMixin;
 
-@JacksonMixin(ChatCompletionResponse.Builder.class)
+@JacksonMixin(Delta.Builder.class)
 @JsonPOJOBuilder(withPrefix = "")
-public abstract class ChatCompletionResponseBuilderMixin {
+public abstract class DeltaBuilderMixin {
 }

@@ -17,6 +17,7 @@
 package io.quarkiverse.langchain4j.it;
 
 import java.util.Collections;
+import java.util.Objects;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -25,8 +26,10 @@ import jakarta.ws.rs.Path;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
+import dev.ai4j.openai4j.chat.Delta;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.OpenAiClient;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 @Path("/langchain4j")
@@ -64,6 +67,34 @@ public class Langchain4jResource {
                 .frequencyPenalty(0d)
                 .addUserMessage("When was the nobel prize for economics first awarded?").build();
         return openAiClient.createChatCompletion(request).map(r -> r.choices().get(0).message().content());
+    }
+
+    @GET
+    @Path("streaming/client")
+    public Multi<String> streamingClient() {
+        ChatCompletionRequest request = ChatCompletionRequest.builder()
+                .stream(true)
+                .model("gpt-3.5-turbo")
+                .logitBias(Collections.emptyMap())
+                .maxTokens(100)
+                .user("testing")
+                .presencePenalty(0d)
+                .frequencyPenalty(0d)
+                .addUserMessage("Write a short 1 paragraph funny poem about developers and null-pointers").build();
+        return openAiClient.streamingCreateChatCompletion(request)
+                .filter(r -> {
+                    if (r.choices() != null) {
+                        if (r.choices().size() == 1) {
+                            Delta delta = r.choices().get(0).delta();
+                            if (delta != null) {
+                                return delta.content() != null;
+                            }
+                        }
+                    }
+                    return false;
+                })
+                .map(r -> r.choices().get(0).delta().content())
+                .filter(Objects::nonNull);
     }
 
 }
