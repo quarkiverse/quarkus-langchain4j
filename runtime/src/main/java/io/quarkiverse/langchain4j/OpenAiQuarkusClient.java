@@ -11,6 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import dev.ai4j.openai4j.AsyncResponseHandling;
 import dev.ai4j.openai4j.ErrorHandling;
 import dev.ai4j.openai4j.OpenAiClient;
+import dev.ai4j.openai4j.ResponseHandle;
 import dev.ai4j.openai4j.StreamingCompletionHandling;
 import dev.ai4j.openai4j.StreamingResponseHandling;
 import dev.ai4j.openai4j.SyncOrAsyncOrStreaming;
@@ -18,6 +19,7 @@ import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.Cancellable;
 
 /**
  * Implements feature set of {@link OpenAiClient} using Quarkus functionality
@@ -99,9 +101,10 @@ public class OpenAiQuarkusClient {
             }
 
             @Override
-            public void execute() {
-                uniSupplier.get()
+            public ResponseHandle execute() {
+                var cancellable = uniSupplier.get()
                         .subscribe().with(responseHandler, errorHandlerRef.get());
+                return new ResponseHandleImpl(cancellable);
             }
         }
     }
@@ -155,10 +158,11 @@ public class OpenAiQuarkusClient {
             }
 
             @Override
-            public void execute() {
-                multiSupplier.get()
+            public ResponseHandle execute() {
+                var cancellable = multiSupplier.get()
                         .subscribe()
                         .with(partialResponseHandler, errorHandlerRef.get(), completeHandlerRef.get());
+                return new ResponseHandleImpl(cancellable);
             }
         }
     }
@@ -186,6 +190,19 @@ public class OpenAiQuarkusClient {
         @Override
         public void run() {
 
+        }
+    }
+
+    private static class ResponseHandleImpl extends ResponseHandle {
+        private final Cancellable cancellable;
+
+        public ResponseHandleImpl(Cancellable cancellable) {
+            this.cancellable = cancellable;
+        }
+
+        @Override
+        public void cancel() {
+            cancellable.cancel();
         }
     }
 
