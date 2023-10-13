@@ -25,11 +25,17 @@ import io.smallrye.mutiny.Uni;
 @ClientHeaderParam(name = "Authorization", value = "Bearer ${openai.key}")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public interface OpenAiClient {
+public interface OpenAiQuarkusRestApi {
 
     @Path("chat/completions")
     @POST
+    @NoStream
     Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request);
+
+    @Path("chat/completions")
+    @POST
+    @NoStream
+    ChatCompletionResponse blockingCreateChatCompletion(ChatCompletionRequest request);
 
     @Path("chat/completions")
     @POST
