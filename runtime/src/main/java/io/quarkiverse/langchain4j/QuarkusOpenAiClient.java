@@ -1,12 +1,14 @@
 package io.quarkiverse.langchain4j;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import jakarta.inject.Singleton;
-
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
 import dev.ai4j.openai4j.AsyncResponseHandling;
 import dev.ai4j.openai4j.ErrorHandling;
@@ -14,9 +16,19 @@ import dev.ai4j.openai4j.OpenAiClient;
 import dev.ai4j.openai4j.ResponseHandle;
 import dev.ai4j.openai4j.StreamingCompletionHandling;
 import dev.ai4j.openai4j.StreamingResponseHandling;
+import dev.ai4j.openai4j.SyncOrAsync;
 import dev.ai4j.openai4j.SyncOrAsyncOrStreaming;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.ai4j.openai4j.chat.Delta;
+import dev.ai4j.openai4j.completion.CompletionRequest;
+import dev.ai4j.openai4j.completion.CompletionResponse;
+import dev.ai4j.openai4j.embedding.EmbeddingRequest;
+import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import dev.ai4j.openai4j.moderation.ModerationRequest;
+import dev.ai4j.openai4j.moderation.ModerationResponse;
+import dev.ai4j.openai4j.moderation.ModerationResult;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.Cancellable;
@@ -24,20 +36,45 @@ import io.smallrye.mutiny.subscription.Cancellable;
 /**
  * Implements feature set of {@link OpenAiClient} using Quarkus functionality
  */
-@Singleton
-public class OpenAiQuarkusClient {
+public class QuarkusOpenAiClient extends OpenAiClient {
+
+    private final String token;
 
     private final OpenAiQuarkusRestApi restApi;
 
-    public OpenAiQuarkusClient(@RestClient OpenAiQuarkusRestApi restApi) {
-        this.restApi = restApi;
+    public QuarkusOpenAiClient(String apiKey) {
+        this(new Builder().openAiApiKey(apiKey));
     }
 
+    private QuarkusOpenAiClient(Builder serviceBuilder) {
+        this.token = serviceBuilder.openAiApiKey;
+
+        try {
+            restApi = QuarkusRestClientBuilder.newBuilder()
+                    .baseUri(new URI(serviceBuilder.baseUrl))
+                    // TODO add the rest of the relevant configuration
+                    .build(OpenAiQuarkusRestApi.class);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public SyncOrAsyncOrStreaming<CompletionResponse> completion(CompletionRequest request) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
+    public SyncOrAsyncOrStreaming<String> completion(String prompt) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
     public SyncOrAsyncOrStreaming<ChatCompletionResponse> chatCompletion(ChatCompletionRequest request) {
         return new SyncOrAsyncOrStreaming<>() {
             @Override
             public ChatCompletionResponse execute() {
-                return restApi.blockingCreateChatCompletion(request);
+                return restApi.blockingCreateChatCompletion(request, token);
             }
 
             @Override
@@ -46,7 +83,7 @@ public class OpenAiQuarkusClient {
                         new Supplier<>() {
                             @Override
                             public Uni<ChatCompletionResponse> get() {
-                                return restApi.createChatCompletion(request);
+                                return restApi.createChatCompletion(request, token);
                             }
                         },
                         responseHandler);
@@ -59,11 +96,95 @@ public class OpenAiQuarkusClient {
                         new Supplier<>() {
                             @Override
                             public Multi<ChatCompletionResponse> get() {
-                                return restApi.streamingCreateChatCompletion(request);
+                                return restApi.streamingCreateChatCompletion(request, token);
                             }
                         }, partialResponseHandler);
             }
         };
+    }
+
+    @Override
+    public SyncOrAsyncOrStreaming<String> chatCompletion(String userMessage) {
+        ChatCompletionRequest request = ChatCompletionRequest.builder()
+                .addUserMessage(userMessage)
+                .build();
+
+        return new SyncOrAsyncOrStreaming<>() {
+            @Override
+            public String execute() {
+                return restApi.blockingCreateChatCompletion(request, token).content();
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<String> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<String> get() {
+                                return restApi.createChatCompletion(request, token).map(ChatCompletionResponse::content);
+                            }
+                        },
+                        responseHandler);
+            }
+
+            @Override
+            public StreamingResponseHandling onPartialResponse(
+                    Consumer<String> partialResponseHandler) {
+                return new StreamingResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Multi<String> get() {
+                                return restApi.streamingCreateChatCompletion(request, token)
+                                        .filter(r -> {
+                                            if (r.choices() != null) {
+                                                if (r.choices().size() == 1) {
+                                                    Delta delta = r.choices().get(0).delta();
+                                                    if (delta != null) {
+                                                        return delta.content() != null;
+                                                    }
+                                                }
+                                            }
+                                            return false;
+                                        })
+                                        .map(r -> r.choices().get(0).delta().content())
+                                        .filter(Objects::nonNull);
+                            }
+                        }, partialResponseHandler);
+            }
+        };
+    }
+
+    @Override
+    public SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
+    public SyncOrAsync<List<Float>> embedding(String input) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
+    public SyncOrAsync<ModerationResponse> moderation(ModerationRequest request) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
+    public SyncOrAsync<ModerationResult> moderation(String input) {
+        throw new NotImplementedYet();
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    public static class Builder extends OpenAiClient.Builder<QuarkusOpenAiClient, Builder> {
+
+        @Override
+        public QuarkusOpenAiClient build() {
+            return new QuarkusOpenAiClient(this);
+        }
     }
 
     private static class AsyncResponseHandlingImpl<RESPONSE> implements AsyncResponseHandling {
