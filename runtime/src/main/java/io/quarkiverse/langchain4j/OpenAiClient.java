@@ -34,6 +34,7 @@ public interface OpenAiClient {
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
+    @Stream
     Multi<ChatCompletionResponse> streamingCreateChatCompletion(ChatCompletionRequest request);
 
     @ClientObjectMapper

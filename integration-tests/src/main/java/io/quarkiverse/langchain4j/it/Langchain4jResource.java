@@ -73,7 +73,6 @@ public class Langchain4jResource {
     @Path("streaming/client")
     public Multi<String> streamingClient() {
         ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .stream(true)
                 .model("gpt-3.5-turbo")
                 .logitBias(Collections.emptyMap())
                 .maxTokens(100)
