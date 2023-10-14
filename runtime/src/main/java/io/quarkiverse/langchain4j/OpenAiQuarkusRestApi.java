@@ -25,20 +25,29 @@ import io.smallrye.mutiny.Uni;
 @Produces(MediaType.APPLICATION_JSON)
 public interface OpenAiQuarkusRestApi {
 
+    /**
+     * Perform a non-blocking request for a chat completion response
+     * Important: The {@code stream} value must not be true
+     */
     @Path("chat/completions")
     @POST
-    @NoStream
     Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request, @NotBody String token);
 
+    /**
+     * Perform a blocking request for a chat completion response
+     * Important: The {@code stream} value must not be true
+     */
     @Path("chat/completions")
     @POST
-    @NoStream
     ChatCompletionResponse blockingCreateChatCompletion(ChatCompletionRequest request, @NotBody String token);
 
+    /**
+     * Performs a non-blocking request for a streaming chat completion request
+     * Important: The {@code stream} value must be true
+     */
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    @Stream
     Multi<ChatCompletionResponse> streamingCreateChatCompletion(ChatCompletionRequest request, @NotBody String token);
 
     @ClientObjectMapper
