@@ -3,12 +3,6 @@ package io.quarkiverse.langchain4j.runtime;
 import java.util.Optional;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
-import dev.langchain4j.model.huggingface.HuggingFaceEmbeddingModel;
-import dev.langchain4j.model.huggingface.HuggingFaceLanguageModel;
-import dev.langchain4j.model.localai.LocalAiChatModel;
-import dev.langchain4j.model.localai.LocalAiEmbeddingModel;
-import dev.langchain4j.model.localai.LocalAiLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiLanguageModel;
@@ -41,39 +35,40 @@ public class Langchain4jRecorder {
                     .logResponses(openAi.logResponses())
                     .build();
             return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.LOCAL_AI) {
-            LocalAi localAi = runtimeConfig.chatModel().localAi();
-            if (localAi.baseUrl().isEmpty()) {
-                throw new ConfigValidationException(createProblems("local", "base-url"));
-            }
-            LocalAiChatModel result = LocalAiChatModel.builder()
-                    .baseUrl(localAi.baseUrl().get())
-                    .modelName(localAi.modelName())
-                    .temperature(localAi.temperature())
-                    .topP(localAi.topP())
-                    .maxTokens(localAi.maxTokens())
-                    .timeout(localAi.timeout())
-                    .maxRetries(localAi.maxRetries())
-                    .logRequests(localAi.logRequests())
-                    .logResponses(localAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-            HuggingFace huggingFace = runtimeConfig.chatModel().huggingFace();
-            if (huggingFace.accessToken().isEmpty()) {
-                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-            }
-            HuggingFaceChatModel result = HuggingFaceChatModel.builder()
-                    .accessToken(huggingFace.accessToken().get())
-                    .modelId(huggingFace.modelId())
-                    .timeout(huggingFace.timeout())
-                    .temperature(huggingFace.temperature())
-                    .maxNewTokens(huggingFace.maxNewTokens())
-                    .returnFullText(huggingFace.returnFullText())
-                    .waitForModel(huggingFace.waitForModel())
-                    .build();
-            return new RuntimeValue<>(result);
         }
+        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
+        //            if (localAi.baseUrl().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("local", "base-url"));
+        //            }
+        //            LocalAiChatModel result = LocalAiChatModel.builder()
+        //                    .baseUrl(localAi.baseUrl().get())
+        //                    .modelName(localAi.modelName())
+        //                    .temperature(localAi.temperature())
+        //                    .topP(localAi.topP())
+        //                    .maxTokens(localAi.maxTokens())
+        //                    .timeout(localAi.timeout())
+        //                    .maxRetries(localAi.maxRetries())
+        //                    .logRequests(localAi.logRequests())
+        //                    .logResponses(localAi.logResponses())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //            HuggingFace huggingFace = runtimeConfig.chatModel().huggingFace();
+        //            if (huggingFace.accessToken().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //            }
+        //            HuggingFaceChatModel result = HuggingFaceChatModel.builder()
+        //                    .accessToken(huggingFace.accessToken().get())
+        //                    .modelId(huggingFace.modelId())
+        //                    .timeout(huggingFace.timeout())
+        //                    .temperature(huggingFace.temperature())
+        //                    .maxNewTokens(huggingFace.maxNewTokens())
+        //                    .returnFullText(huggingFace.returnFullText())
+        //                    .waitForModel(huggingFace.waitForModel())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
@@ -96,39 +91,40 @@ public class Langchain4jRecorder {
                     .logResponses(openAi.logResponses())
                     .build();
             return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.LOCAL_AI) {
-            LocalAi localAi = runtimeConfig.chatModel().localAi();
-            if (localAi.baseUrl().isEmpty()) {
-                throw new ConfigValidationException(createProblems("local", "base-url"));
-            }
-            LocalAiLanguageModel result = LocalAiLanguageModel.builder()
-                    .baseUrl(localAi.baseUrl().get())
-                    .modelName(localAi.modelName())
-                    .temperature(localAi.temperature())
-                    .topP(localAi.topP())
-                    .maxTokens(localAi.maxTokens())
-                    .timeout(localAi.timeout())
-                    .maxRetries(localAi.maxRetries())
-                    .logRequests(localAi.logRequests())
-                    .logResponses(localAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
-            if (huggingFace.accessToken().isEmpty()) {
-                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-            }
-            HuggingFaceLanguageModel result = HuggingFaceLanguageModel.builder()
-                    .accessToken(huggingFace.accessToken().get())
-                    .modelId(huggingFace.modelId())
-                    .timeout(huggingFace.timeout())
-                    .temperature(huggingFace.temperature())
-                    .maxNewTokens(huggingFace.maxNewTokens())
-                    .returnFullText(huggingFace.returnFullText())
-                    .waitForModel(huggingFace.waitForModel())
-                    .build();
-            return new RuntimeValue<>(result);
         }
+        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
+        //            if (localAi.baseUrl().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("local", "base-url"));
+        //            }
+        //            LocalAiLanguageModel result = LocalAiLanguageModel.builder()
+        //                    .baseUrl(localAi.baseUrl().get())
+        //                    .modelName(localAi.modelName())
+        //                    .temperature(localAi.temperature())
+        //                    .topP(localAi.topP())
+        //                    .maxTokens(localAi.maxTokens())
+        //                    .timeout(localAi.timeout())
+        //                    .maxRetries(localAi.maxRetries())
+        //                    .logRequests(localAi.logRequests())
+        //                    .logResponses(localAi.logResponses())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
+        //            if (huggingFace.accessToken().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //            }
+        //            HuggingFaceLanguageModel result = HuggingFaceLanguageModel.builder()
+        //                    .accessToken(huggingFace.accessToken().get())
+        //                    .modelId(huggingFace.modelId())
+        //                    .timeout(huggingFace.timeout())
+        //                    .temperature(huggingFace.temperature())
+        //                    .maxNewTokens(huggingFace.maxNewTokens())
+        //                    .returnFullText(huggingFace.returnFullText())
+        //                    .waitForModel(huggingFace.waitForModel())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
@@ -149,33 +145,34 @@ public class Langchain4jRecorder {
                     .logResponses(openAi.logResponses())
                     .build();
             return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.LOCAL_AI) {
-            LocalAi localAi = runtimeConfig.chatModel().localAi();
-            if (localAi.baseUrl().isEmpty()) {
-                throw new ConfigValidationException(createProblems("local", "base-url"));
-            }
-            LocalAiEmbeddingModel result = LocalAiEmbeddingModel.builder()
-                    .baseUrl(localAi.baseUrl().get())
-                    .modelName(localAi.modelName())
-                    .timeout(localAi.timeout())
-                    .maxRetries(localAi.maxRetries())
-                    .logRequests(localAi.logRequests())
-                    .logResponses(localAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
-        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
-            if (huggingFace.accessToken().isEmpty()) {
-                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-            }
-            HuggingFaceEmbeddingModel result = HuggingFaceEmbeddingModel.builder()
-                    .accessToken(huggingFace.accessToken().get())
-                    .modelId(huggingFace.modelId())
-                    .timeout(huggingFace.timeout())
-                    .waitForModel(huggingFace.waitForModel())
-                    .build();
-            return new RuntimeValue<>(result);
         }
+        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
+        //            if (localAi.baseUrl().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("local", "base-url"));
+        //            }
+        //            LocalAiEmbeddingModel result = LocalAiEmbeddingModel.builder()
+        //                    .baseUrl(localAi.baseUrl().get())
+        //                    .modelName(localAi.modelName())
+        //                    .timeout(localAi.timeout())
+        //                    .maxRetries(localAi.maxRetries())
+        //                    .logRequests(localAi.logRequests())
+        //                    .logResponses(localAi.logResponses())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
+        //            if (huggingFace.accessToken().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //            }
+        //            HuggingFaceEmbeddingModel result = HuggingFaceEmbeddingModel.builder()
+        //                    .accessToken(huggingFace.accessToken().get())
+        //                    .modelId(huggingFace.modelId())
+        //                    .timeout(huggingFace.timeout())
+        //                    .waitForModel(huggingFace.waitForModel())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }

@@ -31,17 +31,17 @@
       <version>${langchain4j.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>dev.langchain4j</groupId>
-      <artifactId>langchain4j-local-ai</artifactId>
-      <version>${langchain4j.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>dev.langchain4j</groupId>-->
+<!--      <artifactId>langchain4j-local-ai</artifactId>-->
+<!--      <version>${langchain4j.version}</version>-->
+<!--    </dependency>-->
 
-    <dependency>
-      <groupId>dev.langchain4j</groupId>
-      <artifactId>langchain4j-hugging-face</artifactId>
-      <version>${langchain4j.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>dev.langchain4j</groupId>-->
+<!--      <artifactId>langchain4j-hugging-face</artifactId>-->
+<!--      <version>${langchain4j.version}</version>-->
+<!--    </dependency>-->
   </dependencies>
   <build>
     <plugins>
