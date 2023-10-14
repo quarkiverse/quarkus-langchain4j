@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.runtime;
 
 import java.util.Optional;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiLanguageModel;
@@ -21,7 +20,7 @@ public class Langchain4jRecorder {
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
-            ChatLanguageModel result = OpenAiChatModel.builder()
+            var builder = OpenAiChatModel.builder()
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .temperature(openAi.temperature())
@@ -32,9 +31,13 @@ public class Langchain4jRecorder {
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
+                    .logResponses(openAi.logResponses());
+
+            if (openAi.baseUrl().isPresent()) {
+                builder.baseUrl(openAi.baseUrl().get());
+            }
+
+            return new RuntimeValue<>(builder.build());
         }
         //        else if (modelProvider == ModelProvider.LOCAL_AI) {
         //            LocalAi localAi = runtimeConfig.chatModel().localAi();
@@ -81,16 +84,20 @@ public class Langchain4jRecorder {
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
-            OpenAiLanguageModel result = OpenAiLanguageModel.builder()
+            var builder = OpenAiLanguageModel.builder()
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .temperature(openAi.temperature())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
+                    .logResponses(openAi.logResponses());
+
+            if (openAi.baseUrl().isPresent()) {
+                builder.baseUrl(openAi.baseUrl().get());
+            }
+
+            return new RuntimeValue<>(builder.build());
         }
         //        else if (modelProvider == ModelProvider.LOCAL_AI) {
         //            LocalAi localAi = runtimeConfig.chatModel().localAi();
@@ -136,15 +143,19 @@ public class Langchain4jRecorder {
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
-            OpenAiEmbeddingModel result = OpenAiEmbeddingModel.builder()
+            var builder = OpenAiEmbeddingModel.builder()
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
+                    .logResponses(openAi.logResponses());
+
+            if (openAi.baseUrl().isPresent()) {
+                builder.baseUrl(openAi.baseUrl().get());
+            }
+
+            return new RuntimeValue<>(builder.build());
         }
         //        else if (modelProvider == ModelProvider.LOCAL_AI) {
         //            LocalAi localAi = runtimeConfig.chatModel().localAi();
@@ -194,15 +205,19 @@ public class Langchain4jRecorder {
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
-            OpenAiModerationModel result = OpenAiModerationModel.builder()
+            var builder = OpenAiModerationModel.builder()
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses())
-                    .build();
-            return new RuntimeValue<>(result);
+                    .logResponses(openAi.logResponses());
+
+            if (openAi.baseUrl().isPresent()) {
+                builder.baseUrl(openAi.baseUrl().get());
+            }
+
+            return new RuntimeValue<>(builder.build());
         }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);

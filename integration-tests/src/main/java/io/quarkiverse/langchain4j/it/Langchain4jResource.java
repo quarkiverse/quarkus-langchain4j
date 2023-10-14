@@ -33,11 +33,6 @@ public class Langchain4jResource {
     }
 
     @GET
-    public String hello() {
-        return "Hello langchain4j";
-    }
-
-    @GET
     @Path("chat")
     public String chat() {
         return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");

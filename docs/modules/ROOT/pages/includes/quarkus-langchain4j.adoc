@@ -82,6 +82,23 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.base-url]]`link:#quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.base-url[quarkus.langchain4j.chat-model.openai.base-url]`
+
+
+[.description]
+--
+Base URL of OpenAI API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHAT_MODEL_OPENAI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MODEL_OPENAI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
 a| [[quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.api-key]]`link:#quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.api-key[quarkus.langchain4j.chat-model.openai.api-key]`
 
 
@@ -576,6 +593,23 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MODEL_HUGGING_FACE_WAIT_FOR_M
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
+
+
+a| [[quarkus-langchain4j_quarkus.langchain4j.language-model.openai.base-url]]`link:#quarkus-langchain4j_quarkus.langchain4j.language-model.openai.base-url[quarkus.langchain4j.language-model.openai.base-url]`
+
+
+[.description]
+--
+Base URL of OpenAI API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANGUAGE_MODEL_OPENAI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LANGUAGE_MODEL_OPENAI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
 
 
 a| [[quarkus-langchain4j_quarkus.langchain4j.language-model.openai.api-key]]`link:#quarkus-langchain4j_quarkus.langchain4j.language-model.openai.api-key[quarkus.langchain4j.language-model.openai.api-key]`

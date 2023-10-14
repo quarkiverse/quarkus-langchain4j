@@ -29,6 +29,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>999-SNAPSHOT</quarkus.version>
     <langchain4j.version>0.23.0</langchain4j.version>
+    <assertj.version>3.24.2</assertj.version>
   </properties>
   <dependencyManagement>
     <dependencies>

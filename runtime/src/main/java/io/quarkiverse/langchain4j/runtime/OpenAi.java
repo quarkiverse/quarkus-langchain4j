@@ -10,6 +10,11 @@ import io.smallrye.config.WithDefault;
 public interface OpenAi {
 
     /**
+     * Base URL of OpenAI API
+     */
+    Optional<String> baseUrl();
+
+    /**
      * OpenAI API key
      */
     Optional<String> apiKey();
