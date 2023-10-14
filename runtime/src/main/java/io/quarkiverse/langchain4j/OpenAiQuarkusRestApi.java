@@ -7,6 +7,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,11 +24,11 @@ import io.smallrye.mutiny.Uni;
 @ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@RegisterProvider(OpenAiRestApiWriterInterceptor.class)
 public interface OpenAiQuarkusRestApi {
 
     /**
      * Perform a non-blocking request for a chat completion response
-     * Important: The {@code stream} value must not be true
      */
     @Path("chat/completions")
     @POST
@@ -35,7 +36,6 @@ public interface OpenAiQuarkusRestApi {
 
     /**
      * Perform a blocking request for a chat completion response
-     * Important: The {@code stream} value must not be true
      */
     @Path("chat/completions")
     @POST
@@ -43,7 +43,6 @@ public interface OpenAiQuarkusRestApi {
 
     /**
      * Performs a non-blocking request for a streaming chat completion request
-     * Important: The {@code stream} value must be true
      */
     @Path("chat/completions")
     @POST

@@ -54,6 +54,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         try {
             restApi = QuarkusRestClientBuilder.newBuilder()
+                    .register(OpenAiRestApiWriterInterceptor.class)
                     .baseUri(new URI(serviceBuilder.baseUrl))
                     // TODO add the rest of the relevant configuration
                     .build(OpenAiQuarkusRestApi.class);
@@ -87,8 +88,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<ChatCompletionResponse> get() {
-                                return restApi.createChatCompletion(
-                                        ChatCompletionRequest.builder().from(request).stream(null).build(), token);
+                                return restApi.createChatCompletion(request, token);
                             }
                         },
                         responseHandler);
@@ -101,8 +101,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Multi<ChatCompletionResponse> get() {
-                                return restApi.streamingCreateChatCompletion(
-                                        ChatCompletionRequest.builder().from(request).stream(true).build(), token);
+                                return restApi.streamingCreateChatCompletion(request, token);
                             }
                         }, partialResponseHandler);
             }
@@ -119,7 +118,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             @Override
             public String execute() {
                 return restApi
-                        .blockingCreateChatCompletion(ChatCompletionRequest.builder().from(request).stream(null).build(), token)
+                        .blockingCreateChatCompletion(request, token)
                         .content();
             }
 
