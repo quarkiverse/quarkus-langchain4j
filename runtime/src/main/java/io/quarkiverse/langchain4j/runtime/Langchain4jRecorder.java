@@ -6,6 +6,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiLanguageModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -30,6 +31,68 @@ public class Langchain4jRecorder {
                     .frequencyPenalty(openAi.frequencyPenalty())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
+                    .logRequests(openAi.logRequests())
+                    .logResponses(openAi.logResponses());
+
+            if (openAi.baseUrl().isPresent()) {
+                builder.baseUrl(openAi.baseUrl().get());
+            }
+
+            return new RuntimeValue<>(builder.build());
+        }
+        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
+        //            if (localAi.baseUrl().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("local", "base-url"));
+        //            }
+        //            LocalAiChatModel result = LocalAiChatModel.builder()
+        //                    .baseUrl(localAi.baseUrl().get())
+        //                    .modelName(localAi.modelName())
+        //                    .temperature(localAi.temperature())
+        //                    .topP(localAi.topP())
+        //                    .maxTokens(localAi.maxTokens())
+        //                    .timeout(localAi.timeout())
+        //                    .maxRetries(localAi.maxRetries())
+        //                    .logRequests(localAi.logRequests())
+        //                    .logResponses(localAi.logResponses())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //            HuggingFace huggingFace = runtimeConfig.chatModel().huggingFace();
+        //            if (huggingFace.accessToken().isEmpty()) {
+        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //            }
+        //            HuggingFaceChatModel result = HuggingFaceChatModel.builder()
+        //                    .accessToken(huggingFace.accessToken().get())
+        //                    .modelId(huggingFace.modelId())
+        //                    .timeout(huggingFace.timeout())
+        //                    .temperature(huggingFace.temperature())
+        //                    .maxNewTokens(huggingFace.maxNewTokens())
+        //                    .returnFullText(huggingFace.returnFullText())
+        //                    .waitForModel(huggingFace.waitForModel())
+        //                    .build();
+        //            return new RuntimeValue<>(result);
+        //        }
+
+        throw new IllegalStateException("Unsupported model provider " + modelProvider);
+    }
+
+    public RuntimeValue<?> streamingChatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
+        if (modelProvider == ModelProvider.OPEN_AI) {
+            OpenAi openAi = runtimeConfig.chatModel().openAi();
+            Optional<String> apiKeyOpt = openAi.apiKey();
+            if (apiKeyOpt.isEmpty()) {
+                throw new ConfigValidationException(createProblems("openai", "api-key"));
+            }
+            var builder = OpenAiStreamingChatModel.builder()
+                    .apiKey(apiKeyOpt.get())
+                    .modelName(openAi.modelName())
+                    .temperature(openAi.temperature())
+                    .topP(openAi.topP())
+                    .maxTokens(openAi.maxTokens())
+                    .presencePenalty(openAi.presencePenalty())
+                    .frequencyPenalty(openAi.frequencyPenalty())
+                    .timeout(openAi.timeout())
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 

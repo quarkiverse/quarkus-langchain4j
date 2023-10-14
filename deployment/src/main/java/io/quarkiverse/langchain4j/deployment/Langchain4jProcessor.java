@@ -20,6 +20,7 @@ import org.jboss.jandex.DotName;
 import com.knuddels.jtokkit.Encodings;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.language.LanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
@@ -43,6 +44,7 @@ class Langchain4jProcessor {
 
     private static final String FEATURE = "langchain4j";
     private static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
+    private static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
     private static final DotName LANGUAGE_MODEL = DotName.createSimple(LanguageModel.class);
     private static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     private static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
@@ -99,6 +101,7 @@ class Langchain4jProcessor {
             Langchain4jRecorder recorder) {
 
         boolean chatModelBeanRequested = false;
+        boolean streamingChatModelBeanRequested = false;
         boolean languageModelBeanRequested = false;
         boolean embeddingModelBeanRequested = false;
         boolean moderationModelBeanRequested = false;
@@ -106,6 +109,8 @@ class Langchain4jProcessor {
             DotName requiredName = ip.getRequiredType().name();
             if (CHAT_MODEL.equals(requiredName)) {
                 chatModelBeanRequested = true;
+            } else if (STREAMING_CHAT_MODEL.equals(requiredName)) {
+                streamingChatModelBeanRequested = true;
             } else if (LANGUAGE_MODEL.equals(requiredName)) {
                 languageModelBeanRequested = true;
             } else if (EMBEDDING_MODEL.equals(requiredName)) {
@@ -126,6 +131,19 @@ class Langchain4jProcessor {
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
                     .runtimeValue(recorder.chatModel(provider.get(), runtimeConfig))
+                    .done());
+        }
+        if (streamingChatModelBeanRequested) {
+            Optional<ModelProvider> provider = buildConfig.chatModel().provider();
+            if (provider.isEmpty()) {
+                throw new ConfigurationException(configErrorMessage(CHAT_MODEL, "chat-model"));
+            }
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(STREAMING_CHAT_MODEL)
+                    .setRuntimeInit()
+                    .scope(ApplicationScoped.class)
+                    .runtimeValue(recorder.streamingChatModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (languageModelBeanRequested) {
