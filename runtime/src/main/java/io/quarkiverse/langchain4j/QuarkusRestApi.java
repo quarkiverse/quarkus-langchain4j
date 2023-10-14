@@ -25,7 +25,7 @@ import io.smallrye.mutiny.Uni;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RegisterProvider(OpenAiRestApiWriterInterceptor.class)
-public interface OpenAiQuarkusRestApi {
+public interface QuarkusRestApi {
 
     /**
      * Perform a non-blocking request for a chat completion response

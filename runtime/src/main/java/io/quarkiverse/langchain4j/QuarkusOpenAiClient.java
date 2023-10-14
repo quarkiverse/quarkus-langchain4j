@@ -43,10 +43,14 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     private final String token;
 
-    private final OpenAiQuarkusRestApi restApi;
+    private final QuarkusRestApi restApi;
 
     public QuarkusOpenAiClient(String apiKey) {
         this(new Builder().openAiApiKey(apiKey));
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private QuarkusOpenAiClient(Builder serviceBuilder) {
@@ -57,7 +61,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                     .register(OpenAiRestApiWriterInterceptor.class)
                     .baseUri(new URI(serviceBuilder.baseUrl))
                     // TODO add the rest of the relevant configuration
-                    .build(OpenAiQuarkusRestApi.class);
+                    .build(QuarkusRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
