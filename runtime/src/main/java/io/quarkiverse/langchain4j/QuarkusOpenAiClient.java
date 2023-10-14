@@ -28,6 +28,9 @@ import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
+import dev.ai4j.openai4j.spi.OpenAiClientBuilderFactory;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -177,6 +180,19 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     @Override
     public void shutdown() {
 
+    }
+
+    public static class QuarkusOpenAiClientBuilderFactory implements OpenAiClientBuilderFactory {
+
+        @Override
+        public Builder get() {
+            ArcContainer arcContainer = Arc.container();
+            if (arcContainer == null) {
+                // in regular unit tests Quarkus is not running, so don't do anything
+                return null;
+            }
+            return new Builder();
+        }
     }
 
     public static class Builder extends OpenAiClient.Builder<QuarkusOpenAiClient, Builder> {
