@@ -78,6 +78,12 @@
 <!--      <artifactId>langchain4j-hugging-face</artifactId>-->
 <!--      <version>${langchain4j.version}</version>-->
 <!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.graalvm.sdk</groupId>
+      <artifactId>graal-sdk</artifactId>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

@@ -1,10 +1,23 @@
 package io.quarkiverse.langchain4j.deployment;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Optional;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.DotName;
+
+import com.knuddels.jtokkit.Encodings;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -23,6 +36,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 class Langchain4jProcessor {
@@ -41,6 +55,40 @@ class Langchain4jProcessor {
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.ai4j", "openai4j"));
+    }
+
+    @BuildStep
+    void nativeImageSupport(BuildProducer<NativeImageResourceBuildItem> resourcesProducer) {
+        registerJtokkitResources(resourcesProducer);
+    }
+
+    private void registerJtokkitResources(BuildProducer<NativeImageResourceBuildItem> resourcesProducer) {
+        List<String> resources = new ArrayList<>();
+        try (JarFile jarFile = new JarFile(determineJarLocation(Encodings.class).toFile())) {
+            Enumeration<JarEntry> e = jarFile.entries();
+            while (e.hasMoreElements()) {
+                String name = e.nextElement().getName();
+                if (name.endsWith(".tiktoken")) {
+                    resources.add(name);
+                }
+
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        resourcesProducer.produce(new NativeImageResourceBuildItem(resources));
+    }
+
+    private static Path determineJarLocation(Class<?> classFromJar) {
+        URL url = classFromJar.getProtectionDomain().getCodeSource().getLocation();
+        if (!url.getProtocol().equals("file")) {
+            throw new IllegalStateException("Unable to find which jar class " + classFromJar + " belongs to");
+        }
+        try {
+            return Paths.get(url.toURI());
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @BuildStep
