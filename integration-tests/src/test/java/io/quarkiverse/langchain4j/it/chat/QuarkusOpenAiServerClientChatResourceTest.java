@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.it.language;
+package io.quarkiverse.langchain4j.it.chat;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +16,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.sse.SseEventSource;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -24,9 +23,9 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-public class QuarkusOpenAiClientLanguageResourceTest {
+public class QuarkusOpenAiServerClientChatResourceTest {
 
-    @TestHTTPEndpoint(QuarkusOpenAiClientLanguageResource.class)
+    @TestHTTPEndpoint(QuarkusOpenAiClientChatResource.class)
     @TestHTTPResource
     URL url;
 
@@ -38,7 +37,7 @@ public class QuarkusOpenAiClientLanguageResourceTest {
                 .get("sync")
                 .then()
                 .statusCode(200)
-                .body(containsString("This is indeed a test"));
+                .body(containsString("MockGPT"));
     }
 
     @Test
@@ -49,17 +48,15 @@ public class QuarkusOpenAiClientLanguageResourceTest {
                 .get("async")
                 .then()
                 .statusCode(200)
-                .body(containsString("This is indeed a test"));
+                .body(containsString("MockGPT"));
     }
 
     @Test
-    @Disabled("The Mock API does not handle streaming properly")
     public void sse() throws Exception {
         Client client = ClientBuilder.newBuilder().build();
         WebTarget target = client.target(url.toString() + "/streaming");
         // do not reconnect
-        try (SseEventSource eventSource = SseEventSource.target(target)
-                .reconnectingEvery(Integer.MAX_VALUE, TimeUnit.SECONDS)
+        try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(Integer.MAX_VALUE, TimeUnit.SECONDS)
                 .build()) {
             CompletableFuture<List<String>> res = new CompletableFuture<>();
             List<String> collect = Collections.synchronizedList(new ArrayList<>());

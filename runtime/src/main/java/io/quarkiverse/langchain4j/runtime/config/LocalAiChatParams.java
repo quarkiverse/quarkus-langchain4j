@@ -1,46 +1,14 @@
-package io.quarkiverse.langchain4j.runtime;
-
-import java.time.Duration;
-import java.util.Optional;
+package io.quarkiverse.langchain4j.runtime.config;
 
 import io.smallrye.config.WithDefault;
 
-public interface LocalAi {
-
-    /**
-     * Base URL of OpenAI API
-     */
-    Optional<String> baseUrl();
+public interface LocalAiChatParams {
 
     /**
      * Model name to use
      */
     @WithDefault("gpt-3.5-turbo")
     String modelName();
-
-    /**
-     * Timeout for OpenAI calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
-
-    /**
-     * The maximum number of times to retry
-     */
-    @WithDefault("3")
-    Integer maxRetries();
-
-    /**
-     * Whether the OpenAI client should log requests
-     */
-    @WithDefault("false")
-    Boolean logRequests();
-
-    /**
-     * Whether the OpenAI client should log responses
-     */
-    @WithDefault("false")
-    Boolean logResponses();
 
     /**
      * What sampling temperature to use, with values between 0 and 2.

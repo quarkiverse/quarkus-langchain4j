@@ -12,8 +12,8 @@ import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.chat.Message;
 import io.quarkiverse.langchain4j.QuarkusOpenAiClient;
-import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
-import io.quarkiverse.langchain4j.runtime.OpenAi;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
+import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -23,9 +23,9 @@ public class QuarkusOpenAiClientChatResource {
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
     public QuarkusOpenAiClientChatResource(LangChain4jRuntimeConfig runtimeConfig) {
-        OpenAi openAi = runtimeConfig.openAi();
-        String token = openAi.apiKey().get();
-        String baseUrl = openAi.baseUrl();
+        OpenAiServer openAiServer = runtimeConfig.openAi();
+        String token = openAiServer.apiKey().get();
+        String baseUrl = openAiServer.baseUrl();
         quarkusOpenAiClient = QuarkusOpenAiClient.builder().openAiApiKey(token).baseUrl(baseUrl).build();
     }
 

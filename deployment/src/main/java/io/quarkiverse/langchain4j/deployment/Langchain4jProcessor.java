@@ -25,10 +25,10 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.language.LanguageModel;
 import dev.langchain4j.model.language.StreamingLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
-import io.quarkiverse.langchain4j.runtime.LangChain4jBuildConfig;
-import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.Langchain4jRecorder;
-import io.quarkiverse.langchain4j.runtime.ModelProvider;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jBuildConfig;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
+import io.quarkiverse.langchain4j.runtime.config.ModelProvider;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.processor.InjectionPointInfo;
@@ -196,10 +196,10 @@ class Langchain4jProcessor {
                 throw new ConfigurationException(configErrorMessage(MODERATION_MODEL, "moderation-model"));
             }
             if (ModelProvider.OPEN_AI != provider.get()) {
-                throw new ConfigurationException("Currently only 'openai' is the only supported provider of ModerationModel");
+                throw new ConfigurationException("Currently 'openai' is the only supported provider of the moderation model");
             }
             beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(EMBEDDING_MODEL)
+                    .configure(MODERATION_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
                     .runtimeValue(recorder.moderationModel(provider.get(), runtimeConfig))

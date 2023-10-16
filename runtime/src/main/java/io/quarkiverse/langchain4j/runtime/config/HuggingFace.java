@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime;
+package io.quarkiverse.langchain4j.runtime.config;
 
 import java.time.Duration;
 import java.util.Optional;

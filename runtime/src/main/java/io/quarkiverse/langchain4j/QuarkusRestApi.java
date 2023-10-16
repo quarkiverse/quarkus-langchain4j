@@ -42,6 +42,10 @@ import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.completion.CompletionRequest;
 import dev.ai4j.openai4j.completion.CompletionResponse;
+import dev.ai4j.openai4j.embedding.EmbeddingRequest;
+import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import dev.ai4j.openai4j.moderation.ModerationRequest;
+import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkus.arc.Arc;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
@@ -102,6 +106,34 @@ public interface QuarkusRestApi {
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @NotBody String token);
+
+    /**
+     * Perform a non-blocking request to get the embeddings of an input text
+     */
+    @Path("embeddings")
+    @POST
+    Uni<EmbeddingResponse> embedding(EmbeddingRequest request, @NotBody String token);
+
+    /**
+     * Perform a blocking request to get the embeddings of an input text
+     */
+    @Path("embeddings")
+    @POST
+    EmbeddingResponse blockingEmbedding(EmbeddingRequest request, @NotBody String token);
+
+    /**
+     * Perform a non-blocking request to get a moderated version of an input text
+     */
+    @Path("moderations")
+    @POST
+    Uni<ModerationResponse> moderation(ModerationRequest request, @NotBody String token);
+
+    /**
+     * Perform a blocking request to get a moderated version of an input text
+     */
+    @Path("moderations")
+    @POST
+    ModerationResponse blockingModeration(ModerationRequest request, @NotBody String token);
 
     /**
      * We need a custom version of the Jackson provider because reading SSE values does not work properly with

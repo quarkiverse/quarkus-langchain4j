@@ -1,11 +1,12 @@
-package io.quarkiverse.langchain4j.runtime;
+package io.quarkiverse.langchain4j.runtime.config;
 
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
 
 @ConfigGroup
-public interface EmbeddingModelBuild {
+public interface ChatModelBuildTime {
+
     /**
      * The model provider to use
      */

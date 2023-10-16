@@ -18,9 +18,11 @@ package io.quarkiverse.langchain4j.it;
 
 import static io.quarkiverse.langchain4j.it.MessageUtil.createChatCompletionRequest;
 import static io.quarkiverse.langchain4j.it.MessageUtil.createCompletionRequest;
+import static io.quarkiverse.langchain4j.it.MessageUtil.createEmbeddingRequest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -35,9 +37,10 @@ import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.chat.Message;
 import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
+import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import io.quarkiverse.langchain4j.QuarkusRestApi;
-import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
-import io.quarkiverse.langchain4j.runtime.OpenAi;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
+import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -51,7 +54,7 @@ public class QuarkusRestApiResource {
 
     public QuarkusRestApiResource(LangChain4jRuntimeConfig runtimeConfig)
             throws URISyntaxException {
-        OpenAi openAi = runtimeConfig.openAi();
+        OpenAiServer openAi = runtimeConfig.openAi();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(new URI(openAi.baseUrl()))
                 .build(QuarkusRestApi.class);
@@ -137,6 +140,19 @@ public class QuarkusRestApiResource {
                     }
                     return "";
                 });
+    }
+
+    @GET
+    @Path("embedding/sync")
+    public List<Float> embeddingSync() {
+        return restApi.blockingEmbedding(createEmbeddingRequest("Your text string goes here"), token).embedding();
+    }
+
+    @GET
+    @Path("embedding/async")
+    public Uni<List<Float>> embeddingAsync() {
+        return restApi.embedding(createEmbeddingRequest("Your text string goes here"), token)
+                .map(EmbeddingResponse::embedding);
     }
 
 }

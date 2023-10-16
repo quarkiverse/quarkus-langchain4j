@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.completion.CompletionRequest;
+import dev.ai4j.openai4j.embedding.EmbeddingRequest;
 
 public class MessageUtil {
 
@@ -28,5 +29,12 @@ public class MessageUtil {
                 .presencePenalty(0d)
                 .frequencyPenalty(0d)
                 .addUserMessage(userMessage).build();
+    }
+
+    public static EmbeddingRequest createEmbeddingRequest(String prompt) {
+        return EmbeddingRequest.builder()
+                .model("text-embedding-ada-002")
+                .input(prompt)
+                .build();
     }
 }

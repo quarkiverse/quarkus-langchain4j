@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime;
+package io.quarkiverse.langchain4j.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXED;
 

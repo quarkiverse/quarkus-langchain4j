@@ -201,22 +201,97 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     @Override
     public SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request) {
-        throw new NotImplementedYet();
+        return new SyncOrAsync<>() {
+            @Override
+            public EmbeddingResponse execute() {
+                return restApi.blockingEmbedding(request, token);
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<EmbeddingResponse> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<EmbeddingResponse> get() {
+                                return restApi.embedding(request, token);
+                            }
+                        },
+                        responseHandler);
+            }
+        };
     }
 
     @Override
     public SyncOrAsync<List<Float>> embedding(String input) {
-        throw new NotImplementedYet();
+        EmbeddingRequest request = EmbeddingRequest.builder()
+                .input(input)
+                .build();
+        return new SyncOrAsync<>() {
+            @Override
+            public List<Float> execute() {
+                return restApi.blockingEmbedding(request, token).embedding();
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<List<Float>> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<List<Float>> get() {
+                                return restApi.embedding(request, token).map(EmbeddingResponse::embedding);
+                            }
+                        },
+                        responseHandler);
+            }
+        };
     }
 
     @Override
     public SyncOrAsync<ModerationResponse> moderation(ModerationRequest request) {
-        throw new NotImplementedYet();
+        return new SyncOrAsync<>() {
+            @Override
+            public ModerationResponse execute() {
+                return restApi.blockingModeration(request, token);
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<ModerationResponse> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<ModerationResponse> get() {
+                                return restApi.moderation(request, token);
+                            }
+                        },
+                        responseHandler);
+            }
+        };
     }
 
     @Override
     public SyncOrAsync<ModerationResult> moderation(String input) {
-        throw new NotImplementedYet();
+        ModerationRequest request = ModerationRequest.builder()
+                .input(input)
+                .build();
+
+        return new SyncOrAsync<>() {
+            @Override
+            public ModerationResult execute() {
+                return restApi.blockingModeration(request, token).results().get(0);
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<ModerationResult> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<ModerationResult> get() {
+                                return restApi.moderation(request, token).map(r -> r.results().get(0));
+                            }
+                        },
+                        responseHandler);
+            }
+        };
     }
 
     @Override

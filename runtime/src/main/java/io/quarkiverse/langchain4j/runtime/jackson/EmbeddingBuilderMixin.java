@@ -2,10 +2,10 @@ package io.quarkiverse.langchain4j.runtime.jackson;
 
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-import dev.ai4j.openai4j.completion.CompletionResponse;
+import dev.ai4j.openai4j.embedding.Embedding;
 import io.quarkus.jackson.JacksonMixin;
 
-@JacksonMixin(CompletionResponse.Builder.class)
+@JacksonMixin(Embedding.Builder.class)
 @JsonPOJOBuilder(withPrefix = "")
-public abstract class CompletionResponseBuilderMixin {
+public abstract class EmbeddingBuilderMixin {
 }
