@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.it.chat;
+package io.quarkiverse.langchain4j.it;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,38 +23,38 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-public class QuarkusOpenAiClientResourceTest {
+class QuarkusRestApiResourceTest {
 
-    @TestHTTPEndpoint(QuarkusOpenAiClientResource.class)
+    @TestHTTPEndpoint(QuarkusRestApiResource.class)
     @TestHTTPResource
     URL url;
 
     @Test
-    public void sync() {
+    public void chatSync() {
         given()
                 .baseUri(url.toString())
                 .when()
-                .get("sync")
+                .get("chat/sync")
                 .then()
                 .statusCode(200)
                 .body(containsString("MockGPT"));
     }
 
     @Test
-    public void async() {
+    public void chatAsync() {
         given()
                 .baseUri(url.toString())
                 .when()
-                .get("async")
+                .get("chat/async")
                 .then()
                 .statusCode(200)
                 .body(containsString("MockGPT"));
     }
 
     @Test
-    public void sse() throws Exception {
+    public void chatSse() throws Exception {
         Client client = ClientBuilder.newBuilder().build();
-        WebTarget target = client.target(url.toString() + "/streaming");
+        WebTarget target = client.target(url.toString() + "/chat/streaming");
         // do not reconnect
         try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(Integer.MAX_VALUE, TimeUnit.SECONDS)
                 .build()) {
@@ -69,4 +69,43 @@ public class QuarkusOpenAiClientResourceTest {
         }
     }
 
+    @Test
+    public void languageSync() {
+        given()
+                .baseUri(url.toString())
+                .when()
+                .get("language/sync")
+                .then()
+                .statusCode(200)
+                .body(containsString("This is indeed a test"));
+    }
+
+    @Test
+    public void languageAsync() {
+        given()
+                .baseUri(url.toString())
+                .when()
+                .get("language/async")
+                .then()
+                .statusCode(200)
+                .body(containsString("This is indeed a test"));
+    }
+
+    @Test
+    public void languageSse() throws Exception {
+        Client client = ClientBuilder.newBuilder().build();
+        WebTarget target = client.target(url.toString() + "/language/streaming");
+        // do not reconnect
+        try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(Integer.MAX_VALUE, TimeUnit.SECONDS)
+                .build()) {
+            CompletableFuture<List<String>> res = new CompletableFuture<>();
+            List<String> collect = Collections.synchronizedList(new ArrayList<>());
+            eventSource.register(
+                    inboundSseEvent -> collect.add(inboundSseEvent.readData()),
+                    res::completeExceptionally,
+                    () -> res.complete(collect));
+            eventSource.open();
+            assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
+        }
+    }
 }

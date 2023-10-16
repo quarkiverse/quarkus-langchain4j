@@ -6,7 +6,6 @@ import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import io.quarkus.jackson.JacksonMixin;
 
 @JacksonMixin(ChatCompletionResponse.class)
-//@JsonDeserialize(builder = ChatCompletionResponse.Builder.class)
 @JsonDeserialize(using = ChatCompletionResponseDeserializer.class)
 public abstract class ChatCompletionResponseMixin {
 }

@@ -23,6 +23,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.language.LanguageModel;
+import dev.langchain4j.model.language.StreamingLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.runtime.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
@@ -46,6 +47,7 @@ class Langchain4jProcessor {
     private static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
     private static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
     private static final DotName LANGUAGE_MODEL = DotName.createSimple(LanguageModel.class);
+    private static final DotName STREAMING_LANGUAGE_MODEL = DotName.createSimple(StreamingLanguageModel.class);
     private static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     private static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
 
@@ -103,6 +105,7 @@ class Langchain4jProcessor {
         boolean chatModelBeanRequested = false;
         boolean streamingChatModelBeanRequested = false;
         boolean languageModelBeanRequested = false;
+        boolean streamingLanguageModelBeanRequested = false;
         boolean embeddingModelBeanRequested = false;
         boolean moderationModelBeanRequested = false;
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
@@ -113,6 +116,8 @@ class Langchain4jProcessor {
                 streamingChatModelBeanRequested = true;
             } else if (LANGUAGE_MODEL.equals(requiredName)) {
                 languageModelBeanRequested = true;
+            } else if (STREAMING_LANGUAGE_MODEL.equals(requiredName)) {
+                streamingLanguageModelBeanRequested = true;
             } else if (EMBEDDING_MODEL.equals(requiredName)) {
                 embeddingModelBeanRequested = true;
             } else if (MODERATION_MODEL.equals(requiredName)) {
@@ -157,6 +162,19 @@ class Langchain4jProcessor {
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
                     .runtimeValue(recorder.languageModel(provider.get(), runtimeConfig))
+                    .done());
+        }
+        if (streamingLanguageModelBeanRequested) {
+            Optional<ModelProvider> provider = buildConfig.languageModel().provider();
+            if (provider.isEmpty()) {
+                throw new ConfigurationException(configErrorMessage(LANGUAGE_MODEL, "language-model"));
+            }
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(STREAMING_LANGUAGE_MODEL)
+                    .setRuntimeInit()
+                    .scope(ApplicationScoped.class)
+                    .runtimeValue(recorder.streamingLanguageModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (embeddingModelBeanRequested) {

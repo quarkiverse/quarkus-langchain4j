@@ -69,7 +69,37 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     @Override
     public SyncOrAsyncOrStreaming<CompletionResponse> completion(CompletionRequest request) {
-        throw new NotImplementedYet();
+        return new SyncOrAsyncOrStreaming<>() {
+            @Override
+            public CompletionResponse execute() {
+                return restApi.blockingCompletion(CompletionRequest.builder().from(request).stream(null).build(),
+                        token);
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<CompletionResponse> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<CompletionResponse> get() {
+                                return restApi.completion(request, token);
+                            }
+                        },
+                        responseHandler);
+            }
+
+            @Override
+            public StreamingResponseHandling onPartialResponse(
+                    Consumer<CompletionResponse> partialResponseHandler) {
+                return new StreamingResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Multi<CompletionResponse> get() {
+                                return restApi.streamingCompletion(request, token);
+                            }
+                        }, partialResponseHandler);
+            }
+        };
     }
 
     @Override
@@ -82,7 +112,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsyncOrStreaming<>() {
             @Override
             public ChatCompletionResponse execute() {
-                return restApi.blockingCreateChatCompletion(ChatCompletionRequest.builder().from(request).stream(null).build(),
+                return restApi.blockingChatCompletion(ChatCompletionRequest.builder().from(request).stream(null).build(),
                         token);
             }
 
@@ -105,7 +135,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Multi<ChatCompletionResponse> get() {
-                                return restApi.streamingCreateChatCompletion(request, token);
+                                return restApi.streamingChatCompletion(request, token);
                             }
                         }, partialResponseHandler);
             }
@@ -122,7 +152,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             @Override
             public String execute() {
                 return restApi
-                        .blockingCreateChatCompletion(request, token)
+                        .blockingChatCompletion(request, token)
                         .content();
             }
 
@@ -149,7 +179,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             @Override
                             public Multi<String> get() {
                                 return restApi
-                                        .streamingCreateChatCompletion(
+                                        .streamingChatCompletion(
                                                 ChatCompletionRequest.builder().from(request).stream(true).build(), token)
                                         .filter(r -> {
                                             if (r.choices() != null) {

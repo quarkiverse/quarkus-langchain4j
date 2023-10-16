@@ -14,9 +14,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package io.quarkiverse.langchain4j.it.chat;
+package io.quarkiverse.langchain4j.it;
 
-import static io.quarkiverse.langchain4j.it.MessageUtil.createRequest;
+import static io.quarkiverse.langchain4j.it.MessageUtil.createChatCompletionRequest;
+import static io.quarkiverse.langchain4j.it.MessageUtil.createCompletionRequest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +33,8 @@ import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.chat.Message;
+import dev.ai4j.openai4j.completion.CompletionChoice;
+import dev.ai4j.openai4j.completion.CompletionResponse;
 import io.quarkiverse.langchain4j.QuarkusRestApi;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.OpenAi;
@@ -39,7 +42,7 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
-@Path("/restApi")
+@Path("restApi")
 @ApplicationScoped
 public class QuarkusRestApiResource {
 
@@ -57,25 +60,26 @@ public class QuarkusRestApiResource {
     }
 
     @GET
-    @Path("sync")
-    public String sync() {
-        return restApi.blockingCreateChatCompletion(
-                createRequest("Write a short 1 paragraph funny poem about segmentation fault"), token).content();
+    @Path("chat/sync")
+    public String chatSync() {
+        return restApi.blockingChatCompletion(
+                createChatCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token).content();
     }
 
     @GET
-    @Path("async")
-    public Uni<String> async() {
-        return restApi.createChatCompletion(createRequest("Write a short 1 paragraph funny poem about Unicode"), token)
+    @Path("chat/async")
+    public Uni<String> chatAsync() {
+        return restApi
+                .createChatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token)
                 .map(ChatCompletionResponse::content);
     }
 
     @GET
-    @Path("streaming")
+    @Path("chat/streaming")
     @RestStreamElementType(MediaType.TEXT_PLAIN)
-    public Multi<String> streaming() {
-        return restApi.streamingCreateChatCompletion(
-                createRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+    public Multi<String> chatStreaming() {
+        return restApi.streamingChatCompletion(
+                createChatCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -88,12 +92,50 @@ public class QuarkusRestApiResource {
                             } else { // normally this is not needed but mock APIs don't really work with the streaming response
                                 Message message = choice.message();
                                 if (message != null) {
-                                    return message.content();
+                                    String content = message.content();
+                                    if (content != null) {
+                                        return content;
+                                    }
                                 }
                             }
                         }
                     }
-                    return null;
+                    return "";
+                });
+    }
+
+    @GET
+    @Path("language/sync")
+    public String languageSync() {
+        return restApi.blockingCompletion(
+                createCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token).text();
+    }
+
+    @GET
+    @Path("language/async")
+    public Uni<String> languageAsync() {
+        return restApi
+                .completion(createCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token)
+                .map(CompletionResponse::text);
+    }
+
+    @GET
+    @Path("language/streaming")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> languageStreaming() {
+        return restApi.streamingCompletion(
+                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+                .map(r -> {
+                    if (r.choices() != null) {
+                        if (r.choices().size() == 1) {
+                            CompletionChoice choice = r.choices().get(0);
+                            var text = choice.text();
+                            if (text != null) {
+                                return text;
+                            }
+                        }
+                    }
+                    return "";
                 });
     }
 

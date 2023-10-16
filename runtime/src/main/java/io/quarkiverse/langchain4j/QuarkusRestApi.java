@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.ai4j.openai4j.completion.CompletionRequest;
+import dev.ai4j.openai4j.completion.CompletionResponse;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
@@ -30,6 +32,28 @@ import io.smallrye.mutiny.Uni;
 public interface QuarkusRestApi {
 
     /**
+     * Perform a non-blocking request for a completion response
+     */
+    @Path("completions")
+    @POST
+    Uni<CompletionResponse> completion(CompletionRequest request, @NotBody String token);
+
+    /**
+     * Perform a blocking request for a completion response
+     */
+    @Path("completions")
+    @POST
+    CompletionResponse blockingCompletion(CompletionRequest request, @NotBody String token);
+
+    /**
+     * Performs a non-blocking request for a streaming completion request
+     */
+    @Path("chat/completions")
+    @POST
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    Multi<CompletionResponse> streamingCompletion(CompletionRequest request, @NotBody String token);
+
+    /**
      * Perform a non-blocking request for a chat completion response
      */
     @Path("chat/completions")
@@ -41,7 +65,7 @@ public interface QuarkusRestApi {
      */
     @Path("chat/completions")
     @POST
-    ChatCompletionResponse blockingCreateChatCompletion(ChatCompletionRequest request, @NotBody String token);
+    ChatCompletionResponse blockingChatCompletion(ChatCompletionRequest request, @NotBody String token);
 
     /**
      * Performs a non-blocking request for a streaming chat completion request
@@ -49,7 +73,7 @@ public interface QuarkusRestApi {
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<ChatCompletionResponse> streamingCreateChatCompletion(ChatCompletionRequest request, @NotBody String token);
+    Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @NotBody String token);
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {

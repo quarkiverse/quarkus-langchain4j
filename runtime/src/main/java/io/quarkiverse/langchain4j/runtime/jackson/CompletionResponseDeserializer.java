@@ -10,23 +10,23 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
-import dev.ai4j.openai4j.chat.ChatCompletionChoice;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.ai4j.openai4j.completion.CompletionChoice;
+import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.shared.Usage;
 
 //TODO: figure out a way to get rid of this
-public class ChatCompletionResponseDeserializer extends StdDeserializer<ChatCompletionResponse> {
+public class CompletionResponseDeserializer extends StdDeserializer<CompletionResponse> {
 
-    public ChatCompletionResponseDeserializer() {
-        super(ChatCompletionResponse.class);
+    public CompletionResponseDeserializer() {
+        super(CompletionResponse.class);
     }
 
-    protected ChatCompletionResponseDeserializer(Class<?> vc) {
+    protected CompletionResponseDeserializer(Class<?> vc) {
         super(vc);
     }
 
     @Override
-    public ChatCompletionResponse deserialize(JsonParser p, DeserializationContext ctxt)
+    public CompletionResponse deserialize(JsonParser p, DeserializationContext ctxt)
             throws IOException, JacksonException {
 
         try {
@@ -40,7 +40,7 @@ public class ChatCompletionResponseDeserializer extends StdDeserializer<ChatComp
         String id = null;
         Integer created = null;
         String model = null;
-        List<ChatCompletionChoice> choices = null;
+        List<CompletionChoice> choices = null;
         Usage usage = null;
         while (p.nextToken() != JsonToken.END_OBJECT) {
             String name = p.getCurrentName();
@@ -56,13 +56,13 @@ public class ChatCompletionResponseDeserializer extends StdDeserializer<ChatComp
             } else if ("choices".equals(name)) {
                 p.nextToken();
                 choices = ctxt.readValue(p,
-                        ctxt.getTypeFactory().constructCollectionType(List.class, ChatCompletionChoice.class));
+                        ctxt.getTypeFactory().constructCollectionType(List.class, CompletionChoice.class));
             } else if ("usage".equals(name)) {
                 p.nextToken();
                 usage = ctxt.readValue(p, Usage.class);
             }
         }
 
-        return ChatCompletionResponse.builder().id(id).created(created).model(model).choices(choices).usage(usage).build();
+        return CompletionResponse.builder().id(id).created(created).model(model).choices(choices).usage(usage).build();
     }
 }

@@ -7,6 +7,7 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiLanguageModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingLanguageModel;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -149,6 +150,62 @@ public class Langchain4jRecorder {
                     .temperature(openAi.temperature())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
+                    .logRequests(openAi.logRequests())
+                    .logResponses(openAi.logResponses());
+
+            return new RuntimeValue<>(builder.build());
+        }
+        //                else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //                    LocalAi localAi = runtimeConfig.localAi();
+        //                    if (localAi.baseUrl().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("local", "base-url"));
+        //                    }
+        //                    LocalAiLanguageModel result = LocalAiLanguageModel.builder()
+        //                            .baseUrl(localAi.baseUrl().get())
+        //                            .modelName(localAi.modelName())
+        //                            .temperature(localAi.temperature())
+        //                            .topP(localAi.topP())
+        //                            .maxTokens(localAi.maxTokens())
+        //                            .timeout(localAi.timeout())
+        //                            .maxRetries(localAi.maxRetries())
+        //                            .logRequests(localAi.logRequests())
+        //                            .logResponses(localAi.logResponses())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //                    HuggingFace huggingFace = runtimeConfig.huggingFace();
+        //                    if (huggingFace.accessToken().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //                    }
+        //                    HuggingFaceLanguageModel result = HuggingFaceLanguageModel.builder()
+        //                            .accessToken(huggingFace.accessToken().get())
+        //                            .modelId(huggingFace.modelId())
+        //                            .timeout(huggingFace.timeout())
+        //                            .temperature(huggingFace.temperature())
+        //                            .maxNewTokens(huggingFace.maxNewTokens())
+        //                            .returnFullText(huggingFace.returnFullText())
+        //                            .waitForModel(huggingFace.waitForModel())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
+
+        throw new IllegalStateException("Unsupported model provider " + modelProvider);
+    }
+
+    public RuntimeValue<?> streamingLanguageModel(ModelProvider modelProvider,
+            LangChain4jRuntimeConfig runtimeConfig) {
+        if (modelProvider == ModelProvider.OPEN_AI) {
+            OpenAi openAi = runtimeConfig.openAi();
+            Optional<String> apiKeyOpt = openAi.apiKey();
+            if (apiKeyOpt.isEmpty()) {
+                throw new ConfigValidationException(createProblems("openai", "api-key"));
+            }
+            var builder = OpenAiStreamingLanguageModel.builder()
+                    .baseUrl(openAi.baseUrl())
+                    .apiKey(apiKeyOpt.get())
+                    .modelName(openAi.modelName())
+                    .temperature(openAi.temperature())
+                    .timeout(openAi.timeout())
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 

@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.it.chat;
 
-import static io.quarkiverse.langchain4j.it.MessageUtil.createRequest;
+import static io.quarkiverse.langchain4j.it.MessageUtil.createChatCompletionRequest;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -17,12 +17,12 @@ import io.quarkiverse.langchain4j.runtime.OpenAi;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
-@Path("quarkusClient")
-public class QuarkusOpenAiClientResource {
+@Path("quarkusClient/chat")
+public class QuarkusOpenAiClientChatResource {
 
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
-    public QuarkusOpenAiClientResource(LangChain4jRuntimeConfig runtimeConfig) {
+    public QuarkusOpenAiClientChatResource(LangChain4jRuntimeConfig runtimeConfig) {
         OpenAi openAi = runtimeConfig.openAi();
         String token = openAi.apiKey().get();
         String baseUrl = openAi.baseUrl();
@@ -32,14 +32,15 @@ public class QuarkusOpenAiClientResource {
     @GET
     @Path("sync")
     public String sync() {
-        return quarkusOpenAiClient.chatCompletion(createRequest("Write a short 1 paragraph funny poem about dynamic typing"))
+        return quarkusOpenAiClient
+                .chatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about dynamic typing"))
                 .execute().content();
     }
 
     @GET
     @Path("async")
     public Uni<String> async() {
-        var request = createRequest("Write a short 1 paragraph funny poem about Scrum");
+        var request = createChatCompletionRequest("Write a short 1 paragraph funny poem about Scrum");
         return Uni.createFrom().emitter(emitter -> {
             quarkusOpenAiClient.chatCompletion(request)
                     .onResponse(res -> emitter.complete(res.content()))
@@ -52,7 +53,7 @@ public class QuarkusOpenAiClientResource {
     @Path("streaming")
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> streaming() {
-        var request = createRequest("Write a short 1 paragraph funny poem about javascript frameworks");
+        var request = createChatCompletionRequest("Write a short 1 paragraph funny poem about javascript frameworks");
         return Multi.createFrom().emitter(emitter -> {
             quarkusOpenAiClient.chatCompletion(request)
                     .onPartialResponse(r -> {
