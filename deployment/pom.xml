@@ -19,6 +19,10 @@
       <artifactId>quarkus-rest-client-reactive-jackson-deployment</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-qute-deployment</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j</artifactId>
       <version>${project.version}</version>

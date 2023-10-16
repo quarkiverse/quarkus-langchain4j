@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.it.chat;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
@@ -10,6 +13,8 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.output.Response;
 import io.smallrye.mutiny.Multi;
 
@@ -56,5 +61,20 @@ public class ChatLanguageModelResource {
                                 }
                             });
                 });
+    }
+
+    @GET
+    @Path("template")
+    public String template() {
+        String template = "Create a recipe for a {{dishType}} with the following ingredients: {{ingredients}}";
+        PromptTemplate promptTemplate = PromptTemplate.from(template);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("dishType", "oven dish");
+        variables.put("ingredients", "potato, tomato, feta, olive oil");
+
+        Prompt prompt = promptTemplate.apply(variables);
+
+        return chatLanguageModel.generate(prompt.text());
     }
 }

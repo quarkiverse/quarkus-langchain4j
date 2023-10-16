@@ -18,6 +18,10 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-qute</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>dev.langchain4j</groupId>
@@ -35,6 +39,10 @@
         <exclusion>
           <groupId>com.google.code.gson</groupId>
           <artifactId>gson</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.github.spullara.mustache.java</groupId>
+          <artifactId>compiler</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

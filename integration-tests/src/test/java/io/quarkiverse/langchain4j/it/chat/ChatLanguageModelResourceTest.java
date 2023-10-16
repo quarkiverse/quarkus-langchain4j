@@ -58,4 +58,14 @@ public class ChatLanguageModelResourceTest {
             assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
         }
     }
+
+    @Test
+    public void template() {
+        given()
+                .baseUri(url.toString())
+                .get("template")
+                .then()
+                .statusCode(200)
+                .body(containsString("MockGPT"));
+    }
 }
