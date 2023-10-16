@@ -6,16 +6,24 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
+import io.quarkus.test.QuarkusUnitTest;
 
 /**
  * Copied from {@code dev.langchain4j.model.input.PromptTemplateTest}
  * Meant to ensure that the Quarkus integration works as expected
  */
 public class PromptTemplateTest {
+
+    @RegisterExtension
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Test
     void should_create_prompt_from_template_with_single_variable() {

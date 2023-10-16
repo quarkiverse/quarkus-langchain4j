@@ -68,4 +68,14 @@ public class ChatLanguageModelResourceTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
     }
+
+    @Test
+    public void structuredPrompt() {
+        given()
+                .baseUri(url.toString())
+                .get("structuredPrompt")
+                .then()
+                .statusCode(200)
+                .body(containsString("MockGPT"));
+    }
 }

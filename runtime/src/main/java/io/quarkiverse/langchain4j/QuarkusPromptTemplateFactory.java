@@ -10,7 +10,7 @@ import io.quarkus.qute.TemplateInstance;
 
 public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
 
-    Engine ENGINE = Engine.builder().addDefaults().addParserHook(new ParserHook() {
+    public static Engine ENGINE = Engine.builder().addDefaults().addParserHook(new ParserHook() {
         @Override
         public void beforeParsing(ParserHelper parserHelper) {
             parserHelper.addContentFilter(contents -> contents.replace("{{", "{"));
