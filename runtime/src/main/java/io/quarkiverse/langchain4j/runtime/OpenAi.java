@@ -12,7 +12,8 @@ public interface OpenAi {
     /**
      * Base URL of OpenAI API
      */
-    Optional<String> baseUrl();
+    @WithDefault("https://api.openai.com/v1/")
+    String baseUrl();
 
     /**
      * OpenAI API key

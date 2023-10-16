@@ -23,9 +23,9 @@ public class QuarkusOpenAiClientResource {
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
     public QuarkusOpenAiClientResource(LangChain4jRuntimeConfig runtimeConfig) {
-        OpenAi openAi = runtimeConfig.chatModel().openAi();
+        OpenAi openAi = runtimeConfig.openAi();
         String token = openAi.apiKey().get();
-        String baseUrl = openAi.baseUrl().get();
+        String baseUrl = openAi.baseUrl();
         quarkusOpenAiClient = QuarkusOpenAiClient.builder().openAiApiKey(token).baseUrl(baseUrl).build();
     }
 

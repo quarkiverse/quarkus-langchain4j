@@ -16,12 +16,13 @@ public class Langchain4jRecorder {
 
     public RuntimeValue<?> chatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAi openAi = runtimeConfig.chatModel().openAi();
+            OpenAi openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             var builder = OpenAiChatModel.builder()
+                    .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .temperature(openAi.temperature())
@@ -34,57 +35,55 @@ public class Langchain4jRecorder {
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 
-            if (openAi.baseUrl().isPresent()) {
-                builder.baseUrl(openAi.baseUrl().get());
-            }
-
             return new RuntimeValue<>(builder.build());
         }
-        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
-        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
-        //            if (localAi.baseUrl().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("local", "base-url"));
-        //            }
-        //            LocalAiChatModel result = LocalAiChatModel.builder()
-        //                    .baseUrl(localAi.baseUrl().get())
-        //                    .modelName(localAi.modelName())
-        //                    .temperature(localAi.temperature())
-        //                    .topP(localAi.topP())
-        //                    .maxTokens(localAi.maxTokens())
-        //                    .timeout(localAi.timeout())
-        //                    .maxRetries(localAi.maxRetries())
-        //                    .logRequests(localAi.logRequests())
-        //                    .logResponses(localAi.logResponses())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-        //            HuggingFace huggingFace = runtimeConfig.chatModel().huggingFace();
-        //            if (huggingFace.accessToken().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-        //            }
-        //            HuggingFaceChatModel result = HuggingFaceChatModel.builder()
-        //                    .accessToken(huggingFace.accessToken().get())
-        //                    .modelId(huggingFace.modelId())
-        //                    .timeout(huggingFace.timeout())
-        //                    .temperature(huggingFace.temperature())
-        //                    .maxNewTokens(huggingFace.maxNewTokens())
-        //                    .returnFullText(huggingFace.returnFullText())
-        //                    .waitForModel(huggingFace.waitForModel())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        }
+        //                else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //                    LocalAi localAi = runtimeConfig.localAi();
+        //                    if (localAi.baseUrl().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("local", "base-url"));
+        //                    }
+        //                    LocalAiChatModel result = LocalAiChatModel.builder()
+        //                            .baseUrl(localAi.baseUrl().get())
+        //                            .modelName(localAi.modelName())
+        //                            .temperature(localAi.temperature())
+        //                            .topP(localAi.topP())
+        //                            .maxTokens(localAi.maxTokens())
+        //                            .timeout(localAi.timeout())
+        //                            .maxRetries(localAi.maxRetries())
+        //                            .logRequests(localAi.logRequests())
+        //                            .logResponses(localAi.logResponses())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
+        //                else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //                    HuggingFace huggingFace = runtimeConfig.huggingFace();
+        //                    if (huggingFace.accessToken().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //                    }
+        //                    HuggingFaceChatModel result = HuggingFaceChatModel.builder()
+        //                            .accessToken(huggingFace.accessToken().get())
+        //                            .modelId(huggingFace.modelId())
+        //                            .timeout(huggingFace.timeout())
+        //                            .temperature(huggingFace.temperature())
+        //                            .maxNewTokens(huggingFace.maxNewTokens())
+        //                            .returnFullText(huggingFace.returnFullText())
+        //                            .waitForModel(huggingFace.waitForModel())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
     public RuntimeValue<?> streamingChatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAi openAi = runtimeConfig.chatModel().openAi();
+            OpenAi openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             var builder = OpenAiStreamingChatModel.builder()
+                    .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .temperature(openAi.temperature())
@@ -96,45 +95,41 @@ public class Langchain4jRecorder {
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 
-            if (openAi.baseUrl().isPresent()) {
-                builder.baseUrl(openAi.baseUrl().get());
-            }
-
             return new RuntimeValue<>(builder.build());
         }
-        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
-        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
-        //            if (localAi.baseUrl().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("local", "base-url"));
-        //            }
-        //            LocalAiChatModel result = LocalAiChatModel.builder()
-        //                    .baseUrl(localAi.baseUrl().get())
-        //                    .modelName(localAi.modelName())
-        //                    .temperature(localAi.temperature())
-        //                    .topP(localAi.topP())
-        //                    .maxTokens(localAi.maxTokens())
-        //                    .timeout(localAi.timeout())
-        //                    .maxRetries(localAi.maxRetries())
-        //                    .logRequests(localAi.logRequests())
-        //                    .logResponses(localAi.logResponses())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-        //            HuggingFace huggingFace = runtimeConfig.chatModel().huggingFace();
-        //            if (huggingFace.accessToken().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-        //            }
-        //            HuggingFaceChatModel result = HuggingFaceChatModel.builder()
-        //                    .accessToken(huggingFace.accessToken().get())
-        //                    .modelId(huggingFace.modelId())
-        //                    .timeout(huggingFace.timeout())
-        //                    .temperature(huggingFace.temperature())
-        //                    .maxNewTokens(huggingFace.maxNewTokens())
-        //                    .returnFullText(huggingFace.returnFullText())
-        //                    .waitForModel(huggingFace.waitForModel())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        }
+        //                else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //                    LocalAi localAi = runtimeConfig.localAi();
+        //                    if (localAi.baseUrl().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("local", "base-url"));
+        //                    }
+        //                    LocalAiChatModel result = LocalAiChatModel.builder()
+        //                            .baseUrl(localAi.baseUrl().get())
+        //                            .modelName(localAi.modelName())
+        //                            .temperature(localAi.temperature())
+        //                            .topP(localAi.topP())
+        //                            .maxTokens(localAi.maxTokens())
+        //                            .timeout(localAi.timeout())
+        //                            .maxRetries(localAi.maxRetries())
+        //                            .logRequests(localAi.logRequests())
+        //                            .logResponses(localAi.logResponses())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //                    HuggingFace huggingFace = runtimeConfig.huggingFace();
+        //                    if (huggingFace.accessToken().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //                    }
+        //                    HuggingFaceChatModel result = HuggingFaceChatModel.builder()
+        //                            .accessToken(huggingFace.accessToken().get())
+        //                            .modelId(huggingFace.modelId())
+        //                            .timeout(huggingFace.timeout())
+        //                            .temperature(huggingFace.temperature())
+        //                            .maxNewTokens(huggingFace.maxNewTokens())
+        //                            .returnFullText(huggingFace.returnFullText())
+        //                            .waitForModel(huggingFace.waitForModel())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
@@ -142,12 +137,13 @@ public class Langchain4jRecorder {
     public RuntimeValue<?> languageModel(ModelProvider modelProvider,
             LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAi openAi = runtimeConfig.languageModel().openAi();
+            OpenAi openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             var builder = OpenAiLanguageModel.builder()
+                    .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .temperature(openAi.temperature())
@@ -156,57 +152,54 @@ public class Langchain4jRecorder {
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 
-            if (openAi.baseUrl().isPresent()) {
-                builder.baseUrl(openAi.baseUrl().get());
-            }
-
             return new RuntimeValue<>(builder.build());
         }
-        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
-        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
-        //            if (localAi.baseUrl().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("local", "base-url"));
-        //            }
-        //            LocalAiLanguageModel result = LocalAiLanguageModel.builder()
-        //                    .baseUrl(localAi.baseUrl().get())
-        //                    .modelName(localAi.modelName())
-        //                    .temperature(localAi.temperature())
-        //                    .topP(localAi.topP())
-        //                    .maxTokens(localAi.maxTokens())
-        //                    .timeout(localAi.timeout())
-        //                    .maxRetries(localAi.maxRetries())
-        //                    .logRequests(localAi.logRequests())
-        //                    .logResponses(localAi.logResponses())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-        //            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
-        //            if (huggingFace.accessToken().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-        //            }
-        //            HuggingFaceLanguageModel result = HuggingFaceLanguageModel.builder()
-        //                    .accessToken(huggingFace.accessToken().get())
-        //                    .modelId(huggingFace.modelId())
-        //                    .timeout(huggingFace.timeout())
-        //                    .temperature(huggingFace.temperature())
-        //                    .maxNewTokens(huggingFace.maxNewTokens())
-        //                    .returnFullText(huggingFace.returnFullText())
-        //                    .waitForModel(huggingFace.waitForModel())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        }
+        //                else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //                    LocalAi localAi = runtimeConfig.localAi();
+        //                    if (localAi.baseUrl().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("local", "base-url"));
+        //                    }
+        //                    LocalAiLanguageModel result = LocalAiLanguageModel.builder()
+        //                            .baseUrl(localAi.baseUrl().get())
+        //                            .modelName(localAi.modelName())
+        //                            .temperature(localAi.temperature())
+        //                            .topP(localAi.topP())
+        //                            .maxTokens(localAi.maxTokens())
+        //                            .timeout(localAi.timeout())
+        //                            .maxRetries(localAi.maxRetries())
+        //                            .logRequests(localAi.logRequests())
+        //                            .logResponses(localAi.logResponses())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //                    HuggingFace huggingFace = runtimeConfig.huggingFace();
+        //                    if (huggingFace.accessToken().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //                    }
+        //                    HuggingFaceLanguageModel result = HuggingFaceLanguageModel.builder()
+        //                            .accessToken(huggingFace.accessToken().get())
+        //                            .modelId(huggingFace.modelId())
+        //                            .timeout(huggingFace.timeout())
+        //                            .temperature(huggingFace.temperature())
+        //                            .maxNewTokens(huggingFace.maxNewTokens())
+        //                            .returnFullText(huggingFace.returnFullText())
+        //                            .waitForModel(huggingFace.waitForModel())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
     public RuntimeValue<?> embeddingModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAi openAi = runtimeConfig.languageModel().openAi();
+            OpenAi openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             var builder = OpenAiEmbeddingModel.builder()
+                    .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .timeout(openAi.timeout())
@@ -214,39 +207,35 @@ public class Langchain4jRecorder {
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
 
-            if (openAi.baseUrl().isPresent()) {
-                builder.baseUrl(openAi.baseUrl().get());
-            }
-
             return new RuntimeValue<>(builder.build());
         }
-        //        else if (modelProvider == ModelProvider.LOCAL_AI) {
-        //            LocalAi localAi = runtimeConfig.chatModel().localAi();
-        //            if (localAi.baseUrl().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("local", "base-url"));
-        //            }
-        //            LocalAiEmbeddingModel result = LocalAiEmbeddingModel.builder()
-        //                    .baseUrl(localAi.baseUrl().get())
-        //                    .modelName(localAi.modelName())
-        //                    .timeout(localAi.timeout())
-        //                    .maxRetries(localAi.maxRetries())
-        //                    .logRequests(localAi.logRequests())
-        //                    .logResponses(localAi.logResponses())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        } else if (modelProvider == ModelProvider.HUGGING_FACE) {
-        //            HuggingFace huggingFace = runtimeConfig.languageModel().huggingFace();
-        //            if (huggingFace.accessToken().isEmpty()) {
-        //                throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
-        //            }
-        //            HuggingFaceEmbeddingModel result = HuggingFaceEmbeddingModel.builder()
-        //                    .accessToken(huggingFace.accessToken().get())
-        //                    .modelId(huggingFace.modelId())
-        //                    .timeout(huggingFace.timeout())
-        //                    .waitForModel(huggingFace.waitForModel())
-        //                    .build();
-        //            return new RuntimeValue<>(result);
-        //        }
+        //                else if (modelProvider == ModelProvider.LOCAL_AI) {
+        //                    LocalAi localAi = runtimeConfig.localAi();
+        //                    if (localAi.baseUrl().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("local", "base-url"));
+        //                    }
+        //                    LocalAiEmbeddingModel result = LocalAiEmbeddingModel.builder()
+        //                            .baseUrl(localAi.baseUrl().get())
+        //                            .modelName(localAi.modelName())
+        //                            .timeout(localAi.timeout())
+        //                            .maxRetries(localAi.maxRetries())
+        //                            .logRequests(localAi.logRequests())
+        //                            .logResponses(localAi.logResponses())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                } else if (modelProvider == ModelProvider.HUGGING_FACE) {
+        //                    HuggingFace huggingFace = runtimeConfig.huggingFace();
+        //                    if (huggingFace.accessToken().isEmpty()) {
+        //                        throw new ConfigValidationException(createProblems("hugging-face", "access-token"));
+        //                    }
+        //                    HuggingFaceEmbeddingModel result = HuggingFaceEmbeddingModel.builder()
+        //                            .accessToken(huggingFace.accessToken().get())
+        //                            .modelId(huggingFace.modelId())
+        //                            .timeout(huggingFace.timeout())
+        //                            .waitForModel(huggingFace.waitForModel())
+        //                            .build();
+        //                    return new RuntimeValue<>(result);
+        //                }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
@@ -263,22 +252,19 @@ public class Langchain4jRecorder {
 
     public RuntimeValue<?> moderationModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAi openAi = runtimeConfig.languageModel().openAi();
+            OpenAi openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             var builder = OpenAiModerationModel.builder()
+                    .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
                     .modelName(openAi.modelName())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
                     .logResponses(openAi.logResponses());
-
-            if (openAi.baseUrl().isPresent()) {
-                builder.baseUrl(openAi.baseUrl().get());
-            }
 
             return new RuntimeValue<>(builder.build());
         }

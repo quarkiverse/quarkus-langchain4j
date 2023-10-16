@@ -48,9 +48,9 @@ public class QuarkusRestApiResource {
 
     public QuarkusRestApiResource(LangChain4jRuntimeConfig runtimeConfig)
             throws URISyntaxException {
-        OpenAi openAi = runtimeConfig.chatModel().openAi();
+        OpenAi openAi = runtimeConfig.openAi();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
-                .baseUri(new URI(openAi.baseUrl().orElse("https://api.openai.com/v1/")))
+                .baseUri(new URI(openAi.baseUrl()))
                 .build(QuarkusRestApi.class);
         this.token = openAi.apiKey().get();
 
