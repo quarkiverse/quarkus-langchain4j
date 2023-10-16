@@ -32,7 +32,6 @@ import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.chat.Message;
-import io.quarkiverse.langchain4j.OpenAiRestApiWriterInterceptor;
 import io.quarkiverse.langchain4j.QuarkusRestApi;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.OpenAi;
@@ -51,7 +50,6 @@ public class QuarkusRestApiResource {
             throws URISyntaxException {
         OpenAi openAi = runtimeConfig.chatModel().openAi();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
-                .register(OpenAiRestApiWriterInterceptor.class)
                 .baseUri(new URI(openAi.baseUrl().orElse("https://api.openai.com/v1/")))
                 .build(QuarkusRestApi.class);
         this.token = openAi.apiKey().get();

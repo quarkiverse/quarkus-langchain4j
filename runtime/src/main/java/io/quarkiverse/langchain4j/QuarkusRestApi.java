@@ -21,6 +21,7 @@ import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
+@Path("")
 @ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
