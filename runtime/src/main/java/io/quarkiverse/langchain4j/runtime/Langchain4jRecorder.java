@@ -240,16 +240,6 @@ public class Langchain4jRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    private ConfigValidationException.Problem[] createProblems(String namespace, String key) {
-        return new ConfigValidationException.Problem[] { createProblem(namespace, key) };
-    }
-
-    private ConfigValidationException.Problem createProblem(String namespace, String key) {
-        return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j.%s.%s is required but it could not be found in any config source",
-                namespace, key));
-    }
-
     public RuntimeValue<?> moderationModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAi openAi = runtimeConfig.openAi();
@@ -270,5 +260,15 @@ public class Langchain4jRecorder {
         }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
+    }
+
+    private ConfigValidationException.Problem[] createProblems(String namespace, String key) {
+        return new ConfigValidationException.Problem[] { createProblem(namespace, key) };
+    }
+
+    private ConfigValidationException.Problem createProblem(String namespace, String key) {
+        return new ConfigValidationException.Problem(String.format(
+                "SRCFG00014: The config property quarkus.langchain4j.%s.%s is required but it could not be found in any config source",
+                namespace, key));
     }
 }
