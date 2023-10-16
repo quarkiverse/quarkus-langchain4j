@@ -9,3 +9,8 @@ metadata:
 #  categories:
 #    - "miscellaneous"
   status: "experimental"
+  codestart:
+    name: langchain4j
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j:codestarts:jar:${project.version}"
