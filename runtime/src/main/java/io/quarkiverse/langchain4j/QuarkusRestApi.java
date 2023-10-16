@@ -23,6 +23,7 @@ import io.smallrye.mutiny.Uni;
 
 @Path("")
 @ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
+@ClientHeaderParam(name = "api-key", value = "{token}") // used by AzureAI
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RegisterProvider(OpenAiRestApiWriterInterceptor.class)
