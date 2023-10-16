@@ -58,7 +58,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         try {
             restApi = QuarkusRestClientBuilder.newBuilder()
-                    .register(OpenAiRestApiWriterInterceptor.class)
                     .baseUri(new URI(serviceBuilder.baseUrl))
                     // TODO add the rest of the relevant configuration
                     .build(QuarkusRestApi.class);
