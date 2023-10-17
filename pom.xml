@@ -30,6 +30,7 @@
     <quarkus.version>999-SNAPSHOT</quarkus.version>
     <langchain4j.version>0.23.0</langchain4j.version>
     <assertj.version>3.24.2</assertj.version>
+    <wiremock.version>3.2.0</wiremock.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -57,6 +58,14 @@
             <compilerArgs>
               <arg>-parameters</arg>
             </compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>net.revelc.code</groupId>
+          <artifactId>impsort-maven-plugin</artifactId>
+          <version>${version.impsort.plugin}</version>
+          <configuration>
+            <compliance>17</compliance>
           </configuration>
         </plugin>
       </plugins>

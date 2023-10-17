@@ -38,6 +38,12 @@
       <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>${wiremock.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -52,6 +58,19 @@
             </path>
           </annotationProcessorPaths>
         </configuration>
+        <!-- Allow tests to use Java 17 -->
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <release>17</release>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

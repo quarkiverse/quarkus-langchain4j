@@ -22,6 +22,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.ext.ReaderInterceptor;
@@ -41,6 +42,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
+import dev.ai4j.openai4j.OpenAiHttpException;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.completion.CompletionRequest;
@@ -50,6 +52,7 @@ import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkus.arc.Arc;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -142,6 +145,14 @@ public interface QuarkusRestApi {
     @Path("moderations")
     @POST
     ModerationResponse blockingModeration(ModerationRequest request, @NotBody String token);
+
+    @ClientExceptionMapper
+    static RuntimeException toException(Response response) {
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            return new OpenAiHttpException(response.getStatus(), response.readEntity(String.class));
+        }
+        return null;
+    }
 
     /**
      * We need a custom version of the Jackson provider because reading SSE values does not work properly with
