@@ -116,11 +116,13 @@ public class ChatLanguageModelResource {
 
             @Override
             public void onNext(String token) {
+                //                System.out.print(token);
                 sb.append(token);
             }
 
             @Override
             public void onComplete(Response<AiMessage> response) {
+                //                System.out.println("\n\ndone\n\n");
                 if (response != null) {
                     futureRef.get().complete(response.content());
                 } else {
@@ -134,6 +136,7 @@ public class ChatLanguageModelResource {
             }
         };
 
+        //        System.out.println("starting first\n\n");
         streamingChatLanguageModel.generate(chatMemory.messages(), handler);
         AiMessage firstAiMessage = futureRef.get().get(60, TimeUnit.SECONDS);
         chatMemory.add(firstAiMessage);
@@ -148,6 +151,7 @@ public class ChatLanguageModelResource {
                 .append("\n[LLM]: ");
 
         futureRef.set(new CompletableFuture<>());
+        //        System.out.println("\n\n\nstarting second\n\n");
         streamingChatLanguageModel.generate(chatMemory.messages(), handler);
         futureRef.get().get(60, TimeUnit.SECONDS);
         return sb.toString();

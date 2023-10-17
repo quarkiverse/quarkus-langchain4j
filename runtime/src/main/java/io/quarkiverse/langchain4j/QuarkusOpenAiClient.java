@@ -1,13 +1,17 @@
 package io.quarkiverse.langchain4j;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
 import dev.ai4j.openai4j.AsyncResponseHandling;
@@ -53,14 +57,30 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new Builder();
     }
 
-    private QuarkusOpenAiClient(Builder serviceBuilder) {
-        this.token = serviceBuilder.openAiApiKey;
+    private QuarkusOpenAiClient(Builder builder) {
+        this.token = builder.openAiApiKey;
 
         try {
-            restApi = QuarkusRestClientBuilder.newBuilder()
-                    .baseUri(new URI(serviceBuilder.baseUrl))
-                    // TODO add the rest of the relevant configuration
-                    .build(QuarkusRestApi.class);
+            QuarkusRestClientBuilder restApiBuilder = QuarkusRestClientBuilder.newBuilder()
+                    .baseUri(new URI(builder.baseUrl))
+                    .connectTimeout(builder.connectTimeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
+            if (builder.logRequests || builder.logResponses) {
+                restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
+                restApiBuilder.clientLogger(new QuarkusRestApi.OpenAiClientLogger(builder.logRequests,
+                        builder.logResponses));
+            }
+            if (builder.proxy != null) {
+                if (builder.proxy.type() != Proxy.Type.HTTP) {
+                    throw new IllegalArgumentException("Only HTTP type proxy is supported");
+                }
+                if (!(builder.proxy.address() instanceof InetSocketAddress)) {
+                    throw new IllegalArgumentException("Unsupported proxy type");
+                }
+                InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
+                restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
+            }
+            restApi = restApiBuilder.build(QuarkusRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

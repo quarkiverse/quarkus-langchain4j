@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.runtime.config;
 
-import java.time.Duration;
-
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -13,12 +11,6 @@ public interface OpenAiChatParams {
      */
     @WithDefault("gpt-3.5-turbo")
     String modelName();
-
-    /**
-     * Timeout for OpenAI calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
 
     /**
      * What sampling temperature to use, with values between 0 and 2.

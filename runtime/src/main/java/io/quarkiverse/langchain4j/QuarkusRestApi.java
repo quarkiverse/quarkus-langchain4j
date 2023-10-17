@@ -7,6 +7,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.ConstrainedTo;
@@ -29,7 +30,9 @@ import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -50,6 +53,11 @@ import io.quarkus.arc.Arc;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
 
 /**
  * This Microprofile REST client is used as the building block of all the API calls to OpenAI.
@@ -235,6 +243,89 @@ public interface QuarkusRestApi {
                 }
             }
             context.proceed();
+        }
+    }
+
+    /**
+     * Introduce a custom logger as the stock one logs at the DEBUG level by default...
+     */
+    class OpenAiClientLogger implements ClientLogger {
+        private static final Logger log = Logger.getLogger(OpenAiClientLogger.class);
+
+        private int bodySize;
+
+        private final boolean logRequests;
+        private final boolean logResponses;
+
+        public OpenAiClientLogger(boolean logRequests, boolean logResponses) {
+            this.logRequests = logRequests;
+            this.logResponses = logResponses;
+        }
+
+        @Override
+        public void setBodySize(int bodySize) {
+            this.bodySize = bodySize;
+        }
+
+        @Override
+        public void logResponse(HttpClientResponse response, boolean redirect) {
+            if (!logResponses || !log.isInfoEnabled()) {
+                return;
+            }
+            response.bodyHandler(new Handler<>() {
+                @Override
+                public void handle(Buffer body) {
+                    log.infof("%s: %s %s, Status[%d %s], Headers[%s], Body:\n%s",
+                            redirect ? "Redirect" : "Response",
+                            response.request().getMethod(), response.request().absoluteURI(), response.statusCode(),
+                            response.statusMessage(), asString(response.headers()), bodyToString(body));
+                }
+            });
+        }
+
+        @Override
+        public void logRequest(HttpClientRequest request, Buffer body, boolean omitBody) {
+            if (!logRequests || !log.isInfoEnabled()) {
+                return;
+            }
+            if (omitBody) {
+                log.infof("Request: %s %s Headers[%s], Body omitted",
+                        request.getMethod(), request.absoluteURI(), asString(request.headers()));
+            } else if (body == null || body.length() == 0) {
+                log.infof("Request: %s %s Headers[%s], Empty body",
+                        request.getMethod(), request.absoluteURI(), asString(request.headers()));
+            } else {
+                log.infof("Request: %s %s Headers[%s], Body:\n%s",
+                        request.getMethod(), request.absoluteURI(), asString(request.headers()), bodyToString(body));
+            }
+        }
+
+        private String bodyToString(Buffer body) {
+            if (body == null) {
+                return "";
+            } else if (bodySize <= 0) {
+                return body.toString();
+            } else {
+                String bodyAsString = body.toString();
+                return bodyAsString.substring(0, Math.min(bodySize, bodyAsString.length()));
+            }
+        }
+
+        private String asString(MultiMap headers) {
+            if (headers.isEmpty()) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder((headers.size() * (6 + 1 + 6)) + (headers.size() - 1)); // this is a very rough estimate of a result like 'key1=value1 key2=value2'
+            boolean isFirst = true;
+            for (Map.Entry<String, String> entry : headers) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    sb.append(' ');
+                }
+                sb.append(entry.getKey()).append('=').append(entry.getValue());
+            }
+            return sb.toString();
         }
     }
 }

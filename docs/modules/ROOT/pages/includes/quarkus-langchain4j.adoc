@@ -99,24 +99,6 @@ endif::add-copy-button-to-env-var[]
 |`gpt-3.5-turbo`
 
 
-a| [[quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.timeout]]`link:#quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.timeout[quarkus.langchain4j.chat-model.openai.timeout]`
-
-
-[.description]
---
-Timeout for OpenAI calls
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHAT_MODEL_OPENAI_TIMEOUT+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MODEL_OPENAI_TIMEOUT+++`
-endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
-|`10S`
-
-
 a| [[quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.temperature]]`link:#quarkus-langchain4j_quarkus.langchain4j.chat-model.openai.temperature[quarkus.langchain4j.chat-model.openai.temperature]`
 
 
@@ -217,24 +199,6 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LANGUAGE_MODEL_OPENAI_MODEL_NAME++
 endif::add-copy-button-to-env-var[]
 --|string 
 |`gpt-3.5-turbo`
-
-
-a| [[quarkus-langchain4j_quarkus.langchain4j.language-model.openai.timeout]]`link:#quarkus-langchain4j_quarkus.langchain4j.language-model.openai.timeout[quarkus.langchain4j.language-model.openai.timeout]`
-
-
-[.description]
---
-Timeout for OpenAI calls
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LANGUAGE_MODEL_OPENAI_TIMEOUT+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_LANGUAGE_MODEL_OPENAI_TIMEOUT+++`
-endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
-|`10S`
 
 
 a| [[quarkus-langchain4j_quarkus.langchain4j.language-model.openai.temperature]]`link:#quarkus-langchain4j_quarkus.langchain4j.language-model.openai.temperature[quarkus.langchain4j.language-model.openai.temperature]`

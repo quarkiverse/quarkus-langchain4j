@@ -32,16 +32,17 @@ public class Langchain4jModelsRecorder {
             var builder = OpenAiChatModel.builder()
                     .baseUrl(openAiServer.baseUrl())
                     .apiKey(apiKeyOpt.get())
+                    .timeout(openAiServer.timeout())
+                    .maxRetries(openAiServer.maxRetries())
+                    .logRequests(openAiServer.logRequests())
+                    .logResponses(openAiServer.logResponses())
+
                     .modelName(openAiChatParams.modelName())
                     .temperature(openAiChatParams.temperature())
                     .topP(openAiChatParams.topP())
                     .maxTokens(openAiChatParams.maxTokens())
                     .presencePenalty(openAiChatParams.presencePenalty())
-                    .frequencyPenalty(openAiChatParams.frequencyPenalty())
-                    .timeout(openAiChatParams.timeout())
-                    .maxRetries(openAiServer.maxRetries())
-                    .logRequests(openAiServer.logRequests())
-                    .logResponses(openAiServer.logResponses());
+                    .frequencyPenalty(openAiChatParams.frequencyPenalty());
 
             return new RuntimeValue<>(builder.build());
         }
@@ -94,15 +95,16 @@ public class Langchain4jModelsRecorder {
             var builder = OpenAiStreamingChatModel.builder()
                     .baseUrl(openAiServer.baseUrl())
                     .apiKey(apiKeyOpt.get())
+                    .timeout(openAiServer.timeout())
+                    .logRequests(openAiServer.logRequests())
+                    .logResponses(openAiServer.logResponses())
+
                     .modelName(openAiChatParams.modelName())
                     .temperature(openAiChatParams.temperature())
                     .topP(openAiChatParams.topP())
                     .maxTokens(openAiChatParams.maxTokens())
                     .presencePenalty(openAiChatParams.presencePenalty())
-                    .frequencyPenalty(openAiChatParams.frequencyPenalty())
-                    .timeout(openAiServer.timeout())
-                    .logRequests(openAiServer.logRequests())
-                    .logResponses(openAiServer.logResponses());
+                    .frequencyPenalty(openAiChatParams.frequencyPenalty());
 
             return new RuntimeValue<>(builder.build());
         }
@@ -146,21 +148,22 @@ public class Langchain4jModelsRecorder {
     public RuntimeValue<?> languageModel(ModelProvider modelProvider,
             LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
-            OpenAiServer openAi = runtimeConfig.openAi();
-            Optional<String> apiKeyOpt = openAi.apiKey();
+            OpenAiServer openAiServer = runtimeConfig.openAi();
+            Optional<String> apiKeyOpt = openAiServer.apiKey();
             if (apiKeyOpt.isEmpty()) {
                 throw new ConfigValidationException(createProblems("openai", "api-key"));
             }
             OpenAiChatParams openAiChatParams = runtimeConfig.chatModel().openAi();
             var builder = OpenAiLanguageModel.builder()
-                    .baseUrl(openAi.baseUrl())
+                    .baseUrl(openAiServer.baseUrl())
                     .apiKey(apiKeyOpt.get())
+                    .timeout(openAiServer.timeout())
+                    .maxRetries(openAiServer.maxRetries())
+                    .logRequests(openAiServer.logRequests())
+                    .logResponses(openAiServer.logResponses())
+
                     .modelName(openAiChatParams.modelName())
-                    .temperature(openAiChatParams.temperature())
-                    .timeout(openAi.timeout())
-                    .maxRetries(openAi.maxRetries())
-                    .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses());
+                    .temperature(openAiChatParams.temperature());
 
             return new RuntimeValue<>(builder.build());
         }
@@ -213,11 +216,12 @@ public class Langchain4jModelsRecorder {
             var builder = OpenAiStreamingLanguageModel.builder()
                     .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
-                    .modelName(openAiChatParams.modelName())
-                    .temperature(openAiChatParams.temperature())
                     .timeout(openAi.timeout())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses());
+                    .logResponses(openAi.logResponses())
+
+                    .modelName(openAiChatParams.modelName())
+                    .temperature(openAiChatParams.temperature());
 
             return new RuntimeValue<>(builder.build());
         }
@@ -269,11 +273,12 @@ public class Langchain4jModelsRecorder {
             var builder = OpenAiEmbeddingModel.builder()
                     .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
-                    .modelName(modelParams.modelName())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses());
+                    .logResponses(openAi.logResponses())
+
+                    .modelName(modelParams.modelName());
 
             return new RuntimeValue<>(builder.build());
         }
@@ -319,11 +324,12 @@ public class Langchain4jModelsRecorder {
             var builder = OpenAiModerationModel.builder()
                     .baseUrl(openAi.baseUrl())
                     .apiKey(apiKeyOpt.get())
-                    .modelName(params.modelName())
                     .timeout(openAi.timeout())
                     .maxRetries(openAi.maxRetries())
                     .logRequests(openAi.logRequests())
-                    .logResponses(openAi.logResponses());
+                    .logResponses(openAi.logResponses())
+
+                    .modelName(params.modelName());
 
             return new RuntimeValue<>(builder.build());
         }
