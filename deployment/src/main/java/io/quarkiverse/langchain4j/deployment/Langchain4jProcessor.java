@@ -57,6 +57,7 @@ import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.gizmo.ClassTransformer;
 import io.quarkus.gizmo.MethodCreator;
@@ -136,7 +137,8 @@ class Langchain4jProcessor {
     void generateBeans(LangChain4jBuildConfig buildConfig, LangChain4jRuntimeConfig runtimeConfig,
             BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            Langchain4jModelsRecorder recorder) {
+            Langchain4jModelsRecorder recorder,
+            ShutdownContextBuildItem shutdown) {
 
         boolean chatModelBeanRequested = false;
         boolean streamingChatModelBeanRequested = false;
@@ -241,6 +243,7 @@ class Langchain4jProcessor {
                     .runtimeValue(recorder.moderationModel(provider.get(), runtimeConfig))
                     .done());
         }
+        recorder.cleanUp(shutdown);
     }
 
     private static String configErrorMessage(DotName beanType, String configNamespace) {

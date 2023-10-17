@@ -8,6 +8,7 @@ import dev.langchain4j.model.openai.OpenAiLanguageModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingLanguageModel;
+import io.quarkiverse.langchain4j.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.config.ModelProvider;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiChatParams;
@@ -15,6 +16,7 @@ import io.quarkiverse.langchain4j.runtime.config.OpenAiEmbeddingParams;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiModerationParams;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -345,5 +347,14 @@ public class Langchain4jModelsRecorder {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.%s.%s is required but it could not be found in any config source",
                 namespace, key));
+    }
+
+    public void cleanUp(ShutdownContext shutdown) {
+        shutdown.addShutdownTask(new Runnable() {
+            @Override
+            public void run() {
+                QuarkusOpenAiClient.clearCache();
+            }
+        });
     }
 }

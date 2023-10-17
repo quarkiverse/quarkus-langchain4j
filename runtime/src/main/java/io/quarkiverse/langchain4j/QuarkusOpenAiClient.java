@@ -5,9 +5,12 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -33,8 +36,6 @@ import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
 import dev.ai4j.openai4j.spi.OpenAiClientBuilderFactory;
-import io.quarkus.arc.Arc;
-import io.quarkus.arc.ArcContainer;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -49,6 +50,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     private final QuarkusRestApi restApi;
 
+    private static final Map<Builder, QuarkusRestApi> cache = new ConcurrentHashMap<>();
+
     public QuarkusOpenAiClient(String apiKey) {
         this(new Builder().openAiApiKey(apiKey));
     }
@@ -57,33 +60,43 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new Builder();
     }
 
+    public static void clearCache() {
+        cache.clear();
+    }
+
     private QuarkusOpenAiClient(Builder builder) {
         this.token = builder.openAiApiKey;
+        // cache the client the builder could be called with the same parameters from multiple models
+        this.restApi = cache.compute(builder, new BiFunction<Builder, QuarkusRestApi, QuarkusRestApi>() {
+            @Override
+            public QuarkusRestApi apply(Builder builder, QuarkusRestApi quarkusRestApi) {
+                try {
+                    QuarkusRestClientBuilder restApiBuilder = QuarkusRestClientBuilder.newBuilder()
+                            .baseUri(new URI(builder.baseUrl))
+                            .connectTimeout(builder.connectTimeout.toSeconds(), TimeUnit.SECONDS)
+                            .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
+                    if (builder.logRequests || builder.logResponses) {
+                        restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
+                        restApiBuilder.clientLogger(new QuarkusRestApi.OpenAiClientLogger(builder.logRequests,
+                                builder.logResponses));
+                    }
+                    if (builder.proxy != null) {
+                        if (builder.proxy.type() != Proxy.Type.HTTP) {
+                            throw new IllegalArgumentException("Only HTTP type proxy is supported");
+                        }
+                        if (!(builder.proxy.address() instanceof InetSocketAddress)) {
+                            throw new IllegalArgumentException("Unsupported proxy type");
+                        }
+                        InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
+                        restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
+                    }
+                    return restApiBuilder.build(QuarkusRestApi.class);
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
 
-        try {
-            QuarkusRestClientBuilder restApiBuilder = QuarkusRestClientBuilder.newBuilder()
-                    .baseUri(new URI(builder.baseUrl))
-                    .connectTimeout(builder.connectTimeout.toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
-            if (builder.logRequests || builder.logResponses) {
-                restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                restApiBuilder.clientLogger(new QuarkusRestApi.OpenAiClientLogger(builder.logRequests,
-                        builder.logResponses));
-            }
-            if (builder.proxy != null) {
-                if (builder.proxy.type() != Proxy.Type.HTTP) {
-                    throw new IllegalArgumentException("Only HTTP type proxy is supported");
-                }
-                if (!(builder.proxy.address() instanceof InetSocketAddress)) {
-                    throw new IllegalArgumentException("Unsupported proxy type");
-                }
-                InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
-                restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
-            }
-            restApi = restApiBuilder.build(QuarkusRestApi.class);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -323,11 +336,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         @Override
         public Builder get() {
-            ArcContainer arcContainer = Arc.container();
-            if (arcContainer == null) {
-                // in regular unit tests Quarkus is not running, so don't do anything
-                return null;
-            }
             return new Builder();
         }
     }
@@ -337,6 +345,33 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         @Override
         public QuarkusOpenAiClient build() {
             return new QuarkusOpenAiClient(this);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Builder builder = (Builder) o;
+            return logRequests == builder.logRequests && logResponses == builder.logResponses
+                    && logStreamingResponses == builder.logStreamingResponses && Objects.equals(baseUrl, builder.baseUrl)
+                    && Objects.equals(apiVersion, builder.apiVersion) && Objects.equals(openAiApiKey,
+                            builder.openAiApiKey)
+                    && Objects.equals(azureApiKey, builder.azureApiKey) && Objects.equals(
+                            callTimeout, builder.callTimeout)
+                    && Objects.equals(connectTimeout, builder.connectTimeout)
+                    && Objects.equals(readTimeout, builder.readTimeout) && Objects.equals(writeTimeout,
+                            builder.writeTimeout)
+                    && Objects.equals(proxy, builder.proxy);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(baseUrl, apiVersion, openAiApiKey, azureApiKey, callTimeout, connectTimeout, readTimeout,
+                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses);
         }
     }
 
