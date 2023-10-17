@@ -195,9 +195,11 @@ public interface QuarkusRestApi {
     }
 
     /**
-     * The point of this is to return null the API is streaming results back and
-     * the last result has been encountered.
-     * This result is usually a "[DONE]" message, so it cannot map onto the domain.
+     * This method does two things:
+     * <p>
+     * First, it returns {@code null} instead of throwing an exception when last streaming API result comes back and.
+     * This result is a "[DONE]" message, so it cannot map onto the domain.
+     * Second, it validates that the response is not empty, which happens when the API returns an error object
      */
     @Provider
     @ConstrainedTo(RuntimeType.CLIENT)
@@ -206,7 +208,7 @@ public interface QuarkusRestApi {
         @Override
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
             try {
-                return context.proceed();
+                return validateResponse(context.proceed());
             } catch (ProcessingException e) {
                 Throwable cause = e.getCause();
                 if (cause instanceof MismatchedInputException) {
@@ -222,6 +224,33 @@ public interface QuarkusRestApi {
 
                 throw e;
             }
+        }
+
+        /**
+         * The purpose of this method is to ensure that the API response contains a valid object.
+         * This is needed because OpenAI sometime returns HTTP 200 but with a json response
+         * that contains an error object and therefore Jackson does not set any properties.
+         *
+         * @return result if it is valid
+         */
+        private Object validateResponse(Object result) {
+            if (result instanceof ChatCompletionResponse) {
+                ChatCompletionResponse r = (ChatCompletionResponse) result;
+                if (r.id() == null) {
+                    throw new OpenAiApiException(ChatCompletionResponse.class);
+                }
+            } else if (result instanceof CompletionResponse) {
+                CompletionResponse r = (CompletionResponse) result;
+                if (r.id() == null) {
+                    throw new OpenAiApiException(CompletionResponse.class);
+                }
+            } else if (result instanceof ModerationResponse) {
+                ModerationResponse r = (ModerationResponse) result;
+                if (r.id() == null) {
+                    throw new OpenAiApiException(ModerationResponse.class);
+                }
+            }
+            return result;
         }
 
     }

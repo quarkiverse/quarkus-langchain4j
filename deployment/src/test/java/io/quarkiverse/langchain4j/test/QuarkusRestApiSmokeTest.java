@@ -15,7 +15,6 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,6 +23,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import dev.ai4j.openai4j.OpenAiHttpException;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import io.quarkiverse.langchain4j.OpenAiApiException;
 import io.quarkiverse.langchain4j.QuarkusRestApi;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.test.QuarkusUnitTest;
@@ -99,8 +99,6 @@ public class QuarkusRestApiSmokeTest {
     }
 
     @Test
-    @Disabled("Currently no exception is thrown and the completion object is just all nulls")
-    // TODO: deal with this probably at the langchain4j level
     void server200ButAPIError() throws URISyntaxException {
         wireMockServer.stubFor(
                 post(urlEqualTo("/v1/chat/completions"))
@@ -121,7 +119,8 @@ public class QuarkusRestApiSmokeTest {
 
         QuarkusRestApi restApi = createClient();
 
-        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN));
+        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN)).isInstanceOf(
+                OpenAiApiException.class);
     }
 
     private QuarkusRestApi createClient() throws URISyntaxException {
