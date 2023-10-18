@@ -17,4 +17,8 @@ public class StructuredPromptsRecorder {
     public static String get(String className) {
         return templates.get(className);
     }
+
+    public static void clearTemplates() {
+        templates.clear();
+    }
 }

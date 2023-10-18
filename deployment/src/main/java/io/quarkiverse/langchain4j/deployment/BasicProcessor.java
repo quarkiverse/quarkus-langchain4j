@@ -25,7 +25,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.language.LanguageModel;
 import dev.langchain4j.model.language.StreamingLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
-import io.quarkiverse.langchain4j.runtime.Langchain4jModelsRecorder;
+import io.quarkiverse.langchain4j.runtime.BasicRecorder;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.config.ModelProvider;
@@ -102,7 +102,7 @@ class BasicProcessor {
     void generateBeans(LangChain4jBuildConfig buildConfig, LangChain4jRuntimeConfig runtimeConfig,
             BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            Langchain4jModelsRecorder recorder,
+            BasicRecorder recorder,
             ShutdownContextBuildItem shutdown) {
 
         boolean chatModelBeanRequested = false;

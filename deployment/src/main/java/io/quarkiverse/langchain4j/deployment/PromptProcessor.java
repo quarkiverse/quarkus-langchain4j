@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.deployment;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -17,7 +16,6 @@ import org.jboss.jandex.IndexView;
 import org.objectweb.asm.ClassVisitor;
 
 import dev.langchain4j.model.input.structured.StructuredPrompt;
-import io.quarkiverse.langchain4j.QuarkusPromptTemplateFactory;
 import io.quarkiverse.langchain4j.runtime.StructuredPromptsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -30,8 +28,6 @@ import io.quarkus.gizmo.ClassTransformer;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
-import io.quarkus.qute.Expression;
-import io.quarkus.qute.Template;
 
 public class PromptProcessor {
 
@@ -60,7 +56,7 @@ public class PromptProcessor {
             String delimiter = delimiterValue != null ? delimiterValue.asString() : "\n";
             String promptTemplateString = String.join(delimiter, parts);
             ClassInfo annotatedClass = target.asClass();
-            boolean hasNestedParams = isMappable(promptTemplateString);
+            boolean hasNestedParams = hasNestedParams(promptTemplateString);
             if (!hasNestedParams) {
                 ClassInfo current = annotatedClass;
                 while (true) {
@@ -83,16 +79,8 @@ public class PromptProcessor {
     /**
      * We can obtain a map of the class values if the template does not try to access values in any nested level
      */
-    private static boolean isMappable(String promptTemplateString) {
-        Template template = QuarkusPromptTemplateFactory.ENGINE.parse(promptTemplateString);
-        boolean hasNestedParams = false;
-        List<Expression> expressions = template.getExpressions();
-        for (Expression expression : expressions) {
-            if (expression.getParts().size() > 1) {
-                hasNestedParams = true;
-            }
-        }
-        return hasNestedParams;
+    private static boolean hasNestedParams(String promptTemplateString) {
+        return TemplateUtil.parts(promptTemplateString).stream().anyMatch(p -> p.size() > 1);
     }
 
     /**
@@ -128,7 +116,6 @@ public class PromptProcessor {
                 String name = field.name();
                 ResultHandle fieldValue = mc.readInstanceField(field, mc.getThis());
                 mc.invokeInterfaceMethod(MAP_PUT, mapHandle, mc.load(name), fieldValue);
-
             }
             if (hasSuperMappable) {
                 ResultHandle mapFromSuper = mc
