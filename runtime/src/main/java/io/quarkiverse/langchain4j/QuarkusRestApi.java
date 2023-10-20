@@ -292,8 +292,6 @@ public interface QuarkusRestApi {
     class OpenAiClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(OpenAiClientLogger.class);
 
-        private int bodySize;
-
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -304,7 +302,7 @@ public interface QuarkusRestApi {
 
         @Override
         public void setBodySize(int bodySize) {
-            this.bodySize = bodySize;
+            // ignore
         }
 
         @Override
@@ -343,12 +341,8 @@ public interface QuarkusRestApi {
         private String bodyToString(Buffer body) {
             if (body == null) {
                 return "";
-            } else if (bodySize <= 0) {
-                return body.toString();
-            } else {
-                String bodyAsString = body.toString();
-                return bodyAsString.substring(0, Math.min(bodySize, bodyAsString.length()));
             }
+            return body.toString();
         }
 
         private String asString(MultiMap headers) {
