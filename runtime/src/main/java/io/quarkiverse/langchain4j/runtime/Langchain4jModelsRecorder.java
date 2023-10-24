@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
@@ -15,7 +16,6 @@ import io.quarkiverse.langchain4j.runtime.config.OpenAiChatParams;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiEmbeddingParams;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiModerationParams;
 import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
-import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -23,7 +23,7 @@ import io.smallrye.config.ConfigValidationException;
 @Recorder
 public class Langchain4jModelsRecorder {
 
-    public RuntimeValue<?> chatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
+    public Supplier<?> chatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAiServer = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAiServer.apiKey();
@@ -46,7 +46,12 @@ public class Langchain4jModelsRecorder {
                     .presencePenalty(openAiChatParams.presencePenalty())
                     .frequencyPenalty(openAiChatParams.frequencyPenalty());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
         //                else if (modelProvider == ModelProvider.LOCAL_AI) {
         //                    LocalAi localAi = runtimeConfig.localAi();
@@ -86,7 +91,7 @@ public class Langchain4jModelsRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    public RuntimeValue<?> streamingChatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
+    public Supplier<?> streamingChatModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAiServer = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAiServer.apiKey();
@@ -108,7 +113,12 @@ public class Langchain4jModelsRecorder {
                     .presencePenalty(openAiChatParams.presencePenalty())
                     .frequencyPenalty(openAiChatParams.frequencyPenalty());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
         //                else if (modelProvider == ModelProvider.LOCAL_AI) {
         //                    LocalAi localAi = runtimeConfig.localAi();
@@ -147,7 +157,7 @@ public class Langchain4jModelsRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    public RuntimeValue<?> languageModel(ModelProvider modelProvider,
+    public Supplier<?> languageModel(ModelProvider modelProvider,
             LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAiServer = runtimeConfig.openAi();
@@ -167,7 +177,12 @@ public class Langchain4jModelsRecorder {
                     .modelName(openAiChatParams.modelName())
                     .temperature(openAiChatParams.temperature());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
         //                else if (modelProvider == ModelProvider.LOCAL_AI) {
         //                    LocalAi localAi = runtimeConfig.localAi();
@@ -206,7 +221,7 @@ public class Langchain4jModelsRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    public RuntimeValue<?> streamingLanguageModel(ModelProvider modelProvider,
+    public Supplier<?> streamingLanguageModel(ModelProvider modelProvider,
             LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAi = runtimeConfig.openAi();
@@ -225,7 +240,12 @@ public class Langchain4jModelsRecorder {
                     .modelName(openAiChatParams.modelName())
                     .temperature(openAiChatParams.temperature());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
         //                else if (modelProvider == ModelProvider.LOCAL_AI) {
         //                    LocalAi localAi = runtimeConfig.localAi();
@@ -264,7 +284,7 @@ public class Langchain4jModelsRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    public RuntimeValue<?> embeddingModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
+    public Supplier<?> embeddingModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
@@ -282,7 +302,12 @@ public class Langchain4jModelsRecorder {
 
                     .modelName(modelParams.modelName());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
         //                else if (modelProvider == ModelProvider.LOCAL_AI) {
         //                    LocalAi localAi = runtimeConfig.localAi();
@@ -315,7 +340,7 @@ public class Langchain4jModelsRecorder {
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
     }
 
-    public RuntimeValue<?> moderationModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
+    public Supplier<?> moderationModel(ModelProvider modelProvider, LangChain4jRuntimeConfig runtimeConfig) {
         if (modelProvider == ModelProvider.OPEN_AI) {
             OpenAiServer openAi = runtimeConfig.openAi();
             Optional<String> apiKeyOpt = openAi.apiKey();
@@ -333,7 +358,12 @@ public class Langchain4jModelsRecorder {
 
                     .modelName(params.modelName());
 
-            return new RuntimeValue<>(builder.build());
+            return new Supplier<>() {
+                @Override
+                public Object get() {
+                    return builder.build();
+                }
+            };
         }
 
         throw new IllegalStateException("Unsupported model provider " + modelProvider);
@@ -357,4 +387,5 @@ public class Langchain4jModelsRecorder {
             }
         });
     }
+
 }

@@ -138,7 +138,7 @@ class BasicProcessor {
                     .configure(CHAT_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.chatModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.chatModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (streamingChatModelBeanRequested) {
@@ -151,7 +151,7 @@ class BasicProcessor {
                     .configure(STREAMING_CHAT_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.streamingChatModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.streamingChatModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (languageModelBeanRequested) {
@@ -164,7 +164,7 @@ class BasicProcessor {
                     .configure(LANGUAGE_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.languageModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.languageModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (streamingLanguageModelBeanRequested) {
@@ -177,7 +177,7 @@ class BasicProcessor {
                     .configure(STREAMING_LANGUAGE_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.streamingLanguageModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.streamingLanguageModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (embeddingModelBeanRequested) {
@@ -190,7 +190,7 @@ class BasicProcessor {
                     .configure(EMBEDDING_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.embeddingModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.embeddingModel(provider.get(), runtimeConfig))
                     .done());
         }
         if (moderationModelBeanRequested) {
@@ -205,7 +205,7 @@ class BasicProcessor {
                     .configure(MODERATION_MODEL)
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class)
-                    .runtimeValue(recorder.moderationModel(provider.get(), runtimeConfig))
+                    .supplier(recorder.moderationModel(provider.get(), runtimeConfig))
                     .done());
         }
         recorder.cleanUp(shutdown);
