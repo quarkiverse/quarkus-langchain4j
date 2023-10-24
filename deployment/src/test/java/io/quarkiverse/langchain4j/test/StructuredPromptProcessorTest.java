@@ -65,8 +65,8 @@ class StructuredPromptProcessorTest {
     }
 
     @StructuredPrompt({
-            "Suggest tasty {{dish}} recipes that can be prepared in {{maxPreparationTime}} minutes.",
-            "I have only {{ingredients}} in my fridge.",
+            "Suggest tasty {dish} recipes that can be prepared in {maxPreparationTime} minutes.",
+            "I have only {ingredients} in my fridge.",
     })
     static class SuggestRecipes extends SuggestRecipesSuper {
 

@@ -38,7 +38,7 @@ public class PromptTemplateTestInfo {
     @Test
     void should_create_prompt_from_template_with_multiple_variables() {
 
-        PromptTemplate promptTemplate = PromptTemplate.from("My name is {{name}} {{surname}}.");
+        PromptTemplate promptTemplate = PromptTemplate.from("My name is {name} {surname}.");
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("name", "Klaus");
