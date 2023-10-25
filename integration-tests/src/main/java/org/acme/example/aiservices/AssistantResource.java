@@ -1,5 +1,6 @@
 package org.acme.example.aiservices;
 
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
@@ -18,7 +19,7 @@ public class AssistantResource {
     }
 
     @GET
-    public String get(@RestQuery String message) {
+    public String get(@DefaultValue("Hello, my name is test") @RestQuery String message) {
         return assistant.chat(message);
     }
 

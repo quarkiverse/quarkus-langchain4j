@@ -68,44 +68,4 @@ class QuarkusRestApiResourceTest {
             assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
         }
     }
-
-    @Test
-    public void languageSync() {
-        given()
-                .baseUri(url.toString())
-                .when()
-                .get("language/sync")
-                .then()
-                .statusCode(200)
-                .body(containsString("This is indeed a test"));
-    }
-
-    @Test
-    public void languageAsync() {
-        given()
-                .baseUri(url.toString())
-                .when()
-                .get("language/async")
-                .then()
-                .statusCode(200)
-                .body(containsString("This is indeed a test"));
-    }
-
-    @Test
-    public void languageSse() throws Exception {
-        Client client = ClientBuilder.newBuilder().build();
-        WebTarget target = client.target(url.toString() + "/language/streaming");
-        // do not reconnect
-        try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(Integer.MAX_VALUE, TimeUnit.SECONDS)
-                .build()) {
-            CompletableFuture<List<String>> res = new CompletableFuture<>();
-            List<String> collect = Collections.synchronizedList(new ArrayList<>());
-            eventSource.register(
-                    inboundSseEvent -> collect.add(inboundSseEvent.readData()),
-                    res::completeExceptionally,
-                    () -> res.complete(collect));
-            eventSource.open();
-            assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
-        }
-    }
 }

@@ -1,0 +1,16 @@
+name: Langchain4j
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the basic integration with Langchain4j
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+#  guide: https://quarkiverse.github.io/quarkiverse-docs/langchain4j/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  categories:
+    - "miscellaneous"
+  status: "experimental"
+  codestart:
+    name: langchain4j
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-core:codestarts:jar:${project.version}"

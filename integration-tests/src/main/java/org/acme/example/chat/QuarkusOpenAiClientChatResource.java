@@ -10,9 +10,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.chat.Message;
-import io.quarkiverse.langchain4j.QuarkusOpenAiClient;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
-import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -21,10 +20,10 @@ public class QuarkusOpenAiClientChatResource {
 
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
-    public QuarkusOpenAiClientChatResource(LangChain4jRuntimeConfig runtimeConfig) {
-        OpenAiServer openAiServer = runtimeConfig.openAi();
-        String token = openAiServer.apiKey().get();
-        String baseUrl = openAiServer.baseUrl();
+    public QuarkusOpenAiClientChatResource(Langchain4jOpenAiConfig runtimeConfig) {
+        String token = runtimeConfig.apiKey()
+                .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
+        String baseUrl = runtimeConfig.baseUrl();
         quarkusOpenAiClient = QuarkusOpenAiClient.builder().openAiApiKey(token).baseUrl(baseUrl).build();
     }
 

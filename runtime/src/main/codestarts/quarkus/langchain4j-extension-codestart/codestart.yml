@@ -1,9 +1,0 @@
-name: langchain4j-codestart
-ref: langchain4j
-type: code
-tags: extension-codestart
-metadata:
-  title: LangChain4J Extension
-  description: Start coding with LangChain4J
-#  path: /some-path
-#  related-guide-section: TBD

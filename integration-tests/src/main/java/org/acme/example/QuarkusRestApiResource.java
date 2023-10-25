@@ -38,9 +38,8 @@ import dev.ai4j.openai4j.chat.Message;
 import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
-import io.quarkiverse.langchain4j.QuarkusRestApi;
-import io.quarkiverse.langchain4j.runtime.config.LangChain4jRuntimeConfig;
-import io.quarkiverse.langchain4j.runtime.config.OpenAiServer;
+import io.quarkiverse.langchain4j.openai.QuarkusRestApi;
+import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -52,13 +51,13 @@ public class QuarkusRestApiResource {
     private final QuarkusRestApi restApi;
     private final String token;
 
-    public QuarkusRestApiResource(LangChain4jRuntimeConfig runtimeConfig)
+    public QuarkusRestApiResource(Langchain4jOpenAiConfig runtimeConfig)
             throws URISyntaxException {
-        OpenAiServer openAi = runtimeConfig.openAi();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
-                .baseUri(new URI(openAi.baseUrl()))
+                .baseUri(new URI(runtimeConfig.baseUrl()))
                 .build(QuarkusRestApi.class);
-        this.token = openAi.apiKey().get();
+        this.token = runtimeConfig.apiKey()
+                .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
 
     }
 

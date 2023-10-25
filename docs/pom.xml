@@ -17,7 +17,7 @@
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-deployment</artifactId>
+            <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
