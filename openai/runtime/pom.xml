@@ -54,6 +54,10 @@
                     <groupId>com.squareup.okhttp3</groupId>
                     <artifactId>okhttp-sse</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.github.spullara.mustache.java</groupId>
+                    <artifactId>compiler</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
