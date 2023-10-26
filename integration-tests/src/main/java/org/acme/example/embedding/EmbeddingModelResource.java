@@ -6,7 +6,10 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
 @Path("embedding")
 public class EmbeddingModelResource {
@@ -15,6 +18,8 @@ public class EmbeddingModelResource {
 
     public EmbeddingModelResource(EmbeddingModel embeddingModel) {
         this.embeddingModel = embeddingModel;
+
+        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
     }
 
     @GET
