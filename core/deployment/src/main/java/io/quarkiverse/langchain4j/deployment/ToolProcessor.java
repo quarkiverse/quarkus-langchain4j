@@ -241,7 +241,12 @@ public class ToolProcessor {
             }
             ResultHandle result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
                     targetMethodHandles);
-            invokeMc.returnValue(result);
+            boolean toolReturnsVoid = methodInfo.returnType().kind() == Type.Kind.VOID;
+            if (toolReturnsVoid) {
+                invokeMc.returnValue(invokeMc.load("Success"));
+            } else {
+                invokeMc.returnValue(result);
+            }
 
             MethodCreator methodMetadataMc = classCreator
                     .getMethodCreator(MethodDescriptor.ofMethod(implClassName, "methodMetadata",
@@ -254,7 +259,7 @@ public class ToolProcessor {
             }
 
             ResultHandle resultHandle = methodMetadataMc.newInstance(METHOD_METADATA_CTOR,
-                    methodMetadataMc.load(methodInfo.returnType().kind() == Type.Kind.VOID), nameToParamPositionHandle);
+                    methodMetadataMc.load(toolReturnsVoid), nameToParamPositionHandle);
             methodMetadataMc.returnValue(resultHandle);
         }
         return implClassName;
