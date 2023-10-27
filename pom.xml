@@ -18,6 +18,7 @@
     <module>docs</module>
     <module>hugging-face</module>
     <module>openai</module>
+    <module>redis</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
