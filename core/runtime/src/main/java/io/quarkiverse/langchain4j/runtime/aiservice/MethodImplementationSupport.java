@@ -99,7 +99,9 @@ public class MethodImplementationSupport {
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);
 
-        Response<AiMessage> response = context.chatModel.generate(messages, context.toolSpecifications);
+        Response<AiMessage> response = context.toolSpecifications != null
+                ? context.chatModel.generate(messages, context.toolSpecifications)
+                : context.chatModel.generate(messages);
         verifyModerationIfNeeded(moderationFuture);
 
         ToolExecutionRequest toolExecutionRequest;
