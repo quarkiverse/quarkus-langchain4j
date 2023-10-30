@@ -1,0 +1,82 @@
+package io.quarkiverse.langchain4j.deployment;
+
+import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.determineJarLocation;
+import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.matchingJarEntries;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+
+import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
+import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
+import io.quarkus.deployment.annotations.BuildProducer;
+import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourcePatternsBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuildItem;
+
+/**
+ * TODO: we might want to make this more granular so all these document related dependencies don't always end up in the application
+ */
+public class DocumentNativeSupportProcessor {
+
+    @BuildStep
+    void onnxJni(BuildProducer<NativeImageResourcePatternsBuildItem> nativePatternProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectionProducer) {
+        // TODO: we can do better here and only include the target architecture's libs
+        nativePatternProducer
+                .produce(NativeImageResourcePatternsBuildItem.builder().includeGlobs("ai/onnxruntime/native/**").build());
+        reflectionProducer
+                .produce(ReflectiveClassBuildItem.builder("opennlp.tools.sentdetect.SentenceDetectorFactory").build());
+        reflectionProducer.produce(ReflectiveClassBuildItem.builder("ai.onnxruntime.OnnxTensor").methods(true).build());
+    }
+
+    @BuildStep
+    void apachePoiRuntimeClasses(BuildProducer<RuntimeInitializedClassBuildItem> classProducer,
+            BuildProducer<RuntimeInitializedPackageBuildItem> packageProducer) {
+        Stream.of(
+                "dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel",
+                "dev.langchain4j.model.embedding.OnnxBertBiEncoder",
+                "ai.onnxruntime.OrtEnvironment",
+                "ai.onnxruntime.OnnxRuntime",
+                "org.apache.fontbox.ttf.RAFDataStream",
+                "org.apache.fontbox.ttf.TTFParser",
+                "org.apache.pdfbox.pdmodel.encrypetion.PublicKeySecurityHandler",
+                "org.apache.pdfbox.pdmodel.font.FileSystemFontProvider$FSFontInfo",
+                "org.apache.pdfbox.pdmodel.font.FontMapperImpl$DefaultFontProvider",
+                "org.apache.pdfbox.pdmodel.font.FontMapperImpl",
+                "org.apache.pdfbox.pdmodel.font.FontMappers$DefaultFontMapper",
+                "org.apache.pdfbox.pdmodel.font.PDFont",
+                "org.apache.pdfbox.pdmodel.font.PDFontLike",
+                "org.apache.pdfbox.pdmodel.font.PDSimpleFont",
+                "org.apache.pdfbox.pdmodel.font.PDType1Font",
+                "org.apache.pdfbox.pdmodel.graphics.color.PDCIEDictionaryBasedColorSpace",
+                "org.apache.pdfbox.pdmodel.PDDocument",
+                "org.apache.pdfbox.rendering.SoftMask")
+                .filter(QuarkusClassLoader::isClassPresentAtRuntime)
+                .map(RuntimeInitializedClassBuildItem::new).forEach(classProducer::produce);
+
+        packageProducer.produce(new RuntimeInitializedPackageBuildItem("com.microsoft.schemas.office"));
+    }
+
+    @BuildStep
+    void openNLPResources(BuildProducer<NativeImageResourceBuildItem> producer) {
+        registerCustomOpenNLPResources(producer);
+        // TODO: maybe we should also be opening jars and getting these?
+        producer.produce(new NativeImageResourceBuildItem("bert-vocabulary-en.txt"));
+        producer.produce(new NativeImageResourceBuildItem("all-minilm-l6-v2.onnx"));
+    }
+
+    private void registerCustomOpenNLPResources(BuildProducer<NativeImageResourceBuildItem> resourcesProducer) {
+        Path langChain4jJar = determineJarLocation(DocumentBySentenceSplitter.class);
+        List<String> names = matchingJarEntries(langChain4jJar, e -> e.getName().endsWith(".bin")).stream().map(
+                ZipEntry::getName).collect(Collectors.toList());
+        if (!names.isEmpty()) {
+            resourcesProducer.produce(new NativeImageResourceBuildItem(names));
+        }
+    }
+}

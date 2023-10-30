@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.graalvm;
 
+import java.lang.reflect.Field;
+
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 
@@ -17,6 +19,7 @@ import io.quarkiverse.langchain4j.QuarkusChatMessageJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusPromptTemplateFactory;
 import io.quarkiverse.langchain4j.QuarkusStructuredPromptFactory;
+import opennlp.tools.util.ext.ExtensionNotLoadedException;
 
 public class Substitutions {
 
@@ -62,6 +65,56 @@ public class Substitutions {
         @Substitute
         private static ChatMessageJsonCodec loadCodec() {
             return new QuarkusChatMessageJsonCodecFactory().create();
+        }
+    }
+
+    @TargetClass(opennlp.tools.util.ext.ExtensionLoader.class)
+    static final class Target_ExtensionLoader {
+
+        /**
+         * This is needed because otherwise OSGi comes into play and breaks everything...
+         */
+        @Substitute
+        public static <T> T instantiateExtension(Class<T> clazz, String extensionClassName) {
+
+            // First try to load extension and instantiate extension from class path
+            try {
+                Class<?> extClazz = Class.forName(extensionClassName);
+
+                if (clazz.isAssignableFrom(extClazz)) {
+
+                    try {
+                        return (T) extClazz.newInstance();
+                    } catch (InstantiationException e) {
+                        throw new ExtensionNotLoadedException(e);
+                    } catch (IllegalAccessException e) {
+                        // constructor is private. Try to load using INSTANCE
+                        Field instanceField;
+                        try {
+                            instanceField = extClazz.getDeclaredField("INSTANCE");
+                        } catch (NoSuchFieldException | SecurityException e1) {
+                            throw new ExtensionNotLoadedException(e1);
+                        }
+                        if (instanceField != null) {
+                            try {
+                                return (T) instanceField.get(null);
+                            } catch (IllegalArgumentException | IllegalAccessException e1) {
+                                throw new ExtensionNotLoadedException(e1);
+                            }
+                        }
+                        throw new ExtensionNotLoadedException(e);
+                    }
+                } else {
+                    throw new ExtensionNotLoadedException("Extension class '" + extClazz.getName() +
+                            "' needs to have type: " + clazz.getName());
+                }
+            } catch (ClassNotFoundException e) {
+                // Class is not on classpath
+            }
+
+            throw new ExtensionNotLoadedException("Unable to find implementation for " +
+                    clazz.getName() + ", the class or service " + extensionClassName +
+                    " could not be located!");
         }
     }
 }

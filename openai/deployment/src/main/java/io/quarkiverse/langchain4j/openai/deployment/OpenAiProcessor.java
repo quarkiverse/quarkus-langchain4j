@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.openai.deployment;
 
+import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.determineJarLocation;
+import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.matchingJarEntries;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
@@ -7,16 +9,14 @@ import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMIN
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -74,18 +74,10 @@ public class OpenAiProcessor {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        resourcesProducer.produce(new NativeImageResourceBuildItem(resources));
-    }
-
-    private static Path determineJarLocation(Class<?> classFromJar) {
-        URL url = classFromJar.getProtectionDomain().getCodeSource().getLocation();
-        if (!url.getProtocol().equals("file")) {
-            throw new IllegalStateException("Unable to find which jar class " + classFromJar + " belongs to");
-        }
-        try {
-            return Paths.get(url.toURI());
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException(e);
+        List<String> names = matchingJarEntries(determineJarLocation(Encodings.class),
+                e -> e.getName().endsWith(".tiktoken")).stream().map(ZipEntry::getName).collect(Collectors.toList());
+        if (!names.isEmpty()) {
+            resourcesProducer.produce(new NativeImageResourceBuildItem(resources));
         }
     }
 

@@ -1,0 +1,73 @@
+[
+  {
+    "name": "[Lai.onnxruntime.OnnxValue;"
+  },
+  {
+    "name": "[Ljava.lang.String;"
+  },
+  {
+    "name": "ai.onnxruntime.OnnxTensor",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "long",
+          "long",
+          "ai.onnxruntime.TensorInfo"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ai.onnxruntime.OnnxValue"
+  },
+  {
+    "name": "ai.onnxruntime.TensorInfo",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "long[]",
+          "int"
+        ]
+      }
+    ]
+  },
+  {
+    "name" : "ai.onnxruntime.OnnxTensor",
+    "allDeclaredConstructors" : false,
+    "allPublicConstructors" : false,
+    "allDeclaredMethods" : false,
+    "allPublicMethods" : false,
+    "fields" : [
+
+    ],
+    "methods" : [
+      { "name" : "createTensorFromBuffer",
+        "parameterTypes" : [
+          "long",
+          "long",
+          "java.nio.Buffer",
+          "int",
+          "long",
+          "long[]",
+          "int"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "java.lang.Boolean",
+    "methods": [
+      {
+        "name": "getBoolean",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "java.lang.String"
+  }
+]
