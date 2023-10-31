@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import io.quarkiverse.langchain4j.openai.QuarkusRestApi;
+import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class JsonParsingTest {
@@ -22,7 +22,7 @@ public class JsonParsingTest {
 
     @Test
     void testChatCompletion() throws JsonProcessingException {
-        ObjectMapper mapperToUse = QuarkusRestApi.OpenAiRestApiJacksonProvider.ObjectMapperHolder.MAPPER;
+        ObjectMapper mapperToUse = OpenAiRestApi.OpenAiRestApiJacksonProvider.ObjectMapperHolder.MAPPER;
 
         ChatCompletionResponse chatCompletionResponse = mapperToUse.readValue(
                 "{\"id\":\"chatcmpl-8AAeH0Sdve2wfHWhFIXq1gFkkqoIU\",\"object\":\"chat.completion.chunk\",\"created\":1697434905,\"model\":\"gpt-3.5-turbo-0613\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"length\"}]}",

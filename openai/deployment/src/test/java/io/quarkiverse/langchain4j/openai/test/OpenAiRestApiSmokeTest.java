@@ -21,11 +21,11 @@ import dev.ai4j.openai4j.OpenAiHttpException;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import io.quarkiverse.langchain4j.openai.OpenAiApiException;
-import io.quarkiverse.langchain4j.openai.QuarkusRestApi;
+import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class QuarkusRestApiSmokeTest {
+public class OpenAiRestApiSmokeTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -49,7 +49,7 @@ public class QuarkusRestApiSmokeTest {
     void happyPath() throws URISyntaxException {
         wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub(TOKEN));
 
-        QuarkusRestApi restApi = createClient();
+        OpenAiRestApi restApi = createClient();
 
         ChatCompletionResponse response = restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN);
         assertThat(response).isNotNull();
@@ -63,7 +63,7 @@ public class QuarkusRestApiSmokeTest {
                                 .withStatus(500)
                                 .withBody("This is a dummy error message")));
 
-        QuarkusRestApi restApi = createClient();
+        OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN)).isInstanceOf(
                 OpenAiHttpException.class).hasMessage("This is a dummy error message");
@@ -87,15 +87,15 @@ public class QuarkusRestApiSmokeTest {
                                                 }
                                                 """)));
 
-        QuarkusRestApi restApi = createClient();
+        OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN)).isInstanceOf(
                 OpenAiApiException.class);
     }
 
-    private QuarkusRestApi createClient() throws URISyntaxException {
+    private OpenAiRestApi createClient() throws URISyntaxException {
         return QuarkusRestClientBuilder.newBuilder()
                 .baseUri(new URI("http://localhost:8089/v1"))
-                .build(QuarkusRestApi.class);
+                .build(OpenAiRestApi.class);
     }
 }

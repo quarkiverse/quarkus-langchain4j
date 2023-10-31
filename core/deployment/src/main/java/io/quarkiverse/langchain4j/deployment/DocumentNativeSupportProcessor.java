@@ -20,7 +20,8 @@ import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildI
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuildItem;
 
 /**
- * TODO: we might want to make this more granular so all these document related dependencies don't always end up in the application
+ * TODO: we might want to make this more granular so all these document related dependencies don't always end up in the
+ * application
  */
 public class DocumentNativeSupportProcessor {
 

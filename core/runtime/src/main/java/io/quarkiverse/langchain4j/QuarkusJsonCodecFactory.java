@@ -7,12 +7,14 @@ import java.io.UncheckedIOException;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.spi.json.JsonCodecFactory;
@@ -71,6 +73,13 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                     .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
         }
+    }
+
+    public static class SnakeCaseObjectMapperHolder {
+        public static final ObjectMapper MAPPER = Arc.container().instance(ObjectMapper.class).get()
+                .copy()
+                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
 }

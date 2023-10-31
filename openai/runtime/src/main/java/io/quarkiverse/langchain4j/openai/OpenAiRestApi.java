@@ -36,10 +36,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import dev.ai4j.openai4j.OpenAiHttpException;
@@ -51,7 +49,7 @@ import dev.ai4j.openai4j.embedding.EmbeddingRequest;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
-import io.quarkus.arc.Arc;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
@@ -72,7 +70,7 @@ import io.vertx.core.http.HttpClientResponse;
 @ClientHeaderParam(name = "api-key", value = "{token}") // used by AzureAI
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public interface QuarkusRestApi {
+public interface OpenAiRestApi {
 
     /**
      * Perform a non-blocking request for a completion response
@@ -185,10 +183,7 @@ public interface QuarkusRestApi {
         }
 
         public static class ObjectMapperHolder {
-            public static final ObjectMapper MAPPER = Arc.container().instance(ObjectMapper.class).get()
-                    .copy()
-                    .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-                    .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            public static final ObjectMapper MAPPER = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
 
             private static final ObjectReader READER = MAPPER.reader();
         }

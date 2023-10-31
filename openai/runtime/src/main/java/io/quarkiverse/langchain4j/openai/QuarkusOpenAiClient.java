@@ -48,9 +48,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     private final String token;
 
-    private final QuarkusRestApi restApi;
+    private final OpenAiRestApi restApi;
 
-    private static final Map<Builder, QuarkusRestApi> cache = new ConcurrentHashMap<>();
+    private static final Map<Builder, OpenAiRestApi> cache = new ConcurrentHashMap<>();
 
     public QuarkusOpenAiClient(String apiKey) {
         this(new Builder().openAiApiKey(apiKey));
@@ -67,9 +67,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     private QuarkusOpenAiClient(Builder builder) {
         this.token = builder.openAiApiKey;
         // cache the client the builder could be called with the same parameters from multiple models
-        this.restApi = cache.compute(builder, new BiFunction<Builder, QuarkusRestApi, QuarkusRestApi>() {
+        this.restApi = cache.compute(builder, new BiFunction<Builder, OpenAiRestApi, OpenAiRestApi>() {
             @Override
-            public QuarkusRestApi apply(Builder builder, QuarkusRestApi quarkusRestApi) {
+            public OpenAiRestApi apply(Builder builder, OpenAiRestApi openAiRestApi) {
                 try {
                     QuarkusRestClientBuilder restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                             .baseUri(new URI(builder.baseUrl))
@@ -77,7 +77,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
                     if (builder.logRequests || builder.logResponses) {
                         restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                        restApiBuilder.clientLogger(new QuarkusRestApi.OpenAiClientLogger(builder.logRequests,
+                        restApiBuilder.clientLogger(new OpenAiRestApi.OpenAiClientLogger(builder.logRequests,
                                 builder.logResponses));
                     }
                     if (builder.proxy != null) {
@@ -90,7 +90,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
                         restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
                     }
-                    return restApiBuilder.build(QuarkusRestApi.class);
+                    return restApiBuilder.build(OpenAiRestApi.class);
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }

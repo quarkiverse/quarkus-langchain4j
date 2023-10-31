@@ -38,7 +38,7 @@ import dev.ai4j.openai4j.chat.Message;
 import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
-import io.quarkiverse.langchain4j.openai.QuarkusRestApi;
+import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
@@ -48,14 +48,14 @@ import io.smallrye.mutiny.Uni;
 @ApplicationScoped
 public class QuarkusRestApiResource {
 
-    private final QuarkusRestApi restApi;
+    private final OpenAiRestApi restApi;
     private final String token;
 
     public QuarkusRestApiResource(Langchain4jOpenAiConfig runtimeConfig)
             throws URISyntaxException {
         this.restApi = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(new URI(runtimeConfig.baseUrl()))
-                .build(QuarkusRestApi.class);
+                .build(OpenAiRestApi.class);
         this.token = runtimeConfig.apiKey()
                 .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
 

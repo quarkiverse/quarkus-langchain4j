@@ -15,6 +15,7 @@
   <modules>
     <module>core</module>
     <module>openai</module>
+    <module>chroma</module>
     <module>docs</module>
   </modules>
   <scm>

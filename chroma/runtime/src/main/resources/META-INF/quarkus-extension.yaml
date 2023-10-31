@@ -1,0 +1,17 @@
+name: Langchain4j Chroma
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus Langchain4j with the Chroma vector database
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - chroma
+  #  guide: https://quarkiverse.github.io/quarkiverse-docs/langchain4j/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  categories:
+    - "miscellaneous"
+  status: "experimental"
+  codestart:
+    name: langchain4j-chroma
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-chroma:codestarts:jar:${project.version}"

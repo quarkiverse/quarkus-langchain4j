@@ -23,7 +23,7 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-class QuarkusRestApiResourceTest {
+class OpenAiRestApiResourceTest {
 
     @TestHTTPEndpoint(QuarkusRestApiResource.class)
     @TestHTTPResource
