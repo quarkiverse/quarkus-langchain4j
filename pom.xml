@@ -13,10 +13,11 @@
   <packaging>pom</packaging>
   <name>Quarkus Langchain4j - Parent</name>
   <modules>
-    <module>core</module>
-    <module>openai</module>
     <module>chroma</module>
+    <module>core</module>
     <module>docs</module>
+    <module>hugging-face</module>
+    <module>openai</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
