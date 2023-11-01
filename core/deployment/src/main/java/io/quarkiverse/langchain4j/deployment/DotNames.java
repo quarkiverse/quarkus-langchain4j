@@ -31,4 +31,5 @@ class DotNames {
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
 
+    public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
 }
