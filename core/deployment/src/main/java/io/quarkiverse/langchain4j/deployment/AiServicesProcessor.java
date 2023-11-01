@@ -37,16 +37,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
-import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.service.AiServiceContext;
-import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.MemoryId;
-import dev.langchain4j.service.Moderate;
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.UserName;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
@@ -72,14 +64,6 @@ public class AiServicesProcessor {
 
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
-    private static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
-    private static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
-    private static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
-    private static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
-    private static final DotName USER_NAME = DotName.createSimple(UserName.class);
-    private static final DotName MODERATE = DotName.createSimple(Moderate.class);
-    private static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
-    private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final DotName V = DotName.createSimple(V.class);
     private static final String DEFAULT_DELIMITER = "\n";
     private static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
@@ -99,7 +83,7 @@ public class AiServicesProcessor {
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         IndexView index = indexBuildItem.getIndex();
-        Collection<AnnotationInstance> instances = index.getAnnotations(DESCRIPTION);
+        Collection<AnnotationInstance> instances = index.getAnnotations(Langchain4jDotNames.DESCRIPTION);
         Set<ClassInfo> classesUsingDescription = new HashSet<>();
         for (AnnotationInstance instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.FIELD) {
@@ -141,8 +125,8 @@ public class AiServicesProcessor {
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer) {
         IndexView index = indexBuildItem.getIndex();
 
-        Set<String> detectedForCreate = new HashSet<>();
-        for (ClassInfo classInfo : index.getKnownUsers(AI_SERVICES)) {
+        List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
+        for (ClassInfo classInfo : index.getKnownUsers(Langchain4jDotNames.AI_SERVICES)) {
             String className = classInfo.name().toString();
             if (className.startsWith("io.quarkiverse.langchain4j") || className.startsWith("dev.langchain4j")) { // TODO: this can be made smarter if needed
                 continue;
@@ -156,7 +140,7 @@ public class AiServicesProcessor {
                 var cr = new ClassReader(is);
                 cr.accept(cn, 0);
                 for (MethodNode method : cn.methods) {
-                    CodeFlowUtil.detectForCreate(cn, method, detectedForCreate);
+                    aiServicesAnalysisResults.addAll(AiServicesUseAnalyzer.analyze(cn, method).entries);
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException("Reading bytecode of class '" + className + "' failed", e);
@@ -164,7 +148,21 @@ public class AiServicesProcessor {
                 log.debug("Unable to analyze bytecode of class '" + className + "'", e);
             }
         }
+        Map<String, Boolean> nameToUsed = aiServicesAnalysisResults.stream()
+                .collect(Collectors.toMap(e -> e.createdClassName, e -> e.chatMemoryProviderUsed, (u1, u2) -> u1 || u2));
+        for (var entry : nameToUsed.entrySet()) {
+            String className = entry.getKey();
+            ClassInfo classInfo = index.getClassByName(className);
+            if (classInfo == null) {
+                continue;
+            }
+            if (!classInfo.annotations(Langchain4jDotNames.MEMORY_ID).isEmpty() && !entry.getValue()) {
+                log.warn("Class '" + className
+                        + "' is used in AiServices and while it leverages @MemoryId, a ChatMemoryProvider has not been configured. This will likely result in an exception being thrown when the service is used.");
+            }
+        }
 
+        Set<String> detectedForCreate = new HashSet<>(nameToUsed.keySet());
         addCreatedAware(index, detectedForCreate);
         addIfacesWithMessageAnns(index, detectedForCreate);
 
@@ -260,7 +258,8 @@ public class AiServicesProcessor {
     }
 
     private void addIfacesWithMessageAnns(IndexView index, Set<String> detectedForCreate) {
-        List<DotName> annotations = List.of(SYSTEM_MESSAGE, USER_MESSAGE, MODERATE);
+        List<DotName> annotations = List.of(Langchain4jDotNames.SYSTEM_MESSAGE, Langchain4jDotNames.USER_MESSAGE,
+                Langchain4jDotNames.MODERATE);
         for (DotName annotation : annotations) {
             Collection<AnnotationInstance> instances = index.getAnnotations(annotation);
             for (AnnotationInstance instance : instances) {
@@ -276,7 +275,7 @@ public class AiServicesProcessor {
     }
 
     private static void addCreatedAware(IndexView index, Set<String> detectedForCreate) {
-        Collection<AnnotationInstance> instances = index.getAnnotations(CREATED_AWARE);
+        Collection<AnnotationInstance> instances = index.getAnnotations(Langchain4jDotNames.CREATED_AWARE);
         for (var instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue;
@@ -290,7 +289,7 @@ public class AiServicesProcessor {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
 
-        boolean requiresModeration = method.hasAnnotation(MODERATE);
+        boolean requiresModeration = method.hasAnnotation(Langchain4jDotNames.MODERATE);
 
         List<MethodParameterInfo> params = method.parameters();
 
@@ -335,7 +334,7 @@ public class AiServicesProcessor {
 
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams) {
-        AnnotationInstance instance = method.annotation(SYSTEM_MESSAGE);
+        AnnotationInstance instance = method.annotation(Langchain4jDotNames.SYSTEM_MESSAGE);
         if (instance != null) {
             String systemMessageTemplate = "";
             AnnotationValue delimiterValue = instance.value("delimiter");
@@ -358,7 +357,7 @@ public class AiServicesProcessor {
     }
 
     private Optional<Integer> gatherMemoryIdParamName(MethodInfo method) {
-        return method.annotations(MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
+        return method.annotations(Langchain4jDotNames.MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
                 .map(METHOD_PARAMETER_POSITION_FUNCTION)
                 .findFirst();
     }
@@ -368,10 +367,10 @@ public class AiServicesProcessor {
             Class<?> returnType) {
         String outputFormatInstructions = outputFormatInstructions(returnType);
 
-        Optional<Integer> userNameParamName = method.annotations(USER_NAME).stream().filter(
+        Optional<Integer> userNameParamName = method.annotations(Langchain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
 
-        AnnotationInstance userMessageInstance = method.declaredAnnotation(USER_MESSAGE);
+        AnnotationInstance userMessageInstance = method.declaredAnnotation(Langchain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
             AnnotationValue delimiterValue = userMessageInstance.value("delimiter");
             String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
@@ -393,7 +392,8 @@ public class AiServicesProcessor {
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
                     userNameParamName);
         } else {
-            Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(USER_MESSAGE).stream()
+            Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(Langchain4jDotNames.USER_MESSAGE)
+                    .stream()
                     .filter(IS_METHOD_PARAMETER_ANNOTATION).findFirst();
             if (userMessageOnMethodParam.isPresent()) {
                 return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
