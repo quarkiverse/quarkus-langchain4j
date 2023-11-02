@@ -9,12 +9,10 @@ import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
 import static io.quarkiverse.langchain4j.openai.test.WiremockUtils.DEFAULT_TOKEN;
 import static java.time.Month.JULY;
-import static org.assertj.core.api.Assertions.as;
+import static org.acme.examples.aiservices.MessageAssertUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.api.InstanceOfAssertFactories.list;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -24,11 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
-import org.assertj.core.api.InstanceOfAssertFactory;
-import org.assertj.core.api.ListAssert;
-import org.assertj.core.api.MapAssert;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
@@ -37,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
@@ -67,12 +60,8 @@ public class AiServicesTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WiremockUtils.class));
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
-    };
-    private static final InstanceOfAssertFactory<Map, MapAssert<String, String>> MAP_STRING_STRING = map(String.class,
-            String.class);
-    private static final InstanceOfAssertFactory<List, ListAssert<Map>> LIST_MAP = list(Map.class);
+            .setArchiveProducer(
+                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class));
 
     static WireMockServer wireMockServer;
 
@@ -958,55 +947,6 @@ public class AiServicesTest {
                         new MessageContent("user", "What is the square root of 485906798473894056 in scientific notation?"),
                         new MessageContent("assistant", null),
                         new MessageContent("function", "6.97070153193991E8")));
-    }
-
-    private static void assertSingleRequestMessage(Map<String, Object> requestAsMap, String value) {
-        assertMessages(requestAsMap, (listOfMessages -> {
-            assertThat(listOfMessages).singleElement(as(MAP_STRING_STRING)).satisfies(message -> {
-                assertThat(message)
-                        .containsEntry("role", "user")
-                        .containsEntry("content", value);
-            });
-        }));
-    }
-
-    private static void assertMultipleRequestMessage(Map<String, Object> requestAsMap, List<MessageContent> messageContents) {
-        assertMessages(requestAsMap, listOfMessages -> {
-            assertThat(listOfMessages).asInstanceOf(LIST_MAP).hasSize(messageContents.size()).satisfies(l -> {
-                for (int i = 0; i < messageContents.size(); i++) {
-                    MessageContent messageContent = messageContents.get(i);
-                    assertThat((Map<String, String>) l.get(i)).satisfies(systemMessage -> {
-                        assertThat(systemMessage)
-                                .containsEntry("role", messageContent.getRole())
-                                .containsEntry("content", messageContent.getContent());
-                    });
-                }
-            });
-        });
-    }
-
-    private static class MessageContent {
-        private final String role;
-        private final String content;
-
-        public MessageContent(String role, String content) {
-            this.role = role;
-            this.content = content;
-        }
-
-        public String getRole() {
-            return role;
-        }
-
-        public String getContent() {
-            return content;
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    private static void assertMessages(Map<String, Object> requestAsMap, Consumer<List<? extends Map>> messagesAssertions) {
-        assertThat(requestAsMap).hasEntrySatisfying("messages",
-                o -> assertThat(o).asInstanceOf(list(Map.class)).satisfies(messagesAssertions));
     }
 
     private Map<String, Object> getRequestAsMap() throws IOException {

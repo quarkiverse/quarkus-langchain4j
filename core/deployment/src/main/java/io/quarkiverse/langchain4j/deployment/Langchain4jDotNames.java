@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.deployment;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -9,6 +12,7 @@ import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.output.structured.Description;
+import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Moderate;
@@ -16,6 +20,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.CreatedAware;
+import io.quarkiverse.langchain4j.RegisterAiService;
 
 public class Langchain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
@@ -32,4 +37,24 @@ public class Langchain4jDotNames {
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
+    static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
+
+    static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanChatLanguageModelSupplier.class);
+
+    static final DotName CHAT_MEMORY = DotName.createSimple(ChatMemory.class);
+    static final DotName CHAT_MEMORY_PROVIDER = DotName.createSimple(ChatMemoryProvider.class);
+
+    static final DotName BEAN_CHAT_MEMORY_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanChatMemorySupplier.class);
+
+    static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanChatMemoryProviderSupplier.class);
+
+    static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
+    static final DotName TEXT_SEGMENT = DotName.createSimple(TextSegment.class);
+
+    static final DotName BEAN_RETRIEVER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanRetrieverSupplier.class);
+
 }

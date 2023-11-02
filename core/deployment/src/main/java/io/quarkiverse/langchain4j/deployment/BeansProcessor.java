@@ -34,7 +34,7 @@ import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
-public class Langchain4jProcessor {
+public class BeansProcessor {
 
     private static final String FEATURE = "langchain4j";
 
@@ -53,6 +53,7 @@ public class Langchain4jProcessor {
             List<ChatModelProviderCandidateBuildItem> chatCandidateItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
+            List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             LangChain4jBuildConfig buildConfig,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
@@ -73,6 +74,9 @@ public class Langchain4jProcessor {
             } else if (MODERATION_MODEL.equals(requiredName)) {
                 moderationModelBeanRequested = true;
             }
+        }
+        if (!requestChatModelBeanItems.isEmpty()) {
+            chatModelBeanRequested = true;
         }
 
         if (chatModelBeanRequested || streamingChatModelBeanRequested) {
