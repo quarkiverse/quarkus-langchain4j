@@ -88,5 +88,15 @@
         <module>integration-tests</module>
       </modules>
     </profile>
+
+    <profile>
+      <id>samples</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>samples/email-a-poem</module>
+      </modules>
+    </profile>
   </profiles>
 </project>
