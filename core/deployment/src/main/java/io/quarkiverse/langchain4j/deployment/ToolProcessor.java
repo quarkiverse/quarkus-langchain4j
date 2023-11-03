@@ -44,6 +44,7 @@ import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.ToolParametersObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpecificationObjectSubstitution;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -81,7 +82,8 @@ public class ToolProcessor {
             RecorderContext recorderContext,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation) {
         recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
                 ToolSpecificationObjectSubstitution.class);
         recorderContext.registerSubstitution(ToolParameters.class, ToolParametersObjectSubstitution.Serialized.class,
@@ -108,9 +110,10 @@ public class ToolProcessor {
                 MethodInfo methodInfo = instance.target().asMethod();
                 ClassInfo classInfo = methodInfo.declaringClass();
                 if (classInfo.isInterface() || Modifier.isAbstract(classInfo.flags())) {
-                    log.warn(
-                            "@Tool is only supported on non-abstract classes, all other usages are ignored. Offending method is '"
-                                    + methodInfo.declaringClass().name().toString() + "#" + methodInfo.name() + "'");
+                    validation.produce(
+                            new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
+                                    "@Tool is only supported on non-abstract classes, all other usages are ignored. Offending method is '"
+                                            + methodInfo.declaringClass().name().toString() + "#" + methodInfo.name() + "'")));
                     continue;
                 }
 
@@ -118,12 +121,36 @@ public class ToolProcessor {
                 methodsPerClass.computeIfAbsent(declaringClassName, (n -> new ArrayList<>())).add(methodInfo);
             }
 
+            boolean validationErrorFound = false;
+            Map<String, ClassInfo> discoveredTools = new HashMap<>();
             for (var entry : methodsPerClass.entrySet()) {
                 DotName className = entry.getKey();
 
                 List<MethodInfo> toolMethods = entry.getValue();
                 List<MethodInfo> privateMethods = new ArrayList<>();
                 for (MethodInfo toolMethod : toolMethods) {
+                    // Validation
+                    // - Must not have another tool with the same method name
+                    // - Must have at least one parameter
+                    if (discoveredTools.containsKey(toolMethod.name())) {
+                        validation.produce(
+                                new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
+                                        "A tool with the name '" + toolMethod.name() + "' from class '"
+                                                + className + "' is already declared in class '"
+                                                + discoveredTools.get(toolMethod.name())
+                                                + "'. Tools method name must be unique.")));
+                        validationErrorFound = true;
+                        continue;
+                    }
+                    if (toolMethod.parametersCount() == 0) {
+                        validation.produce(
+                                new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
+                                        "Tool method '" + toolMethod.name() + "' on class '" + className
+                                                + "' must have at least one parameter")));
+                        validationErrorFound = true;
+                    }
+                    discoveredTools.put(toolMethod.name(), toolMethod.declaringClass());
+
                     if (Modifier.isPrivate(toolMethod.flags())) {
                         privateMethods.add(toolMethod);
                     }
@@ -131,6 +158,10 @@ public class ToolProcessor {
                 if (!privateMethods.isEmpty()) {
                     transformerProducer.produce(new BytecodeTransformerBuildItem(className.toString(),
                             new RemovePrivateFromMethodsVisitor(privateMethods)));
+                }
+
+                if (validationErrorFound) {
+                    return;
                 }
 
                 for (MethodInfo toolMethod : toolMethods) {
