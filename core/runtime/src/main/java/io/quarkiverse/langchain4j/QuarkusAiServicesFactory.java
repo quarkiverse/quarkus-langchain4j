@@ -28,6 +28,10 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         return new QuarkusAiServices<>(context);
     }
 
+    public static class InstanceHolder {
+        public static final QuarkusAiServicesFactory INSTANCE = new QuarkusAiServicesFactory();
+    }
+
     public static class QuarkusAiServices<T> extends AiServices<T> {
         public QuarkusAiServices(AiServiceContext context) {
             super(context);
@@ -87,7 +91,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             AiServiceClassCreateInfo classCreateInfo = AiServicesRecorder.getMetadata().get(aiServiceClass.getName());
             if (classCreateInfo == null) {
                 throw new RuntimeException("Quarkus was not able to determine class '" + aiServiceClass.getName()
-                        + "' as an AiService at build time. Consider annotating the class with '@CreatedAware'");
+                        + "' as an AiService at build time. Consider annotating the class with "
+                        + "'@CreatedAware'");
             }
 
             performBasicValidation();
@@ -95,8 +100,10 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             Collection<AiServiceMethodCreateInfo> methodCreateInfos = classCreateInfo.getMethodMap().values();
             for (var methodCreateInfo : methodCreateInfos) {
                 if (methodCreateInfo.isRequiresModeration() && ((context.moderationModel == null))) {
-                    throw illegalConfiguration("The @Moderate annotation is present, but the moderationModel is not set up. " +
-                            "Please ensure a valid moderationModel is configured before using the @Moderate annotation.");
+                    throw illegalConfiguration(
+                            "The @Moderate annotation is present, but the moderationModel is not set up. " +
+                                    "Please ensure a valid moderationModel is configured before using the @Moderate "
+                                    + "annotation.");
                 }
             }
 
