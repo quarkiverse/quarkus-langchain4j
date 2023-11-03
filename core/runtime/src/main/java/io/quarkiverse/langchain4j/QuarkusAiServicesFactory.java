@@ -4,8 +4,10 @@ import static dev.langchain4j.exception.IllegalConfigurationException.illegalCon
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.AiServiceContext;
@@ -17,6 +19,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkus.arc.ClientProxy;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -37,9 +40,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
             for (Object objectWithTool : objectsWithTools) {
                 Class<?> clazz = objectWithTool.getClass();
-                List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata().get(clazz.getName());
+                List<ToolMethodCreateInfo> methodCreateInfos = lookup(objectWithTool, clazz.getName());
                 if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
-                    continue; // this is what Langchain4j does
+                    if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
+                        continue; // this is what Langchain4j does
+                    }
                 }
                 for (ToolMethodCreateInfo methodCreateInfo : methodCreateInfos) {
                     String invokerClassName = methodCreateInfo.getInvokerClassName();
@@ -52,6 +57,27 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             }
 
             return this;
+        }
+
+        List<ToolMethodCreateInfo> lookup(Object bean, String className) {
+            Map<String, List<ToolMethodCreateInfo>> metadata = ToolsRecorder.getMetadata();
+            // Fast path first.
+            var fast = metadata.get(className);
+            if (fast != null) {
+                return fast;
+            }
+
+            String beanClassName = ClientProxy.unwrap(bean).getClass().getName();
+            for (Map.Entry<String, List<ToolMethodCreateInfo>> entry : metadata.entrySet()) {
+                if (entry.getKey().endsWith(className)) {
+                    return entry.getValue();
+                }
+                if (entry.getKey().equals(beanClassName)) {
+                    metadata.put(className, entry.getValue()); // For the next lookup.
+                    return entry.getValue();
+                }
+            }
+            return Collections.emptyList();
         }
 
         @SuppressWarnings("unchecked")
