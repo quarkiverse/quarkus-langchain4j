@@ -96,6 +96,7 @@
       </activation>
       <modules>
         <module>samples/email-a-poem</module>
+        <module>samples/fraud-detection</module>
       </modules>
     </profile>
   </profiles>
