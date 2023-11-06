@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import jakarta.ws.rs.WebApplicationException;
 
@@ -27,6 +28,7 @@ import io.quarkiverse.langchain4j.chroma.runtime.Collection;
 import io.quarkiverse.langchain4j.chroma.runtime.CreateCollectionRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.QueryRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.QueryResponse;
+import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 /**
@@ -38,7 +40,7 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     private final ChromaClient chromaClient;
-    private final String collectionId;
+    private final LazyValue<String> collectionId;
 
     /**
      * Initializes a new instance of ChromaEmbeddingStore with the specified parameters.
@@ -48,17 +50,23 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
      * @param timeout The timeout duration for the Chroma client. If not specified, 5 seconds will be used.
      */
     public ChromaEmbeddingStore(String baseUrl, String collectionName, Duration timeout) {
-        collectionName = getOrDefault(collectionName, "default");
+        String effectiveCollectionName = getOrDefault(collectionName, "default");
 
         this.chromaClient = new ChromaClient(baseUrl, getOrDefault(timeout, ofSeconds(5)));
 
-        Collection collection = chromaClient.collection(collectionName);
-        if (collection == null) {
-            Collection createdCollection = chromaClient.createCollection(new CreateCollectionRequest(collectionName));
-            collectionId = createdCollection.getId();
-        } else {
-            collectionId = collection.getId();
-        }
+        this.collectionId = new LazyValue<>(new Supplier<String>() {
+            @Override
+            public String get() {
+                Collection collection = chromaClient.collection(effectiveCollectionName);
+                if (collection == null) {
+                    Collection createdCollection = chromaClient
+                            .createCollection(new CreateCollectionRequest(effectiveCollectionName));
+                    return createdCollection.getId();
+                } else {
+                    return collection.getId();
+                }
+            }
+        });
     }
 
     public static Builder builder() {
@@ -169,14 +177,14 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
                                 .collect(toList()))
                 .build();
 
-        chromaClient.addEmbeddings(collectionId, addEmbeddingsRequest);
+        chromaClient.addEmbeddings(collectionId.get(), addEmbeddingsRequest);
     }
 
     @Override
     public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding referenceEmbedding, int maxResults, double minScore) {
         QueryRequest queryRequest = new QueryRequest(referenceEmbedding.vectorAsList(), maxResults);
 
-        QueryResponse queryResponse = chromaClient.queryCollection(collectionId, queryRequest);
+        QueryResponse queryResponse = chromaClient.queryCollection(collectionId.get(), queryRequest);
 
         List<EmbeddingMatch<TextSegment>> matches = toEmbeddingMatches(queryResponse);
 
