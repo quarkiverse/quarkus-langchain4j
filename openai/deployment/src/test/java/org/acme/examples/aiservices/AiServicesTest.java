@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
@@ -208,11 +209,10 @@ public class AiServicesTest {
                 "Analyze sentiment of This LaptopPro X15 is wicked fast and that 4K screen is a dream.\nYou must answer strictly in the following format: one of [POSITIVE, NEUTRAL, NEGATIVE]");
     }
 
-    static class Person {
-
-        private String firstName;
-        private String lastName;
-        private LocalDate birthDate;
+    record Person(String firstName, String lastName, LocalDate birthDate) {
+        @JsonCreator
+        public Person {
+        }
     }
 
     interface PersonExtractor {
