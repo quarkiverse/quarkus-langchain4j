@@ -11,8 +11,8 @@
         <relativePath>../..</relativePath>
     </parent>
 
-    <artifactId>quarkus-langchain4j-sample-fraud-detection</artifactId>
-    <name>Quarkus langchain4j - Sample - Fraud Detection</name>
+    <artifactId>quarkus-langchain4j-sample-review-triage</artifactId>
+    <name>Quarkus langchain4j - Sample - Review Triage</name>
 
     <dependencies>
         <dependency>
@@ -24,17 +24,24 @@
             <artifactId>quarkus-langchain4j-openai</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- UI -->
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>importmap</artifactId>
+            <version>1.0.8</version>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
+            <groupId>org.mvnpm.at.mvnpm</groupId>
+            <artifactId>vaadin-webcomponents</artifactId>
+            <version>24.2.1</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>es-module-shims</artifactId>
+            <scope>runtime</scope>
+            <version>1.8.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -103,4 +110,6 @@
             </properties>
         </profile>
     </profiles>
+
+
 </project>
