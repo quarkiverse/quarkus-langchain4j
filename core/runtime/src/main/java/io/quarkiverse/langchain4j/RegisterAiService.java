@@ -2,11 +2,12 @@ package io.quarkiverse.langchain4j;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.function.Supplier;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;

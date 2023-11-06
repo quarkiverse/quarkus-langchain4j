@@ -65,7 +65,7 @@ public class MethodImplementationSupport {
                         .map(TextSegment::text)
                         .collect(joining("\n\n"));
 
-                log.debug("Retrieved relevant information:\n" + relevantConcatenated + "\n");
+                log.debugv("Retrieved relevant information:\n{0}\n", relevantConcatenated);
 
                 userMessage = userMessage(userMessage.text()
                         + "\n\nHere is some information that might be useful for answering:\n\n"
@@ -99,9 +99,11 @@ public class MethodImplementationSupport {
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);
 
+        log.debug("Attempting to obtain AI response");
         Response<AiMessage> response = context.toolSpecifications != null
                 ? context.chatModel.generate(messages, context.toolSpecifications)
                 : context.chatModel.generate(messages);
+        log.debug("AI response obtained");
         verifyModerationIfNeeded(moderationFuture);
 
         ToolExecutionRequest toolExecutionRequest;
@@ -113,18 +115,23 @@ public class MethodImplementationSupport {
 
             toolExecutionRequest = response.content().toolExecutionRequest();
             if (toolExecutionRequest == null) {
+                log.debug("No tool execution request found - computation is complete");
                 break;
             }
 
             ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
+            log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
             String toolExecutionResult = toolExecutor.execute(toolExecutionRequest);
+            log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
             ToolExecutionResultMessage toolExecutionResultMessage = toolExecutionResultMessage(toolExecutionRequest.name(),
                     toolExecutionResult);
 
             ChatMemory chatMemory = context.chatMemory(memoryId);
             chatMemory.add(toolExecutionResultMessage);
 
+            log.debug("Attempting to obtain AI response");
             response = context.chatModel.generate(chatMemory.messages(), context.toolSpecifications);
+            log.debug("AI response obtained");
         }
 
         return ServiceOutputParser.parse(response, returnType);
@@ -135,6 +142,8 @@ public class MethodImplementationSupport {
             List<ChatMessage> messages) {
         Future<Moderation> moderationFuture = null;
         if (createInfo.isRequiresModeration()) {
+            log.debug("Moderation is required and it will be executed in the background");
+
             // TODO: don't occupy a worker thread for this and instead use the reactive API provided by the client
 
             ExecutorService defaultExecutor = (ExecutorService) Infrastructure.getDefaultExecutor();
@@ -142,7 +151,10 @@ public class MethodImplementationSupport {
                 @Override
                 public Moderation call() {
                     List<ChatMessage> messagesToModerate = removeToolMessages(messages);
-                    return context.moderationModel.moderate(messagesToModerate).content();
+                    log.debug("Attempting to moderate messages");
+                    var result = context.moderationModel.moderate(messagesToModerate).content();
+                    log.debug("Moderation completed");
+                    return result;
                 }
             });
         }

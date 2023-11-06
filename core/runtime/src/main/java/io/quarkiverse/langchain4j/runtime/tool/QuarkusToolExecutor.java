@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -37,10 +38,13 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
         Object[] params = prepareArguments(toolExecutionRequest, invokerInstance.methodMetadata());
         try {
+            if (log.isDebugEnabled()) {
+                log.debugv("Attempting to invoke tool '{0}' with parameters '{1}'", tool, Arrays.toString(params));
+            }
             Object invocationResult = invokerInstance.invoke(tool,
                     params);
             String result = handleResult(invokerInstance, invocationResult);
-            log.debugv("Tool execution result: {0}", result);
+            log.debugv("Tool execution result: '{0}'", result);
             return result;
         } catch (Exception e) {
             if (e instanceof IllegalArgumentException) {
@@ -77,7 +81,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
         String argumentsJsonStr = toolExecutionRequest.arguments();
         Map<String, Object> argumentsFromRequest;
         try {
+            log.debugv("Attempting to convert '{0}' JSON string into args map", argumentsJsonStr);
             argumentsFromRequest = convertJsonToArguments(argumentsJsonStr);
+            log.debugv("Converted '{0}' JSON string into args map '{1}'", argumentsJsonStr, argumentsFromRequest);
         } catch (JsonProcessingException e) {
             log.error(e);
             invalidMethodParams(argumentsJsonStr);
