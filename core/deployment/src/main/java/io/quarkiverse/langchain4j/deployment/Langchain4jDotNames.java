@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.deployment;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -42,14 +41,12 @@ public class Langchain4jDotNames {
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatLanguageModelSupplier.class);
 
-    static final DotName CHAT_MEMORY = DotName.createSimple(ChatMemory.class);
     static final DotName CHAT_MEMORY_PROVIDER = DotName.createSimple(ChatMemoryProvider.class);
-
-    static final DotName BEAN_CHAT_MEMORY_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanChatMemorySupplier.class);
 
     static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatMemoryProviderSupplier.class);
+    static final DotName NO_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.NoChatMemoryProviderSupplier.class);
 
     static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
     static final DotName TEXT_SEGMENT = DotName.createSimple(TextSegment.class);

@@ -157,19 +157,16 @@ public class AiServicesProcessor {
             }
 
             DotName chatMemorySupplierClassDotName = null;
-            AnnotationValue chatMemorySupplierValue = instance.value("chatMemorySupplier");
-            if (chatMemorySupplierValue != null) {
-                chatMemorySupplierClassDotName = chatMemorySupplierValue.asClass().name();
-                if (!chatMemorySupplierClassDotName.equals(Langchain4jDotNames.BEAN_CHAT_MEMORY_SUPPLIER)) {
-                    validateSupplierAndRegisterForReflection(chatMemorySupplierClassDotName, index, reflectiveClassProducer);
-                }
-            }
 
             DotName chatMemoryProviderSupplierClassDotName = null;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
-                if (!chatMemoryProviderSupplierClassDotName.equals(Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                if (chatMemoryProviderSupplierClassDotName.equals(
+                        Langchain4jDotNames.NO_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                    chatMemoryProviderSupplierClassDotName = null;
+                } else if (!chatMemoryProviderSupplierClassDotName
+                        .equals(Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
                             reflectiveClassProducer);
                 }
@@ -178,7 +175,7 @@ public class AiServicesProcessor {
             List<DotName> toolDotNames = Collections.emptyList();
             AnnotationValue toolsInstance = instance.value("tools");
             if (toolsInstance != null) {
-                if ((chatMemorySupplierValue == null) && (chatMemoryProviderSupplierValue == null)) {
+                if (chatMemoryProviderSupplierClassDotName == null) {
                     throw new IllegalConfigurationException("Class '" + declarativeAiServiceClassInfo.name()
                             + "' which is annotated with @RegisterAiService has configured tools support, but no ChatMemory or ChatMemoryProvider configuration is present. Please set up chatMemory or chatMemoryProvider in order to use tools. A ChatMemory that can hold at least 3 messages is required for the tools to work properly. While the LLM can technically execute a tool without chat memory, if it only receives the result of the tool's execution without the initial message from the user, it won't interpret the result properly.");
                 }
@@ -236,7 +233,6 @@ public class AiServicesProcessor {
             BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
 
         boolean needsChatModelBean = false;
-        boolean needsChatMemoryBean = false;
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
         Set<DotName> allToolNames = new HashSet<>();
@@ -255,13 +251,6 @@ public class AiServicesProcessor {
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
                     : null;
 
-            String chatMemorySupplierClassName = bi.getChatMemorySupplierClassDotName() != null
-                    ? bi.getChatMemorySupplierClassDotName().toString()
-                    : null;
-            if (chatMemoryProviderSupplierClassName != null) { // when the memory provider is configured, it overrides the memory configuration
-                chatMemorySupplierClassName = null;
-            }
-
             String retrieverSupplierClassName = bi.getRetrieverSupplierClassDotName() != null
                     ? bi.getRetrieverSupplierClassDotName().toString()
                     : null;
@@ -270,7 +259,7 @@ public class AiServicesProcessor {
                     .configure(declarativeAiServiceClassInfo.name())
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
-                                    toolClassNames, chatMemorySupplierClassName, chatMemoryProviderSupplierClassName,
+                                    toolClassNames, chatMemoryProviderSupplierClassName,
                                     retrieverSupplierClassName)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
@@ -291,10 +280,6 @@ public class AiServicesProcessor {
                 configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
             }
-            if (Langchain4jDotNames.BEAN_CHAT_MEMORY_SUPPLIER.toString().equals(chatMemorySupplierClassName)) {
-                configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MEMORY));
-                needsChatMemoryBean = true;
-            }
 
             if (Langchain4jDotNames.BEAN_RETRIEVER_SUPPLIER.toString().equals(retrieverSupplierClassName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
@@ -307,9 +292,6 @@ public class AiServicesProcessor {
 
         if (needsChatModelBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MODEL));
-        }
-        if (needsChatMemoryBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MEMORY));
         }
         if (needsChatMemoryProviderBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));

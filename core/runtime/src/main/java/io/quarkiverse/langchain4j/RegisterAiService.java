@@ -41,39 +41,23 @@ public @interface RegisterAiService {
     /**
      * Tool classes to use. All tools are expected to be CDI beans.
      * <p>
-     * NOTE: when this is used, either {@code chatMemorySupplier} or {@code chatMemoryProviderSupplier} MUST be set.
+     * NOTE: when this is used, {@code chatMemoryProviderSupplier} must NOT be set to {@link NoChatMemoryProviderSupplier}.
      */
     Class<?>[] tools() default {};
 
     /**
-     * Configures the way to obtain the {@link ChatMemory} to use.
-     * By default, no chat memory is used.
-     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanChatMemorySupplier}.
-     * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
-     * needs to be provided.
-     * <p>
-     * NOTE: if both this method and {@code chatMemoryProviderSupplier} are configured, AiServices this method is ignored and
-     * the value of {@code chatMemorySupplier} is used to configure AiServices.
-     */
-    Class<? extends Supplier<ChatMemory>> chatMemorySupplier() default NoChatMemorySupplier.class;
-
-    /**
      * Configures the way to obtain the {@link ChatMemoryProvider} to use.
-     * By default, no chat memory is used.
-     * If a CDI bean of type {@link ChatMemoryProvider} is needed, the value should be {@link BeanChatMemoryProviderSupplier}.
+     * By default, Quarkus will look for a CDI bean that implements {@link ChatMemoryProvider}.
      * If an arbitrary {@link ChatMemoryProvider} instance is needed, a custom implementation of
      * {@link Supplier<ChatMemoryProvider>}
      * needs to be provided.
-     * <p>
-     * NOTE: if both this method and {@code chatMemorySupplier} are configured, AiServices is configured with this method
-     * and not with the value of {@code chatMemorySupplier}.
      */
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default NoChatMemoryProviderSupplier.class;
 
     /**
      * Configures the way to obtain the {@link Retriever} to use (when using RAG).
      * By default, no chat memory is used.
-     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanChatMemorySupplier}.
+     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanRetrieverSupplier}.
      * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
      * needs to be provided.
      */
@@ -88,28 +72,6 @@ public @interface RegisterAiService {
 
         @Override
         public ChatLanguageModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the chat memory that the user has configured as a CDI bean
-     */
-    final class BeanChatMemorySupplier implements Supplier<ChatMemory> {
-
-        @Override
-        public ChatMemory get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker class to indicate that no chat memory should be used
-     */
-    final class NoChatMemorySupplier implements Supplier<ChatMemory> {
-
-        @Override
-        public ChatMemory get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }
