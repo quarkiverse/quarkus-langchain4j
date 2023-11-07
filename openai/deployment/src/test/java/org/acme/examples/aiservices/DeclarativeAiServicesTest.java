@@ -42,7 +42,6 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.service.MemoryId;
@@ -171,15 +170,41 @@ public class DeclarativeAiServicesTest {
         }
     }
 
-    public static class ChatMemoryProducer {
+    public static class ChatMemoryProviderProducer {
 
         @Singleton
-        ChatMemory chatMemory() {
-            return MessageWindowChatMemory.withMaxMessages(10);
+        ChatMemoryProvider chatMemory(ChatMemoryStore store) {
+            return memoryId -> MessageWindowChatMemory.builder()
+                    .id(memoryId)
+                    .maxMessages(10)
+                    .chatMemoryStore(store)
+                    .build();
         }
     }
 
-    @RegisterAiService(tools = Calculator.class, chatMemorySupplier = RegisterAiService.BeanChatMemorySupplier.class)
+    @Singleton
+    public static class CustomChatMemoryStore implements ChatMemoryStore {
+
+        // emulating persistent storage
+        private final Map</* memoryId */ Object, String> persistentStorage = new HashMap<>();
+
+        @Override
+        public List<ChatMessage> getMessages(Object memoryId) {
+            return messagesFromJson(persistentStorage.get(memoryId));
+        }
+
+        @Override
+        public void updateMessages(Object memoryId, List<ChatMessage> messages) {
+            persistentStorage.put(memoryId, messagesToJson(messages));
+        }
+
+        @Override
+        public void deleteMessages(Object memoryId) {
+            persistentStorage.remove(memoryId);
+        }
+    }
+
+    @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
     interface AssistantWithCalculator extends Assistant {
 
     }
@@ -271,40 +296,6 @@ public class DeclarativeAiServicesTest {
                                 "What is the square root of 485906798473894056 in scientific notation?"),
                         new MessageAssertUtils.MessageContent("assistant", null),
                         new MessageAssertUtils.MessageContent("function", "6.97070153193991E8")));
-    }
-
-    public static class ChatMemoryProviderProducer {
-
-        @Singleton
-        ChatMemoryProvider chatMemory(ChatMemoryStore store) {
-            return memoryId -> MessageWindowChatMemory.builder()
-                    .id(memoryId)
-                    .maxMessages(10)
-                    .chatMemoryStore(store)
-                    .build();
-        }
-    }
-
-    @Singleton
-    public static class CustomChatMemoryStore implements ChatMemoryStore {
-
-        // emulating persistent storage
-        private final Map</* memoryId */ Object, String> persistentStorage = new HashMap<>();
-
-        @Override
-        public List<ChatMessage> getMessages(Object memoryId) {
-            return messagesFromJson(persistentStorage.get(memoryId));
-        }
-
-        @Override
-        public void updateMessages(Object memoryId, List<ChatMessage> messages) {
-            persistentStorage.put(memoryId, messagesToJson(messages));
-        }
-
-        @Override
-        public void deleteMessages(Object memoryId) {
-            persistentStorage.remove(memoryId);
-        }
     }
 
     @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)

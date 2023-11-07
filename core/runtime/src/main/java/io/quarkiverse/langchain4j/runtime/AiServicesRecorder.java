@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.retriever.Retriever;
@@ -100,18 +99,6 @@ public class AiServicesRecorder {
                                     .loadClass(info.getChatMemoryProviderSupplierClassName())
                                     .getConstructor().newInstance();
                             quarkusAiServices.chatMemoryProvider(supplier.get());
-                        }
-                    }
-
-                    if (info.getChatMemorySupplierClassName() != null) {
-                        if (RegisterAiService.BeanChatMemorySupplier.class.getName()
-                                .equals(info.getChatMemorySupplierClassName())) {
-                            quarkusAiServices.chatMemory(creationalContext.getInjectedReference(ChatMemory.class));
-                        } else {
-                            Supplier<? extends ChatMemory> supplier = (Supplier<? extends ChatMemory>) Thread
-                                    .currentThread().getContextClassLoader().loadClass(info.getChatMemorySupplierClassName())
-                                    .getConstructor().newInstance();
-                            quarkusAiServices.chatMemory(supplier.get());
                         }
                     }
 
