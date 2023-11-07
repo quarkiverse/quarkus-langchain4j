@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.jboss.logging.Logger;
 
@@ -30,6 +29,9 @@ import io.quarkiverse.langchain4j.redis.runtime.RedisSchema;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.json.ReactiveJsonCommands;
 import io.quarkus.redis.datasource.keys.KeyScanArgs;
+import io.quarkus.redis.datasource.search.Document;
+import io.quarkus.redis.datasource.search.QueryArgs;
+import io.quarkus.redis.datasource.search.SearchQueryResponse;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.redis.client.Command;
 import io.vertx.mutiny.redis.client.Request;
@@ -152,30 +154,39 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             double minScore) {
         String queryTemplate = "*=>[ KNN %d @%s $BLOB AS %s ]";
         String query = format(queryTemplate, maxResults, schema.getVectorFieldName(), SCORE_FIELD_NAME);
-        // TODO: rewrite to the data source api, but we need a new
-        // method QueryArgs.param(String, byte[]) to get it working
-
-        //        QueryArgs args = new QueryArgs()
-        //                .sortByAscending(SCORE_FIELD_NAME)
-        //                .param("DIALECT", "2")
-        //                .param("BLOB", toByteArray(referenceEmbedding.vector()));
-        //        Uni<SearchQueryResponse> search = ds.search()
-        //                .ftSearch(schema.getIndexName(), query, args);
-        //        SearchQueryResponse response = search.await().indefinitely();
-        Request request = Request.cmd(Command.FT_SEARCH)
-                .arg(schema.getIndexName())
-                .arg(query)
-                .arg("PARAMS")
-                .arg("2")
-                .arg("BLOB")
-                .arg(toByteArray(referenceEmbedding.vector()))
-                .arg("DIALECT")
-                .arg("2");
-        Response response = ds.getRedis().send(request).await().indefinitely();
-        return StreamSupport.stream(response.get("results").spliterator(), false)
-                .map(this::toEmbeddingMatch)
+        QueryArgs args = new QueryArgs()
+                .sortByAscending(SCORE_FIELD_NAME)
+                .param("DIALECT", "2")
+                .param("BLOB", referenceEmbedding.vector());
+        Uni<SearchQueryResponse> search = ds.search()
+                .ftSearch(schema.getIndexName(), query, args);
+        System.out.println("ARGS = " + args.toArgs());
+        System.out.println("query = " + query);
+        SearchQueryResponse response = search.await().indefinitely();
+        return response.documents().stream().map(this::extractEmbeddingMatch)
                 .filter(embeddingMatch -> embeddingMatch.score() >= minScore)
                 .collect(toList());
+    }
+
+    private EmbeddingMatch<TextSegment> extractEmbeddingMatch(Document document) {
+        try {
+            JsonNode jsonNode = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                    .readTree(document.property("$").asString());
+            JsonNode embedded = jsonNode.get(schema.getScalarFieldName());
+            Embedding embedding = new Embedding(
+                    Json.fromJson(jsonNode.get(schema.getVectorFieldName()).toString(), float[].class));
+            double score = (2 - document.property(SCORE_FIELD_NAME).asDouble()) / 2;
+            String id = document.key().substring(schema.getPrefix().length());
+            Map<String, String> metadata = schema.getMetadataFields().stream()
+                    .filter(jsonNode::has)
+                    .collect(Collectors.toMap(metadataFieldName -> metadataFieldName,
+                            (name) -> jsonNode.get(name).asText()));
+            TextSegment textSegment = embedded != null ? new TextSegment(embedded.asText(), Metadata.from(metadata)) : null;
+            return new EmbeddingMatch<>(score, id, embedding, textSegment);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**
@@ -190,34 +201,6 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             ds.getRedis().send(command).await().indefinitely();
             LOG.debug("Deleted " + keysToDelete.size() + " keys");
         }
-    }
-
-    public static byte[] toByteArray(float[] input) {
-        byte[] bytes = new byte[Float.BYTES * input.length];
-        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().put(input);
-        return bytes;
-    }
-
-    private EmbeddingMatch<TextSegment> toEmbeddingMatch(Response response) {
-        String document = response.get(EXTRA_ATTRIBUTES).get("$").toString();
-        try {
-            JsonNode jsonNode = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readTree(document);
-            JsonNode embedded = jsonNode.get(schema.getScalarFieldName());
-            Embedding embedding = new Embedding(
-                    Json.fromJson(jsonNode.get(schema.getVectorFieldName()).toString(), float[].class));
-            double score = (2 - response.get(EXTRA_ATTRIBUTES).get(SCORE_FIELD_NAME).toDouble()) / 2;
-            String id = response.get(ID).toString().substring(schema.getPrefix().length());
-            List<String> metadataFields = schema.getMetadataFields();
-            Map<String, String> metadata = metadataFields.stream()
-                    .filter(jsonNode::has)
-                    .collect(Collectors.toMap(metadataFieldName -> metadataFieldName,
-                            (name) -> jsonNode.get(name).asText()));
-            TextSegment textSegment = embedded != null ? new TextSegment(embedded.asText(), Metadata.from(metadata)) : null;
-            return new EmbeddingMatch<>(score, id, embedding, textSegment);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     public static class Builder {
