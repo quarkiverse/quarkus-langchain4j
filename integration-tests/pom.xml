@@ -14,5 +14,6 @@
   <modules>
     <module>openai</module>
     <module>hugging-face</module>
+    <module>ollama</module>
   </modules>
 </project>

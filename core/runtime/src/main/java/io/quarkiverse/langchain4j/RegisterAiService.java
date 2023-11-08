@@ -1,5 +1,14 @@
 package io.quarkiverse.langchain4j;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.function.Supplier;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -7,14 +16,6 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
-import jakarta.enterprise.context.ApplicationScoped;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.function.Supplier;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Used to create Langchain4j's {@link AiServices} in a declarative manner that the application can then use simply by
@@ -51,7 +52,7 @@ public @interface RegisterAiService {
      * {@link Supplier<ChatMemoryProvider>} needs to be provided.
      * <p>
      * If the memory provider to use is exposed as a CDI bean exposing the type {@link ChatMemoryProvider}, then
-     * set the value to {@link  RegisterAiService.BeanChatMemoryProviderSupplier}
+     * set the value to {@link RegisterAiService.BeanChatMemoryProviderSupplier}
      */
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default NoChatMemoryProviderSupplier.class;
 
