@@ -16,18 +16,16 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName languageModelSupplierClassDotName;
     private final List<DotName> toolDotNames;
 
-    private final DotName chatMemorySupplierClassDotName;
     private final DotName chatMemoryProviderSupplierClassDotName;
     private final DotName retrieverSupplierClassDotName;
 
     public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
-            List<DotName> toolDotNames, DotName chatMemorySupplierClassDotName,
+            List<DotName> toolDotNames,
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrieverSupplierClassDotName) {
         this.serviceClassInfo = serviceClassInfo;
         this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
         this.toolDotNames = toolDotNames;
-        this.chatMemorySupplierClassDotName = chatMemorySupplierClassDotName;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrieverSupplierClassDotName = retrieverSupplierClassDotName;
     }
@@ -42,10 +40,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public List<DotName> getToolDotNames() {
         return toolDotNames;
-    }
-
-    public DotName getChatMemorySupplierClassDotName() {
-        return chatMemorySupplierClassDotName;
     }
 
     public DotName getChatMemoryProviderSupplierClassDotName() {

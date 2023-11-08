@@ -156,8 +156,6 @@ public class AiServicesProcessor {
                 needChatModelBean = true;
             }
 
-            DotName chatMemorySupplierClassDotName = null;
-
             DotName chatMemoryProviderSupplierClassDotName = null;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
@@ -177,7 +175,7 @@ public class AiServicesProcessor {
             if (toolsInstance != null) {
                 if (chatMemoryProviderSupplierClassDotName == null) {
                     throw new IllegalConfigurationException("Class '" + declarativeAiServiceClassInfo.name()
-                            + "' which is annotated with @RegisterAiService has configured tools support, but no ChatMemory or ChatMemoryProvider configuration is present. Please set up chatMemory or chatMemoryProvider in order to use tools. A ChatMemory that can hold at least 3 messages is required for the tools to work properly. While the LLM can technically execute a tool without chat memory, if it only receives the result of the tool's execution without the initial message from the user, it won't interpret the result properly.");
+                            + "' which is annotated with @RegisterAiService has configured tools support, but no ChatMemoryProvider configuration is present. Please set up chatMemoryProvider in order to use tools. A ChatMemory that can hold at least 3 messages is required for the tools to work properly. While the LLM can technically execute a tool without chat memory, if it only receives the result of the tool's execution without the initial message from the user, it won't interpret the result properly.");
                 }
 
                 toolDotNames = Arrays.stream(toolsInstance.asClassArray()).map(Type::name)
@@ -198,7 +196,6 @@ public class AiServicesProcessor {
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
                             toolDotNames,
-                            chatMemorySupplierClassDotName,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverSupplierClassDotName));
         }
