@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-parent</artifactId>
+    <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
     <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-tests-openai</artifactId>
