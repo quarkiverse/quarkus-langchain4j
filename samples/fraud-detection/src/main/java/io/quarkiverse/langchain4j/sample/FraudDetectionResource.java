@@ -7,13 +7,12 @@ import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestQuery;
 
-import io.quarkus.logging.Log;
-
 @Path("/fraud")
 public class FraudDetectionResource {
 
     private final FraudDetectionAi service;
     private final TransactionRepository transactions;
+
     public FraudDetectionResource(FraudDetectionAi service, TransactionRepository transactions) {
         this.service = service;
         this.transactions = transactions;
