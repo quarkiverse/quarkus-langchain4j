@@ -5,8 +5,8 @@ import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXE
 import java.util.List;
 import java.util.Optional;
 
-import io.quarkiverse.langchain4j.redis.MetricType;
-import io.quarkiverse.langchain4j.redis.VectorAlgorithm;
+import io.quarkus.redis.datasource.search.DistanceMetric;
+import io.quarkus.redis.datasource.search.VectorAlgorithm;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -51,7 +51,7 @@ public interface RedisEmbeddingStoreConfig {
      * Metric used to compute the distance between two vectors.
      */
     @WithDefault("COSINE")
-    MetricType metricType();
+    DistanceMetric distanceMetric();
 
     /**
      * Name of the key that will be used to store the embedding vector.

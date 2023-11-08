@@ -5,8 +5,6 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +27,13 @@ import io.quarkiverse.langchain4j.redis.runtime.RedisSchema;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.json.ReactiveJsonCommands;
 import io.quarkus.redis.datasource.keys.KeyScanArgs;
+import io.quarkus.redis.datasource.search.CreateArgs;
 import io.quarkus.redis.datasource.search.Document;
 import io.quarkus.redis.datasource.search.QueryArgs;
 import io.quarkus.redis.datasource.search.SearchQueryResponse;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.redis.client.Command;
 import io.vertx.mutiny.redis.client.Request;
-import io.vertx.mutiny.redis.client.Response;
 
 public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
 
@@ -67,19 +65,12 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
                     }
                 }).await().indefinitely();
         if (!indexes.contains(schema.getIndexName())) {
-            // TODO: rewrite to use the typesafe data source API
-            Request request = Request.cmd(Command.FT_CREATE)
-                    .arg(schema.getIndexName())
-                    .arg("ON")
-                    .arg("JSON")
-                    .arg("PREFIX")
-                    .arg("1")
-                    .arg(schema.getPrefix())
-                    .arg("SCHEMA");
-            schema.defineFields(request);
-            LOG.debug(
-                    "Creating index with command: " + request.toString().replaceAll("\r\n", " "));
-            ds.getRedis().send(request).await().indefinitely();
+            CreateArgs indexCreateArgs = new CreateArgs()
+                    .onJson()
+                    .prefixes(schema.getPrefix());
+            schema.defineFields(indexCreateArgs);
+            LOG.debug("Creating Redis index " + schema.getIndexName());
+            ds.search().ftCreate(schema.getIndexName(), indexCreateArgs).await().indefinitely();
         } else {
             LOG.debug("Index in Redis already exists: " + schema.getIndexName());
         }
@@ -160,8 +151,6 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
                 .param("BLOB", referenceEmbedding.vector());
         Uni<SearchQueryResponse> search = ds.search()
                 .ftSearch(schema.getIndexName(), query, args);
-        System.out.println("ARGS = " + args.toArgs());
-        System.out.println("query = " + query);
         SearchQueryResponse response = search.await().indefinitely();
         return response.documents().stream().map(this::extractEmbeddingMatch)
                 .filter(embeddingMatch -> embeddingMatch.score() >= minScore)

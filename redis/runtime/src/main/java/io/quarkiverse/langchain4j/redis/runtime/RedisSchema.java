@@ -2,9 +2,12 @@ package io.quarkiverse.langchain4j.redis.runtime;
 
 import java.util.List;
 
-import io.quarkiverse.langchain4j.redis.MetricType;
-import io.quarkiverse.langchain4j.redis.VectorAlgorithm;
-import io.vertx.mutiny.redis.client.Request;
+import io.quarkus.redis.datasource.search.CreateArgs;
+import io.quarkus.redis.datasource.search.DistanceMetric;
+import io.quarkus.redis.datasource.search.FieldOptions;
+import io.quarkus.redis.datasource.search.FieldType;
+import io.quarkus.redis.datasource.search.VectorAlgorithm;
+import io.quarkus.redis.datasource.search.VectorType;
 
 public class RedisSchema {
 
@@ -15,7 +18,7 @@ public class RedisSchema {
     private List<String> metadataFields;
     private VectorAlgorithm vectorAlgorithm;
     private Long dimension;
-    private MetricType metricType;
+    private DistanceMetric distanceMetric;
     private static final String JSON_PATH_PREFIX = "$.";
 
     public RedisSchema(String indexName,
@@ -25,7 +28,7 @@ public class RedisSchema {
             List<String> metadataFields,
             VectorAlgorithm vectorAlgorithm,
             Long dimension,
-            MetricType metricType) {
+            DistanceMetric distanceMetric) {
         this.indexName = indexName;
         this.prefix = prefix;
         this.vectorFieldName = vectorFieldName;
@@ -33,7 +36,7 @@ public class RedisSchema {
         this.metadataFields = metadataFields;
         this.vectorAlgorithm = vectorAlgorithm;
         this.dimension = dimension;
-        this.metricType = metricType;
+        this.distanceMetric = distanceMetric;
     }
 
     public String getIndexName() {
@@ -64,51 +67,34 @@ public class RedisSchema {
         return dimension;
     }
 
-    public MetricType getMetricType() {
-        return metricType;
+    public DistanceMetric getDistanceMetric() {
+        return distanceMetric;
     }
 
-    public void defineFields(Request args) {
+    public void defineFields(CreateArgs args) {
         defineTextField(args);
         defineVectorField(args);
         defineMetadataFields(args);
     }
 
-    private void defineMetadataFields(Request args) {
+    private void defineMetadataFields(CreateArgs args) {
         for (String metadataField : metadataFields) {
-            args.arg(JSON_PATH_PREFIX + metadataField);
-            args.arg("AS");
-            args.arg(metadataField);
-            args.arg("TEXT");
-            args.arg("WEIGHT");
-            args.arg("1.0");
+            args.indexedField(JSON_PATH_PREFIX + metadataField, metadataField, FieldType.TEXT, new FieldOptions().weight(1.0));
         }
     }
 
-    private void defineTextField(Request args) {
-        args.arg(JSON_PATH_PREFIX + scalarFieldName);
-        args.arg("AS");
-        args.arg(scalarFieldName);
-        args.arg("TEXT");
-        args.arg("WEIGHT");
-        args.arg("1.0");
+    private void defineTextField(CreateArgs args) {
+        args.indexedField(JSON_PATH_PREFIX + scalarFieldName, scalarFieldName, FieldType.TEXT, new FieldOptions().weight(1.0));
     }
 
-    private void defineVectorField(Request args) {
-        args.arg(JSON_PATH_PREFIX + vectorFieldName);
-        args.arg("AS");
-        args.arg(vectorFieldName);
-        args.arg("VECTOR");
-        args.arg(vectorAlgorithm.name());
-        args.arg("8");
-        args.arg("DIM");
-        args.arg(dimension);
-        args.arg("DISTANCE_METRIC");
-        args.arg(metricType.name());
-        args.arg("TYPE");
-        args.arg("FLOAT32");
-        args.arg("INITIAL_CAP");
-        args.arg("5");
+    private void defineVectorField(CreateArgs args) {
+        args.indexedField(JSON_PATH_PREFIX + vectorFieldName,
+                vectorFieldName,
+                FieldType.VECTOR, new FieldOptions()
+                        .vectorAlgorithm(vectorAlgorithm)
+                        .vectorType(VectorType.FLOAT32)
+                        .dimension(dimension.intValue())
+                        .distanceMetric(distanceMetric));
     }
 
     public static class Builder {
@@ -119,7 +105,7 @@ public class RedisSchema {
         private List<String> metadataFields;
         private VectorAlgorithm vectorAlgorithm;
         private Long dimension;
-        private MetricType metricType;
+        private DistanceMetric metricType;
 
         public Builder indexName(String indexName) {
             this.indexName = indexName;
@@ -160,7 +146,7 @@ public class RedisSchema {
             return this;
         }
 
-        public Builder metricType(MetricType metricType) {
+        public Builder metricType(DistanceMetric metricType) {
             this.metricType = metricType;
             return this;
         }
