@@ -51,7 +51,7 @@ public @interface RegisterAiService {
      * {@link Supplier<ChatMemoryProvider>} needs to be provided.
      * <p>
      * If the memory provider to use is exposed as a CDI bean exposing the type {@link ChatMemoryProvider}, then
-     * set the value to {@link  RegisterAiService.BeanChatMemoryProviderSupplier  RegisterAiService.BeanChatMemoryProviderSupplier.class}
+     * set the value to {@link  RegisterAiService.BeanChatMemoryProviderSupplier}
      */
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default NoChatMemoryProviderSupplier.class;
 
