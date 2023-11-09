@@ -169,22 +169,22 @@ public class ChatLanguageModelResource {
         return chatLanguageModel.generate(prompt.text());
     }
 
-    @StructuredPrompt({
-            "Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}.",
-            "Structure your answer in the following way:",
+    @StructuredPrompt("""
+            Create a recipe of a {{dish}} that can be prepared using only {{ingredients}}.
+            Structure your answer in the following way:
 
-            "Recipe name: ...",
-            "Description: ...",
-            "Preparation time: ...",
+            Recipe name: ...
+            Description: ...
+            Preparation time: ...
 
-            "Required ingredients:",
-            "- ...",
-            "- ...",
+            Required ingredients:
+            - ...
+            - ...
 
-            "Instructions:",
-            "- ...",
-            "- ..."
-    })
+            Instructions:
+            - ...
+            - ..."
+            """)
     static class CreateRecipePrompt {
 
         String dish;
