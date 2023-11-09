@@ -30,7 +30,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus.version>999-SNAPSHOT</quarkus.version>
+    <quarkus.version>3.5.1</quarkus.version>
     <langchain4j.version>0.23.0</langchain4j.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version>
     <assertj.version>3.24.2</assertj.version>
