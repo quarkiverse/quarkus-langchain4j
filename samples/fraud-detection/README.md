@@ -121,11 +121,11 @@ public class FraudDetectionResource {
 To run the demo, use the following commands:
 
 ```shell
-> mvn quarkus:dev
+mvn quarkus:dev
 ```
 Then, issue requests:
 
 ```shell
->  http ":8080/fraud/amount?customerId=1"
->  http ":8080/fraud/distance?customerId=1"
+http ":8080/fraud/amount?customerId=1"
+http ":8080/fraud/distance?customerId=1"
 ```
