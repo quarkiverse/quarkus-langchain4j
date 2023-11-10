@@ -13,7 +13,9 @@ public interface EmbeddingModelConfig {
     String modelId();
 
     /**
-     * TODO
+     * If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your
+     * inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your
+     * application to known places
      */
     @WithDefault("true")
     Boolean waitForModel();
