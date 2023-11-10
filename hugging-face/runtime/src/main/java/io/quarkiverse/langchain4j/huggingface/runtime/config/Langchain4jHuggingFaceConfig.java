@@ -25,18 +25,6 @@ public interface Langchain4jHuggingFaceConfig {
     Duration timeout();
 
     /**
-     * Whether the HuggingFace client should log requests
-     */
-    @WithDefault("false")
-    Boolean logRequests();
-
-    /**
-     * Whether the HuggingFace client should log responses
-     */
-    @WithDefault("false")
-    Boolean logResponses();
-
-    /**
      * Chat model related settings
      */
     ChatModelConfig chatModel();
