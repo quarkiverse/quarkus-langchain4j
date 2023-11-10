@@ -1,0 +1,27 @@
+= Making AI interactions more robust
+
+include::./includes/attributes.adoc[]
+
+When implementing an AI service, leveraging Quarkus fault tolerance annotations can enhance the reliability of your interactions.
+To integrate fault tolerance, follow these steps:
+
+* 1. Start by adding the `quarkus-smallrye-fault-tolerance` dependency to your `pom.xml` file:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+</dependency>
+----
+
+* 2. Utilize the `@Fallback` or `@Timeout` annotation within the `AIService` class. These annotations help manage exceptional scenarios:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultTolerance.java[]
+----
+
+== A Note on Utilizing Tools
+
+When employing tools in your interactions, multiple requests and responses occur in the background, potentially extending the time required to obtain a response from the AI service. It's essential to consider this while configuring a timeout to ensure robustness in your system's interactions.

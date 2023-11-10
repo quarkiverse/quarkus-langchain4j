@@ -1,1 +1,7 @@
 * xref:index.adoc[Quarkus Langchain4j]
+
+** AI Services
+*** xref:ai-services.adoc[AI Services]
+
+** Advanced topics
+*** xref:fault-tolerance.adoc[Fault Tolerance]
