@@ -1,0 +1,53 @@
+= OpenAI
+
+include::./includes/attributes.adoc[]
+
+OpenAI stands as a pioneering AI research organization, famous for its groundbreaking Large Language Models (LLMs) like GPT-3 and GPT-4, setting new benchmarks in natural language understanding and generation.
+
+OpenAI's LLMs offer extensive support for:
+
+- Tools facilitating seamless interaction between the LLM and applications.
+- Document retrievers enabling the transmission of pertinent content to the LLM.
+
+== Using OpenAI Models
+
+To employ OpenAI LLMs, integrate the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured OpenAI model.
+
+=== Configuration
+
+Configuring OpenAI models mandates an API key, obtainable by creating an account on the OpenAI platform.
+
+The API key can be set in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+TIP: Alternatively, leverage the `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable.
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+== Document Retriever
+
+When utilizing OpenAI models, the recommended practice involves leveraging the `OpenAiEmbeddingModel`. If no other LLM extension is installed, retrieve the embedding model as follows:
+
+[source, java]
+----
+@Inject EmbeddingModel model; // Injects the OpenAIEmbeddingModel
+----
+
+IMPORTANT: The `OpenAIEmbeddingModel` transmits the document to OpenAI for embedding computation.
