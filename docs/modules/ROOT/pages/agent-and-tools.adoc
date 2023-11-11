@@ -1,0 +1,87 @@
+= Agent and Tools
+
+include::./includes/attributes.adoc[]
+
+The core premise of agents involves employing a language model to discern a sequence of actions.
+Unlike _chains_, where actions are hardcoded, agents utilize a language model as a reasoning engine to determine the actions (_tools_) and their sequence.
+
+== Concepts
+
+=== Agent
+
+The agent is the core decision-maker responsible for determining the subsequent steps. It's driven by a language model and a prompt. The inputs include:
+
+** Tools: Descriptions of available actions
+** User Input: The high-level objective
+** Intermediate Steps: Previous (action, tool output) pairs executed in the order to fulfill the user input
+
+The output presents the next action(s) to take or the final response to be delivered to the user. Each action specifies a tool (method name) and its corresponding input parameters.
+
+=== Tools
+
+Tools are the methods an agent can invoke. Two essential design considerations:
+
+- Granting the agent access to the right tools.
+- Describing tools in a manner most beneficial to the agent.
+
+Failure to consider both aspects may hinder the agent's functionality. Access to an incorrect set of tools impedes the agent from achieving objectives, while improperly described tools hamper their effective utilization.
+
+== Recommendations for Agent Construction
+
+When constructing an agent, consider:
+
+- Setting the model temperature to 0 for the agent to consistently choose the most probable action.
+- Ensuring well-detailed descriptions of tools.
+- Listing steps in the prompt in the desired execution order.
+
+== Declaring a Tool
+
+A _tool_ denotes a method accessible by an agent. It must be part of a CDI bean and annotated with `@Tool`:
+
+[source, java]
+----
+// Example of an EmailService tool method
+package io.quarkiverse.langchain4j.sample;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import dev.langchain4j.agent.tool.Tool;
+import io.quarkus.logging.Log;
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
+
+@ApplicationScoped
+public class EmailService {
+
+    @Inject
+    Mailer mailer;
+
+    @Tool("send the provided content via email")
+    public void sendAnEmail(String content) {
+        Log.info("Sending an email: " + content);
+        mailer.send(Mail.withText("sendMeALetter@quarkus.io", "A poem for you", content));
+    }
+
+}
+----
+
+IMPORTANT: A CDI bean can host multiple methods annotated with `@Tool`.
+However, ensure each method name is unique among all declared tools.
+
+== Providing Tool Access
+
+In the link:./ai-services.adoc[AI Service], you can specify the tools accessible to the agent. By default, **no tools** are available. Hence, ensure to define the list of tools you wish to make accessible:
+
+[source, java]
+----
+@RegisterAiService(
+        chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class,
+        tools = { EmailService.class }
+)
+public interface MyAiService {
+    // ...
+}
+----
+
+When employing tools, configuring the memory provider is necessary. Since tools necessitate a sequence of messages, maintaining this conversation is essential. A minimum memory of three messages is necessary for optimal tool functionality.

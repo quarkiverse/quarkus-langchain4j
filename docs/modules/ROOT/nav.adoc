@@ -2,6 +2,11 @@
 
 ** AI Services
 *** xref:ai-services.adoc[AI Services]
+*** xref:agent-and-tools.adoc[Agent and Tools]
+
+** LLMs
+*** xref:llms.adoc[LLMs]
+*** xref:openai.adoc[OpenAI]
 
 ** Advanced topics
 *** xref:fault-tolerance.adoc[Fault Tolerance]
