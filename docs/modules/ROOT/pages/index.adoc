@@ -2,13 +2,25 @@
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+_Large Language Models_ (LLMs) are AI-based systems designed to understand, generate, and manipulate human language, showcasing advanced natural language processing capabilities.
+The dynamic LLM landscape is reshaping our interactions with applications and the very construction of these applications.
+The Quarkus Langchain4j extension seamlessly integrates LLMs into Quarkus applications, enabling the harnessing of LLM capabilities for the development of more intelligent applications.
 
-== Installation
+For instance, an application utilizing this extension can:
 
-If you want to use this extension, you need to add the `io.quarkiverse.langchain4j:quarkus-langchain4j` extension first to your build file.
+- Automatically triage or classify documents
+- Extract structured and unstructured information from various data sources
+- Construct chatbots for system interaction
+- Generate personalized text such as emails or reports
 
-For instance, with Maven, add the following dependency to your POM file:
+This extension is built upon the https://github.com/langchain4j/langchain4j[langchain4j library].
+It offers a declarative approach to interact with diverse LLMs like OpenAI, Hugging Face, or Ollama. It facilitates LLM-invoked functions within Quarkus applications and allows document loading within the LLM "context".
+
+== Quick Overview
+
+To incorporate this extension, add the `io.quarkiverse.langchain4j:quarkus-langchain4j` extension to your build file.
+
+For example, in Maven, add the following dependency to your POM file:
 
 [source,xml,subs=attributes+]
 ----
@@ -19,9 +31,38 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
-[[extension-configuration-reference]]
-== Extension Configuration Reference
+Depending on the specific LLM you're using, additional dependencies and configurations might be necessary.
+For instance, with OpenAI:
 
-TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
 
-include::includes/quarkus-langchain4j.adoc[leveloffset=+1, opts=optional]
+Then, include your OpenAI API key in your `application.properties` file (or any other mandatory configuration):
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+TIP: Alternatively, utilize the `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable.
+
+Once you've added the dependency and configuration, the next step involves creating an _AI service_, serving as the integration point. This service is the interface your application code will utilize to interact with the LLM. A basic example is demonstrated below:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/MyAiService.java[]
+----
+
+1. The `@RegisterAiService` annotation registers the _AI service_.
+2. The `chatMemoryProviderSupplier` attribute specifies the _chat memory_ provider, managing how the LLM retains conversation history (the "context").
+3. The `tools` attribute defines the _tools_ the LLM can employ.
+During interaction, the LLM can invoke these tools and reflect on their output.
+4. The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
+5. The `@UserMessage` annotation serves as the _prompt_.
+6. The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.

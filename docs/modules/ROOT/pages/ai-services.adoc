@@ -1,0 +1,256 @@
+= Designing AI services
+
+include::./includes/attributes.adoc[]
+
+An _AI Service_ employs a declarative approach to define interactions with the LLM, serving as the pivotal interaction point between your application and the LLM. It operates as an intermediary, known as an https://learn.microsoft.com/en-us/azure/architecture/patterns/ambassador[_ambassador_].
+
+== Purpose
+
+The _AI Service_ serves as the core connection point between your application and the LLM. It abstracts the LLM specifics, encapsulating and declaring all interactions within a singular interface.
+
+== Leveraging @RegisterAiService
+
+The `@RegisterAiService` annotation is pivotal for registering an _AI Service_, placed on an interface:
+
+[source,java]
+----
+@RegisterAiService
+public interface MyAiService {
+    // methods.
+}
+----
+
+Once registered, you can inject the _AI Service_ into your application:
+
+[source,java]
+----
+@Inject MyAiService service;
+----
+
+== AI method declaration
+
+Within the interface annotated with `@RegisterAiService`, you model interactions with the LLM using _methods_. These methods accept parameters and are annotated with `@SystemMessage` and `@UserMessage` to define instructions directed to the LLM:
+
+[source,java]
+----
+@SystemMessage("You are a professional poet.")
+@UserMessage("""
+    Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
+""")
+String writeAPoem(String topic, int lines);
+----
+
+=== System Message
+
+The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM. It delineates the AI service's role in the interaction:
+
+[source,java]
+----
+@SystemMessage("""
+    You are working for a bank, processing reviews about financial products. Triage reviews into positive and negative ones, responding with a JSON document.
+    """
+)
+----
+=== User Message (Prompt)
+
+The `@UserMessage` annotation defines primary instructions dispatched to the LLM. It typically encompasses requests and the expected response format:
+
+[source,java]
+----
+@UserMessage("""
+    Your task is to process the review delimited by ---.
+    Apply a sentiment analysis to the review to determine if it is positive or negative, considering various languages.
+
+    For example:
+    - "I love your bank, you are the best!" is a 'POSITIVE' review
+    - "J'adore votre banque" is a 'POSITIVE' review
+    - "I hate your bank, you are the worst!" is a 'NEGATIVE' review
+
+    Respond with a JSON document containing:
+    - the 'evaluation' key set to 'POSITIVE' if the review is positive, 'NEGATIVE' otherwise
+    - the 'message' key set to a message thanking or apologizing to the customer. These messages must be polite and match the review's language.
+
+    ---
+    {review}
+    ---
+""")
+TriagedReview triage(String review);
+----
+
+=== Parameter Passing and Referencing
+
+AI methods can take parameters referenced in system and user messages using the `\{parameter}` syntax:
+
+[source,java]
+----
+@SystemMessage("You are a professional poet")
+@UserMessage("""
+    Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
+""")
+String writeAPoem(String topic, int lines);
+----
+
+=== AI Method Return Type
+
+If the _prompt_ defines the JSON response format precisely, you can map the response directly to an object:
+
+[source,java]
+----
+// ... See above for the prompt
+TriagedReview triage(String review);
+----
+
+In this instance, Quarkus automatically creates an instance of `TriagedReview` from the LLM's JSON response.
+
+=== Receiving User Message as a Parameter
+
+For situations requiring the user message to be passed as a parameter, you can use the `@UserMessage` annotation on a parameter. Exercise caution with this feature, especially when the AI has access to _tools_:
+
+[source,java]
+----
+String chat(@UserMessage String userMessage);
+----
+
+The annotated parameter should be of type `String`.
+
+=== Receiving MemoryId as a Parameter
+
+The _memory_ encompasses the cumulative context of the interaction with the LLM. To manage statelessness in LLMs, the complete context must be exchanged between the LLM and the AI service.
+
+Hence, the AI Service can store the latest messages in a _memory_, often termed _context_. The `@MemoryId` annotation enables referencing the memory for a specific user in the AI method:
+
+[source,java]
+----
+String chat(@MemoryId int memoryId, @UserMessage String userMessage);
+----
+
+We'll explore an alternative approach to avoid manual memory handling in the <<memory>> section.
+
+== Configuring the Chat Language Model
+
+While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions. If you have a single chat language model, no specific configuration is required.
+
+However, with multiple models like OpenAI and Hugging Faces, you need to specify which one to use:
+
+[source,java]
+----
+@RegisterAiService(
+    chatLanguageModelSupplier = MyChatModelSupplier.class
+)
+----
+
+The `MyChatModelSupplier` class should implement the `Supplier<ChatLanguageModel>` interface:
+
+[source,java]
+----
+package io.quarkiverse.langchain4j.sample;
+
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+
+import java.util.function.Supplier;
+
+public class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
+    @Override
+    public ChatLanguageModel get() {
+        return OpenAiChatModel.builder()
+                .apiKey("...")
+                .build();
+    }
+}
+----
+
+[#memory]
+== Configuring the Context (Memory)
+
+As LLMs are stateless, the memory—comprising the interaction context—must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
+
+The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the memory provider:
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
+----
+
+It can be a class implementing `Supplier<ChatMemoryProvider>`, such as:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/MySmallMemoryProvider.java[]
+----
+
+In cases involving multiple users, ensure each user has a unique memory ID and pass this ID to the AI method:
+
+[source,java]
+----
+String chat(@MemoryId int memoryId, @UserMessage String userMessage);
+----
+
+Also, remember to clear out users to prevent memory issues.
+
+TIP: For non-memory-reliant LLM interactions, you may skip memory configuration.
+
+Alternatively, you can use the `BeanChatMemoryProviderSupplier` class to use a CDI bean as memory provider:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
+----
+
+Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
+
+This bean is then referenced in the `@RegisterAiService` annotation using the `RegisterAiService.BeanChatMemoryProviderSupplier.class` value:
+
+[source,java]
+----
+@RegisterAiService(
+        chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class
+)
+----
+
+NOTE: It is recommended that the bean use the `@RequestScoped` scope or a scope not shared between users.
+
+IMPORTANT: When using tools, you need a memory of at least 3 messages to cover the tools interaction.
+
+== Configuring Tools
+
+Tools are methods that LLMs can invoke to access additional data. These methods, declared using the `@Tool` annotation, should be part of a bean:
+
+[source,java]
+----
+@ApplicationScoped
+public class CustomerRepository implements PanacheRepository<Customer> {
+
+    @Tool("get the customer name for the given customerId")
+    public String getCustomerName(long id) {
+        return find("id", id).firstResult().name;
+    }
+
+}
+----
+
+The `@Tool` annotation can provide a description of the action, aiding the LLM in tool selection. The `@RegisterAiService` annotation allows configuring the tool provider:
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class,
+    tools = {TransactionRepository.class, CustomerRepository.class })
+----
+
+IMPORTANT: Ensure you configure the memory provider when using tools.
+
+IMPORTANT: Be cautious to avoid exposing destructive operations via tools.
+
+// TODO: Add information about supported parameter types for tools.
+
+IMPORTANT: Methods annotated with tools must have unique names, even if they belong to different classes or have different signatures.
+
+== Configuring a Document Retriever
+
+A document retriever fetches data from an external source and provides it to the LLM. It helps by sending only the relevant data, considering the LLM's context limitations.
+
+// TODO: Provide detailed information about document retrievers.
+
+This guidance aims to cover all crucial aspects of designing AI services with Quarkus, ensuring robust and efficient interactions with LLMs.
