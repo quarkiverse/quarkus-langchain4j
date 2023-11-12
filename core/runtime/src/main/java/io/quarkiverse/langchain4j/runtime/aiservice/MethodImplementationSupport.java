@@ -121,7 +121,7 @@ public class MethodImplementationSupport {
 
             ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
             log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest);
+            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
             log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
             ToolExecutionResultMessage toolExecutionResultMessage = toolExecutionResultMessage(toolExecutionRequest.name(),
                     toolExecutionResult);

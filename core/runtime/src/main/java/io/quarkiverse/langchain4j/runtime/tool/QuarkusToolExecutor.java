@@ -31,7 +31,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
         this.argumentMapperClassName = argumentMapperClassName;
     }
 
-    public String execute(ToolExecutionRequest toolExecutionRequest) {
+    public String execute(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
         log.debugv("About to execute {0}", toolExecutionRequest);
 
         ToolInvoker invokerInstance = createInvokerInstance();
