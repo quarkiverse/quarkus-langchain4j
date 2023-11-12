@@ -40,9 +40,10 @@ Within the interface annotated with `@RegisterAiService`, you model interactions
 String writeAPoem(String topic, int lines);
 ----
 
+[#_system_message]
 === System Message
 
-The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM. It delineates the AI service's role in the interaction:
+The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM.It delineates the AI service's role in the interaction:
 
 [source,java]
 ----
@@ -90,6 +91,7 @@ AI methods can take parameters referenced in system and user messages using the 
 String writeAPoem(String topic, int lines);
 ----
 
+[#_ai_method_return_type]
 === AI Method Return Type
 
 If the _prompt_ defines the JSON response format precisely, you can map the response directly to an object:
@@ -245,7 +247,7 @@ IMPORTANT: Be cautious to avoid exposing destructive operations via tools.
 
 // TODO: Add information about supported parameter types for tools.
 
-IMPORTANT: Methods annotated with tools must have unique names, even if they belong to different classes or have different signatures.
+More information about tools is available in the xref:./agent-and-tools.adoc[Agent and Tools] page.
 
 == Configuring a Document Retriever
 
