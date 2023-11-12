@@ -3,10 +3,15 @@
 ** AI Services
 *** xref:ai-services.adoc[AI Services]
 *** xref:agent-and-tools.adoc[Agent and Tools]
+*** xref:retrievers.adoc[Embeddings and Document Retrievers]
 
 ** LLMs
 *** xref:llms.adoc[LLMs]
 *** xref:openai.adoc[OpenAI]
+
+** Document Stores
+*** xref:redis-store.adoc[Redis Store]
+*** xref:chroma-store.adoc[Chroma Store]
 
 ** Advanced topics
 *** xref:fault-tolerance.adoc[Fault Tolerance]

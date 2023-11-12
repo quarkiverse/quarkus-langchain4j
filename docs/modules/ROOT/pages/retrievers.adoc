@@ -1,0 +1,5 @@
+= Document Retriever
+
+include::./includes/attributes.adoc[]
+
+_To be written_
