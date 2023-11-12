@@ -241,7 +241,7 @@ class ToolExecutorTest {
 
         ToolExecutor toolExecutor = getToolExecutor(methodName);
 
-        String result = toolExecutor.execute(request);
+        String result = toolExecutor.execute(request, null);
 
         assertThat(result).isEqualTo(expectedResult);
     }
@@ -253,7 +253,7 @@ class ToolExecutorTest {
 
         ToolExecutor toolExecutor = getToolExecutor(methodName);
 
-        assertThatThrownBy(() -> toolExecutor.execute(request))
+        assertThatThrownBy(() -> toolExecutor.execute(request, null))
                 .isExactlyInstanceOf(IllegalArgumentException.class);
     }
 

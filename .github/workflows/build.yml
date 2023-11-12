@@ -37,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        java: [11, 17, 21]
+        java: [17, 21]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Prepare git
@@ -51,6 +51,15 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: 'maven'
+
+      #  This task will be moved into a nightly build once we have a release.
+      - name: Build langchain4j
+        run: |
+          mkdir langchain4j
+          cd langchain4j
+          git clone https://github.com/langchain4j/langchain4j.git
+          cd langchain4j
+          mvn -B clean install -DskipTests
 
       - name: Build with Maven
         run: mvn -B clean install -Dno-format
