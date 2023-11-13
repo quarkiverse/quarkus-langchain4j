@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.huggingface;
 
-import static dev.langchain4j.model.huggingface.HuggingFaceModelName.SENTENCE_TRANSFORMERS_ALL_MINI_LM_L6_V2;
 import static java.util.stream.Collectors.toList;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 
@@ -22,7 +24,7 @@ import dev.langchain4j.model.output.Response;
  */
 public class QuarkusHuggingFaceEmbeddingModel implements EmbeddingModel {
 
-    public static final HuggingFaceClientFactory CLIENT_FACTORY = new QuarkusHuggingFaceClientFactory();
+    public static final QuarkusHuggingFaceClientFactory CLIENT_FACTORY = new QuarkusHuggingFaceClientFactory();
 
     private final HuggingFaceClient client;
     private final boolean waitForModel;
@@ -36,14 +38,14 @@ public class QuarkusHuggingFaceEmbeddingModel implements EmbeddingModel {
 
             @Override
             public String modelId() {
-                return builder.modelId;
+                throw new UnsupportedOperationException("Should not be called");
             }
 
             @Override
             public Duration timeout() {
                 return builder.timeout;
             }
-        });
+        }, builder.url);
         this.waitForModel = builder.waitForModel;
     }
 
@@ -77,17 +79,21 @@ public class QuarkusHuggingFaceEmbeddingModel implements EmbeddingModel {
     public static final class Builder {
 
         private String accessToken;
-        private String modelId = SENTENCE_TRANSFORMERS_ALL_MINI_LM_L6_V2;
         private Duration timeout = Duration.ofSeconds(15);
         private Boolean waitForModel = true;
+        private URI url;
 
         public Builder accessToken(String accessToken) {
             this.accessToken = accessToken;
             return this;
         }
 
-        public Builder modelId(String modelId) {
-            this.modelId = modelId;
+        public Builder url(URL url) {
+            try {
+                this.url = url.toURI();
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
             return this;
         }
 

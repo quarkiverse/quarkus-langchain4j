@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.huggingface.runtime.config;
 
+import java.net.URL;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -8,11 +9,20 @@ import io.smallrye.config.WithDefault;
 @ConfigGroup
 public interface ChatModelConfig {
 
+    String DEFAULT_INFERENCE_ENDPOINT = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
+
     /**
-     * Model to use
+     * The URL of the inference endpoint for the chat model.
+     * <p>
+     * When using Hugging Face with the inference API, the URL is
+     * {@code https://api-inference.huggingface.co/models/<model-id>},
+     * for example {@code https://api-inference.huggingface.co/models/google/flan-t5-small}.
+     * <p>
+     * When using a deployed inference endpoint, the URL is the URL of the endpoint.
+     * When using a local hugging face model, the URL is the URL of the local model.
      */
-    @WithDefault("tiiuae/falcon-7b-instruct")
-    String modelId();
+    @WithDefault(DEFAULT_INFERENCE_ENDPOINT)
+    URL inferenceEndpointUrl();
 
     /**
      * Float (0.0-100.0). The temperature of the sampling operation. 1 means regular sampling, 0 means always take the highest

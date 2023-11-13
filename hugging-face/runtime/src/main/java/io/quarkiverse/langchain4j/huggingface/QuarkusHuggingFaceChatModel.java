@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.huggingface;
 
-import static dev.langchain4j.model.huggingface.HuggingFaceModelName.TII_UAE_FALCON_7B_INSTRUCT;
 import static java.util.stream.Collectors.joining;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import dev.langchain4j.model.output.Response;
  */
 public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
 
-    public static final HuggingFaceClientFactory CLIENT_FACTORY = new QuarkusHuggingFaceClientFactory();
+    public static final QuarkusHuggingFaceClientFactory CLIENT_FACTORY = new QuarkusHuggingFaceClientFactory();
     private final HuggingFaceClient client;
     private final Double temperature;
     private final Integer maxNewTokens;
@@ -42,14 +44,14 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
 
             @Override
             public String modelId() {
-                return builder.modelId;
+                throw new UnsupportedOperationException("Should not be called");
             }
 
             @Override
             public Duration timeout() {
                 return builder.timeout;
             }
-        });
+        }, builder.url);
         this.temperature = builder.temperature;
         this.maxNewTokens = builder.maxNewTokens;
         this.returnFullText = builder.returnFullText;
@@ -95,20 +97,24 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
     public static final class Builder {
 
         private String accessToken;
-        private String modelId = TII_UAE_FALCON_7B_INSTRUCT;
         private Duration timeout = Duration.ofSeconds(15);
         private Double temperature;
         private Integer maxNewTokens;
         private Boolean returnFullText;
         private Boolean waitForModel = true;
+        private URI url;
 
         public Builder accessToken(String accessToken) {
             this.accessToken = accessToken;
             return this;
         }
 
-        public Builder modelId(String modelId) {
-            this.modelId = modelId;
+        public Builder url(URL url) {
+            try {
+                this.url = url.toURI();
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
             return this;
         }
 

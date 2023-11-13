@@ -30,13 +30,11 @@ import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 @Produces(MediaType.APPLICATION_JSON)
 public interface HuggingFaceRestApi {
 
-    @Path("/models/{modelId}")
     @POST
-    List<TextGenerationResponse> generate(TextGenerationRequest request, String modelId, @NotBody String token);
+    List<TextGenerationResponse> generate(TextGenerationRequest request, @NotBody String token);
 
-    @Path("/pipeline/feature-extraction/{modelId}")
     @POST
-    List<float[]> embed(EmbeddingRequest request, String modelId, @NotBody String token);
+    List<float[]> embed(EmbeddingRequest request, @NotBody String token);
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {

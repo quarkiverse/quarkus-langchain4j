@@ -79,7 +79,7 @@ public class QuarkusHuggingFaceClientTest {
                         .waitForModel(true)
                         .build())
                 .build();
-        TextGenerationResponse response = createClient(CHAT_MODEL_ID).chat(request);
+        TextGenerationResponse response = createClientForChat().chat(request);
         assertThat(response).isNotNull().satisfies(r -> {
             assertThat(r.generatedText()).contains("hanging with");
         });
@@ -88,14 +88,14 @@ public class QuarkusHuggingFaceClientTest {
     @Test
     void embed() {
         wireMockServer.stubFor(
-                post(urlEqualTo("/pipeline/feature-extraction/" + sanitizeModelForUrl(EMBED_MODEL_ID)))
+                post(urlEqualTo("/models/" + sanitizeModelForUrl(EMBED_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody(
                                         "[[-0.06277172267436981,0.054958775639534,0.052164800465106964,0.08578997850418091]]")));
 
-        List<float[]> response = createClient(EMBED_MODEL_ID).embed(new EmbeddingRequest(List.of("whatever"), true));
+        List<float[]> response = createClient().embed(new EmbeddingRequest(List.of("whatever"), true));
         assertThat(response).singleElement().satisfies(fa -> {
             assertThat(fa).hasSize(4);
         });
@@ -105,12 +105,23 @@ public class QuarkusHuggingFaceClientTest {
         return modelId.replace("/", "%2F");
     }
 
-    private QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient createClient(String modelId) {
+    private QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient createClient() {
         try {
             HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
-                    .baseUri(new URI("http://localhost:" + WIREMOCK_PORT))
+                    .baseUri(new URI("http://localhost:" + WIREMOCK_PORT + "/models/" + sanitizeModelForUrl(EMBED_MODEL_ID)))
                     .build(HuggingFaceRestApi.class);
-            return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, modelId, API_KEY);
+            return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient createClientForChat() {
+        try {
+            HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
+                    .baseUri(new URI("http://localhost:" + WIREMOCK_PORT + "/models/" + sanitizeModelForUrl(CHAT_MODEL_ID)))
+                    .build(HuggingFaceRestApi.class);
+            return new QuarkusHuggingFaceClientFactory.QuarkusHuggingFaceClient(restApi, API_KEY);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

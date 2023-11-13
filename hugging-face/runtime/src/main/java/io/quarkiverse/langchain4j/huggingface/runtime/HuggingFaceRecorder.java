@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.huggingface.runtime;
 
+import java.net.URL;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -15,14 +16,16 @@ import io.smallrye.config.ConfigValidationException;
 public class HuggingFaceRecorder {
     public Supplier<?> chatModel(Langchain4jHuggingFaceConfig runtimeConfig) {
         Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        Optional<String> baseUrlOpt = runtimeConfig.baseUrl();
-        if (apiKeyOpt.isEmpty() && baseUrlOpt.isEmpty()) { // when using the default base URL an API key is required
+        URL url = runtimeConfig.chatModel().inferenceEndpointUrl();
+
+        if (apiKeyOpt.isEmpty() && url.toExternalForm().contains("api-inference.huggingface.co")) { // when using the default base URL an API key is required
             throw new ConfigValidationException(createApiKeyConfigProblems());
         }
+
         ChatModelConfig chatModelConfig = runtimeConfig.chatModel();
         var builder = QuarkusHuggingFaceChatModel.builder()
+                .url(url)
                 .timeout(runtimeConfig.timeout())
-                .modelId(chatModelConfig.modelId())
                 .temperature(chatModelConfig.temperature())
                 .waitForModel(chatModelConfig.waitForModel());
 
@@ -47,14 +50,18 @@ public class HuggingFaceRecorder {
 
     public Supplier<?> embeddingModel(Langchain4jHuggingFaceConfig runtimeConfig) {
         Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        Optional<String> baseUrlOpt = runtimeConfig.baseUrl();
-        if (apiKeyOpt.isEmpty() && baseUrlOpt.isEmpty()) { // when using the default base URL an API key is required
+        EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
+        Optional<URL> urlOpt = embeddingModelConfig.inferenceEndpointUrl();
+        if (urlOpt.isEmpty()) {
+            return null;
+        }
+        if (apiKeyOpt.isEmpty() && urlOpt.isPresent()
+                && urlOpt.get().toExternalForm().contains("api-inference.huggingface.co")) { // when using the default base URL an API key is required
             throw new ConfigValidationException(createApiKeyConfigProblems());
         }
-        EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
         var builder = QuarkusHuggingFaceEmbeddingModel.builder()
+                .url(urlOpt.get())
                 .timeout(runtimeConfig.timeout())
-                .modelId(embeddingModelConfig.modelId())
                 .waitForModel(embeddingModelConfig.waitForModel());
 
         if (apiKeyOpt.isPresent()) {
