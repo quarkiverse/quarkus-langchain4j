@@ -1,0 +1,195 @@
+
+:summaryTableId: quarkus-langchain4j-chroma
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-chroma_configuration]]link:#quarkus-langchain4j-chroma_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.enabled]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.enabled[quarkus.langchain4j.chroma.devservices.enabled]`
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically configure and start a database when running in Dev or Test mode and when Docker is running.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.image-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.image-name[quarkus.langchain4j.chroma.devservices.image-name]`
+
+
+[.description]
+--
+The container image name to use, for container based DevServices providers. If you want to use Redis Stack modules (bloom, graph, search...), use: `redis/redis-stack:latest`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`ghcr.io/chroma-core/chroma:0.4.15`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.port]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.port[quarkus.langchain4j.chroma.devservices.port]`
+
+
+[.description]
+--
+Optional fixed port the dev service will listen to.
+
+If not defined, the port will be chosen randomly.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.shared]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.shared[quarkus.langchain4j.chroma.devservices.shared]`
+
+
+[.description]
+--
+Indicates if the Redis server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Redis starts a new container.
+
+The discovery uses the `quarkus-dev-service-chroma` label. The value is configured using the `service-name` property.
+
+Container sharing is only used in dev mode.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.service-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.service-name[quarkus.langchain4j.chroma.devservices.service-name]`
+
+
+[.description]
+--
+The value of the `quarkus-dev-service-chroma` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Redis looks for a container with the `quarkus-dev-service-chroma` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-chroma` label set to the specified value.
+
+This property is used when you need multiple shared Chroma servers.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`chroma`
+
+
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.url]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.url[quarkus.langchain4j.chroma.url]`
+
+
+[.description]
+--
+URL where the Chroma database is listening for requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.collection-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.collection-name[quarkus.langchain4j.chroma.collection-name]`
+
+
+[.description]
+--
+The collection name.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_COLLECTION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_COLLECTION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`default`
+
+
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.timeout]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.timeout[quarkus.langchain4j.chroma.timeout]`
+
+
+[.description]
+--
+The timeout duration for the Chroma client. If not specified, 5 seconds will be used.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.container-env-container-env]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.container-env-container-env[quarkus.langchain4j.chroma.devservices.container-env]`
+
+
+[.description]
+--
+Environment variables that are passed to the container.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_CONTAINER_ENV+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_CONTAINER_ENV+++`
+endif::add-copy-button-to-env-var[]
+--|`Map<String,String>` 
+|
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

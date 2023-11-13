@@ -1,5 +1,80 @@
-= Document Retriever
+= Document Retrieval for Language Models
 
 include::./includes/attributes.adoc[]
 
-_To be written_
+Many applications involving Large Language Models (LLMs) often require user-specific data beyond their training set, such as CSV files, data from various sources, or reports. To achieve this, the process of Retrieval Augmented Generation (RAG) is commonly employed.
+
+== Understanding the Data Ingestion Journey
+
+Before delving into the RAG process, it's crucial to delineate two distinct phases:
+
+The Data Ingestion Process:: Involves data collection, cleaning, transformation, and adding metadata, resulting in a set of vectorized documents stored in a database.
+
+The RAG Process:: Before engaging with the LLM, it seeks relevant documents in the database and passes them for model augmentation.
+
+== Unveiling Embeddings
+
+Embeddings denote data representations, typically in a lower-dimensional space (arrays of floats), preserving essential characteristics of the original data. In the realm of language or text, word embeddings represent words as numerical vectors in a continuous space.
+
+[TIP]
+.Why Use Vectors/Embeddings?
+Efficiently comparing documents to user queries during the RAG process, a crucial step in finding relevant documents, relies on computing similarity (or distance) between documents and queries. Vectorizing documents significantly speeds up this process.
+
+== The Ingestion Process
+
+The ingestion process varies based on the data source, operating as a one-shot or continuous process, possibly within a data streaming architecture where each message is treated as a document.
+
+To illustrate document creation, the following code exemplifies creating a Document from a text file:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/DocumentFromTextCreationExample.java[]
+----
+
+A more complex scenario involves creating a Document from a CSV line:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/DocumentCreationExample.java[]
+----
+
+Following document creation, the documents need to be ingested. The Quarkus Lang4J extension offers _ingestor_ components for database storage.
+For instance, quarkus-langchain4j-redis stores data in a Redis database, while quarkus-langchain4j-chroma uses a Chroma database.
+
+The following code demonstrates document ingestion in a Redis database:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExample.java[]
+----
+
+Adjust the `documentSplitter` parameter based on the data structure.
+For instance, for CSV files with document representation separated by `\n`, `new DocumentByLineSplitter(500, 0)` is a recommended starting point.
+
+== Retrieval Augmented Generation (RAG)
+
+Once documents are ingested, they can augment the LLM's capabilities. The following code illustrates the creation of a DocumentRetriever:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/DocumentRetrieverExample.java[]
+----
+
+The EmbeddingStoreRetriever necessitates a configured embedding store (Redis, Chroma, etc.) and an embedding model.
+Configure the maximum number of documents to retrieve (e.g., 20 in the example) and set the minimum relevance score if required.
+
+Make sure that the number of documents is not too high (or document too large).
+More document you have, more data you are adding to the LLM context, and you may exceed the limit.
+
+To use the retriever in your AI service, configure it as a CDI bean:
+
+[source,java]
+----
+@RegisterAiService(retrieverSupplier = RegisterAiService.BeanRetrieverSupplier.class)
+public interface MyAiService {
+// ...
+}
+----
+
+Alternatively, implement a class implementing `Supplier<Retriever<TextSegment>>` if you prefer not to expose the retriever as a CDI bean.
+Then, configure the `retrieverSupplier` attribute to point to your implementation.

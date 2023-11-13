@@ -1,5 +1,39 @@
-= Redis Document Store
+= Redis Document Store for Retrieval Augmented Generation (RAG)
 
 include::./includes/attributes.adoc[]
 
-_To be written_
+When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage a Redis database as the document store.
+
+== Leveraging the Redis Document Store
+
+To utilize the Redis document store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-redis</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension relies on the Quarkus Redis client. Ensure the default Redis datasource is configured appropriately. For detailed guidance, refer to the link:https://quarkus.io/guides/redis[Quarkus Redis Quickstart] and the link:https://quarkus.io/guides/redis-reference[Quarkus Redis Reference].
+
+IMPORTANT: The Redis document store's functionality is built on the Redis JSON and Redis Search modules. Ensure these modules are installed, or consider using the Redis Stack. If you want to use the Quarkus DevServices for Redis, make sure to configure `quarkus.redis.devservices.image-name=redis/redis-stack:latest` in your `application.properties` file.
+
+Upon installing the extension, you can utilize the Redis document store using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExample.java[]
+----
+
+== Configuration Settings
+
+By default, the extension utilizes the default Redis datasource for storing and indexing the documents. Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-redis.adoc[leveloffset=+1,opts=optional]
+
+== Under the Hood
+
+Each ingested document is saved as a JSON document in Redis, containing the _embedding_ stored as a vector. The document store also generates an index for each ingested document. To retrieve relevant documents, the extension employs the Redis _search_ command.
