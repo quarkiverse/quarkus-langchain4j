@@ -7,3 +7,12 @@ This repository hosts various Quarkus extensions that provide deep integration b
 ## Documentation
 
 The documentation for this extension can be found [here](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs).
+
+## Samples
+
+Samples be found [here](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs).
+Furthermore, the [integration tests](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/integration-tests) can also provide samples on how to use the extensions.
+
+
+
+
