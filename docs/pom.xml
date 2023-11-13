@@ -14,12 +14,6 @@
     <name>Quarkus Langchain4j - Documentation</name>
 
     <dependencies>
-        <!-- Make sure the doc is built after the other artifacts -->
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
@@ -27,6 +21,33 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-redis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-chroma</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Make sure the doc is built after the other artifacts -->
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-redis-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -78,6 +99,8 @@
                                     <directory>${project.basedir}/../target/asciidoc/generated/config/</directory>
                                     <include>quarkus-langchain4j.adoc</include>
                                     <include>quarkus-langchain4j-openai.adoc</include>
+                                    <include>quarkus-langchain4j-redis.adoc</include>
+                                    <include>quarkus-langchain4j-chroma.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

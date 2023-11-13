@@ -1,5 +1,33 @@
-= Chroma Document Store
+= Chroma Document Store for Retrieval Augmented Generation (RAG)
 
 include::./includes/attributes.adoc[]
 
-_To be written_
+When implementing Retrieval Augmented Generation (RAG), a robust document store is crucial. This guide demonstrates how to leverage a [Chroma](https://www.trychroma.com/) database as the document store.
+
+== Leveraging the Chroma Document Store
+
+To make use of the Chroma document store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-chroma</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension includes a dev service. Therefore, if you're operating in a container environment, a Chroma instance will automatically start in dev and test mode.
+
+Upon installing the extension, you can use the Chroma document store with the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithChroma.java[]
+----
+
+== Configuration Settings
+
+Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-chroma.adoc[leveloffset=+1,opts=optional]
