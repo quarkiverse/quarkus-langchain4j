@@ -6,4 +6,4 @@ This repository hosts various Quarkus extensions that provide deep integration b
 
 ## Documentation
 
-The documentation for this extension can be found [here](https://github.com/geoand/quarkus-langchain4j/tree/master/docs).
+The documentation for this extension can be found [here](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs).
