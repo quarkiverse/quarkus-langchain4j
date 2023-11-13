@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.huggingface;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -13,30 +12,28 @@ import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class QuarkusHuggingFaceClientFactory implements HuggingFaceClientFactory {
+
     @Override
     public HuggingFaceClient create(Input input) {
-        try {
-            // TODO: cache?
-            HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
-                    .baseUri(new URI("https://api-inference.huggingface.co"))
-                    .connectTimeout(input.timeout().toSeconds(), TimeUnit.SECONDS)
-                    .readTimeout(input.timeout().toSeconds(), TimeUnit.SECONDS)
-                    .build(HuggingFaceRestApi.class);
-            return new QuarkusHuggingFaceClient(restApi, input.modelId(), input.apiKey());
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        throw new UnsupportedOperationException("Should not be called");
+    }
+
+    public HuggingFaceClient create(Input input, URI url) {
+        HuggingFaceRestApi restApi = QuarkusRestClientBuilder.newBuilder()
+                .baseUri(url)
+                .connectTimeout(input.timeout().toSeconds(), TimeUnit.SECONDS)
+                .readTimeout(input.timeout().toSeconds(), TimeUnit.SECONDS)
+                .build(HuggingFaceRestApi.class);
+        return new QuarkusHuggingFaceClient(restApi, input.apiKey());
     }
 
     public static class QuarkusHuggingFaceClient implements HuggingFaceClient {
 
         private final HuggingFaceRestApi restApi;
-        private final String modelId;
         private final String token;
 
-        public QuarkusHuggingFaceClient(HuggingFaceRestApi restApi, String modelId, String token) {
+        public QuarkusHuggingFaceClient(HuggingFaceRestApi restApi, String token) {
             this.restApi = restApi;
-            this.modelId = modelId;
             this.token = token;
         }
 
@@ -47,7 +44,7 @@ public class QuarkusHuggingFaceClientFactory implements HuggingFaceClientFactory
 
         @Override
         public TextGenerationResponse generate(TextGenerationRequest request) {
-            return toOneResponse(restApi.generate(request, modelId, token));
+            return toOneResponse(restApi.generate(request, token));
         }
 
         private static TextGenerationResponse toOneResponse(List<TextGenerationResponse> responses) {
@@ -61,7 +58,7 @@ public class QuarkusHuggingFaceClientFactory implements HuggingFaceClientFactory
 
         @Override
         public List<float[]> embed(EmbeddingRequest request) {
-            return restApi.embed(request, modelId, token);
+            return restApi.embed(request, token);
         }
     }
 }

@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MOD
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -59,13 +60,16 @@ public class HuggingFaceProcessor {
         }
 
         if (selectedEmbedding.isPresent() && PROVIDER.equals(selectedEmbedding.get().getProvider())) {
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(EMBEDDING_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.embeddingModel(config))
-                    .done());
+            Supplier<?> supplier = recorder.embeddingModel(config);
+            if (supplier != null) {
+                beanProducer.produce(SyntheticBeanBuildItem
+                        .configure(EMBEDDING_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(supplier)
+                        .done());
+            }
         }
     }
 }
