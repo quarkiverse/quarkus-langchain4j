@@ -3,7 +3,8 @@ package io.quarkiverse.langchain4j.huggingface.runtime;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
+import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
+import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.Langchain4jHuggingFaceConfig;
@@ -14,17 +15,23 @@ import io.smallrye.config.ConfigValidationException;
 public class HuggingFaceRecorder {
     public Supplier<?> chatModel(Langchain4jHuggingFaceConfig runtimeConfig) {
         Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
+        Optional<String> baseUrlOpt = runtimeConfig.baseUrl();
+        if (apiKeyOpt.isEmpty() && baseUrlOpt.isEmpty()) { // when using the default base URL an API key is required
             throw new ConfigValidationException(createApiKeyConfigProblems());
         }
         ChatModelConfig chatModelConfig = runtimeConfig.chatModel();
-        var builder = HuggingFaceChatModel.builder()
-                .accessToken(apiKeyOpt.get())
+        var builder = QuarkusHuggingFaceChatModel.builder()
                 .timeout(runtimeConfig.timeout())
                 .modelId(chatModelConfig.modelId())
                 .temperature(chatModelConfig.temperature())
-                .returnFullText(chatModelConfig.returnFullText())
                 .waitForModel(chatModelConfig.waitForModel());
+
+        if (apiKeyOpt.isPresent()) {
+            builder.accessToken(apiKeyOpt.get());
+        }
+        if (chatModelConfig.returnFullText().isPresent()) {
+            builder.returnFullText(chatModelConfig.returnFullText().get());
+        }
 
         if (chatModelConfig.maxNewTokens().isPresent()) {
             builder.maxNewTokens(chatModelConfig.maxNewTokens().get());
@@ -40,15 +47,19 @@ public class HuggingFaceRecorder {
 
     public Supplier<?> embeddingModel(Langchain4jHuggingFaceConfig runtimeConfig) {
         Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
+        Optional<String> baseUrlOpt = runtimeConfig.baseUrl();
+        if (apiKeyOpt.isEmpty() && baseUrlOpt.isEmpty()) { // when using the default base URL an API key is required
             throw new ConfigValidationException(createApiKeyConfigProblems());
         }
         EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
-        var builder = HuggingFaceChatModel.builder()
-                .accessToken(apiKeyOpt.get())
+        var builder = QuarkusHuggingFaceEmbeddingModel.builder()
                 .timeout(runtimeConfig.timeout())
                 .modelId(embeddingModelConfig.modelId())
                 .waitForModel(embeddingModelConfig.waitForModel());
+
+        if (apiKeyOpt.isPresent()) {
+            builder.accessToken(apiKeyOpt.get());
+        }
 
         return new Supplier<>() {
             @Override
