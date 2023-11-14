@@ -22,7 +22,7 @@ To employ OpenAI LLMs, integrate the following dependency into your project:
 </dependency>
 ----
 
-If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured OpenAI model.
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured OpenAI model.
 
 === Configuration
 

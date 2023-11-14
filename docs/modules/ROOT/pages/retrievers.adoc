@@ -38,7 +38,7 @@ A more complex scenario involves creating a Document from a CSV line:
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/DocumentCreationExample.java[]
 ----
 
-Following document creation, the documents need to be ingested. The Quarkus Lang4J extension offers _ingestor_ components for database storage.
+Following document creation, the documents need to be ingested. The Quarkus LangChain4j extension offers _ingestor_ components for database storage.
 For instance, quarkus-langchain4j-redis stores data in a Redis database, while quarkus-langchain4j-chroma uses a Chroma database.
 
 The following code demonstrates document ingestion in a Redis database:

@@ -71,7 +71,7 @@ However, ensure each method name is unique among all declared tools.
 
 == Providing Tool Access
 
-In the link:./ai-services.adoc[AI Service], you can specify the tools accessible to the agent. By default, **no tools** are available. Hence, ensure to define the list of tools you wish to make accessible:
+In the xref:ai-services.adoc[AI Service], you can specify the tools accessible to the agent. By default, **no tools** are available. Hence, ensure to define the list of tools you wish to make accessible:
 
 [source, java]
 ----

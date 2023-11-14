@@ -9,7 +9,7 @@ This page lists a few techniques that can be used to guide the model in performi
 
 Input delimiters play a vital role in structuring the instructions for the language model. They mark the boundaries between different sections or segments of the prompt, guiding the model in processing distinct pieces of information.
 
-For instance, hyphens (---) or similar markers delineate various components within the prompt, aiding the model in discerning user input, intermediate steps, and the final actions to be executed.
+For instance, hyphens (`---`) or similar markers delineate various components within the prompt, aiding the model in discerning user input, intermediate steps, and the final actions to be executed.
 
 [source, text]
 ----
@@ -37,7 +37,7 @@ Using a few-shot technique guides a model to understand sentiment analysis based
 Provide sentiment labels for the statements delimited by ---
 The response must be either 'Positive', 'Neutral', or 'Negative'.
 
-Here is a few examples:
+Here are a few examples:
 - 'I love this product' - Positive
 - 'Not bad, but could be better' - Neutral
 - 'I'm thoroughly disappointed' - Negative
@@ -47,11 +47,11 @@ Here is a few examples:
 ---
 ----
 
-In this example, the model is presented with a few labeled statements to learn sentiment analysis, followed by a new \{text} to analyze.
+In this example, the model is presented with a few labeled statements to learn sentiment analysis, followed by a new `\{text}` to analyze.
 
 == Passing a list of actions
 
-To instruct a language model to perform a sequence of actions, a carefully structured prompt containing a list of actions is essential. This involves delineating each action along with its associated link:./agent-and-tools.adoc[tool] and parameters within the prompt.
+To instruct a language model to perform a sequence of actions, a carefully structured prompt containing a list of actions is essential. This involves delineating each action along with its associated xref:agent-and-tools.adoc[tool] and parameters within the prompt.
 
 For example, a structured list could entail a set of instructions such as:
 
@@ -99,12 +99,12 @@ JSON Structure:
     }
 }
 
-Provided Data: John Doe, 30, john@example.com, 123 Main St, New York, 10001"
+Provided Data: John Doe, 30, john@example.com, 123 Main St, New York, 10001
 ----
 
-In this example, the prompt specifies the expected structure for the JSON response, comprising keys like 'name', 'age', 'email', and 'address', with their respective value types. The 'Provided Data' segment serves as the input to be formatted into the requested JSON structure.
+In this example, the prompt specifies the expected structure for the JSON response, comprising keys like `name`, `age`, `email`, and `address`, with their respective value types. The `Provided Data` segment serves as the input to be formatted into the requested JSON structure.
 
-Being able to describe the JSON output is essential when an  xref:./ai-services.adoc#_ai_method_return_type[AI method] return an object.
+Being able to describe the JSON output is essential when an xref:ai-services.adoc#_ai_method_return_type[AI method] returns an object.
 The Quarkus LangChain4j extension will use the JSON structure to create an instance of the return type.
 
 == Control tokens and prefixes
@@ -134,7 +134,7 @@ These techniques offer additional methods to direct language models effectively,
 == Giving a role to the AI
 
 In relation to the previous technique, giving a role to the AI is a technique that involves assigning a specific role to the language model, such as a teacher, student, or assistant.
-This is generally done in the xref:./ai-services.adoc#_system_message[system message] to guide the model's behavior:
+This is generally done in the xref:ai-services.adoc#_system_message[system message] to guide the model's behavior:
 
 [source, text]
 ----

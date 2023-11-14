@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.langchain4j/quarkus-langchain4j?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.langchain4j/quarkus-langchain4j)
 
-This repository contains Quarkus extensions that facilitate seamless integration between Quarkus and [Langchain4j](https://github.com/langchain4j/langchain4j), enabling easy incorporation of Large Language Models (LLMs) into your Quarkus applications.
+This repository contains Quarkus extensions that facilitate seamless integration between Quarkus and [LangChain4j](https://github.com/langchain4j/langchain4j), enabling easy incorporation of Large Language Models (LLMs) into your Quarkus applications.
 
 ## Features
 
@@ -46,7 +46,7 @@ or, to use hugging face:
 </dependency>
 ```
 
-Make sure to replace {latest-version} with the most recent release version available on [Maven Central](https://search.maven.org/artifact/io.quarkiverse.langchain4j/quarkus-langchain4j).
+Make sure to replace `{latest-version}` with the most recent release version available on [Maven Central](https://search.maven.org/artifact/io.quarkiverse.langchain4j/quarkus-langchain4j).
 
 ## Contributing
 

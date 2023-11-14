@@ -43,7 +43,7 @@ String writeAPoem(String topic, int lines);
 [#_system_message]
 === System Message
 
-The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM.It delineates the AI service's role in the interaction:
+The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM. It delineates the AI service's role in the interaction:
 
 [source,java]
 ----
@@ -52,6 +52,7 @@ The `@SystemMessage` annotation defines the scope and initial instructions, serv
     """
 )
 ----
+
 === User Message (Prompt)
 
 The `@UserMessage` annotation defines primary instructions dispatched to the LLM. It typically encompasses requests and the expected response format:
@@ -165,7 +166,7 @@ public class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
 [#memory]
 == Configuring the Context (Memory)
 
-As LLMs are stateless, the memory—comprising the interaction context—must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
+As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
 
 The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the memory provider:
 

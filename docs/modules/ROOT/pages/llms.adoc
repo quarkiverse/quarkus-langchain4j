@@ -16,11 +16,11 @@ Continued research and development in LLMs are constantly pushing the boundaries
 
 LLMs are a core component of the Quarkus LangChain4j extension.
 The extension does not serve its own LLMs, but rather provides a standard interface for interacting with many different LLMs such as OpenAI GPT-3/4, Hugging Face, and Ollama.
-This link:../ai-services.adoc[interface] is designed to be simple and intuitive, allowing developers to quickly integrate LLMs into their applications.
+This xref:ai-services.adoc[interface] is designed to be simple and intuitive, allowing developers to quickly integrate LLMs into their applications.
 
 Note that each LLM has a different feature set.
 Please check the specific documentation for the LLM you are using to see what features are available:
 
-- link:../openai.adoc[OpenAI (GT-3/4)]
-- link:../hugging-face.adoc[Hugging Face]
-- link:../ollama.adoc[Ollama]
+- xref:openai.adoc[OpenAI (GT-3/4)]
+- xref:hugging-face.adoc[Hugging Face]
+- xref:ollama.adoc[Ollama]
