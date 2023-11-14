@@ -1,4 +1,4 @@
-# Quarkiverse - Quarkus Langchain4j
+# Quarkus LangChain4j
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.langchain4j/quarkus-langchain4j?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.langchain4j/quarkus-langchain4j)
 
@@ -18,7 +18,7 @@ Here is a non-exhaustive list of features that are currently supported:
 
 ## Documentation
 
-Refer to the comprehensive [documentation](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs) for detailed information and usage guidelines.
+Refer to the comprehensive [documentation](https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html) for detailed information and usage guidelines.
 
 ## Samples
 
