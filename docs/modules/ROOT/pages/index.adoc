@@ -4,7 +4,7 @@ include::./includes/attributes.adoc[]
 
 _Large Language Models_ (LLMs) are AI-based systems designed to understand, generate, and manipulate human language, showcasing advanced natural language processing capabilities.
 The dynamic LLM landscape is reshaping our interactions with applications and the very construction of these applications.
-The Quarkus Langchain4j extension seamlessly integrates LLMs into Quarkus applications, enabling the harnessing of LLM capabilities for the development of more intelligent applications.
+The Quarkus LangChain4j extension seamlessly integrates LLMs into Quarkus applications, enabling the harnessing of LLM capabilities for the development of more intelligent applications.
 
 For instance, an application utilizing this extension can:
 
@@ -13,7 +13,7 @@ For instance, an application utilizing this extension can:
 - Construct chatbots for system interaction
 - Generate personalized text such as emails or reports
 
-This extension is built upon the https://github.com/langchain4j/langchain4j[langchain4j library].
+This extension is built upon the https://github.com/langchain4j/langchain4j[LangChain4j library].
 It offers a declarative approach to interact with diverse LLMs like OpenAI, Hugging Face, or Ollama. It facilitates LLM-invoked functions within Quarkus applications and allows document loading within the LLM "context".
 
 == Quick Overview
@@ -58,11 +58,10 @@ Once you've added the dependency and configuration, the next step involves creat
 ----
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/MyAiService.java[]
 ----
-
-1. The `@RegisterAiService` annotation registers the _AI service_.
-2. The `chatMemoryProviderSupplier` attribute specifies the _chat memory_ provider, managing how the LLM retains conversation history (the "context").
-3. The `tools` attribute defines the _tools_ the LLM can employ.
+<1> The `@RegisterAiService` annotation registers the _AI service_.
+<2> The `chatMemoryProviderSupplier` attribute specifies the _chat memory_ provider, managing how the LLM retains conversation history (the "context").
+<3> The `tools` attribute defines the _tools_ the LLM can employ.
 During interaction, the LLM can invoke these tools and reflect on their output.
-4. The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
-5. The `@UserMessage` annotation serves as the _prompt_.
-6. The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
+<4> The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
+<5> The `@UserMessage` annotation serves as the _prompt_.
+<6> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.

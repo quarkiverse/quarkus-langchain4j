@@ -1,4 +1,4 @@
-* xref:index.adoc[Quarkus Langchain4j]
+* xref:index.adoc[Getting started]
 
 ** AI Services
 *** xref:ai-services.adoc[AI Services]
