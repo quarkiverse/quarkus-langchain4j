@@ -10,7 +10,7 @@ The documentation for this extension can be found [here](https://github.com/quar
 
 ## Samples
 
-Samples be found [here](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs).
+Samples be found [here](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples).
 Furthermore, the [integration tests](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/integration-tests) can also provide samples on how to use the extensions.
 
 
