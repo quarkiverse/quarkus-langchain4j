@@ -1,30 +1,9 @@
-name: Build
+name: Build against Langchain4j main
 
 on:
-  push:
-    branches:
-      - "main"
-    paths-ignore:
-      - '.gitignore'
-      - 'CODEOWNERS'
-      - 'LICENSE'
-      - '*.md'
-      - '*.adoc'
-      - '*.txt'
-      - '.all-contributorsrc'
-  pull_request:
-    paths-ignore:
-      - '.gitignore'
-      - 'CODEOWNERS'
-      - 'LICENSE'
-      - '*.md'
-      - '*.adoc'
-      - '*.txt'
-      - '.all-contributorsrc'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
 
 defaults:
   run:
@@ -51,6 +30,14 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: 'maven'
+
+      - name: Build langchain4j
+        run: |
+          mkdir langchain4j
+          cd langchain4j
+          git clone https://github.com/langchain4j/langchain4j.git
+          cd langchain4j
+          mvn -B clean install -DskipTests
 
       - name: Build with Maven
         run: mvn -B clean install -Dno-format
