@@ -41,7 +41,7 @@
             <groupId>org.mvnpm</groupId>
             <artifactId>es-module-shims</artifactId>
             <scope>runtime</scope>
-            <version>1.8.0</version>
+            <version>1.8.2</version>
         </dependency>
     </dependencies>
     <build>
