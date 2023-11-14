@@ -93,7 +93,10 @@
     <profile>
       <id>samples</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>performRelease</name>
+          <value>!true</value>
+        </property>
       </activation>
       <modules>
         <module>samples/email-a-poem</module>
