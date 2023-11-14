@@ -22,7 +22,7 @@ Refer to the comprehensive [documentation](https://github.com/quarkiverse/quarku
 
 ## Samples
 
-Check out the [samples](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/docs) and [integration tests](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/integration-tests) to gain practical insights on how to use these extensions effectively.
+Check out the [samples](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples) and [integration tests](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/integration-tests) to gain practical insights on how to use these extensions effectively.
 
 ## Getting Started
 
