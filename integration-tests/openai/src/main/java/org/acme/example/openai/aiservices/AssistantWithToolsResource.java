@@ -1,5 +1,10 @@
 package org.acme.example.openai.aiservices;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -7,27 +12,29 @@ import jakarta.ws.rs.Path;
 import org.jboss.resteasy.reactive.RestQuery;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.service.AiServices;
+import io.quarkiverse.langchain4j.RegisterAiService;
 
 @Path("assistant-with-tool")
 public class AssistantWithToolsResource {
 
     private final Assistant assistant;
 
-    public AssistantWithToolsResource(ChatLanguageModel chatLanguageModel,
-            Calculator calculator) {
-        this.assistant = AiServices.builder(Assistant.class)
-                .chatLanguageModel(chatLanguageModel)
-                .tools(calculator)
-                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
-                .build();
+    public AssistantWithToolsResource(Assistant assistant) {
+        this.assistant = assistant;
     }
 
     @GET
     public String get(@RestQuery String message) {
         return assistant.chat(message);
+    }
+
+    @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
+    public interface Assistant {
+
+        String chat(String userMessage);
     }
 
     @Singleton
@@ -49,8 +56,22 @@ public class AssistantWithToolsResource {
         }
     }
 
-    interface Assistant {
+    @RequestScoped
+    public static class ChatMemoryBean implements ChatMemoryProvider {
 
-        String chat(String userMessage);
+        private final Map<Object, ChatMemory> memories = new ConcurrentHashMap<>();
+
+        @Override
+        public ChatMemory get(Object memoryId) {
+            return memories.computeIfAbsent(memoryId, id -> MessageWindowChatMemory.builder()
+                    .maxMessages(20)
+                    .id(memoryId)
+                    .build());
+        }
+
+        @PreDestroy
+        public void close() {
+            memories.clear();
+        }
     }
 }
