@@ -65,3 +65,20 @@ During interaction, the LLM can invoke these tools and reflect on their output.
 <4> The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
 <5> The `@UserMessage` annotation serves as the _prompt_.
 <6> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
+
+== Advantages over vanilla Langchain4j
+
+The extension offers the following advantages over using the vanilla https://github.com/langchain4j/langchain4j[LangChain4j] library in Quarkus:
+
+* Seamless integration with the Quarkus programming model
+** CDI beans for the Langchain4j models
+** Standard configuration properties for configuring said models
+* xref:ai-services.adoc[Declarative AI Services]
+* Build time wiring
+** Reduced footprint of the library
+** Feedback about misuse at build time
+* Leverage runtime Quarkus components
+** REST calls and JSON handling are performed using the libraries used throughout Quarkus
+*** Results in reduces library footprint
+*** Enables GraalVM native image compilation
+
