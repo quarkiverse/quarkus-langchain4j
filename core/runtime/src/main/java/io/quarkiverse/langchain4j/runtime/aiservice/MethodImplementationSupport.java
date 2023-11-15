@@ -198,11 +198,13 @@ public class MethodImplementationSupport {
 
             return userMessage(userName, prompt.text());
         } else if (userMessageInfo.getParamPosition().isPresent()) {
-            Object argValue = methodArgs[userMessageInfo.getParamPosition().get()];
+            Integer paramIndex = userMessageInfo.getParamPosition().get();
+            Object argValue = methodArgs[paramIndex];
             if (argValue == null) {
                 throw new IllegalArgumentException(
-                        "Unable to construct UserMessage for class + " + context.aiServiceClass.getName() + "because parameter "
-                                + userMessageInfo.getParamPosition() + " is null");
+                        "Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
+                                + "' because parameter with index "
+                                + paramIndex + " is null");
             }
             return userMessage(userName, toString(argValue) + userMessageInfo.getInstructions().orElse(""));
         } else {
