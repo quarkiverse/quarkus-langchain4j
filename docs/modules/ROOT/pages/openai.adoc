@@ -52,3 +52,70 @@ When utilizing OpenAI models, the recommended practice involves leveraging the `
 
 IMPORTANT: The `OpenAIEmbeddingModel` transmits the document to OpenAI for embedding computation.
 
+== Advanced usage
+
+`quarkus-langchain4j-openai` uses a REST Client under the hood to make the REST calls required by Langchain4j.
+This client is however available for use in a Quarkus application in the same way as any other REST client.
+
+An example usage is the following:
+
+[source,java]
+----
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+
+import org.jboss.resteasy.reactive.RestStreamElementType;
+
+import dev.ai4j.openai4j.chat.ChatCompletionChoice;
+import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.ai4j.openai4j.chat.Delta;
+import dev.ai4j.openai4j.chat.Message;
+import dev.ai4j.openai4j.completion.CompletionChoice;
+import dev.ai4j.openai4j.completion.CompletionResponse;
+import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Multi;
+
+
+@Path("restApi")
+@ApplicationScoped
+public class QuarkusRestApiResource {
+
+    private final OpenAiRestApi restApi;
+    private final String token;
+
+    public QuarkusRestApiResource() throws URISyntaxException {
+        this.restApi = QuarkusRestClientBuilder.newBuilder()
+                .baseUri(new URI("https://api.openai.com/v1/"))
+                .build(OpenAiRestApi.class);
+        this.token = "sometoken";
+
+    }
+
+    @GET
+    @Path("language/streaming")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> languageStreaming() {
+        return restApi.streamingCompletion(
+                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+                .map(r -> {
+                    if (r.choices() != null) {
+                        if (r.choices().size() == 1) {
+                            CompletionChoice choice = r.choices().get(0);
+                            var text = choice.text();
+                            if (text != null) {
+                                return text;
+                            }
+                        }
+                    }
+                    return "";
+                });
+    }
+}
+----
+
+This example allows for streaming OpenAIs response back to the user's browser as Server Sent Events.
+
