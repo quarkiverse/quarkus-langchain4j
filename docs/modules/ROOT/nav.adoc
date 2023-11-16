@@ -4,6 +4,7 @@
 ** xref:ai-services.adoc[AI Services]
 ** xref:agent-and-tools.adoc[Agent and Tools]
 ** xref:retrievers.adoc[Embeddings and Document Retrievers]
+** xref:prompt-engineering.adoc[Prompt Engineering 101]
 
 * LLMs
 ** xref:llms.adoc[LLMs]
