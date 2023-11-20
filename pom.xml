@@ -104,6 +104,7 @@
         <module>samples/email-a-poem</module>
         <module>samples/review-triage</module>
         <module>samples/fraud-detection</module>
+        <module>samples/chatbot</module>
       </modules>
     </profile>
   </profiles>
