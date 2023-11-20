@@ -1,0 +1,4 @@
+name: Langchain4j OpenAI Common
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+metadata:
+  unlisted: true

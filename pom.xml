@@ -18,7 +18,8 @@
     <module>docs</module>
     <module>hugging-face</module>
     <module>ollama</module>
-    <module>openai</module>
+    <module>openai/openai-common</module>
+    <module>openai/openai-vanilla</module>
     <module>redis</module>
   </modules>
   <scm>
