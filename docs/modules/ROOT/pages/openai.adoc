@@ -52,9 +52,22 @@ When utilizing OpenAI models, the recommended practice involves leveraging the `
 
 IMPORTANT: The `OpenAIEmbeddingModel` transmits the document to OpenAI for embedding computation.
 
+== Azure OpenAI
+
+Applications can leverage the https://learn.microsoft.com/en-us/azure/ai-services/openai/overview[Azure's] version of OpenAI services simply by using the `quarkus-langchain4j-azure-openai` extension instead of the `quarkus-langchain4j-openai` extension.
+
+When this extension is used, the following configuration properties are required:
+
+[source, properties]
+----
+quarkus.langchain4j.azure-openai.api-key=
+quarkus.langchain4j.azure-openai.resource-name=
+quarkus.langchain4j.azure-openai.deployment-id=
+----
+
 == Advanced usage
 
-`quarkus-langchain4j-openai` uses a REST Client under the hood to make the REST calls required by Langchain4j.
+`quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` extensions use a REST Client under the hood to make the REST calls required by LangChain4j.
 This client is however available for use in a Quarkus application in the same way as any other REST client.
 
 An example usage is the following:
@@ -100,7 +113,7 @@ public class QuarkusRestApiResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> languageStreaming() {
         return restApi.streamingCompletion(
-                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token, null)
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -118,4 +131,10 @@ public class QuarkusRestApiResource {
 ----
 
 This example allows for streaming OpenAIs response back to the user's browser as Server Sent Events.
+
+[NOTE]
+====
+We used `null` as the `apiVersion` parameter in the call to `streamingCompletion` as this parameter is optional when using the vanilla OpenAI APIs.
+This parameter is only required when using Azure OpenAI.
+====
 
