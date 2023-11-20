@@ -36,6 +36,7 @@ import jakarta.ws.rs.ext.WriterInterceptorContext;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
@@ -70,8 +71,8 @@ import io.vertx.core.http.HttpClientResponse;
  */
 
 @Path("")
-@ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
-@ClientHeaderParam(name = "api-key", value = "{token}") // used by AzureAI
+@ClientHeaderParam(name = "Authorization", value = "Bearer {apiKey}")
+@ClientHeaderParam(name = "api-key", value = "{apiKey}") // used by AzureAI
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface OpenAiRestApi {
@@ -81,14 +82,16 @@ public interface OpenAiRestApi {
      */
     @Path("completions")
     @POST
-    Uni<CompletionResponse> completion(CompletionRequest request, @NotBody String token);
+    Uni<CompletionResponse> completion(CompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a blocking request for a completion response
      */
     @Path("completions")
     @POST
-    CompletionResponse blockingCompletion(CompletionRequest request, @NotBody String token);
+    CompletionResponse blockingCompletion(CompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Performs a non-blocking request for a streaming completion request
@@ -96,21 +99,24 @@ public interface OpenAiRestApi {
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<CompletionResponse> streamingCompletion(CompletionRequest request, @NotBody String token);
+    Multi<CompletionResponse> streamingCompletion(CompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a non-blocking request for a chat completion response
      */
     @Path("chat/completions")
     @POST
-    Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request, @NotBody String token);
+    Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a blocking request for a chat completion response
      */
     @Path("chat/completions")
     @POST
-    ChatCompletionResponse blockingChatCompletion(ChatCompletionRequest request, @NotBody String token);
+    ChatCompletionResponse blockingChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Performs a non-blocking request for a streaming chat completion request
@@ -118,35 +124,40 @@ public interface OpenAiRestApi {
     @Path("chat/completions")
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @NotBody String token);
+    Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a non-blocking request to get the embeddings of an input text
      */
     @Path("embeddings")
     @POST
-    Uni<EmbeddingResponse> embedding(EmbeddingRequest request, @NotBody String token);
+    Uni<EmbeddingResponse> embedding(EmbeddingRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a blocking request to get the embeddings of an input text
      */
     @Path("embeddings")
     @POST
-    EmbeddingResponse blockingEmbedding(EmbeddingRequest request, @NotBody String token);
+    EmbeddingResponse blockingEmbedding(EmbeddingRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a non-blocking request to get a moderated version of an input text
      */
     @Path("moderations")
     @POST
-    Uni<ModerationResponse> moderation(ModerationRequest request, @NotBody String token);
+    Uni<ModerationResponse> moderation(ModerationRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     /**
      * Perform a blocking request to get a moderated version of an input text
      */
     @Path("moderations")
     @POST
-    ModerationResponse blockingModeration(ModerationRequest request, @NotBody String token);
+    ModerationResponse blockingModeration(ModerationRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
 
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {

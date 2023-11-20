@@ -51,7 +51,7 @@ public class OpenAiRestApiSmokeTest {
 
         OpenAiRestApi restApi = createClient();
 
-        ChatCompletionResponse response = restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN);
+        ChatCompletionResponse response = restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN, null);
         assertThat(response).isNotNull();
     }
 
@@ -65,8 +65,10 @@ public class OpenAiRestApiSmokeTest {
 
         OpenAiRestApi restApi = createClient();
 
-        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN)).isInstanceOf(
-                OpenAiHttpException.class).hasMessage("This is a dummy error message");
+        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN, null))
+                .isInstanceOf(
+                        OpenAiHttpException.class)
+                .hasMessage("This is a dummy error message");
     }
 
     @Test
@@ -89,8 +91,9 @@ public class OpenAiRestApiSmokeTest {
 
         OpenAiRestApi restApi = createClient();
 
-        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN)).isInstanceOf(
-                OpenAiApiException.class);
+        assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(), TOKEN, null))
+                .isInstanceOf(
+                        OpenAiApiException.class);
     }
 
     private OpenAiRestApi createClient() throws URISyntaxException {
