@@ -15,5 +15,6 @@
     <module>openai</module>
     <module>hugging-face</module>
     <module>ollama</module>
+    <module>azure-openai</module>
   </modules>
 </project>

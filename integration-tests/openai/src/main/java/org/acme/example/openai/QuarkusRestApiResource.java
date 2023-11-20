@@ -65,14 +65,16 @@ public class QuarkusRestApiResource {
     @Path("chat/sync")
     public String chatSync() {
         return restApi.blockingChatCompletion(
-                createChatCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token).content();
+                createChatCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token, null)
+                .content();
     }
 
     @GET
     @Path("chat/async")
     public Uni<String> chatAsync() {
         return restApi
-                .createChatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token)
+                .createChatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token,
+                        null)
                 .map(ChatCompletionResponse::content);
     }
 
@@ -81,7 +83,7 @@ public class QuarkusRestApiResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> chatStreaming() {
         return restApi.streamingChatCompletion(
-                createChatCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+                createChatCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token, null)
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -110,14 +112,14 @@ public class QuarkusRestApiResource {
     @Path("language/sync")
     public String languageSync() {
         return restApi.blockingCompletion(
-                createCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token).text();
+                createCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"), token, null).text();
     }
 
     @GET
     @Path("language/async")
     public Uni<String> languageAsync() {
         return restApi
-                .completion(createCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token)
+                .completion(createCompletionRequest("Write a short 1 paragraph funny poem about Unicode"), token, null)
                 .map(CompletionResponse::text);
     }
 
@@ -126,7 +128,7 @@ public class QuarkusRestApiResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> languageStreaming() {
         return restApi.streamingCompletion(
-                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token)
+                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token, null)
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -144,13 +146,13 @@ public class QuarkusRestApiResource {
     @GET
     @Path("embedding/sync")
     public List<Float> embeddingSync() {
-        return restApi.blockingEmbedding(createEmbeddingRequest("Your text string goes here"), token).embedding();
+        return restApi.blockingEmbedding(createEmbeddingRequest("Your text string goes here"), token, null).embedding();
     }
 
     @GET
     @Path("embedding/async")
     public Uni<List<Float>> embeddingAsync() {
-        return restApi.embedding(createEmbeddingRequest("Your text string goes here"), token)
+        return restApi.embedding(createEmbeddingRequest("Your text string goes here"), token, null)
                 .map(EmbeddingResponse::embedding);
     }
 
