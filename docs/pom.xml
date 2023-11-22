@@ -38,6 +38,11 @@
 <!--            <artifactId>quarkus-langchain4j-chroma</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
+<!--            <artifactId>quarkus-langchain4j-pinecone</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
@@ -53,6 +58,11 @@
 <!--        <dependency>-->
 <!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
 <!--            <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
+<!--            <artifactId>quarkus-langchain4j-pinecone-deployment</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--        </dependency>-->
 <!--        <dependency>-->
@@ -112,6 +122,7 @@
                                     <include>quarkus-langchain4j-huggingface.adoc</include>
                                     <include>quarkus-langchain4j-redis.adoc</include>
                                     <include>quarkus-langchain4j-chroma.adoc</include>
+                                    <include>quarkus-langchain4j-pinecone.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

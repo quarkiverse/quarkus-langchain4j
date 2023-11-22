@@ -1,0 +1,23 @@
+= Pinecone Store for Retrieval Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+
+When implementing Retrieval Augmented Generation (RAG), a robust document store is crucial. This guide demonstrates how to leverage a https://www.pinecone.io/[Pinecone] database as the document store.
+
+== Leveraging the Pinecone Document Store
+
+To make use of the Pinecone document store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-pinecone</artifactId>
+</dependency>
+----
+
+== Configuration Settings
+
+Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-pinecone.adoc[leveloffset=+1,opts=optional]

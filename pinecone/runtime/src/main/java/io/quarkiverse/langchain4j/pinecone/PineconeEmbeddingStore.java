@@ -1,0 +1,196 @@
+package io.quarkiverse.langchain4j.pinecone;
+
+import static dev.langchain4j.internal.Utils.randomUUID;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
+
+import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.RelevanceScore;
+import io.quarkiverse.langchain4j.pinecone.runtime.CreateIndexRequest;
+import io.quarkiverse.langchain4j.pinecone.runtime.DistanceMetric;
+import io.quarkiverse.langchain4j.pinecone.runtime.PineconeIndexOperationsApi;
+import io.quarkiverse.langchain4j.pinecone.runtime.PineconeVectorOperationsApi;
+import io.quarkiverse.langchain4j.pinecone.runtime.QueryRequest;
+import io.quarkiverse.langchain4j.pinecone.runtime.QueryResponse;
+import io.quarkiverse.langchain4j.pinecone.runtime.UpsertRequest;
+import io.quarkiverse.langchain4j.pinecone.runtime.UpsertResponse;
+import io.quarkiverse.langchain4j.pinecone.runtime.UpsertVector;
+import io.quarkus.arc.impl.LazyValue;
+import io.quarkus.logging.Log;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+
+public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
+
+    private final PineconeVectorOperationsApi vectorOperations;
+    private final PineconeIndexOperationsApi indexOperations;
+    private final String namespace;
+    private final String textFieldName;
+    private final String indexName;
+    private final Integer dimension;
+    private final LazyValue<Object> indexExists;
+
+    public PineconeEmbeddingStore(String apiKey,
+            String indexName,
+            String projectId,
+            String environment,
+            String namespace,
+            String textFieldName,
+            Duration timeout,
+            Integer dimension) {
+        this.indexName = indexName;
+        this.dimension = dimension;
+        String baseUrl = "https://" + indexName + "-" + projectId + ".svc." + environment + ".pinecone.io";
+        String baseUrlIndexOperations = "https://controller." + environment + ".pinecone.io";
+        try {
+            ClientHeadersFactory clientHeadersFactory = new ClientHeadersFactory() {
+                @Override
+                public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incoming,
+                        MultivaluedMap<String, String> outgoing) {
+                    MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
+                    headers.put("Api-Key", singletonList(apiKey));
+                    return headers;
+                }
+            };
+            vectorOperations = QuarkusRestClientBuilder.newBuilder()
+                    .baseUri(new URI(baseUrl))
+                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .clientHeadersFactory(clientHeadersFactory)
+                    .build(PineconeVectorOperationsApi.class);
+            indexOperations = QuarkusRestClientBuilder.newBuilder()
+                    .baseUri(new URI(baseUrlIndexOperations))
+                    .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
+                    .clientHeadersFactory(clientHeadersFactory)
+                    .build(PineconeIndexOperationsApi.class);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        this.namespace = namespace;
+        this.textFieldName = textFieldName;
+        Log.info("PineconeEmbeddingStore using base URL: " + baseUrl);
+        this.indexExists = new LazyValue<>(new Supplier<Object>() {
+            @Override
+            public Object get() {
+                if (indexOperations.listIndexes().contains(indexName)) {
+                    Log.info("Pinecone index " + indexName + " already exists");
+                } else {
+                    if (dimension == null) {
+                        throw new IllegalArgumentException(
+                                "quarkus.langchain4j.pinecone.dimension must be specified when creating a new index");
+                    }
+                    indexOperations.createIndex(new CreateIndexRequest(indexName, dimension, DistanceMetric.COSINE));
+                    Log.info("Created Pinecone index " + indexName + " with dimension = " + dimension);
+                }
+                return new Object();
+            }
+        });
+    }
+
+    @Override
+    public String add(Embedding embedding) {
+        String id = randomUUID();
+        add(id, embedding);
+        return id;
+    }
+
+    @Override
+    public void add(String id, Embedding embedding) {
+        addInternal(id, embedding, null);
+    }
+
+    @Override
+    public String add(Embedding embedding, TextSegment textSegment) {
+        String id = randomUUID();
+        addInternal(id, embedding, textSegment);
+        return id;
+    }
+
+    @Override
+    public List<String> addAll(List<Embedding> embeddings) {
+        List<String> ids = embeddings.stream()
+                .map(ignored -> randomUUID())
+                .collect(toList());
+        addAllInternal(ids, embeddings, null);
+        return ids;
+    }
+
+    @Override
+    public List<String> addAll(List<Embedding> embeddings, List<TextSegment> embedded) {
+        List<String> ids = embeddings.stream()
+                .map(ignored -> randomUUID())
+                .collect(toList());
+        addAllInternal(ids, embeddings, embedded);
+        return ids;
+    }
+
+    @Override
+    public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding embedding, int maxResults, double minScore) {
+        indexExists.get();
+        QueryRequest request = new QueryRequest(namespace, (long) maxResults, true, true, embedding.vector());
+        QueryResponse response = vectorOperations.query(request);
+        return response
+                .getMatches().stream().map(match -> new EmbeddingMatch<>(
+                        RelevanceScore.fromCosineSimilarity(match.getScore()),
+                        match.getId(),
+                        new Embedding(match.getValues()),
+                        match.getMetadata().get(textFieldName) != null ? new TextSegment(
+                                match.getMetadata().get(textFieldName),
+                                new Metadata(mapWithoutKey(match.getMetadata(), textFieldName))) : null))
+                .filter(match -> match.score() >= minScore)
+                .collect(toList());
+    }
+
+    public PineconeVectorOperationsApi getUnderlyingClient() {
+        return vectorOperations;
+    }
+
+    public Map<String, String> mapWithoutKey(Map<String, String> input, String key) {
+        return input.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(key))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private void addInternal(String id, Embedding embedding, TextSegment textSegment) {
+        addAllInternal(singletonList(id), singletonList(embedding), textSegment == null ? null : singletonList(textSegment));
+    }
+
+    private void addAllInternal(List<String> ids, List<Embedding> embeddings, List<TextSegment> textSegments) {
+        indexExists.get();
+        Log.debug("Adding embeddings: " + embeddings);
+        int count = ids.size();
+        List<UpsertVector> vectorList = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            UpsertVector vector = new UpsertVector.Builder()
+                    .id(ids.get(i))
+                    .value(embeddings.get(i).vector())
+                    .metadata(textFieldName, textSegments == null ? null : textSegments.get(i).text())
+                    .metadata(textSegments != null ? textSegments.get(i).metadata().asMap() : null)
+                    .build();
+            vectorList.add(vector);
+        }
+        UpsertRequest request = new UpsertRequest(vectorList, namespace);
+        UpsertResponse response = vectorOperations.upsert(request);
+        Log.debug("Added embeddings: " + response.getUpsertedCount());
+    }
+
+}
