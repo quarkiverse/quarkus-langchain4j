@@ -27,7 +27,13 @@ public class HuggingFaceRecorder {
                 .url(url)
                 .timeout(runtimeConfig.timeout())
                 .temperature(chatModelConfig.temperature())
-                .waitForModel(chatModelConfig.waitForModel());
+                .waitForModel(chatModelConfig.waitForModel())
+                .doSample(chatModelConfig.doSample())
+                .topP(chatModelConfig.topP())
+                .topK(chatModelConfig.topK())
+                .repetitionPenalty(chatModelConfig.repetitionPenalty())
+                .logRequests(runtimeConfig.logRequests())
+                .logResponses(runtimeConfig.logResponses());
 
         if (apiKeyOpt.isPresent()) {
             builder.accessToken(apiKeyOpt.get());

@@ -7,6 +7,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -34,9 +37,13 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
     private final Integer maxNewTokens;
     private final Boolean returnFullText;
     private final Boolean waitForModel;
+    private final Optional<Boolean> doSample;
+    private final OptionalDouble topP;
+    private final OptionalInt topK;
+    private final OptionalDouble repetitionPenalty;
 
     private QuarkusHuggingFaceChatModel(Builder builder) {
-        this.client = CLIENT_FACTORY.create(new HuggingFaceClientFactory.Input() {
+        this.client = CLIENT_FACTORY.create(builder, new HuggingFaceClientFactory.Input() {
             @Override
             public String apiKey() {
                 return builder.accessToken;
@@ -56,6 +63,10 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
         this.maxNewTokens = builder.maxNewTokens;
         this.returnFullText = builder.returnFullText;
         this.waitForModel = builder.waitForModel;
+        this.doSample = builder.doSample;
+        this.topP = builder.topP;
+        this.topK = builder.topK;
+        this.repetitionPenalty = builder.repetitionPenalty;
     }
 
     public static Builder builder() {
@@ -65,15 +76,23 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages) {
 
+        Parameters.Builder builder = Parameters.builder()
+                .temperature(temperature)
+                .maxNewTokens(maxNewTokens)
+                .returnFullText(returnFullText);
+
+        doSample.ifPresent(builder::doSample);
+        topK.ifPresent(builder::topK);
+        topP.ifPresent(builder::topP);
+        repetitionPenalty.ifPresent(builder::repetitionPenalty);
+
+        Parameters parameters = builder
+                .build();
         TextGenerationRequest request = TextGenerationRequest.builder()
                 .inputs(messages.stream()
                         .map(ChatMessage::text)
                         .collect(joining("\n")))
-                .parameters(Parameters.builder()
-                        .temperature(temperature)
-                        .maxNewTokens(maxNewTokens)
-                        .returnFullText(returnFullText)
-                        .build())
+                .parameters(parameters)
                 .options(Options.builder()
                         .waitForModel(waitForModel)
                         .build())
@@ -103,6 +122,14 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
         private Boolean returnFullText;
         private Boolean waitForModel = true;
         private URI url;
+        private Optional<Boolean> doSample;
+
+        private OptionalInt topK;
+        private OptionalDouble topP;
+
+        private OptionalDouble repetitionPenalty;
+        public boolean logResponses;
+        public boolean logRequests;
 
         public Builder accessToken(String accessToken) {
             this.accessToken = accessToken;
@@ -143,8 +170,38 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
             return this;
         }
 
+        public Builder doSample(Optional<Boolean> doSample) {
+            this.doSample = doSample;
+            return this;
+        }
+
+        public Builder topK(OptionalInt topK) {
+            this.topK = topK;
+            return this;
+        }
+
+        public Builder topP(OptionalDouble topP) {
+            this.topP = topP;
+            return this;
+        }
+
+        public Builder repetitionPenalty(OptionalDouble repetitionPenalty) {
+            this.repetitionPenalty = repetitionPenalty;
+            return this;
+        }
+
         public QuarkusHuggingFaceChatModel build() {
             return new QuarkusHuggingFaceChatModel(this);
+        }
+
+        public Builder logRequests(boolean logRequests) {
+            this.logRequests = logRequests;
+            return this;
+        }
+
+        public Builder logResponses(boolean logResponses) {
+            this.logResponses = logResponses;
+            return this;
         }
     }
 }

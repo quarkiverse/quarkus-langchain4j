@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.huggingface.runtime.config;
 
 import java.net.URL;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -50,4 +52,27 @@ public interface ChatModelConfig {
      */
     @WithDefault("true")
     Boolean waitForModel();
+
+    /**
+     * Whether or not to use sampling ; use greedy decoding otherwise.
+     */
+    Optional<Boolean> doSample();
+
+    /**
+     * The number of highest probability vocabulary tokens to keep for top-k-filtering.
+     */
+    OptionalInt topK();
+
+    /**
+     * If set to less than {@code 1}, only the most probable tokens with probabilities that add up to {@code top_p} or
+     * higher are kept for generation.
+     */
+    OptionalDouble topP();
+
+    /**
+     * The parameter for repetition penalty. 1.0 means no penalty.
+     * See <a href="https://arxiv.org/pdf/1909.05858.pdf">this paper</a> for more details.
+     */
+    OptionalDouble repetitionPenalty();
+
 }
