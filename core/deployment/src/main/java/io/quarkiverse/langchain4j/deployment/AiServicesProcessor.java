@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -156,7 +157,7 @@ public class AiServicesProcessor {
                 needChatModelBean = true;
             }
 
-            DotName chatMemoryProviderSupplierClassDotName = null;
+            DotName chatMemoryProviderSupplierClassDotName = Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
@@ -182,7 +183,7 @@ public class AiServicesProcessor {
                         .collect(Collectors.toList());
             }
 
-            DotName retrieverSupplierClassDotName = null;
+            DotName retrieverSupplierClassDotName = Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER;
             AnnotationValue retrieverSupplierValue = instance.value("retrieverSupplier");
             if (retrieverSupplierValue != null) {
                 retrieverSupplierClassDotName = retrieverSupplierValue.asClass().name();
@@ -276,11 +277,23 @@ public class AiServicesProcessor {
             if (Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
+            } else if (Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER.toString()
+                    .equals(chatMemoryProviderSupplierClassName)) {
+                configurator.addInjectionPoint(ParameterizedType.create(DotName.createSimple(Instance.class),
+                        new Type[] { ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER) }, null));
+                needsChatMemoryProviderBean = true;
             }
 
             if (Langchain4jDotNames.BEAN_RETRIEVER_SUPPLIER.toString().equals(retrieverSupplierClassName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
                         new Type[] { ClassType.create(Langchain4jDotNames.TEXT_SEGMENT) }, null));
+                needsRetrieverBean = true;
+            } else if (Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER.toString()
+                    .equals(retrieverSupplierClassName)) {
+                configurator.addInjectionPoint(ParameterizedType.create(DotName.createSimple(Instance.class),
+                        new Type[] { ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
+                                new Type[] { ClassType.create(Langchain4jDotNames.TEXT_SEGMENT) }, null) },
+                        null));
                 needsRetrieverBean = true;
             }
 

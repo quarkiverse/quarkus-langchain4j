@@ -5,7 +5,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class, retrieverSupplier = RegisterAiService.BeanRetrieverSupplier.class)
+@RegisterAiService
 public interface Bot {
 
     @SystemMessage("""
