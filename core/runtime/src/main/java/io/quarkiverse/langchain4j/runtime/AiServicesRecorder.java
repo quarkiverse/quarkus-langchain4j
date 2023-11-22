@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.retriever.Retriever;
@@ -25,6 +27,11 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
+
+    private static final TypeLiteral<Instance<ChatMemoryProvider>> CHAT_MEMORY_PROVIDER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+    private static final TypeLiteral<Instance<Retriever<TextSegment>>> RETRIEVER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     // the key is the interface's class name
     private static final Map<String, AiServiceClassCreateInfo> metadata = new HashMap<>();
@@ -93,6 +100,13 @@ public class AiServicesRecorder {
                                 .equals(info.getChatMemoryProviderSupplierClassName())) {
                             quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
                                     ChatMemoryProvider.class));
+                        } else if (RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class.getName()
+                                .equals(info.getChatMemoryProviderSupplierClassName())) {
+                            Instance<ChatMemoryProvider> instance = creationalContext
+                                    .getInjectedReference(CHAT_MEMORY_PROVIDER_INSTANCE_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.chatMemoryProvider(instance.get());
+                            }
                         } else {
                             Supplier<? extends ChatMemoryProvider> supplier = (Supplier<? extends ChatMemoryProvider>) Thread
                                     .currentThread().getContextClassLoader()
@@ -107,6 +121,13 @@ public class AiServicesRecorder {
                                 .equals(info.getRetrieverSupplierClassName())) {
                             quarkusAiServices.retriever(creationalContext.getInjectedReference(new TypeLiteral<>() {
                             }));
+                        } else if (RegisterAiService.BeanIfExistsRetrieverSupplier.class.getName()
+                                .equals(info.getRetrieverSupplierClassName())) {
+                            Instance<Retriever<TextSegment>> instance = creationalContext
+                                    .getInjectedReference(RETRIEVER_INSTANCE_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.retriever(instance.get());
+                            }
                         } else {
                             @SuppressWarnings("rawtypes")
                             Supplier<? extends Retriever> supplier = (Supplier<? extends Retriever>) Thread
