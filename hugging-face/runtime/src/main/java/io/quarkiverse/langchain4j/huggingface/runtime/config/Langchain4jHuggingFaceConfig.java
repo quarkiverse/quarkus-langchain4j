@@ -33,4 +33,16 @@ public interface Langchain4jHuggingFaceConfig {
      * Embedding model related settings
      */
     EmbeddingModelConfig embeddingModel();
+
+    /**
+     * Whether the OpenAI client should log requests
+     */
+    @WithDefault("false")
+    Boolean logRequests();
+
+    /**
+     * Whether the OpenAI client should log responses
+     */
+    @WithDefault("false")
+    Boolean logResponses();
 }

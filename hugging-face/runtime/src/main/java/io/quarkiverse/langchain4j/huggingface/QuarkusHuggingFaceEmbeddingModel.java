@@ -30,7 +30,7 @@ public class QuarkusHuggingFaceEmbeddingModel implements EmbeddingModel {
     private final boolean waitForModel;
 
     private QuarkusHuggingFaceEmbeddingModel(Builder builder) {
-        this.client = CLIENT_FACTORY.create(new HuggingFaceClientFactory.Input() {
+        this.client = CLIENT_FACTORY.create(null, new HuggingFaceClientFactory.Input() {
             @Override
             public String apiKey() {
                 return builder.accessToken;
