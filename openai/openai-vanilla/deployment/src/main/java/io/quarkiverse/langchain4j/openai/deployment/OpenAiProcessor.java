@@ -38,10 +38,17 @@ public class OpenAiProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer) {
-        chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
-        embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
-        moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
+            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
+            Langchain4jOpenAiBuildConfig config) {
+        if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+        }
+        if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
+            embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+        if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
+            moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
