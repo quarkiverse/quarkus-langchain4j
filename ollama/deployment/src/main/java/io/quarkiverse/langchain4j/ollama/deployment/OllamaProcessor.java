@@ -7,7 +7,6 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.Langchain4jOllamaConfig;
@@ -30,11 +29,10 @@ public class OllamaProcessor {
 
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
-            //                                   BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer) {
-        chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
-        //        embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
-        //        moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
+            Langchain4jOllamaOpenAiBuildConfig config) {
+        if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
