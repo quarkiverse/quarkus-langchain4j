@@ -33,11 +33,11 @@
             <artifactId>quarkus-langchain4j-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-chroma</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
+<!--            <artifactId>quarkus-langchain4j-chroma</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
@@ -50,11 +50,11 @@
             <artifactId>quarkus-langchain4j-redis-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
+<!--            <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>io.quarkiverse.langchain4j</groupId>-->
 <!--            <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>-->

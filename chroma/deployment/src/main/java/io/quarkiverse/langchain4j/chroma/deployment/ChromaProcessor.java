@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaConfig;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaRecorder;
@@ -33,6 +34,7 @@ class ChromaProcessor {
             ChromaConfig config) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(CHROMA_EMBEDDING_STORE)
+                .types(EmbeddingStore.class)
                 .defaultBean()
                 .setRuntimeInit()
                 .defaultBean()

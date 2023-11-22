@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -41,6 +42,7 @@ public class RedisEmbeddingStoreProcessor {
             RedisEmbeddingStoreConfig config) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(REDIS_EMBEDDING_STORE)
+                .types(EmbeddingStore.class)
                 .setRuntimeInit()
                 .defaultBean()
                 .scope(ApplicationScoped.class)

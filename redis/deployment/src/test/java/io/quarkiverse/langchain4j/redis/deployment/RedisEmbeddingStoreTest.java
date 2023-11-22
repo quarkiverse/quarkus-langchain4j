@@ -23,6 +23,7 @@ import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.CosineSimilarity;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.RelevanceScore;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
@@ -38,17 +39,21 @@ public class RedisEmbeddingStoreTest {
                             "application.properties"));
 
     @Inject
-    RedisEmbeddingStore embeddingStore;
+    EmbeddingStore embeddingStore;
+    @Inject
+    RedisEmbeddingStore redisEmbeddingStore;
 
     private final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
 
     @AfterEach
     public void cleanup() {
-        embeddingStore.deleteAll();
+        redisEmbeddingStore.deleteAll();
     }
 
     @Test
     void should_add_embedding() {
+        assertThat(embeddingStore).isSameAs(redisEmbeddingStore);
+
         Embedding embedding = embeddingModel.embed(randomUUID()).content();
 
         String id = embeddingStore.add(embedding);

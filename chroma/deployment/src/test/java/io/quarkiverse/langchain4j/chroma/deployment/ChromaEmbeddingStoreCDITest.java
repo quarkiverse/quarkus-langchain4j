@@ -18,6 +18,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -32,7 +33,7 @@ class ChromaEmbeddingStoreCDITest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    ChromaEmbeddingStore embeddingStore;
+    EmbeddingStore embeddingStore;
 
     private final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
 
