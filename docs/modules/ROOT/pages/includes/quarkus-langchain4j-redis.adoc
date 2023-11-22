@@ -137,6 +137,8 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langc
 --
 Prefix to be applied to all keys by the embedding store. Embeddings are stored in Redis under a key that is the concatenation of this prefix and the embedding ID.
 
+If the configured prefix does not ends with `:`, it will be added automatically to follow the Redis convention.
+
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_PREFIX+++[]
 endif::add-copy-button-to-env-var[]

@@ -28,7 +28,6 @@ public interface RedisEmbeddingStoreConfig {
      * The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by
      * the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384.
      * OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
-     *
      */
     Long dimension();
 
@@ -69,6 +68,8 @@ public interface RedisEmbeddingStoreConfig {
     /**
      * Prefix to be applied to all keys by the embedding store. Embeddings are stored in Redis
      * under a key that is the concatenation of this prefix and the embedding ID.
+     * <p>
+     * If the configured prefix does not ends with {@code :}, it will be added automatically to follow the Redis convention.
      */
     @WithDefault("embedding:")
     String prefix();

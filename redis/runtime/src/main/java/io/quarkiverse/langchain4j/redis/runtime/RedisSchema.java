@@ -127,6 +127,10 @@ public class RedisSchema {
         }
 
         public Builder prefix(String prefix) {
+            // Follow redis convention
+            if (prefix != null && !prefix.endsWith(":")) {
+                prefix = prefix + ":";
+            }
             this.prefix = prefix;
             return this;
         }
