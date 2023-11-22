@@ -168,20 +168,39 @@ public class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
 
 As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
 
-The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the memory provider:
+The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the memory provider. The default value of this annotation is `RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class`
+which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application, while falling back to no memory if no such bean exists.
+An example of such a bean is:
 
 [source,java]
 ----
-@RegisterAiService(
-    chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
 ----
 
-It can be a class implementing `Supplier<ChatMemoryProvider>`, such as:
+Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
+
+NOTE: It is recommended that the bean use the `@RequestScoped` scope or a scope not shared between users.
+
+Users can provide their own custom `ChatMemoryProvider` for use in the AiService by implementing `Supplier<ChatMemoryProvider>`, such as:
 
 [source,java]
 ----
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/MySmallMemoryProvider.java[]
 ----
+
+and configuring the AiService as so:
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryProviderSupplier = MySmallMemoryProvider.class)
+----
+
+TIP: For non-memory-reliant LLM interactions, you may skip memory configuration.
+
+IMPORTANT: When using tools, you need a memory of at least 3 messages to cover the tools interaction.
+
+=== @MemoryId
 
 In cases involving multiple users, ensure each user has a unique memory ID and pass this ID to the AI method:
 
@@ -191,30 +210,6 @@ String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 ----
 
 Also, remember to clear out users to prevent memory issues.
-
-TIP: For non-memory-reliant LLM interactions, you may skip memory configuration.
-
-Alternatively, you can use the `BeanChatMemoryProviderSupplier` class to use a CDI bean as memory provider:
-
-[source,java]
-----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
-----
-
-Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
-
-This bean is then referenced in the `@RegisterAiService` annotation using the `RegisterAiService.BeanChatMemoryProviderSupplier.class` value:
-
-[source,java]
-----
-@RegisterAiService(
-        chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class
-)
-----
-
-NOTE: It is recommended that the bean use the `@RequestScoped` scope or a scope not shared between users.
-
-IMPORTANT: When using tools, you need a memory of at least 3 messages to cover the tools interaction.
 
 == Configuring Tools
 
@@ -237,9 +232,7 @@ The `@Tool` annotation can provide a description of the action, aiding the LLM i
 
 [source,java]
 ----
-@RegisterAiService(
-    chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class,
-    tools = {TransactionRepository.class, CustomerRepository.class })
+@RegisterAiService(tools = {TransactionRepository.class, CustomerRepository.class })
 ----
 
 IMPORTANT: Ensure you configure the memory provider when using tools.

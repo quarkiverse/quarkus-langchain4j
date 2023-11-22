@@ -66,15 +66,7 @@ Configure the maximum number of documents to retrieve (e.g., 20 in the example) 
 Make sure that the number of documents is not too high (or document too large).
 More document you have, more data you are adding to the LLM context, and you may exceed the limit.
 
-To use the retriever in your AI service, configure it as a CDI bean:
-
-[source,java]
-----
-@RegisterAiService(retrieverSupplier = RegisterAiService.BeanRetrieverSupplier.class)
-public interface MyAiService {
-// ...
-}
-----
+A retriever is used by default in your AI service, simply by having said retriever configured as a CDI bean,
 
 Alternatively, implement a class implementing `Supplier<Retriever<TextSegment>>` if you prefer not to expose the retriever as a CDI bean.
 Then, configure the `retrieverSupplier` attribute to point to your implementation.

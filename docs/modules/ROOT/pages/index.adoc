@@ -59,12 +59,11 @@ Once you've added the dependency and configuration, the next step involves creat
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/MyAiService.java[]
 ----
 <1> The `@RegisterAiService` annotation registers the _AI service_.
-<2> The `chatMemoryProviderSupplier` attribute specifies the _chat memory_ provider, managing how the LLM retains conversation history (the "context").
-<3> The `tools` attribute defines the _tools_ the LLM can employ.
+<2> The `tools` attribute defines the _tools_ the LLM can employ.
 During interaction, the LLM can invoke these tools and reflect on their output.
-<4> The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
-<5> The `@UserMessage` annotation serves as the _prompt_.
-<6> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
+<3> The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
+<4> The `@UserMessage` annotation serves as the _prompt_.
+<5> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
 
 == Advantages over vanilla Langchain4j
 
