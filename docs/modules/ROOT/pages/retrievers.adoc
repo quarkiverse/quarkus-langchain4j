@@ -4,6 +4,7 @@ include::./includes/attributes.adoc[]
 
 Many applications involving Large Language Models (LLMs) often require user-specific data beyond their training set, such as CSV files, data from various sources, or reports. To achieve this, the process of Retrieval Augmented Generation (RAG) is commonly employed.
 
+
 == Understanding the Data Ingestion Journey
 
 Before delving into the RAG process, it's crucial to delineate two distinct phases:
@@ -11,6 +12,8 @@ Before delving into the RAG process, it's crucial to delineate two distinct phas
 The Data Ingestion Process:: Involves data collection, cleaning, transformation, and adding metadata, resulting in a set of vectorized documents stored in a database.
 
 The RAG Process:: Before engaging with the LLM, it seeks relevant documents in the database and passes them for model augmentation.
+
+image::chatbot-architecture.png[width=1000,align="center"]
 
 == Unveiling Embeddings
 
