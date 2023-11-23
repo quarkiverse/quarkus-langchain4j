@@ -9,18 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.jboss.jandex.DotName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
-import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.ProviderHolder;
-import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
-import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.*;
 import io.quarkiverse.langchain4j.runtime.Langchain4jRecorder;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -57,7 +52,8 @@ public class BeansProcessor {
             LangChain4jBuildConfig buildConfig,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
-            BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer) {
+            BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
+            List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems) {
 
         boolean chatModelBeanRequested = false;
         boolean streamingChatModelBeanRequested = false;
@@ -91,7 +87,8 @@ public class BeansProcessor {
         if (embeddingModelBeanRequested) {
             selectedEmbeddingProducer.produce(
                     new SelectedEmbeddingModelCandidateBuildItem(
-                            selectProvider(
+                            selectEmbeddingModelProvider(
+                                    inProcessEmbeddingBuildItems,
                                     embeddingCandidateItems,
                                     buildConfig.embeddingModel().provider(),
                                     "EmbeddingModel",
@@ -110,7 +107,8 @@ public class BeansProcessor {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private <T extends ProviderHolder> String selectProvider(List<T> chatCandidateItems,
+    private <T extends ProviderHolder> String selectProvider(
+            List<T> chatCandidateItems,
             Optional<String> userSelectedProvider,
             String requestedBeanName,
             String configNamespace) {
@@ -119,6 +117,41 @@ public class BeansProcessor {
         if (availableProviders.isEmpty()) {
             throw new ConfigurationException(String.format(
                     "A %s bean was requested, but no langchain4j providers were configured. Consider adding an extension like 'quarkus-langchain4j-openai'",
+                    requestedBeanName));
+        }
+        if (availableProviders.size() == 1) {
+            return availableProviders.get(0);
+        }
+        // multiple providers exist, so we now need the configuration to select the proper one
+        if (userSelectedProvider.isEmpty()) {
+            throw new ConfigurationException(String.format(
+                    "A %s bean was requested, but since there are multiple available providers, the 'quarkus.langchain4j.%s.provider' needs to be set to one of the available options (%s).",
+                    requestedBeanName, configNamespace, String.join(",", availableProviders)));
+        }
+        boolean matches = availableProviders.stream().anyMatch(ap -> ap.equals(userSelectedProvider.get()));
+        if (matches) {
+            return userSelectedProvider.get();
+        }
+        throw new ConfigurationException(String.format(
+                "A %s bean was requested, but the value of 'quarkus.langchain4j.%s.provider' does not match any of the available options (%s).",
+                requestedBeanName, configNamespace, String.join(",", availableProviders)));
+    }
+
+    private <T extends ProviderHolder> String selectEmbeddingModelProvider(
+            List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
+            List<T> chatCandidateItems,
+            Optional<String> userSelectedProvider,
+            String requestedBeanName,
+            String configNamespace) {
+        List<String> availableProviders = chatCandidateItems.stream().map(ProviderHolder::getProvider)
+                .collect(Collectors.toList());
+        availableProviders.addAll(inProcessEmbeddingBuildItems.stream().map(InProcessEmbeddingBuildItem::getProvider)
+                .toList());
+        if (availableProviders.isEmpty()) {
+            throw new ConfigurationException(String.format(
+                    "A %s bean was requested, but no langchain4j providers were configured and no in-process embedding model were found on the classpath. "
+                            +
+                            "Consider adding an extension like 'quarkus-langchain4j-openai' or one of the in-process embedding model.",
                     requestedBeanName));
         }
         if (availableProviders.size() == 1) {

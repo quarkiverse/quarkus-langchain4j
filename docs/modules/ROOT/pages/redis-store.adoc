@@ -21,6 +21,9 @@ This extension relies on the Quarkus Redis client. Ensure the default Redis data
 
 IMPORTANT: The Redis document store's functionality is built on the Redis JSON and Redis Search modules. Ensure these modules are installed, or consider using the Redis Stack. If you want to use the Quarkus Dev Services for Redis, make sure to configure `quarkus.redis.devservices.image-name=redis/redis-stack:latest` in your `application.properties` file.
 
+IMPORTANT: The Redis document store requires the dimension of the vector to be set. Add the `quarkus.langchain4j.redis.dimension` property to your `application.properties` file and set it to the dimension of the vector. The dimension depends on the embedding model you use.
+For example, `AllMiniLmL6V2QuantizedEmbeddingModel` produces vectors of dimension 384. OpenAI’s `text-embedding-ada-002` produces vectors of dimension 1536.
+
 Upon installing the extension, you can utilize the Redis document store using the following code:
 
 [source,java]
