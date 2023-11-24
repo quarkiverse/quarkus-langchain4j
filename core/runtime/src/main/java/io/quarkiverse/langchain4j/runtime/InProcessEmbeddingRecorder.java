@@ -11,15 +11,18 @@ import io.quarkus.runtime.annotations.Recorder;
 public class InProcessEmbeddingRecorder {
     @SuppressWarnings("unchecked")
     public Supplier<?> instantiate(String className) {
-        return () -> {
-            try {
-                Class<? extends AbstractInProcessEmbeddingModel> loaded = (Class<? extends AbstractInProcessEmbeddingModel>) InProcessEmbeddingRecorder.class
-                        .getClassLoader().loadClass(className);
-                return loaded.getConstructor().newInstance();
-            } catch (Exception e) {
-                Logger.getLogger(InProcessEmbeddingRecorder.class)
-                        .errorf("Failed to instantiate in-process embedding model %s", className, e);
-                throw new RuntimeException(e);
+        return new Supplier<Object>() {
+            @Override
+            public Object get() {
+                try {
+                    Class<? extends AbstractInProcessEmbeddingModel> loaded = (Class<? extends AbstractInProcessEmbeddingModel>) InProcessEmbeddingRecorder.class
+                            .getClassLoader().loadClass(className);
+                    return loaded.getConstructor().newInstance();
+                } catch (Exception e) {
+                    Logger.getLogger(InProcessEmbeddingRecorder.class)
+                            .errorf("Failed to instantiate in-process embedding model %s", className, e);
+                    throw new RuntimeException(e);
+                }
             }
         };
     }
