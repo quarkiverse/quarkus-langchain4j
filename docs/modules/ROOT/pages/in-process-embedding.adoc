@@ -1,0 +1,87 @@
+= In-Process Embedding Models
+
+include::./includes/attributes.adoc[]
+
+When ingesting document or implementing the RAG pattern, you need an _embedding model_.
+This is a model that takes a document and returns a vector representation of that document.
+The vector representation is stored in a vector database, and is used to find similar documents.
+
+When using LLMs like OpenAI or HuggingFace, it provides _remote_ embedding models.
+To compute the _embedding_ of a document, you need to send the document to the remote model.
+
+In-process models avoids this overhead by running the model in the same process as the application.
+This is generally faster, but requires more memory.
+
+== Supported in-process models
+
+The Quarkus LangChain4j extension provides supports for a set of in-process embedding models.
+They are **not** included by default, and you need to add the explicit dependency to your project.
+
+The following table lists the supported models, and the corresponding dependency to add to your project.
+
+[cols="2,1,1,1",options="header"]
+|===
+| Model Name | Dependency | Vector Dimension | Injected type
+
+| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2-q]
+|`dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel`
+
+| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2]
+|`dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel`
+
+| https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en-q]
+|`dev.langchain4j:langchain4j-embeddings-bge-small-en-q:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel`
+
+| https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en]
+|`dev.langchain4j:langchain4j-embeddings-bge-small-en:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel`
+
+| https://huggingface.co/BAAI/bge-small-zh[bge-small-zh-q]
+|`dev.langchain4j:langchain4j-embeddings-bge-small-zh-q:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel`
+
+
+| https://huggingface.co/BAAI/bge-small-zh[bge-small-zh]
+|`dev.langchain4j:langchain4j-embeddings-bge-small-zh:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel`
+
+
+| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
+|`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel`
+
+| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
+|`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
+| 384
+| `dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel`
+
+|===
+
+== Injecting an embedding model
+
+You can inject the model in your application using:
+
+[source,java]
+----
+@Inject E5SmallV2QuantizedEmbeddingModel model;
+----
+
+Use the corresponding model type for the model you want to use, and make sure you have added the corresponding dependency to your project.
+
+Note that if you do not have any other embedding model in your project, you can inject the `EmbeddingModel` interface, and it will be automatically injected with the available model:
+
+[source,java]
+----
+@Inject EmbeddingModel model;
+----
+
