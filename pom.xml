@@ -105,6 +105,7 @@
         <module>samples/review-triage</module>
         <module>samples/fraud-detection</module>
         <module>samples/chatbot</module>
+        <module>samples/csv-chatbot</module>
       </modules>
     </profile>
   </profiles>

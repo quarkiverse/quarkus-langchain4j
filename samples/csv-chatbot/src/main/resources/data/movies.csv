@@ -1,0 +1,100 @@
+index,movie_name,year_of_release,category,run_time,genre,imdb_rating,votes,gross_total
+1.,The Godfather,(1972),R,175 min,"Crime, Drama",9.2,"1,860,471",$134.97M
+2.,The Silence of the Lambs,(1991),R,118 min,"Crime, Drama, Thriller",8.6,"1,435,344",$130.74M
+3.,Star Wars: Episode V - The Empire Strikes Back,(1980),PG,124 min,"Action, Adventure, Fantasy",8.7,"1,294,805",$290.48M
+4.,The Shawshank Redemption,(1994),R,142 min,Drama,9.3,"2,683,302",$28.34M
+5.,The Shining,(1980),R,146 min,"Drama, Horror",8.4,"1,025,560",$44.02M
+6.,Casablanca,(1942),PG,102 min,"Drama, Romance, War",8.5,"574,092",$1.02M
+7.,One Flew Over the Cuckoo's Nest,(1975),R,133 min,Drama,8.7,"1,010,102",$112.00M
+8.,Indiana Jones and the Raiders of the Lost Ark,(1981),PG,115 min,"Action, Adventure",8.4,"969,143",$248.16M
+9.,The Lord of the Rings: The Return of the King,(2003),PG-13,201 min,"Action, Adventure, Drama",9,"1,849,082",$377.85M
+10.,Star Wars: Episode IV - A New Hope,(1977),PG,121 min,"Action, Adventure, Fantasy",8.6,"1,367,430",$322.74M
+11.,The Dark Knight,(2008),PG-13,152 min,"Action, Crime, Drama",9,"2,656,768",$534.86M
+12.,The Godfather: Part II,(1974),R,202 min,"Crime, Drama",9,"1,273,349",$57.30M
+13.,Aliens,(1986),R,137 min,"Action, Adventure, Sci-Fi",8.4,"720,623",$85.16M
+14.,Schindler's List,(1993),R,195 min,"Biography, Drama, History",9,"1,357,621",$96.90M
+15.,Inception,(2010),PG-13,148 min,"Action, Adventure, Sci-Fi",8.8,"2,356,293",$292.58M
+16.,The Lord of the Rings: The Fellowship of the Ring,(2001),PG-13,178 min,"Action, Adventure, Drama",8.8,"1,878,557",$315.54M
+17.,Alien,(1979),R,117 min,"Horror, Sci-Fi",8.5,"885,635",$78.90M
+18.,Some Like It Hot,(1959),Passed,121 min,"Comedy, Music, Romance",8.2,"269,346",$25.00M
+19.,Blade Runner,(1982),R,117 min,"Action, Drama, Sci-Fi",8.1,"773,425",$32.87M
+20.,Se7en,(1995),R,127 min,"Crime, Drama, Mystery",8.6,"1,655,745",$100.13M
+21.,Apocalypse Now,(1979),R,147 min,"Drama, Mystery, War",8.5,"669,994",$83.47M
+22.,12 Angry Men,(1957),Approved,96 min,"Crime, Drama",9,"792,729",$4.36M
+23.,The Lord of the Rings: The Two Towers,(2002),PG-13,179 min,"Action, Adventure, Drama",8.8,"1,669,715",$342.55M
+24.,Terminator 2: Judgment Day,(1991),R,137 min,"Action, Sci-Fi",8.6,"1,101,850",$204.84M
+25.,Star Wars: Episode VI - Return of the Jedi,(1983),PG,131 min,"Action, Adventure, Fantasy",8.3,"1,056,750",$309.13M
+26.,Die Hard,(1988),R,132 min,"Action, Thriller",8.2,"887,967",$83.01M
+27.,Gone with the Wind,(1939),Passed,238 min,"Drama, Romance, War",8.2,"317,621",$198.68M
+28.,Taxi Driver,(1976),R,114 min,"Crime, Drama",8.2,"836,871",$28.26M
+29.,Pulp Fiction,(1994),R,154 min,"Crime, Drama",8.9,"2,058,574",$107.93M
+30.,The Bridge on the River Kwai,(1957),PG,161 min,"Adventure, Drama, War",8.2,"222,540",$44.91M
+31.,The Lion King,(1994),G,88 min,"Animation, Adventure, Drama",8.5,"1,060,900",$422.78M
+32.,North by Northwest,(1959),Approved,136 min,"Action, Adventure, Mystery",8.3,"330,232",$13.28M
+33.,Rear Window,(1954),PG,112 min,"Mystery, Thriller",8.5,"493,926",$36.76M
+34.,Léon: The Professional,(1994),R,110 min,"Action, Crime, Drama",8.5,"1,164,087",$19.50M
+35.,Back to the Future,(1985),PG,116 min,"Adventure, Comedy, Sci-Fi",8.5,"1,208,582",$210.61M
+36.,Citizen Kane,(1941),PG,119 min,"Drama, Mystery",8.3,"444,359",$1.59M
+37.,Goodfellas,(1990),R,145 min,"Biography, Crime, Drama",8.7,"1,164,128",$46.84M
+38.,Memento,(2000),R,113 min,"Mystery, Thriller",8.4,"1,241,252",$25.54M
+39.,American Beauty,(1999),R,122 min,Drama,8.4,"1,157,536",$130.10M
+40.,As Good as It Gets,(1997),PG-13,139 min,"Comedy, Drama, Romance",7.7,"301,756",$148.48M
+41.,Forrest Gump,(1994),PG-13,142 min,"Drama, Romance",8.8,"2,082,477",$330.25M
+42.,Singin' in the Rain,(1952),G,103 min,"Comedy, Musical, Romance",8.3,"244,548",$8.82M
+43.,Braveheart,(1995),R,178 min,"Biography, Drama, History",8.4,"1,040,416",$75.60M
+44.,Saving Private Ryan,(1998),R,169 min,"Drama, War",8.6,"1,394,262",$216.54M
+45.,Rain Man,(1988),R,133 min,Drama,8,"517,528",$178.80M
+46.,The King's Speech,(2010),R,118 min,"Biography, Drama, History",8,"683,379",$138.80M
+47.,2001: A Space Odyssey,(1968),G,149 min,"Adventure, Sci-Fi",8.3,"671,980",$56.95M
+48.,Kill Bill: Vol. 1,(2003),R,111 min,"Action, Crime, Drama",8.2,"1,119,120",$70.10M
+49.,Avanti!,(1972),R,144 min,"Comedy, Romance",7.2,"10,748",$3.30M
+50.,"The Good, the Bad and the Ugly",(1966),Approved,178 min,"Adventure, Western",8.8,"763,678",$6.10M
+51.,Amélie,(2001),R,122 min,"Comedy, Romance",8.3,"759,411",$33.23M
+52.,Modern Times,(1936),G,87 min,"Comedy, Drama, Romance",8.5,"244,162",$0.16M
+53.,Lost in Translation,(2003),R,102 min,"Comedy, Drama",7.7,"458,613",$44.59M
+54.,Full Metal Jacket,(1987),R,116 min,"Drama, War",8.3,"745,546",$46.36M
+55.,Requiem for a Dream,(2000),R,102 min,Drama,8.3,"845,362",$3.64M
+56.,Fight Club,(1999),R,139 min,Drama,8.8,"2,128,902",$37.03M
+57.,No Country for Old Men,(2007),R,122 min,"Crime, Drama, Thriller",8.2,"977,336",$74.28M
+58.,Django Unchained,(2012),R,165 min,"Drama, Western",8.4,"1,557,890",$162.81M
+59.,Children of Men,(2006),R,109 min,"Action, Drama, Sci-Fi",7.9,"503,642",$35.55M
+60.,Ratatouille,(2007),G,111 min,"Animation, Adventure, Comedy",8.1,"741,322",$206.45M
+61.,The Lives of Others,(2006),R,137 min,"Drama, Mystery, Thriller",8.4,"391,480",$11.29M
+62.,The Prestige,(2006),PG-13,130 min,"Drama, Mystery, Sci-Fi",8.5,"1,336,235",$53.09M
+63.,V for Vendetta,(2005),R,132 min,"Action, Drama, Sci-Fi",8.2,"1,125,038",$70.51M
+64.,Chinatown,(1974),R,130 min,"Drama, Mystery, Thriller",8.2,"329,110",$8.49M
+65.,City of God,(2002),R,130 min,"Crime, Drama",8.6,"758,914",$7.56M
+66.,To Have and Have Not,(1944),Passed,100 min,"Adventure, Comedy, Film-Noir",7.8,"35,528",
+67.,Fargo,(1996),R,98 min,"Crime, Thriller",8.1,"681,256",$24.61M
+68.,Life of Pi,(2012),PG,127 min,"Adventure, Drama, Fantasy",7.9,"634,357",$124.99M
+69.,Slumdog Millionaire,(2008),R,120 min,"Crime, Drama, Romance",8,"848,344",$141.32M
+70.,Vertigo,(1958),PG,128 min,"Mystery, Romance, Thriller",8.3,"404,626",$3.20M
+71.,Trainspotting,(1996),R,93 min,Drama,8.1,"690,138",$16.50M
+72.,Interstellar,(2014),PG-13,169 min,"Adventure, Drama, Sci-Fi",8.6,"1,835,790",$188.02M
+73.,The Thing,(1982),R,109 min,"Horror, Mystery, Sci-Fi",8.2,"428,474",$13.78M
+74.,The Third Man,(1949),Approved,93 min,"Film-Noir, Mystery, Thriller",8.1,"173,206",$0.45M
+75.,12 Monkeys,(1995),R,129 min,"Mystery, Sci-Fi, Thriller",8,"621,205",$57.14M
+76.,Life Is Beautiful,(1997),PG-13,116 min,"Comedy, Drama, Romance",8.6,"697,226",$57.60M
+77.,The Pianist,(2002),R,150 min,"Biography, Drama, Music",8.5,"834,842",$32.57M
+78.,Magnolia,(1999),R,188 min,Drama,8,"315,037",$22.46M
+79.,The Dark Knight Rises,(2012),PG-13,164 min,"Action, Drama",8.4,"1,708,002",$448.14M
+80.,Star Wars: Episode VII - The Force Awakens,(2015),PG-13,138 min,"Action, Adventure, Sci-Fi",7.8,"933,771",$936.66M
+81.,The Hobbit: The Desolation of Smaug,(2013),PG-13,161 min,"Adventure, Fantasy",7.8,"667,864",$258.37M
+82.,Mad Max: Fury Road,(2015),R,120 min,"Action, Adventure, Sci-Fi",8.1,"1,006,158",$154.06M
+83.,12 Years a Slave,(2013),R,134 min,"Biography, Drama, History",8.1,"703,824",$56.67M
+84.,Indiana Jones and the Last Crusade,(1989),PG-13,127 min,"Action, Adventure",8.2,"758,057",$197.17M
+85.,"O Brother, Where Art Thou?",(2000),PG-13,107 min,"Adventure, Comedy, Crime",7.7,"315,173",$45.51M
+86.,Inglourious Basterds,(2009),R,153 min,"Adventure, Drama, War",8.3,"1,453,288",$120.54M
+87.,The Departed,(2006),R,151 min,"Crime, Drama, Thriller",8.5,"1,328,252",$132.38M
+88.,A Beautiful Mind,(2001),PG-13,135 min,"Biography, Drama",8.2,"935,549",$170.74M
+89.,District 9,(2009),R,112 min,"Action, Sci-Fi, Thriller",7.9,"685,403",$115.65M
+90.,The Piano,(1993),R,121 min,"Drama, Music, Romance",7.5,"89,819",$40.16M
+91.,Mystic River,(2003),R,138 min,"Crime, Drama, Mystery",7.9,"459,918",$90.14M
+92.,The Insider,(1999),R,157 min,"Biography, Drama, Thriller",7.8,"172,759",$28.97M
+93.,L.A. Confidential,(1997),R,138 min,"Crime, Drama, Mystery",8.2,"585,555",$64.62M
+94.,Heat,(1995),R,170 min,"Action, Crime, Drama",8.3,"658,033",$67.44M
+95.,The Usual Suspects,(1995),R,106 min,"Crime, Drama, Mystery",8.5,"1,087,832",$23.34M
+96.,Cool Hand Luke,(1967),GP,127 min,"Crime, Drama",8.1,"178,888",$16.22M
+97.,Eternal Sunshine of the Spotless Mind,(2004),R,108 min,"Drama, Romance, Sci-Fi",8.3,"1,011,004",$34.40M
+98.,City Lights,(1931),G,87 min,"Comedy, Drama, Romance",8.5,"186,059",$0.02M
+99.,The Matrix,(1999),R,136 min,"Action, Sci-Fi",8.7,"1,916,083",$171.48M
