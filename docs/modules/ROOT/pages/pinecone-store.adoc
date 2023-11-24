@@ -16,20 +16,6 @@ To make use of the Pinecone document store, you'll need to include the following
 </dependency>
 ----
 
-The required configuration properties to make the extension work are
-`quarkus.langchain4j.pinecone.api-key`,
-`quarkus.langchain4j.pinecone.environment`,
-`quarkus.langchain4j.pinecone.index-name`, and
-`quarkus.langchain4j.pinecone.project-id`. The specified index will be
-created if it doesn't exist yet.
-
-Upon installing the extension, you can utilize the Pinecone embedding store using the following code:
-
-[source,java]
-----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithPinecone.java[]
-----
-
 == Configuration Settings
 
 Customize the behavior of the extension by exploring various configuration options:
