@@ -40,7 +40,7 @@ public class RedisEmbeddingStoreRecorder {
                         .metadataFields(config.metadataFields().orElse(Collections.emptyList()))
                         .vectorAlgorithm(config.vectorAlgorithm())
                         .dimension(config.dimension())
-                        .metricType(config.metricType())
+                        .metricType(config.distanceMetric())
                         .build();
                 builder.schema(schema);
 
