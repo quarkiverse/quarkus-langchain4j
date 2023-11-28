@@ -2,8 +2,11 @@ package io.quarkiverse.langchain4j.chroma.deployment;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
 
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaConfig;
@@ -34,7 +37,8 @@ class ChromaProcessor {
             ChromaConfig config) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(CHROMA_EMBEDDING_STORE)
-                .types(EmbeddingStore.class)
+                .types(ClassType.create(EmbeddingStore.class),
+                        ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .defaultBean()
                 .setRuntimeInit()
                 .defaultBean()
