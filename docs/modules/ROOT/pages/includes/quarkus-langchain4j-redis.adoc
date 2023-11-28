@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.metric-type]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.metric-type[quarkus.langchain4j.redis.metric-type]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.distance-metric]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.distance-metric[quarkus.langchain4j.redis.distance-metric]`
 
 
 [.description]
@@ -86,13 +86,13 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langc
 Metric used to compute the distance between two vectors.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_METRIC_TYPE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_DISTANCE_METRIC+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_METRIC_TYPE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_DISTANCE_METRIC+++`
 endif::add-copy-button-to-env-var[]
 -- a|
-`cosine`, `ip`, `l2` 
+`l2`, `ip`, `cosine` 
 |`cosine`
 
 
