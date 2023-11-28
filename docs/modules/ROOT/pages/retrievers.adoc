@@ -48,7 +48,7 @@ The following code demonstrates document ingestion in a Redis database:
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExample.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithRedis.java[]
 ----
 
 Adjust the `documentSplitter` parameter based on the data structure.
