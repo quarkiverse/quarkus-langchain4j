@@ -10,7 +10,7 @@ When loading a CSV file, the process involves:
 2. Ingesting the set of documents using an appropriate *document splitter*.
 3. Storing the documents in the database.
 
-You can find a complete example in the [GitHub repository](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/csv-chatbot).
+You can find a complete example in the https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/csv-chatbot[GitHub Repository].
 
 == From CSV to Documents
 
