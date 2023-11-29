@@ -10,17 +10,17 @@ import jakarta.inject.Inject;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
-import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
+import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
 
 @ApplicationScoped
-public class IngestorExampleWithChroma {
+public class IngestorExampleWithRedis {
 
     /**
      * The embedding store (the database).
-     * The bean is provided by the quarkus-langchain4j-chroma extension.
+     * The bean is provided by the quarkus-langchain4j-redis extension.
      */
     @Inject
-    ChromaEmbeddingStore store;
+    RedisEmbeddingStore store;
 
     /**
      * The embedding model (how is computed the vector of a document).

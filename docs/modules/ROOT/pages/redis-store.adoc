@@ -28,7 +28,7 @@ Upon installing the extension, you can utilize the Redis document store using th
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExample.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithRedis.java[]
 ----
 
 == Configuration Settings

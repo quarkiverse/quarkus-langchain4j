@@ -14,6 +14,7 @@
 * Document Stores
 ** xref:redis-store.adoc[Redis Store]
 ** xref:chroma-store.adoc[Chroma Store]
+** xref:pinecone-store.adoc[Pinecone Store]
 ** xref:in-process-embedding.adoc[In-Process Embeddings]
 ** xref:csv.adoc[Loading CSV files]
 

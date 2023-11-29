@@ -1,0 +1,168 @@
+
+:summaryTableId: quarkus-langchain4j-pinecone
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-pinecone_configuration]]link:#quarkus-langchain4j-pinecone_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key[quarkus.langchain4j.pinecone.api-key]`
+
+
+[.description]
+--
+The API key to Pinecone.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment[quarkus.langchain4j.pinecone.environment]`
+
+
+[.description]
+--
+Environment name, e.g. gcp-starter or northamerica-northeast1-gcp.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_ENVIRONMENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_ENVIRONMENT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id[quarkus.langchain4j.pinecone.project-id]`
+
+
+[.description]
+--
+ID of the project.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name[quarkus.langchain4j.pinecone.index-name]`
+
+
+[.description]
+--
+Name of the index within the project. If the index doesn't exist, it will be created.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension[quarkus.langchain4j.pinecone.dimension]`
+
+
+[.description]
+--
+Dimension of the embeddings in the index. This is required only in case that the index doesn't exist yet and needs to be created.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace[quarkus.langchain4j.pinecone.namespace]`
+
+
+[.description]
+--
+The namespace.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_NAMESPACE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_NAMESPACE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name[quarkus.langchain4j.pinecone.text-field-name]`
+
+
+[.description]
+--
+The name of the field that contains the text segment.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_TEXT_FIELD_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TEXT_FIELD_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`text`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout[quarkus.langchain4j.pinecone.timeout]`
+
+
+[.description]
+--
+The timeout duration for the Pinecone client. If not specified, 5 seconds will be used.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+|
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() javadoc] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
