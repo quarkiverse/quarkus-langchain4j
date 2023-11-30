@@ -1,21 +1,19 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import dev.langchain4j.service.AiServiceContext;
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 
-/**
- * When micrometer metrics are enabled, this is used to record how long calls take
- */
-@SuppressWarnings("unused") // the methods are used in generated code
-public class MetricsProducingMethodImplementationSupport {
+public class MetricsWrapper implements AiServiceMethodImplementationSupport.Wrapper {
 
-    public static Object implement(AiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
-        Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfoOpt = createInfo.getMetricsInfo();
+    @Override
+    public Object wrap(AiServiceMethodImplementationSupport.Input input,
+            Function<AiServiceMethodImplementationSupport.Input, Object> fun) {
+        Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfoOpt = input.createInfo.getMetricsInfo();
         if (metricsInfoOpt.isPresent()) {
             AiServiceMethodCreateInfo.MetricsInfo metricsInfo = metricsInfoOpt.get();
             if (metricsInfo.isLongTask()) {
@@ -28,7 +26,7 @@ public class MetricsProducingMethodImplementationSupport {
                 return timer.record(new Supplier<Object>() {
                     @Override
                     public Object get() {
-                        return MethodImplementationSupport.implement(context, createInfo, methodArgs);
+                        return fun.apply(input);
                     }
                 });
             } else {
@@ -41,12 +39,12 @@ public class MetricsProducingMethodImplementationSupport {
                 return timer.record(new Supplier<Object>() {
                     @Override
                     public Object get() {
-                        return MethodImplementationSupport.implement(context, createInfo, methodArgs);
+                        return fun.apply(input);
                     }
                 });
             }
         } else {
-            return MethodImplementationSupport.implement(context, createInfo, methodArgs);
+            return fun.apply(input);
         }
     }
 }

@@ -7,6 +7,7 @@ import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigu
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,9 +50,13 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
-import io.quarkiverse.langchain4j.runtime.aiservice.MethodImplementationSupport;
-import io.quarkiverse.langchain4j.runtime.aiservice.MetricsProducingMethodImplementationSupport;
+import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+import io.quarkus.arc.InstanceHandle;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.builder.item.MultiBuildItem;
@@ -90,11 +95,9 @@ public class AiServicesProcessor {
     public static final MethodDescriptor OBJECT_CONSTRUCTOR = MethodDescriptor.ofConstructor(Object.class);
     private static final MethodDescriptor RECORDER_METHOD_CREATE_INFO = MethodDescriptor.ofMethod(AiServicesRecorder.class,
             "getAiServiceMethodCreateInfo", AiServiceMethodCreateInfo.class, String.class, String.class);
-    private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(MethodImplementationSupport.class,
-            "implement", Object.class, AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class);
-    private static final MethodDescriptor SUPPORT_WITH_METRICS_IMPLEMENT = MethodDescriptor.ofMethod(
-            MetricsProducingMethodImplementationSupport.class,
-            "implement", Object.class, AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class);
+    private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(
+            AiServiceMethodImplementationSupport.class,
+            "implement", Object.class, AiServiceMethodImplementationSupport.Input.class);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -329,6 +332,7 @@ public class AiServicesProcessor {
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             Optional<MetricsCapabilityBuildItem> metricsCapability) {
 
         IndexView index = indexBuildItem.getIndex();
@@ -397,6 +401,10 @@ public class AiServicesProcessor {
         var addMicrometerMetrics = metricsCapability.isPresent()
                 && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
 
+        if (addMicrometerMetrics) {
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsWrapper.class).build());
+        }
+
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
         if (!ifacesForCreate.isEmpty()) {
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
@@ -448,9 +456,13 @@ public class AiServicesProcessor {
                             mc.writeArrayValue(paramsHandle, i, mc.getMethodParam(i));
                         }
 
-                        ResultHandle resultHandle = mc.invokeStaticMethod(
-                                addMicrometerMetrics ? SUPPORT_WITH_METRICS_IMPLEMENT : SUPPORT_IMPLEMENT, contextHandle,
-                                methodCreateInfoHandle, paramsHandle);
+                        ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
+                        ResultHandle inputHandle = mc.newInstance(
+                                MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
+                                        AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class),
+                                contextHandle, methodCreateInfoHandle, paramsHandle);
+
+                        ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
                         mc.returnValue(resultHandle);
 
                         aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
@@ -464,6 +476,17 @@ public class AiServicesProcessor {
         }
 
         recorder.setMetadata(perClassMetadata);
+    }
+
+    private ResultHandle getFromCDI(MethodCreator mc, String className) {
+        ResultHandle containerHandle = mc
+                .invokeStaticMethod(MethodDescriptor.ofMethod(Arc.class, "container", ArcContainer.class));
+        ResultHandle instanceHandle = mc.invokeInterfaceMethod(
+                MethodDescriptor.ofMethod(ArcContainer.class, "instance", InstanceHandle.class, Class.class,
+                        Annotation[].class),
+                containerHandle, mc.loadClassFromTCCL(className),
+                mc.newArray(Annotation.class, 0));
+        return mc.invokeInterfaceMethod(MethodDescriptor.ofMethod(InstanceHandle.class, "get", Object.class), instanceHandle);
     }
 
     private String createMethodId(MethodInfo methodInfo) {
