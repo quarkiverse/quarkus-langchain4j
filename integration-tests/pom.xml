@@ -15,6 +15,7 @@
     <module>hugging-face</module>
     <module>ollama</module>
     <module>azure-openai</module>
+    <module>devui</module>
     <module>in-process-embedding-all-minilm-l6-v2-q</module>
     <module>in-process-embedding-all-minilm-l6-v2</module>
     <module>in-process-embedding-bge-small-en-q</module>
