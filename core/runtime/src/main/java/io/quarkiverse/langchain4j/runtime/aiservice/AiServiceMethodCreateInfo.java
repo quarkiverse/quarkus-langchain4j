@@ -17,16 +17,21 @@ public class AiServiceMethodCreateInfo {
 
     private final Optional<MetricsInfo> metricsInfo;
 
+    private final Optional<SpanInfo> spanInfo;
+
     @RecordableConstructor
     public AiServiceMethodCreateInfo(Optional<TemplateInfo> systemMessageInfo, UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
-            boolean requiresModeration, Class<?> returnType, Optional<MetricsInfo> metricsInfo) {
+            boolean requiresModeration, Class<?> returnType,
+            Optional<MetricsInfo> metricsInfo,
+            Optional<SpanInfo> spanInfo) {
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
         this.requiresModeration = requiresModeration;
         this.returnType = returnType;
         this.metricsInfo = metricsInfo;
+        this.spanInfo = spanInfo;
     }
 
     public Optional<TemplateInfo> getSystemMessageInfo() {
@@ -51,6 +56,10 @@ public class AiServiceMethodCreateInfo {
 
     public Optional<MetricsInfo> getMetricsInfo() {
         return metricsInfo;
+    }
+
+    public Optional<SpanInfo> getSpanInfo() {
+        return spanInfo;
     }
 
     public static class UserMessageInfo {
@@ -203,6 +212,19 @@ public class AiServiceMethodCreateInfo {
                 return new AiServiceMethodCreateInfo.MetricsInfo(name, longTask, extraTags, percentiles, histogram,
                         description);
             }
+        }
+    }
+
+    public static class SpanInfo {
+        private final String name;
+
+        @RecordableConstructor
+        public SpanInfo(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }
