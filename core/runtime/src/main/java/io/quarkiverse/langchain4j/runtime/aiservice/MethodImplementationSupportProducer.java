@@ -33,8 +33,8 @@ public class MethodImplementationSupportProducer {
                 });
 
                 for (Wrapper wrapper : wrappers) {
-                    Function<Input, Object> currentFun = funRef.get();
-                    Function<Input, Object> newFunction = new Function<Input, Object>() {
+                    var currentFun = funRef.get();
+                    var newFunction = new Function<Input, Object>() {
                         @Override
                         public Object apply(Input input) {
                             return wrapper.wrap(input, currentFun);

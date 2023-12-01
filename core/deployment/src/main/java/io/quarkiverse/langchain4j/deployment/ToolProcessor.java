@@ -43,8 +43,12 @@ import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.ToolParametersObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpecificationObjectSubstitution;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -74,6 +78,14 @@ public class ToolProcessor {
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
+
+    @BuildStep
+    public void telemetry(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+        var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
+        if (addOpenTelemetrySpan) {
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(ToolSpanWrapper.class).build());
+        }
+    }
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)

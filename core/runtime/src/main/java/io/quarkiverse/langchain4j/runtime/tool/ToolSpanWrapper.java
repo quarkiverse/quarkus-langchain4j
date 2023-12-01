@@ -1,10 +1,10 @@
-package io.quarkiverse.langchain4j.runtime.aiservice;
+package io.quarkiverse.langchain4j.runtime.tool;
 
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import jakarta.inject.Inject;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -14,15 +14,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-public class SpanWrapper implements AiServiceMethodImplementationSupport.Wrapper {
+public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
 
     private static final String INSTRUMENTATION_NAME = "io.quarkus.opentelemetry";
 
-    private final Instrumenter<AiServiceMethodImplementationSupport.Input, Void> instrumenter;
+    private final Instrumenter<ToolExecutionRequest, Void> instrumenter;
 
     @Inject
-    public SpanWrapper(OpenTelemetry openTelemetry) {
-        InstrumenterBuilder<AiServiceMethodImplementationSupport.Input, Void> builder = Instrumenter.builder(
+    public ToolSpanWrapper(OpenTelemetry openTelemetry) {
+        InstrumenterBuilder<ToolExecutionRequest, Void> builder = Instrumenter.builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 InputSpanNameExtractor.INSTANCE);
@@ -31,36 +31,35 @@ public class SpanWrapper implements AiServiceMethodImplementationSupport.Wrapper
         this.instrumenter = builder
                 .buildInstrumenter(new SpanKindExtractor<>() {
                     @Override
-                    public SpanKind extract(AiServiceMethodImplementationSupport.Input input) {
+                    public SpanKind extract(ToolExecutionRequest toolExecutionRequest) {
                         return SpanKind.INTERNAL;
                     }
                 });
     }
 
     @Override
-    public Object wrap(AiServiceMethodImplementationSupport.Input input,
-            Function<AiServiceMethodImplementationSupport.Input, Object> fun) {
-
+    public String wrap(ToolExecutionRequest toolExecutionRequest, Object memoryId,
+            BiFunction<ToolExecutionRequest, Object, String> fun) {
         Context parentContext = Context.current();
         Context spanContext = null;
         Scope scope = null;
-        boolean shouldStart = instrumenter.shouldStart(parentContext, input);
+        boolean shouldStart = instrumenter.shouldStart(parentContext, toolExecutionRequest);
         if (shouldStart) {
-            spanContext = instrumenter.start(parentContext, input);
+            spanContext = instrumenter.start(parentContext, toolExecutionRequest);
             scope = spanContext.makeCurrent();
         }
 
         try {
-            Object result = fun.apply(input);
+            String result = fun.apply(toolExecutionRequest, memoryId);
 
             if (shouldStart) {
-                instrumenter.end(spanContext, input, null, null);
+                instrumenter.end(spanContext, toolExecutionRequest, null, null);
             }
 
             return result;
         } catch (Throwable t) {
             if (shouldStart) {
-                instrumenter.end(spanContext, input, null, t);
+                instrumenter.end(spanContext, toolExecutionRequest, null, t);
             }
             throw t;
         } finally {
@@ -70,17 +69,13 @@ public class SpanWrapper implements AiServiceMethodImplementationSupport.Wrapper
         }
     }
 
-    private static class InputSpanNameExtractor implements SpanNameExtractor<AiServiceMethodImplementationSupport.Input> {
+    private static class InputSpanNameExtractor implements SpanNameExtractor<ToolExecutionRequest> {
 
         private static final InputSpanNameExtractor INSTANCE = new InputSpanNameExtractor();
 
         @Override
-        public String extract(AiServiceMethodImplementationSupport.Input input) {
-            Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfoOpt = input.createInfo.getSpanInfo();
-            if (spanInfoOpt.isPresent()) {
-                return spanInfoOpt.get().getName();
-            }
-            return null;
+        public String extract(ToolExecutionRequest toolExecutionRequest) {
+            return "langchain4j.tools." + toolExecutionRequest.name();
         }
     }
 }
