@@ -24,6 +24,9 @@ import dev.langchain4j.service.AiServices;
  * {@link ChatMemoryProvider} and {@link Retriever} beans (which by default are configured if such beans exist).
  * <p>
  * NOTE: The resulting CDI bean is {@link ApplicationScoped}.
+ * <p>
+ * NOTE: When the application also contains the {@code quarkus-micrometer} extension, metrics are automatically generated
+ * for the method invocations.
  */
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)

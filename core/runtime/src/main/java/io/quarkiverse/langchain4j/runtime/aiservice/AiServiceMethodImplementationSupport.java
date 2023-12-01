@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import org.jboss.logging.Logger;
 
@@ -43,12 +44,14 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 /**
  * Provides the basic building blocks that the generated Interface methods call into
  */
-@SuppressWarnings("unused") // the methods are used in generated code
-public class MethodImplementationSupport {
+public class AiServiceMethodImplementationSupport {
 
-    private static final Logger log = Logger.getLogger(MethodImplementationSupport.class);
+    private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
 
-    public static Object implement(AiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+    public Object implement(Input input) {
+        AiServiceContext context = input.context;
+        AiServiceMethodCreateInfo createInfo = input.createInfo;
+        Object[] methodArgs = input.methodArgs;
 
         // TODO: add validation
 
@@ -251,5 +254,22 @@ public class MethodImplementationSupport {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    public static class Input {
+        final AiServiceContext context;
+        final AiServiceMethodCreateInfo createInfo;
+        final Object[] methodArgs;
+
+        public Input(AiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+            this.context = context;
+            this.createInfo = createInfo;
+            this.methodArgs = methodArgs;
+        }
+    }
+
+    public interface Wrapper {
+
+        Object wrap(Input input, Function<Input, Object> fun);
     }
 }

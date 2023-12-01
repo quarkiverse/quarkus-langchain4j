@@ -7,6 +7,7 @@ import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigu
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,8 +50,13 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
-import io.quarkiverse.langchain4j.runtime.aiservice.MethodImplementationSupport;
+import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+import io.quarkus.arc.InstanceHandle;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.builder.item.MultiBuildItem;
@@ -62,6 +68,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
 import io.quarkus.gizmo.FieldDescriptor;
@@ -69,6 +76,7 @@ import io.quarkus.gizmo.Gizmo;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.runtime.metrics.MetricsFactory;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServicesProcessor {
@@ -76,6 +84,7 @@ public class AiServicesProcessor {
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
     private static final DotName V = DotName.createSimple(V.class);
+    public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     private static final String DEFAULT_DELIMITER = "\n";
     private static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
             .kind() == AnnotationTarget.Kind.METHOD_PARAMETER;
@@ -86,8 +95,9 @@ public class AiServicesProcessor {
     public static final MethodDescriptor OBJECT_CONSTRUCTOR = MethodDescriptor.ofConstructor(Object.class);
     private static final MethodDescriptor RECORDER_METHOD_CREATE_INFO = MethodDescriptor.ofMethod(AiServicesRecorder.class,
             "getAiServiceMethodCreateInfo", AiServiceMethodCreateInfo.class, String.class, String.class);
-    private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(MethodImplementationSupport.class,
-            "implement", Object.class, AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class);
+    private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(
+            AiServiceMethodImplementationSupport.class,
+            "implement", Object.class, AiServiceMethodImplementationSupport.Input.class);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -321,7 +331,9 @@ public class AiServicesProcessor {
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
-            BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer) {
+            BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
+            Optional<MetricsCapabilityBuildItem> metricsCapability) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -386,6 +398,13 @@ public class AiServicesProcessor {
             ifacesForCreate.add(classInfo);
         }
 
+        var addMicrometerMetrics = metricsCapability.isPresent()
+                && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
+
+        if (addMicrometerMetrics) {
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsWrapper.class).build());
+        }
+
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
         if (!ifacesForCreate.isEmpty()) {
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
@@ -420,7 +439,7 @@ public class AiServicesProcessor {
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
-                        perMethodMetadata.put(methodId, gatherMethodMetadata(methodInfo));
+                        perMethodMetadata.put(methodId, gatherMethodMetadata(methodInfo, addMicrometerMetrics));
                         MethodCreator constructor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
                                 AiServiceContext.class);
                         constructor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, constructor.getThis());
@@ -437,8 +456,13 @@ public class AiServicesProcessor {
                             mc.writeArrayValue(paramsHandle, i, mc.getMethodParam(i));
                         }
 
-                        ResultHandle resultHandle = mc.invokeStaticMethod(SUPPORT_IMPLEMENT, contextHandle,
-                                methodCreateInfoHandle, paramsHandle);
+                        ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
+                        ResultHandle inputHandle = mc.newInstance(
+                                MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
+                                        AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class),
+                                contextHandle, methodCreateInfoHandle, paramsHandle);
+
+                        ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
                         mc.returnValue(resultHandle);
 
                         aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
@@ -452,6 +476,17 @@ public class AiServicesProcessor {
         }
 
         recorder.setMetadata(perClassMetadata);
+    }
+
+    private ResultHandle getFromCDI(MethodCreator mc, String className) {
+        ResultHandle containerHandle = mc
+                .invokeStaticMethod(MethodDescriptor.ofMethod(Arc.class, "container", ArcContainer.class));
+        ResultHandle instanceHandle = mc.invokeInterfaceMethod(
+                MethodDescriptor.ofMethod(ArcContainer.class, "instance", InstanceHandle.class, Class.class,
+                        Annotation[].class),
+                containerHandle, mc.loadClassFromTCCL(className),
+                mc.newArray(Annotation.class, 0));
+        return mc.invokeInterfaceMethod(MethodDescriptor.ofMethod(InstanceHandle.class, "get", Object.class), instanceHandle);
     }
 
     private String createMethodId(MethodInfo methodInfo) {
@@ -486,7 +521,7 @@ public class AiServicesProcessor {
         }
     }
 
-    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method) {
+    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, boolean addMicrometerMetrics) {
         if (method.returnType().kind() == Type.Kind.VOID) {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
@@ -501,9 +536,10 @@ public class AiServicesProcessor {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
                 returnType);
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamName(method);
+        Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfo = gatherMetricsInfo(method, addMicrometerMetrics);
 
         return new AiServiceMethodCreateInfo(systemMessageInfo, userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType);
+                returnType, metricsInfo);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -618,6 +654,66 @@ public class AiServicesProcessor {
                         method);
             }
         }
+    }
+
+    private Optional<AiServiceMethodCreateInfo.MetricsInfo> gatherMetricsInfo(MethodInfo method,
+            boolean addMicrometerMetrics) {
+        if (!addMicrometerMetrics) {
+            return Optional.empty();
+        }
+
+        String name = defaultAiServiceMetricName(method);
+
+        AnnotationInstance timedInstance = method.annotation(MICROMETER_TIMED);
+        if (timedInstance == null) {
+            timedInstance = method.declaringClass().declaredAnnotation(MICROMETER_TIMED);
+        }
+
+        if (timedInstance == null) {
+            // we default to having all AiServices being timed
+            return Optional.of(new AiServiceMethodCreateInfo.MetricsInfo.Builder(name).build());
+        }
+
+        AnnotationValue nameValue = timedInstance.value();
+        if (nameValue != null) {
+            String nameStr = nameValue.asString();
+            if (nameStr != null && !nameStr.isEmpty()) {
+                name = nameStr;
+            }
+        }
+
+        var builder = new AiServiceMethodCreateInfo.MetricsInfo.Builder(name);
+
+        AnnotationValue extraTagsValue = timedInstance.value("extraTags");
+        if (extraTagsValue != null) {
+            builder.setExtraTags(extraTagsValue.asStringArray());
+        }
+
+        AnnotationValue longTaskValue = timedInstance.value("longTask");
+        if (longTaskValue != null) {
+            builder.setLongTask(longTaskValue.asBoolean());
+        }
+
+        AnnotationValue percentilesValue = timedInstance.value("percentiles");
+        if (percentilesValue != null) {
+            builder.setPercentiles(percentilesValue.asDoubleArray());
+        }
+
+        AnnotationValue histogramValue = timedInstance.value("histogram");
+        if (histogramValue != null) {
+            builder.setHistogram(histogramValue.asBoolean());
+        }
+
+        AnnotationValue descriptionValue = timedInstance.value("description");
+        if (descriptionValue != null) {
+            builder.setDescription(descriptionValue.asString());
+        }
+
+        return Optional.of(builder.build());
+    }
+
+    private String defaultAiServiceMetricName(MethodInfo method) {
+        return "langchain4j.aiservices." + method.declaringClass().name().withoutPackagePrefix() + "." + method.name();
     }
 
     private static class TemplateParameterInfo {
