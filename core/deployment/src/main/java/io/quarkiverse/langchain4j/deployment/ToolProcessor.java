@@ -95,7 +95,8 @@ public class ToolProcessor {
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
-            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation) {
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation,
+            BuildProducer<ToolsMetadataBuildItem> toolsMetadataProducer) {
         recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
                 ToolSpecificationObjectSubstitution.class);
         recorderContext.registerSubstitution(ToolParameters.class, ToolParametersObjectSubstitution.Serialized.class,
@@ -229,6 +230,7 @@ public class ToolProcessor {
                     .build());
         }
 
+        toolsMetadataProducer.produce(new ToolsMetadataBuildItem(metadata));
         recorder.setMetadata(metadata);
     }
 
