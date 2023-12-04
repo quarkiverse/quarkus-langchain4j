@@ -20,21 +20,7 @@ image::llms-big-picture.png[width=600,align="center"]
 
 == Quick Overview
 
-To incorporate this extension, add the `io.quarkiverse.langchain4j:quarkus-langchain4j` extension to your build file.
-
-For example, in Maven, add the following dependency to your POM file:
-
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
-
-Depending on the specific LLM you're using, additional dependencies and configurations might be necessary.
-For instance, with OpenAI:
+To incorporate Quarkus Langchain4j into your Quarkus project, add the following Maven dependency:
 
 [source,xml,subs=attributes+]
 ----
@@ -44,6 +30,18 @@ For instance, with OpenAI:
     <version>{project-version}</version>
 </dependency>
 ----
+
+or, to use hugging face:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-huggingface</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
 
 Then, include your OpenAI API key in your `application.properties` file (or any other mandatory configuration):
 
