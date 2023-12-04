@@ -17,11 +17,12 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.retriever.Retriever;
-import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -31,6 +32,9 @@ public class AiServicesRecorder {
     private static final TypeLiteral<Instance<ChatMemoryProvider>> CHAT_MEMORY_PROVIDER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
     };
     private static final TypeLiteral<Instance<Retriever<TextSegment>>> RETRIEVER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
+
+    };
+    private static final TypeLiteral<Instance<AuditService>> AUDIT_SERVICE_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     // the key is the interface's class name
@@ -72,7 +76,7 @@ public class AiServicesRecorder {
                     Class<?> serviceClass = Thread.currentThread().getContextClassLoader()
                             .loadClass(info.getServiceClassName());
 
-                    AiServiceContext aiServiceContext = new AiServiceContext(serviceClass);
+                    QuarkusAiServiceContext aiServiceContext = new QuarkusAiServiceContext(serviceClass);
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
 
                     if (info.getLanguageModelSupplierClassName() != null) {
@@ -134,6 +138,23 @@ public class AiServicesRecorder {
                                     .currentThread().getContextClassLoader().loadClass(info.getRetrieverSupplierClassName())
                                     .getConstructor().newInstance();
                             quarkusAiServices.retriever(supplier.get());
+                        }
+                    }
+
+                    if (info.getAuditServiceClassSupplierName() != null) {
+                        if (RegisterAiService.BeanIfExistsAuditServiceSupplier.class.getName()
+                                .equals(info.getAuditServiceClassSupplierName())) {
+                            Instance<AuditService> instance = creationalContext
+                                    .getInjectedReference(AUDIT_SERVICE_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.auditService(instance.get());
+                            }
+                        } else {
+                            @SuppressWarnings("rawtypes")
+                            Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
+                                    .currentThread().getContextClassLoader().loadClass(info.getAuditServiceClassSupplierName())
+                                    .getConstructor().newInstance();
+                            quarkusAiServices.auditService(supplier.get());
                         }
                     }
 

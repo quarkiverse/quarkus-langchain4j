@@ -73,6 +73,10 @@ The extension offers the following advantages over using the vanilla https://git
 ** CDI beans for the Langchain4j models
 ** Standard configuration properties for configuring said models
 * xref:ai-services.adoc[Declarative AI Services]
+* Built-in observability
+** Metrics
+** Tracing
+** Auditing
 * Build time wiring
 ** Reduced footprint of the library
 ** Feedback about misuse at build time

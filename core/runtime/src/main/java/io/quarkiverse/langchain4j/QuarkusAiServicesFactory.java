@@ -13,10 +13,12 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.spi.services.AiServicesFactory;
+import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutorFactory;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
@@ -27,7 +29,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
     @Override
     public <T> QuarkusAiServices<T> create(AiServiceContext context) {
-        return new QuarkusAiServices<>(context);
+        if (context instanceof QuarkusAiServiceContext) {
+            return new QuarkusAiServices<>(context);
+        } else {
+            // the context is always empty (except for the aiServiceClass) anyway and never escapes, so we can just use our own type
+            return new QuarkusAiServices<>(new QuarkusAiServiceContext(context.aiServiceClass));
+        }
     }
 
     public static class InstanceHolder {
@@ -67,6 +74,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                 }
             }
 
+            return this;
+        }
+
+        public AiServices<T> auditService(AuditService auditService) {
+            ((QuarkusAiServiceContext) context).auditService = auditService;
             return this;
         }
 
@@ -116,8 +128,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
             try {
                 return (T) Class.forName(classCreateInfo.getImplClassName(), true, Thread.currentThread()
-                        .getContextClassLoader()).getConstructor(AiServiceContext.class)
-                        .newInstance(context);
+                        .getContextClassLoader()).getConstructor(QuarkusAiServiceContext.class)
+                        .newInstance(((QuarkusAiServiceContext) context));
             } catch (Exception e) {
                 throw new IllegalStateException("Unable to create class '" + classCreateInfo.getImplClassName(), e);
             }
