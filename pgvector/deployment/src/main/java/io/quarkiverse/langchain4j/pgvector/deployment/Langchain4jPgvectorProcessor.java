@@ -6,6 +6,8 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 
+import com.pgvector.PGvector;
+
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.agroal.api.AgroalDataSource;
@@ -18,6 +20,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 class Langchain4jPgvectorProcessor {
 
@@ -47,5 +50,10 @@ class Langchain4jPgvectorProcessor {
                 .createWith(recorder.embeddingStoreFunction(config))
                 .done());
 
+    }
+
+    @BuildStep
+    public ReflectiveClassBuildItem reflectiveClass() {
+        return ReflectiveClassBuildItem.builder(PGvector.class).build();
     }
 }
