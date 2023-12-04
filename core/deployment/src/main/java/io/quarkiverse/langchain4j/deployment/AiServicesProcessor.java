@@ -53,6 +53,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
@@ -60,6 +61,8 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.builder.item.MultiBuildItem;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -333,7 +336,8 @@ public class AiServicesProcessor {
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
-            Optional<MetricsCapabilityBuildItem> metricsCapability) {
+            Optional<MetricsCapabilityBuildItem> metricsCapability,
+            Capabilities capabilities) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -400,9 +404,13 @@ public class AiServicesProcessor {
 
         var addMicrometerMetrics = metricsCapability.isPresent()
                 && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
-
         if (addMicrometerMetrics) {
             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsWrapper.class).build());
+        }
+
+        var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
+        if (addOpenTelemetrySpan) {
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(SpanWrapper.class).build());
         }
 
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
@@ -439,7 +447,8 @@ public class AiServicesProcessor {
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
-                        perMethodMetadata.put(methodId, gatherMethodMetadata(methodInfo, addMicrometerMetrics));
+                        perMethodMetadata.put(methodId,
+                                gatherMethodMetadata(methodInfo, addMicrometerMetrics, addOpenTelemetrySpan));
                         MethodCreator constructor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
                                 AiServiceContext.class);
                         constructor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, constructor.getThis());
@@ -521,7 +530,8 @@ public class AiServicesProcessor {
         }
     }
 
-    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, boolean addMicrometerMetrics) {
+    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, boolean addMicrometerMetrics,
+            boolean addOpenTelemetrySpans) {
         if (method.returnType().kind() == Type.Kind.VOID) {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
@@ -537,9 +547,10 @@ public class AiServicesProcessor {
                 returnType);
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamName(method);
         Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfo = gatherMetricsInfo(method, addMicrometerMetrics);
+        Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
 
         return new AiServiceMethodCreateInfo(systemMessageInfo, userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType, metricsInfo);
+                returnType, metricsInfo, spanInfo);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -712,7 +723,24 @@ public class AiServicesProcessor {
         return Optional.of(builder.build());
     }
 
+    private Optional<AiServiceMethodCreateInfo.SpanInfo> gatherSpanInfo(MethodInfo method,
+            boolean addOpenTelemetrySpans) {
+        if (!addOpenTelemetrySpans) {
+            return Optional.empty();
+        }
+
+        String name = defaultAiServiceSpanName(method);
+
+        // TODO: add more
+
+        return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(name));
+    }
+
     private String defaultAiServiceMetricName(MethodInfo method) {
+        return "langchain4j.aiservices." + method.declaringClass().name().withoutPackagePrefix() + "." + method.name();
+    }
+
+    private String defaultAiServiceSpanName(MethodInfo method) {
         return "langchain4j.aiservices." + method.declaringClass().name().withoutPackagePrefix() + "." + method.name();
     }
 

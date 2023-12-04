@@ -18,7 +18,9 @@ import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
+import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutorFactory;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
+import io.quarkus.arc.Arc;
 import io.quarkus.arc.ClientProxy;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
@@ -33,8 +35,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
     }
 
     public static class QuarkusAiServices<T> extends AiServices<T> {
+
+        private final QuarkusToolExecutorFactory toolExecutorFactory;
+
         public QuarkusAiServices(AiServiceContext context) {
             super(context);
+            toolExecutorFactory = Arc.container().instance(QuarkusToolExecutorFactory.class).get();
         }
 
         @Override
@@ -54,9 +60,10 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                     String invokerClassName = methodCreateInfo.getInvokerClassName();
                     ToolSpecification toolSpecification = methodCreateInfo.getToolSpecification();
                     context.toolSpecifications.add(toolSpecification);
-                    context.toolExecutors.put(toolSpecification.name(),
-                            new QuarkusToolExecutor(objectWithTool, invokerClassName, methodCreateInfo.getMethodName(),
-                                    methodCreateInfo.getArgumentMapperClassName()));
+                    QuarkusToolExecutor.Context executorContext = new QuarkusToolExecutor.Context(objectWithTool,
+                            invokerClassName, methodCreateInfo.getMethodName(),
+                            methodCreateInfo.getArgumentMapperClassName());
+                    context.toolExecutors.put(toolSpecification.name(), toolExecutorFactory.create(executorContext));
                 }
             }
 
