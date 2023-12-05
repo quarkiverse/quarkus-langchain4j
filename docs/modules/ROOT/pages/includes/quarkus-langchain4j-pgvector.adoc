@@ -1,0 +1,114 @@
+
+:summaryTableId: quarkus-langchain4j-pgvector
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-pgvector_configuration]]link:#quarkus-langchain4j-pgvector_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table[quarkus.langchain4j.pgvector.table]`
+
+
+[.description]
+--
+The table name for storing embeddings
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`embeddings`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.dimension]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.dimension[quarkus.langchain4j.pgvector.dimension]`
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.use-index]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.use-index[quarkus.langchain4j.pgvector.use-index]`
+
+
+[.description]
+--
+Use index or not
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_USE_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_USE_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.index-list-size]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.index-list-size[quarkus.langchain4j.pgvector.index-list-size]`
+
+
+[.description]
+--
+index size
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_INDEX_LIST_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_INDEX_LIST_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`0`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.create-table]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.create-table[quarkus.langchain4j.pgvector.create-table]`
+
+
+[.description]
+--
+Create table or not
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_CREATE_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_CREATE_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.drop-table-first]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.drop-table-first[quarkus.langchain4j.pgvector.drop-table-first]`
+
+
+[.description]
+--
+Drop table or not
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DROP_TABLE_FIRST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DROP_TABLE_FIRST+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+|===
