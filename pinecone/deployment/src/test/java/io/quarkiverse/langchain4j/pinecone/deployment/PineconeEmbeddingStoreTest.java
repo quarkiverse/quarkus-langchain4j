@@ -80,12 +80,13 @@ public class PineconeEmbeddingStoreTest {
         // Normally we would use deleteAll=true for deleting all vectors,
         // but that doesn't work in the gcp-starter environment,
         // so make it a two-step process instead by querying for all vectors, and then removing them.
+        Log.info("About to delete all embeddings");
         PineconeVectorOperationsApi client = embeddingStore.getUnderlyingClient();
         float[] vector = new float[384];
         QueryRequest allRequest = new QueryRequest(null, 10000L, false, false, vector);
         List<String> existingEntries = client.query(allRequest).getMatches().stream().map(VectorMatch::getId).toList();
         if (!existingEntries.isEmpty()) {
-            Log.info("Deleting " + existingEntries.size() + " embeddings");
+            Log.info("Deleting " + existingEntries.size() + " embeddings: " + existingEntries);
             client.delete(new DeleteRequest(existingEntries, false, null, null));
         }
 
@@ -97,7 +98,9 @@ public class PineconeEmbeddingStoreTest {
      */
     private static void delay() {
         try {
-            TimeUnit.SECONDS.sleep(30);
+            int timeout = 40;
+            Log.info("Waiting " + timeout + " seconds to allow Pinecone time to process deletions");
+            TimeUnit.SECONDS.sleep(timeout);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

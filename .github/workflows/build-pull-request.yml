@@ -1,17 +1,6 @@
-name: Build
+name: Build (on pull request)
 
 on:
-  push:
-    branches:
-      - "main"
-    paths-ignore:
-      - '.gitignore'
-      - 'CODEOWNERS'
-      - 'LICENSE'
-      - '*.md'
-      - '*.adoc'
-      - '*.txt'
-      - '.all-contributorsrc'
   pull_request:
     paths-ignore:
       - '.gitignore'
