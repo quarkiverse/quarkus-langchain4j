@@ -170,7 +170,17 @@ public class AiServicesProcessor {
                 needChatModelBean = true;
             }
 
-            DotName chatMemoryProviderSupplierClassDotName = Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER;
+            List<DotName> toolDotNames = Collections.emptyList();
+            AnnotationValue toolsInstance = instance.value("tools");
+            if (toolsInstance != null) {
+                toolDotNames = Arrays.stream(toolsInstance.asClassArray()).map(Type::name)
+                        .collect(Collectors.toList());
+            }
+
+            // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
+            DotName chatMemoryProviderSupplierClassDotName = toolDotNames.isEmpty()
+                    ? Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER
+                    : Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
@@ -182,18 +192,6 @@ public class AiServicesProcessor {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
                             reflectiveClassProducer);
                 }
-            }
-
-            List<DotName> toolDotNames = Collections.emptyList();
-            AnnotationValue toolsInstance = instance.value("tools");
-            if (toolsInstance != null) {
-                if (chatMemoryProviderSupplierClassDotName == null) {
-                    throw new IllegalConfigurationException("Class '" + declarativeAiServiceClassInfo.name()
-                            + "' which is annotated with @RegisterAiService has configured tools support, but no ChatMemoryProvider configuration is present. Please set up chatMemoryProvider in order to use tools. A ChatMemory that can hold at least 3 messages is required for the tools to work properly. While the LLM can technically execute a tool without chat memory, if it only receives the result of the tool's execution without the initial message from the user, it won't interpret the result properly.");
-                }
-
-                toolDotNames = Arrays.stream(toolsInstance.asClassArray()).map(Type::name)
-                        .collect(Collectors.toList());
             }
 
             DotName retrieverSupplierClassDotName = Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER;
