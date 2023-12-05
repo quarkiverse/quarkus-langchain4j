@@ -1,12 +1,8 @@
-import { LitElement, html, css} from 'lit';
+import { LitElement, html} from 'lit';
 import { JsonRpc } from 'jsonrpc';
-import '@vaadin/icon';
 import '@vaadin/button';
 import '@vaadin/text-field';
 import '@vaadin/text-area';
-import '@vaadin/form-layout';
-import '@vaadin/progress-bar';
-import '@vaadin/checkbox';
 import '@vaadin/grid';
 import 'qui-alert';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
@@ -17,31 +13,9 @@ export class QwcEmbeddingStore extends LitElement {
 
     jsonRpc = new JsonRpc(this);
 
-    static styles = css`
-        .button {
-            cursor: pointer;
-        }
-        .clearIcon {
-            color: orange;
-        }
-        .message {
-          padding: 15px;
-          text-align: center;
-          margin-left: 20%;
-          margin-right: 20%;
-          border: 2px solid orange;
-          border-radius: 10px;
-          font-size: large;
-        }
-        `;
-
     static properties = {
         "_addEmbeddingConfirmation": {state: true},
         "_relevantEmbeddingsOutput": {state: true}
-    }
-
-    connectedCallback() {
-        super.connectedCallback();
     }
 
     render() {
@@ -92,11 +66,11 @@ export class QwcEmbeddingStore extends LitElement {
         this._relevantEmbeddingsOutput = '';
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
-                <vaadin-grid id="relevant-embeddings" .items=${jsonRpcResponse.result} class="datatable">
-                    <vaadin-grid-column path="embeddingId" header="ID" ${columnBodyRenderer(this._embeddingMatchIdRenderer, [])}></vaadin-grid-column>
-                    <vaadin-grid-column path="score" header="Score" ${columnBodyRenderer(this._embeddingMatchScoreRenderer, [])}></vaadin-grid-column>
-                    <vaadin-grid-column path="embedded" header="Text segment" ${columnBodyRenderer(this._embeddingMatchEmbeddedRenderer, [])}></vaadin-grid-column>
-                    <vaadin-grid-column path="metadata" header="Metadata" ${columnBodyRenderer(this._embeddingMatchMetadataRenderer, [])}></vaadin-grid-column>
+                <vaadin-grid id="relevant-embeddings" .items=${jsonRpcResponse.result}>
+                    <vaadin-grid-sort-column path="embeddingId" header="ID" ${columnBodyRenderer(this._embeddingMatchIdRenderer, [])}></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column path="score" header="Score" ${columnBodyRenderer(this._embeddingMatchScoreRenderer, [])}></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column path="embedded" header="Text segment" ${columnBodyRenderer(this._embeddingMatchEmbeddedRenderer, [])}></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column path="metadata" header="Metadata" ${columnBodyRenderer(this._embeddingMatchMetadataRenderer, [])}></vaadin-grid-sort-column>
                 </vaadin-grid>
                 `;
         });
@@ -115,7 +89,6 @@ export class QwcEmbeddingStore extends LitElement {
     }
 
     _embeddingMatchMetadataRenderer(match) {
-        // return html`${ match.metadata }`
         if (match.metadata && match.metadata.length > 0) {
             return html`<vaadin-vertical-layout>
                           ${match.metadata.map((entry) =>
