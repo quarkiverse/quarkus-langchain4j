@@ -3,15 +3,14 @@ package io.quarkiverse.langchain4j.sample;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.annotation.PreDestroy;
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Singleton;
 
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import io.quarkiverse.langchain4j.RemovableChatMemoryProvider;
 
-@RequestScoped
-public class ChatMemoryBean implements ChatMemoryProvider {
+@Singleton
+public class ChatMemoryBean implements RemovableChatMemoryProvider {
 
     private final Map<Object, ChatMemory> memories = new ConcurrentHashMap<>();
 
@@ -23,8 +22,8 @@ public class ChatMemoryBean implements ChatMemoryProvider {
                 .build());
     }
 
-    @PreDestroy
-    public void close() {
-        memories.clear();
+    @Override
+    public void remove(Object id) {
+        memories.remove(id);
     }
 }

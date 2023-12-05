@@ -1,29 +1,22 @@
 package org.acme.examples.aiservices;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
-import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
 import static org.acme.examples.aiservices.MessageAssertUtils.assertMultipleRequestMessage;
 import static org.acme.examples.aiservices.MessageAssertUtils.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.api.InstanceOfAssertFactories.list;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
-import org.assertj.core.api.InstanceOfAssertFactory;
-import org.assertj.core.api.ListAssert;
-import org.assertj.core.api.MapAssert;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
@@ -39,17 +32,18 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.RemovableChatMemoryProvider;
 import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class BeanDeclarativeAiServicesTest {
+public class RemovableChatMemoryTest {
 
     private static final int WIREMOCK_PORT = 8089;
 
@@ -61,17 +55,10 @@ public class BeanDeclarativeAiServicesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1");
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
     };
-    private static final InstanceOfAssertFactory<Map, MapAssert<String, String>> MAP_STRING_STRING = map(String.class,
-            String.class);
-    private static final InstanceOfAssertFactory<List, ListAssert<Map>> LIST_MAP = list(Map.class);
 
     static WireMockServer wireMockServer;
 
     static ObjectMapper mapper;
-
-    private static MessageWindowChatMemory createChatMemory() {
-        return MessageWindowChatMemory.withMaxMessages(10);
-    }
 
     @BeforeAll
     static void beforeAll() {
@@ -92,42 +79,26 @@ public class BeanDeclarativeAiServicesTest {
         wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
     }
 
-    public static class ChatMemoryProviderProducer {
+    @ApplicationScoped
+    public static class ChatMemoryBean implements RemovableChatMemoryProvider {
 
-        @Singleton
-        ChatMemoryProvider chatMemory(ChatMemoryStore store) {
-            return memoryId -> MessageWindowChatMemory.builder()
+        static final Map<Object, ChatMemory> memories = new ConcurrentHashMap<>();
+
+        @Override
+        public ChatMemory get(Object memoryId) {
+            return memories.computeIfAbsent(memoryId, id -> MessageWindowChatMemory.builder()
+                    .maxMessages(20)
                     .id(memoryId)
-                    .maxMessages(10)
-                    .chatMemoryStore(store)
-                    .build();
-        }
-    }
-
-    @Singleton
-    public static class CustomChatMemoryStore implements ChatMemoryStore {
-
-        // emulating persistent storage
-        private final Map</* memoryId */ Object, String> persistentStorage = new HashMap<>();
-
-        @Override
-        public List<ChatMessage> getMessages(Object memoryId) {
-            return messagesFromJson(persistentStorage.get(memoryId));
+                    .build());
         }
 
         @Override
-        public void updateMessages(Object memoryId, List<ChatMessage> messages) {
-            persistentStorage.put(memoryId, messagesToJson(messages));
-        }
-
-        @Override
-        public void deleteMessages(Object memoryId) {
-            persistentStorage.remove(memoryId);
+        public void remove(Object id) {
+            memories.remove(id);
         }
     }
 
     @RegisterAiService
-    @Singleton
     interface ChatWithSeparateMemoryForEachUser {
 
         String chat(@MemoryId int memoryId, @UserMessage String userMessage);
@@ -139,8 +110,43 @@ public class BeanDeclarativeAiServicesTest {
     @Test
     void should_keep_separate_chat_memory_for_each_user_in_store() throws IOException {
 
-        ChatMemoryStore store = Arc.container().instance(ChatMemoryStore.class).get();
+        ManagedContext requestContext = Arc.container().requestContext();
 
+        // add a dummy entry that should not affect the chat in any way
+        ChatMemoryBean.memories.put("DUMMY", new ChatMemory() {
+            @Override
+            public Object id() {
+                return null;
+            }
+
+            @Override
+            public void add(ChatMessage message) {
+
+            }
+
+            @Override
+            public List<ChatMessage> messages() {
+                return null;
+            }
+
+            @Override
+            public void clear() {
+
+            }
+        });
+
+        try {
+            requestContext.activate();
+            testInRequestContext();
+        } finally {
+            requestContext.terminate();
+        }
+
+        // since the request context was closed, we should now only have the initial dummy entry
+        assertThat(ChatMemoryBean.memories).containsOnlyKeys("DUMMY");
+    }
+
+    private void testInRequestContext() throws IOException {
         int firstMemoryId = 1;
         int secondMemoryId = 2;
 
@@ -157,7 +163,7 @@ public class BeanDeclarativeAiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(), firstMessageFromFirstUser);
 
         // assert chat memory
-        assertThat(store.getMessages(firstMemoryId)).hasSize(2)
+        assertThat(ChatMemoryBean.memories.get(firstMemoryId).messages()).hasSize(2)
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
@@ -176,7 +182,7 @@ public class BeanDeclarativeAiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(), firstMessageFromSecondUser);
 
         // assert chat memory
-        assertThat(store.getMessages(secondMemoryId)).hasSize(2)
+        assertThat(ChatMemoryBean.memories.get(secondMemoryId).messages()).hasSize(2)
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
@@ -199,7 +205,7 @@ public class BeanDeclarativeAiServicesTest {
                         new MessageAssertUtils.MessageContent("user", secondsMessageFromFirstUser)));
 
         // assert chat memory
-        assertThat(store.getMessages(firstMemoryId)).hasSize(4)
+        assertThat(ChatMemoryBean.memories.get(firstMemoryId).messages()).hasSize(4)
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser),
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
@@ -224,7 +230,7 @@ public class BeanDeclarativeAiServicesTest {
                         new MessageAssertUtils.MessageContent("user", secondsMessageFromSecondUser)));
 
         // assert chat memory
-        assertThat(store.getMessages(secondMemoryId)).hasSize(4)
+        assertThat(ChatMemoryBean.memories.get(secondMemoryId).messages()).hasSize(4)
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));

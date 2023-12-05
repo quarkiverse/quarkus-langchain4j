@@ -27,6 +27,13 @@ Once registered, you can inject the _AI Service_ into your application:
 @Inject MyAiService service;
 ----
 
+[IMPORTANT]
+====
+The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory>> objects.
+This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (currently, but may change in the future).
+For example when using a service in a CLI, it makes sense to have the service be `@ApplicationScoped` and the extension allows this simply if the service is annotated with `@ApplicationScoped`.
+====
+
 == AI method declaration
 
 Within the interface annotated with `@RegisterAiService`, you model interactions with the LLM using _methods_. These methods accept parameters and are annotated with `@SystemMessage` and `@UserMessage` to define instructions directed to the LLM:
@@ -179,7 +186,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
 
 Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
 
-NOTE: It is recommended that the bean use the `@RequestScoped` scope or a scope not shared between users.
+NOTE: It is recommended to have your chat memory beans implement `RemovableChatMemoryProvider` because the objects used as memory IDs are removed from the memory when the service goes out of scope.
 
 Users can provide their own custom `ChatMemoryProvider` for use in the AiService by implementing `Supplier<ChatMemoryProvider>`, such as:
 

@@ -1,11 +1,14 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
+import jakarta.inject.Singleton;
+
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
 @RegisterAiService
+@Singleton // this is singleton because WebSockets currently never closes the scope
 public interface Bot {
 
     @SystemMessage("""

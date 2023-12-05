@@ -23,7 +23,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -50,6 +49,7 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
+import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceBeanDestroyer;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
@@ -60,6 +60,8 @@ import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.processor.BuiltinScope;
+import io.quarkus.arc.processor.ScopeInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -101,6 +103,9 @@ public class AiServicesProcessor {
     private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(
             AiServiceMethodImplementationSupport.class,
             "implement", Object.class, AiServiceMethodImplementationSupport.Input.class);
+
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_CLOSE = MethodDescriptor.ofMethod(
+            QuarkusAiServiceContext.class, "close", void.class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     @BuildStep
@@ -211,6 +216,9 @@ public class AiServicesProcessor {
                 validateSupplierAndRegisterForReflection(auditServiceClassSupplierName, index, reflectiveClassProducer);
             }
 
+            BuiltinScope declaredScope = BuiltinScope.from(declarativeAiServiceClassInfo);
+            ScopeInfo cdiScope = declaredScope != null ? declaredScope.getInfo() : BuiltinScope.REQUEST.getInfo();
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -218,7 +226,8 @@ public class AiServicesProcessor {
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverSupplierClassDotName,
-                            auditServiceClassSupplierName));
+                            auditServiceClassSupplierName,
+                            cdiScope));
         }
 
         if (needChatModelBean) {
@@ -285,8 +294,9 @@ public class AiServicesProcessor {
                                     toolClassNames, chatMemoryProviderSupplierClassName,
                                     retrieverSupplierClassName,
                                     auditServiceClassSupplierName)))
+                    .destroyer(DeclarativeAiServiceBeanDestroyer.class)
                     .setRuntimeInit()
-                    .scope(ApplicationScoped.class);
+                    .scope(bi.getCdiScope());
             if ((chatLanguageModelSupplierClassName == null) && selectedChatModelProvider.isPresent()) { // TODO: is second condition needed?
                 configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL));
                 needsChatModelBean = true;
@@ -403,8 +413,10 @@ public class AiServicesProcessor {
         Set<String> detectedForCreate = new HashSet<>(nameToUsed.keySet());
         addCreatedAware(index, detectedForCreate);
         addIfacesWithMessageAnns(index, detectedForCreate);
-        detectedForCreate.addAll(declarativeAiServiceItems.stream().map(bi -> bi.getServiceClassInfo().name().toString())
-                .collect(Collectors.toList()));
+        Set<String> registeredAiServiceClassNames = declarativeAiServiceItems.stream()
+                .map(bi -> bi.getServiceClassInfo().name().toString()).collect(
+                        Collectors.toUnmodifiableSet());
+        detectedForCreate.addAll(registeredAiServiceClassNames);
 
         Set<ClassInfo> ifacesForCreate = new HashSet<>();
         for (String className : detectedForCreate) {
@@ -453,12 +465,18 @@ public class AiServicesProcessor {
                     methodsToImplement.add(method);
                 }
 
-                String implClassName = iface.name().toString() + "$$QuarkusImpl";
-                try (ClassCreator classCreator = ClassCreator.builder()
+                String ifaceName = iface.name().toString();
+                String implClassName = ifaceName + "$$QuarkusImpl";
+                boolean isRegisteredService = registeredAiServiceClassNames.contains(ifaceName);
+
+                ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
                         .classOutput(classOutput)
                         .className(implClassName)
-                        .interfaces(iface.name().toString())
-                        .build()) {
+                        .interfaces(ifaceName);
+                if (isRegisteredService) {
+                    classCreatorBuilder.interfaces(AutoCloseable.class);
+                }
+                try (ClassCreator classCreator = classCreatorBuilder.build()) {
 
                     FieldDescriptor contextField = classCreator.getFieldCreator("context", QuarkusAiServiceContext.class)
                             .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
@@ -480,7 +498,7 @@ public class AiServicesProcessor {
                         MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
                         ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
                         ResultHandle methodCreateInfoHandle = mc.invokeStaticMethod(RECORDER_METHOD_CREATE_INFO,
-                                mc.load(iface.name().toString()),
+                                mc.load(ifaceName),
                                 mc.load(methodId));
                         ResultHandle paramsHandle = mc.newArray(Object.class, methodInfo.parametersCount());
                         for (int i = 0; i < methodInfo.parametersCount(); i++) {
@@ -498,8 +516,16 @@ public class AiServicesProcessor {
 
                         aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
                     }
+
+                    if (isRegisteredService) {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "close", void.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLOSE, contextHandle);
+                        mc.returnVoid();
+                    }
                 }
-                perClassMetadata.put(iface.name().toString(), new AiServiceClassCreateInfo(perMethodMetadata, implClassName));
+                perClassMetadata.put(ifaceName, new AiServiceClassCreateInfo(perMethodMetadata, implClassName));
                 // make the constructor accessible reflectively since that is how we create the instance
                 reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
             }

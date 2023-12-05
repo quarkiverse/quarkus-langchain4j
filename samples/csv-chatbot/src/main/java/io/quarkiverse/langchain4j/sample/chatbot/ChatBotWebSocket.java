@@ -3,10 +3,13 @@ package io.quarkiverse.langchain4j.sample.chatbot;
 import java.io.IOException;
 
 import jakarta.inject.Inject;
-import jakarta.websocket.*;
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 
-import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.eclipse.microprofile.context.ManagedExecutor;
 
 @ServerEndpoint("/chatbot")
 public class ChatBotWebSocket {
@@ -15,11 +18,14 @@ public class ChatBotWebSocket {
     MovieMuse bot;
 
     @Inject
+    ManagedExecutor managedExecutor;
+
+    @Inject
     ChatMemoryBean chatMemoryBean;
 
     @OnOpen
     public void onOpen(Session session) {
-        Infrastructure.getDefaultExecutor().execute(() -> {
+        managedExecutor.execute(() -> {
             String response = bot.chat(session, "hello");
             try {
                 session.getBasicRemote().sendText(response);
@@ -36,7 +42,7 @@ public class ChatBotWebSocket {
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        Infrastructure.getDefaultExecutor().execute(() -> {
+        managedExecutor.execute(() -> {
             String response = bot.chat(session, message);
             try {
                 session.getBasicRemote().sendText(response);
