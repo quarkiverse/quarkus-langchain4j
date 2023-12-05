@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.validation.constraints.NotNull;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
@@ -121,7 +123,7 @@ public class AiServicesTest {
     interface Humorist {
 
         @UserMessage("Tell me a joke about {{it}}")
-        String joke(String topic);
+        String joke(@NotNull String topic);
     }
 
     @Test

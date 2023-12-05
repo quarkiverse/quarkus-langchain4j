@@ -560,7 +560,7 @@ public class AiServicesProcessor {
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : params) {
-            if (param.annotations().isEmpty()) { // if a parameter has no annotations it is considered a template variable
+            if (effectiveParamAnnotations(param).isEmpty()) { // if a parameter has no annotations it is considered a template variable
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
             } else {
                 AnnotationInstance vInstance = param.annotation(V);
@@ -579,6 +579,19 @@ public class AiServicesProcessor {
         }
 
         return templateParams;
+    }
+
+    private List<AnnotationInstance> effectiveParamAnnotations(MethodParameterInfo param) {
+        return param.annotations().stream().filter(ai -> {
+            String name = ai.name().toString();
+            if (name.startsWith("kotlin") || name.startsWith("jakarta.validation.constraints")) {
+                return false;
+            }
+            if (name.endsWith("NotNull")) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
     }
 
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
