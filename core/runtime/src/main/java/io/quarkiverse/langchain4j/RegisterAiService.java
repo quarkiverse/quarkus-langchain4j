@@ -44,7 +44,8 @@ public @interface RegisterAiService {
     /**
      * Tool classes to use. All tools are expected to be CDI beans.
      * <p>
-     * NOTE: when this is used, {@code chatMemoryProviderSupplier} must NOT be set to {@link NoChatMemoryProviderSupplier}.
+     * NOTE: when this is used, either a {@link ChatMemoryProvider} bean must be present in the application, or a custom
+     * {@link Supplier<ChatMemoryProvider>} must be set.
      */
     Class<?>[] tools() default {};
 
@@ -57,6 +58,10 @@ public @interface RegisterAiService {
      * <p>
      * If the memory provider to use is exposed as a CDI bean exposing the type {@link ChatMemoryProvider}, then
      * set the value to {@link RegisterAiService.BeanChatMemoryProviderSupplier}
+     * <p>
+     * NOTE: when {@link tools} is set, the default is changed to {@link BeanChatMemoryProviderSupplier} which means that a
+     * bean a {@link ChatMemoryProvider} bean must be present. The alternative in this case is to set a custom
+     * {@link Supplier<ChatMemoryProvider>}.
      */
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanIfExistsChatMemoryProviderSupplier.class;
 
