@@ -15,20 +15,19 @@ public class QueryResponse {
 
     private final List<VectorMatch> matches;
 
-    private String metadata;
+    private String namespace;
 
     @JsonCreator
-    public QueryResponse(List<VectorMatch> matches, String metadata) {
+    public QueryResponse(List<VectorMatch> matches, String metadata, String namespace) {
         this.matches = matches;
-        this.metadata = metadata;
+        this.namespace = namespace;
     }
 
     public List<VectorMatch> getMatches() {
         return matches;
     }
 
-    public String getMetadata() {
-        return metadata;
+    public String getNamespace() {
+        return namespace;
     }
-
 }
