@@ -24,7 +24,7 @@ IMPORTANT: Hugging Face provides multiple kind of models. We only support **text
 
 By default, the extension uses:
 
-- https://huggingface.co/tiiuae/falcon-7b-instruct[titiuas/falcon-7b-instruct] as chat model (inference endpoint: _https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct_)
+- https://huggingface.co/tiiuae/falcon-7b-instruct[tiiuae/falcon-7b-instruct] as chat model (inference endpoint: _https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct_)
 - https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[sentence-transformers/all-MiniLM-L6-v2] as embedding model (inference endpoint: _https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2_)
 
 === Configuration
