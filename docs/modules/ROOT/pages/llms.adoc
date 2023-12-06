@@ -21,5 +21,5 @@ This xref:ai-services.adoc[interface] is designed to be simple and intuitive, al
 Note that each LLM has a different feature set.
 Please check the specific documentation for the LLM you are using to see what features are available:
 
-- xref:openai.adoc[OpenAI (GT-3/4)]
+- xref:openai.adoc[OpenAI (GPT-3/4)]
 - xref:huggingface.adoc[Hugging Face]
