@@ -20,6 +20,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.audit.AuditService;
 
 public class Langchain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
@@ -53,10 +54,15 @@ public class Langchain4jDotNames {
     static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
     static final DotName TEXT_SEGMENT = DotName.createSimple(TextSegment.class);
 
+    static final DotName AUDIT_SERVICE = DotName.createSimple(AuditService.class);
+
     static final DotName BEAN_RETRIEVER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanRetrieverSupplier.class);
 
     static final DotName BEAN_IF_EXISTS_RETRIEVER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsRetrieverSupplier.class);
+
+    static final DotName BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsAuditServiceSupplier.class);
 
 }

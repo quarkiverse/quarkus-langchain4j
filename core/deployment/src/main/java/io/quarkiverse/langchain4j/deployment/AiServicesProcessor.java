@@ -44,7 +44,6 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
-import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -53,6 +52,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
@@ -101,6 +101,7 @@ public class AiServicesProcessor {
     private static final MethodDescriptor SUPPORT_IMPLEMENT = MethodDescriptor.ofMethod(
             AiServiceMethodImplementationSupport.class,
             "implement", Object.class, AiServiceMethodImplementationSupport.Input.class);
+    public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -203,13 +204,21 @@ public class AiServicesProcessor {
                 }
             }
 
+            DotName auditServiceClassSupplierName = Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
+            AnnotationValue auditServiceClassSupplierValue = instance.value("auditServiceSupplier");
+            if (auditServiceClassSupplierValue != null) {
+                auditServiceClassSupplierName = auditServiceClassSupplierValue.asClass().name();
+                validateSupplierAndRegisterForReflection(auditServiceClassSupplierName, index, reflectiveClassProducer);
+            }
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
-                            retrieverSupplierClassDotName));
+                            retrieverSupplierClassDotName,
+                            auditServiceClassSupplierName));
         }
 
         if (needChatModelBean) {
@@ -244,6 +253,7 @@ public class AiServicesProcessor {
         boolean needsChatModelBean = false;
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
+        boolean needsAuditServiceBean = false;
         Set<DotName> allToolNames = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
@@ -264,12 +274,17 @@ public class AiServicesProcessor {
                     ? bi.getRetrieverSupplierClassDotName().toString()
                     : null;
 
+            String auditServiceClassSupplierName = bi.getAuditServiceClassSupplierDotName() != null
+                    ? bi.getAuditServiceClassSupplierDotName().toString()
+                    : null;
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(declarativeAiServiceClassInfo.name())
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName,
-                                    retrieverSupplierClassName)))
+                                    retrieverSupplierClassName,
+                                    auditServiceClassSupplierName)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if ((chatLanguageModelSupplierClassName == null) && selectedChatModelProvider.isPresent()) { // TODO: is second condition needed?
@@ -290,7 +305,7 @@ public class AiServicesProcessor {
                 needsChatMemoryProviderBean = true;
             } else if (Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER.toString()
                     .equals(chatMemoryProviderSupplierClassName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(DotName.createSimple(Instance.class),
+                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
                         new Type[] { ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER) }, null));
                 needsChatMemoryProviderBean = true;
             }
@@ -301,11 +316,17 @@ public class AiServicesProcessor {
                 needsRetrieverBean = true;
             } else if (Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER.toString()
                     .equals(retrieverSupplierClassName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(DotName.createSimple(Instance.class),
+                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
                         new Type[] { ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
                                 new Type[] { ClassType.create(Langchain4jDotNames.TEXT_SEGMENT) }, null) },
                         null));
                 needsRetrieverBean = true;
+            }
+
+            if (Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
+                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                        new Type[] { ClassType.create(Langchain4jDotNames.AUDIT_SERVICE) }, null));
+                needsAuditServiceBean = true;
             }
 
             syntheticBeanProducer.produce(configurator.done());
@@ -319,6 +340,9 @@ public class AiServicesProcessor {
         }
         if (needsRetrieverBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.RETRIEVER));
+        }
+        if (needsAuditServiceBean) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.AUDIT_SERVICE));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
@@ -436,19 +460,19 @@ public class AiServicesProcessor {
                         .interfaces(iface.name().toString())
                         .build()) {
 
-                    FieldDescriptor contextField = classCreator.getFieldCreator("context", AiServiceContext.class)
+                    FieldDescriptor contextField = classCreator.getFieldCreator("context", QuarkusAiServiceContext.class)
                             .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
                             .getFieldDescriptor();
 
                     for (MethodInfo methodInfo : methodsToImplement) {
-                        // The implementation essentially gets method the context and delegates to
+                        // The implementation essentially gets the context and delegates to
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
                         perMethodMetadata.put(methodId,
                                 gatherMethodMetadata(methodInfo, addMicrometerMetrics, addOpenTelemetrySpan));
                         MethodCreator constructor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
-                                AiServiceContext.class);
+                                QuarkusAiServiceContext.class);
                         constructor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, constructor.getThis());
                         constructor.writeInstanceField(contextField, constructor.getThis(), constructor.getMethodParam(0));
                         constructor.returnValue(null);
@@ -466,7 +490,7 @@ public class AiServicesProcessor {
                         ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
                         ResultHandle inputHandle = mc.newInstance(
                                 MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
-                                        AiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class),
+                                        QuarkusAiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class),
                                 contextHandle, methodCreateInfoHandle, paramsHandle);
 
                         ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
@@ -547,7 +571,8 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfo = gatherMetricsInfo(method, addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
 
-        return new AiServiceMethodCreateInfo(systemMessageInfo, userMessageInfo, memoryIdParamPosition, requiresModeration,
+        return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
+                userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnType, metricsInfo, spanInfo);
     }
 

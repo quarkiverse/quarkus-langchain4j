@@ -39,6 +39,8 @@ import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.ServiceOutputParser;
 import dev.langchain4j.service.TokenStream;
+import io.quarkiverse.langchain4j.audit.Audit;
+import io.quarkiverse.langchain4j.audit.AuditService;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 /**
@@ -48,15 +50,47 @@ public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
 
+    /**
+     * This method is called by the implementations of each ai service method.
+     */
     public Object implement(Input input) {
-        AiServiceContext context = input.context;
+        QuarkusAiServiceContext context = input.context;
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
 
-        // TODO: add validation
+        AuditService auditService = context.auditService;
+        Audit audit = null;
+        if (auditService != null) {
+            audit = auditService.create(new Audit.CreateInfo(createInfo.getInterfaceName(), createInfo.getMethodName(),
+                    methodArgs, createInfo.getMemoryIdParamPosition()));
+        }
 
+        // TODO: add validation
+        try {
+            var result = doImplement(createInfo, methodArgs, context, audit);
+            if (audit != null) {
+                audit.onCompletion(result);
+                auditService.complete(audit);
+            }
+            return result;
+        } catch (Exception e) {
+            log.errorv(e, "Execution of {0}#{1} failed", createInfo.getInterfaceName(), createInfo.getMethodName());
+            if (audit != null) {
+                audit.onFailure(e);
+                auditService.complete(audit);
+            }
+            throw e;
+        }
+    }
+
+    private static Object doImplement(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+            QuarkusAiServiceContext context, Audit audit) {
         Optional<SystemMessage> systemMessage = prepareSystemMessage(createInfo, methodArgs);
         UserMessage userMessage = prepareUserMessage(context, createInfo, methodArgs);
+
+        if (audit != null) {
+            audit.initialMessages(systemMessage, userMessage);
+        }
 
         if (context.retriever != null) { // TODO extract method/class
             List<TextSegment> relevant = context.retriever.findRelevant(userMessage.text());
@@ -73,6 +107,10 @@ public class AiServiceMethodImplementationSupport {
                 userMessage = userMessage(userMessage.text()
                         + "\n\nHere is some information that might be useful for answering:\n\n"
                         + relevantConcatenated);
+
+                if (audit != null) {
+                    audit.addRelevantDocument(relevant, userMessage);
+                }
             }
         }
 
@@ -97,7 +135,7 @@ public class AiServiceMethodImplementationSupport {
 
         Class<?> returnType = createInfo.getReturnType();
         if (returnType.equals(TokenStream.class)) {
-            return new AiServiceTokenStream(messages, context, memoryId); // TODO: moderation
+            return new AiServiceTokenStream(messages, context, memoryId);
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);
@@ -107,6 +145,9 @@ public class AiServiceMethodImplementationSupport {
                 ? context.chatModel.generate(messages, context.toolSpecifications)
                 : context.chatModel.generate(messages);
         log.debug("AI response obtained");
+        if (audit != null) {
+            audit.addLLMToApplicationMessage(response);
+        }
         verifyModerationIfNeeded(moderationFuture);
 
         ToolExecutionRequest toolExecutionRequest;
@@ -128,6 +169,9 @@ public class AiServiceMethodImplementationSupport {
             log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
             ToolExecutionResultMessage toolExecutionResultMessage = toolExecutionResultMessage(toolExecutionRequest.name(),
                     toolExecutionResult);
+            if (audit != null) {
+                audit.addApplicationToLLMMessage(toolExecutionResultMessage);
+            }
 
             ChatMemory chatMemory = context.chatMemory(memoryId);
             chatMemory.add(toolExecutionResultMessage);
@@ -135,6 +179,10 @@ public class AiServiceMethodImplementationSupport {
             log.debug("Attempting to obtain AI response");
             response = context.chatModel.generate(chatMemory.messages(), context.toolSpecifications);
             log.debug("AI response obtained");
+
+            if (audit != null) {
+                audit.addLLMToApplicationMessage(response);
+            }
         }
 
         return ServiceOutputParser.parse(response, returnType);
@@ -257,11 +305,11 @@ public class AiServiceMethodImplementationSupport {
     }
 
     public static class Input {
-        final AiServiceContext context;
+        final QuarkusAiServiceContext context;
         final AiServiceMethodCreateInfo createInfo;
         final Object[] methodArgs;
 
-        public Input(AiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+        public Input(QuarkusAiServiceContext context, AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
             this.context = context;
             this.createInfo = createInfo;
             this.methodArgs = methodArgs;

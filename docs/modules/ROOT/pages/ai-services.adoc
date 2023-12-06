@@ -356,3 +356,8 @@ In the trace above we can see the parent span which corresponds to the handling 
 interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
 The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
 
+=== Auditing
+
+The extension allows users to audit the process of implementing an AiService by introducing `io.quarkiverse.langchain4j.audit.AuditService` and `io.quarkiverse.langchain4j.audit.Audit`.
+By default, if a bean of type `AuditService` is present in the application, it will be used in order to create an `Audit`, which received various callbacks pertaining to the implementation
+of the AiService method. More information can be found on the javadoc of these two classes.

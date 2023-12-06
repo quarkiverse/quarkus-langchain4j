@@ -12,15 +12,19 @@ public class DeclarativeAiServiceCreateInfo {
     private final String chatMemoryProviderSupplierClassName;
     private final String retrieverSupplierClassName;
 
+    private final String auditServiceClassSupplierName;
+
     @RecordableConstructor
     public DeclarativeAiServiceCreateInfo(String serviceClassName, String languageModelSupplierClassName,
             List<String> toolsClassNames, String chatMemoryProviderSupplierClassName,
-            String retrieverSupplierClassName) {
+            String retrieverSupplierClassName,
+            String auditServiceClassSupplierName) {
         this.serviceClassName = serviceClassName;
         this.languageModelSupplierClassName = languageModelSupplierClassName;
         this.toolsClassNames = toolsClassNames;
         this.chatMemoryProviderSupplierClassName = chatMemoryProviderSupplierClassName;
         this.retrieverSupplierClassName = retrieverSupplierClassName;
+        this.auditServiceClassSupplierName = auditServiceClassSupplierName;
     }
 
     public String getServiceClassName() {
@@ -41,5 +45,9 @@ public class DeclarativeAiServiceCreateInfo {
 
     public String getRetrieverSupplierClassName() {
         return retrieverSupplierClassName;
+    }
+
+    public String getAuditServiceClassSupplierName() {
+        return auditServiceClassSupplierName;
     }
 }

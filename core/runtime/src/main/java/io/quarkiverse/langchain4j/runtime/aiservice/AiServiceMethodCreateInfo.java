@@ -8,6 +8,9 @@ import io.quarkus.runtime.annotations.RecordableConstructor;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServiceMethodCreateInfo {
 
+    private final String interfaceName;
+    private final String methodName;
+
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
@@ -20,11 +23,14 @@ public class AiServiceMethodCreateInfo {
     private final Optional<SpanInfo> spanInfo;
 
     @RecordableConstructor
-    public AiServiceMethodCreateInfo(Optional<TemplateInfo> systemMessageInfo, UserMessageInfo userMessageInfo,
+    public AiServiceMethodCreateInfo(String interfaceName, String methodName,
+            Optional<TemplateInfo> systemMessageInfo, UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
             boolean requiresModeration, Class<?> returnType,
             Optional<MetricsInfo> metricsInfo,
             Optional<SpanInfo> spanInfo) {
+        this.interfaceName = interfaceName;
+        this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
@@ -32,6 +38,14 @@ public class AiServiceMethodCreateInfo {
         this.returnType = returnType;
         this.metricsInfo = metricsInfo;
         this.spanInfo = spanInfo;
+    }
+
+    public String getInterfaceName() {
+        return interfaceName;
+    }
+
+    public String getMethodName() {
+        return methodName;
     }
 
     public Optional<TemplateInfo> getSystemMessageInfo() {
