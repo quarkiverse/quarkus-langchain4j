@@ -149,13 +149,19 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
         QueryRequest request = new QueryRequest(namespace, (long) maxResults, true, true, embedding.vector());
         QueryResponse response = vectorOperations.query(request);
         return response
-                .getMatches().stream().map(match -> new EmbeddingMatch<>(
-                        RelevanceScore.fromCosineSimilarity(match.getScore()),
-                        match.getId(),
-                        new Embedding(match.getValues()),
-                        match.getMetadata().get(textFieldName) != null ? new TextSegment(
-                                match.getMetadata().get(textFieldName),
-                                new Metadata(mapWithoutKey(match.getMetadata(), textFieldName))) : null))
+                .getMatches().stream().map(match -> {
+                    String text = match.getMetadata() != null &&
+                            match.getMetadata().get(textFieldName) != null
+                                    ? match.getMetadata().get(textFieldName)
+                                    : null;
+                    return new EmbeddingMatch<>(
+                            RelevanceScore.fromCosineSimilarity(match.getScore()),
+                            match.getId(),
+                            new Embedding(match.getValues()),
+                            text != null ? new TextSegment(
+                                    text,
+                                    new Metadata(mapWithoutKey(match.getMetadata(), textFieldName))) : null);
+                })
                 .filter(match -> match.score() >= minScore)
                 .collect(toList());
     }

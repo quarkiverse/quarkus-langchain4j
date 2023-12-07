@@ -98,7 +98,7 @@ public class PineconeEmbeddingStoreTest {
      */
     private static void delay() {
         try {
-            int timeout = 40;
+            int timeout = 30;
             Log.info("Waiting " + timeout + " seconds to allow Pinecone time to process deletions");
             TimeUnit.SECONDS.sleep(timeout);
         } catch (InterruptedException e) {
