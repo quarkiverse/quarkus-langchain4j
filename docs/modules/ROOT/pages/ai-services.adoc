@@ -181,10 +181,18 @@ An example of such a bean is:
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryProviderBean.java[]
 ----
 
-Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
+Additionally, it is important to configure a `ChatMemoryStore` which is responsible for actually storing the chat memory.
+The following example shows how an application wide `InMemoryChatMemoryStore` can be used for this.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryStoreProducer.java[]
+----
+
+Notice that with this example, conversations are not deleted and thus accumulate over time.
 
 NOTE: It is recommended to have your chat memory beans implement `RemovableChatMemoryProvider` because the objects used as memory IDs are removed from the memory when the service goes out of scope.
 
