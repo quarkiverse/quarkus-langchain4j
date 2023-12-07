@@ -126,6 +126,7 @@ public class AuditingServiceTest {
     }
 
     @RegisterAiService(tools = Calculator.class)
+    @Singleton
     interface Assistant {
 
         String chat(String message);

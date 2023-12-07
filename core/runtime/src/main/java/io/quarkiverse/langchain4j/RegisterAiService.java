@@ -7,8 +7,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.function.Supplier;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -24,7 +22,9 @@ import io.quarkiverse.langchain4j.audit.AuditService;
  * while also providing the builder with the proper {@link ChatLanguageModel} bean (mandatory), {@code tools} bean (optional),
  * {@link ChatMemoryProvider} and {@link Retriever} beans (which by default are configured if such beans exist).
  * <p>
- * NOTE: The resulting CDI bean is {@link ApplicationScoped}.
+ * NOTE: The resulting CDI bean is {@link jakarta.enterprise.context.RequestScoped} by default. If you need to change the scope,
+ * simply annotate the class with a CDI scope.
+ * CAUTION: When using anything other than the request scope, you need to be very careful with the chat memory implementation.
  * <p>
  * NOTE: When the application also contains the {@code quarkus-micrometer} extension, metrics are automatically generated
  * for the method invocations.

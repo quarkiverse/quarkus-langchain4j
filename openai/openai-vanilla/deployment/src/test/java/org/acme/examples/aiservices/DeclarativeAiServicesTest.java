@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -105,6 +106,7 @@ public class DeclarativeAiServicesTest {
     Assistant assistant;
 
     @Test
+    @ActivateRequestContext
     public void test_simple_instruction_with_single_argument_and_no_annotations() throws IOException {
         String result = assistant.chat("Tell me a joke about developers");
         assertThat(result).isNotBlank();
@@ -129,6 +131,7 @@ public class DeclarativeAiServicesTest {
     SentimentAnalyzer sentimentAnalyzer;
 
     @Test
+    @ActivateRequestContext
     void test_extract_enum() throws IOException {
         wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "POSITIVE"));
 
@@ -213,6 +216,7 @@ public class DeclarativeAiServicesTest {
     AssistantWithCalculator assistantWithCalculator;
 
     @Test
+    @ActivateRequestContext
     void should_execute_tool_then_answer() throws IOException {
         var firstResponse = """
                 {
@@ -308,6 +312,7 @@ public class DeclarativeAiServicesTest {
     ChatWithSeparateMemoryForEachUser chatWithSeparateMemoryForEachUser;
 
     @Test
+    @ActivateRequestContext
     void should_keep_separate_chat_memory_for_each_user_in_store() throws IOException {
 
         ChatMemoryStore store = Arc.container().instance(ChatMemoryStore.class).get();
