@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.redis.runtime;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXED;
+import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,15 +14,9 @@ import io.smallrye.config.WithDefault;
 /**
  * Configuration of the Redis embedding store.
  */
-@ConfigRoot(phase = BUILD_AND_RUN_TIME_FIXED)
+@ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.redis")
 public interface RedisEmbeddingStoreConfig {
-
-    /**
-     * The name of the Redis client to use. These clients are configured by means of the `redis-client` extension.
-     * If unspecified, it will use the default Redis client.
-     */
-    Optional<String> clientName();
 
     /**
      * The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by
