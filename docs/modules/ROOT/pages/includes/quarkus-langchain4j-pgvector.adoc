@@ -10,6 +10,23 @@ h|[[quarkus-langchain4j-pgvector_configuration]]link:#quarkus-langchain4j-pgvect
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.datasource]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.datasource[quarkus.langchain4j.pgvector.datasource]`
+
+
+[.description]
+--
+The name of the configured Postgres datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
 a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table[quarkus.langchain4j.pgvector.table]`
 
 
