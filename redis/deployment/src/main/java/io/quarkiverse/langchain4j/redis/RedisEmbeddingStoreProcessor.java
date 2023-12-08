@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.redis;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
@@ -17,6 +19,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.redis.client.RedisClientName;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.deployment.client.RequestedRedisClientBuildItem;
 import io.quarkus.redis.runtime.client.config.RedisConfig;
@@ -33,7 +36,7 @@ public class RedisEmbeddingStoreProcessor {
     }
 
     @BuildStep
-    public RequestedRedisClientBuildItem requestRedisClient(RedisEmbeddingStoreConfig config) {
+    public RequestedRedisClientBuildItem requestRedisClient(RedisEmbeddingStoreBuildTimeConfig config) {
         return new RequestedRedisClientBuildItem(config.clientName().orElse(RedisConfig.DEFAULT_CLIENT_NAME));
     }
 
@@ -43,7 +46,17 @@ public class RedisEmbeddingStoreProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             RedisEmbeddingStoreRecorder recorder,
             RedisEmbeddingStoreConfig config,
-            BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
+            BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
+            RedisEmbeddingStoreBuildTimeConfig buildTimeConfig) {
+        String clientName = buildTimeConfig.clientName().orElse(null);
+        AnnotationInstance redisClientQualifier;
+        if (clientName == null) {
+            redisClientQualifier = AnnotationInstance.builder(Default.class).build();
+        } else {
+            redisClientQualifier = AnnotationInstance.builder(RedisClientName.class)
+                    .add("value", clientName)
+                    .build();
+        }
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(REDIS_EMBEDDING_STORE)
                 .types(ClassType.create(EmbeddingStore.class),
@@ -51,8 +64,9 @@ public class RedisEmbeddingStoreProcessor {
                 .setRuntimeInit()
                 .defaultBean()
                 .scope(ApplicationScoped.class)
-                .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)))
-                .createWith(recorder.embeddingStoreFunction(config))
+                .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
+                        redisClientQualifier)
+                .createWith(recorder.embeddingStoreFunction(config, clientName))
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
