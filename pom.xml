@@ -40,7 +40,7 @@
     <quarkus-poi.version>2.0.4</quarkus-poi.version>
     <assertj.version>3.24.2</assertj.version>
     <wiremock.version>3.3.1</wiremock.version>
-    <pgvector-java.version>0.1.3</pgvector-java.version>
+    <pgvector-java.version>0.1.4</pgvector-java.version>
   </properties>
   <dependencyManagement>
     <dependencies>
