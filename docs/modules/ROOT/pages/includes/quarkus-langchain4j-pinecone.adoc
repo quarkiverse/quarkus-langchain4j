@@ -10,7 +10,7 @@ h|[[quarkus-langchain4j-pinecone_configuration]]link:#quarkus-langchain4j-pineco
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key[quarkus.langchain4j.pinecone.api-key]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.api-key[quarkus.langchain4j.pinecone.api-key]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment[quarkus.langchain4j.pinecone.environment]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.environment[quarkus.langchain4j.pinecone.environment]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id[quarkus.langchain4j.pinecone.project-id]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.project-id[quarkus.langchain4j.pinecone.project-id]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name[quarkus.langchain4j.pinecone.index-name]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-name[quarkus.langchain4j.pinecone.index-name]`
 
 
 [.description]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension[quarkus.langchain4j.pinecone.dimension]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.dimension[quarkus.langchain4j.pinecone.dimension]`
 
 
 [.description]
@@ -95,7 +95,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace[quarkus.langchain4j.pinecone.namespace]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace[quarkus.langchain4j.pinecone.namespace]`
 
 
 [.description]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name[quarkus.langchain4j.pinecone.text-field-name]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.text-field-name[quarkus.langchain4j.pinecone.text-field-name]`
 
 
 [.description]
@@ -129,7 +129,7 @@ endif::add-copy-button-to-env-var[]
 |`text`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout[quarkus.langchain4j.pinecone.timeout]`
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.timeout[quarkus.langchain4j.pinecone.timeout]`
 
 
 [.description]

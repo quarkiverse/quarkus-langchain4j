@@ -39,10 +39,10 @@ import io.quarkus.test.QuarkusUnitTest;
  * and the following environment variables must be set accordingly:
  * PINECONE_API_KEY, PINECONE_ENVIRONMENT, PINECONE_PROJECT_ID and PINECONE_INDEX_NAME
  *
- * These are set as GitHub secrets in the main repository. GitHub doesn't
- * pass them to workflows triggered from forks though, so this test only
- * runs with the nightly CI workflow, or for PRs submitted from the main
- * quarkiverse repository (NOT from a fork).
+ * These are set as GitHub secrets in the main repository. Because we only
+ * have one account in the starter region and one shared Pinecone index, we
+ * can't run this test multiple times in parallel, and so to prevent
+ * unnecessary failures, this test currently runs only in the nightly build.
  *
  * <p>
  * Original data in the index will be lost during the test.
