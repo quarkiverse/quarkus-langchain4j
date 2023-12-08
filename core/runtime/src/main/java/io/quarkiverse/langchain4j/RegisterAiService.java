@@ -10,9 +10,12 @@ import java.util.function.Supplier;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.audit.AuditService;
 
 /**
@@ -44,27 +47,29 @@ public @interface RegisterAiService {
 
     /**
      * Tool classes to use. All tools are expected to be CDI beans.
-     * <p>
-     * NOTE: when this is used, either a {@link ChatMemoryProvider} bean must be present in the application, or a custom
-     * {@link Supplier<ChatMemoryProvider>} must be set.
      */
     Class<?>[] tools() default {};
 
     /**
-     * Configures the way to obtain the {@link ChatMemoryProvider} to use.
-     * By default, Quarkus will look for a CDI bean that implements {@link ChatMemoryProvider}, but will fall back to not using
-     * any memory if no such bean exists.
-     * If an arbitrary {@link ChatMemoryProvider} instance is needed, a custom implementation of
+     * Configures the way to obtain the {@link ChatMemoryProvider}.
+     * <p>
+     * Be default, Quarkus configures a {@link ChatMemoryProvider} bean that uses a {@link InMemoryChatMemoryStore} bean
+     * as the backing store. The default type for the actual {@link ChatMemory} is {@link MessageWindowChatMemory}
+     * and it is configured with the value of the {@code quarkus.langchain4j.chat-memory.memory-window.max-messages}
+     * configuration property (which default to 10) as a way of limiting the number of messages in each chat.
+     * <p>
+     * If the application provides its own {@link ChatMemoryProvider} bean, that takes precedence over what Quarkus provides as
+     * the default.
+     * <p>
+     * If the application provides an implementation of {@link ChatMemoryStore}, then that is used instead of the default
+     * {@link InMemoryChatMemoryStore}.
+     * <p>
+     * In the most advances case, an arbitrary {@link ChatMemoryProvider} can be used by having a custom
+     * {@code Supplier<ChatMemoryProvider>} configured in this property.
      * {@link Supplier<ChatMemoryProvider>} needs to be provided.
      * <p>
-     * If the memory provider to use is exposed as a CDI bean exposing the type {@link ChatMemoryProvider}, then
-     * set the value to {@link RegisterAiService.BeanChatMemoryProviderSupplier}
-     * <p>
-     * NOTE: when {@link tools} is set, the default is changed to {@link BeanChatMemoryProviderSupplier} which means that a
-     * bean a {@link ChatMemoryProvider} bean must be present. The alternative in this case is to set a custom
-     * {@link Supplier<ChatMemoryProvider>}.
      */
-    Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanIfExistsChatMemoryProviderSupplier.class;
+    Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
 
     /**
      * Configures the way to obtain the {@link Retriever} to use (when using RAG).
@@ -98,33 +103,13 @@ public @interface RegisterAiService {
     }
 
     /**
-     * Marker that is used to tell Quarkus to use the retriever that the user has configured as a CDI bean. If the bean does
-     * not exist, Quarkus will fail at build time.
+     * Marker that is used to tell Quarkus to use the retriever that the user has configured as a CDI bean.
+     * Be default, Quarkus configures an {@link ChatMemoryProvider} by using an {@link InMemoryChatMemoryStore}
+     * as the backing store while using {@link MessageWindowChatMemory} with the value of
+     * configuration property {@code quarkus.langchain4j.chat-memory.memory-window.max-messages} (which default to 10)
+     * as a way of limiting the number of messages in each chat.
      */
     final class BeanChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-
-        @Override
-        public ChatMemoryProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link ChatMemoryProvider} that the user has configured as a CDI bean.
-     * If no such bean exists, then no memory will be used.
-     */
-    final class BeanIfExistsChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
-
-        @Override
-        public ChatMemoryProvider get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker class to indicate that no chat memory should be used
-     */
-    final class NoChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
 
         @Override
         public ChatMemoryProvider get() {

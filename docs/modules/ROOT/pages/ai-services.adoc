@@ -27,10 +27,11 @@ Once registered, you can inject the _AI Service_ into your application:
 @Inject MyAiService service;
 ----
 
+[#scope]
 [IMPORTANT]
 ====
 The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory>> objects.
-This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (currently, but may change in the future).
+This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (WebSocket support is expected to improve in the near future).
 For example when using a service in a CLI, it makes sense to have the service be `@ApplicationScoped` and the extension allows this simply if the service is annotated with `@ApplicationScoped`.
 ====
 
@@ -175,24 +176,40 @@ public class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
 
 As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
 
-The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the memory provider. The default value of this annotation is `RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class`
+The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the `dev.langchain4j.memory.chat.ChatMemoryProvider`. The default value of this annotation is `RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class`
 which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application, while falling back to no memory if no such bean exists.
-An example of such a bean is:
+
+The extension provides a default implementation of `ChatMemoryProvider` which does two things:
+
+* It uses whatever bean `dev.langchain4j.store.memory.chat.ChatMemoryStore` bean is configured, as the backing store. The default implementation is `dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore`
+** If the application provides its own `ChatMemoryStore` bean, that will be used instead of the default `InMemoryChatMemoryStore`,
+* It leverages the available configuration options under `quarkus.langchain4j.chat-memory` to construct the  `ChatMemoryProvider`.
+** The default configuration values result in the usage of `dev.langchain4j.memory.chat.MessageWindowChatMemory` with a window size of ten
+** By setting `quarkus.langchain4j.chat-memory.type=token-window`, a `dev.langchain4j.memory.chat.TokenWindowChatMemory` will be used. Note that this requires the presence of a `dev.langchain4j.model.Tokenizer` bean.
+
+[IMPORTANT]
+====
+The topic of `ChatMemory` cleanup is of paramount importance in order to avoid having the application terminate with `out of memory` errors. For this reason, the extension automatically removes all the `ChatMemory` objects from
+the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope>> that such bean are `@RequestScoped` be default).
+
+However, in cases where more fine-grained control is needed (which is the case when the bean is declared as `@Singleton` or `@ApplicationScoped`) then `io.quarkiverse.langchain4j.ChatMemoryRemover` should be used to manually remove elements.
+====
+
+=== Advanced usage
+
+Although the extension's default `ChatMemoryProvider` is very configurable making unnecessary in most cases to resort to a custom implementation, such a capability is possible. Here is a possible example:
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/ChatMemoryBean.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/CustomChatMemoryProvider.java[]
 ----
 
-Notice that the messages are deleted when the scope terminates (as it will call the `close` method).
-
-NOTE: It is recommended to have your chat memory beans implement `RemovableChatMemoryProvider` because the objects used as memory IDs are removed from the memory when the service goes out of scope.
-
-Users can provide their own custom `ChatMemoryProvider` for use in the AiService by implementing `Supplier<ChatMemoryProvider>`, such as:
+If for some reason different AI services need to have a different `ChatMemoryProvider` (i.e. not use the globally available bean), this is possible by configuring the `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation and implementing as custom provider.
+Here is a possible example:
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/MySmallMemoryProvider.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/CustomProvider.java[]
 ----
 
 and configuring the AiService as so:

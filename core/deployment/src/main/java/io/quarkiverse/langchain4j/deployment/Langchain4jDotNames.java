@@ -46,10 +46,6 @@ public class Langchain4jDotNames {
 
     static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatMemoryProviderSupplier.class);
-    static final DotName BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class);
-    static final DotName NO_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoChatMemoryProviderSupplier.class);
 
     static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
     static final DotName TEXT_SEGMENT = DotName.createSimple(TextSegment.class);

@@ -10,8 +10,6 @@ import static org.acme.examples.aiservices.MessageAssertUtils.assertMultipleRequ
 import static org.acme.examples.aiservices.MessageAssertUtils.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.api.InstanceOfAssertFactories.list;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,9 +21,6 @@ import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import org.assertj.core.api.InstanceOfAssertFactory;
-import org.assertj.core.api.ListAssert;
-import org.assertj.core.api.MapAssert;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
@@ -65,17 +60,10 @@ public class DeclarativeAiServicesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1");
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
     };
-    private static final InstanceOfAssertFactory<Map, MapAssert<String, String>> MAP_STRING_STRING = map(String.class,
-            String.class);
-    private static final InstanceOfAssertFactory<List, ListAssert<Map>> LIST_MAP = list(Map.class);
 
     static WireMockServer wireMockServer;
 
     static ObjectMapper mapper;
-
-    private static MessageWindowChatMemory createChatMemory() {
-        return MessageWindowChatMemory.withMaxMessages(10);
-    }
 
     @BeforeAll
     static void beforeAll() {
@@ -96,7 +84,7 @@ public class DeclarativeAiServicesTest {
         wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService
     interface Assistant {
 
         String chat(String message);
@@ -120,7 +108,7 @@ public class DeclarativeAiServicesTest {
         NEGATIVE
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService
     interface SentimentAnalyzer {
 
         @UserMessage("Analyze sentiment of {it}")

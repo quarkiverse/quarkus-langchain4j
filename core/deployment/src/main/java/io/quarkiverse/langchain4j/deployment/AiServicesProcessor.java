@@ -49,6 +49,7 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceBeanDestroyer;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
@@ -106,6 +107,9 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_CLOSE = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "close", void.class);
+
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
+            QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     @BuildStep
@@ -184,16 +188,11 @@ public class AiServicesProcessor {
             }
 
             // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
-            DotName chatMemoryProviderSupplierClassDotName = toolDotNames.isEmpty()
-                    ? Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER
-                    : Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
+            DotName chatMemoryProviderSupplierClassDotName = Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
-                if (chatMemoryProviderSupplierClassDotName.equals(
-                        Langchain4jDotNames.NO_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                    chatMemoryProviderSupplierClassDotName = null;
-                } else if (!chatMemoryProviderSupplierClassDotName
+                if (!chatMemoryProviderSupplierClassDotName
                         .equals(Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
                             reflectiveClassProducer);
@@ -312,11 +311,6 @@ public class AiServicesProcessor {
 
             if (Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
-                needsChatMemoryProviderBean = true;
-            } else if (Langchain4jDotNames.BEAN_IF_EXISTS_CHAT_MEMORY_PROVIDER_SUPPLIER.toString()
-                    .equals(chatMemoryProviderSupplierClassName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
-                        new Type[] { ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER) }, null));
                 needsChatMemoryProviderBean = true;
             }
 
@@ -472,7 +466,7 @@ public class AiServicesProcessor {
                 ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
                         .classOutput(classOutput)
                         .className(implClassName)
-                        .interfaces(ifaceName);
+                        .interfaces(ifaceName, ChatMemoryRemovable.class.getName());
                 if (isRegisteredService) {
                     classCreatorBuilder.interfaces(AutoCloseable.class);
                 }
@@ -524,6 +518,16 @@ public class AiServicesProcessor {
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLOSE, contextHandle);
                         mc.returnVoid();
                     }
+
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "remove", void.class, Object[].class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS, contextHandle,
+                                mc.getMethodParam(0));
+                        mc.returnVoid();
+                    }
+
                 }
                 perClassMetadata.put(ifaceName, new AiServiceClassCreateInfo(perMethodMetadata, implClassName));
                 // make the constructor accessible reflectively since that is how we create the instance
