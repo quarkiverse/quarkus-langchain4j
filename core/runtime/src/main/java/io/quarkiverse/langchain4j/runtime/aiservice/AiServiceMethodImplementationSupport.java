@@ -115,7 +115,6 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Object memoryId = memoryId(createInfo, methodArgs).orElse("default");
-        context.usedMemoryIds.add(memoryId);
 
         if (context.hasChatMemory()) {
             ChatMemory chatMemory = context.chatMemory(memoryId);

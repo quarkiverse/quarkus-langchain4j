@@ -36,10 +36,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.output.Response;
-import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -64,18 +61,6 @@ public class AuditingServiceTest {
     static WireMockServer wireMockServer;
 
     static ObjectMapper mapper;
-
-    public static class ChatMemoryProviderProducer {
-
-        @Singleton
-        ChatMemoryProvider chatMemory() {
-            return memoryId -> MessageWindowChatMemory.builder()
-                    .id(memoryId)
-                    .maxMessages(10)
-                    .chatMemoryStore(new InMemoryChatMemoryStore())
-                    .build();
-        }
-    }
 
     @BeforeAll
     static void beforeAll() {

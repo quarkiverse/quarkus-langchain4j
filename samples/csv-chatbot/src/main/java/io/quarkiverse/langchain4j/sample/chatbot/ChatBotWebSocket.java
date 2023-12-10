@@ -11,6 +11,8 @@ import jakarta.websocket.server.ServerEndpoint;
 
 import org.eclipse.microprofile.context.ManagedExecutor;
 
+import io.quarkiverse.langchain4j.ChatMemoryRemover;
+
 @ServerEndpoint("/chatbot")
 public class ChatBotWebSocket {
 
@@ -19,9 +21,6 @@ public class ChatBotWebSocket {
 
     @Inject
     ManagedExecutor managedExecutor;
-
-    @Inject
-    ChatMemoryBean chatMemoryBean;
 
     @OnOpen
     public void onOpen(Session session) {
@@ -37,7 +36,7 @@ public class ChatBotWebSocket {
 
     @OnClose
     void onClose(Session session) {
-        chatMemoryBean.clear(session);
+        ChatMemoryRemover.remove(bot, session);
     }
 
     @OnMessage

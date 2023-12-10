@@ -124,7 +124,7 @@ public class AssistantWithToolsResource {
         this.assistant = assistant;
     }
 
-    @GET  // <6>
+    @GET  // <3>
     public String get(@RestQuery String message) {
         return assistant.chat(message);
     }
@@ -148,25 +148,7 @@ public class AssistantWithToolsResource {
         }
     }
 
-    @Singleton // <2>
-    public static class ChatMemoryBean implements RemovableChatMemoryProvider {   // <3>
-
-        private final Map<Object, ChatMemory> memories = new ConcurrentHashMap<>();
-
-        @Override
-        public ChatMemory get(Object memoryId) {
-            return memories.computeIfAbsent(memoryId, id -> MessageWindowChatMemory.builder()
-                    .maxMessages(20)
-                    .id(memoryId)
-                    .build());
-        }
-
-        public void remove(Object id) {    // <4>
-            memories.remove(id);
-        }
-    }
-
-    @RegisterAiService(tools = Calculator.class) // <5>
+    @RegisterAiService(tools = Calculator.class) // <2>
     public interface Assistant {
 
         String chat(String userMessage);
@@ -174,11 +156,8 @@ public class AssistantWithToolsResource {
 }
 ----
 <1> Declare a CDI bean that provides three different tools
-<2> Declare a CDI bean for providing a simple in-memory message store
-<3> By making the bean implement `RemovableChatMemoryProvider`, the objects used as memory IDs are removed from memory when the service goes out of scope
-<4> The `remove` method is called automatically by Quarkus when an AiService goes out of scope in order to remove the memory objects used by said service
-<5> Register an AiService that responds to a user's request and has access to the calculator tools. This service is also able to keep track of the session's messages using the CDI message store declared above.
-<6> Declare an HTTP endpoint that retrieves the user's question via a query parameter and simply responds with chatbot's response
+<2> Register an AiService that responds to a user's request and has access to the calculator tools. This service is also able to keep track of the session's messages using the CDI message store declared above.
+<3> Declare an HTTP endpoint that retrieves the user's question via a query parameter and simply responds with chatbot's response
 
 Now, if we ask the chatbot `What is the square root of the sum of the numbers of letters in the words "hello" and "world"` via:
 

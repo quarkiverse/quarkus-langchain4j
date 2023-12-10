@@ -104,13 +104,6 @@ public class AiServicesRecorder {
                                 .equals(info.getChatMemoryProviderSupplierClassName())) {
                             quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
                                     ChatMemoryProvider.class));
-                        } else if (RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class.getName()
-                                .equals(info.getChatMemoryProviderSupplierClassName())) {
-                            Instance<ChatMemoryProvider> instance = creationalContext
-                                    .getInjectedReference(CHAT_MEMORY_PROVIDER_INSTANCE_TYPE_LITERAL);
-                            if (instance.isResolvable()) {
-                                quarkusAiServices.chatMemoryProvider(instance.get());
-                            }
                         } else {
                             Supplier<? extends ChatMemoryProvider> supplier = (Supplier<? extends ChatMemoryProvider>) Thread
                                     .currentThread().getContextClassLoader()
