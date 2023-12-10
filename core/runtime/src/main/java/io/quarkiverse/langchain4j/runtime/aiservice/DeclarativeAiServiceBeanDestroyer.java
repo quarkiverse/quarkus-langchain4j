@@ -18,7 +18,7 @@ public class DeclarativeAiServiceBeanDestroyer implements BeanDestroyer<AutoClos
         try {
             instance.close();
         } catch (Exception e) {
-            log.error("Unable to close " + instance);
+            log.error("Unable to close " + instance, e);
         }
     }
 }
