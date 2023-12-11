@@ -275,6 +275,34 @@ A document retriever fetches data from an external source and provides it to the
 
 This guidance aims to cover all crucial aspects of designing AI services with Quarkus, ensuring robust and efficient interactions with LLMs.
 
+== Moderation
+
+By default, @RegisterAiService annotated interfaces don't moderate content. However, users can opt in to having the LLM moderate
+content by annotating the method with `@Moderate`.
+
+For moderation to work, the following criteria need to be met:
+
+* A CDI bean for `dev.langchain4j.model.moderation.ModerationModel` must be configured (the `quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` provide one out of the box)
+* The interface must be configured with `@RegisterAiService(moderationModelSupplier = RegisterAiService.BeanModerationModelSupplier.class)`
+
+=== Advanced usage
+An alternative to providing a CDI bean is to configure the interface with `@RegisterAiService(moderationModelSupplier = MyCustomSupplier.class)`
+and implement `MyCustomModerationSupplier` like so:
+
+[source,java]
+----
+import dev.langchain4j.model.moderation.ModerationModel;
+
+public class MyCustomModerationSupplier implements Supplier<ModerationModel> {
+
+    @Override
+    public ModerationModel get(){
+        // TODO: implement
+    }
+
+}
+----
+
 == Observability
 
 Observability is built into services created via `@RegisterAiService` and is provided in the following form:

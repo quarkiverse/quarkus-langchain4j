@@ -12,6 +12,7 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -73,7 +74,7 @@ public @interface RegisterAiService {
 
     /**
      * Configures the way to obtain the {@link Retriever} to use (when using RAG).
-     * By default, no chat memory is used.
+     * By default, no supplier is used.
      * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanRetrieverSupplier}.
      * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
      * needs to be provided.
@@ -88,6 +89,15 @@ public @interface RegisterAiService {
      * {@link Supplier<AuditService>} needs to be provided.
      */
     Class<? extends Supplier<AuditService>> auditServiceSupplier() default BeanIfExistsAuditServiceSupplier.class;
+
+    /**
+     * Configures the way to obtain the {@link ModerationModel} to use.
+     * By default, no moderation model is used.
+     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanRetrieverSupplier}.
+     * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
+     * needs to be provided.
+     */
+    Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default NoModerationModelSupplier.class;
 
     /**
      * Marker that is used to tell Quarkus to use the {@link ChatLanguageModel} that has been configured as a CDI bean by
@@ -159,6 +169,30 @@ public @interface RegisterAiService {
 
         @Override
         public AuditService get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ModerationModel} that has been configured as a CDI bean by
+     * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
+     * {@code quarkus-langchain4j-azure-openai}).
+     */
+    final class BeanModerationModelSupplier implements Supplier<ModerationModel> {
+
+        @Override
+        public ModerationModel get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker class to indicate that no moderation model should be used
+     */
+    final class NoModerationModelSupplier implements Supplier<ModerationModel> {
+
+        @Override
+        public ModerationModel get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

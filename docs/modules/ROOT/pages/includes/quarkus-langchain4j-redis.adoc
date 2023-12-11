@@ -10,23 +10,6 @@ h|[[quarkus-langchain4j-redis_configuration]]link:#quarkus-langchain4j-redis_con
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.client-name]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.client-name[quarkus.langchain4j.redis.client-name]`
-
-
-[.description]
---
-The name of the Redis client to use. These clients are configured by means of the `redis-client` extension. If unspecified, it will use the default Redis client.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_CLIENT_NAME+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_CLIENT_NAME+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|
-
-
 a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.dimension]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.dimension[quarkus.langchain4j.redis.dimension]`
 
 

@@ -61,4 +61,10 @@ public class Langchain4jDotNames {
     static final DotName BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsAuditServiceSupplier.class);
 
+    static final DotName BEAN_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanModerationModelSupplier.class);
+
+    static final DotName NO_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
+            RegisterAiService.NoModerationModelSupplier.class);
+
 }

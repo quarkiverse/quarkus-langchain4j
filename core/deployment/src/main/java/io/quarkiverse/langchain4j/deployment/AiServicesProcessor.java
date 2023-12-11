@@ -153,11 +153,13 @@ public class AiServicesProcessor {
     @BuildStep
     public void findDeclarativeServices(CombinedIndexBuildItem indexBuildItem,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
+            BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         IndexView index = indexBuildItem.getIndex();
 
         boolean needChatModelBean = false;
+        boolean needModerationModelBean = false;
         for (AnnotationInstance instance : index.getAnnotations(Langchain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
@@ -208,11 +210,24 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName auditServiceClassSupplierName = Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
-            AnnotationValue auditServiceClassSupplierValue = instance.value("auditServiceSupplier");
-            if (auditServiceClassSupplierValue != null) {
-                auditServiceClassSupplierName = auditServiceClassSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(auditServiceClassSupplierName, index, reflectiveClassProducer);
+            DotName auditServiceSupplierClassName = Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
+            AnnotationValue auditServiceSupplierValue = instance.value("auditServiceSupplier");
+            if (auditServiceSupplierValue != null) {
+                auditServiceSupplierClassName = auditServiceSupplierValue.asClass().name();
+                validateSupplierAndRegisterForReflection(auditServiceSupplierClassName, index, reflectiveClassProducer);
+            }
+
+            DotName moderationModelSupplierClassName = null;
+            AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
+            if (moderationModelSupplierValue != null) {
+                moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
+                if (Langchain4jDotNames.NO_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
+                    moderationModelSupplierClassName = null;
+                } else if (Langchain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
+                    needModerationModelBean = true;
+                } else {
+                    validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+                }
             }
 
             BuiltinScope declaredScope = BuiltinScope.from(declarativeAiServiceClassInfo);
@@ -225,12 +240,16 @@ public class AiServicesProcessor {
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverSupplierClassDotName,
-                            auditServiceClassSupplierName,
+                            auditServiceSupplierClassName,
+                            moderationModelSupplierClassName,
                             cdiScope));
         }
 
         if (needChatModelBean) {
             requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem());
+        }
+        if (needModerationModelBean) {
+            requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem());
         }
     }
 
@@ -262,6 +281,7 @@ public class AiServicesProcessor {
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
         boolean needsAuditServiceBean = false;
+        boolean needsModerationModelBean = false;
         Set<DotName> allToolNames = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
@@ -286,13 +306,18 @@ public class AiServicesProcessor {
                     ? bi.getAuditServiceClassSupplierDotName().toString()
                     : null;
 
+            String moderationModelSupplierClassName = (bi.getModerationModelSupplierDotName() != null
+                    ? bi.getModerationModelSupplierDotName().toString()
+                    : null);
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(declarativeAiServiceClassInfo.name())
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName,
                                     retrieverSupplierClassName,
-                                    auditServiceClassSupplierName)))
+                                    auditServiceClassSupplierName,
+                                    moderationModelSupplierClassName)))
                     .destroyer(DeclarativeAiServiceBeanDestroyer.class)
                     .setRuntimeInit()
                     .scope(bi.getCdiScope());
@@ -333,6 +358,11 @@ public class AiServicesProcessor {
                 needsAuditServiceBean = true;
             }
 
+            if (Langchain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.toString().equals(moderationModelSupplierClassName)) {
+                configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.MODERATION_MODEL));
+                needsModerationModelBean = true;
+            }
+
             syntheticBeanProducer.produce(configurator.done());
         }
 
@@ -347,6 +377,9 @@ public class AiServicesProcessor {
         }
         if (needsAuditServiceBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.AUDIT_SERVICE));
+        }
+        if (needsModerationModelBean) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.MODERATION_MODEL));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));

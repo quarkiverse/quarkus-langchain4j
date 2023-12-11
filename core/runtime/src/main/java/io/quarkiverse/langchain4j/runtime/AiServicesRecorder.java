@@ -16,6 +16,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.retriever.Retriever;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -28,9 +29,6 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
-
-    private static final TypeLiteral<Instance<ChatMemoryProvider>> CHAT_MEMORY_PROVIDER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
-    };
     private static final TypeLiteral<Instance<Retriever<TextSegment>>> RETRIEVER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
 
     };
@@ -146,6 +144,21 @@ public class AiServicesRecorder {
                             @SuppressWarnings("rawtypes")
                             Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
                                     .currentThread().getContextClassLoader().loadClass(info.getAuditServiceClassSupplierName())
+                                    .getConstructor().newInstance();
+                            quarkusAiServices.auditService(supplier.get());
+                        }
+                    }
+
+                    if (info.getModerationModelSupplierClassName() != null) {
+                        if (RegisterAiService.BeanModerationModelSupplier.class.getName()
+                                .equals(info.getModerationModelSupplierClassName())) {
+                            ModerationModel moderationModel = creationalContext.getInjectedReference(ModerationModel.class);
+                            quarkusAiServices.moderationModel(moderationModel);
+                        } else {
+                            @SuppressWarnings("rawtypes")
+                            Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
+                                    .currentThread().getContextClassLoader()
+                                    .loadClass(info.getModerationModelSupplierClassName())
                                     .getConstructor().newInstance();
                             quarkusAiServices.auditService(supplier.get());
                         }
