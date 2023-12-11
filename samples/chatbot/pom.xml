@@ -129,9 +129,6 @@
 
         <profile>
             <id>mvnpm</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <repositories>
                 <repository>
                     <id>central</id>
