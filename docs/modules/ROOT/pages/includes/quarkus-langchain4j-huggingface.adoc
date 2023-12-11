@@ -10,6 +10,57 @@ h|[[quarkus-langchain4j-huggingface_configuration]]link:#quarkus-langchain4j-hug
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.enabled[quarkus.langchain4j.huggingface.chat-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.enabled[quarkus.langchain4j.huggingface.embedding-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.moderation-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.moderation-model.enabled[quarkus.langchain4j.huggingface.moderation-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_MODERATION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_MODERATION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.api-key]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.api-key[quarkus.langchain4j.huggingface.api-key]`
 
 
