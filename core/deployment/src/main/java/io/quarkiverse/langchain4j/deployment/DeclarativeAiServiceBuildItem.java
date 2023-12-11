@@ -20,6 +20,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName chatMemoryProviderSupplierClassDotName;
     private final DotName retrieverSupplierClassDotName;
     private final DotName auditServiceClassSupplierDotName;
+    private final DotName moderationModelSupplierDotName;
     private final ScopeInfo cdiScope;
 
     public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
@@ -27,6 +28,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrieverSupplierClassDotName,
             DotName auditServiceClassSupplierDotName,
+            DotName moderationModelSupplierDotName,
             ScopeInfo cdiScope) {
         this.serviceClassInfo = serviceClassInfo;
         this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
@@ -34,6 +36,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrieverSupplierClassDotName = retrieverSupplierClassDotName;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
+        this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.cdiScope = cdiScope;
     }
 
@@ -59,6 +62,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getAuditServiceClassSupplierDotName() {
         return auditServiceClassSupplierDotName;
+    }
+
+    public DotName getModerationModelSupplierDotName() {
+        return moderationModelSupplierDotName;
     }
 
     public ScopeInfo getCdiScope() {

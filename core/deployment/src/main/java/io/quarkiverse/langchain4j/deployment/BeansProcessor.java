@@ -49,6 +49,7 @@ public class BeansProcessor {
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
+            List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             LangChain4jBuildConfig buildConfig,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
@@ -73,6 +74,9 @@ public class BeansProcessor {
         }
         if (!requestChatModelBeanItems.isEmpty()) {
             chatModelBeanRequested = true;
+        }
+        if (!requestModerationModelBeanBuildItems.isEmpty()) {
+            moderationModelBeanRequested = true;
         }
 
         if (chatModelBeanRequested || streamingChatModelBeanRequested) {
