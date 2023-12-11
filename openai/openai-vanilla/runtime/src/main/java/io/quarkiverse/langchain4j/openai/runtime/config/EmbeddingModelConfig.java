@@ -7,7 +7,9 @@ import io.smallrye.config.WithDefault;
 public interface EmbeddingModelConfig {
 
     /**
-     * Model name to use
+     * Embedding Model name to use
+     * 
+     * See https://platform.openai.com/docs/guides/embeddings/embedding-models for a list of available models.
      */
     @WithDefault("text-embedding-ada-002")
     String modelName();
