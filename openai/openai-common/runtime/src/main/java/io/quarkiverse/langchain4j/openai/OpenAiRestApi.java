@@ -190,6 +190,15 @@ public interface OpenAiRestApi {
     @Priority(Priorities.USER + 100)
     class OpenAiRestApiJacksonProvider extends AbstractJsonMessageBodyReader implements MessageBodyWriter<Object> {
 
+        /**
+         * Normally this is not necessary, but if one uses the 'demo' key, then the response comes back as type text/html
+         * but the content is still JSON. Go figure...
+         */
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return true;
+        }
+
         @Override
         public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType,
                 MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
