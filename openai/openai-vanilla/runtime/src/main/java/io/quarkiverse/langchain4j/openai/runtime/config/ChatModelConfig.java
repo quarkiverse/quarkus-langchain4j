@@ -9,7 +9,9 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * Model name to use
+     * Chat model name to use.
+     * 
+     * See https://platform.openai.com/docs/models/overview for a list of available models. 
      */
     @WithDefault("gpt-3.5-turbo")
     String modelName();
