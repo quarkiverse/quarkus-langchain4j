@@ -20,6 +20,7 @@
     <module>openai/azure-openai</module>
     <module>openai/openai-common</module>
     <module>openai/openai-vanilla</module>
+    <module>openai/local-ai</module>
     <module>pinecone</module>
     <module>redis</module>
     <module>pgvector</module>
