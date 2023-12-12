@@ -56,6 +56,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -122,13 +123,16 @@ public class AiServicesTest {
 
     interface Humorist {
 
-        @UserMessage("Tell me a joke about {{it}}")
-        String joke(@NotNull String topic);
+        @UserMessage("Tell me a joke about {{wrapper.topic}}")
+        String joke(@SpanAttribute @NotNull Wrapper wrapper);
+    }
+
+    public record Wrapper(String topic) {
     }
 
     @Test
     public void test_simple_instruction_with_single_argument() throws IOException {
-        String result = AiServices.create(Humorist.class, createChatModel()).joke("programmers");
+        String result = AiServices.create(Humorist.class, createChatModel()).joke(new Wrapper("programmers"));
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about programmers");

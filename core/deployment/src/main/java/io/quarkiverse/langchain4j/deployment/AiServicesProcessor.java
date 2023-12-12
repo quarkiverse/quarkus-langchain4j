@@ -676,6 +676,9 @@ public class AiServicesProcessor {
             if (name.endsWith("NotNull")) {
                 return false;
             }
+            if (name.startsWith("io.opentelemetry")) {
+                return false;
+            }
             return true;
         }).collect(Collectors.toList());
     }
