@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.azure.openai.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.Optional;
 
@@ -43,9 +45,6 @@ public class AzureOpenAiProcessor {
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
         }
-        if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
-            moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
-        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -66,33 +65,23 @@ public class AzureOpenAiProcessor {
                     .supplier(recorder.chatModel(config))
                     .done());
 
-            //            beanProducer.produce(SyntheticBeanBuildItem
-            //                    .configure(STREAMING_CHAT_MODEL)
-            //                    .setRuntimeInit()
-            //                    .defaultBean()
-            //                    .scope(ApplicationScoped.class)
-            //                    .supplier(recorder.streamingChatModel(config))
-            //                    .done());
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(STREAMING_CHAT_MODEL)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.streamingChatModel(config))
+                    .done());
         }
 
         if (selectedEmbedding.isPresent() && PROVIDER.equals(selectedEmbedding.get().getProvider())) {
-            //            beanProducer.produce(SyntheticBeanBuildItem
-            //                    .configure(EMBEDDING_MODEL)
-            //                    .setRuntimeInit()
-            //                    .defaultBean()
-            //                    .scope(ApplicationScoped.class)
-            //                    .supplier(recorder.embeddingModel(config))
-            //                    .done());
-        }
-
-        if (selectedModeration.isPresent() && PROVIDER.equals(selectedModeration.get().getProvider())) {
-            //            beanProducer.produce(SyntheticBeanBuildItem
-            //                    .configure(MODERATION_MODEL)
-            //                    .setRuntimeInit()
-            //                    .defaultBean()
-            //                    .scope(ApplicationScoped.class)
-            //                    .supplier(recorder.moderationModel(config))
-            //                    .done());
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(EMBEDDING_MODEL)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.embeddingModel(config))
+                    .done());
         }
     }
 

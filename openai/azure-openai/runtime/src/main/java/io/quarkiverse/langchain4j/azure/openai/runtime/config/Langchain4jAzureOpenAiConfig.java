@@ -61,4 +61,9 @@ public interface Langchain4jAzureOpenAiConfig {
      * Chat model related settings
      */
     ChatModelConfig chatModel();
+
+    /**
+     * Embedding model related settings
+     */
+    EmbeddingModelConfig embeddingModel();
 }
