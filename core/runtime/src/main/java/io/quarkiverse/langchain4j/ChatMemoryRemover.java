@@ -5,6 +5,7 @@ import java.util.List;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
+import io.quarkus.arc.ClientProxy;
 
 /**
  * Allows the application to manually control when a {@link ChatMemory} should be removed from the underlying
@@ -22,7 +23,8 @@ public final class ChatMemoryRemover {
      * @param memoryId The object used as memory IDs for which the corresponding {@link ChatMemory} should be removed
      */
     public static void remove(Object aiService, Object memoryId) {
-        if (aiService instanceof ChatMemoryRemovable r) {
+        var obj = ClientProxy.unwrap(aiService);
+        if (obj instanceof ChatMemoryRemovable r) {
             r.remove(memoryId);
         }
     }
@@ -32,7 +34,8 @@ public final class ChatMemoryRemover {
      * @param memoryIds The objects used as memory IDs for which the corresponding {@link ChatMemory} should be removed
      */
     public static void remove(Object aiService, List<Object> memoryIds) {
-        if (aiService instanceof ChatMemoryRemovable r) {
+        var obj = ClientProxy.unwrap(aiService);
+        if (obj instanceof ChatMemoryRemovable r) {
             r.remove(memoryIds.toArray(EMPTY_OBJECT_ARRAY));
         }
     }

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -81,7 +82,7 @@ public class CustomChatMemoryStoreTest {
     }
 
     @RegisterAiService
-    @Singleton
+    @ApplicationScoped
     interface ChatWithSeparateMemoryForEachUser {
 
         String chat(@MemoryId int memoryId, @UserMessage String userMessage);
