@@ -59,6 +59,8 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
@@ -392,6 +394,7 @@ public class AiServicesProcessor {
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
@@ -476,7 +479,8 @@ public class AiServicesProcessor {
 
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
         if (!ifacesForCreate.isEmpty()) {
-            ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
+            ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
+            ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
                 Set<MethodInfo> allMethods = new HashSet<>(iface.methods());
                 JandexUtil.getAllSuperinterfaces(iface, index).forEach(ci -> allMethods.addAll(ci.methods()));
@@ -497,7 +501,7 @@ public class AiServicesProcessor {
                 boolean isRegisteredService = registeredAiServiceClassNames.contains(ifaceName);
 
                 ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
-                        .classOutput(classOutput)
+                        .classOutput(isRegisteredService ? generatedBeanOutput : generatedClassOutput)
                         .className(implClassName)
                         .interfaces(ifaceName, ChatMemoryRemovable.class.getName());
                 if (isRegisteredService) {
@@ -523,6 +527,16 @@ public class AiServicesProcessor {
                         constructor.returnValue(null);
 
                         MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
+
+                        // copy annotations
+                        for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
+                            // TODO: we need to review this
+                            if (annotationInstance.name().toString()
+                                    .startsWith("org.eclipse.microprofile.faulttolerance")) {
+                                mc.addAnnotation(annotationInstance);
+                            }
+                        }
+
                         ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
                         ResultHandle methodCreateInfoHandle = mc.invokeStaticMethod(RECORDER_METHOD_CREATE_INFO,
                                 mc.load(ifaceName),
