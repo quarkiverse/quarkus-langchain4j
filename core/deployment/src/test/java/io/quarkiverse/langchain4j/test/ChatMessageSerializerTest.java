@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.UserMessage;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -93,16 +94,16 @@ class ChatMessageSerializerTest {
                         .name("calculator")
                         .arguments("{}")
                         .build()),
-                toolExecutionResultMessage("calculator", "4"));
+                toolExecutionResultMessage("12345", "calculator", "4"));
 
-        String json = messagesToJson(messages);
+        String json = ChatMessageSerializer.messagesToJson(messages);
         assertThat(json).isEqualTo("[" +
                 "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
                 "{\"text\":\"Hello from user\",\"type\":\"USER\"}," +
                 "{\"name\":\"Klaus\",\"text\":\"Hello from Klaus\",\"type\":\"USER\"}," +
                 "{\"text\":\"Hello from AI\",\"type\":\"AI\"}," +
-                "{\"toolExecutionRequest\":{\"name\":\"calculator\",\"arguments\":\"{}\"},\"type\":\"AI\"}," +
-                "{\"toolName\":\"calculator\",\"text\":\"4\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +
+                "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"type\":\"AI\"}," +
+                "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +
                 "]");
 
         List<ChatMessage> deserializedMessages = messagesFromJson(json);

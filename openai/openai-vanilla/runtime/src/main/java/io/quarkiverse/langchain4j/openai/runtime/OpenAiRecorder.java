@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.openai.runtime;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -8,8 +10,10 @@ import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkus.runtime.ShutdownContext;
@@ -128,6 +132,57 @@ public class OpenAiRecorder {
                 return builder.build();
             }
         };
+    }
+
+    public Supplier<?> imageModel(Langchain4jOpenAiConfig runtimeConfig) {
+        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
+        if (apiKeyOpt.isEmpty()) {
+            throw new ConfigValidationException(createApiKeyConfigProblems());
+        }
+        ImageModelConfig imageModelConfig = runtimeConfig.imageModel();
+        var builder = QuarkusOpenAiImageModel.builder()
+                .baseUrl(runtimeConfig.baseUrl())
+                .apiKey(apiKeyOpt.get())
+                .timeout(runtimeConfig.timeout())
+                .maxRetries(runtimeConfig.maxRetries())
+                .logRequests(runtimeConfig.logRequests())
+                .logResponses(runtimeConfig.logResponses())
+
+                .modelName(imageModelConfig.modelName())
+                .size(imageModelConfig.size())
+                .quality(imageModelConfig.quality())
+                .style(imageModelConfig.style())
+                .responseFormat(imageModelConfig.responseFormat())
+                .user(imageModelConfig.user());
+
+        // we persist if the directory was set explicitly and the boolean flag was not set to false
+        // or if the boolean flag was set explicitly to true
+        Optional<Path> persistDirectory = Optional.empty();
+        if (imageModelConfig.persist().isPresent()) {
+            if (imageModelConfig.persist().get()) {
+                persistDirectory = imageModelConfig.persistDirectory()
+                        .or(new Supplier<>() {
+                            @Override
+                            public Optional<? extends Path> get() {
+                                return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "dall-e-images"));
+                            }
+                        });
+            }
+        } else {
+            if (imageModelConfig.persistDirectory().isPresent()) {
+                persistDirectory = imageModelConfig.persistDirectory();
+            }
+        }
+
+        builder.persistDirectory(persistDirectory);
+
+        return new Supplier<>() {
+            @Override
+            public Object get() {
+                return builder.build();
+            }
+        };
+
     }
 
     private ConfigValidationException.Problem[] createApiKeyConfigProblems() {

@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.openai.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
@@ -12,9 +13,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
@@ -37,11 +40,12 @@ public class OpenAiProcessor {
     }
 
     @BuildStep
-    public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
+    public void providerCandidates(BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer,
+            BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
-            Langchain4jOpenAiBuildConfig config,
-            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer) {
+            BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
+            Langchain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -52,6 +56,9 @@ public class OpenAiProcessor {
         if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
             moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
         }
+        if (config.imageModel().enabled().isEmpty() || config.imageModel().enabled().get()) {
+            imageProducer.produce(new ImageModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -61,6 +68,7 @@ public class OpenAiProcessor {
             Optional<SelectedChatModelProviderBuildItem> selectedChatItem,
             Optional<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             Optional<SelectedModerationModelProviderBuildItem> selectedModeration,
+            Optional<SelectedImageModelProviderBuildItem> selectedImage,
             Langchain4jOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         if (selectedChatItem.isPresent() && PROVIDER.equals(selectedChatItem.get().getProvider())) {
@@ -98,6 +106,16 @@ public class OpenAiProcessor {
                     .defaultBean()
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.moderationModel(config))
+                    .done());
+        }
+
+        if (selectedImage.isPresent() && PROVIDER.equals(selectedImage.get().getProvider())) {
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(IMAGE_MODEL)
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.imageModel(config))
                     .done());
         }
     }

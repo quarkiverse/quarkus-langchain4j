@@ -21,8 +21,8 @@ public class InProcessEmbeddingResource {
         var r1 = typedModel.embed(sentence);
         var r2 = embeddingModel.embed(sentence);
 
-        return "bgeSmallEnEmbeddingModel: " + r1.content().dimensions() + "\n" + "embeddingModel: "
-                + r2.content().dimensions();
+        return "bgeSmallEnEmbeddingModel: " + r1.content().dimension() + "\n" + "embeddingModel: "
+                + r2.content().dimension();
     }
 
 }

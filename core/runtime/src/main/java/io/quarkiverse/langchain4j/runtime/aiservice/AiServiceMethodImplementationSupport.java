@@ -2,8 +2,10 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.ToolExecutionResultMessage.toolExecutionResultMessage;
 import static dev.langchain4j.data.message.UserMessage.userMessage;
+import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
+import static dev.langchain4j.service.ServiceOutputParser.parse;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Array;
@@ -35,9 +37,9 @@ import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
-import dev.langchain4j.service.ServiceOutputParser;
 import dev.langchain4j.service.TokenStream;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -49,6 +51,8 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
+
+    private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
 
     /**
      * This method is called by the implementations of each ai service method.
@@ -141,40 +145,50 @@ public class AiServiceMethodImplementationSupport {
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);
 
         log.debug("Attempting to obtain AI response");
-        Response<AiMessage> response = context.toolSpecifications != null
-                ? context.chatModel.generate(messages, context.toolSpecifications)
-                : context.chatModel.generate(messages);
+        Response<AiMessage> response = context.toolSpecifications == null
+                ? context.chatModel.generate(messages)
+                : context.chatModel.generate(messages, context.toolSpecifications);
         log.debug("AI response obtained");
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
         }
+        TokenUsage tokenUsageAccumulator = response.tokenUsage();
+
         verifyModerationIfNeeded(moderationFuture);
 
-        ToolExecutionRequest toolExecutionRequest;
-        while (true) { // TODO limit number of cycles
+        int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
+        while (true) {
+
+            if (executionsLeft-- == 0) {
+                throw runtime("Something is wrong, exceeded %s sequential tool executions",
+                        MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+            }
+
+            AiMessage aiMessage = response.content();
 
             if (context.hasChatMemory()) {
                 context.chatMemory(memoryId).add(response.content());
             }
 
-            toolExecutionRequest = response.content().toolExecutionRequest();
-            if (toolExecutionRequest == null) {
-                log.debug("No tool execution request found - computation is complete");
+            if (!aiMessage.hasToolExecutionRequests()) {
                 break;
             }
 
-            ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
-            log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-            log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-            ToolExecutionResultMessage toolExecutionResultMessage = toolExecutionResultMessage(toolExecutionRequest.name(),
-                    toolExecutionResult);
-            if (audit != null) {
-                audit.addApplicationToLLMMessage(toolExecutionResultMessage);
-            }
-
             ChatMemory chatMemory = context.chatMemory(memoryId);
-            chatMemory.add(toolExecutionResultMessage);
+
+            for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
+                ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
+                String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
+                log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                        toolExecutionRequest,
+                        toolExecutionResult);
+                if (audit != null) {
+                    audit.addApplicationToLLMMessage(toolExecutionResultMessage);
+                }
+                chatMemory.add(toolExecutionResultMessage);
+            }
 
             log.debug("Attempting to obtain AI response");
             response = context.chatModel.generate(chatMemory.messages(), context.toolSpecifications);
@@ -183,9 +197,12 @@ public class AiServiceMethodImplementationSupport {
             if (audit != null) {
                 audit.addLLMToApplicationMessage(response);
             }
+
+            tokenUsageAccumulator = tokenUsageAccumulator.add(response.tokenUsage());
         }
 
-        return ServiceOutputParser.parse(response, returnType);
+        response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
+        return parse(response, returnType);
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,

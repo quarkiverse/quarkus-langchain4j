@@ -2,11 +2,10 @@ package io.quarkiverse.langchain4j.azure.openai.runtime;
 
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.azure.AzureOpenAiChatModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkus.runtime.ShutdownContext;
@@ -45,7 +44,7 @@ public class AzureOpenAiRecorder {
 
     public Supplier<?> streamingChatModel(Langchain4jAzureOpenAiConfig runtimeConfig) {
         ChatModelConfig chatModelConfig = runtimeConfig.chatModel();
-        var builder = OpenAiStreamingChatModel.builder()
+        var builder = AzureOpenAiStreamingChatModel.builder()
                 .baseUrl(getBaseUrl(runtimeConfig))
                 .apiKey(runtimeConfig.apiKey())
                 .timeout(runtimeConfig.timeout())
@@ -70,16 +69,13 @@ public class AzureOpenAiRecorder {
     }
 
     public Supplier<?> embeddingModel(Langchain4jAzureOpenAiConfig runtimeConfig) {
-        EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
-        var builder = OpenAiEmbeddingModel.builder()
+        var builder = AzureOpenAiEmbeddingModel.builder()
                 .baseUrl(getBaseUrl(runtimeConfig))
                 .apiKey(runtimeConfig.apiKey())
                 .timeout(runtimeConfig.timeout())
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(runtimeConfig.logRequests())
-                .logResponses(runtimeConfig.logResponses())
-
-                .modelName(embeddingModelConfig.modelName());
+                .logResponses(runtimeConfig.logResponses());
 
         return new Supplier<>() {
             @Override

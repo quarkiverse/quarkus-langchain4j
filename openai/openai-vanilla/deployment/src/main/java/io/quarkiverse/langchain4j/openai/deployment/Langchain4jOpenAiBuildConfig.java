@@ -23,4 +23,9 @@ public interface Langchain4jOpenAiBuildConfig {
      * Moderation model related settings
      */
     ModerationModelBuildConfig moderationModel();
+
+    /**
+     * Image model related settings
+     */
+    ImageModelBuildConfig imageModel();
 }

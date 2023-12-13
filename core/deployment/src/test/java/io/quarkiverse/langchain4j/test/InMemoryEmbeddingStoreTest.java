@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Percentage.withPercentage;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -250,7 +252,7 @@ class InMemoryEmbeddingStoreTest {
         String json = originalEmbeddingStore.serializeToJson();
         InMemoryEmbeddingStore<TextSegment> deserializedEmbeddingStore = InMemoryEmbeddingStore.fromJson(json);
 
-        assertThat(deserializedEmbeddingStore).isEqualTo(originalEmbeddingStore);
+        assertThat(entries(deserializedEmbeddingStore)).isEqualTo(entries(originalEmbeddingStore));
     }
 
     @Test
@@ -262,7 +264,7 @@ class InMemoryEmbeddingStoreTest {
         originalEmbeddingStore.serializeToFile(filePath);
         InMemoryEmbeddingStore<TextSegment> deserializedEmbeddingStore = InMemoryEmbeddingStore.fromFile(filePath);
 
-        assertThat(deserializedEmbeddingStore).isEqualTo(originalEmbeddingStore);
+        assertThat(entries(deserializedEmbeddingStore)).isEqualTo(entries(originalEmbeddingStore));
     }
 
     private InMemoryEmbeddingStore<TextSegment> createEmbeddingStore() {
@@ -279,4 +281,25 @@ class InMemoryEmbeddingStoreTest {
 
         return embeddingStore;
     }
+
+    private static final Field IN_MEMORY_EMBEDDING_STORE_FIELD;
+
+    static {
+        try {
+            Field f = InMemoryEmbeddingStore.class.getDeclaredField("entries");
+            f.setAccessible(true);
+            IN_MEMORY_EMBEDDING_STORE_FIELD = f;
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static CopyOnWriteArrayList<Object> entries(InMemoryEmbeddingStore<TextSegment> embeddingStore) {
+        try {
+            return (CopyOnWriteArrayList<Object>) IN_MEMORY_EMBEDDING_STORE_FIELD.get(embeddingStore);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

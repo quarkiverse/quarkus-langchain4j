@@ -10,7 +10,8 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 import dev.langchain4j.data.document.Document;
-import dev.langchain4j.data.document.FileSystemDocumentLoader;
+import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
+import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
@@ -35,7 +36,8 @@ public class IngestorExample {
 
     public void ingest(@Observes StartupEvent event) {
         System.out.printf("Ingesting documents...%n");
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(new File("src/main/resources/catalog").toPath());
+        List<Document> documents = FileSystemDocumentLoader.loadDocuments(new File("src/main/resources/catalog").toPath(),
+                new TextDocumentParser());
         var ingestor = EmbeddingStoreIngestor.builder()
                 .embeddingStore(store)
                 .embeddingModel(embeddingModel)

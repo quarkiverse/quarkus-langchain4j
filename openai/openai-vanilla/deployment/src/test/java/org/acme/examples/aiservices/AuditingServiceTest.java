@@ -279,7 +279,7 @@ public class AuditingServiceTest {
                 if (response.content().text() != null) {
                     aiMessageResult = response.content().text();
                 } else {
-                    aiMessageToolExecution = response.content().toolExecutionRequest().name();
+                    aiMessageToolExecution = response.content().toolExecutionRequests().get(0).name();
                 }
             }
 
