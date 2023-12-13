@@ -23,7 +23,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -50,7 +53,6 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
-import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceBeanDestroyer;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
@@ -59,6 +61,8 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
+import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
@@ -311,16 +315,18 @@ public class AiServicesProcessor {
                     : null);
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
-                    .configure(declarativeAiServiceClassInfo.name())
+                    .configure(QuarkusAiServiceContext.class)
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName,
                                     retrieverSupplierClassName,
                                     auditServiceClassSupplierName,
                                     moderationModelSupplierClassName)))
-                    .destroyer(DeclarativeAiServiceBeanDestroyer.class)
                     .setRuntimeInit()
-                    .scope(bi.getCdiScope());
+                    .addQualifier()
+                    .annotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
+                    .done()
+                    .scope(Dependent.class);
             if ((chatLanguageModelSupplierClassName == null) && selectedChatModelProvider.isPresent()) { // TODO: is second condition needed?
                 configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL));
                 needsChatModelBean = true;
@@ -392,6 +398,7 @@ public class AiServicesProcessor {
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
@@ -476,7 +483,8 @@ public class AiServicesProcessor {
 
         Map<String, AiServiceClassCreateInfo> perClassMetadata = new HashMap<>();
         if (!ifacesForCreate.isEmpty()) {
-            ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
+            ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
+            ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
                 Set<MethodInfo> allMethods = new HashSet<>(iface.methods());
                 JandexUtil.getAllSuperinterfaces(iface, index).forEach(ci -> allMethods.addAll(ci.methods()));
@@ -497,13 +505,22 @@ public class AiServicesProcessor {
                 boolean isRegisteredService = registeredAiServiceClassNames.contains(ifaceName);
 
                 ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
-                        .classOutput(classOutput)
+                        .classOutput(isRegisteredService ? generatedBeanOutput : generatedClassOutput)
                         .className(implClassName)
                         .interfaces(ifaceName, ChatMemoryRemovable.class.getName());
                 if (isRegisteredService) {
                     classCreatorBuilder.interfaces(AutoCloseable.class);
                 }
                 try (ClassCreator classCreator = classCreatorBuilder.build()) {
+                    if (isRegisteredService) {
+                        // we need to make this a bean, so we need to add the proper scope annotation
+                        ScopeInfo scopeInfo = declarativeAiServiceItems.stream()
+                                .filter(bi -> bi.getServiceClassInfo().equals(iface))
+                                .findFirst().orElseThrow(() -> new IllegalStateException(
+                                        "Unable to determine the CDI scope of " + iface))
+                                .getCdiScope();
+                        classCreator.addAnnotation(scopeInfo.getDotName().toString());
+                    }
 
                     FieldDescriptor contextField = classCreator.getFieldCreator("context", QuarkusAiServiceContext.class)
                             .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
@@ -516,37 +533,67 @@ public class AiServicesProcessor {
                         String methodId = createMethodId(methodInfo);
                         perMethodMetadata.put(methodId,
                                 gatherMethodMetadata(methodInfo, addMicrometerMetrics, addOpenTelemetrySpan));
-                        MethodCreator constructor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
-                                QuarkusAiServiceContext.class);
-                        constructor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, constructor.getThis());
-                        constructor.writeInstanceField(contextField, constructor.getThis(), constructor.getMethodParam(0));
-                        constructor.returnValue(null);
-
-                        MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
-                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
-                        ResultHandle methodCreateInfoHandle = mc.invokeStaticMethod(RECORDER_METHOD_CREATE_INFO,
-                                mc.load(ifaceName),
-                                mc.load(methodId));
-                        ResultHandle paramsHandle = mc.newArray(Object.class, methodInfo.parametersCount());
-                        for (int i = 0; i < methodInfo.parametersCount(); i++) {
-                            mc.writeArrayValue(paramsHandle, i, mc.getMethodParam(i));
+                        {
+                            MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
+                                    QuarkusAiServiceContext.class);
+                            ctor.setModifiers(Modifier.PUBLIC);
+                            ctor.addAnnotation(Inject.class);
+                            ctor.getParameterAnnotations(0)
+                                    .addAnnotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
+                                    .add("value", ifaceName);
+                            ctor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, ctor.getThis());
+                            ctor.writeInstanceField(contextField, ctor.getThis(),
+                                    ctor.getMethodParam(0));
+                            ctor.returnValue(null);
                         }
 
-                        ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
-                        ResultHandle inputHandle = mc.newInstance(
-                                MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
-                                        QuarkusAiServiceContext.class, AiServiceMethodCreateInfo.class, Object[].class),
-                                contextHandle, methodCreateInfoHandle, paramsHandle);
+                        {
+                            MethodCreator noArgsCtor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V");
+                            noArgsCtor.setModifiers(Modifier.PUBLIC);
+                            noArgsCtor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, noArgsCtor.getThis());
+                            noArgsCtor.writeInstanceField(contextField, noArgsCtor.getThis(), noArgsCtor.loadNull());
+                            noArgsCtor.returnValue(null);
+                        }
 
-                        ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
-                        mc.returnValue(resultHandle);
+                        { // actual method we need to implement
+                            MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
 
-                        aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
+                            // copy annotations
+                            for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
+                                // TODO: we need to review this
+                                if (annotationInstance.name().toString()
+                                        .startsWith("org.eclipse.microprofile.faulttolerance")) {
+                                    mc.addAnnotation(annotationInstance);
+                                }
+                            }
+
+                            ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                            ResultHandle methodCreateInfoHandle = mc.invokeStaticMethod(RECORDER_METHOD_CREATE_INFO,
+                                    mc.load(ifaceName),
+                                    mc.load(methodId));
+                            ResultHandle paramsHandle = mc.newArray(Object.class, methodInfo.parametersCount());
+                            for (int i = 0; i < methodInfo.parametersCount(); i++) {
+                                mc.writeArrayValue(paramsHandle, i, mc.getMethodParam(i));
+                            }
+
+                            ResultHandle supportHandle = getFromCDI(mc, AiServiceMethodImplementationSupport.class.getName());
+                            ResultHandle inputHandle = mc.newInstance(
+                                    MethodDescriptor.ofConstructor(AiServiceMethodImplementationSupport.Input.class,
+                                            QuarkusAiServiceContext.class, AiServiceMethodCreateInfo.class,
+                                            Object[].class),
+                                    contextHandle, methodCreateInfoHandle, paramsHandle);
+
+                            ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
+                            mc.returnValue(resultHandle);
+
+                            aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
+                        }
                     }
 
                     if (isRegisteredService) {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "close", void.class));
+                        mc.addAnnotation(PreDestroy.class);
                         ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLOSE, contextHandle);
                         mc.returnVoid();

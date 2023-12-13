@@ -11,6 +11,11 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     public AuditService auditService;
 
+    // needed by Arc
+    public QuarkusAiServiceContext() {
+        super(null);
+    }
+
     public QuarkusAiServiceContext(Class<?> aiServiceClass) {
         super(aiServiceClass);
     }

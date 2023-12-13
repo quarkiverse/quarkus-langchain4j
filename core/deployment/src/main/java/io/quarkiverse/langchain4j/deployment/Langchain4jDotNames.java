@@ -21,6 +21,7 @@ import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 
 public class Langchain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
@@ -66,5 +67,8 @@ public class Langchain4jDotNames {
 
     static final DotName NO_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoModerationModelSupplier.class);
+
+    static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
+            QuarkusAiServiceContextQualifier.class);
 
 }

@@ -75,6 +75,8 @@ public class AiServicesRecorder {
                             .loadClass(info.getServiceClassName());
 
                     QuarkusAiServiceContext aiServiceContext = new QuarkusAiServiceContext(serviceClass);
+                    // we don't really care about QuarkusAiServices here, all we care about is that it
+                    // properly populates QuarkusAiServiceContext which is what we are trying to construct
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
 
                     if (info.getLanguageModelSupplierClassName() != null) {
@@ -164,7 +166,7 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    return (T) quarkusAiServices.build();
+                    return (T) aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
                 } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException
