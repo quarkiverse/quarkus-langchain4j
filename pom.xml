@@ -16,6 +16,7 @@
     <module>core</module>
     <module>docs</module>
     <module>hugging-face</module>
+    <module>milvus</module>
     <module>ollama</module>
     <module>openai/azure-openai</module>
     <module>openai/openai-common</module>

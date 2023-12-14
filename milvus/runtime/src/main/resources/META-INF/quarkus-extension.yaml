@@ -1,0 +1,12 @@
+name: Langchain4j Milvus embedding store
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the Milvus Embedding store for Langchain4j
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - openai
+    - milvus
+  categories:
+    - "miscellaneous"
+  status: "experimental"
