@@ -13,6 +13,7 @@ import io.quarkiverse.langchain4j.runtime.ChatMemoryRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -24,6 +25,7 @@ public class ChatMemoryProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void setupBeans(ChatMemoryBuildConfig buildConfig, ChatMemoryConfig runtimeConfig,
             ChatMemoryRecorder recorder,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer) {
 
         Function<SyntheticCreationalContext<ChatMemoryProvider>, ChatMemoryProvider> fun;
@@ -47,5 +49,6 @@ public class ChatMemoryProcessor {
         configurator.createWith(fun);
 
         syntheticBeanProducer.produce(configurator.done());
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ChatMemoryStore.class));
     }
 }
