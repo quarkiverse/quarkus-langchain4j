@@ -84,10 +84,15 @@ public class DeclarativeAiServicesTest {
         wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
     }
 
-    @RegisterAiService
-    interface Assistant {
+    interface AssistantBase {
 
         String chat(String message);
+    }
+
+    @RegisterAiService
+    interface Assistant extends AssistantBase {
+
+        String chat2(String message);
     }
 
     @Inject
@@ -95,8 +100,17 @@ public class DeclarativeAiServicesTest {
 
     @Test
     @ActivateRequestContext
-    public void test_simple_instruction_with_single_argument_and_no_annotations() throws IOException {
+    public void test_simple_instruction_with_single_argument_and_no_annotations_from_super() throws IOException {
         String result = assistant.chat("Tell me a joke about developers");
+        assertThat(result).isNotBlank();
+
+        assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
+    }
+
+    @Test
+    @ActivateRequestContext
+    public void test_simple_instruction_with_single_argument_and_no_annotations_from_iface() throws IOException {
+        String result = assistant.chat2("Tell me a joke about developers");
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
@@ -195,8 +209,8 @@ public class DeclarativeAiServicesTest {
         }
     }
 
-    @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
-    interface AssistantWithCalculator extends Assistant {
+    @RegisterAiService(tools = Calculator.class)
+    interface AssistantWithCalculator extends AssistantBase {
 
     }
 
@@ -290,7 +304,7 @@ public class DeclarativeAiServicesTest {
                         new MessageAssertUtils.MessageContent("function", "6.97070153193991E8")));
     }
 
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
+    @RegisterAiService
     interface ChatWithSeparateMemoryForEachUser {
 
         String chat(@MemoryId int memoryId, @UserMessage String userMessage);
