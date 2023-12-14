@@ -90,8 +90,11 @@ public class AzureOpenAiRecorder {
     }
 
     private String getBaseUrl(Langchain4jAzureOpenAiConfig runtimeConfig) {
-        return String.format("https://%s.openai.azure.com/openai/deployments/%s", runtimeConfig.resourceName(),
-                runtimeConfig.deploymentId());
+        var baseUrl = runtimeConfig.baseUrl();
+
+        return !baseUrl.trim().isEmpty() ? baseUrl
+                : String.format("https://%s.openai.azure.com/openai/deployments/%s", runtimeConfig.resourceName(),
+                        runtimeConfig.deploymentId());
     }
 
     public void cleanUp(ShutdownContext shutdown) {
