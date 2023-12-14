@@ -43,7 +43,8 @@ class AssistantResourceWithMetricsTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
 
-        waitForMeters(registry.find("langchain4j.aiservices.AssistantResourceWithMetrics$Assistant1.chat").timers(), 1);
+        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
+                .tag("method", "chat").timers(), 1);
     }
 
     @Test
@@ -55,8 +56,8 @@ class AssistantResourceWithMetricsTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
 
-        waitForMeters(registry.find("langchain4j.aiservices.AssistantResourceWithMetrics$Assistant2.chat").tag("key", "value")
-                .timers(), 1);
+        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
+                .tag("method", "chat").tag("key", "value").timers(), 1);
     }
 
     @Test

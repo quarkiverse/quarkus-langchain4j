@@ -146,10 +146,6 @@ public class AiServiceMethodCreateInfo {
         private final boolean histogram;
         private final String description;
 
-        public MetricsInfo(String name) {
-            this(name, false, null, null, false, null);
-        }
-
         @RecordableConstructor
         public MetricsInfo(String name, boolean longTask, String[] extraTags, double[] percentiles, boolean histogram,
                 String description) {

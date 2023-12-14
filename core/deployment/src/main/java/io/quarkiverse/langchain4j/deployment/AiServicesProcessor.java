@@ -115,6 +115,7 @@ public class AiServicesProcessor {
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -822,7 +823,12 @@ public class AiServicesProcessor {
             return Optional.empty();
         }
 
-        String name = defaultAiServiceMetricName(method);
+        String name = "langchain4j.aiservices";
+        List<String> tags = new ArrayList<>();
+        tags.add("aiservice");
+        tags.add(method.declaringClass().name().withoutPackagePrefix());
+        tags.add("method");
+        tags.add(method.name());
 
         AnnotationInstance timedInstance = method.annotation(MICROMETER_TIMED);
         if (timedInstance == null) {
@@ -831,7 +837,8 @@ public class AiServicesProcessor {
 
         if (timedInstance == null) {
             // we default to having all AiServices being timed
-            return Optional.of(new AiServiceMethodCreateInfo.MetricsInfo.Builder(name).build());
+            return Optional.of(new AiServiceMethodCreateInfo.MetricsInfo.Builder(name)
+                    .setExtraTags(tags.toArray(EMPTY_STRING_ARRAY)).build());
         }
 
         AnnotationValue nameValue = timedInstance.value();
@@ -846,8 +853,9 @@ public class AiServicesProcessor {
 
         AnnotationValue extraTagsValue = timedInstance.value("extraTags");
         if (extraTagsValue != null) {
-            builder.setExtraTags(extraTagsValue.asStringArray());
+            tags.addAll(Arrays.asList(extraTagsValue.asStringArray()));
         }
+        builder.setExtraTags(tags.toArray(EMPTY_STRING_ARRAY));
 
         AnnotationValue longTaskValue = timedInstance.value("longTask");
         if (longTaskValue != null) {
@@ -883,10 +891,6 @@ public class AiServicesProcessor {
         // TODO: add more
 
         return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(name));
-    }
-
-    private String defaultAiServiceMetricName(MethodInfo method) {
-        return "langchain4j.aiservices." + method.declaringClass().name().withoutPackagePrefix() + "." + method.name();
     }
 
     private String defaultAiServiceSpanName(MethodInfo method) {
