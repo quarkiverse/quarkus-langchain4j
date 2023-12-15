@@ -18,8 +18,8 @@ public class AiServiceMethodCreateInfo {
     private final boolean requiresModeration;
     private final Class<?> returnType;
 
-    private final Optional<MetricsInfo> metricsInfo;
-
+    private final Optional<MetricsTimedInfo> metricsTimedInfo;
+    private final Optional<MetricsCountedInfo> metricsCountedInfo;
     private final Optional<SpanInfo> spanInfo;
 
     @RecordableConstructor
@@ -27,7 +27,8 @@ public class AiServiceMethodCreateInfo {
             Optional<TemplateInfo> systemMessageInfo, UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
             boolean requiresModeration, Class<?> returnType,
-            Optional<MetricsInfo> metricsInfo,
+            Optional<MetricsTimedInfo> metricsTimedInfo,
+            Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
@@ -36,7 +37,8 @@ public class AiServiceMethodCreateInfo {
         this.memoryIdParamPosition = memoryIdParamPosition;
         this.requiresModeration = requiresModeration;
         this.returnType = returnType;
-        this.metricsInfo = metricsInfo;
+        this.metricsTimedInfo = metricsTimedInfo;
+        this.metricsCountedInfo = metricsCountedInfo;
         this.spanInfo = spanInfo;
     }
 
@@ -68,8 +70,12 @@ public class AiServiceMethodCreateInfo {
         return returnType;
     }
 
-    public Optional<MetricsInfo> getMetricsInfo() {
-        return metricsInfo;
+    public Optional<MetricsTimedInfo> getMetricsTimedInfo() {
+        return metricsTimedInfo;
+    }
+
+    public Optional<MetricsCountedInfo> getMetricsCountedInfo() {
+        return metricsCountedInfo;
     }
 
     public Optional<SpanInfo> getSpanInfo() {
@@ -138,7 +144,7 @@ public class AiServiceMethodCreateInfo {
         }
     }
 
-    public static class MetricsInfo {
+    public static class MetricsTimedInfo {
         private final String name;
         private final boolean longTask;
         private final String[] extraTags;
@@ -147,7 +153,7 @@ public class AiServiceMethodCreateInfo {
         private final String description;
 
         @RecordableConstructor
-        public MetricsInfo(String name, boolean longTask, String[] extraTags, double[] percentiles, boolean histogram,
+        public MetricsTimedInfo(String name, boolean longTask, String[] extraTags, double[] percentiles, boolean histogram,
                 String description) {
             this.name = name;
             this.longTask = longTask;
@@ -218,9 +224,71 @@ public class AiServiceMethodCreateInfo {
                 return this;
             }
 
-            public AiServiceMethodCreateInfo.MetricsInfo build() {
-                return new AiServiceMethodCreateInfo.MetricsInfo(name, longTask, extraTags, percentiles, histogram,
+            public MetricsTimedInfo build() {
+                return new MetricsTimedInfo(name, longTask, extraTags, percentiles, histogram,
                         description);
+            }
+        }
+    }
+
+    public static class MetricsCountedInfo {
+        private final String name;
+        private final boolean recordFailuresOnly;
+        private final String[] extraTags;
+        private final String description;
+
+        @RecordableConstructor
+        public MetricsCountedInfo(String name, String[] extraTags,
+                boolean recordFailuresOnly, String description) {
+            this.name = name;
+            this.extraTags = extraTags;
+            this.recordFailuresOnly = recordFailuresOnly;
+            this.description = description;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String[] getExtraTags() {
+            return extraTags;
+        }
+
+        public boolean isRecordFailuresOnly() {
+            return recordFailuresOnly;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public static class Builder {
+            private final String name;
+            private String[] extraTags = {};
+            private boolean recordFailuresOnly = false;
+            private String description = "";
+
+            public Builder(String name) {
+                this.name = name;
+            }
+
+            public Builder setExtraTags(String[] extraTags) {
+                this.extraTags = extraTags;
+                return this;
+            }
+
+            public Builder setRecordFailuresOnly(boolean recordFailuresOnly) {
+                this.recordFailuresOnly = recordFailuresOnly;
+                return this;
+            }
+
+            public Builder setDescription(String description) {
+                this.description = description;
+                return this;
+            }
+
+            public MetricsCountedInfo build() {
+                return new MetricsCountedInfo(name, extraTags, recordFailuresOnly, description);
             }
         }
     }
