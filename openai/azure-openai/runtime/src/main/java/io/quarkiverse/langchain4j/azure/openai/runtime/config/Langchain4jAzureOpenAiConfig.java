@@ -23,6 +23,13 @@ public interface Langchain4jAzureOpenAiConfig {
     String deploymentId();
 
     /**
+     * The base url for the Azure OpenAI resource. Defaults to
+     * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-id}}.
+     */
+    @WithDefault("https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-id}")
+    String baseUrl();
+
+    /**
      * The API version to use for this operation. This follows the YYYY-MM-DD format
      */
     @WithDefault("2023-05-15")
