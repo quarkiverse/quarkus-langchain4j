@@ -8,20 +8,20 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 
-public class MetricsWrapper implements AiServiceMethodImplementationSupport.Wrapper {
+public class MetricsTimedWrapper implements AiServiceMethodImplementationSupport.Wrapper {
 
     @Override
     public Object wrap(AiServiceMethodImplementationSupport.Input input,
             Function<AiServiceMethodImplementationSupport.Input, Object> fun) {
-        Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfoOpt = input.createInfo.getMetricsInfo();
+        Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsInfoOpt = input.createInfo.getMetricsTimedInfo();
         if (metricsInfoOpt.isPresent()) {
-            AiServiceMethodCreateInfo.MetricsInfo metricsInfo = metricsInfoOpt.get();
-            if (metricsInfo.isLongTask()) {
-                LongTaskTimer timer = LongTaskTimer.builder(metricsInfo.getName())
-                        .description(metricsInfo.getDescription())
-                        .publishPercentiles(metricsInfo.getPercentiles())
-                        .publishPercentileHistogram(metricsInfo.isHistogram())
-                        .tags(metricsInfo.getExtraTags())
+            AiServiceMethodCreateInfo.MetricsTimedInfo metricsTimedInfo = metricsInfoOpt.get();
+            if (metricsTimedInfo.isLongTask()) {
+                LongTaskTimer timer = LongTaskTimer.builder(metricsTimedInfo.getName())
+                        .description(metricsTimedInfo.getDescription())
+                        .publishPercentiles(metricsTimedInfo.getPercentiles())
+                        .publishPercentileHistogram(metricsTimedInfo.isHistogram())
+                        .tags(metricsTimedInfo.getExtraTags())
                         .register(Metrics.globalRegistry);
                 return timer.record(new Supplier<Object>() {
                     @Override
@@ -30,11 +30,11 @@ public class MetricsWrapper implements AiServiceMethodImplementationSupport.Wrap
                     }
                 });
             } else {
-                Timer timer = Timer.builder(metricsInfo.getName())
-                        .description(metricsInfo.getDescription())
-                        .publishPercentiles(metricsInfo.getPercentiles())
-                        .publishPercentileHistogram(metricsInfo.isHistogram())
-                        .tags(metricsInfo.getExtraTags())
+                Timer timer = Timer.builder(metricsTimedInfo.getName())
+                        .description(metricsTimedInfo.getDescription())
+                        .publishPercentiles(metricsTimedInfo.getPercentiles())
+                        .publishPercentileHistogram(metricsTimedInfo.isHistogram())
+                        .tags(metricsTimedInfo.getExtraTags())
                         .register(Metrics.globalRegistry);
                 return timer.record(new Supplier<Object>() {
                     @Override

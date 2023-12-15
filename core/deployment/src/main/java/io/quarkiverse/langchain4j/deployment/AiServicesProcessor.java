@@ -54,7 +54,8 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
-import io.quarkiverse.langchain4j.runtime.aiservice.MetricsWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkus.arc.Arc;
@@ -95,6 +96,7 @@ public class AiServicesProcessor {
 
     private static final DotName V = DotName.createSimple(V.class);
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
+    public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     private static final String DEFAULT_DELIMITER = "\n";
     private static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
             .kind() == AnnotationTarget.Kind.METHOD_PARAMETER;
@@ -116,6 +118,7 @@ public class AiServicesProcessor {
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -474,7 +477,8 @@ public class AiServicesProcessor {
         var addMicrometerMetrics = metricsCapability.isPresent()
                 && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
         if (addMicrometerMetrics) {
-            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsWrapper.class).build());
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsTimedWrapper.class).build());
+            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(MetricsCountedWrapper.class).build());
         }
 
         var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
@@ -679,12 +683,15 @@ public class AiServicesProcessor {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
                 returnType);
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamName(method);
-        Optional<AiServiceMethodCreateInfo.MetricsInfo> metricsInfo = gatherMetricsInfo(method, addMicrometerMetrics);
+        Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsTimedInfo = gatherMetricsTimedInfo(method,
+                addMicrometerMetrics);
+        Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
+                addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType, metricsInfo, spanInfo);
+                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -817,18 +824,14 @@ public class AiServicesProcessor {
         }
     }
 
-    private Optional<AiServiceMethodCreateInfo.MetricsInfo> gatherMetricsInfo(MethodInfo method,
+    private Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> gatherMetricsTimedInfo(MethodInfo method,
             boolean addMicrometerMetrics) {
         if (!addMicrometerMetrics) {
             return Optional.empty();
         }
 
-        String name = "langchain4j.aiservices";
-        List<String> tags = new ArrayList<>();
-        tags.add("aiservice");
-        tags.add(method.declaringClass().name().withoutPackagePrefix());
-        tags.add("method");
-        tags.add(method.name());
+        String name = METRICS_DEFAULT_NAME;
+        List<String> tags = defaultMetricsTags(method);
 
         AnnotationInstance timedInstance = method.annotation(MICROMETER_TIMED);
         if (timedInstance == null) {
@@ -837,7 +840,7 @@ public class AiServicesProcessor {
 
         if (timedInstance == null) {
             // we default to having all AiServices being timed
-            return Optional.of(new AiServiceMethodCreateInfo.MetricsInfo.Builder(name)
+            return Optional.of(new AiServiceMethodCreateInfo.MetricsTimedInfo.Builder(name)
                     .setExtraTags(tags.toArray(EMPTY_STRING_ARRAY)).build());
         }
 
@@ -849,7 +852,7 @@ public class AiServicesProcessor {
             }
         }
 
-        var builder = new AiServiceMethodCreateInfo.MetricsInfo.Builder(name);
+        var builder = new AiServiceMethodCreateInfo.MetricsTimedInfo.Builder(name);
 
         AnnotationValue extraTagsValue = timedInstance.value("extraTags");
         if (extraTagsValue != null) {
@@ -878,6 +881,64 @@ public class AiServicesProcessor {
         }
 
         return Optional.of(builder.build());
+    }
+
+    private Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> gatherMetricsCountedInfo(MethodInfo method,
+            boolean addMicrometerMetrics) {
+        if (!addMicrometerMetrics) {
+            return Optional.empty();
+        }
+
+        String name = METRICS_DEFAULT_NAME;
+        List<String> tags = defaultMetricsTags(method);
+
+        AnnotationInstance timedInstance = method.annotation(MICROMETER_COUNTED);
+        if (timedInstance == null) {
+            timedInstance = method.declaringClass().declaredAnnotation(MICROMETER_COUNTED);
+        }
+
+        if (timedInstance == null) {
+            // we default to having all AiServices being timed
+            return Optional.of(new AiServiceMethodCreateInfo.MetricsCountedInfo.Builder(name)
+                    .setExtraTags(tags.toArray(EMPTY_STRING_ARRAY)).build());
+        }
+
+        AnnotationValue nameValue = timedInstance.value();
+        if (nameValue != null) {
+            String nameStr = nameValue.asString();
+            if (nameStr != null && !nameStr.isEmpty()) {
+                name = nameStr;
+            }
+        }
+
+        var builder = new AiServiceMethodCreateInfo.MetricsCountedInfo.Builder(name);
+
+        AnnotationValue extraTagsValue = timedInstance.value("extraTags");
+        if (extraTagsValue != null) {
+            tags.addAll(Arrays.asList(extraTagsValue.asStringArray()));
+        }
+        builder.setExtraTags(tags.toArray(EMPTY_STRING_ARRAY));
+
+        AnnotationValue recordFailuresOnlyValue = timedInstance.value("recordFailuresOnly");
+        if (recordFailuresOnlyValue != null) {
+            builder.setRecordFailuresOnly(recordFailuresOnlyValue.asBoolean());
+        }
+
+        AnnotationValue descriptionValue = timedInstance.value("description");
+        if (descriptionValue != null) {
+            builder.setDescription(descriptionValue.asString());
+        }
+
+        return Optional.of(builder.build());
+    }
+
+    private List<String> defaultMetricsTags(MethodInfo method) {
+        List<String> tags = new ArrayList<>(4);
+        tags.add("aiservice");
+        tags.add(method.declaringClass().name().withoutPackagePrefix());
+        tags.add("method");
+        tags.add(method.name());
+        return tags;
     }
 
     private Optional<AiServiceMethodCreateInfo.SpanInfo> gatherSpanInfo(MethodInfo method,

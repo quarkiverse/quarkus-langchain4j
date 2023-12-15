@@ -331,13 +331,17 @@ and one chooses to use `quarkus-micrometer-registry-prometheus`, then the metric
 
 [source]
 ----
-# TYPE langchain4j_aiservices_MyAiService_writeAPoem_seconds_max gauge
-# HELP langchain4j_aiservices_MyAiService_writeAPoem_seconds_max
-langchain4j_aiservices_MyAiService_writeAPoem_seconds_max 19.791836635
-# TYPE langchain4j_aiservices_MyAiService_writeAPoem_seconds summary
-# HELP langchain4j_aiservices_MyAiService_writeAPoem_seconds
-langchain4j_aiservices_MyAiService_writeAPoem_seconds_count 2.0
-langchain4j_aiservices_MyAiService_writeAPoem_seconds_sum 29.992314839
+# TYPE langchain4j_aiservices counter
+# HELP langchain4j_aiservices
+langchain4j_aiservices_total{aiservice="MyAiService",exception="none",method="writeAPoem",result="success"} 5.0
+
+# TYPE langchain4j_aiservices_seconds_max gauge
+# HELP langchain4j_aiservices_seconds_max
+langchain4j_aiservices_seconds_max{aiservice="MyAiService",method="writeAPoem"} 7.725769221
+# TYPE langchain4j_aiservices_seconds summary
+# HELP langchain4j_aiservices_seconds
+langchain4j_aiservices_seconds_count{aiservice="MyAiService",method="writeAPoem"} 5.0
+langchain4j_aiservices_seconds_sum{aiservice="MyAiService",method="writeAPoem"} 30.229575906
 ----
 
 === Tracing
