@@ -15,26 +15,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.annotation.Priority;
-import jakarta.ws.rs.ConstrainedTo;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.RuntimeType;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.MessageBodyWriter;
-import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.ext.ReaderInterceptor;
 import jakarta.ws.rs.ext.ReaderInterceptorContext;
 import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestStreamElementType;
@@ -76,6 +74,10 @@ import io.vertx.core.http.HttpClientResponse;
 @ClientHeaderParam(name = "api-key", value = "{apiKey}") // used by AzureAI
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@RegisterProvider(OpenAiRestApi.OpenAiRestApiJacksonReader.class)
+@RegisterProvider(OpenAiRestApi.OpenAiRestApiJacksonWriter.class)
+@RegisterProvider(OpenAiRestApi.OpenAiRestApiReaderInterceptor.class)
+@RegisterProvider(OpenAiRestApi.OpenAiRestApiWriterInterceptor.class)
 public interface OpenAiRestApi {
 
     /**
@@ -181,32 +183,8 @@ public interface OpenAiRestApi {
         }
     }
 
-    /**
-     * We need a custom version of the Jackson provider because reading SSE values does not work properly with
-     * {@code @ClientObjectMapper} due to the lack of a complete context in those requests
-     */
-    @Provider
-    @ConstrainedTo(RuntimeType.CLIENT)
-    @Priority(Priorities.USER + 100)
-    class OpenAiRestApiJacksonProvider extends AbstractJsonMessageBodyReader implements MessageBodyWriter<Object> {
-
-        /**
-         * Normally this is not necessary, but if one uses the 'demo' key, then the response comes back as type text/html
-         * but the content is still JSON. Go figure...
-         */
-        @Override
-        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            return true;
-        }
-
-        @Override
-        public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType,
-                MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
-                throws IOException, WebApplicationException {
-            return ObjectMapperHolder.READER
-                    .forType(ObjectMapperHolder.READER.getTypeFactory().constructType(genericType != null ? genericType : type))
-                    .readValue(entityStream);
-        }
+    @Priority(Priorities.USER + 100) // this priority ensures that our Writer has priority over the standard Jackson one
+    class OpenAiRestApiJacksonWriter implements MessageBodyWriter<Object> {
 
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -219,19 +197,44 @@ public interface OpenAiRestApi {
                 throws IOException, WebApplicationException {
             entityStream.write(ObjectMapperHolder.MAPPER.writeValueAsString(o).getBytes(StandardCharsets.UTF_8));
         }
+    }
 
-        public static class ObjectMapperHolder {
-            public static final ObjectMapper MAPPER = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
+    @Priority(Priorities.USER - 100) // this priority ensures that our Reader has priority over the standard Jackson one
+    class OpenAiRestApiJacksonReader extends AbstractJsonMessageBodyReader {
 
-            private static final ObjectReader READER = MAPPER.reader();
+        /**
+         * Normally this is not necessary, but if one uses the 'demo' Langchain4j key, then the response comes back as type
+         * text/html
+         * but the content is still JSON.
+         */
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return true;
         }
+
+        /**
+         * We need a custom version of the Jackson provider because reading SSE values does not work properly with
+         * {@code @ClientObjectMapper} due to the lack of a complete context in those requests
+         */
+        @Override
+        public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
+                throws IOException, WebApplicationException {
+            return ObjectMapperHolder.READER
+                    .forType(ObjectMapperHolder.READER.getTypeFactory().constructType(genericType != null ? genericType : type))
+                    .readValue(entityStream);
+        }
+    }
+
+    public class ObjectMapperHolder {
+        public static final ObjectMapper MAPPER = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
+
+        private static final ObjectReader READER = MAPPER.reader();
     }
 
     /**
      * This method validates that the response is not empty, which happens when the API returns an error object
      */
-    @Provider
-    @ConstrainedTo(RuntimeType.CLIENT)
     class OpenAiRestApiReaderInterceptor implements ReaderInterceptor {
 
         @Override
@@ -272,8 +275,6 @@ public interface OpenAiRestApi {
      * The point of this is to properly set the {@code stream} value of the request
      * so users don't have to remember to set it manually
      */
-    @Provider
-    @ConstrainedTo(RuntimeType.CLIENT)
     class OpenAiRestApiWriterInterceptor implements WriterInterceptor {
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
