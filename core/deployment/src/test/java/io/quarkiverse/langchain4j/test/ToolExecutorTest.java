@@ -11,6 +11,7 @@ import java.util.List;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -72,6 +73,11 @@ class ToolExecutorTest {
         @Tool
         BigInteger bigIntegers(BigInteger arg0, BigInteger arg1) {
             return arg0.add(arg1);
+        }
+
+        @Tool
+        int noArgs() {
+            return 1;
         }
     }
 
@@ -231,6 +237,18 @@ class ToolExecutorTest {
     })
     void should_execute_tool_with_parameters_of_type_BigInteger(String arguments) {
         executeAndAssert(arguments, "bigIntegers", "4");
+    }
+
+    @Test
+    void should_execute_tool_with_no_args() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+                .build();
+
+        ToolExecutor toolExecutor = getToolExecutor("noArgs");
+
+        String result = toolExecutor.execute(request, null);
+
+        assertThat(result).isEqualTo("1");
     }
 
     private void executeAndAssert(String arguments, String methodName,
