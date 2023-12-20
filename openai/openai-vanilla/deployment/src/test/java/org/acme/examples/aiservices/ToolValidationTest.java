@@ -40,25 +40,6 @@ public class ToolValidationTest {
     }
 
     @Nested
-    @DisplayName("No parameter detection")
-    class NoParameterTools {
-        @RegisterExtension
-        static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-                .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyInvalidTool.class))
-                .assertException(t -> {
-                    assertThat(t)
-                            .isInstanceOf(DeploymentException.class)
-                            .hasCauseInstanceOf(IllegalStateException.class)
-                            .hasMessageContaining("Tool method 'myTool' on class");
-                });
-
-        @Test
-        void test() {
-            fail("Should not be called");
-        }
-    }
-
-    @Nested
     @DisplayName("Abstract tool detection")
     class AbstractTools {
         @RegisterExtension

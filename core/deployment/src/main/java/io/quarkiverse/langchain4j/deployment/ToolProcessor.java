@@ -155,13 +155,6 @@ public class ToolProcessor {
                         validationErrorFound = true;
                         continue;
                     }
-                    if (toolMethod.parametersCount() == 0) {
-                        validation.produce(
-                                new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
-                                        "Tool method '" + toolMethod.name() + "' on class '" + className
-                                                + "' must have at least one parameter")));
-                        validationErrorFound = true;
-                    }
                     discoveredTools.put(toolMethod.name(), toolMethod.declaringClass());
 
                     if (Modifier.isPrivate(toolMethod.flags())) {
@@ -276,16 +269,19 @@ public class ToolProcessor {
             MethodCreator invokeMc = classCreator.getMethodCreator(
                     MethodDescriptor.ofMethod(implClassName, "invoke", Object.class, Object.class, Object[].class));
 
-            ResultHandle[] targetMethodHandles = null;
-            if (methodInfo.parametersCount() != 0) {
+            ResultHandle result;
+            if (methodInfo.parametersCount() > 0) {
                 List<ResultHandle> argumentHandles = new ArrayList<>(methodInfo.parametersCount());
                 for (int i = 0; i < methodInfo.parametersCount(); i++) {
                     argumentHandles.add(invokeMc.readArrayValue(invokeMc.getMethodParam(1), i));
                 }
-                targetMethodHandles = argumentHandles.toArray(new ResultHandle[0]);
+                ResultHandle[] targetMethodHandles = argumentHandles.toArray(new ResultHandle[0]);
+                result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
+                        targetMethodHandles);
+            } else {
+                result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0));
             }
-            ResultHandle result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
-                    targetMethodHandles);
+
             boolean toolReturnsVoid = methodInfo.returnType().kind() == Type.Kind.VOID;
             if (toolReturnsVoid) {
                 invokeMc.returnValue(invokeMc.load("Success"));

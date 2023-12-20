@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.tool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -111,6 +112,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
     }
 
     private Map<String, Object> convertJsonToArguments(String argumentsJsonStr) throws JsonProcessingException {
+        if (argumentsJsonStr == null || argumentsJsonStr.isEmpty()) {
+            return Collections.emptyMap();
+        }
         Mappable mappable = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(argumentsJsonStr, loadMapperClass());
         return mappable.obtainFieldValuesMap();
     }
