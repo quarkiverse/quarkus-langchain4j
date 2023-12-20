@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.5.1</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-tests-azure-openai</artifactId>
     <name>Quarkus Langchain4j - Integration Tests - Azure OpenAI</name>
