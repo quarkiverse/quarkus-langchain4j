@@ -22,7 +22,7 @@ public class JsonParsingTest {
 
     @Test
     void testChatCompletion() throws JsonProcessingException {
-        ObjectMapper mapperToUse = OpenAiRestApi.OpenAiRestApiJacksonProvider.ObjectMapperHolder.MAPPER;
+        ObjectMapper mapperToUse = OpenAiRestApi.ObjectMapperHolder.MAPPER;
 
         ChatCompletionResponse chatCompletionResponse = mapperToUse.readValue(
                 "{\"id\":\"chatcmpl-8AAeH0Sdve2wfHWhFIXq1gFkkqoIU\",\"object\":\"chat.completion.chunk\",\"created\":1697434905,\"model\":\"gpt-3.5-turbo-0613\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"length\"}]}",
