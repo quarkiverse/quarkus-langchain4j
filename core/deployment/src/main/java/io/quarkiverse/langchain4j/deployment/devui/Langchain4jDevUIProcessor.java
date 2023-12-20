@@ -26,7 +26,9 @@ public class Langchain4jDevUIProcessor {
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
-        addToolsPage(card, toolsMetadataBuildItem);
+        if (toolsMetadataBuildItem != null) {
+            addToolsPage(card, toolsMetadataBuildItem);
+        }
         // for now, add the embedding store page only if there is a single embedding model and a single embedding store
         // if we allow more in the future, we need a way to specify which ones to use for the page
         if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
@@ -61,7 +63,7 @@ public class Langchain4jDevUIProcessor {
         for (Map.Entry<String, List<ToolMethodCreateInfo>> toolClassEntry : metadata.entrySet()) {
             for (ToolMethodCreateInfo toolMethodCreateInfo : toolClassEntry.getValue()) {
                 infos.add(new ToolMethodInfo(toolClassEntry.getKey(),
-                        toolMethodCreateInfo.getMethodName(),
+                        toolMethodCreateInfo.getToolSpecification().name(),
                         toolMethodCreateInfo.getToolSpecification().description()));
             }
         }
