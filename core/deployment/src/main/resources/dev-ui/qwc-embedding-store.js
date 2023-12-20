@@ -46,7 +46,7 @@ export class QwcEmbeddingStore extends LitElement {
     }
 
     _addEmbedding(id, text, metadata){
-        this._addEmbeddingConfirmation = '';
+        this._addEmbeddingConfirmation = html`Working...<br/>`;
         this.jsonRpc.add({id: id, text: text, metadata: metadata}).then(jsonRpcResponse => {
             if(jsonRpcResponse.result === false) {
                 this._addEmbeddingConfirmation = html`
@@ -63,7 +63,7 @@ export class QwcEmbeddingStore extends LitElement {
     }
 
     _findRelevant(text, limit){
-        this._relevantEmbeddingsOutput = '';
+        this._relevantEmbeddingsOutput = html`Working...<br/>`;
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
                 <vaadin-grid id="relevant-embeddings" .items=${jsonRpcResponse.result}>
