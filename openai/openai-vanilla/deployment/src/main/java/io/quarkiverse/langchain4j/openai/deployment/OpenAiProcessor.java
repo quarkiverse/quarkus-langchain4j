@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
@@ -39,12 +40,14 @@ public class OpenAiProcessor {
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
-            Langchain4jOpenAiBuildConfig config) {
+            Langchain4jOpenAiBuildConfig config,
+            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+            embeddingModelProducer.produce(new EmbeddingModelBuildItem());
         }
         if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
             moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
