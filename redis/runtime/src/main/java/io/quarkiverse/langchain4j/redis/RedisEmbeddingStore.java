@@ -42,6 +42,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     private final ReactiveRedisDataSource ds;
     private final RedisSchema schema;
     private final Logger LOG = Logger.getLogger(RedisEmbeddingStore.class);
+    private final boolean indexCreated;
+    private boolean warnedAboutWrongDimension = false;
 
     private static final String SCORE_FIELD_NAME = "vector_score";
 
@@ -52,10 +54,10 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     public RedisEmbeddingStore(ReactiveRedisDataSource ds, RedisSchema schema) {
         this.ds = ds;
         this.schema = schema;
-        createIndexIfDoesNotExist();
+        this.indexCreated = createIndexIfDoesNotExist();
     }
 
-    private void createIndexIfDoesNotExist() {
+    private boolean createIndexIfDoesNotExist() {
         List<String> indexes = ds.search().ft_list()
                 .onFailure().invoke(t -> {
                     if (t.getMessage().contains("unknown command")) {
@@ -71,8 +73,10 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             schema.defineFields(indexCreateArgs);
             LOG.debug("Creating Redis index " + schema.getIndexName());
             ds.search().ftCreate(schema.getIndexName(), indexCreateArgs).await().indefinitely();
+            return true;
         } else {
             LOG.debug("Index in Redis already exists: " + schema.getIndexName());
+            return false;
         }
     }
 
@@ -130,6 +134,14 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             TextSegment textSegment = embedded == null ? null : embedded.get(i);
             Map<String, Object> fields = new HashMap<>();
             fields.put(schema.getVectorFieldName(), embedding.vector());
+            if (!warnedAboutWrongDimension && indexCreated && embedding.vector().length != schema.getDimension()) {
+                LOG.warn("Creating an embedding with dimension " + embedding.vector().length + " but the index was " +
+                        "created with dimension " + schema.getDimension() + ". " +
+                        "This may result in embeddings not being found when they should be. " +
+                        "Please check the quarkus.langchain4j.redis.dimension property. " +
+                        "This warning will be shown only once.");
+                warnedAboutWrongDimension = true;
+            }
             if (textSegment != null) {
                 fields.put(schema.getScalarFieldName(), textSegment.text());
                 fields.putAll(textSegment.metadata().asMap());
