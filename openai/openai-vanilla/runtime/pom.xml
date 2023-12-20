@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-openai-parent</artifactId>
-        <version>0.5.0</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-openai</artifactId>
     <name>Quarkus Langchain4j - OpenAI - Runtime</name>
