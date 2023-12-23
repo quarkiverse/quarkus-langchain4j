@@ -1,4 +1,4 @@
 release:
-  current-version: "0.5.1"
+  current-version: "0.6.0.CR1"
   next-version: "999-SNAPSHOT"
 
