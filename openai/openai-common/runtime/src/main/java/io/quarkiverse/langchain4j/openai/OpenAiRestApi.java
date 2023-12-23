@@ -51,6 +51,8 @@ import dev.ai4j.openai4j.completion.CompletionRequest;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingRequest;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import dev.ai4j.openai4j.image.GenerateImagesRequest;
+import dev.ai4j.openai4j.image.GenerateImagesResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
@@ -162,6 +164,16 @@ public interface OpenAiRestApi {
     @Path("moderations")
     @POST
     ModerationResponse blockingModeration(ModerationRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
+
+    @Path("images/generations")
+    @POST
+    GenerateImagesResponse blockingImagesGenerations(GenerateImagesRequest request, @NotBody String apiKey,
+            @RestQuery("api-version") String apiVersion);
+
+    @Path("images/generations")
+    @POST
+    Uni<GenerateImagesResponse> imagesGenerations(GenerateImagesRequest request, @NotBody String apiKey,
             @RestQuery("api-version") String apiVersion);
 
     @ClientExceptionMapper

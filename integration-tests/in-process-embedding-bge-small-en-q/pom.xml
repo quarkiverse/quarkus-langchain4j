@@ -20,7 +20,13 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-bge-small-en-q</artifactId>
-            <version>${langchain4j.version}</version>
+            <version>${langchain4j-embeddings.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>dev.langchain4j</groupId>
+                    <artifactId>langchain4j-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

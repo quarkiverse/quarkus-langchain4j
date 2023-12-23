@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
@@ -48,18 +49,21 @@ public class BeansProcessor {
             List<ChatModelProviderCandidateBuildItem> chatCandidateItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
+            List<ImageModelProviderCandidateBuildItem> imageCandidateItems,
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             LangChain4jBuildConfig buildConfig,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
             BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
+            BuildProducer<SelectedImageModelProviderBuildItem> selectedImageProducer,
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems) {
 
         boolean chatModelBeanRequested = false;
         boolean streamingChatModelBeanRequested = false;
         boolean embeddingModelBeanRequested = false;
         boolean moderationModelBeanRequested = false;
+        boolean imageModelBeanRequested = false;
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
             DotName requiredName = ip.getRequiredType().name();
             if (CHAT_MODEL.equals(requiredName)) {
@@ -70,6 +74,8 @@ public class BeansProcessor {
                 embeddingModelBeanRequested = true;
             } else if (MODERATION_MODEL.equals(requiredName)) {
                 moderationModelBeanRequested = true;
+            } else if (IMAGE_MODEL.equals(requiredName)) {
+                imageModelBeanRequested = true;
             }
         }
         if (!requestChatModelBeanItems.isEmpty()) {
@@ -106,6 +112,15 @@ public class BeansProcessor {
                                     buildConfig.moderationModel().provider(),
                                     "ModerationModel",
                                     "moderation-model")));
+        }
+        if (imageModelBeanRequested) {
+            selectedImageProducer.produce(
+                    new SelectedImageModelProviderBuildItem(
+                            selectProvider(
+                                    imageCandidateItems,
+                                    buildConfig.moderationModel().provider(),
+                                    "ImageModel",
+                                    "image-model")));
         }
 
     }

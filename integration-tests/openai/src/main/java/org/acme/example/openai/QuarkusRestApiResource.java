@@ -31,10 +31,10 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
+import dev.ai4j.openai4j.chat.AssistantMessage;
 import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.chat.Message;
 import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
@@ -94,7 +94,7 @@ public class QuarkusRestApiResource {
                                     return delta.content();
                                 }
                             } else { // normally this is not needed but mock APIs don't really work with the streaming response
-                                Message message = choice.message();
+                                AssistantMessage message = choice.message();
                                 if (message != null) {
                                     String content = message.content();
                                     if (content != null) {

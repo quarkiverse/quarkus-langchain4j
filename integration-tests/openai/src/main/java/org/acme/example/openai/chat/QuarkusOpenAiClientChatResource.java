@@ -7,9 +7,9 @@ import jakarta.ws.rs.core.MediaType;
 import org.acme.example.openai.MessageUtil;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
+import dev.ai4j.openai4j.chat.AssistantMessage;
 import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.chat.Message;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.smallrye.mutiny.Multi;
@@ -66,7 +66,7 @@ public class QuarkusOpenAiClientChatResource {
                                         emitter.emit(delta.content());
                                     }
                                 } else { // normally this is not needed but mock APIs don't really work with the streaming response
-                                    Message message = choice.message();
+                                    AssistantMessage message = choice.message();
                                     if (message != null) {
                                         emitter.emit(message.content());
                                     }

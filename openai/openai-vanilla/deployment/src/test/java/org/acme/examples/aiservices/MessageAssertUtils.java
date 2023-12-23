@@ -38,10 +38,17 @@ class MessageAssertUtils {
             assertThat(listOfMessages).asInstanceOf(LIST_MAP).hasSize(messageContents.size()).satisfies(l -> {
                 for (int i = 0; i < messageContents.size(); i++) {
                     MessageContent messageContent = messageContents.get(i);
-                    assertThat((Map<String, String>) l.get(i)).satisfies(systemMessage -> {
-                        assertThat(systemMessage)
-                                .containsEntry("role", messageContent.getRole())
-                                .containsEntry("content", messageContent.getContent());
+                    assertThat((Map<String, String>) l.get(i)).satisfies(message -> {
+                        assertThat(message)
+                                .containsEntry("role", messageContent.getRole());
+                        if (messageContent.getContent() == null) {
+                            if (message.containsKey("content")) {
+                                assertThat(message).containsEntry("content", null);
+                            }
+                        } else {
+                            assertThat(message).containsEntry("content", messageContent.getContent());
+                        }
+
                     });
                 }
             });

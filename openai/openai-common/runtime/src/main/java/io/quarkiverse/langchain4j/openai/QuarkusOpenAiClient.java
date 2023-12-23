@@ -32,6 +32,8 @@ import dev.ai4j.openai4j.completion.CompletionRequest;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingRequest;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import dev.ai4j.openai4j.image.GenerateImagesRequest;
+import dev.ai4j.openai4j.image.GenerateImagesResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
@@ -334,6 +336,28 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             @Override
                             public Uni<ModerationResult> get() {
                                 return restApi.moderation(request, apiKey, apiVersion).map(r -> r.results().get(0));
+                            }
+                        },
+                        responseHandler);
+            }
+        };
+    }
+
+    @Override
+    public SyncOrAsync<GenerateImagesResponse> imagesGeneration(GenerateImagesRequest generateImagesRequest) {
+        return new SyncOrAsync<GenerateImagesResponse>() {
+            @Override
+            public GenerateImagesResponse execute() {
+                return restApi.blockingImagesGenerations(generateImagesRequest, apiKey, apiVersion);
+            }
+
+            @Override
+            public AsyncResponseHandling onResponse(Consumer<GenerateImagesResponse> responseHandler) {
+                return new AsyncResponseHandlingImpl<>(
+                        new Supplier<>() {
+                            @Override
+                            public Uni<GenerateImagesResponse> get() {
+                                return restApi.imagesGenerations(generateImagesRequest, apiKey, apiVersion);
                             }
                         },
                         responseHandler);

@@ -21,8 +21,8 @@ public class InProcessEmbeddingResource {
         var r1 = allMiniLmL6V2QuantizedEmbeddingModel.embed(sentence);
         var r2 = embeddingModel.embed(sentence);
 
-        return "allMiniLmL6V2QuantizedEmbeddingModel: " + r1.content().dimensions() + "\n" + "embeddingModel: "
-                + r2.content().dimensions();
+        return "allMiniLmL6V2QuantizedEmbeddingModel: " + r1.content().dimension() + "\n" + "embeddingModel: "
+                + r2.content().dimension();
     }
 
 }

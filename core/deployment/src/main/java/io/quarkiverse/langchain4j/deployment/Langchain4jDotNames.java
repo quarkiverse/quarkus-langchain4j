@@ -7,6 +7,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.ModerationModel;
@@ -28,6 +29,7 @@ public class Langchain4jDotNames {
     public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
+    public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
     static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);

@@ -61,6 +61,23 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.enabled]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.enabled[quarkus.langchain4j.openai.image-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.base-url]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.base-url[quarkus.langchain4j.openai.base-url]`
 
 
@@ -298,6 +315,177 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_MODERATION_MODEL_MODEL_NAME
 endif::add-copy-button-to-env-var[]
 --|string 
 |`text-moderation-latest`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.model-name[quarkus.langchain4j.openai.image-model.model-name]`
+
+
+[.description]
+--
+Model name to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`dall-e-3`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.persist]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.persist[quarkus.langchain4j.openai.image-model.persist]`
+
+
+[.description]
+--
+Configure whether the generated images will be saved to disk. By default, persisting is disabled, but it is implicitly enabled when `quarkus.langchain4j.openai.image-mode.directory` is set and this property is not to `false`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_PERSIST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_PERSIST+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.persist-directory]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.persist-directory[quarkus.langchain4j.openai.image-model.persist-directory]`
+
+
+[.description]
+--
+The path where the generated images will be persisted to disk. This only applies of `quarkus.langchain4j.openai.image-mode.persist` is not set to `false`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_PERSIST_DIRECTORY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_PERSIST_DIRECTORY+++`
+endif::add-copy-button-to-env-var[]
+--|path 
+|`${java.io.tmpdir}/dall-e-images`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.response-format]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.response-format[quarkus.langchain4j.openai.image-model.response-format]`
+
+
+[.description]
+--
+The format in which the generated images are returned.
+
+Must be one of `url` or `b64_json`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`url`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.size]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.size[quarkus.langchain4j.openai.image-model.size]`
+
+
+[.description]
+--
+The size of the generated images.
+
+Must be one of `1024x1024`, `1792x1024`, or `1024x1792` when the model is `dall-e-3`.
+
+Must be one of `256x256`, `512x512`, or `1024x1024` when the model is `dall-e-2`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`1024x1024`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.quality]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.quality[quarkus.langchain4j.openai.image-model.quality]`
+
+
+[.description]
+--
+The quality of the image that will be generated.
+
+`hd` creates images with finer details and greater consistency across the image.
+
+This param is only supported for when the model is `dall-e-3`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_QUALITY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_QUALITY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`standard`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.number]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.number[quarkus.langchain4j.openai.image-model.number]`
+
+
+[.description]
+--
+The number of images to generate.
+
+Must be between 1 and 10.
+
+When the model is dall-e-3, only n=1 is supported.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_NUMBER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_NUMBER+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`1`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.style]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.style[quarkus.langchain4j.openai.image-model.style]`
+
+
+[.description]
+--
+The style of the generated images.
+
+Must be one of `vivid` or `natural`. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images.
+
+This param is only supported for when the model is `dall-e-3`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_STYLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_STYLE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`vivid`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.user]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.image-model.user[quarkus.langchain4j.openai.image-model.user]`
+
+
+[.description]
+--
+A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_IMAGE_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
 
 |===
 ifndef::no-duration-note[]

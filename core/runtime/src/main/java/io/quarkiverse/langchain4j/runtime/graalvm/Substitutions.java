@@ -13,8 +13,11 @@ import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.spi.prompt.PromptTemplateFactory;
 import dev.langchain4j.spi.prompt.structured.StructuredPromptFactory;
+import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStoreJsonCodec;
 import io.quarkiverse.langchain4j.QuarkusAiServicesFactory;
 import io.quarkiverse.langchain4j.QuarkusChatMessageJsonCodecFactory;
+import io.quarkiverse.langchain4j.QuarkusInMemoryEmbeddingJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.QuarkusPromptTemplateFactory;
 import io.quarkiverse.langchain4j.QuarkusStructuredPromptFactory;
@@ -65,6 +68,15 @@ public class Substitutions {
         @Substitute
         private static ChatMessageJsonCodec loadCodec() {
             return new QuarkusChatMessageJsonCodecFactory().create();
+        }
+    }
+
+    @TargetClass(InMemoryEmbeddingStore.class)
+    static final class Target_InMemoryEmbeddingStore {
+
+        @Substitute
+        private static InMemoryEmbeddingStoreJsonCodec loadCodec() {
+            return new QuarkusInMemoryEmbeddingJsonCodecFactory().create();
         }
     }
 
