@@ -47,9 +47,13 @@ public interface Langchain4jAzureOpenAiConfig {
     Duration timeout();
 
     /**
-     * The maximum number of times to retry
+     * The maximum number of times to retry.
+     *
+     * @deprecated Users are encouraged to use <a href="https://quarkus.io/guides/smallrye-fault-tolerance">SmallRye Fault
+     *             Tolerance</a> instead
      */
-    @WithDefault("3")
+    @WithDefault("1")
+    @Deprecated
     Integer maxRetries();
 
     /**

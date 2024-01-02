@@ -32,7 +32,11 @@ public interface Langchain4jOpenAiConfig {
 
     /**
      * The maximum number of times to retry
+     *
+     * @deprecated Users are encouraged to use <a href="https://quarkus.io/guides/smallrye-fault-tolerance">SmallRye Fault
+     *             Tolerance</a> instead
      */
+    @Deprecated
     @WithDefault("3")
     Integer maxRetries();
 
