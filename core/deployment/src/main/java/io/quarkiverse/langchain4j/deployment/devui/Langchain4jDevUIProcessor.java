@@ -8,6 +8,8 @@ import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.runtime.devui.ChatJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.devui.EmbeddingStoreJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.deployment.IsDevelopment;
@@ -23,7 +25,8 @@ public class Langchain4jDevUIProcessor {
     CardPageBuildItem cardPage(List<DeclarativeAiServiceBuildItem> aiServices,
             ToolsMetadataBuildItem toolsMetadataBuildItem,
             List<EmbeddingModelBuildItem> embeddingModelBuildItem,
-            List<EmbeddingStoreBuildItem> embeddingStoreBuildItem) {
+            List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
+            List<ChatModelProviderCandidateBuildItem> chatModelCandidates) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
         if (toolsMetadataBuildItem != null) {
@@ -33,6 +36,9 @@ public class Langchain4jDevUIProcessor {
         // if we allow more in the future, we need a way to specify which ones to use for the page
         if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
             addEmbeddingStorePage(card);
+        }
+        if (!chatModelCandidates.isEmpty()) {
+            addChatPage(card);
         }
         return card;
     }
@@ -74,14 +80,23 @@ public class Langchain4jDevUIProcessor {
                 .icon("font-awesome-solid:toolbox"));
     }
 
+    private void addChatPage(CardPageBuildItem card) {
+        card.addPage(Page.webComponentPageBuilder().title("Chat")
+                .componentLink("qwc-chat.js")
+                .icon("font-awesome-solid:comments"));
+    }
+
     @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> producers,
             List<EmbeddingModelBuildItem> embeddingModelBuildItem,
-            List<EmbeddingStoreBuildItem> embeddingStoreBuildItem) {
+            List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
+            List<ChatModelProviderCandidateBuildItem> chatModelCandidates) {
         if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
             producers.produce(new JsonRPCProvidersBuildItem(EmbeddingStoreJsonRPCService.class));
         }
-
+        if (!chatModelCandidates.isEmpty()) {
+            producers.produce(new JsonRPCProvidersBuildItem(ChatJsonRPCService.class));
+        }
     }
 
 }
