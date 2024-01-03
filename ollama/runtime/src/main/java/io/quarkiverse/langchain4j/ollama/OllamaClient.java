@@ -34,4 +34,8 @@ public class OllamaClient {
     public CompletionResponse completion(CompletionRequest request) {
         return restApi.generate(request);
     }
+
+    public EmbeddingResponse embedding(EmbeddingRequest request) {
+        return restApi.embeddings(request);
+    }
 }
