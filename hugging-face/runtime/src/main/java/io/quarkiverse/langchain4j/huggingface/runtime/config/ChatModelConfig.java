@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -74,5 +75,17 @@ public interface ChatModelConfig {
      * See <a href="https://arxiv.org/pdf/1909.05858.pdf">this paper</a> for more details.
      */
     OptionalDouble repetitionPenalty();
+
+    /**
+     * Whether chat model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether chat model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logResponses();
 
 }

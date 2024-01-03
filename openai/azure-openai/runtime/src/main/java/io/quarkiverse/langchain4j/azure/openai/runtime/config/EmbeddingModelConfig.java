@@ -1,19 +1,12 @@
-package io.quarkiverse.langchain4j.openai.runtime.config;
+package io.quarkiverse.langchain4j.azure.openai.runtime.config;
 
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface EmbeddingModelConfig {
-
-    /**
-     * Model name to use
-     */
-    @WithDefault("text-embedding-ada-002")
-    String modelName();
 
     /**
      * Whether embedding model requests should be logged

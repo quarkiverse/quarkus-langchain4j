@@ -84,4 +84,16 @@ public interface ImageModelConfig {
      * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
      */
     Optional<String> user();
+
+    /**
+     * Whether image model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether image model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logResponses();
 }
