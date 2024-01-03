@@ -1,9 +1,6 @@
 package io.quarkiverse.langchain4j.openai.test;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +10,7 @@ import java.util.Optional;
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 
@@ -52,6 +50,16 @@ public class WiremockUtils {
     public static MappingBuilder chatCompletionMapping(String token) {
         return post(urlEqualTo("/v1/chat/completions"))
                 .withHeader("Authorization", equalTo("Bearer " + token));
+    }
+
+    public static RequestPatternBuilder chatCompletionRequestPattern(String token) {
+        return postRequestedFor(urlEqualTo("/v1/chat/completions"))
+                .withHeader("Authorization", equalTo("Bearer " + token));
+    }
+
+    public static RequestPatternBuilder chatCompletionRequestPattern(String token, String organization) {
+        return chatCompletionRequestPattern(token)
+                .withHeader("OpenAI-Organization", equalTo(organization));
     }
 
     public static MappingBuilder moderationMapping(String token) {

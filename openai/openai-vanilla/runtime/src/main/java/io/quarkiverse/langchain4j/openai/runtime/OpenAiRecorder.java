@@ -38,12 +38,13 @@ public class OpenAiRecorder {
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
-
                 .modelName(chatModelConfig.modelName())
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty());
+
+        runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
         if (chatModelConfig.maxTokens().isPresent()) {
             builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -69,12 +70,13 @@ public class OpenAiRecorder {
                 .timeout(runtimeConfig.timeout())
                 .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
-
                 .modelName(chatModelConfig.modelName())
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty());
+
+        runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
         if (chatModelConfig.maxTokens().isPresent()) {
             builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -101,8 +103,9 @@ public class OpenAiRecorder {
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), runtimeConfig.logResponses()))
-
                 .modelName(embeddingModelConfig.modelName());
+
+        runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
         return new Supplier<>() {
             @Override
@@ -125,8 +128,9 @@ public class OpenAiRecorder {
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), runtimeConfig.logResponses()))
-
                 .modelName(moderationModelConfig.modelName());
+
+        runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
         return new Supplier<>() {
             @Override
@@ -149,13 +153,14 @@ public class OpenAiRecorder {
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), runtimeConfig.logResponses()))
-
                 .modelName(imageModelConfig.modelName())
                 .size(imageModelConfig.size())
                 .quality(imageModelConfig.quality())
                 .style(imageModelConfig.style())
                 .responseFormat(imageModelConfig.responseFormat())
                 .user(imageModelConfig.user());
+
+        runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
         // we persist if the directory was set explicitly and the boolean flag was not set to false
         // or if the boolean flag was set explicitly to true
