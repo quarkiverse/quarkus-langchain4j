@@ -117,8 +117,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsyncOrStreaming<>() {
             @Override
             public CompletionResponse execute() {
-                return restApi.blockingCompletion(CompletionRequest.builder().from(request).stream(null).build(),
-                        apiKey, apiVersion);
+                return restApi.blockingCompletion(
+                        CompletionRequest.builder().from(request).stream(null).build(),
+                        OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
             }
 
             @Override
@@ -127,7 +128,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<CompletionResponse> get() {
-                                return restApi.completion(request, apiKey, apiVersion);
+                                return restApi.completion(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         },
                         responseHandler);
@@ -140,7 +141,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Multi<CompletionResponse> get() {
-                                return restApi.streamingCompletion(request, apiKey, apiVersion);
+                                return restApi.streamingCompletion(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         }, partialResponseHandler);
             }
@@ -157,8 +158,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsyncOrStreaming<>() {
             @Override
             public ChatCompletionResponse execute() {
-                return restApi.blockingChatCompletion(ChatCompletionRequest.builder().from(request).stream(null).build(),
-                        apiKey, apiVersion);
+                return restApi.blockingChatCompletion(
+                        ChatCompletionRequest.builder().from(request).stream(null).build(),
+                        OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
             }
 
             @Override
@@ -167,7 +169,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<ChatCompletionResponse> get() {
-                                return restApi.createChatCompletion(request, apiKey, apiVersion);
+                                return restApi.createChatCompletion(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         },
                         responseHandler);
@@ -180,7 +182,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Multi<ChatCompletionResponse> get() {
-                                return restApi.streamingChatCompletion(request, apiKey, apiVersion);
+                                return restApi.streamingChatCompletion(request,
+                                        OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         }, partialResponseHandler);
             }
@@ -197,7 +200,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             @Override
             public String execute() {
                 return restApi
-                        .blockingChatCompletion(request, apiKey, apiVersion)
+                        .blockingChatCompletion(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion))
                         .content();
             }
 
@@ -210,8 +213,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                                 return restApi
                                         .createChatCompletion(
                                                 ChatCompletionRequest.builder().from(request).stream(null).build(),
-                                                apiKey,
-                                                apiVersion)
+                                                OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion))
                                         .map(ChatCompletionResponse::content);
                             }
                         },
@@ -228,7 +230,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                                 return restApi
                                         .streamingChatCompletion(
                                                 ChatCompletionRequest.builder().from(request).stream(true).build(),
-                                                apiKey, apiVersion)
+                                                OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion))
                                         .filter(r -> {
                                             if (r.choices() != null) {
                                                 if (r.choices().size() == 1) {
@@ -253,7 +255,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsync<>() {
             @Override
             public EmbeddingResponse execute() {
-                return restApi.blockingEmbedding(request, apiKey, apiVersion);
+                return restApi.blockingEmbedding(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
             }
 
             @Override
@@ -262,7 +264,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<EmbeddingResponse> get() {
-                                return restApi.embedding(request, apiKey, apiVersion);
+                                return restApi.embedding(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         },
                         responseHandler);
@@ -278,7 +280,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsync<>() {
             @Override
             public List<Float> execute() {
-                return restApi.blockingEmbedding(request, apiKey, apiVersion).embedding();
+                return restApi.blockingEmbedding(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion)).embedding();
             }
 
             @Override
@@ -287,7 +289,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<List<Float>> get() {
-                                return restApi.embedding(request, apiKey, apiVersion).map(EmbeddingResponse::embedding);
+                                return restApi.embedding(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion))
+                                        .map(EmbeddingResponse::embedding);
                             }
                         },
                         responseHandler);
@@ -300,7 +303,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsync<>() {
             @Override
             public ModerationResponse execute() {
-                return restApi.blockingModeration(request, apiKey, apiVersion);
+                return restApi.blockingModeration(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
             }
 
             @Override
@@ -309,7 +312,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<ModerationResponse> get() {
-                                return restApi.moderation(request, apiKey, apiVersion);
+                                return restApi.moderation(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         },
                         responseHandler);
@@ -326,7 +329,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsync<>() {
             @Override
             public ModerationResult execute() {
-                return restApi.blockingModeration(request, apiKey, apiVersion).results().get(0);
+                return restApi.blockingModeration(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion)).results().get(0);
             }
 
             @Override
@@ -335,7 +338,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<ModerationResult> get() {
-                                return restApi.moderation(request, apiKey, apiVersion).map(r -> r.results().get(0));
+                                return restApi.moderation(request, OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion))
+                                        .map(r -> r.results().get(0));
                             }
                         },
                         responseHandler);
@@ -348,7 +352,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         return new SyncOrAsync<GenerateImagesResponse>() {
             @Override
             public GenerateImagesResponse execute() {
-                return restApi.blockingImagesGenerations(generateImagesRequest, apiKey, apiVersion);
+                return restApi.blockingImagesGenerations(generateImagesRequest,
+                        OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
             }
 
             @Override
@@ -357,7 +362,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         new Supplier<>() {
                             @Override
                             public Uni<GenerateImagesResponse> get() {
-                                return restApi.imagesGenerations(generateImagesRequest, apiKey, apiVersion);
+                                return restApi.imagesGenerations(generateImagesRequest,
+                                        OpenAiRestApi.ApiMetadata.of(apiKey, apiVersion));
                             }
                         },
                         responseHandler);

@@ -15,11 +15,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.annotation.Priority;
+import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -31,10 +34,8 @@ import jakarta.ws.rs.ext.ReaderInterceptorContext;
 import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.RestQuery;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.SseEventFilter;
@@ -57,7 +58,6 @@ import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Handler;
@@ -72,8 +72,6 @@ import io.vertx.core.http.HttpClientResponse;
  */
 
 @Path("")
-@ClientHeaderParam(name = "Authorization", value = "Bearer {apiKey}")
-@ClientHeaderParam(name = "api-key", value = "{apiKey}") // used by AzureAI
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RegisterProvider(OpenAiRestApi.OpenAiRestApiJacksonReader.class)
@@ -87,16 +85,14 @@ public interface OpenAiRestApi {
      */
     @Path("completions")
     @POST
-    Uni<CompletionResponse> completion(CompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Uni<CompletionResponse> completion(CompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a blocking request for a completion response
      */
     @Path("completions")
     @POST
-    CompletionResponse blockingCompletion(CompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    CompletionResponse blockingCompletion(CompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Performs a non-blocking request for a streaming completion request
@@ -105,24 +101,21 @@ public interface OpenAiRestApi {
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     @SseEventFilter(DoneFilter.class)
-    Multi<CompletionResponse> streamingCompletion(CompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Multi<CompletionResponse> streamingCompletion(CompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a non-blocking request for a chat completion response
      */
     @Path("chat/completions")
     @POST
-    Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Uni<ChatCompletionResponse> createChatCompletion(ChatCompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a blocking request for a chat completion response
      */
     @Path("chat/completions")
     @POST
-    ChatCompletionResponse blockingChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    ChatCompletionResponse blockingChatCompletion(ChatCompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Performs a non-blocking request for a streaming chat completion request
@@ -131,50 +124,43 @@ public interface OpenAiRestApi {
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     @SseEventFilter(DoneFilter.class)
-    Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Multi<ChatCompletionResponse> streamingChatCompletion(ChatCompletionRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a non-blocking request to get the embeddings of an input text
      */
     @Path("embeddings")
     @POST
-    Uni<EmbeddingResponse> embedding(EmbeddingRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Uni<EmbeddingResponse> embedding(EmbeddingRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a blocking request to get the embeddings of an input text
      */
     @Path("embeddings")
     @POST
-    EmbeddingResponse blockingEmbedding(EmbeddingRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    EmbeddingResponse blockingEmbedding(EmbeddingRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a non-blocking request to get a moderated version of an input text
      */
     @Path("moderations")
     @POST
-    Uni<ModerationResponse> moderation(ModerationRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Uni<ModerationResponse> moderation(ModerationRequest request, @BeanParam ApiMetadata input);
 
     /**
      * Perform a blocking request to get a moderated version of an input text
      */
     @Path("moderations")
     @POST
-    ModerationResponse blockingModeration(ModerationRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    ModerationResponse blockingModeration(ModerationRequest request, @BeanParam ApiMetadata input);
 
     @Path("images/generations")
     @POST
-    GenerateImagesResponse blockingImagesGenerations(GenerateImagesRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    GenerateImagesResponse blockingImagesGenerations(GenerateImagesRequest request, @BeanParam ApiMetadata input);
 
     @Path("images/generations")
     @POST
-    Uni<GenerateImagesResponse> imagesGenerations(GenerateImagesRequest request, @NotBody String apiKey,
-            @RestQuery("api-version") String apiVersion);
+    Uni<GenerateImagesResponse> imagesGenerations(GenerateImagesRequest request, @BeanParam ApiMetadata input);
 
     @ClientExceptionMapper
     static RuntimeException toException(Response response) {
@@ -421,6 +407,34 @@ public interface OpenAiRestApi {
             } catch (Exception e) {
                 return "Failed to mask the API key.";
             }
+        }
+    }
+
+    class ApiMetadata {
+
+        @HeaderParam("Authorization")
+        public final String authorization;
+
+        @HeaderParam("api-key")
+        public final String apiKey;
+        @QueryParam("api-version")
+        public final String apiVersion;
+
+        private ApiMetadata(String authorization, String apiKey,
+                String apiVersion) {
+            this.authorization = authorization;
+            this.apiKey = apiKey;
+            this.apiVersion = apiVersion;
+        }
+
+        public static ApiMetadata of(String apiKey, String apiVersion) {
+            if (apiKey == null) {
+                return new ApiMetadata(null, null, apiVersion);
+            }
+            return new ApiMetadata(
+                    "Bearer " + apiKey, // typical OpenAI authentication
+                    apiKey, // used by AzureAI
+                    apiVersion);
         }
     }
 }
