@@ -36,6 +36,10 @@ public interface OllamaRestApi {
     @POST
     CompletionResponse generate(CompletionRequest request);
 
+    @Path("/api/embeddings")
+    @POST
+    EmbeddingResponse embeddings(EmbeddingRequest request);
+
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
         return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
