@@ -1,11 +1,14 @@
 package io.quarkiverse.langchain4j.azure.openai.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.util.function.Supplier;
 
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkus.runtime.ShutdownContext;
@@ -22,8 +25,8 @@ public class AzureOpenAiRecorder {
                 .apiVersion(runtimeConfig.apiVersion())
                 .timeout(runtimeConfig.timeout())
                 .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(runtimeConfig.logRequests())
-                .logResponses(runtimeConfig.logResponses())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
 
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
@@ -48,8 +51,8 @@ public class AzureOpenAiRecorder {
                 .baseUrl(getBaseUrl(runtimeConfig))
                 .apiKey(runtimeConfig.apiKey())
                 .timeout(runtimeConfig.timeout())
-                .logRequests(runtimeConfig.logRequests())
-                .logResponses(runtimeConfig.logResponses())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
 
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
@@ -69,13 +72,14 @@ public class AzureOpenAiRecorder {
     }
 
     public Supplier<?> embeddingModel(Langchain4jAzureOpenAiConfig runtimeConfig) {
+        EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
         var builder = AzureOpenAiEmbeddingModel.builder()
                 .baseUrl(getBaseUrl(runtimeConfig))
                 .apiKey(runtimeConfig.apiKey())
                 .timeout(runtimeConfig.timeout())
                 .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(runtimeConfig.logRequests())
-                .logResponses(runtimeConfig.logResponses());
+                .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), runtimeConfig.logRequests()))
+                .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), runtimeConfig.logResponses()));
 
         return new Supplier<>() {
             @Override

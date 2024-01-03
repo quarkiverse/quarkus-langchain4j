@@ -5,6 +5,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 import java.time.Duration;
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -39,14 +40,14 @@ public interface Langchain4jOpenAiConfig {
     /**
      * Whether the OpenAI client should log requests
      */
-    @WithDefault("false")
-    Boolean logRequests();
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequests();
 
     /**
      * Whether the OpenAI client should log responses
      */
-    @WithDefault("false")
-    Boolean logResponses();
+    @ConfigDocDefault("false")
+    Optional<Boolean> logResponses();
 
     /**
      * Chat model related settings
