@@ -16,9 +16,7 @@
 */
 package org.acme.example.openai;
 
-import static org.acme.example.openai.MessageUtil.createChatCompletionRequest;
-import static org.acme.example.openai.MessageUtil.createCompletionRequest;
-import static org.acme.example.openai.MessageUtil.createEmbeddingRequest;
+import static org.acme.example.openai.MessageUtil.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,6 +48,7 @@ public class QuarkusRestApiResource {
 
     private final OpenAiRestApi restApi;
     private final String token;
+    private final String organizationId;
 
     public QuarkusRestApiResource(Langchain4jOpenAiConfig runtimeConfig)
             throws URISyntaxException {
@@ -58,7 +57,7 @@ public class QuarkusRestApiResource {
                 .build(OpenAiRestApi.class);
         this.token = runtimeConfig.apiKey()
                 .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
-
+        this.organizationId = runtimeConfig.organizationId().orElse(null);
     }
 
     @GET
@@ -66,7 +65,10 @@ public class QuarkusRestApiResource {
     public String chatSync() {
         return restApi.blockingChatCompletion(
                 createChatCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"),
-                OpenAiRestApi.ApiMetadata.of(token, null))
+                OpenAiRestApi.ApiMetadata.builder()
+                        .apiKey(token)
+                        .organizationId(organizationId)
+                        .build())
                 .content();
     }
 
@@ -75,7 +77,10 @@ public class QuarkusRestApiResource {
     public Uni<String> chatAsync() {
         return restApi
                 .createChatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about Unicode"),
-                        OpenAiRestApi.ApiMetadata.of(token, null))
+                        OpenAiRestApi.ApiMetadata.builder()
+                                .apiKey(token)
+                                .organizationId(organizationId)
+                                .build())
                 .map(ChatCompletionResponse::content);
     }
 
@@ -85,7 +90,10 @@ public class QuarkusRestApiResource {
     public Multi<String> chatStreaming() {
         return restApi.streamingChatCompletion(
                 createChatCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"),
-                OpenAiRestApi.ApiMetadata.of(token, null))
+                OpenAiRestApi.ApiMetadata.builder()
+                        .apiKey(token)
+                        .organizationId(organizationId)
+                        .build())
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -115,7 +123,10 @@ public class QuarkusRestApiResource {
     public String languageSync() {
         return restApi.blockingCompletion(
                 createCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"),
-                OpenAiRestApi.ApiMetadata.of(token, null))
+                OpenAiRestApi.ApiMetadata.builder()
+                        .apiKey(token)
+                        .organizationId(organizationId)
+                        .build())
                 .text();
     }
 
@@ -124,7 +135,10 @@ public class QuarkusRestApiResource {
     public Uni<String> languageAsync() {
         return restApi
                 .completion(createCompletionRequest("Write a short 1 paragraph funny poem about Unicode"),
-                        OpenAiRestApi.ApiMetadata.of(token, null))
+                        OpenAiRestApi.ApiMetadata.builder()
+                                .apiKey(token)
+                                .organizationId(organizationId)
+                                .build())
                 .map(CompletionResponse::text);
     }
 
@@ -134,7 +148,10 @@ public class QuarkusRestApiResource {
     public Multi<String> languageStreaming() {
         return restApi.streamingCompletion(
                 createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"),
-                OpenAiRestApi.ApiMetadata.of(token, null))
+                OpenAiRestApi.ApiMetadata.builder()
+                        .apiKey(token)
+                        .organizationId(organizationId)
+                        .build())
                 .map(r -> {
                     if (r.choices() != null) {
                         if (r.choices().size() == 1) {
@@ -153,14 +170,22 @@ public class QuarkusRestApiResource {
     @Path("embedding/sync")
     public List<Float> embeddingSync() {
         return restApi.blockingEmbedding(createEmbeddingRequest("Your text string goes here"),
-                OpenAiRestApi.ApiMetadata.of(token, null)).embedding();
+                OpenAiRestApi.ApiMetadata.builder()
+                        .apiKey(token)
+                        .organizationId(organizationId)
+                        .build())
+                .embedding();
     }
 
     @GET
     @Path("embedding/async")
     public Uni<List<Float>> embeddingAsync() {
         return restApi
-                .embedding(createEmbeddingRequest("Your text string goes here"), OpenAiRestApi.ApiMetadata.of(token, null))
+                .embedding(createEmbeddingRequest("Your text string goes here"),
+                        OpenAiRestApi.ApiMetadata.builder()
+                                .apiKey(token)
+                                .organizationId(organizationId)
+                                .build())
                 .map(EmbeddingResponse::embedding);
     }
 

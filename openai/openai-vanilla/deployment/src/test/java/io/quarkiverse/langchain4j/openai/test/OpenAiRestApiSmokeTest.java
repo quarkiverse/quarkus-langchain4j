@@ -2,8 +2,7 @@ package io.quarkiverse.langchain4j.openai.test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,6 +30,7 @@ public class OpenAiRestApiSmokeTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WiremockUtils.class));
     private static final String TOKEN = "whatever";
+    private static final String ORGANIZATION = "org";
 
     static WireMockServer wireMockServer;
 
@@ -52,8 +52,10 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         ChatCompletionResponse response = restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.of(TOKEN, null));
+                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).organizationId(ORGANIZATION).build());
         assertThat(response).isNotNull();
+
+        wireMockServer.verify(WiremockUtils.chatCompletionRequestPattern(TOKEN, ORGANIZATION));
     }
 
     @Test
@@ -67,10 +69,14 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.of(TOKEN, null)))
+                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).build()))
                 .isInstanceOf(
                         OpenAiHttpException.class)
                 .hasMessage("This is a dummy error message");
+
+        wireMockServer.verify(
+                WiremockUtils.chatCompletionRequestPattern(TOKEN)
+                        .withoutHeader("OpenAI-Organization"));
     }
 
     @Test
@@ -94,7 +100,7 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.of(TOKEN, null)))
+                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).build()))
                 .isInstanceOf(
                         OpenAiApiException.class);
     }

@@ -26,6 +26,11 @@ public interface Langchain4jOpenAiConfig {
     Optional<String> apiKey();
 
     /**
+     * OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+     */
+    Optional<String> organizationId();
+
+    /**
      * Timeout for OpenAI calls
      */
     @WithDefault("10s")

@@ -112,6 +112,23 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.organization-id]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.organization-id[quarkus.langchain4j.openai.organization-id]`
+
+
+[.description]
+--
+OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_ORGANIZATION_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_ORGANIZATION_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.timeout]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.timeout[quarkus.langchain4j.openai.timeout]`
 
 

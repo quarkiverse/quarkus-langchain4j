@@ -420,21 +420,48 @@ public interface OpenAiRestApi {
         @QueryParam("api-version")
         public final String apiVersion;
 
+        @HeaderParam("OpenAI-Organization")
+        public final String organizationId;
+
         private ApiMetadata(String authorization, String apiKey,
-                String apiVersion) {
+                String apiVersion, String organizationId) {
             this.authorization = authorization;
             this.apiKey = apiKey;
             this.apiVersion = apiVersion;
+            this.organizationId = organizationId;
         }
 
-        public static ApiMetadata of(String apiKey, String apiVersion) {
-            if (apiKey == null) {
-                return new ApiMetadata(null, null, apiVersion);
+        public static ApiMetadata.Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+            private String apiKey;
+            private String apiVersion;
+            private String organizationId;
+
+            public ApiMetadata build() {
+                return (apiKey == null) ? new ApiMetadata(null, null, apiVersion, organizationId)
+                        : new ApiMetadata(
+                                "Bearer " + apiKey, // typical OpenAI authentication
+                                apiKey, // used by AzureAI
+                                apiVersion, organizationId);
             }
-            return new ApiMetadata(
-                    "Bearer " + apiKey, // typical OpenAI authentication
-                    apiKey, // used by AzureAI
-                    apiVersion);
+
+            public ApiMetadata.Builder apiKey(String apiKey) {
+                this.apiKey = apiKey;
+                return this;
+            }
+
+            public ApiMetadata.Builder apiVersion(String apiVersion) {
+                this.apiVersion = apiVersion;
+                return this;
+            }
+
+            public ApiMetadata.Builder organizationId(String organizationId) {
+                this.organizationId = organizationId;
+                return this;
+            }
         }
     }
 }
