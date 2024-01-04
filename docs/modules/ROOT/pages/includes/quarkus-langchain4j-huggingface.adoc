@@ -254,6 +254,40 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-requests[quarkus.langchain4j.huggingface.chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-responses[quarkus.langchain4j.huggingface.chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url[quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url]`
 
 
@@ -298,7 +332,7 @@ a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-request
 
 [.description]
 --
-Whether the OpenAI client should log requests
+Whether the HuggingFace client should log requests
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_LOG_REQUESTS+++[]
@@ -315,7 +349,7 @@ a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-respons
 
 [.description]
 --
-Whether the OpenAI client should log responses
+Whether the HuggingFace client should log responses
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_LOG_RESPONSES+++[]
