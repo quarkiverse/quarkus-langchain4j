@@ -19,5 +19,8 @@
 ** xref:in-process-embedding.adoc[In-Process Embeddings]
 ** xref:csv.adoc[Loading CSV files]
 
+* Additional tools
+** xref:dev-ui.adoc[Dev UI]
+
 * Advanced topics
 ** xref:fault-tolerance.adoc[Fault Tolerance]

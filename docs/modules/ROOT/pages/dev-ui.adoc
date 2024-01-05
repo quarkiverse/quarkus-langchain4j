@@ -1,0 +1,19 @@
+= Dev UI
+
+include::./includes/attributes.adoc[]
+
+If you use the Dev mode, the `quarkus-langchain4j` project provides several pages
+in the Dev UI to facilitate development:
+
+* *AI Services* page: provides a table of all AI Services detected in the application along
+with a list of tools that they are declared to use.
+
+* *Tools* page: provides a list of tools detected in the application.
+
+* *Chat* page: allows you to manually hold a conversation with a chat model. This
+page is only available if the application contains a chat model.
+
+* *Images* page: allows you to test the outputs of image models and tune its parameters.
+This page is provided specifically by the `openai-vanilla` extension and is currently specific
+to OpenAI's image models. It appears if the application uses the `openai-vanilla` extension
+and doesn't have image models explicitly disabled.
