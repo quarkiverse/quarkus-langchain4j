@@ -66,6 +66,8 @@ a new system message, you have to use the New conversation button." style="width
         var systemMessage = this.shadowRoot.getElementById('system-message').value;
         if(systemMessage) {
             this._chatHistory = [{type: "System", message: systemMessage}];
+        } else {
+            this._chatHistory = [];
         }
         this.shadowRoot.getElementById('chat-button').disabled = null;
         this.jsonRpc.reset({systemMessage: systemMessage});
