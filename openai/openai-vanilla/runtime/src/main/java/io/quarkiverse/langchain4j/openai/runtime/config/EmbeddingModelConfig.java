@@ -26,4 +26,10 @@ public interface EmbeddingModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
+     */
+    @WithDefault("default")
+    String user();
 }
