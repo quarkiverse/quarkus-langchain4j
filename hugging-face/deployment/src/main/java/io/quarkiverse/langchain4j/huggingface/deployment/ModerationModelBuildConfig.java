@@ -9,7 +9,8 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 public interface ModerationModelBuildConfig {
 
     /**
-     * Whether the model should be enabled
+     * Whether the moderation model should be enabled.
+     * 
      */
     @ConfigDocDefault("true")
     Optional<Boolean> enabled();
