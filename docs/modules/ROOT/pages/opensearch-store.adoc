@@ -1,0 +1,37 @@
+= OpenSearch Document Store for Retrieval Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+
+When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage a pgvector database as the document store.
+
+== Leveraging the OpenSearch Document Store
+
+To utilize the OpenSearch document store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-opensearch</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension relies on the OpenSearch Java Client, make sure you have one configured correctly.
+
+Upon installing the extension, you can utilize the pgvector store using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithOpenSearch.java[]
+----
+
+== Configuration Settings
+
+Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-pgvector.adoc[leveloffset=+1,opts=optional]
+
+== Under the Hood
+
+Each ingested document is saved as a row in a Postgres table, containing the embedding column stored as a vector.
