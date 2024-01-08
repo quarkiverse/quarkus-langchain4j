@@ -385,6 +385,23 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.user]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.user[quarkus.langchain4j.openai.embedding-model.user]`
+
+
+[.description]
+--
+A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_EMBEDDING_MODEL_USER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_EMBEDDING_MODEL_USER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`default`
+
+
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.moderation-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.moderation-model.model-name[quarkus.langchain4j.openai.moderation-model.model-name]`
 
 
