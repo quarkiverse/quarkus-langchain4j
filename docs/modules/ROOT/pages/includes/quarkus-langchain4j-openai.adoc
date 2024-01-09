@@ -399,7 +399,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_EMBEDDING_MODEL_USER+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`default`
+|
 
 
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.moderation-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.moderation-model.model-name[quarkus.langchain4j.openai.moderation-model.model-name]`
