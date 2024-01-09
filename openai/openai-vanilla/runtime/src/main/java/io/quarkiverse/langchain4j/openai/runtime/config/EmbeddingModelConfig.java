@@ -30,6 +30,5 @@ public interface EmbeddingModelConfig {
     /**
      * A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
      */
-    @WithDefault("default")
-    String user();
+    Optional<String> user();
 }

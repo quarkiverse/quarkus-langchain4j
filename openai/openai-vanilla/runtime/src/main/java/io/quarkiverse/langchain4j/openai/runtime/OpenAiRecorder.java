@@ -103,8 +103,11 @@ public class OpenAiRecorder {
                 .maxRetries(runtimeConfig.maxRetries())
                 .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), runtimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), runtimeConfig.logResponses()))
-                .modelName(embeddingModelConfig.modelName())
-                .user(embeddingModelConfig.user());
+                .modelName(embeddingModelConfig.modelName());
+
+        if (embeddingModelConfig.user().isPresent()) {
+            builder.user(embeddingModelConfig.user().get());
+        }
 
         runtimeConfig.organizationId().ifPresent(builder::organizationId);
 
