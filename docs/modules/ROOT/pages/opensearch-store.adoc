@@ -34,4 +34,4 @@ include::includes/quarkus-langchain4j-opensearch.adoc[leveloffset=+1,opts=option
 
 == Under the Hood
 
-Each ingested document is saved as a row in a Postgres table, containing the embedding column stored as a vector.
+Each ingested document is saved as a document in a OpenSearch index, containing the embedding field stored as a vector.

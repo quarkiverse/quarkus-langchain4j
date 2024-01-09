@@ -28,7 +28,7 @@
         <dependency>
             <groupId>io.quarkiverse.opensearch</groupId>
             <artifactId>quarkus-opensearch-java-client-deployment</artifactId>
-            <version>1.4.0</version>
+            <version>${quarkus-opensearch-java-client-deployment.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

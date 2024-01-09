@@ -16,4 +16,7 @@
         <module>deployment</module>
         <module>runtime</module>
     </modules>
+    <properties>
+        <quarkus-opensearch-java-client-deployment.version>1.4.0</quarkus-opensearch-java-client-deployment.version>
+    </properties>
 </project>
