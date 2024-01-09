@@ -2,7 +2,7 @@
 
 include::./includes/attributes.adoc[]
 
-When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage a pgvector database as the document store.
+When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage an _opensearch-store_ database as the document store.
 
 == Leveraging the OpenSearch Document Store
 
@@ -19,7 +19,7 @@ To utilize the OpenSearch document store, you'll need to include the following d
 
 This extension relies on the OpenSearch Java Client, make sure you have one configured correctly.
 
-Upon installing the extension, you can utilize the pgvector store using the following code:
+Upon installing the extension, you can utilize the opensearch store using the following code:
 
 [source,java]
 ----
@@ -30,7 +30,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithOp
 
 Customize the behavior of the extension by exploring various configuration options:
 
-include::includes/quarkus-langchain4j-pgvector.adoc[leveloffset=+1,opts=optional]
+include::includes/quarkus-langchain4j-opensearch.adoc[leveloffset=+1,opts=optional]
 
 == Under the Hood
 
