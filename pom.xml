@@ -12,6 +12,7 @@
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
+    <module>bom</module>
     <module>chroma</module>
     <module>core</module>
     <module>docs</module>
@@ -35,17 +36,28 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <compiler-plugin.version>3.12.1</compiler-plugin.version>
-    <maven.compiler.release>17</maven.compiler.release>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus.version>3.7.0</quarkus.version>
+    <!-- Dependency versions -->
     <langchain4j.version>0.25.0</langchain4j.version>
     <langchain4j-embeddings.version>0.25.0</langchain4j-embeddings.version>
+    <pgvector-java.version>0.1.4</pgvector-java.version>
+    <quarkus.version>3.7.0</quarkus.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
+
+    <!-- Test dependency versions -->
     <assertj.version>3.25.2</assertj.version>
     <wiremock.version>3.3.1</wiremock.version>
-    <pgvector-java.version>0.1.4</pgvector-java.version>
+    
+    <!-- Plugin versions -->
+    <compiler-plugin.version>3.12.1</compiler-plugin.version>
+    <cq-maven-plugin.version>4.4.7</cq-maven-plugin.version>
+
+    <!-- maven-compiler-plugin -->
+    <maven.compiler.release>17</maven.compiler.release>
+    
+    <!-- Misc. -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -82,6 +94,11 @@
           <configuration>
             <compliance>17</compliance>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.l2x6.cq</groupId>
+          <artifactId>cq-maven-plugin</artifactId>
+          <version>${cq-maven-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
