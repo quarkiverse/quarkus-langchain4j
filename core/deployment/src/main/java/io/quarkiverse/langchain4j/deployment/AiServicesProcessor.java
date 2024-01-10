@@ -567,7 +567,9 @@ public class AiServicesProcessor {
                             for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
                                 // TODO: we need to review this
                                 if (annotationInstance.name().toString()
-                                        .startsWith("org.eclipse.microprofile.faulttolerance")) {
+                                        .startsWith("org.eclipse.microprofile.faulttolerance")
+                                        || annotationInstance.name().toString()
+                                                .startsWith("io.smallrye.faulttolerance.api")) {
                                     mc.addAnnotation(annotationInstance);
                                 }
                             }
