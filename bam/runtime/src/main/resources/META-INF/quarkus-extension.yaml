@@ -1,0 +1,11 @@
+name: Quarkus Langchain4j BAM
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus Langchain4j with the IBM BAM API
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - bam
+   categories:
+     - "miscellaneous"
+   status: "preview"
