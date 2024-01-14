@@ -139,6 +139,12 @@ public class BeansProcessor {
                     requestedBeanName));
         }
         if (availableProviders.size() == 1) {
+            // user has selected a provider, but it's not the one that is available
+            if (userSelectedProvider.isPresent() && !availableProviders.get(0).equals(userSelectedProvider.get())) {
+                throw new ConfigurationException(String.format(
+                        "A %s bean with provider=%s was requested was requested via configuration, but the only provider found on the classpath is %s.",
+                        requestedBeanName, userSelectedProvider.get(), availableProviders.get(0)));
+            }
             return availableProviders.get(0);
         }
         // multiple providers exist, so we now need the configuration to select the proper one
@@ -170,10 +176,16 @@ public class BeansProcessor {
             throw new ConfigurationException(String.format(
                     "A %s bean was requested, but no langchain4j providers were configured and no in-process embedding model were found on the classpath. "
                             +
-                            "Consider adding an extension like 'quarkus-langchain4j-openai' or one of the in-process embedding model.",
+                            "Consider adding an extension like 'quarkus-langchain4j-openai' or one of the in-process embedding models.",
                     requestedBeanName));
         }
         if (availableProviders.size() == 1) {
+            // user has selected a provider, but it's not the one that is available
+            if (userSelectedProvider.isPresent() && !availableProviders.get(0).equals(userSelectedProvider.get())) {
+                throw new ConfigurationException(String.format(
+                        "Embedding model provider %s was requested via configuration, but the only provider found on the classpath is %s.",
+                        userSelectedProvider.get(), availableProviders.get(0)));
+            }
             return availableProviders.get(0);
         }
         // multiple providers exist, so we now need the configuration to select the proper one
