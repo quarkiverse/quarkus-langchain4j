@@ -1,0 +1,29 @@
+
+:summaryTableId: quarkus-langchain4j-opensearch
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-opensearch_configuration]]link:#quarkus-langchain4j-opensearch_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-opensearch_quarkus.langchain4j.opensearch.index]]`link:#quarkus-langchain4j-opensearch_quarkus.langchain4j.opensearch.index[quarkus.langchain4j.opensearch.index]`
+
+
+[.description]
+--
+Name of the index that will be used in OpenSearch when searching for related embeddings. If this index doesn't exist, it will be created.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSEARCH_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSEARCH_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`default`
+
+|===
