@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.6.3</version>
     </parent>
 
     <artifactId>in-process-embedding-all-minilm-l6-v2</artifactId>
