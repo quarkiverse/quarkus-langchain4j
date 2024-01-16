@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.deployment;
 
 import org.jboss.jandex.DotName;
 
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -51,15 +50,10 @@ public class Langchain4jDotNames {
             RegisterAiService.BeanChatMemoryProviderSupplier.class);
 
     static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
-    static final DotName TEXT_SEGMENT = DotName.createSimple(TextSegment.class);
+    static final DotName NO_RETRIEVER = DotName.createSimple(
+            RegisterAiService.NoRetriever.class);
 
     static final DotName AUDIT_SERVICE = DotName.createSimple(AuditService.class);
-
-    static final DotName BEAN_RETRIEVER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanRetrieverSupplier.class);
-
-    static final DotName BEAN_IF_EXISTS_RETRIEVER_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsRetrieverSupplier.class);
 
     static final DotName BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsAuditServiceSupplier.class);

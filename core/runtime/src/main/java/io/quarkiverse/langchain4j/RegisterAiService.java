@@ -5,6 +5,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.List;
 import java.util.function.Supplier;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -73,13 +74,10 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
 
     /**
-     * Configures the way to obtain the {@link Retriever} to use (when using RAG).
+     * Configures the way to obtain the {@link Retriever} to use (when using RAG). All tools are expected to be CDI beans
      * By default, no supplier is used.
-     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanRetrieverSupplier}.
-     * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
-     * needs to be provided.
      */
-    Class<? extends Supplier<Retriever<TextSegment>>> retrieverSupplier() default NoRetrieverSupplier.class;
+    Class<? extends Retriever<TextSegment>> retriever() default NoRetriever.class;
 
     /**
      * Configures the way to obtain the {@link AuditService} to use.
@@ -128,35 +126,12 @@ public @interface RegisterAiService {
     }
 
     /**
-     * Marker that is used to tell Quarkus to use the retriever that the user has configured as a CDI bean
-     */
-    final class BeanRetrieverSupplier implements Supplier<Retriever<TextSegment>> {
-
-        @Override
-        public Retriever<TextSegment> get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link Retriever} that the user has configured as a CDI bean.
-     * If no such bean exists, then no retriever will be used.
-     */
-    final class BeanIfExistsRetrieverSupplier implements Supplier<Retriever<TextSegment>> {
-
-        @Override
-        public Retriever<TextSegment> get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
      * Marker class to indicate that no retriever should be used
      */
-    final class NoRetrieverSupplier implements Supplier<Retriever<TextSegment>> {
+    final class NoRetriever implements Retriever<TextSegment> {
 
         @Override
-        public Retriever<TextSegment> get() {
+        public List<TextSegment> findRelevant(String text) {
             throw new UnsupportedOperationException("should never be called");
         }
     }

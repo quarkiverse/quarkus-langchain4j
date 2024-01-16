@@ -113,25 +113,9 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    if (info.getRetrieverSupplierClassName() != null) {
-                        if (RegisterAiService.BeanRetrieverSupplier.class.getName()
-                                .equals(info.getRetrieverSupplierClassName())) {
-                            quarkusAiServices.retriever(creationalContext.getInjectedReference(new TypeLiteral<>() {
-                            }));
-                        } else if (RegisterAiService.BeanIfExistsRetrieverSupplier.class.getName()
-                                .equals(info.getRetrieverSupplierClassName())) {
-                            Instance<Retriever<TextSegment>> instance = creationalContext
-                                    .getInjectedReference(RETRIEVER_INSTANCE_TYPE_LITERAL);
-                            if (instance.isResolvable()) {
-                                quarkusAiServices.retriever(instance.get());
-                            }
-                        } else {
-                            @SuppressWarnings("rawtypes")
-                            Supplier<? extends Retriever> supplier = (Supplier<? extends Retriever>) Thread
-                                    .currentThread().getContextClassLoader().loadClass(info.getRetrieverSupplierClassName())
-                                    .getConstructor().newInstance();
-                            quarkusAiServices.retriever(supplier.get());
-                        }
+                    if (info.getRetrieverClassName() != null) {
+                        quarkusAiServices.retriever((Retriever<TextSegment>) creationalContext.getInjectedReference(
+                                Thread.currentThread().getContextClassLoader().loadClass(info.getRetrieverClassName())));
                     }
 
                     if (info.getAuditServiceClassSupplierName() != null) {
