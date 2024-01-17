@@ -17,3 +17,8 @@ page is only available if the application contains a chat model.
 This page is provided specifically by the `openai-vanilla` extension and is currently specific
 to OpenAI's image models. It appears if the application uses the `openai-vanilla` extension
 and doesn't have image models explicitly disabled.
+
+* *Moderation* page: allows you to test the outputs of moderation models - you submit a prompt
+and receive a list of scores for each appropriateness category (violence, sexual, hate,...).
+This page is currently only available with the `openai-vanilla` extension, and it
+appears if the application doesn't explicitly disable moderation models.
