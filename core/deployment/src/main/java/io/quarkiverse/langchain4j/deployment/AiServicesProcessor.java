@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
 import static dev.langchain4j.service.ServiceOutputParser.outputFormatInstructions;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.NO_RETRIEVER;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -209,12 +210,12 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName retrieverSupplierClassDotName = Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER;
-            AnnotationValue retrieverSupplierValue = instance.value("retrieverSupplier");
-            if (retrieverSupplierValue != null) {
-                retrieverSupplierClassDotName = retrieverSupplierValue.asClass().name();
-                if (!retrieverSupplierClassDotName.equals(Langchain4jDotNames.BEAN_RETRIEVER_SUPPLIER)) {
-                    validateSupplierAndRegisterForReflection(retrieverSupplierClassDotName, index, reflectiveClassProducer);
+            DotName retrieverClassDotName = null;
+            AnnotationValue retrieverValue = instance.value("retriever");
+            if (retrieverValue != null) {
+                retrieverClassDotName = retrieverValue.asClass().name();
+                if (NO_RETRIEVER.equals(retrieverClassDotName)) {
+                    retrieverClassDotName = null;
                 }
             }
 
@@ -247,7 +248,7 @@ public class AiServicesProcessor {
                             chatLanguageModelSupplierClassDotName,
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
-                            retrieverSupplierClassDotName,
+                            retrieverClassDotName,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
                             cdiScope));
@@ -306,8 +307,8 @@ public class AiServicesProcessor {
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
                     : null;
 
-            String retrieverSupplierClassName = bi.getRetrieverSupplierClassDotName() != null
-                    ? bi.getRetrieverSupplierClassDotName().toString()
+            String retrieverClassName = bi.getRetrieverClassDotName() != null
+                    ? bi.getRetrieverClassDotName().toString()
                     : null;
 
             String auditServiceClassSupplierName = bi.getAuditServiceClassSupplierDotName() != null
@@ -323,7 +324,7 @@ public class AiServicesProcessor {
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName,
-                                    retrieverSupplierClassName,
+                                    retrieverClassName,
                                     auditServiceClassSupplierName,
                                     moderationModelSupplierClassName)))
                     .setRuntimeInit()
@@ -349,16 +350,8 @@ public class AiServicesProcessor {
                 needsChatMemoryProviderBean = true;
             }
 
-            if (Langchain4jDotNames.BEAN_RETRIEVER_SUPPLIER.toString().equals(retrieverSupplierClassName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
-                        new Type[] { ClassType.create(Langchain4jDotNames.TEXT_SEGMENT) }, null));
-                needsRetrieverBean = true;
-            } else if (Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVER_SUPPLIER.toString()
-                    .equals(retrieverSupplierClassName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
-                        new Type[] { ParameterizedType.create(Langchain4jDotNames.RETRIEVER,
-                                new Type[] { ClassType.create(Langchain4jDotNames.TEXT_SEGMENT) }, null) },
-                        null));
+            if (retrieverClassName != null) {
+                configurator.addInjectionPoint(ClassType.create(retrieverClassName));
                 needsRetrieverBean = true;
             }
 

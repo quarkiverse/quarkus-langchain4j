@@ -38,8 +38,10 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -114,6 +116,34 @@ public class DeclarativeAiServicesTest {
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
+    }
+
+    @Singleton
+    public static class DummyRetriever implements Retriever<TextSegment> {
+
+        @Override
+        public List<TextSegment> findRelevant(String text) {
+            return List.of(TextSegment.from("dummy"));
+        }
+    }
+
+    @RegisterAiService(retriever = DummyRetriever.class)
+    interface AssistantWithRetriever {
+
+        String chat(String message);
+    }
+
+    @Inject
+    AssistantWithRetriever assistantWithRetriever;
+
+    @Test
+    @ActivateRequestContext
+    public void test_simple_instruction_with_retriever() throws IOException {
+        String result = assistantWithRetriever.chat("Tell me a joke about developers");
+        assertThat(result).isNotBlank();
+
+        assertSingleRequestMessage(getRequestAsMap(),
+                "Tell me a joke about developers\n\nHere is some information that might be useful for answering:\n\ndummy");
     }
 
     enum Sentiment {

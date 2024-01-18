@@ -18,7 +18,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final List<DotName> toolDotNames;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
-    private final DotName retrieverSupplierClassDotName;
+    private final DotName retrieverClassDotName;
     private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
     private final ScopeInfo cdiScope;
@@ -26,7 +26,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
             List<DotName> toolDotNames,
             DotName chatMemoryProviderSupplierClassDotName,
-            DotName retrieverSupplierClassDotName,
+            DotName retrieverClassDotName,
             DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
             ScopeInfo cdiScope) {
@@ -34,7 +34,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
         this.toolDotNames = toolDotNames;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
-        this.retrieverSupplierClassDotName = retrieverSupplierClassDotName;
+        this.retrieverClassDotName = retrieverClassDotName;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.cdiScope = cdiScope;
@@ -56,8 +56,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return chatMemoryProviderSupplierClassDotName;
     }
 
-    public DotName getRetrieverSupplierClassDotName() {
-        return retrieverSupplierClassDotName;
+    public DotName getRetrieverClassDotName() {
+        return retrieverClassDotName;
     }
 
     public DotName getAuditServiceClassSupplierDotName() {

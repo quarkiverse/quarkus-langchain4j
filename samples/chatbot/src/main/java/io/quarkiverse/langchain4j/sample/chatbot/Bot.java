@@ -7,7 +7,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService
+@RegisterAiService(retriever = RetrieverExample.class)
 @Singleton // this is singleton because WebSockets currently never closes the scope
 public interface Bot {
 
