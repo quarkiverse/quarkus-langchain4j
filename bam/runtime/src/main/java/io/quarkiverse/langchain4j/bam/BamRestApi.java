@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.bam;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +46,10 @@ public interface BamRestApi {
     @POST
     @Path("text/chat")
     TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
+
+    @POST
+    @Path("/text/embeddings")
+    EmbeddingResponse embeddings(EmbeddingRequest request, @NotBody String token, @QueryParam("version") String version);
 
     @POST
     @Path("/text/tokenization")

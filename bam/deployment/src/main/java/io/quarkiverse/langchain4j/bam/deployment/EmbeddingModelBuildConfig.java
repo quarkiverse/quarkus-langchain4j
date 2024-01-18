@@ -6,16 +6,11 @@ import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 
 @ConfigGroup
-public interface ChatModelBuildConfig {
+public interface EmbeddingModelBuildConfig {
 
     /**
      * Whether the model should be enabled
      */
     @ConfigDocDefault("true")
     Optional<Boolean> enabled();
-
-    /**
-     * Embedding model related settings
-     */
-    EmbeddingModelBuildConfig embeddingModel();
 }
