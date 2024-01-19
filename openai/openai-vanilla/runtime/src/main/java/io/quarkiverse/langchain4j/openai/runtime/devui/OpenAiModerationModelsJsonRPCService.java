@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.openai.runtime.devui;
 
 import java.time.Duration;
-import java.util.Optional;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -32,10 +31,6 @@ public class OpenAiModerationModelsJsonRPCService {
     @Inject
     @ConfigProperty(name = "quarkus.langchain4j.openai.timeout")
     Duration timeout;
-
-    @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.image-model.user")
-    Optional<String> user;
 
     @Inject
     @ConfigProperty(name = "quarkus.langchain4j.openai.max-retries")
