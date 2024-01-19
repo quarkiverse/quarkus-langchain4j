@@ -26,6 +26,8 @@ public class OllamaRecorder {
                 .baseUrl(runtimeConfig.baseUrl())
                 .timeout(runtimeConfig.timeout())
                 .model(chatModelConfig.modelId())
+                .logRequests(runtimeConfig.logRequests())
+                .logResponses(runtimeConfig.logResponses())
                 .options(optionsBuilder.build());
 
         return new Supplier<>() {
