@@ -17,7 +17,8 @@ public interface ChatModelConfig {
     String modelId();
 
     /**
-     * The temperature of the model. Increasing the temperature will make the model answer
+     * The temperature of the model. Increasing the temperature will make the model answer with
+     * more variability. A lower temperature will make the model answer more conservatively.
      */
     @WithDefault("0.8")
     Double temperature();

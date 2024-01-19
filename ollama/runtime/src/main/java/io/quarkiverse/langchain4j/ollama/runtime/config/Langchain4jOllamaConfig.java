@@ -19,19 +19,19 @@ public interface Langchain4jOllamaConfig {
     String baseUrl();
 
     /**
-     * Timeout for HuggingFace calls
+     * Timeout for Ollama calls
      */
     @WithDefault("10s")
     Duration timeout();
 
     /**
-     * Whether the HuggingFace client should log requests
+     * Whether the Ollama client should log requests
      */
     @WithDefault("false")
     Boolean logRequests();
 
     /**
-     * Whether the HuggingFace client should log responses
+     * Whether the Ollama client should log responses
      */
     @WithDefault("false")
     Boolean logResponses();
