@@ -1,4 +1,4 @@
-package com.ibm.generativeai.bam.deployment;
+package io.quarkiverse.langchain4j.bam.deployment;
 
 import static org.junit.jupiter.api.Assertions.fail;
 

@@ -1,10 +1,5 @@
-package com.ibm.generativeai.bam.deployment;
+package io.quarkiverse.langchain4j.bam.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,7 +7,6 @@ import java.time.Duration;
 import java.util.List;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -24,12 +18,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
-import io.quarkiverse.langchain4j.bam.BamChatModel;
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.Message;
 import io.quarkiverse.langchain4j.bam.Parameters;
 import io.quarkiverse.langchain4j.bam.TextGenerationRequest;
-import io.quarkiverse.langchain4j.bam.runtime.BamRecorder;
 import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -37,11 +30,12 @@ public class AllPropertiesTest {
 
     static WireMockServer wireMockServer;
     static ObjectMapper mapper;
+    static WireMockUtil mockServers;
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", Util.URL)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", Util.API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.log-responses", "true")
@@ -62,16 +56,20 @@ public class AllPropertiesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.repetition-penalty", "2.0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.beam-width", "2")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(Util.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
     Langchain4jBamConfig config;
 
+    @Inject
+    ChatLanguageModel model;
+
     @BeforeAll
     static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(Util.PORT));
+        wireMockServer = new WireMockServer(options().port(WireMockUtil.PORT));
         wireMockServer.start();
         mapper = BamRestApi.objectMapper(new ObjectMapper());
+        mockServers = new WireMockUtil(wireMockServer);
     }
 
     @AfterAll
@@ -82,8 +80,8 @@ public class AllPropertiesTest {
     @Test
     void generate() throws Exception {
 
-        assertEquals(Util.URL, config.baseUrl().get().toString());
-        assertEquals(Util.API_KEY, config.apiKey());
+        assertEquals(WireMockUtil.URL, config.baseUrl().get().toString());
+        assertEquals(WireMockUtil.API_KEY, config.apiKey());
         assertEquals(Duration.ofSeconds(60), config.timeout());
         assertEquals(true, config.logRequests());
         assertEquals(true, config.logResponses());
@@ -128,34 +126,27 @@ public class AllPropertiesTest {
 
         var body = new TextGenerationRequest(modelId, messages, parameters);
 
-        wireMockServer.stubFor(
-                post(urlEqualTo(Util.URL_CHAT_API.formatted(config.version())))
-                        .withHeader("Authorization", equalTo("Bearer %s".formatted(Util.API_KEY)))
-                        .withRequestBody(equalToJson(mapper.writeValueAsString(body)))
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", MediaType.APPLICATION_JSON)
-                                        .withBody(
-                                                """
-                                                        {
-                                                            "id": "05a245ad-1da7-4b9d-9807-ae1733177c1d",
-                                                            "model_id": "meta-llama/llama-2-70b-chat",
-                                                            "created_at": "2023-09-01T09:28:29.378Z",
-                                                            "results": [
-                                                                {
-                                                                    "generated_token_count": 20,
-                                                                    "input_token_count": 146,
-                                                                    "stop_reason": "max_tokens",
-                                                                    "seed": 40268626,
-                                                                    "generated_text": "Hello! I'm doing well, thanks for asking. I'm here to assist you"
-                                                                }
-                                                            ],
-                                                            "conversation_id": "cd3a9bca-b88e-41e4-9d62-bab33098fe39"
-                                                        }
-                                                        """)));
+        mockServers.mockBuilder(200, config.version())
+                .body(mapper.writeValueAsString(body))
+                .response("""
+                        {
+                            "id": "05a245ad-1da7-4b9d-9807-ae1733177c1d",
+                            "model_id": "meta-llama/llama-2-70b-chat",
+                            "created_at": "2023-09-01T09:28:29.378Z",
+                            "results": [
+                                {
+                                    "generated_token_count": 20,
+                                    "input_token_count": 146,
+                                    "stop_reason": "max_tokens",
+                                    "seed": 40268626,
+                                    "generated_text": "Hello! I'm doing well, thanks for asking. I'm here to assist you"
+                                }
+                            ],
+                            "conversation_id": "cd3a9bca-b88e-41e4-9d62-bab33098fe39"
+                        }
+                        """)
+                .build();
 
-        BamRecorder recorder = new BamRecorder();
-        BamChatModel model = (BamChatModel) recorder.chatModel(config).get();
         assertEquals("Hello! I'm doing well, thanks for asking. I'm here to assist you", model.generate("Hello how are you?"));
     }
 }

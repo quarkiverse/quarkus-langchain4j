@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.bam.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.util.function.Supplier;
+
 import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.bam.BamEmbeddingModel;
 import io.quarkiverse.langchain4j.bam.runtime.config.ChatModelConfig;

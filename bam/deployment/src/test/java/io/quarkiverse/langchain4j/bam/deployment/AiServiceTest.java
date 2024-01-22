@@ -1,10 +1,5 @@
-package com.ibm.generativeai.bam.deployment;
+package io.quarkiverse.langchain4j.bam.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,7 +7,6 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -38,18 +32,20 @@ public class AiServiceTest {
 
     static WireMockServer wireMockServer;
     static ObjectMapper mapper;
+    static WireMockUtil mockServers;
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", Util.URL)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", Util.API_KEY)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(Util.class));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @BeforeAll
     static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(Util.PORT));
+        wireMockServer = new WireMockServer(options().port(WireMockUtil.PORT));
         wireMockServer.start();
         mapper = BamRestApi.objectMapper(new ObjectMapper());
+        mockServers = new WireMockUtil(wireMockServer);
     }
 
     @AfterAll
@@ -90,27 +86,22 @@ public class AiServiceTest {
 
         var body = new TextGenerationRequest(modelId, messages, parameters);
 
-        wireMockServer.stubFor(
-                post(urlEqualTo(Util.URL_CHAT_API.formatted(config.version())))
-                        .withHeader("Authorization", equalTo("Bearer %s".formatted(Util.API_KEY)))
-                        .withRequestBody(equalToJson(mapper.writeValueAsString(body)))
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", MediaType.APPLICATION_JSON)
-                                        .withStatus(200)
-                                        .withBody("""
-                                                {
-                                                    "results": [
-                                                        {
-                                                            "generated_token_count": 20,
-                                                            "input_token_count": 146,
-                                                            "stop_reason": "max_tokens",
-                                                            "seed": 40268626,
-                                                            "generated_text": "AI Response"
-                                                        }
-                                                    ]
-                                                }
-                                                """)));
+        mockServers.mockBuilder(200)
+                .body(mapper.writeValueAsString(body))
+                .response("""
+                        {
+                            "results": [
+                                {
+                                    "generated_token_count": 20,
+                                    "input_token_count": 146,
+                                    "stop_reason": "max_tokens",
+                                    "seed": 40268626,
+                                    "generated_text": "AI Response"
+                                }
+                            ]
+                        }
+                        """)
+                .build();
 
         assertEquals("AI Response", service.chat("Hello"));
     }
