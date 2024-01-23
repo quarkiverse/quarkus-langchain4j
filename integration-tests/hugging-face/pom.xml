@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.7.0</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-tests-hugging-face</artifactId>
     <name>Quarkus Langchain4j - Integration Tests - Hugging Face</name>
