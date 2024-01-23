@@ -33,6 +33,12 @@ public interface Langchain4jBamConfig {
     Duration timeout();
 
     /**
+     * Version to use
+     */
+    @WithDefault("2024-01-10")
+    String version();
+
+    /**
      * Whether the BAM client should log requests
      */
     @WithDefault("false")
@@ -48,4 +54,9 @@ public interface Langchain4jBamConfig {
      * Chat model related settings
      */
     ChatModelConfig chatModel();
+
+    /**
+     * Embedding model related settings
+     */
+    EmbeddingModelConfig embeddingModel();
 }

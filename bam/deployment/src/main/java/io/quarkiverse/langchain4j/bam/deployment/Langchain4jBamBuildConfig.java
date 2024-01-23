@@ -13,4 +13,9 @@ public interface Langchain4jBamBuildConfig {
      * Chat model related settings
      */
     ChatModelBuildConfig chatModel();
+
+    /**
+     * Embedding model related settings
+     */
+    EmbeddingModelBuildConfig embeddingModel();
 }

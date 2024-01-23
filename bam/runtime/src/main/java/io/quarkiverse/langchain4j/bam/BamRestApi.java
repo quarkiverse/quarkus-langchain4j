@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.bam;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,6 +13,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NoContentException;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.jboss.logging.Logger;
@@ -20,6 +22,7 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
@@ -32,20 +35,54 @@ import io.vertx.core.http.HttpClientResponse;
  * This Microprofile REST client is used as the building block of all the API calls to BAM.
  * The implementation is provided by the Reactive REST Client in Quarkus.
  */
-
 @Path("v2")
 @ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface BamRestApi {
 
+    static Logger logger = Logger.getLogger(BamRestApi.class);
+
     @POST
     @Path("text/chat")
     TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
 
+    @POST
+    @Path("/text/embeddings")
+    EmbeddingResponse embeddings(EmbeddingRequest request, @NotBody String token, @QueryParam("version") String version);
+
+    @POST
+    @Path("/text/tokenization")
+    public TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
+            @QueryParam("version") String version);
+
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
         return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
+    }
+
+    @ClientExceptionMapper
+    static BamException toException(jakarta.ws.rs.core.Response response) {
+
+        if (!MediaType.APPLICATION_JSON.equals(response.getHeaderString("Content-Type"))) {
+
+            BamException ex = new BamException();
+            ex.setStatusCode(response.getStatus());
+            ex.setMessage(response.readEntity(String.class));
+            return ex;
+        }
+
+        try {
+
+            return Optional
+                    .ofNullable(response.readEntity(BamException.class))
+                    .orElseThrow(() -> new NoContentException("Empty body"));
+
+        } catch (Exception e) {
+
+            logger.error(e);
+            return new BamException(500, "Unchecked error, see log for details");
+        }
     }
 
     /**
@@ -119,9 +156,9 @@ public interface BamRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (headerKey.equals("Authorization")) {
+                        if ("Authorization".equals(headerKey)) {
                             headerValue = maskAuthorizationHeaderValue(headerValue);
-                        } else if (headerKey.equals("api-key")) {
+                        } else if ("api-key".equals(headerKey)) {
                             headerValue = maskApiKeyHeaderValue(headerValue);
                         }
                         return String.format("[%s: %s]", headerKey, headerValue);
