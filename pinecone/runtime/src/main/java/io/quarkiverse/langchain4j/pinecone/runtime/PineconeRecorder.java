@@ -20,7 +20,9 @@ public class PineconeRecorder {
                         config.namespace().orElse(null),
                         config.textFieldName(),
                         config.timeout().orElse(Duration.ofSeconds(5)),
-                        config.dimension().orElse(null));
+                        config.dimension().orElse(null),
+                        config.podType(),
+                        config.indexReadinessTimeout().orElse(Duration.ofMinutes(1)));
             }
         };
     }
