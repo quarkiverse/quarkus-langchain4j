@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
@@ -23,7 +25,6 @@ import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutorFactory;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.arc.Arc;
-import io.quarkus.arc.ClientProxy;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -43,6 +44,8 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
     public static class QuarkusAiServices<T> extends AiServices<T> {
 
+        private static final Logger log = Logger.getLogger(QuarkusAiServices.class);
+
         private final QuarkusToolExecutorFactory toolExecutorFactory;
 
         public QuarkusAiServices(AiServiceContext context) {
@@ -56,8 +59,7 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             context.toolExecutors = new HashMap<>();
 
             for (Object objectWithTool : objectsWithTools) {
-                Class<?> clazz = objectWithTool.getClass();
-                List<ToolMethodCreateInfo> methodCreateInfos = lookup(objectWithTool, clazz.getName());
+                List<ToolMethodCreateInfo> methodCreateInfos = lookup(objectWithTool);
                 if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
                     if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
                         continue; // this is what Langchain4j does
@@ -82,22 +84,25 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
-        List<ToolMethodCreateInfo> lookup(Object bean, String className) {
+        List<ToolMethodCreateInfo> lookup(Object obj) {
             Map<String, List<ToolMethodCreateInfo>> metadata = ToolsRecorder.getMetadata();
             // Fast path first.
+            String className = obj.getClass().getName();
             var fast = metadata.get(className);
             if (fast != null) {
                 return fast;
             }
 
-            String beanClassName = ClientProxy.unwrap(bean).getClass().getName();
             for (Map.Entry<String, List<ToolMethodCreateInfo>> entry : metadata.entrySet()) {
-                if (entry.getKey().endsWith(className)) {
-                    return entry.getValue();
-                }
-                if (entry.getKey().equals(beanClassName)) {
-                    metadata.put(className, entry.getValue()); // For the next lookup.
-                    return entry.getValue();
+                String targetClassName = entry.getKey();
+                try {
+                    var targetClass = Class.forName(targetClassName, false, Thread.currentThread().getContextClassLoader());
+                    if (targetClass.isAssignableFrom(obj.getClass())) {
+                        metadata.put(targetClassName, entry.getValue()); // For the next lookup.
+                        return entry.getValue();
+                    }
+                } catch (ClassNotFoundException e) {
+                    log.error("Unable to load class " + targetClassName);
                 }
             }
             return Collections.emptyList();
