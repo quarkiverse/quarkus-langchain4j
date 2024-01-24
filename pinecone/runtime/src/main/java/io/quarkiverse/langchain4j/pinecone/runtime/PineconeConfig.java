@@ -40,6 +40,19 @@ public interface PineconeConfig {
     Optional<Integer> dimension();
 
     /**
+     * The type of the pod to use. This is only used if the index doesn't exist yet and needs to be created.
+     * The format: One of `s1`, `p1`, or `p2` appended with `.` and one of `x1`, `x2`, `x4`, or `x8`.
+     */
+    @WithDefault("s1.x1")
+    String podType();
+
+    /**
+     * The timeout duration for the index to become ready. Only relevant if the index doesn't exist yet and needs to be
+     * created. If not specified, 1 minute will be used.
+     */
+    Optional<Duration> indexReadinessTimeout();
+
+    /**
      * The namespace.
      */
     Optional<String> namespace();

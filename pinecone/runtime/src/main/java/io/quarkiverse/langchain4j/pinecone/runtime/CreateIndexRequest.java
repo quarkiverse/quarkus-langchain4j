@@ -14,11 +14,13 @@ public class CreateIndexRequest {
     private final String name;
     private final Integer dimension;
     private final DistanceMetric metric;
+    private final CreateIndexSpec spec;
 
-    public CreateIndexRequest(String name, Integer dimension, DistanceMetric metric) {
+    public CreateIndexRequest(String name, Integer dimension, DistanceMetric metric, CreateIndexSpec spec) {
         this.name = name;
         this.dimension = dimension;
         this.metric = metric;
+        this.spec = spec;
     }
 
     public String getName() {
@@ -31,5 +33,9 @@ public class CreateIndexRequest {
 
     public DistanceMetric getMetric() {
         return metric;
+    }
+
+    public CreateIndexSpec getSpec() {
+        return spec;
     }
 }

@@ -25,7 +25,9 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.RelevanceScore;
+import io.quarkiverse.langchain4j.pinecone.runtime.CreateIndexPodSpec;
 import io.quarkiverse.langchain4j.pinecone.runtime.CreateIndexRequest;
+import io.quarkiverse.langchain4j.pinecone.runtime.CreateIndexSpec;
 import io.quarkiverse.langchain4j.pinecone.runtime.DistanceMetric;
 import io.quarkiverse.langchain4j.pinecone.runtime.PineconeIndexOperationsApi;
 import io.quarkiverse.langchain4j.pinecone.runtime.PineconeVectorOperationsApi;
@@ -55,11 +57,13 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
             String namespace,
             String textFieldName,
             Duration timeout,
-            Integer dimension) {
+            Integer dimension,
+            String podType,
+            Duration indexReadinessTimeout) {
         this.indexName = indexName;
         this.dimension = dimension;
         String baseUrl = "https://" + indexName + "-" + projectId + ".svc." + environment + ".pinecone.io";
-        String baseUrlIndexOperations = "https://controller." + environment + ".pinecone.io";
+        String baseUrlIndexOperations = "https://api.pinecone.io";
         try {
             ClientHeadersFactory clientHeadersFactory = new ClientHeadersFactory() {
                 @Override
@@ -91,15 +95,18 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
         this.indexExists = new LazyValue<>(new Supplier<Object>() {
             @Override
             public Object get() {
-                if (indexOperations.listIndexes().contains(indexName)) {
+                if (indexOperations.listIndexes().getIndexes().stream().anyMatch(i -> i.getName().equals(indexName))) {
                     Log.info("Pinecone index " + indexName + " already exists");
                 } else {
                     if (dimension == null) {
                         throw new IllegalArgumentException(
                                 "quarkus.langchain4j.pinecone.dimension must be specified when creating a new index");
                     }
-                    indexOperations.createIndex(new CreateIndexRequest(indexName, dimension, DistanceMetric.COSINE));
-                    Log.info("Created Pinecone index " + indexName + " with dimension = " + dimension);
+                    CreateIndexSpec spec = new CreateIndexSpec(new CreateIndexPodSpec(environment, podType));
+                    indexOperations.createIndex(new CreateIndexRequest(indexName, dimension, DistanceMetric.COSINE, spec));
+                    Log.info("Created Pinecone index " + indexName + " with dimension = " + dimension + ", " +
+                            "now waiting for it to be become ready...");
+                    waitForIndexToBecomeReady(indexName, indexReadinessTimeout);
                 }
                 return new Object();
             }
@@ -197,6 +204,22 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
         UpsertRequest request = new UpsertRequest(vectorList, namespace);
         UpsertResponse response = vectorOperations.upsert(request);
         Log.debug("Added embeddings: " + response.getUpsertedCount());
+    }
+
+    private void waitForIndexToBecomeReady(String indexName, Duration timeout) {
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeout.toMillis()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (indexOperations.describeIndex(indexName).getStatus().isReady()) {
+                Log.info("Pinecone index " + indexName + " is now ready");
+                return;
+            }
+        }
+        throw new RuntimeException("Index " + indexName + " did not become ready within " + timeout);
     }
 
 }
