@@ -9,9 +9,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/")
+@RegisterProvider(PineconeExceptionMapper.class)
 public interface PineconeIndexOperationsApi {
 
     @POST
