@@ -95,6 +95,41 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.pod-type]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.pod-type[quarkus.langchain4j.pinecone.pod-type]`
+
+
+[.description]
+--
+The type of the pod to use. This is only used if the index doesn't exist yet and needs to be created. The format: One of `s1`, `p1`, or `p2` appended with `.` and one of `x1`, `x2`, `x4`, or `x8`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_POD_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_POD_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`s1.x1`
+
+
+a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-readiness-timeout]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.index-readiness-timeout[quarkus.langchain4j.pinecone.index-readiness-timeout]`
+
+
+[.description]
+--
+The timeout duration for the index to become ready. Only relevant if the index doesn't exist yet and needs to be created. If not specified, 1 minute will be used.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+|
+
+
 a| [[quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace]]`link:#quarkus-langchain4j-pinecone_quarkus.langchain4j.pinecone.namespace[quarkus.langchain4j.pinecone.namespace]`
 
 
