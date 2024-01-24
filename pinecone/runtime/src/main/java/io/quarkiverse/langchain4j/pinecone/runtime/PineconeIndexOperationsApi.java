@@ -1,11 +1,11 @@
 package io.quarkiverse.langchain4j.pinecone.runtime;
 
-import java.util.List;
-
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
@@ -15,11 +15,19 @@ import jakarta.ws.rs.core.MediaType;
 public interface PineconeIndexOperationsApi {
 
     @POST
-    @Path("/databases")
+    @Path("/indexes")
     void createIndex(CreateIndexRequest request);
 
     @GET
-    @Path("/databases")
-    List<String> listIndexes();
+    @Path("/indexes")
+    ListIndexesResponse listIndexes();
+
+    @GET
+    @Path("/indexes/{indexName}")
+    DescribeIndexResponse describeIndex(String indexName);
+
+    @DELETE
+    @Path("/indexes/{indexName}")
+    void deleteIndex(@PathParam("indexName") String indexName);
 
 }

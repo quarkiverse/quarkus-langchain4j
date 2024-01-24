@@ -59,7 +59,7 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
         this.indexName = indexName;
         this.dimension = dimension;
         String baseUrl = "https://" + indexName + "-" + projectId + ".svc." + environment + ".pinecone.io";
-        String baseUrlIndexOperations = "https://controller." + environment + ".pinecone.io";
+        String baseUrlIndexOperations = "https://api.pinecone.io";
         try {
             ClientHeadersFactory clientHeadersFactory = new ClientHeadersFactory() {
                 @Override
@@ -91,7 +91,7 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
         this.indexExists = new LazyValue<>(new Supplier<Object>() {
             @Override
             public Object get() {
-                if (indexOperations.listIndexes().contains(indexName)) {
+                if (indexOperations.listIndexes().getIndexes().stream().anyMatch(i -> i.getName().equals(indexName))) {
                     Log.info("Pinecone index " + indexName + " already exists");
                 } else {
                     if (dimension == null) {
