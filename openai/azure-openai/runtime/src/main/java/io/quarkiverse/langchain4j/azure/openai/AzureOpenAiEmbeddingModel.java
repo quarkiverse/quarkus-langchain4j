@@ -25,7 +25,8 @@ import dev.langchain4j.model.output.TokenUsage;
 /**
  * Represents an OpenAI embedding model, hosted on Azure, such as text-embedding-ada-002.
  * <p>
- * Mandatory parameters for initialization are: baseUrl, apiVersion and apiKey.
+ * Mandatory parameters for initialization are: {@code apiVersion}, {@code apiKey}, and either {@code endpoint} OR
+ * {@code resourceName} and {@code deploymentName}.
  * <p>
  * There are two primary authentication methods to access Azure OpenAI:
  * <p>
@@ -46,7 +47,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
     private final Integer maxRetries;
     private final Tokenizer tokenizer;
 
-    public AzureOpenAiEmbeddingModel(String baseUrl,
+    public AzureOpenAiEmbeddingModel(String endpoint,
             String apiVersion,
             String apiKey,
             Tokenizer tokenizer,
@@ -59,7 +60,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         timeout = getOrDefault(timeout, ofSeconds(60));
 
         this.client = OpenAiClient.builder()
-                .baseUrl(ensureNotBlank(baseUrl, "baseUrl"))
+                .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
@@ -130,7 +131,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
 
     public static class Builder {
 
-        private String baseUrl;
+        private String endpoint;
         private String apiVersion;
         private String apiKey;
         private Tokenizer tokenizer;
@@ -141,14 +142,14 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         private Boolean logResponses;
 
         /**
-         * Sets the Azure OpenAI base URL. This is a mandatory parameter.
+         * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
          *
-         * @param baseUrl The Azure OpenAI base URL in the format:
-         *        https://{resource}.openai.azure.com/openai/deployments/{deployment}
+         * @param endpoint The Azure OpenAI endpoint in the format:
+         *        https://{resource-name}.openai.azure.com/openai/deployments/{deployment-id}
          * @return builder
          */
-        public Builder baseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+        public Builder endpoint(String endpoint) {
+            this.endpoint = endpoint;
             return this;
         }
 
@@ -205,8 +206,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         }
 
         public AzureOpenAiEmbeddingModel build() {
-            return new AzureOpenAiEmbeddingModel(
-                    baseUrl,
+            return new AzureOpenAiEmbeddingModel(endpoint,
                     apiVersion,
                     apiKey,
                     tokenizer,
