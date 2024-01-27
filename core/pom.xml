@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-core-parent</artifactId>
-    <name>Quarkus Langchain4j - Core - Parent</name>
+    <name>Quarkus LangChain4j - Core - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

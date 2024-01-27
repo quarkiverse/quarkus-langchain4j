@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-docs</artifactId>
-    <name>Quarkus Langchain4j - Documentation</name>
+    <name>Quarkus LangChain4j - Documentation</name>
 
     <dependencies>
         <dependency>

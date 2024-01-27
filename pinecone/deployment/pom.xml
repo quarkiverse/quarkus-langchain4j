@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-pinecone-deployment</artifactId>
-    <name>Quarkus Langchain4j - Pinecone embedding store - Deployment</name>
+    <name>Quarkus LangChain4j - Pinecone embedding store - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

@@ -7,7 +7,7 @@
     <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-pgvector</artifactId>
-  <name>Quarkus langchain4j-pgvector - Runtime</name>
+  <name>Quarkus LangChain4j - pgvector - Runtime</name>
   <dependencies>
     <dependency>
         <groupId>io.quarkus</groupId>

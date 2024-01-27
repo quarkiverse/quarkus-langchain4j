@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-tests-azure-openai</artifactId>
-    <name>Quarkus Langchain4j - Integration Tests - Azure OpenAI</name>
+    <name>Quarkus LangChain4j - Integration Tests - Azure OpenAI</name>
     <properties>
         <skipITs>true</skipITs>
     </properties>

@@ -9,7 +9,7 @@
 
 
     <artifactId>quarkus-langchain4j-openshift-ai-deployment</artifactId>
-    <name>Quarkus Langchain4j - OpenShift AI - Deployment</name>
+    <name>Quarkus LangChain4j - OpenShift AI - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

@@ -7,7 +7,7 @@
     <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-tests-simple-ollama</artifactId>
-  <name>Quarkus Langchain4j - Integration Tests - Ollama DevServices</name>
+  <name>Quarkus LangChain4j - Integration Tests - Ollama DevServices</name>
   <properties>
     <skipITs>true</skipITs>
   </properties>

@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-    <name>Quarkus Langchain4j - OpenAI - Deployment</name>
+    <name>Quarkus LangChain4j - OpenAI - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

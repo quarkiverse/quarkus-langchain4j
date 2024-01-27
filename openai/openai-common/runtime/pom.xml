@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-openai-common</artifactId>
-    <name>Quarkus Langchain4j - OpenAI - Common - Runtime</name>
+    <name>Quarkus LangChain4j - OpenAI - Common - Runtime</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

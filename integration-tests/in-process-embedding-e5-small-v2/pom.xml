@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>in-process-embedding-e5-small-v2</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-e5-small-v2</name>
 
     <dependencies>
         <dependency>

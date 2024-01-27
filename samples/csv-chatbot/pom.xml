@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-sample-csv-chatbot</artifactId>
-    <name>Quarkus langchain4j - Sample - Chatbot &amp; RAG loading a CSV file</name>
+    <name>Quarkus LangChain4j - Sample - Chatbot &amp; RAG loading a CSV file</name>
 
     <dependencies>
         <dependency>

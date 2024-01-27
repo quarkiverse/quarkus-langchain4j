@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-ollama-devservices</artifactId>
-    <name>Quarkus Langchain4j - Ollama - Devservices</name>
+    <name>Quarkus LangChain4j - Ollama - Devservices</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

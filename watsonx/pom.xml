@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-watsonx-parent</artifactId>
-    <name>Quarkus Langchain4j - Watsonx - Parent</name>
+    <name>Quarkus LangChain4j - Watsonx - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

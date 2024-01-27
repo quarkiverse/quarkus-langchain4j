@@ -8,7 +8,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>quarkus-langchain4j-openai-common-parent</artifactId>
-    <name>Quarkus Langchain4j - OpenAI - Common - Parent</name>
+    <name>Quarkus LangChain4j - OpenAI - Common - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

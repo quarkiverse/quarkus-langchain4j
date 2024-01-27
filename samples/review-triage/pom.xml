@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-sample-review-triage</artifactId>
-    <name>Quarkus langchain4j - Sample - Review Triage</name>
+    <name>Quarkus LangChain4j - Sample - Review Triage</name>
 
     <dependencies>
         <dependency>
