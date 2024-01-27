@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-redis</artifactId>
-    <name>Quarkus Langchain4j - Redis embedding store - Runtime</name>
+    <name>Quarkus LangChain4j - Redis embedding store - Runtime</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

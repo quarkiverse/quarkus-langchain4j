@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>in-process-embedding-bge-small-en</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-bge-small-en</name>
 
     <dependencies>
         <dependency>

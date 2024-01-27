@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-sample-poem</artifactId>
-    <name>Quarkus langchain4j - Sample - Email me a poem</name>
+    <name>Quarkus LangChain4j - Sample - Email me a poem</name>
 
     <dependencies>
         <dependency>

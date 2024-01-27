@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-core-deployment</artifactId>
-    <name>Quarkus Langchain4j - Core - Deployment</name>
+    <name>Quarkus LangChain4j - Core - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

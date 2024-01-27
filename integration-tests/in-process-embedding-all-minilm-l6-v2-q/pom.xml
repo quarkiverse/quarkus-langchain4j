@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>in-process-embedding-all-minilm-l6-v2-q</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-all-minilm-l6-v2-q</name>
 
     <dependencies>
         <dependency>

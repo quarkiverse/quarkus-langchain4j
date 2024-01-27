@@ -7,7 +7,7 @@
     <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-  <name>Quarkus Langchain4j - Integration Tests - Parent</name>
+  <name>Quarkus LangChain4j - Integration Tests - Parent</name>
   <packaging>pom</packaging>
 
   <modules>

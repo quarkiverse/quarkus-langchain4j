@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-openshift-ai</artifactId>
-    <name>Quarkus Langchain4j - OpenShift AI - Runtime</name>
+    <name>Quarkus LangChain4j - OpenShift AI - Runtime</name>
 
     <dependencies>
         <dependency>

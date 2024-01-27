@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-watsonx-deployment</artifactId>
-    <name>Quarkus Langchain4j - Watsonx - Deployment</name>
+    <name>Quarkus LangChain4j - Watsonx - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

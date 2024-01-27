@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-bam-parent</artifactId>
-    <name>Quarkus Langchain4j - BAM - Parent</name>
+    <name>Quarkus LangChain4j - BAM - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

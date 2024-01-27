@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>quarkus-langchain4j-sample-fraud-detection</artifactId>
-    <name>Quarkus langchain4j - Sample - Fraud Detection</name>
+    <name>Quarkus LangChain4j - Sample - Fraud Detection</name>
 
     <dependencies>
         <dependency>

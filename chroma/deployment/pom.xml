@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>
-    <name>Quarkus Langchain4j - Chroma - Deployment</name>
+    <name>Quarkus LangChain4j - Chroma - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

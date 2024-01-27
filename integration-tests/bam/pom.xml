@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-tests-bam</artifactId>
-    <name>Quarkus Langchain4j - Integration Tests - BAM</name>
+    <name>Quarkus LangChain4j - Integration Tests - BAM</name>
     <properties>
         <skipITs>true</skipITs>
     </properties>

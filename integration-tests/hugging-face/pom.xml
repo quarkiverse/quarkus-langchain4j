@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-tests-hugging-face</artifactId>
-    <name>Quarkus Langchain4j - Integration Tests - Hugging Face</name>
+    <name>Quarkus LangChain4j - Integration Tests - Hugging Face</name>
     <properties>
         <skipITs>true</skipITs>
     </properties>

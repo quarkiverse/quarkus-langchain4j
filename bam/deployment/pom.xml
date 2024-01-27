@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-bam-deployment</artifactId>
-    <name>Quarkus Langchain4j - BAM - Deployment</name>
+    <name>Quarkus LangChain4j - BAM - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

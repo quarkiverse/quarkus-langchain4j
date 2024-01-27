@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-openshift-ai-parent</artifactId>
-    <name>Quarkus Langchain4j - OpenShift AI - Parent</name>
+    <name>Quarkus LangChain4j - OpenShift AI - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
