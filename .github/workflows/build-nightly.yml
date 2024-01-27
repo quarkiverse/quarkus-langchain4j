@@ -34,7 +34,7 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
-        run: mvn -B clean install -Dno-format
+        run: ./mvnw -B clean install -Dno-format
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
@@ -42,7 +42,7 @@ jobs:
           PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
 
       - name: Build with Maven (Native)
-        run: mvn -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
