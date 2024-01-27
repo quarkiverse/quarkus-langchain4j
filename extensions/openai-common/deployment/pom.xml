@@ -9,6 +9,7 @@
     </parent>
     <artifactId>quarkus-langchain4j-openai-common-deployment</artifactId>
     <name>Quarkus LangChain4j - OpenAI - Common - Deployment</name>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

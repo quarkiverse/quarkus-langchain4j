@@ -13,6 +13,7 @@
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
     <module>bom</module>
+    <module>bom-test</module>
     <module>docs</module>
     <module>extensions</module>
   </modules>

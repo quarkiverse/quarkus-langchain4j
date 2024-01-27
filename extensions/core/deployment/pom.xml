@@ -9,6 +9,19 @@
     </parent>
     <artifactId>quarkus-langchain4j-core-deployment</artifactId>
     <name>Quarkus LangChain4j - Core - Deployment</name>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkiverse.langchain4j</groupId>
+                <artifactId>quarkus-langchain4j-bom-test</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -59,13 +72,11 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
-            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
