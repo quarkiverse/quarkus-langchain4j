@@ -33,30 +33,19 @@
     <!-- Test dependency versions -->
     <assertj.version>3.25.2</assertj.version>
     <wiremock.version>3.3.1</wiremock.version>
-    
+
     <!-- Plugin versions -->
     <compiler-plugin.version>3.12.1</compiler-plugin.version>
     <cq-maven-plugin.version>4.4.7</cq-maven-plugin.version>
 
     <!-- maven-compiler-plugin -->
     <maven.compiler.release>17</maven.compiler.release>
-    
+
     <!-- Misc. -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
   </properties>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-bom</artifactId>
-        <version>${quarkus.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
   <build>
     <pluginManagement>
       <plugins>
