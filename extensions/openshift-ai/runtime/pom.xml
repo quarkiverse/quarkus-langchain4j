@@ -23,7 +23,6 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>
@@ -79,5 +78,5 @@
         </plugins>
     </build>
 
-    
+
 </project>
