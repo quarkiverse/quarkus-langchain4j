@@ -8,8 +8,8 @@
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>in-process-embedding-e5-small-v2-q</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - embeddings-e5-small-v2-q</name>
+    <artifactId>quarkus-langchain4j-integration-test-embed-all-minilm-l6-v2-q</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-all-minilm-l6-v2-q</name>
 
     <dependencies>
         <dependency>
@@ -20,7 +20,7 @@
 
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-e5-small-v2-q</artifactId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2-q</artifactId>
             <version>${langchain4j-embeddings.version}</version>
             <exclusions>
                 <exclusion>

@@ -8,7 +8,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>in-process-embedding-bge-small-en-q</artifactId>
+    <artifactId>quarkus-langchain4j-integration-test-embed-bge-small-en-q</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - embeddings-bge-small-en-q</name>
 
     <dependencies>
