@@ -179,6 +179,9 @@ public class AiServiceMethodImplementationSupport {
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
+                if (toolExecutor == null) {
+                    throw runtime("Tool executor %s not found", toolExecutionRequest.name());
+                }
                 String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
                 log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
