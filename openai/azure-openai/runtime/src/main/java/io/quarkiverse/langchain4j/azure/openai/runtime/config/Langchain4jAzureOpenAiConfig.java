@@ -15,21 +15,35 @@ import io.smallrye.config.WithDefault;
 public interface Langchain4jAzureOpenAiConfig {
 
     /**
-     * The name of your Azure OpenAI Resource
+     * The name of your Azure OpenAI Resource. You're required to first deploy a model before you can make calls.
+     * <p>
+     * This and {@code quarkus.langchain4j.azure-openai.deployment-name} are required if
+     * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
+     * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+     * </p>
      */
-    String resourceName();
+    Optional<String> resourceName();
 
     /**
      * The name of your model deployment. You're required to first deploy a model before you can make calls.
+     * <p>
+     * This and {@code quarkus.langchain4j.azure-openai.resource-name} are required if
+     * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
+     * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+     * </p>
      */
-    String deploymentId();
+    Optional<String> deploymentName();
 
     /**
-     * The base url for the Azure OpenAI resource. Defaults to
-     * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-id}}.
+     * The endpoint for the Azure OpenAI resource.
+     * <p>
+     * If not specified, then {@code quarkus.langchain4j.azure-openai.resource-name} and
+     * {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
+     * In this case the endpoint will be set to
+     * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
+     * </p>
      */
-    @WithDefault("https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-id}")
-    String baseUrl();
+    Optional<String> endpoint();
 
     /**
      * The API version to use for this operation. This follows the YYYY-MM-DD format

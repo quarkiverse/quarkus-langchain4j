@@ -25,7 +25,8 @@ import dev.langchain4j.model.output.Response;
 /**
  * Represents an OpenAI language model, hosted on Azure, that has a chat completion interface, such as gpt-3.5-turbo.
  * <p>
- * Mandatory parameters for initialization are: baseUrl, apiVersion and apiKey.
+ * Mandatory parameters for initialization are: {@code apiVersion}, {@code apiKey}, and either {@code endpoint} OR
+ * {@code resourceName} and {@code deploymentName}.
  * <p>
  * There are two primary authentication methods to access Azure OpenAI:
  * <p>
@@ -51,7 +52,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
     private final Integer maxRetries;
     private final Tokenizer tokenizer;
 
-    public AzureOpenAiChatModel(String baseUrl,
+    public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
             String apiKey,
             Tokenizer tokenizer,
@@ -69,7 +70,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         timeout = getOrDefault(timeout, ofSeconds(60));
 
         this.client = OpenAiClient.builder()
-                .baseUrl(ensureNotBlank(baseUrl, "baseUrl"))
+                .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
@@ -143,7 +144,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
     public static class Builder {
 
-        private String baseUrl;
+        private String endpoint;
         private String apiVersion;
         private String apiKey;
         private Tokenizer tokenizer;
@@ -159,14 +160,14 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         private Boolean logResponses;
 
         /**
-         * Sets the Azure OpenAI base URL. This is a mandatory parameter.
+         * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
          *
-         * @param baseUrl The Azure OpenAI base URL in the format:
-         *        https://{resource}.openai.azure.com/openai/deployments/{deployment}
+         * @param endpoint The Azure OpenAI endpoint in the format:
+         *        https://{resource-name}.openai.azure.com/openai/deployments/{deployment-name}
          * @return builder
          */
-        public Builder baseUrl(String baseUrl) {
-            this.baseUrl = baseUrl;
+        public Builder endpoint(String endpoint) {
+            this.endpoint = endpoint;
             return this;
         }
 
@@ -248,8 +249,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         }
 
         public AzureOpenAiChatModel build() {
-            return new AzureOpenAiChatModel(
-                    baseUrl,
+            return new AzureOpenAiChatModel(endpoint,
                     apiVersion,
                     apiKey,
                     tokenizer,
