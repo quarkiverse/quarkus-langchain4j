@@ -20,13 +20,65 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  build-and-test-jvm:
     name: Build on ${{ matrix.os }} - ${{ matrix.java }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        java: [17, 21]
+        java: [17]
+    runs-on: ${{ matrix.os }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - name: Prepare git
+        run: git config --global core.autocrlf false
+        if: startsWith(matrix.os, 'windows')
+
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: ./mvnw -B clean install -Dno-format -ntp
+
+      - name: Zip the Maven repo
+        run: |
+          tar -czf ${{ runner.temp }}/maven-repo.tgz -C ~ .m2/repository
+          # Avoid caching our own artifacts
+          rm -Rf ~/.m2/repository/io/quarkiverse/langchain4j
+      - name: Persist the Maven repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-repo
+          path: ${{ runner.temp }}/maven-repo.tgz
+          retention-days: 5
+
+      - name: Output the matrix
+        id: set-matrix
+        run: |
+          cd integration-tests
+          MATRIX='{"testModule":'$( \
+              find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
+                | sed 's|^\./||' \
+                | sort -u \
+                | jq -R -s -c 'split("\n")[:-1]' \
+          )'}'
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  test-jvm-alt:
+    name: Test on ${{ matrix.os }} - ${{ matrix.java }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        java: [21]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Prepare git
@@ -34,15 +86,49 @@ jobs:
         if: startsWith(matrix.os, 'windows')
 
       - uses: actions/checkout@v3
+
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: 'maven'
 
       - name: Build with Maven
-        run: mvn -B clean install -Dno-format
+        run: ./mvnw -B clean test -Dno-format -ntp
 
-      - name: Build with Maven (Native)
-        run: mvn -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+      - name: Avoid caching our own artifacts
+        run: |
+          rm -Rf ~/.m2/repository/io/quarkiverse/langchain4j
+
+  native-tests:
+    needs: build-and-test-jvm
+    name: ${{matrix.testModule}} native tests
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-and-test-jvm.outputs.matrix) }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Download the Maven repo
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-repo
+          path: ..
+      - name: Unzip the Maven Repo
+        shell: bash
+        run: |
+          tar -xzf ../maven-repo.tgz -C ~
+
+      - name: Run integration test ${{matrix.testModule}}
+        run: |
+          cd integration-tests/${{matrix.testModule}} && ../../mvnw -B verify -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip -Dno-format -ntp

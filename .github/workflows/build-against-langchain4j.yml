@@ -39,10 +39,10 @@ jobs:
           cd langchain4j
           git clone https://github.com/langchain4j/langchain4j.git
           cd langchain4j
-          mvn -B clean install -DskipTests
+          ./mvnw -B clean install -DskipTests
 
       - name: Build with Maven
-        run: mvn -B clean install -Dno-format
+        run: ./mvnw -B clean install -Dno-format
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
@@ -50,7 +50,7 @@ jobs:
           PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
 
       - name: Build with Maven (Native)
-        run: mvn -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}

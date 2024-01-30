@@ -8,8 +8,8 @@
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>in-process-embedding-bge-small-en</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - embeddings-bge-small-en</name>
+    <artifactId>quarkus-langchain4j-integration-test-embed-all-minilm-l6-v2</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-all-minilm-l6-v2</name>
 
     <dependencies>
         <dependency>
@@ -20,7 +20,7 @@
 
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-bge-small-en</artifactId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
             <version>${langchain4j-embeddings.version}</version>
             <exclusions>
                 <exclusion>
