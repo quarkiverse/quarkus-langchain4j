@@ -20,6 +20,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.filter.BearerRequestFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class WatsonChatModel implements ChatLanguageModel {
@@ -50,6 +51,10 @@ public class WatsonChatModel implements ChatLanguageModel {
             builder.clientLogger(new WatsonRestApi.WatsonClientLogger(
                     config.logRequests,
                     config.logResponses));
+        }
+
+        if (config.tokenGenerator != null) {
+            builder.register(new BearerRequestFilter(config.tokenGenerator));
         }
 
         this.client = builder.build(WatsonRestApi.class);
@@ -160,6 +165,7 @@ public class WatsonChatModel implements ChatLanguageModel {
         private Double repetitionPenalty;
         public boolean logResponses;
         public boolean logRequests;
+        private TokenGenerator tokenGenerator;
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;
@@ -236,8 +242,9 @@ public class WatsonChatModel implements ChatLanguageModel {
             return this;
         }
 
-        public WatsonChatModel build() {
-            return new WatsonChatModel(this);
+        public Builder tokenGenerator(TokenGenerator tokenGenerator) {
+            this.tokenGenerator = tokenGenerator;
+            return this;
         }
 
         public Builder logRequests(boolean logRequests) {
@@ -248,6 +255,10 @@ public class WatsonChatModel implements ChatLanguageModel {
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
             return this;
+        }
+
+        public WatsonChatModel build() {
+            return new WatsonChatModel(this);
         }
     }
 }

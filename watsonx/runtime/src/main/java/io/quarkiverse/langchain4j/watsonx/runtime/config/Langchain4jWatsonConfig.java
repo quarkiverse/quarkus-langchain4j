@@ -4,61 +4,98 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.net.URL;
 import java.time.Duration;
+import java.util.Map;
 
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithDefaults;
+import io.smallrye.config.WithName;
+import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.watsonx")
+@ConfigMapping(prefix = "quarkus.langchain4j")
 public interface Langchain4jWatsonConfig {
 
     /**
-     * Base URL
+     * Default model config.
      */
-    URL baseUrl();
+    @WithName("watsonx")
+    WatsonConfig defaultConfig();
 
     /**
-     * Watsonx API key
+     * Named model config.
      */
-    String apiKey();
+    @ConfigDocSection
+    @ConfigDocMapKey("model-name")
+    @WithParentName
+    @WithDefaults
+    Map<String, WatsonOuterNamedConfig> namedConfig();
 
-    /**
-     * Timeout for Watsonx API calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
+    @ConfigGroup
+    interface WatsonConfig {
+        /**
+         * Base URL
+         */
+        @WithDefault("https://dummy.ai/api") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
+        URL baseUrl();
 
-    /**
-     * Version to use
-     */
-    @WithDefault("2023-05-29")
-    String version();
+        /**
+         * Watsonx API key
+         */
+        @WithDefault("dummy")
+        String apiKey();
 
-    /**
-     * Watsonx project id.
-     */
-    String projectId();
+        /**
+         * Timeout for Watsonx API calls
+         */
+        @WithDefault("10s")
+        Duration timeout();
 
-    /**
-     * Whether the Watsonx client should log requests
-     */
-    @WithDefault("false")
-    Boolean logRequests();
+        /**
+         * Version to use
+         */
+        @WithDefault("2023-05-29")
+        String version();
 
-    /**
-     * Whether the Watsonx client should log responses
-     */
-    @WithDefault("false")
-    Boolean logResponses();
+        /**
+         * Watsonx project id.
+         */
+        @WithDefault("dummy") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
+        String projectId();
 
-    /**
-     * Chat model related settings
-     */
-    IAMConfig iam();
+        /**
+         * Whether the Watsonx client should log requests
+         */
+        @WithDefault("false")
+        Boolean logRequests();
 
-    /**
-     * Chat model related settings
-     */
-    ChatModelConfig chatModel();
+        /**
+         * Whether the Watsonx client should log responses
+         */
+        @WithDefault("false")
+        Boolean logResponses();
+
+        /**
+         * Chat model related settings
+         */
+        IAMConfig iam();
+
+        /**
+         * Chat model related settings
+         */
+        ChatModelConfig chatModel();
+    }
+
+    @ConfigGroup
+    interface WatsonOuterNamedConfig {
+        /**
+         * Config for the specified name
+         */
+        @WithName("watsonx")
+        WatsonConfig watsonx();
+    }
 }

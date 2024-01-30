@@ -39,7 +39,7 @@ public class DefaultPropertiesTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    Langchain4jBamConfig config;
+    Langchain4jBamConfig langchain4jBamConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -59,6 +59,7 @@ public class DefaultPropertiesTest {
 
     @Test
     void generate() throws Exception {
+        var config = langchain4jBamConfig.defaultConfig();
 
         assertEquals(Duration.ofSeconds(10), config.timeout());
         assertEquals("2024-01-10", config.version());

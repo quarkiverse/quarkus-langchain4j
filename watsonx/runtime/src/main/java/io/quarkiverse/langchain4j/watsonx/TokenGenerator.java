@@ -13,11 +13,11 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class TokenGenerator {
 
-    private static final ReentrantLock lock = new ReentrantLock();;
-    private IAMRestApi client;
+    private static final ReentrantLock lock = new ReentrantLock();
+    private final IAMRestApi client;
+    private final String apiKey;
+    private final String grantType;
     private IdentityTokenResponse token;
-    private String apiKey;
-    private String grantType;
 
     public TokenGenerator(URL url, Duration timeout, String grantType, String apiKey) {
 

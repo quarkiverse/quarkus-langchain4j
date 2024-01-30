@@ -27,7 +27,6 @@ import io.quarkiverse.langchain4j.bam.BamException;
 import io.quarkiverse.langchain4j.bam.BamException.Code;
 import io.quarkiverse.langchain4j.bam.BamException.Reason;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
-import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class HttpErrorTest {
@@ -35,9 +34,6 @@ public class HttpErrorTest {
     static WireMockServer wireMockServer;
     static ObjectMapper mapper;
     static WireMockUtil mockServers;
-
-    @Inject
-    Langchain4jBamConfig config;
 
     @Inject
     ChatLanguageModel model;

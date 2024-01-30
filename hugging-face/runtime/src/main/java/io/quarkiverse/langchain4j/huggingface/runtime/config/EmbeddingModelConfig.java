@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.huggingface.runtime.config;
 
 import java.net.URL;
-import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -23,7 +22,7 @@ public interface EmbeddingModelConfig {
      * When using a local hugging face model, the URL is the URL of the local model.
      */
     @WithDefault(DEFAULT_INFERENCE_ENDPOINT_EMBEDDING)
-    Optional<URL> inferenceEndpointUrl();
+    URL inferenceEndpointUrl();
 
     /**
      * If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your

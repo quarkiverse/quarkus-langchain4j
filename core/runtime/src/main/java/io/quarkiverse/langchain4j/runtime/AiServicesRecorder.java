@@ -18,6 +18,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.retriever.Retriever;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
@@ -85,7 +86,13 @@ public class AiServicesRecorder {
                                 .getConstructor().newInstance();
                         quarkusAiServices.chatLanguageModel(supplier.get());
                     } else {
-                        quarkusAiServices.chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
+                        if (NamedModelUtil.isDefault(info.getChatModelName())) {
+                            quarkusAiServices
+                                    .chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
+                        } else {
+                            quarkusAiServices.chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class,
+                                    ModelName.Literal.of(info.getChatModelName())));
+                        }
                     }
 
                     List<String> toolsClasses = info.getToolsClassNames();

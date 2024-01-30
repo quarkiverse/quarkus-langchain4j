@@ -19,6 +19,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.CreatedAware;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
@@ -39,6 +40,8 @@ public class Langchain4jDotNames {
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
+
+    static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
 
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(

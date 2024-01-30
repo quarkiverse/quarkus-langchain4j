@@ -33,7 +33,7 @@ public class AllPropertiesTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig config;
+    Langchain4jWatsonConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -85,7 +85,7 @@ public class AllPropertiesTest {
 
     @Test
     void generate() throws Exception {
-
+        var config = langchain4jWatsonConfig.defaultConfig();
         assertEquals(WireMockUtil.URL_WATSONX_SERVER, config.baseUrl().toString());
         assertEquals(WireMockUtil.URL_IAM_SERVER, config.iam().baseUrl().toString());
         assertEquals(WireMockUtil.API_KEY, config.apiKey());

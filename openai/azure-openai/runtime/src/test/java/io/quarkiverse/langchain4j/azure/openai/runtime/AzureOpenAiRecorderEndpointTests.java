@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -11,17 +12,19 @@ import org.junit.jupiter.api.Test;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.smallrye.config.ConfigValidationException;
 import io.smallrye.config.ConfigValidationException.Problem;
 
 class AzureOpenAiRecorderEndpointTests {
     private static final String CONFIG_ERROR_MESSAGE_TEMPLATE = "SRCFG00014: The config property quarkus.langchain4j.azure-openai.%s is required but it could not be found in any config source";
 
-    Langchain4jAzureOpenAiConfig config = spy(Config.class);
+    Langchain4jAzureOpenAiConfig.AzureAiConfig config = spy(CustomAzureAiConfig.class);
 
     @Test
     void noEndpointConfigSet() {
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config),
+        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
+                NamedModelUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -44,7 +47,8 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .resourceName();
 
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config),
+        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
+                NamedModelUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -62,7 +66,8 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .deploymentName();
 
-        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config),
+        var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
+                NamedModelUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -80,7 +85,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .endpoint();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedModelUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isEqualTo("https://somewhere.com");
     }
@@ -95,12 +100,31 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .deploymentName();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedModelUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName", "deploymentName"));
     }
 
-    static class Config implements Langchain4jAzureOpenAiConfig {
+    static class CustomLangchain4JAzureOpenAiConfig implements Langchain4jAzureOpenAiConfig {
+
+        private final AzureAiConfig azureAiConfig;
+
+        CustomLangchain4JAzureOpenAiConfig(AzureAiConfig azureAiConfig) {
+            this.azureAiConfig = azureAiConfig;
+        }
+
+        @Override
+        public AzureAiConfig defaultConfig() {
+            return azureAiConfig;
+        }
+
+        @Override
+        public Map<String, AzureAiOuterNamedConfig> namedConfig() {
+            throw new IllegalStateException("should not be called");
+        }
+    }
+
+    static class CustomAzureAiConfig implements Langchain4jAzureOpenAiConfig.AzureAiConfig {
         @Override
         public Optional<String> resourceName() {
             return Optional.empty();

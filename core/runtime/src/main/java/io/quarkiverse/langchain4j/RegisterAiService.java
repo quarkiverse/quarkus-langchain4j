@@ -48,6 +48,20 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ChatLanguageModel>> chatLanguageModelSupplier() default BeanChatLanguageModelSupplier.class;
 
     /**
+     * When {@code chatLanguageModelSupplier} is set to {@code BeanChatLanguageModelSupplier.class} (which is the default)
+     * this allows the selection of the {@link ChatLanguageModel} CDI bean to use.
+     * <p>
+     * If not set, the default model (i.e. the one configured without setting the model name) is used.
+     * An example of the default model configuration is the following:
+     * {@code quarkus.langchain4j.openai.chat-model.model-name=gpt-4-turbo-preview}
+     *
+     * If set, it uses the model configured by name. For example if this is set to {@code somename}
+     * an example configuration value for that named model could be:
+     * {@code quarkus.langchain4j.somename.openai.chat-model.model-name=gpt-4-turbo-preview}
+     */
+    String modelName() default "<default>";
+
+    /**
      * Tool classes to use. All tools are expected to be CDI beans.
      */
     Class<?>[] tools() default {};

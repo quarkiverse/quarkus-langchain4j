@@ -48,8 +48,10 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.service.V;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
@@ -120,6 +122,7 @@ public class AiServicesProcessor {
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
+    public static final ClassType CHAT_MODEL_CLASS_TYPE = ClassType.create(Langchain4jDotNames.CHAT_MODEL);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -167,7 +170,7 @@ public class AiServicesProcessor {
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         IndexView index = indexBuildItem.getIndex();
 
-        boolean needChatModelBean = false;
+        Set<String> chatModelNames = new HashSet<>();
         boolean needModerationModelBean = false;
         for (AnnotationInstance instance : index.getAnnotations(Langchain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
@@ -187,8 +190,16 @@ public class AiServicesProcessor {
                 }
             }
 
+            String modeName = NamedModelUtil.DEFAULT_NAME;
             if (chatLanguageModelSupplierClassDotName == null) {
-                needChatModelBean = true;
+                AnnotationValue modelNameValue = instance.value("modelName");
+                if (modelNameValue != null) {
+                    String modelNameValueStr = modelNameValue.asString();
+                    if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
+                        modeName = modelNameValueStr;
+                    }
+                }
+                chatModelNames.add(modeName);
             }
 
             List<DotName> toolDotNames = Collections.emptyList();
@@ -251,11 +262,12 @@ public class AiServicesProcessor {
                             retrieverClassDotName,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
-                            cdiScope));
+                            cdiScope,
+                            modeName));
         }
 
-        if (needChatModelBean) {
-            requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem());
+        for (String chatModelName : chatModelNames) {
+            requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(chatModelName));
         }
         if (needModerationModelBean) {
             requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem());
@@ -282,7 +294,7 @@ public class AiServicesProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     public void handleDeclarativeServices(AiServicesRecorder recorder,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
-            Optional<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
+            List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
 
@@ -319,6 +331,7 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
+            String chatModelName = bi.getChatModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .createWith(recorder.createDeclarativeAiService(
@@ -326,14 +339,20 @@ public class AiServicesProcessor {
                                     toolClassNames, chatMemoryProviderSupplierClassName,
                                     retrieverClassName,
                                     auditServiceClassSupplierName,
-                                    moderationModelSupplierClassName)))
+                                    moderationModelSupplierClassName, chatModelName)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
                     .done()
                     .scope(Dependent.class);
-            if ((chatLanguageModelSupplierClassName == null) && selectedChatModelProvider.isPresent()) { // TODO: is second condition needed?
-                configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL));
+            if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
+                if (NamedModelUtil.isDefault(chatModelName)) {
+                    configurator.addInjectionPoint(CHAT_MODEL_CLASS_TYPE);
+                } else {
+                    configurator.addInjectionPoint(CHAT_MODEL_CLASS_TYPE,
+                            AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
+
+                }
                 needsChatModelBean = true;
             }
 
