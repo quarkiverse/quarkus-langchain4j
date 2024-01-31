@@ -155,7 +155,7 @@ public class AzureOpenAiRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             azureAiConfig = runtimeConfig.defaultConfig();
         } else {
-            azureAiConfig = runtimeConfig.namedConfig().get(modelName).azureAi();
+            azureAiConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return azureAiConfig;
     }
@@ -170,7 +170,7 @@ public class AzureOpenAiRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%sazure-openai.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.azure-openai%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 

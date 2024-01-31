@@ -71,7 +71,7 @@ public class OllamaRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             ollamaConfig = runtimeConfig.defaultConfig();
         } else {
-            ollamaConfig = runtimeConfig.namedConfig().get(modelName).ollama();
+            ollamaConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return ollamaConfig;
     }

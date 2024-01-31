@@ -86,7 +86,7 @@ public class WatsonRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             watsonConfig = runtimeConfig.defaultConfig();
         } else {
-            watsonConfig = runtimeConfig.namedConfig().get(modelName).watsonx();
+            watsonConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return watsonConfig;
     }
@@ -105,7 +105,7 @@ public class WatsonRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%swatsonx.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.watsonx%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 }

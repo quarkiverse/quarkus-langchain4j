@@ -91,7 +91,7 @@ public class BamRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             bamConfig = runtimeConfig.defaultConfig();
         } else {
-            bamConfig = runtimeConfig.namedConfig().get(modelName).bam();
+            bamConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return bamConfig;
     }
@@ -106,7 +106,7 @@ public class BamRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%sbam.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.bam%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 }

@@ -210,7 +210,7 @@ public class OpenAiRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             openAiConfig = runtimeConfig.defaultConfig();
         } else {
-            openAiConfig = runtimeConfig.namedConfig().get(modelName).openai();
+            openAiConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return openAiConfig;
     }
@@ -225,7 +225,7 @@ public class OpenAiRecorder {
 
     private ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%sopenai.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.openai%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 

@@ -13,17 +13,16 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j")
+@ConfigMapping(prefix = "quarkus.langchain4j.watsonx")
 public interface Langchain4jWatsonConfig {
 
     /**
      * Default model config.
      */
-    @WithName("watsonx")
+    @WithParentName
     WatsonConfig defaultConfig();
 
     /**
@@ -33,7 +32,7 @@ public interface Langchain4jWatsonConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, WatsonOuterNamedConfig> namedConfig();
+    Map<String, WatsonConfig> namedConfig();
 
     @ConfigGroup
     interface WatsonConfig {
@@ -88,14 +87,5 @@ public interface Langchain4jWatsonConfig {
          * Chat model related settings
          */
         ChatModelConfig chatModel();
-    }
-
-    @ConfigGroup
-    interface WatsonOuterNamedConfig {
-        /**
-         * Config for the specified name
-         */
-        @WithName("watsonx")
-        WatsonConfig watsonx();
     }
 }

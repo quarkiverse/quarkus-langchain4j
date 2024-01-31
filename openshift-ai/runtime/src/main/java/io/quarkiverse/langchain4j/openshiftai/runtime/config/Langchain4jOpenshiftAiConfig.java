@@ -13,17 +13,16 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j")
+@ConfigMapping(prefix = "quarkus.langchain4j.openshift-ai")
 public interface Langchain4jOpenshiftAiConfig {
 
     /**
      * Default model config.
      */
-    @WithName("openshift-ai")
+    @WithParentName
     OpenshiftAiConfig defaultConfig();
 
     /**
@@ -33,7 +32,7 @@ public interface Langchain4jOpenshiftAiConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, OpenshiftAiOuterNamedConfig> namedConfig();
+    Map<String, OpenshiftAiConfig> namedConfig();
 
     @ConfigGroup
     interface OpenshiftAiConfig {
@@ -66,13 +65,5 @@ public interface Langchain4jOpenshiftAiConfig {
          * Chat model related settings
          */
         ChatModelConfig chatModel();
-    }
-
-    interface OpenshiftAiOuterNamedConfig {
-        /**
-         * Config for the specified name
-         */
-        @WithName("openshift-ai")
-        OpenshiftAiConfig openshiftAi();
     }
 }

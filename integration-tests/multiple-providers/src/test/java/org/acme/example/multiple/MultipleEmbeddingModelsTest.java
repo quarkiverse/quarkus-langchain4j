@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
@@ -24,6 +25,14 @@ public class MultipleEmbeddingModelsTest {
     @ModelName("e2")
     EmbeddingModel secondNamedModel;
 
+    @Inject
+    @ModelName("c1")
+    EmbeddingModel thirdNamedModel;
+
+    @Inject
+    @ModelName("c2")
+    EmbeddingModel fourthNamedModel;
+
     @Test
     void firstNamedModel() {
         assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiEmbeddingModel.class);
@@ -32,5 +41,15 @@ public class MultipleEmbeddingModelsTest {
     @Test
     void secondNamedModel() {
         assertThat(ClientProxy.unwrap(secondNamedModel)).isInstanceOf(OllamaEmbeddingModel.class);
+    }
+
+    @Test
+    void thirdNamedModel() {
+        assertThat(ClientProxy.unwrap(thirdNamedModel)).isInstanceOf(AzureOpenAiEmbeddingModel.class);
+    }
+
+    @Test
+    void fourthNamedModel() {
+        assertThat(ClientProxy.unwrap(fourthNamedModel)).isInstanceOf(AzureOpenAiEmbeddingModel.class);
     }
 }

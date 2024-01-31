@@ -61,7 +61,7 @@ public class OpenshiftAiRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             openshiftAiConfig = runtimeConfig.defaultConfig();
         } else {
-            openshiftAiConfig = runtimeConfig.namedConfig().get(modelName).openshiftAi();
+            openshiftAiConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return openshiftAiConfig;
     }
@@ -76,7 +76,7 @@ public class OpenshiftAiRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%sopenshift-ai.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.openshift-ai%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 }

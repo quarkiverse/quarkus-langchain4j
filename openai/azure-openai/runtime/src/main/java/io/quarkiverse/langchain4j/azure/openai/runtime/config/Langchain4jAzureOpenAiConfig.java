@@ -14,17 +14,16 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j")
+@ConfigMapping(prefix = "quarkus.langchain4j.azure-openai")
 public interface Langchain4jAzureOpenAiConfig {
 
     /**
      * Default model config.
      */
-    @WithName("azure-openai")
+    @WithParentName
     AzureAiConfig defaultConfig();
 
     /**
@@ -34,7 +33,7 @@ public interface Langchain4jAzureOpenAiConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, AzureAiOuterNamedConfig> namedConfig();
+    Map<String, AzureAiConfig> namedConfig();
 
     @ConfigGroup
     interface AzureAiConfig {
@@ -114,15 +113,5 @@ public interface Langchain4jAzureOpenAiConfig {
          * Embedding model related settings
          */
         EmbeddingModelConfig embeddingModel();
-    }
-
-    @ConfigGroup
-    interface AzureAiOuterNamedConfig {
-
-        /**
-         * Config for the specified name
-         */
-        @WithName("azure-openai")
-        AzureAiConfig azureAi();
     }
 }

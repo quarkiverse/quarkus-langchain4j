@@ -119,7 +119,7 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
-        public Map<String, AzureAiOuterNamedConfig> namedConfig() {
+        public Map<String, AzureAiConfig> namedConfig() {
             throw new IllegalStateException("should not be called");
         }
     }

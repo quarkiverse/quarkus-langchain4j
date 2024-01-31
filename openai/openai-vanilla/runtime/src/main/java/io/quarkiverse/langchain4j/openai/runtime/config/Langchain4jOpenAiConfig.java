@@ -14,17 +14,16 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j")
+@ConfigMapping(prefix = "quarkus.langchain4j.openai")
 public interface Langchain4jOpenAiConfig {
 
     /**
      * Default model config.
      */
-    @WithName("openai")
+    @WithParentName
     OpenAiConfig defaultConfig();
 
     /**
@@ -34,7 +33,7 @@ public interface Langchain4jOpenAiConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, OpenAiOuterNamedConfig> namedConfig();
+    Map<String, OpenAiConfig> namedConfig();
 
     @ConfigGroup
     interface OpenAiConfig {
@@ -99,14 +98,5 @@ public interface Langchain4jOpenAiConfig {
          * Image model related settings
          */
         ImageModelConfig imageModel();
-    }
-
-    @ConfigGroup
-    interface OpenAiOuterNamedConfig {
-
-        /**
-         * Config for the specified name
-         */
-        OpenAiConfig openai();
     }
 }

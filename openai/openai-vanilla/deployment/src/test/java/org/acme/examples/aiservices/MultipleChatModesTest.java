@@ -41,10 +41,10 @@ public class MultipleChatModesTest {
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "defaultKey")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.model1.openai.api-key", "key1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.model1.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.model2.openai.api-key", "key2")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.model2.openai.base-url",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.model1.api-key", "key1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.model1.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.model2.api-key", "key2")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.model2.base-url",
                     "http://localhost:" + WIREMOCK_PORT + "/v1");
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
     };

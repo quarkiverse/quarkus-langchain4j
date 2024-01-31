@@ -96,7 +96,7 @@ public class HuggingFaceRecorder {
         if (NamedModelUtil.isDefault(modelName)) {
             huggingFaceConfig = runtimeConfig.defaultConfig();
         } else {
-            huggingFaceConfig = runtimeConfig.namedConfig().get(modelName).huggingFace();
+            huggingFaceConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return huggingFaceConfig;
     }
@@ -111,7 +111,7 @@ public class HuggingFaceRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j%shuggingface.%s is required but it could not be found in any config source",
+                "SRCFG00014: The config property quarkus.langchain4j.huggingface%s%s is required but it could not be found in any config source",
                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 }

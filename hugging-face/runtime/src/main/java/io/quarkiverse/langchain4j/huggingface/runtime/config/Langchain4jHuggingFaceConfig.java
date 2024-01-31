@@ -14,17 +14,16 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
-import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j")
+@ConfigMapping(prefix = "quarkus.langchain4j.huggingface")
 public interface Langchain4jHuggingFaceConfig {
 
     /**
      * Default model config.
      */
-    @WithName("huggingface")
+    @WithParentName
     HuggingFaceConfig defaultConfig();
 
     /**
@@ -34,7 +33,7 @@ public interface Langchain4jHuggingFaceConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, HuggingFaceOuterNamedConfig> namedConfig();
+    Map<String, HuggingFaceConfig> namedConfig();
 
     @ConfigGroup
     interface HuggingFaceConfig {
@@ -71,13 +70,5 @@ public interface Langchain4jHuggingFaceConfig {
          */
         @ConfigDocDefault("false")
         Optional<Boolean> logResponses();
-    }
-
-    interface HuggingFaceOuterNamedConfig {
-        /**
-         * Config for the specified name
-         */
-        @WithName("huggingface")
-        HuggingFaceConfig huggingFace();
     }
 }
