@@ -120,6 +120,15 @@
                       <exclude>*:quarkus-langchain4j-sample-*</exclude>
                     </excludes>
                   </modules>
+                  <extraDependencies>
+                    <dependency>
+                      <groupId>dev.langchain4j</groupId>
+                      <artifactId>langchain4j-bom</artifactId>
+                      <version>${langchain4j.version}</version>
+                      <type>pom</type>
+                      <scope>import</scope>
+                    </dependency>
+                  </extraDependencies>
                 </bom>
               </boms>
             </configuration>
