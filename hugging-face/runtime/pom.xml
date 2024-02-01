@@ -26,7 +26,6 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-hugging-face</artifactId>
-            <version>${langchain4j.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.squareup.retrofit2</groupId>
