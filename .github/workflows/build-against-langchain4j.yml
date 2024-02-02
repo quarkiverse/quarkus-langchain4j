@@ -39,7 +39,7 @@ jobs:
           cd langchain4j
           git clone https://github.com/langchain4j/langchain4j.git
           cd langchain4j
-          ./mvnw -B clean install -DskipTests
+          ./mvnw -B clean install -DskipTests -DskipITs
 
       - name: Build with Maven
         run: ./mvnw -B clean install -Dno-format
