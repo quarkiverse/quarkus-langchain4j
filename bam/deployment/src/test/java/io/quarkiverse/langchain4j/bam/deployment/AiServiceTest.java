@@ -66,10 +66,11 @@ public class AiServiceTest {
     NewAIService service;
 
     @Inject
-    Langchain4jBamConfig config;
+    Langchain4jBamConfig langchain4jBamConfig;
 
     @Test
     void chat() throws Exception {
+        var config = langchain4jBamConfig.defaultConfig();
 
         var modelId = config.chatModel().modelId();
 

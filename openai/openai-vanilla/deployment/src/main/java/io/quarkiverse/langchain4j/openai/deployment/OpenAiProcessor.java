@@ -6,10 +6,13 @@ import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MO
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
-import java.util.Optional;
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.jboss.jandex.AnnotationInstance;
+
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -21,6 +24,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBui
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -65,58 +69,82 @@ public class OpenAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(OpenAiRecorder recorder,
-            Optional<SelectedChatModelProviderBuildItem> selectedChatItem,
-            Optional<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            Optional<SelectedModerationModelProviderBuildItem> selectedModeration,
-            Optional<SelectedImageModelProviderBuildItem> selectedImage,
+            List<SelectedChatModelProviderBuildItem> selectedChatItem,
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedModerationModelProviderBuildItem> selectedModeration,
+            List<SelectedImageModelProviderBuildItem> selectedImage,
             Langchain4jOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
-        if (selectedChatItem.isPresent() && PROVIDER.equals(selectedChatItem.get().getProvider())) {
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(CHAT_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.chatModel(config))
-                    .done());
 
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(STREAMING_CHAT_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.streamingChatModel(config))
-                    .done());
+        for (var selected : selectedChatItem) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.chatModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+
+                var streamingBuilder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.streamingChatModel(config, modelName));
+                addQualifierIfNecessary(streamingBuilder, modelName);
+                beanProducer.produce(streamingBuilder.done());
+            }
         }
 
-        if (selectedEmbedding.isPresent() && PROVIDER.equals(selectedEmbedding.get().getProvider())) {
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(EMBEDDING_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.embeddingModel(config))
-                    .done());
+        for (var selected : selectedEmbedding) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(EMBEDDING_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.embeddingModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+            }
         }
 
-        if (selectedModeration.isPresent() && PROVIDER.equals(selectedModeration.get().getProvider())) {
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(MODERATION_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.moderationModel(config))
-                    .done());
+        for (var selected : selectedModeration) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(MODERATION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.moderationModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+            }
         }
 
-        if (selectedImage.isPresent() && PROVIDER.equals(selectedImage.get().getProvider())) {
-            beanProducer.produce(SyntheticBeanBuildItem
-                    .configure(IMAGE_MODEL)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .supplier(recorder.imageModel(config))
-                    .done());
+        for (var selected : selectedImage) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(IMAGE_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.imageModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+            }
+        }
+    }
+
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
+        if (!NamedModelUtil.isDefault(modelName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
         }
     }
 

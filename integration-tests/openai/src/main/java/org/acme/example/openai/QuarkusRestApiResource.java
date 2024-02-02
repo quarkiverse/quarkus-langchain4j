@@ -52,12 +52,12 @@ public class QuarkusRestApiResource {
 
     public QuarkusRestApiResource(Langchain4jOpenAiConfig runtimeConfig)
             throws URISyntaxException {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = runtimeConfig.defaultConfig();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
-                .baseUri(new URI(runtimeConfig.baseUrl()))
+                .baseUri(new URI(openAiConfig.baseUrl()))
                 .build(OpenAiRestApi.class);
-        this.token = runtimeConfig.apiKey()
-                .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
-        this.organizationId = runtimeConfig.organizationId().orElse(null);
+        this.token = openAiConfig.apiKey();
+        this.organizationId = openAiConfig.organizationId().orElse(null);
     }
 
     @GET

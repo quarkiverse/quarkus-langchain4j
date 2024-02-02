@@ -59,7 +59,7 @@ public class AllPropertiesTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    Langchain4jBamConfig config;
+    Langchain4jBamConfig langchain4jBamConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -79,6 +79,7 @@ public class AllPropertiesTest {
 
     @Test
     void generate() throws Exception {
+        var config = langchain4jBamConfig.defaultConfig();
 
         assertEquals(WireMockUtil.URL, config.baseUrl().get().toString());
         assertEquals(WireMockUtil.API_KEY, config.apiKey());

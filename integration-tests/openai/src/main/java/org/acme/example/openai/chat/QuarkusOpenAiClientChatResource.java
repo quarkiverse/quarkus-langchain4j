@@ -21,9 +21,8 @@ public class QuarkusOpenAiClientChatResource {
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
     public QuarkusOpenAiClientChatResource(Langchain4jOpenAiConfig runtimeConfig) {
-        String token = runtimeConfig.apiKey()
-                .orElseThrow(() -> new IllegalArgumentException("quarkus.langchain4j.openai.api-key must be provided"));
-        String baseUrl = runtimeConfig.baseUrl();
+        String token = runtimeConfig.defaultConfig().apiKey();
+        String baseUrl = runtimeConfig.defaultConfig().baseUrl();
         quarkusOpenAiClient = QuarkusOpenAiClient.builder().openAiApiKey(token).baseUrl(baseUrl).build();
     }
 

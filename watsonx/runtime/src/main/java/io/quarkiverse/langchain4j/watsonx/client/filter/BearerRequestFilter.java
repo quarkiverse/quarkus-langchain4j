@@ -9,7 +9,7 @@ import io.quarkiverse.langchain4j.watsonx.TokenGenerator;
 
 public class BearerRequestFilter implements ClientRequestFilter {
 
-    private TokenGenerator tokenGenerator;
+    private final TokenGenerator tokenGenerator;
 
     public BearerRequestFilter(TokenGenerator tokenGenerator) {
         this.tokenGenerator = tokenGenerator;

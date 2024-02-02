@@ -17,6 +17,7 @@
     <module>ollama</module>
     <module>simple-ollama</module>
     <module>azure-openai</module>
+    <module>multiple-providers</module>
     <module>devui</module>
     <module>embed-all-minilm-l6-v2-q</module>
     <module>embed-all-minilm-l6-v2</module>

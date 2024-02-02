@@ -25,6 +25,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -35,7 +36,7 @@ public class AiServiceTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig config;
+    Langchain4jWatsonConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -84,8 +85,10 @@ public class AiServiceTest {
     @Test
     void chat() throws Exception {
 
-        String modelId = config.chatModel().modelId();
-        String projectId = config.projectId();
+        Langchain4jWatsonConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
+        String modelId = chatModelConfig.modelId();
+        String projectId = watsonConfig.projectId();
         String input = new StringBuilder()
                 .append("This is a systemMessage")
                 .append("\n\n")
@@ -93,10 +96,10 @@ public class AiServiceTest {
                 .append("\n")
                 .toString();
         Parameters parameters = Parameters.builder()
-                .decodingMethod(config.chatModel().decodingMethod())
-                .temperature(config.chatModel().temperature())
-                .minNewTokens(config.chatModel().minNewTokens())
-                .maxNewTokens(config.chatModel().maxNewTokens())
+                .decodingMethod(chatModelConfig.decodingMethod())
+                .temperature(chatModelConfig.temperature())
+                .minNewTokens(chatModelConfig.minNewTokens())
+                .maxNewTokens(chatModelConfig.maxNewTokens())
                 .build();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input, parameters);

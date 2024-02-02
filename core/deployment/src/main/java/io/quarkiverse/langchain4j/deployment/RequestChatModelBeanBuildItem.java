@@ -7,4 +7,14 @@ import io.quarkus.builder.item.MultiBuildItem;
  * even if no injection point exists.
  */
 public final class RequestChatModelBeanBuildItem extends MultiBuildItem {
+
+    private final String modelName;
+
+    public RequestChatModelBeanBuildItem(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
 }

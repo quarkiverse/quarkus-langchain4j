@@ -32,7 +32,7 @@ public class DefaultPropertiesTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig config;
+    Langchain4jWatsonConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -68,7 +68,7 @@ public class DefaultPropertiesTest {
 
     @Test
     void generate() throws Exception {
-
+        var config = langchain4jWatsonConfig.defaultConfig();
         assertEquals(Duration.ofSeconds(10), config.timeout());
         assertEquals("2023-05-29", config.version());
         assertEquals(false, config.logRequests());

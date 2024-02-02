@@ -3,90 +3,115 @@ package io.quarkiverse.langchain4j.azure.openai.runtime.config;
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithDefaults;
+import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.azure-openai")
 public interface Langchain4jAzureOpenAiConfig {
 
     /**
-     * The name of your Azure OpenAI Resource. You're required to first deploy a model before you can make calls.
-     * <p>
-     * This and {@code quarkus.langchain4j.azure-openai.deployment-name} are required if
-     * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
-     * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
-     * </p>
+     * Default model config.
      */
-    Optional<String> resourceName();
+    @WithParentName
+    AzureAiConfig defaultConfig();
 
     /**
-     * The name of your model deployment. You're required to first deploy a model before you can make calls.
-     * <p>
-     * This and {@code quarkus.langchain4j.azure-openai.resource-name} are required if
-     * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
-     * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
-     * </p>
+     * Named model config.
      */
-    Optional<String> deploymentName();
+    @ConfigDocSection
+    @ConfigDocMapKey("model-name")
+    @WithParentName
+    @WithDefaults
+    Map<String, AzureAiConfig> namedConfig();
 
-    /**
-     * The endpoint for the Azure OpenAI resource.
-     * <p>
-     * If not specified, then {@code quarkus.langchain4j.azure-openai.resource-name} and
-     * {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
-     * In this case the endpoint will be set to
-     * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
-     * </p>
-     */
-    Optional<String> endpoint();
+    @ConfigGroup
+    interface AzureAiConfig {
+        /**
+         * The name of your Azure OpenAI Resource. You're required to first deploy a model before you can make calls.
+         * <p>
+         * This and {@code quarkus.langchain4j.azure-openai.deployment-name} are required if
+         * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * </p>
+         */
+        Optional<String> resourceName();
 
-    /**
-     * The API version to use for this operation. This follows the YYYY-MM-DD format
-     */
-    @WithDefault("2023-05-15")
-    String apiVersion();
+        /**
+         * The name of your model deployment. You're required to first deploy a model before you can make calls.
+         * <p>
+         * This and {@code quarkus.langchain4j.azure-openai.resource-name} are required if
+         * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * </p>
+         */
+        Optional<String> deploymentName();
 
-    /**
-     * Azure OpenAI API key
-     */
-    String apiKey();
+        /**
+         * The endpoint for the Azure OpenAI resource.
+         * <p>
+         * If not specified, then {@code quarkus.langchain4j.azure-openai.resource-name} and
+         * {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
+         * In this case the endpoint will be set to
+         * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
+         * </p>
+         */
+        Optional<String> endpoint();
 
-    /**
-     * Timeout for OpenAI calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
+        /**
+         * The API version to use for this operation. This follows the YYYY-MM-DD format
+         */
+        @WithDefault("2023-05-15")
+        String apiVersion();
 
-    /**
-     * The maximum number of times to retry
-     */
-    @WithDefault("3")
-    Integer maxRetries();
+        /**
+         * Azure OpenAI API key
+         */
+        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it..
+        String apiKey();
 
-    /**
-     * Whether the OpenAI client should log requests
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logRequests();
+        /**
+         * Timeout for OpenAI calls
+         */
+        @WithDefault("10s")
+        Duration timeout();
 
-    /**
-     * Whether the OpenAI client should log responses
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logResponses();
+        /**
+         * The maximum number of times to retry
+         */
+        @WithDefault("3")
+        Integer maxRetries();
 
-    /**
-     * Chat model related settings
-     */
-    ChatModelConfig chatModel();
+        /**
+         * Whether the OpenAI client should log requests
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logRequests();
 
-    /**
-     * Embedding model related settings
-     */
-    EmbeddingModelConfig embeddingModel();
+        /**
+         * Whether the OpenAI client should log responses
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logResponses();
+
+        /**
+         * Chat model related settings
+         */
+        ChatModelConfig chatModel();
+
+        /**
+         * Embedding model related settings
+         */
+        EmbeddingModelConfig embeddingModel();
+    }
 }

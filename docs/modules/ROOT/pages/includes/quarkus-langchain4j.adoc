@@ -5,7 +5,7 @@ icon:lock[title=Fixed at build time] Configuration property fixed at build time 
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
 |===
 
-h|[[quarkus-langchain4j_configuration]]link:#quarkus-langchain4j_configuration[Configuration property]
+h|[[quarkus-langchain4j_quarkus.langchain4j.default-config-default-model-config]]link:#quarkus-langchain4j_quarkus.langchain4j.default-config-default-model-config[Default model config]
 
 h|Type
 h|Default
@@ -56,6 +56,96 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MODERATION
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MODERATION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.image-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.image-model.provider[quarkus.langchain4j.image-model.provider]`
+
+
+[.description]
+--
+The model provider to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_IMAGE_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_IMAGE_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+h|[[quarkus-langchain4j_quarkus.langchain4j.named-config-named-model-config]]link:#quarkus-langchain4j_quarkus.langchain4j.named-config-named-model-config[Named model config]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.chat-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.chat-model.provider[quarkus.langchain4j."model-name".chat-model.provider]`
+
+
+[.description]
+--
+The model provider to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__CHAT_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__CHAT_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.embedding-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.embedding-model.provider[quarkus.langchain4j."model-name".embedding-model.provider]`
+
+
+[.description]
+--
+The model provider to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__EMBEDDING_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__EMBEDDING_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.moderation-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.moderation-model.provider[quarkus.langchain4j."model-name".moderation-model.provider]`
+
+
+[.description]
+--
+The model provider to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__MODERATION_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__MODERATION_MODEL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.image-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.image-model.provider[quarkus.langchain4j."model-name".image-model.provider]`
+
+
+[.description]
+--
+The model provider to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J__MODEL_NAME__IMAGE_MODEL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J__MODEL_NAME__IMAGE_MODEL_PROVIDER+++`
 endif::add-copy-button-to-env-var[]
 --|string 
 |

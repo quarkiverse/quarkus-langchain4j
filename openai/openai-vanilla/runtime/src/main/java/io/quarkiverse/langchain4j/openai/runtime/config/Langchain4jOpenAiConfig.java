@@ -3,74 +3,100 @@ package io.quarkiverse.langchain4j.openai.runtime.config;
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithDefaults;
+import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.openai")
 public interface Langchain4jOpenAiConfig {
 
     /**
-     * Base URL of OpenAI API
+     * Default model config.
      */
-    @WithDefault("https://api.openai.com/v1/")
-    String baseUrl();
+    @WithParentName
+    OpenAiConfig defaultConfig();
 
     /**
-     * OpenAI API key
+     * Named model config.
      */
-    Optional<String> apiKey();
+    @ConfigDocSection
+    @ConfigDocMapKey("model-name")
+    @WithParentName
+    @WithDefaults
+    Map<String, OpenAiConfig> namedConfig();
 
-    /**
-     * OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
-     */
-    Optional<String> organizationId();
+    @ConfigGroup
+    interface OpenAiConfig {
 
-    /**
-     * Timeout for OpenAI calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
+        /**
+         * Base URL of OpenAI API
+         */
+        @WithDefault("https://api.openai.com/v1/")
+        String baseUrl();
 
-    /**
-     * The maximum number of times to retry
-     */
-    @WithDefault("3")
-    Integer maxRetries();
+        /**
+         * OpenAI API key
+         */
+        @WithDefault("dummy") // TODO: this should be Optional but Smallrye Config doesn't like it...
+        String apiKey();
 
-    /**
-     * Whether the OpenAI client should log requests
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logRequests();
+        /**
+         * OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
+         */
+        Optional<String> organizationId();
 
-    /**
-     * Whether the OpenAI client should log responses
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> logResponses();
+        /**
+         * Timeout for OpenAI calls
+         */
+        @WithDefault("10s")
+        Duration timeout();
 
-    /**
-     * Chat model related settings
-     */
-    ChatModelConfig chatModel();
+        /**
+         * The maximum number of times to retry
+         */
+        @WithDefault("3")
+        Integer maxRetries();
 
-    /**
-     * Embedding model related settings
-     */
-    EmbeddingModelConfig embeddingModel();
+        /**
+         * Whether the OpenAI client should log requests
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logRequests();
 
-    /**
-     * Moderation model related settings
-     */
-    ModerationModelConfig moderationModel();
+        /**
+         * Whether the OpenAI client should log responses
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logResponses();
 
-    /**
-     * Image model related settings
-     */
-    ImageModelConfig imageModel();
+        /**
+         * Chat model related settings
+         */
+        ChatModelConfig chatModel();
+
+        /**
+         * Embedding model related settings
+         */
+        EmbeddingModelConfig embeddingModel();
+
+        /**
+         * Moderation model related settings
+         */
+        ModerationModelConfig moderationModel();
+
+        /**
+         * Image model related settings
+         */
+        ImageModelConfig imageModel();
+    }
 }

@@ -75,7 +75,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|
+|`dummy`
 
 
 a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.timeout]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.timeout[quarkus.langchain4j.huggingface.timeout]`
@@ -356,6 +356,311 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFAC
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+h|[[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.named-config-named-model-config]]link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.named-config-named-model-config[Named model config]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.api-key]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.api-key[quarkus.langchain4j.huggingface."model-name".api-key]`
+
+
+[.description]
+--
+HuggingFace API key
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`dummy`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.timeout]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.timeout[quarkus.langchain4j.huggingface."model-name".timeout]`
+
+
+[.description]
+--
+Timeout for HuggingFace calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+|`10S`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".chat-model.inference-endpoint-url]`
+
+
+[.description]
+--
+The URL of the inference endpoint for the chat model.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/models/<model-id>`, for example `https://api-inference.huggingface.co/models/google/flan-t5-small`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
+ 
+|`https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.temperature]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.temperature[quarkus.langchain4j.huggingface."model-name".chat-model.temperature]`
+
+
+[.description]
+--
+Float (0.0-100.0). The temperature of the sampling operation. 1 means regular sampling, 0 means always take the highest score, 100.0 is getting closer to uniform probability
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`1.0`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.max-new-tokens]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.max-new-tokens[quarkus.langchain4j.huggingface."model-name".chat-model.max-new-tokens]`
+
+
+[.description]
+--
+Int (0-250). The amount of new tokens to be generated, this does not include the input length it is a estimate of the size of generated text you want. Each new tokens slows down the request, so look for balance between response times and length of text generated
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.return-full-text]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.return-full-text[quarkus.langchain4j.huggingface."model-name".chat-model.return-full-text]`
+
+
+[.description]
+--
+If set to `false`, the return results will not contain the original query making it easier for prompting
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_RETURN_FULL_TEXT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_RETURN_FULL_TEXT+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.wait-for-model[quarkus.langchain4j.huggingface."model-name".chat-model.wait-for-model]`
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.do-sample]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.do-sample[quarkus.langchain4j.huggingface."model-name".chat-model.do-sample]`
+
+
+[.description]
+--
+Whether or not to use sampling ; use greedy decoding otherwise.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_DO_SAMPLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_DO_SAMPLE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-k]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-k[quarkus.langchain4j.huggingface."model-name".chat-model.top-k]`
+
+
+[.description]
+--
+The number of highest probability vocabulary tokens to keep for top-k-filtering.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-p]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-p[quarkus.langchain4j.huggingface."model-name".chat-model.top-p]`
+
+
+[.description]
+--
+If set to less than `1`, only the most probable tokens with probabilities that add up to `top_p` or higher are kept for generation.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.repetition-penalty]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.repetition-penalty[quarkus.langchain4j.huggingface."model-name".chat-model.repetition-penalty]`
+
+
+[.description]
+--
+The parameter for repetition penalty. 1.0 means no penalty. See link:https://arxiv.org/pdf/1909.05858.pdf[this paper] for more details.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-requests[quarkus.langchain4j.huggingface."model-name".chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-responses[quarkus.langchain4j.huggingface."model-name".chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".embedding-model.inference-endpoint-url]`
+
+
+[.description]
+--
+The URL of the inference endpoint for the embedding.
+
+When using Hugging Face with the inference API, the URL is `https://api-inference.huggingface.co/pipeline/feature-extraction/<model-id>`, for example `https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2`.
+
+When using a deployed inference endpoint, the URL is the URL of the endpoint. When using a local hugging face model, the URL is the URL of the local model.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__EMBEDDING_MODEL_INFERENCE_ENDPOINT_URL+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
+ 
+|`https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.wait-for-model[quarkus.langchain4j.huggingface."model-name".embedding-model.wait-for-model]`
+
+
+[.description]
+--
+If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your inference done. It is advised to only set this flag to true after receiving a 503 error as it will limit hanging in your application to known places
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__EMBEDDING_MODEL_WAIT_FOR_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__EMBEDDING_MODEL_WAIT_FOR_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-requests[quarkus.langchain4j.huggingface."model-name".log-requests]`
+
+
+[.description]
+--
+Whether the HuggingFace client should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-responses[quarkus.langchain4j.huggingface."model-name".log-responses]`
+
+
+[.description]
+--
+Whether the HuggingFace client should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`

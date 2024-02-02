@@ -4,59 +4,84 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.net.URL;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithDefaults;
+import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.bam")
 public interface Langchain4jBamConfig {
 
     /**
-     * Base URL where the Ollama serving is running
+     * Default model config.
      */
-    @ConfigDocDefault("https://bam-api.res.ibm.com")
-    Optional<URL> baseUrl();
+    @WithParentName
+    BamConfig defaultConfig();
 
     /**
-     * BAM API key
+     * Named model config.
      */
-    String apiKey();
+    @ConfigDocSection
+    @ConfigDocMapKey("model-name")
+    @WithParentName
+    @WithDefaults
+    Map<String, BamConfig> namedConfig();
 
-    /**
-     * Timeout for BAM calls
-     */
-    @WithDefault("10s")
-    Duration timeout();
+    @ConfigGroup
+    interface BamConfig {
+        /**
+         * Base URL where the Ollama serving is running
+         */
+        @ConfigDocDefault("https://bam-api.res.ibm.com")
+        Optional<URL> baseUrl();
 
-    /**
-     * Version to use
-     */
-    @WithDefault("2024-01-10")
-    String version();
+        /**
+         * BAM API key
+         */
+        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it
+        String apiKey();
 
-    /**
-     * Whether the BAM client should log requests
-     */
-    @WithDefault("false")
-    Boolean logRequests();
+        /**
+         * Timeout for BAM calls
+         */
+        @WithDefault("10s")
+        Duration timeout();
 
-    /**
-     * Whether the BAM client should log responses
-     */
-    @WithDefault("false")
-    Boolean logResponses();
+        /**
+         * Version to use
+         */
+        @WithDefault("2024-01-10")
+        String version();
 
-    /**
-     * Chat model related settings
-     */
-    ChatModelConfig chatModel();
+        /**
+         * Whether the BAM client should log requests
+         */
+        @WithDefault("false")
+        Boolean logRequests();
 
-    /**
-     * Embedding model related settings
-     */
-    EmbeddingModelConfig embeddingModel();
+        /**
+         * Whether the BAM client should log responses
+         */
+        @WithDefault("false")
+        Boolean logResponses();
+
+        /**
+         * Chat model related settings
+         */
+        ChatModelConfig chatModel();
+
+        /**
+         * Embedding model related settings
+         */
+        EmbeddingModelConfig embeddingModel();
+    }
 }

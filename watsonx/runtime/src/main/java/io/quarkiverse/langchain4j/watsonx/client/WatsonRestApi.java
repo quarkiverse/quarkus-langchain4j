@@ -10,14 +10,11 @@ import java.util.regex.Pattern;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
-import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +23,6 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
-import io.quarkiverse.langchain4j.watsonx.client.filter.BearerRequestFilter;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonException;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
@@ -42,12 +38,9 @@ import io.vertx.core.http.HttpClientResponse;
  * in Quarkus.
  */
 @Path("/ml/v1-beta")
-@RegisterProvider(BearerRequestFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface WatsonRestApi {
-
-    static Logger logger = Logger.getLogger(WatsonRestApi.class);
 
     @POST
     @Path("generation/text")
@@ -55,25 +48,24 @@ public interface WatsonRestApi {
 
     @ClientExceptionMapper
     static WatsonException toException(jakarta.ws.rs.core.Response response) {
+        MediaType mediaType = response.getMediaType();
+        if ((mediaType != null) && mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
+            try {
+                WatsonError ex = response.readEntity(WatsonError.class);
 
-        if (MediaType.TEXT_PLAIN.equals(response.getHeaderString("Content-Type")))
-            return new WatsonException(response.readEntity(String.class), response.getStatus());
+                StringJoiner joiner = new StringJoiner("\n");
+                if (ex.errors() != null && ex.errors().size() > 0) {
+                    for (WatsonError.Error error : ex.errors())
+                        joiner.add("%s: %s".formatted(error.code(), error.message()));
+                }
 
-        try {
-
-            WatsonError ex = response.readEntity(WatsonError.class);
-
-            StringJoiner joiner = new StringJoiner("\n");
-            if (ex.errors() != null && ex.errors().size() > 0) {
-                for (WatsonError.Error error : ex.errors())
-                    joiner.add("%s: %s".formatted(error.code(), error.message()));
+                return new WatsonException(joiner.toString(), response.getStatus(), ex);
+            } catch (Exception e) {
+                return new WatsonException(response.readEntity(String.class), response.getStatus());
             }
-
-            return new WatsonException(joiner.toString(), response.getStatus(), ex);
-
-        } catch (ClientWebApplicationException | ProcessingException e) {
-            return new WatsonException(e.getCause(), response.getStatus());
         }
+
+        return new WatsonException(response.readEntity(String.class), response.getStatus());
     }
 
     @ClientObjectMapper

@@ -98,6 +98,7 @@ public class HttpErrorTest {
                 .build();
 
         mockServers.mockWatsonBuilder(404)
+                .responseMediaType(MediaType.APPLICATION_JSON)
                 .response("""
                         {
                             "errors": [
@@ -113,8 +114,6 @@ public class HttpErrorTest {
                 .build();
 
         WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
-        assertNotNull(ex.details());
-        assertNotNull(ex.details().trace());
         assertEquals(404, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
@@ -197,7 +196,6 @@ public class HttpErrorTest {
 
         WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
         assertEquals(500, ex.statusCode());
-        assertTrue(ex.getMessage().contains("Unexpected end-of-input"));
     }
 
     @Test

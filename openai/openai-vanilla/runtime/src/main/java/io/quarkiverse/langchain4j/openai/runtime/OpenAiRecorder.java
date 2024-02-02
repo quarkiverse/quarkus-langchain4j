@@ -18,6 +18,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -25,26 +26,29 @@ import io.smallrye.config.ConfigValidationException;
 @Recorder
 public class OpenAiRecorder {
 
-    public Supplier<?> chatModel(Langchain4jOpenAiConfig runtimeConfig) {
-        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
-            throw new ConfigValidationException(createApiKeyConfigProblems());
+    private static final String DUMMY_KEY = "dummy";
+
+    public Supplier<?> chatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+        String apiKey = openAiConfig.apiKey();
+        if (DUMMY_KEY.equals(apiKey)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
         }
-        ChatModelConfig chatModelConfig = runtimeConfig.chatModel();
+        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
         var builder = OpenAiChatModel.builder()
-                .baseUrl(runtimeConfig.baseUrl())
-                .apiKey(apiKeyOpt.get())
-                .timeout(runtimeConfig.timeout())
-                .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .timeout(openAiConfig.timeout())
+                .maxRetries(openAiConfig.maxRetries())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
                 .modelName(chatModelConfig.modelName())
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty());
 
-        runtimeConfig.organizationId().ifPresent(builder::organizationId);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
 
         if (chatModelConfig.maxTokens().isPresent()) {
             builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -58,25 +62,26 @@ public class OpenAiRecorder {
         };
     }
 
-    public Supplier<?> streamingChatModel(Langchain4jOpenAiConfig runtimeConfig) {
-        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
-            throw new ConfigValidationException(createApiKeyConfigProblems());
+    public Supplier<?> streamingChatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+        String apiKey = openAiConfig.apiKey();
+        if (DUMMY_KEY.equals(apiKey)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
         }
-        ChatModelConfig chatModelConfig = runtimeConfig.chatModel();
+        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
         var builder = OpenAiStreamingChatModel.builder()
-                .baseUrl(runtimeConfig.baseUrl())
-                .apiKey(apiKeyOpt.get())
-                .timeout(runtimeConfig.timeout())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), runtimeConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), runtimeConfig.logResponses()))
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .timeout(openAiConfig.timeout())
+                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
                 .modelName(chatModelConfig.modelName())
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty());
 
-        runtimeConfig.organizationId().ifPresent(builder::organizationId);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
 
         if (chatModelConfig.maxTokens().isPresent()) {
             builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -90,26 +95,27 @@ public class OpenAiRecorder {
         };
     }
 
-    public Supplier<?> embeddingModel(Langchain4jOpenAiConfig runtimeConfig) {
-        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
-            throw new ConfigValidationException(createApiKeyConfigProblems());
+    public Supplier<?> embeddingModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+        String apiKeyOpt = openAiConfig.apiKey();
+        if (DUMMY_KEY.equals(apiKeyOpt)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
         }
-        EmbeddingModelConfig embeddingModelConfig = runtimeConfig.embeddingModel();
+        EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
         var builder = OpenAiEmbeddingModel.builder()
-                .baseUrl(runtimeConfig.baseUrl())
-                .apiKey(apiKeyOpt.get())
-                .timeout(runtimeConfig.timeout())
-                .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), runtimeConfig.logRequests()))
-                .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), runtimeConfig.logResponses()))
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKeyOpt)
+                .timeout(openAiConfig.timeout())
+                .maxRetries(openAiConfig.maxRetries())
+                .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), openAiConfig.logResponses()))
                 .modelName(embeddingModelConfig.modelName());
 
         if (embeddingModelConfig.user().isPresent()) {
             builder.user(embeddingModelConfig.user().get());
         }
 
-        runtimeConfig.organizationId().ifPresent(builder::organizationId);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
 
         return new Supplier<>() {
             @Override
@@ -119,22 +125,23 @@ public class OpenAiRecorder {
         };
     }
 
-    public Supplier<?> moderationModel(Langchain4jOpenAiConfig runtimeConfig) {
-        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
-            throw new ConfigValidationException(createApiKeyConfigProblems());
+    public Supplier<?> moderationModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+        String apiKey = openAiConfig.apiKey();
+        if (DUMMY_KEY.equals(apiKey)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
         }
-        ModerationModelConfig moderationModelConfig = runtimeConfig.moderationModel();
+        ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
         var builder = OpenAiModerationModel.builder()
-                .baseUrl(runtimeConfig.baseUrl())
-                .apiKey(apiKeyOpt.get())
-                .timeout(runtimeConfig.timeout())
-                .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), runtimeConfig.logRequests()))
-                .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), runtimeConfig.logResponses()))
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .timeout(openAiConfig.timeout())
+                .maxRetries(openAiConfig.maxRetries())
+                .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), openAiConfig.logResponses()))
                 .modelName(moderationModelConfig.modelName());
 
-        runtimeConfig.organizationId().ifPresent(builder::organizationId);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
 
         return new Supplier<>() {
             @Override
@@ -144,19 +151,20 @@ public class OpenAiRecorder {
         };
     }
 
-    public Supplier<?> imageModel(Langchain4jOpenAiConfig runtimeConfig) {
-        Optional<String> apiKeyOpt = runtimeConfig.apiKey();
-        if (apiKeyOpt.isEmpty()) {
-            throw new ConfigValidationException(createApiKeyConfigProblems());
+    public Supplier<?> imageModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+        String apiKey = openAiConfig.apiKey();
+        if (DUMMY_KEY.equals(apiKey)) {
+            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
         }
-        ImageModelConfig imageModelConfig = runtimeConfig.imageModel();
+        ImageModelConfig imageModelConfig = openAiConfig.imageModel();
         var builder = QuarkusOpenAiImageModel.builder()
-                .baseUrl(runtimeConfig.baseUrl())
-                .apiKey(apiKeyOpt.get())
-                .timeout(runtimeConfig.timeout())
-                .maxRetries(runtimeConfig.maxRetries())
-                .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), runtimeConfig.logRequests()))
-                .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), runtimeConfig.logResponses()))
+                .baseUrl(openAiConfig.baseUrl())
+                .apiKey(apiKey)
+                .timeout(openAiConfig.timeout())
+                .maxRetries(openAiConfig.maxRetries())
+                .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
+                .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
                 .modelName(imageModelConfig.modelName())
                 .size(imageModelConfig.size())
                 .quality(imageModelConfig.quality())
@@ -164,7 +172,7 @@ public class OpenAiRecorder {
                 .responseFormat(imageModelConfig.responseFormat())
                 .user(imageModelConfig.user());
 
-        runtimeConfig.organizationId().ifPresent(builder::organizationId);
+        openAiConfig.organizationId().ifPresent(builder::organizationId);
 
         // we persist if the directory was set explicitly and the boolean flag was not set to false
         // or if the boolean flag was set explicitly to true
@@ -196,18 +204,29 @@ public class OpenAiRecorder {
 
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblems() {
-        return createConfigProblems("api-key");
+    private Langchain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(Langchain4jOpenAiConfig runtimeConfig,
+            String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig;
+        if (NamedModelUtil.isDefault(modelName)) {
+            openAiConfig = runtimeConfig.defaultConfig();
+        } else {
+            openAiConfig = runtimeConfig.namedConfig().get(modelName);
+        }
+        return openAiConfig;
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key) };
+    private ConfigValidationException.Problem[] createApiKeyConfigProblems(String modelName) {
+        return createConfigProblems("api-key", modelName);
     }
 
-    private ConfigValidationException.Problem createConfigProblem(String key) {
+    private ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    }
+
+    private ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(String.format(
-                "SRCFG00014: The config property quarkus.langchain4j.openai.%s is required but it could not be found in any config source",
-                key));
+                "SRCFG00014: The config property quarkus.langchain4j.openai%s%s is required but it could not be found in any config source",
+                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
 
     public void cleanUp(ShutdownContext shutdown) {
