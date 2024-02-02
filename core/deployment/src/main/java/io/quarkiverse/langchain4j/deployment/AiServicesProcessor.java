@@ -783,8 +783,7 @@ public class AiServicesProcessor {
     }
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
-            List<TemplateParameterInfo> templateParams,
-            Class<?> returnType) {
+            List<TemplateParameterInfo> templateParams, Class<?> returnType) {
         String outputFormatInstructions = outputFormatInstructions(returnType);
 
         Optional<Integer> userNameParamName = method.annotations(Langchain4jDotNames.USER_NAME).stream().filter(
@@ -794,8 +793,7 @@ public class AiServicesProcessor {
         if (userMessageInstance != null) {
             AnnotationValue delimiterValue = userMessageInstance.value("delimiter");
             String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
-            String userMessageTemplate = String.join(delimiter, userMessageInstance.value().asStringArray())
-                    + outputFormatInstructions;
+            String userMessageTemplate = String.join(delimiter, userMessageInstance.value().asStringArray());
 
             if (userMessageTemplate.contains("{{it}}")) {
                 if (method.parametersCount() != 1) {
@@ -810,7 +808,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     new AiServiceMethodCreateInfo.TemplateInfo(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamName);
+                    userNameParamName, outputFormatInstructions);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(Langchain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -818,17 +816,14 @@ public class AiServicesProcessor {
             if (userMessageOnMethodParam.isPresent()) {
                 return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                         userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                        outputFormatInstructions,
-                        userNameParamName);
+                        userNameParamName, outputFormatInstructions);
             } else {
                 if (method.parametersCount() == 0) {
                     throw illegalConfigurationForMethod("Method should have at least one argument", method);
                 }
                 if (method.parametersCount() == 1) {
-                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
-                            0,
-                            outputFormatInstructions,
-                            userNameParamName);
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamName,
+                            outputFormatInstructions);
                 }
 
                 throw illegalConfigurationForMethod(

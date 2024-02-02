@@ -143,7 +143,7 @@ public class DeclarativeAiServicesTest {
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Tell me a joke about developers\n\nHere is some information that might be useful for answering:\n\ndummy");
+                "Tell me a joke about developers\n\nAnswer using the following information:\ndummy");
     }
 
     enum Sentiment {

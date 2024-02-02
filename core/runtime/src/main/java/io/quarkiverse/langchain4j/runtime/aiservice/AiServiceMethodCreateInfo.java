@@ -85,26 +85,28 @@ public class AiServiceMethodCreateInfo {
     public static class UserMessageInfo {
         private final Optional<TemplateInfo> template;
         private final Optional<Integer> paramPosition;
-        private final Optional<String> instructions;
         private final Optional<Integer> userNameParamPosition;
+        private final String outputFormatInstructions;
 
         @RecordableConstructor
-        public UserMessageInfo(Optional<TemplateInfo> template, Optional<Integer> paramPosition, Optional<String> instructions,
-                Optional<Integer> userNameParamPosition) {
+        public UserMessageInfo(Optional<TemplateInfo> template, Optional<Integer> paramPosition,
+                Optional<Integer> userNameParamPosition, String outputFormatInstructions) {
             this.template = template;
             this.paramPosition = paramPosition;
-            this.instructions = instructions;
             this.userNameParamPosition = userNameParamPosition;
+            this.outputFormatInstructions = outputFormatInstructions == null ? "" : outputFormatInstructions;
         }
 
-        public static UserMessageInfo fromMethodParam(int paramPosition, String instructions,
-                Optional<Integer> userNameParamPosition) {
-            return new UserMessageInfo(Optional.empty(), Optional.of(paramPosition), Optional.of(instructions),
-                    userNameParamPosition);
+        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition,
+                String outputFormatInstructions) {
+            return new UserMessageInfo(Optional.empty(), Optional.of(paramPosition),
+                    userNameParamPosition, outputFormatInstructions);
         }
 
-        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition) {
-            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), Optional.empty(), userNameParamPosition);
+        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition,
+                String outputFormatInstructions) {
+            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition,
+                    outputFormatInstructions);
         }
 
         public Optional<TemplateInfo> getTemplate() {
@@ -115,12 +117,12 @@ public class AiServiceMethodCreateInfo {
             return paramPosition;
         }
 
-        public Optional<String> getInstructions() {
-            return instructions;
-        }
-
         public Optional<Integer> getUserNameParamPosition() {
             return userNameParamPosition;
+        }
+
+        public String getOutputFormatInstructions() {
+            return outputFormatInstructions;
         }
     }
 

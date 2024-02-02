@@ -10,7 +10,7 @@ h|[[quarkus-langchain4j-redis_configuration]]link:#quarkus-langchain4j-redis_con
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.client-name]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.client-name[quarkus.langchain4j.redis.client-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-client-name]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-client-name[quarkus.langchain4j.redis.client-name]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.dimension]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.dimension[quarkus.langchain4j.redis.dimension]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-dimension]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-dimension[quarkus.langchain4j.redis.dimension]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.index-name]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.index-name[quarkus.langchain4j.redis.index-name]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-index-name]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-index-name[quarkus.langchain4j.redis.index-name]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |`embedding-index`
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.metadata-fields]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.metadata-fields[quarkus.langchain4j.redis.metadata-fields]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-metadata-fields]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-metadata-fields[quarkus.langchain4j.redis.metadata-fields]`
 
 
 [.description]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.distance-metric]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.distance-metric[quarkus.langchain4j.redis.distance-metric]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-distance-metric]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-distance-metric[quarkus.langchain4j.redis.distance-metric]`
 
 
 [.description]
@@ -96,7 +96,7 @@ endif::add-copy-button-to-env-var[]
 |`cosine`
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.vector-field-name]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.vector-field-name[quarkus.langchain4j.redis.vector-field-name]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name[quarkus.langchain4j.redis.vector-field-name]`
 
 
 [.description]
@@ -113,7 +113,7 @@ endif::add-copy-button-to-env-var[]
 |`vector`
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.scalar-field-name]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.scalar-field-name[quarkus.langchain4j.redis.scalar-field-name]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name[quarkus.langchain4j.redis.scalar-field-name]`
 
 
 [.description]
@@ -130,7 +130,7 @@ endif::add-copy-button-to-env-var[]
 |`scalar`
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.prefix]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.prefix[quarkus.langchain4j.redis.prefix]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix[quarkus.langchain4j.redis.prefix]`
 
 
 [.description]
@@ -149,7 +149,7 @@ endif::add-copy-button-to-env-var[]
 |`embedding:`
 
 
-a| [[quarkus-langchain4j-redis_quarkus.langchain4j.redis.vector-algorithm]]`link:#quarkus-langchain4j-redis_quarkus.langchain4j.redis.vector-algorithm[quarkus.langchain4j.redis.vector-algorithm]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm[quarkus.langchain4j.redis.vector-algorithm]`
 
 
 [.description]

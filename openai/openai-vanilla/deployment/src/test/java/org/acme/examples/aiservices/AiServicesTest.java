@@ -160,7 +160,7 @@ public class AiServicesTest {
         assertThat(result).isEqualTo(LocalDate.of(1968, JULY, 4));
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Extract date from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: 2023-12-31");
+                "Extract date from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-dd");
     }
 
     @Test
@@ -173,7 +173,7 @@ public class AiServicesTest {
         assertThat(result).isEqualTo(LocalTime.of(23, 45, 0));
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Extract time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: 23:59:59");
+                "Extract time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: HH:mm:ss");
     }
 
     @Test
@@ -186,7 +186,7 @@ public class AiServicesTest {
         assertThat(result).isEqualTo(LocalDateTime.of(1968, JULY, 4, 23, 45, 0));
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Extract date and time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: 2023-12-31T23:59:59");
+                "Extract date and time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-ddTHH:mm:ss");
     }
 
     enum Sentiment {

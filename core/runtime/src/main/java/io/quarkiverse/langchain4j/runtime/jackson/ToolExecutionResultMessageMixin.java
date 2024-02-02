@@ -17,7 +17,7 @@ public class ToolExecutionResultMessageMixin {
 
     @JsonCreator
     public ToolExecutionResultMessageMixin(@JsonProperty("id") String id, @JsonProperty("toolName") String toolName,
-            @JsonProperty("toolExecutionResult") String toolExecutionResult) {
+            @JsonProperty("text") String text) {
 
     }
 }
