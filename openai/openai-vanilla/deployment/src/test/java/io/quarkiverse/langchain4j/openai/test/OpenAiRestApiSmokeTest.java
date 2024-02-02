@@ -52,7 +52,7 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         ChatCompletionResponse response = restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).organizationId(ORGANIZATION).build());
+                OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).organizationId(ORGANIZATION).build());
         assertThat(response).isNotNull();
 
         wireMockServer.verify(WiremockUtils.chatCompletionRequestPattern(TOKEN, ORGANIZATION));
@@ -69,7 +69,7 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).build()))
+                OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).build()))
                 .isInstanceOf(
                         OpenAiHttpException.class)
                 .hasMessage("This is a dummy error message");
@@ -100,7 +100,7 @@ public class OpenAiRestApiSmokeTest {
         OpenAiRestApi restApi = createClient();
 
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
-                OpenAiRestApi.ApiMetadata.builder().apiKey(TOKEN).build()))
+                OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).build()))
                 .isInstanceOf(
                         OpenAiApiException.class);
     }
