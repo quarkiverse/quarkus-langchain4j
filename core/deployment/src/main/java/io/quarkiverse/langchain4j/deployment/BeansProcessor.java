@@ -18,6 +18,10 @@ import org.jboss.jandex.DotName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -33,6 +37,7 @@ import io.quarkiverse.langchain4j.runtime.Langchain4jRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.processor.BeanStream;
 import io.quarkus.arc.processor.InjectionPointInfo;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -118,14 +123,15 @@ public class BeansProcessor {
                     configNamespace = modelName + ".chat-model";
                 }
 
-                selectedChatProducer.produce(
-                        new SelectedChatModelProviderBuildItem(
-                                selectProvider(
-                                        chatCandidateItems,
-                                        userSelectedProvider,
-                                        "ChatLanguageModel or StreamingChatLanguageModel",
-                                        configNamespace),
-                                modelName));
+                String provider = selectProvider(
+                        chatCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                        userSelectedProvider,
+                        "ChatLanguageModel or StreamingChatLanguageModel",
+                        configNamespace);
+                if (provider != null) {
+                    selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, modelName));
+                }
             }
 
         }
@@ -145,15 +151,16 @@ public class BeansProcessor {
                 configNamespace = modelName + ".embedding-model";
             }
 
-            selectedEmbeddingProducer.produce(
-                    new SelectedEmbeddingModelCandidateBuildItem(
-                            selectEmbeddingModelProvider(
-                                    inProcessEmbeddingBuildItems,
-                                    embeddingCandidateItems,
-                                    userSelectedProvider,
-                                    "EmbeddingModel",
-                                    configNamespace),
-                            modelName));
+            String provider = selectEmbeddingModelProvider(
+                    inProcessEmbeddingBuildItems,
+                    embeddingCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                    userSelectedProvider,
+                    "EmbeddingModel",
+                    configNamespace);
+            if (provider != null) {
+                selectedEmbeddingProducer.produce(new SelectedEmbeddingModelCandidateBuildItem(provider, modelName));
+            }
         }
 
         for (String modelName : requestedModerationModels) {
@@ -171,14 +178,15 @@ public class BeansProcessor {
                 configNamespace = modelName + ".moderation-model";
             }
 
-            selectedModerationProducer.produce(
-                    new SelectedModerationModelProviderBuildItem(
-                            selectProvider(
-                                    moderationCandidateItems,
-                                    userSelectedProvider,
-                                    "ModerationModel",
-                                    configNamespace),
-                            modelName));
+            String provider = selectProvider(
+                    moderationCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ModerationModel.class),
+                    userSelectedProvider,
+                    "ModerationModel",
+                    configNamespace);
+            if (provider != null) {
+                selectedModerationProducer.produce(new SelectedModerationModelProviderBuildItem(provider, modelName));
+            }
         }
 
         for (String modelName : requestedImageModels) {
@@ -196,14 +204,15 @@ public class BeansProcessor {
                 configNamespace = modelName + ".image-model";
             }
 
-            selectedImageProducer.produce(
-                    new SelectedImageModelProviderBuildItem(
-                            selectProvider(
-                                    imageCandidateItems,
-                                    userSelectedProvider,
-                                    "ImageModel",
-                                    configNamespace),
-                            modelName));
+            String provider = selectProvider(
+                    imageCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ImageModel.class),
+                    userSelectedProvider,
+                    "ImageModel",
+                    configNamespace);
+            if (provider != null) {
+                selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, modelName));
+            }
         }
 
     }
@@ -222,15 +231,20 @@ public class BeansProcessor {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private <T extends ProviderHolder> String selectProvider(
             List<T> candidateItems,
+            BeanStream beanStream,
             Optional<String> userSelectedProvider,
             String beanType,
             String configNamespace) {
         List<String> availableProviders = candidateItems.stream().map(ProviderHolder::getProvider)
                 .collect(Collectors.toList());
         if (availableProviders.isEmpty()) {
-            throw new ConfigurationException(String.format(
-                    "A %s bean was requested, but no langchain4j providers were configured. Consider adding an extension like 'quarkus-langchain4j-openai'",
-                    beanType));
+            if (beanStream.collect().isEmpty()) {
+                throw new ConfigurationException(String.format(
+                        "A %s bean was requested, but no langchain4j providers were configured. Consider adding an extension like 'quarkus-langchain4j-openai'",
+                        beanType));
+            }
+            // a user provided bean exists, so there is no need to fail
+            return null;
         }
         if (availableProviders.size() == 1) {
             // user has selected a provider, but it's not the one that is available
@@ -241,24 +255,34 @@ public class BeansProcessor {
             }
             return availableProviders.get(0);
         }
-        // multiple providers exist, so we now need the configuration to select the proper one
+
         if (userSelectedProvider.isEmpty()) {
-            throw new ConfigurationException(String.format(
-                    "A %s bean was requested, but since there are multiple available providers, the 'quarkus.langchain4j.%s.provider' needs to be set to one of the available options (%s).",
-                    beanType, configNamespace, String.join(",", availableProviders)));
+            if (beanStream.collect().isEmpty()) {
+                // multiple providers exist, so we now need the configuration to select the proper one
+                throw new ConfigurationException(String.format(
+                        "A %s bean was requested, but since there are multiple available providers, the 'quarkus.langchain4j.%s.provider' needs to be set to one of the available options (%s).",
+                        beanType, configNamespace, String.join(",", availableProviders)));
+            }
+            // a user provided bean exists, so there is no need to fail
+            return null;
         }
         boolean matches = availableProviders.stream().anyMatch(ap -> ap.equals(userSelectedProvider.get()));
         if (matches) {
             return userSelectedProvider.get();
         }
-        throw new ConfigurationException(String.format(
-                "A %s bean was requested, but the value of 'quarkus.langchain4j.%s.provider' does not match any of the available options (%s).",
-                beanType, configNamespace, String.join(",", availableProviders)));
+        if (beanStream.collect().isEmpty()) {
+            throw new ConfigurationException(String.format(
+                    "A %s bean was requested, but the value of 'quarkus.langchain4j.%s.provider' does not match any of the available options (%s).",
+                    beanType, configNamespace, String.join(",", availableProviders)));
+        }
+        // a user provided bean exists, so there is no need to fail
+        return null;
     }
 
     private <T extends ProviderHolder> String selectEmbeddingModelProvider(
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
             List<T> chatCandidateItems,
+            BeanStream beanStream,
             Optional<String> userSelectedProvider,
             String requestedBeanName,
             String configNamespace) {
@@ -267,11 +291,15 @@ public class BeansProcessor {
         availableProviders.addAll(inProcessEmbeddingBuildItems.stream().map(InProcessEmbeddingBuildItem::getProvider)
                 .toList());
         if (availableProviders.isEmpty()) {
-            throw new ConfigurationException(String.format(
-                    "A %s bean was requested, but no langchain4j providers were configured and no in-process embedding model were found on the classpath. "
-                            +
-                            "Consider adding an extension like 'quarkus-langchain4j-openai' or one of the in-process embedding models.",
-                    requestedBeanName));
+            if (beanStream.collect().isEmpty()) {
+                throw new ConfigurationException(String.format(
+                        "A %s bean was requested, but no langchain4j providers were configured and no in-process embedding model were found on the classpath. "
+                                +
+                                "Consider adding an extension like 'quarkus-langchain4j-openai' or one of the in-process embedding models.",
+                        requestedBeanName));
+            }
+            // a user provided bean exists, so there is no need to fail
+            return null;
         }
         if (availableProviders.size() == 1) {
             // user has selected a provider, but it's not the one that is available
@@ -282,19 +310,28 @@ public class BeansProcessor {
             }
             return availableProviders.get(0);
         }
-        // multiple providers exist, so we now need the configuration to select the proper one
+
         if (userSelectedProvider.isEmpty()) {
-            throw new ConfigurationException(String.format(
-                    "A %s bean was requested, but since there are multiple available providers, the 'quarkus.langchain4j.%s.provider' needs to be set to one of the available options (%s).",
-                    requestedBeanName, configNamespace, String.join(",", availableProviders)));
+            if (beanStream.collect().isEmpty()) {
+                // multiple providers exist, so we now need the configuration to select the proper one
+                throw new ConfigurationException(String.format(
+                        "A %s bean was requested, but since there are multiple available providers, the 'quarkus.langchain4j.%s.provider' needs to be set to one of the available options (%s).",
+                        requestedBeanName, configNamespace, String.join(",", availableProviders)));
+            }
+            // a user provided bean exists, so there is no need to fail
+            return null;
         }
         boolean matches = availableProviders.stream().anyMatch(ap -> ap.equals(userSelectedProvider.get()));
         if (matches) {
             return userSelectedProvider.get();
         }
-        throw new ConfigurationException(String.format(
-                "A %s bean was requested, but the value of 'quarkus.langchain4j.%s.provider' does not match any of the available options (%s).",
-                requestedBeanName, configNamespace, String.join(",", availableProviders)));
+        if (beanStream.collect().isEmpty()) {
+            throw new ConfigurationException(String.format(
+                    "A %s bean was requested, but the value of 'quarkus.langchain4j.%s.provider' does not match any of the available options (%s).",
+                    requestedBeanName, configNamespace, String.join(",", availableProviders)));
+        }
+        // a user provided bean exists, so there is no need to fail
+        return null;
     }
 
     @BuildStep
