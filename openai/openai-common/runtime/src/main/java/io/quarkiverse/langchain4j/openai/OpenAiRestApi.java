@@ -416,17 +416,17 @@ public interface OpenAiRestApi {
         public final String authorization;
 
         @HeaderParam("api-key")
-        public final String apiKey;
+        public final String azureApiKey;
         @QueryParam("api-version")
         public final String apiVersion;
 
         @HeaderParam("OpenAI-Organization")
         public final String organizationId;
 
-        private ApiMetadata(String authorization, String apiKey,
+        private ApiMetadata(String openaiApiKey, String azureApiKey,
                 String apiVersion, String organizationId) {
-            this.authorization = authorization;
-            this.apiKey = apiKey;
+            this.authorization = (openaiApiKey != null) ? "Bearer " + openaiApiKey : null;
+            this.azureApiKey = azureApiKey;
             this.apiVersion = apiVersion;
             this.organizationId = organizationId;
         }
@@ -436,20 +436,30 @@ public interface OpenAiRestApi {
         }
 
         public static class Builder {
-            private String apiKey;
+            private String azureApiKey;
+            private String openAiApiKey;
             private String apiVersion;
             private String organizationId;
 
             public ApiMetadata build() {
-                return (apiKey == null) ? new ApiMetadata(null, null, apiVersion, organizationId)
-                        : new ApiMetadata(
-                                "Bearer " + apiKey, // typical OpenAI authentication
-                                apiKey, // used by AzureAI
-                                apiVersion, organizationId);
+                if ((azureApiKey != null) && (openAiApiKey != null)) {
+                    return new ApiMetadata(openAiApiKey, azureApiKey, apiVersion, organizationId);
+                } else if (azureApiKey != null) {
+                    return new ApiMetadata(null, azureApiKey, apiVersion, organizationId);
+                } else if (openAiApiKey != null) {
+                    return new ApiMetadata(openAiApiKey, null, apiVersion, organizationId);
+                }
+
+                return new ApiMetadata(null, null, apiVersion, organizationId);
             }
 
-            public ApiMetadata.Builder apiKey(String apiKey) {
-                this.apiKey = apiKey;
+            public ApiMetadata.Builder azureApiKey(String azureApiKey) {
+                this.azureApiKey = azureApiKey;
+                return this;
+            }
+
+            public ApiMetadata.Builder openAiApiKey(String openAiApiKey) {
+                this.openAiApiKey = openAiApiKey;
                 return this;
             }
 
