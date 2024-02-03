@@ -105,7 +105,16 @@ Provided Data: John Doe, 30, john@example.com, 123 Main St, New York, 10001
 In this example, the prompt specifies the expected structure for the JSON response, comprising keys like `name`, `age`, `email`, and `address`, with their respective value types. The `Provided Data` segment serves as the input to be formatted into the requested JSON structure.
 
 Being able to describe the JSON output is essential when an xref:ai-services.adoc#_ai_method_return_type[AI method] returns an object.
-The Quarkus LangChain4j extension will use the JSON structure to create an instance of the return type.
+
+Even if a JSON format is not directly provided by the developer in the prompt, the LangChain4j will automatically add it, and the Quarkus LangChain4j extension will use the JSON structure to create an instance of the return type.
+
+In this case, when working with JSON formats, it's good to specify this fact in a prompt and always ask for a valid and unwrapped JSON, for example:
+
+[source, text]
+----
+You must respond in a valid JSON format.
+You must not wrap JSON response in backticks, markdown, or in any other way, but return it as plain text.
+----
 
 == Control tokens and prefixes
 
