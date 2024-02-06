@@ -22,7 +22,7 @@ export class QwcEmbeddingStore extends LitElement {
             return html`
                 <h3>Add a new embedding</h3>
                 ${this._addEmbeddingConfirmation}
-                <vaadin-text-area id="embedding-text" label="Text segment"></vaadin-text-area><br/>
+                <vaadin-text-area id="embedding-text" label="Text segment" required min-length="1"></vaadin-text-area><br/>
                 <vaadin-text-area id="embedding-id" label="(Optional) Embedding ID"></vaadin-text-area><br/>
                 <vaadin-text-area id="metadata"
                                   helper-text="Key-value pairs separated by commas or line breaks"
@@ -35,8 +35,8 @@ export class QwcEmbeddingStore extends LitElement {
                 )}>Create and store</vaadin-button>
                 
                 <h3>Search for relevant embeddings</h3>
-                <vaadin-text-area id="search-text" label="Search text"></vaadin-text-area><br/>
-                <vaadin-text-field id="search-limit" label="Limit" value="10"></vaadin-text-field><br/>
+                <vaadin-text-area id="search-text" label="Search text" required min-length="1"></vaadin-text-area><br/>
+                <vaadin-text-field id="search-limit" label="Limit" value="10" required min-length="1"></vaadin-text-field><br/>
                 <vaadin-button @click=${() => this._findRelevant(
                         this.shadowRoot.getElementById('search-text').value,
                         this.shadowRoot.getElementById('search-limit').value
@@ -66,26 +66,19 @@ export class QwcEmbeddingStore extends LitElement {
         this._relevantEmbeddingsOutput = html`Working...<br/>`;
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
-                <vaadin-grid id="relevant-embeddings" .items=${jsonRpcResponse.result}>
-                    <vaadin-grid-sort-column path="embeddingId" header="ID" ${columnBodyRenderer(this._embeddingMatchIdRenderer, [])}></vaadin-grid-sort-column>
-                    <vaadin-grid-sort-column path="score" header="Score" ${columnBodyRenderer(this._embeddingMatchScoreRenderer, [])}></vaadin-grid-sort-column>
-                    <vaadin-grid-sort-column path="embedded" header="Text segment" ${columnBodyRenderer(this._embeddingMatchEmbeddedRenderer, [])}></vaadin-grid-sort-column>
-                    <vaadin-grid-sort-column path="metadata" header="Metadata" ${columnBodyRenderer(this._embeddingMatchMetadataRenderer, [])}></vaadin-grid-sort-column>
+                <vaadin-grid  theme="wrap-cell-content" id="relevant-embeddings" .items=${jsonRpcResponse.result}>
+                    <vaadin-grid-sort-column path="embeddingId" header="ID" resizable></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column path="score" header="Score" resizable></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column path="embedded" header="Text segment" resizable></vaadin-grid-sort-column>
+                    <vaadin-grid-sort-column header="Metadata" resizable ${columnBodyRenderer(this._embeddingMatchMetadataRenderer, [])}></vaadin-grid-sort-column>
                 </vaadin-grid>
                 `;
+        }).catch((error) => {
+            this._relevantEmbeddingsOutput = html`
+                <qui-alert level="error" showIcon>
+                    <span>${JSON.stringify(error.error)}</span>
+                </qui-alert>`
         });
-    }
-
-    _embeddingMatchIdRenderer(match) {
-        return html`${ match.embeddingId }`
-    }
-
-    _embeddingMatchScoreRenderer(match) {
-        return html`${ match.score }`
-    }
-
-    _embeddingMatchEmbeddedRenderer(match) {
-        return html`${ match.embedded }`
     }
 
     _embeddingMatchMetadataRenderer(match) {
