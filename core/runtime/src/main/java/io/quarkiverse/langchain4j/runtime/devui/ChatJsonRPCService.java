@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.runtime.devui;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -13,6 +14,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 
+@ActivateRequestContext
 public class ChatJsonRPCService {
 
     @Inject
