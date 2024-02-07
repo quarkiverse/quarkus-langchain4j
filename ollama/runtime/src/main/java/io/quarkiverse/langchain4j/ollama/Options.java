@@ -12,6 +12,7 @@ public class Options {
     private final String stop;
     private final Double topP;
     private final Integer topK;
+    private final Integer seed;
 
     private Options(Builder builder) {
         temperature = builder.temperature;
@@ -19,6 +20,7 @@ public class Options {
         stop = builder.stop;
         topP = builder.topP;
         topK = builder.topK;
+        seed = builder.seed;
     }
 
     public static Builder builder() {
@@ -45,12 +47,17 @@ public class Options {
         return topK;
     }
 
+    public Integer getSeed() {
+        return seed;
+    }
+
     public static final class Builder {
         private Double temperature = 0.8;
         private Integer numPredict = 128;
         private String stop;
         private Double topP = 0.9;
         private Integer topK = 40;
+        private Integer seed;
 
         public Builder temperature(Double val) {
             temperature = val;
@@ -74,6 +81,11 @@ public class Options {
 
         public Builder topK(Integer topK) {
             this.topK = topK;
+            return this;
+        }
+
+        public Builder seed(Integer seed) {
+            this.seed = seed;
             return this;
         }
 

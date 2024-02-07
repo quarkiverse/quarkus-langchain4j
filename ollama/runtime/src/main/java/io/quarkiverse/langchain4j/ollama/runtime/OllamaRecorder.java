@@ -17,13 +17,18 @@ public class OllamaRecorder {
     public Supplier<?> chatModel(Langchain4jOllamaConfig runtimeConfig, String modelName) {
         Langchain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
         ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
+
         Options.Builder optionsBuilder = Options.builder()
                 .temperature(chatModelConfig.temperature())
                 .topK(chatModelConfig.topK())
                 .topP(chatModelConfig.topP())
                 .numPredict(chatModelConfig.numPredict());
+
         if (chatModelConfig.stop().isPresent()) {
             optionsBuilder.stop(chatModelConfig.stop().get());
+        }
+        if (chatModelConfig.seed().isPresent()) {
+            optionsBuilder.seed(chatModelConfig.seed().get());
         }
         var builder = OllamaChatLanguageModel.builder()
                 .baseUrl(ollamaConfig.baseUrl())
