@@ -334,6 +334,23 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.chat-model.response-format]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.chat-model.response-format[quarkus.langchain4j.openai.chat-model.response-format]`
+
+
+[.description]
+--
+The response format the model should use. Some models are not compatible with some response formats, make sure to review OpenAI documentation.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`text`
+
+
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.model-name[quarkus.langchain4j.openai.embedding-model.model-name]`
 
 
@@ -917,6 +934,23 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_LOG
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
+
+
+a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.chat-model.response-format]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.chat-model.response-format[quarkus.langchain4j.openai."model-name".chat-model.response-format]`
+
+
+[.description]
+--
+The response format the model should use. Some models are not compatible with some response formats, make sure to review OpenAI documentation.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`text`
 
 
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.embedding-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.embedding-model.model-name[quarkus.langchain4j.openai."model-name".embedding-model.model-name]`

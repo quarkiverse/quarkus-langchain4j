@@ -68,4 +68,11 @@ public interface ChatModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * The response format the model should use.
+     * Some models are not compatible with some response formats, make sure to review OpenAI documentation.
+     */
+    @WithDefault("text")
+    String responseFormat();
 }
