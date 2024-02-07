@@ -348,7 +348,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_RESPONSE_FORMAT+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`text`
+|
 
 
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.embedding-model.model-name[quarkus.langchain4j.openai.embedding-model.model-name]`
@@ -950,7 +950,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_RESPONSE_FORMAT+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`text`
+|
 
 
 a| [[quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.embedding-model.model-name]]`link:#quarkus-langchain4j-openai_quarkus.langchain4j.openai.-model-name-.embedding-model.model-name[quarkus.langchain4j.openai."model-name".embedding-model.model-name]`

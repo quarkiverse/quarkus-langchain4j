@@ -47,7 +47,7 @@ public class OpenAiRecorder {
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                .responseFormat(chatModelConfig.responseFormat());
+                .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
         openAiConfig.organizationId().ifPresent(builder::organizationId);
 
@@ -81,7 +81,7 @@ public class OpenAiRecorder {
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                .responseFormat(chatModelConfig.responseFormat());
+                .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
         openAiConfig.organizationId().ifPresent(builder::organizationId);
 
