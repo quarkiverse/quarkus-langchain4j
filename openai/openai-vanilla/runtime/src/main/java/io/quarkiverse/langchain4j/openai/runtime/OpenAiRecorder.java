@@ -46,7 +46,8 @@ public class OpenAiRecorder {
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty());
+                .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
         openAiConfig.organizationId().ifPresent(builder::organizationId);
 
@@ -79,7 +80,8 @@ public class OpenAiRecorder {
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty());
+                .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
         openAiConfig.organizationId().ifPresent(builder::organizationId);
 
