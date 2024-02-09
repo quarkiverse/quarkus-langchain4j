@@ -10,7 +10,7 @@ h|[[quarkus-langchain4j-pgvector_configuration]]link:#quarkus-langchain4j-pgvect
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.datasource]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.datasource[quarkus.langchain4j.pgvector.datasource]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource[quarkus.langchain4j.pgvector.datasource]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.table[quarkus.langchain4j.pgvector.table]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table[quarkus.langchain4j.pgvector.table]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |`embeddings`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.dimension]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.dimension[quarkus.langchain4j.pgvector.dimension]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension[quarkus.langchain4j.pgvector.dimension]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.use-index]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.use-index[quarkus.langchain4j.pgvector.use-index]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index[quarkus.langchain4j.pgvector.use-index]`
 
 
 [.description]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.index-list-size]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.index-list-size[quarkus.langchain4j.pgvector.index-list-size]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size[quarkus.langchain4j.pgvector.index-list-size]`
 
 
 [.description]
@@ -95,7 +95,7 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.create-table]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.create-table[quarkus.langchain4j.pgvector.create-table]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table[quarkus.langchain4j.pgvector.create-table]`
 
 
 [.description]
@@ -112,7 +112,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.drop-table-first]]`link:#quarkus-langchain4j-pgvector_quarkus.langchain4j.pgvector.drop-table-first[quarkus.langchain4j.pgvector.drop-table-first]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first[quarkus.langchain4j.pgvector.drop-table-first]`
 
 
 [.description]
