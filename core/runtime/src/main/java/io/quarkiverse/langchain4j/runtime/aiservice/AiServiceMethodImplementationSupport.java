@@ -1,12 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import static dev.langchain4j.data.message.ToolExecutionResultMessage.toolExecutionResultMessage;
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static dev.langchain4j.service.ServiceOutputParser.parse;
-import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
@@ -38,6 +35,7 @@ import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.TokenStream;
@@ -96,29 +94,19 @@ public class AiServiceMethodImplementationSupport {
             audit.initialMessages(systemMessage, userMessage);
         }
 
-        if (context.retriever != null) { // TODO extract method/class
-            List<TextSegment> relevant = context.retriever.findRelevant(userMessage.text());
+        Object memoryId = memoryId(createInfo, methodArgs).orElse("default");
 
-            if (relevant == null || relevant.isEmpty()) {
-                log.debug("No relevant information was found");
-            } else {
-                String relevantConcatenated = relevant.stream()
-                        .map(TextSegment::text)
-                        .collect(joining("\n\n"));
-
-                log.debugv("Retrieved relevant information:\n{0}\n", relevantConcatenated);
-
-                userMessage = userMessage(userMessage.text()
-                        + "\n\nHere is some information that might be useful for answering:\n\n"
-                        + relevantConcatenated);
-
-                if (audit != null) {
-                    audit.addRelevantDocument(relevant, userMessage);
-                }
-            }
+        if (context.retrievalAugmentor != null) { // TODO extract method/class
+            List<ChatMessage> chatMemory = context.hasChatMemory()
+                    ? context.chatMemory(memoryId).messages()
+                    : null;
+            Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
+            userMessage = context.retrievalAugmentor.augment(userMessage, metadata);
         }
 
-        Object memoryId = memoryId(createInfo, methodArgs).orElse("default");
+        // TODO give user ability to provide custom OutputParser
+        String outputFormatInstructions = createInfo.getUserMessageInfo().getOutputFormatInstructions();
+        userMessage = UserMessage.from(userMessage.text() + outputFormatInstructions);
 
         if (context.hasChatMemory()) {
             ChatMemory chatMemory = context.chatMemory(memoryId);
@@ -267,7 +255,7 @@ public class AiServiceMethodImplementationSupport {
             // we do not need to apply the instructions as they have already been added to the template text at build time
             Prompt prompt = PromptTemplate.from(templateInfo.getText()).apply(templateParams);
 
-            return userMessage(userName, prompt.text());
+            return createUserMessage(userName, prompt.text());
         } else if (userMessageInfo.getParamPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.getParamPosition().get();
             Object argValue = methodArgs[paramIndex];
@@ -277,10 +265,18 @@ public class AiServiceMethodImplementationSupport {
                                 + "' because parameter with index "
                                 + paramIndex + " is null");
             }
-            return userMessage(userName, toString(argValue) + userMessageInfo.getInstructions().orElse(""));
+            return createUserMessage(userName, toString(argValue));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
                     + "'. Please contact the maintainers");
+        }
+    }
+
+    private static UserMessage createUserMessage(String name, String text) {
+        if (name == null) {
+            return userMessage(text);
+        } else {
+            return userMessage(name, text);
         }
     }
 

@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.UserMessage;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -55,6 +56,16 @@ class ChatMessageSerializerTest {
     }
 
     @Test
+    void should_serialize_and_deserialize_user_message_with_image_content() {
+        UserMessage message = UserMessage.from(ImageContent.from("http://image.url"));
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+    }
+
+    @Test
     void should_serialize_and_deserialize_empty_list() {
 
         List<ChatMessage> messages = emptyList();
@@ -76,7 +87,7 @@ class ChatMessageSerializerTest {
         List<ChatMessage> messages = singletonList(userMessage("hello"));
 
         String json = messagesToJson(messages);
-        assertThat(json).isEqualTo("[{\"text\":\"hello\",\"type\":\"USER\"}]");
+        assertThat(json).isEqualTo("[{\"contents\":[{\"text\":\"hello\",\"type\":\"TEXT\"}],\"type\":\"USER\"}]");
 
         List<ChatMessage> deserializedMessages = messagesFromJson(json);
         assertThat(deserializedMessages).isEqualTo(messages);
@@ -99,8 +110,8 @@ class ChatMessageSerializerTest {
         String json = ChatMessageSerializer.messagesToJson(messages);
         assertThat(json).isEqualTo("[" +
                 "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
-                "{\"text\":\"Hello from user\",\"type\":\"USER\"}," +
-                "{\"name\":\"Klaus\",\"text\":\"Hello from Klaus\",\"type\":\"USER\"}," +
+                "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
+                "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
                 "{\"text\":\"Hello from AI\",\"type\":\"AI\"}," +
                 "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"type\":\"AI\"}," +
                 "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +
