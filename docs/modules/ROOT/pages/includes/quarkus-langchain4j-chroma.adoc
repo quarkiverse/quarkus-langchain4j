@@ -10,7 +10,7 @@ h|[[quarkus-langchain4j-chroma_configuration]]link:#quarkus-langchain4j-chroma_c
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-enabled]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-enabled[quarkus.langchain4j.chroma.devservices.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.enabled]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.enabled[quarkus.langchain4j.chroma.devservices.enabled]`
 
 
 [.description]
@@ -29,7 +29,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-image-name]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-image-name[quarkus.langchain4j.chroma.devservices.image-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.image-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.image-name[quarkus.langchain4j.chroma.devservices.image-name]`
 
 
 [.description]
@@ -46,7 +46,7 @@ endif::add-copy-button-to-env-var[]
 |`ghcr.io/chroma-core/chroma:0.4.15`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port[quarkus.langchain4j.chroma.devservices.port]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.port]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.port[quarkus.langchain4j.chroma.devservices.port]`
 
 
 [.description]
@@ -65,7 +65,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-shared]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-shared[quarkus.langchain4j.chroma.devservices.shared]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.shared]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.shared[quarkus.langchain4j.chroma.devservices.shared]`
 
 
 [.description]
@@ -86,7 +86,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-service-name]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-service-name[quarkus.langchain4j.chroma.devservices.service-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.service-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.service-name[quarkus.langchain4j.chroma.devservices.service-name]`
 
 
 [.description]
@@ -105,7 +105,7 @@ endif::add-copy-button-to-env-var[]
 |`chroma`
 
 
-a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-url]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-url[quarkus.langchain4j.chroma.url]`
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.url]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.url[quarkus.langchain4j.chroma.url]`
 
 
 [.description]
@@ -122,7 +122,7 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-collection-name]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-collection-name[quarkus.langchain4j.chroma.collection-name]`
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.collection-name]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.collection-name[quarkus.langchain4j.chroma.collection-name]`
 
 
 [.description]
@@ -139,7 +139,7 @@ endif::add-copy-button-to-env-var[]
 |`default`
 
 
-a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-timeout]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-timeout[quarkus.langchain4j.chroma.timeout]`
+a| [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.timeout]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.timeout[quarkus.langchain4j.chroma.timeout]`
 
 
 [.description]
@@ -157,7 +157,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env[quarkus.langchain4j.chroma.devservices.container-env]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.container-env-container-env]]`link:#quarkus-langchain4j-chroma_quarkus.langchain4j.chroma.devservices.container-env-container-env[quarkus.langchain4j.chroma.devservices.container-env]`
 
 
 [.description]

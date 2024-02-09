@@ -45,6 +45,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.gizmo.ClassTransformer;
 import io.quarkus.gizmo.Gizmo;
 import io.quarkus.gizmo.MethodCreator;
@@ -63,6 +64,11 @@ public class PromptProcessor {
             "/");
     private static final String TO_PROMPT = "toPrompt";
     private static final String TO_PROMPT_DESCRIPTOR = "(Ljava/lang/Object;)Ldev/langchain4j/model/input/Prompt;";
+
+    @BuildStep
+    public void nativeSupport(BuildProducer<RuntimeInitializedClassBuildItem> producer) {
+        producer.produce(new RuntimeInitializedClassBuildItem("dev.langchain4j.rag.content.injector.DefaultContentInjector"));
+    }
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)

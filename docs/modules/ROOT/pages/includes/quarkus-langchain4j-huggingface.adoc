@@ -10,7 +10,7 @@ h|[[quarkus-langchain4j-huggingface_configuration]]link:#quarkus-langchain4j-hug
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-enabled]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-enabled[quarkus.langchain4j.huggingface.chat-model.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.enabled[quarkus.langchain4j.huggingface.chat-model.enabled]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-enabled]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-enabled[quarkus.langchain4j.huggingface.embedding-model.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.enabled[quarkus.langchain4j.huggingface.embedding-model.enabled]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-moderation-model-enabled]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-moderation-model-enabled[quarkus.langchain4j.huggingface.moderation-model.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.moderation-model.enabled]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.moderation-model.enabled[quarkus.langchain4j.huggingface.moderation-model.enabled]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-api-key]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-api-key[quarkus.langchain4j.huggingface.api-key]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.api-key]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.api-key[quarkus.langchain4j.huggingface.api-key]`
 
 
 [.description]
@@ -78,7 +78,7 @@ endif::add-copy-button-to-env-var[]
 |`dummy`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-timeout]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-timeout[quarkus.langchain4j.huggingface.timeout]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.timeout]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.timeout[quarkus.langchain4j.huggingface.timeout]`
 
 
 [.description]
@@ -96,7 +96,7 @@ endif::add-copy-button-to-env-var[]
 |`10S`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url[quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url[quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url]`
 
 
 [.description]
@@ -118,7 +118,7 @@ endif::add-copy-button-to-env-var[]
 |`https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-temperature]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-temperature[quarkus.langchain4j.huggingface.chat-model.temperature]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.temperature]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.temperature[quarkus.langchain4j.huggingface.chat-model.temperature]`
 
 
 [.description]
@@ -135,7 +135,7 @@ endif::add-copy-button-to-env-var[]
 |`1.0`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-max-new-tokens[quarkus.langchain4j.huggingface.chat-model.max-new-tokens]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.max-new-tokens]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.max-new-tokens[quarkus.langchain4j.huggingface.chat-model.max-new-tokens]`
 
 
 [.description]
@@ -152,7 +152,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-return-full-text]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-return-full-text[quarkus.langchain4j.huggingface.chat-model.return-full-text]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.return-full-text]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.return-full-text[quarkus.langchain4j.huggingface.chat-model.return-full-text]`
 
 
 [.description]
@@ -169,7 +169,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-wait-for-model[quarkus.langchain4j.huggingface.chat-model.wait-for-model]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.wait-for-model[quarkus.langchain4j.huggingface.chat-model.wait-for-model]`
 
 
 [.description]
@@ -186,7 +186,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-do-sample]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-do-sample[quarkus.langchain4j.huggingface.chat-model.do-sample]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.do-sample]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.do-sample[quarkus.langchain4j.huggingface.chat-model.do-sample]`
 
 
 [.description]
@@ -203,7 +203,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-top-k]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-top-k[quarkus.langchain4j.huggingface.chat-model.top-k]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.top-k]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.top-k[quarkus.langchain4j.huggingface.chat-model.top-k]`
 
 
 [.description]
@@ -220,7 +220,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-top-p]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-top-p[quarkus.langchain4j.huggingface.chat-model.top-p]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.top-p]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.top-p[quarkus.langchain4j.huggingface.chat-model.top-p]`
 
 
 [.description]
@@ -237,7 +237,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-repetition-penalty]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-repetition-penalty[quarkus.langchain4j.huggingface.chat-model.repetition-penalty]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.repetition-penalty]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.repetition-penalty[quarkus.langchain4j.huggingface.chat-model.repetition-penalty]`
 
 
 [.description]
@@ -254,7 +254,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-log-requests[quarkus.langchain4j.huggingface.chat-model.log-requests]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-requests[quarkus.langchain4j.huggingface.chat-model.log-requests]`
 
 
 [.description]
@@ -271,7 +271,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-log-responses[quarkus.langchain4j.huggingface.chat-model.log-responses]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.chat-model.log-responses[quarkus.langchain4j.huggingface.chat-model.log-responses]`
 
 
 [.description]
@@ -288,7 +288,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-inference-endpoint-url[quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url[quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url]`
 
 
 [.description]
@@ -310,7 +310,7 @@ endif::add-copy-button-to-env-var[]
 |`https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-embedding-model-wait-for-model[quarkus.langchain4j.huggingface.embedding-model.wait-for-model]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.embedding-model.wait-for-model[quarkus.langchain4j.huggingface.embedding-model.wait-for-model]`
 
 
 [.description]
@@ -327,7 +327,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-log-requests[quarkus.langchain4j.huggingface.log-requests]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-requests[quarkus.langchain4j.huggingface.log-requests]`
 
 
 [.description]
@@ -344,7 +344,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-log-responses[quarkus.langchain4j.huggingface.log-responses]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.log-responses[quarkus.langchain4j.huggingface.log-responses]`
 
 
 [.description]
@@ -361,12 +361,12 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-h|[[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-named-config-named-model-config]]link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-named-config-named-model-config[Named model config]
+h|[[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.named-config-named-model-config]]link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.named-config-named-model-config[Named model config]
 
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-api-key]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-api-key[quarkus.langchain4j.huggingface."model-name".api-key]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.api-key]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.api-key[quarkus.langchain4j.huggingface."model-name".api-key]`
 
 
 [.description]
@@ -383,7 +383,7 @@ endif::add-copy-button-to-env-var[]
 |`dummy`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-timeout]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-timeout[quarkus.langchain4j.huggingface."model-name".timeout]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.timeout]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.timeout[quarkus.langchain4j.huggingface."model-name".timeout]`
 
 
 [.description]
@@ -401,7 +401,7 @@ endif::add-copy-button-to-env-var[]
 |`10S`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".chat-model.inference-endpoint-url]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".chat-model.inference-endpoint-url]`
 
 
 [.description]
@@ -423,7 +423,7 @@ endif::add-copy-button-to-env-var[]
 |`https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-temperature[quarkus.langchain4j.huggingface."model-name".chat-model.temperature]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.temperature]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.temperature[quarkus.langchain4j.huggingface."model-name".chat-model.temperature]`
 
 
 [.description]
@@ -440,7 +440,7 @@ endif::add-copy-button-to-env-var[]
 |`1.0`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-max-new-tokens[quarkus.langchain4j.huggingface."model-name".chat-model.max-new-tokens]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.max-new-tokens]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.max-new-tokens[quarkus.langchain4j.huggingface."model-name".chat-model.max-new-tokens]`
 
 
 [.description]
@@ -457,7 +457,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-return-full-text]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-return-full-text[quarkus.langchain4j.huggingface."model-name".chat-model.return-full-text]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.return-full-text]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.return-full-text[quarkus.langchain4j.huggingface."model-name".chat-model.return-full-text]`
 
 
 [.description]
@@ -474,7 +474,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-wait-for-model[quarkus.langchain4j.huggingface."model-name".chat-model.wait-for-model]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.wait-for-model[quarkus.langchain4j.huggingface."model-name".chat-model.wait-for-model]`
 
 
 [.description]
@@ -491,7 +491,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-do-sample]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-do-sample[quarkus.langchain4j.huggingface."model-name".chat-model.do-sample]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.do-sample]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.do-sample[quarkus.langchain4j.huggingface."model-name".chat-model.do-sample]`
 
 
 [.description]
@@ -508,7 +508,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-top-k]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-top-k[quarkus.langchain4j.huggingface."model-name".chat-model.top-k]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-k]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-k[quarkus.langchain4j.huggingface."model-name".chat-model.top-k]`
 
 
 [.description]
@@ -525,7 +525,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-top-p]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-top-p[quarkus.langchain4j.huggingface."model-name".chat-model.top-p]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-p]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.top-p[quarkus.langchain4j.huggingface."model-name".chat-model.top-p]`
 
 
 [.description]
@@ -542,7 +542,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-repetition-penalty]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-repetition-penalty[quarkus.langchain4j.huggingface."model-name".chat-model.repetition-penalty]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.repetition-penalty]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.repetition-penalty[quarkus.langchain4j.huggingface."model-name".chat-model.repetition-penalty]`
 
 
 [.description]
@@ -559,7 +559,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-log-requests[quarkus.langchain4j.huggingface."model-name".chat-model.log-requests]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-requests[quarkus.langchain4j.huggingface."model-name".chat-model.log-requests]`
 
 
 [.description]
@@ -576,7 +576,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-log-responses[quarkus.langchain4j.huggingface."model-name".chat-model.log-responses]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.chat-model.log-responses[quarkus.langchain4j.huggingface."model-name".chat-model.log-responses]`
 
 
 [.description]
@@ -593,7 +593,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-embedding-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-embedding-model-inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".embedding-model.inference-endpoint-url]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".embedding-model.inference-endpoint-url]`
 
 
 [.description]
@@ -615,7 +615,7 @@ endif::add-copy-button-to-env-var[]
 |`https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-embedding-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-embedding-model-wait-for-model[quarkus.langchain4j.huggingface."model-name".embedding-model.wait-for-model]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.embedding-model.wait-for-model[quarkus.langchain4j.huggingface."model-name".embedding-model.wait-for-model]`
 
 
 [.description]
@@ -632,7 +632,7 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-log-requests[quarkus.langchain4j.huggingface."model-name".log-requests]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-requests]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-requests[quarkus.langchain4j.huggingface."model-name".log-requests]`
 
 
 [.description]
@@ -649,7 +649,7 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-log-responses[quarkus.langchain4j.huggingface."model-name".log-responses]`
+a| [[quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-responses]]`link:#quarkus-langchain4j-huggingface_quarkus.langchain4j.huggingface.-model-name-.log-responses[quarkus.langchain4j.huggingface."model-name".log-responses]`
 
 
 [.description]

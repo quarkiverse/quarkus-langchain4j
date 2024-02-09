@@ -5,12 +5,12 @@ icon:lock[title=Fixed at build time] Configuration property fixed at build time 
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
 |===
 
-h|[[quarkus-langchain4j_quarkus-langchain4j-default-config-default-model-config]]link:#quarkus-langchain4j_quarkus-langchain4j-default-config-default-model-config[Default model config]
+h|[[quarkus-langchain4j_quarkus.langchain4j.default-config-default-model-config]]link:#quarkus-langchain4j_quarkus.langchain4j.default-config-default-model-config[Default model config]
 
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-chat-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-chat-model-provider[quarkus.langchain4j.chat-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.chat-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.chat-model.provider[quarkus.langchain4j.chat-model.provider]`
 
 
 [.description]
@@ -27,7 +27,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-embedding-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-embedding-model-provider[quarkus.langchain4j.embedding-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.embedding-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.embedding-model.provider[quarkus.langchain4j.embedding-model.provider]`
 
 
 [.description]
@@ -44,7 +44,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-moderation-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-moderation-model-provider[quarkus.langchain4j.moderation-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.moderation-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.moderation-model.provider[quarkus.langchain4j.moderation-model.provider]`
 
 
 [.description]
@@ -61,7 +61,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-image-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-image-model-provider[quarkus.langchain4j.image-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.image-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.image-model.provider[quarkus.langchain4j.image-model.provider]`
 
 
 [.description]
@@ -78,12 +78,12 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-h|[[quarkus-langchain4j_quarkus-langchain4j-named-config-named-model-config]]link:#quarkus-langchain4j_quarkus-langchain4j-named-config-named-model-config[Named model config]
+h|[[quarkus-langchain4j_quarkus.langchain4j.named-config-named-model-config]]link:#quarkus-langchain4j_quarkus.langchain4j.named-config-named-model-config[Named model config]
 
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-model-name-chat-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-model-name-chat-model-provider[quarkus.langchain4j."model-name".chat-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.chat-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.chat-model.provider[quarkus.langchain4j."model-name".chat-model.provider]`
 
 
 [.description]
@@ -100,7 +100,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-model-name-embedding-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-model-name-embedding-model-provider[quarkus.langchain4j."model-name".embedding-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.embedding-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.embedding-model.provider[quarkus.langchain4j."model-name".embedding-model.provider]`
 
 
 [.description]
@@ -117,7 +117,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-model-name-moderation-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-model-name-moderation-model-provider[quarkus.langchain4j."model-name".moderation-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.moderation-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.moderation-model.provider[quarkus.langchain4j."model-name".moderation-model.provider]`
 
 
 [.description]
@@ -134,7 +134,7 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-model-name-image-model-provider]]`link:#quarkus-langchain4j_quarkus-langchain4j-model-name-image-model-provider[quarkus.langchain4j."model-name".image-model.provider]`
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus.langchain4j.-model-name-.image-model.provider]]`link:#quarkus-langchain4j_quarkus.langchain4j.-model-name-.image-model.provider[quarkus.langchain4j."model-name".image-model.provider]`
 
 
 [.description]
