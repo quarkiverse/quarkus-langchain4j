@@ -47,14 +47,6 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: Update latest release version in docs
-        run: |
-          ./mvnw -B -ntp -pl docs -am generate-resources -Denforcer.skip -Dformatter.skip -Dimpsort.skip
-          if ! git diff --quiet docs/modules/ROOT/pages/includes/attributes.adoc; then
-            git add docs/modules/ROOT/pages/includes/attributes.adoc
-            git commit -m "Update the latest release version ${{steps.metadata.outputs.current-version}} in documentation"
-          fi
-
       - name: Maven release ${{steps.metadata.outputs.current-version}}
         run: |
           ./mvnw -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
