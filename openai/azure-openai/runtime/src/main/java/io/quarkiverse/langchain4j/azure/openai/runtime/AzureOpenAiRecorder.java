@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
@@ -31,92 +34,120 @@ public class AzureOpenAiRecorder {
 
     public Supplier<ChatLanguageModel> chatModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
         Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
-        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-        String apiKey = azureAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-        }
-        var builder = AzureOpenAiChatModel.builder()
-                .endpoint(getEndpoint(azureAiConfig, modelName))
-                .apiKey(apiKey)
-                .apiVersion(azureAiConfig.apiVersion())
-                .timeout(azureAiConfig.timeout())
-                .maxRetries(azureAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
 
-                .temperature(chatModelConfig.temperature())
-                .topP(chatModelConfig.topP())
-                .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty());
-
-        if (chatModelConfig.maxTokens().isPresent()) {
-            builder.maxTokens(chatModelConfig.maxTokens().get());
-        }
-
-        return new Supplier<>() {
-            @Override
-            public ChatLanguageModel get() {
-                return builder.build();
+        if (azureAiConfig.enableIntegration()) {
+            ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+            String apiKey = azureAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
-        };
+            var builder = AzureOpenAiChatModel.builder()
+                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .apiKey(apiKey)
+                    .apiVersion(azureAiConfig.apiVersion())
+                    .timeout(azureAiConfig.timeout())
+                    .maxRetries(azureAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .temperature(chatModelConfig.temperature())
+                    .topP(chatModelConfig.topP())
+                    .presencePenalty(chatModelConfig.presencePenalty())
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty());
+
+            if (chatModelConfig.maxTokens().isPresent()) {
+                builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return new DisabledChatLanguageModel();
+                }
+            };
+        }
     }
 
     public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jAzureOpenAiConfig runtimeConfig,
             String modelName) {
         Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
-        ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-        String apiKey = azureAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-        }
-        var builder = AzureOpenAiStreamingChatModel.builder()
-                .endpoint(getEndpoint(azureAiConfig, modelName))
-                .apiKey(apiKey)
-                .apiVersion(azureAiConfig.apiVersion())
-                .timeout(azureAiConfig.timeout())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
 
-                .temperature(chatModelConfig.temperature())
-                .topP(chatModelConfig.topP())
-                .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty());
-
-        if (chatModelConfig.maxTokens().isPresent()) {
-            builder.maxTokens(chatModelConfig.maxTokens().get());
-        }
-
-        return new Supplier<>() {
-            @Override
-            public StreamingChatLanguageModel get() {
-                return builder.build();
+        if (azureAiConfig.enableIntegration()) {
+            ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
+            String apiKey = azureAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
-        };
+            var builder = AzureOpenAiStreamingChatModel.builder()
+                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .apiKey(apiKey)
+                    .apiVersion(azureAiConfig.apiVersion())
+                    .timeout(azureAiConfig.timeout())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .temperature(chatModelConfig.temperature())
+                    .topP(chatModelConfig.topP())
+                    .presencePenalty(chatModelConfig.presencePenalty())
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty());
+
+            if (chatModelConfig.maxTokens().isPresent()) {
+                builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return new DisabledStreamingChatLanguageModel();
+                }
+            };
+        }
     }
 
     public Supplier<EmbeddingModel> embeddingModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
         Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
-        EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
-        String apiKey = azureAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-        }
-        var builder = AzureOpenAiEmbeddingModel.builder()
-                .endpoint(getEndpoint(azureAiConfig, modelName))
-                .apiKey(apiKey)
-                .apiVersion(azureAiConfig.apiVersion())
-                .timeout(azureAiConfig.timeout())
-                .maxRetries(azureAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
 
-        return new Supplier<>() {
-            @Override
-            public EmbeddingModel get() {
-                return builder.build();
+        if (azureAiConfig.enableIntegration()) {
+            EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
+            String apiKey = azureAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
-        };
+            var builder = AzureOpenAiEmbeddingModel.builder()
+                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .apiKey(apiKey)
+                    .apiVersion(azureAiConfig.apiVersion())
+                    .timeout(azureAiConfig.timeout())
+                    .maxRetries(azureAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
+
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return new DisabledEmbeddingModel();
+                }
+            };
+        }
     }
 
     static String getEndpoint(Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String modelName) {

@@ -7,6 +7,16 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.image.DisabledImageModel;
+import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.moderation.DisabledModerationModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
@@ -28,182 +38,230 @@ public class OpenAiRecorder {
 
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<?> chatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
         Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
-        String apiKey = openAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
-        }
-        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
-        var builder = OpenAiChatModel.builder()
-                .baseUrl(openAiConfig.baseUrl())
-                .apiKey(apiKey)
-                .timeout(openAiConfig.timeout())
-                .maxRetries(openAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
-                .modelName(chatModelConfig.modelName())
-                .temperature(chatModelConfig.temperature())
-                .topP(chatModelConfig.topP())
-                .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
-        openAiConfig.organizationId().ifPresent(builder::organizationId);
-
-        if (chatModelConfig.maxTokens().isPresent()) {
-            builder.maxTokens(chatModelConfig.maxTokens().get());
-        }
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
-        };
-    }
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            var builder = OpenAiChatModel.builder()
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout())
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(chatModelConfig.modelName())
+                    .temperature(chatModelConfig.temperature())
+                    .topP(chatModelConfig.topP())
+                    .presencePenalty(chatModelConfig.presencePenalty())
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
-    public Supplier<?> streamingChatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
-        String apiKey = openAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
-        }
-        ChatModelConfig chatModelConfig = openAiConfig.chatModel();
-        var builder = OpenAiStreamingChatModel.builder()
-                .baseUrl(openAiConfig.baseUrl())
-                .apiKey(apiKey)
-                .timeout(openAiConfig.timeout())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
-                .modelName(chatModelConfig.modelName())
-                .temperature(chatModelConfig.temperature())
-                .topP(chatModelConfig.topP())
-                .presencePenalty(chatModelConfig.presencePenalty())
-                .frequencyPenalty(chatModelConfig.frequencyPenalty())
-                .responseFormat(chatModelConfig.responseFormat().orElse(null));
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
 
-        openAiConfig.organizationId().ifPresent(builder::organizationId);
-
-        if (chatModelConfig.maxTokens().isPresent()) {
-            builder.maxTokens(chatModelConfig.maxTokens().get());
-        }
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+            if (chatModelConfig.maxTokens().isPresent()) {
+                builder.maxTokens(chatModelConfig.maxTokens().get());
             }
-        };
-    }
 
-    public Supplier<?> embeddingModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
-        String apiKeyOpt = openAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKeyOpt)) {
-            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
-        }
-        EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
-        var builder = OpenAiEmbeddingModel.builder()
-                .baseUrl(openAiConfig.baseUrl())
-                .apiKey(apiKeyOpt)
-                .timeout(openAiConfig.timeout())
-                .maxRetries(openAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), openAiConfig.logResponses()))
-                .modelName(embeddingModelConfig.modelName());
-
-        if (embeddingModelConfig.user().isPresent()) {
-            builder.user(embeddingModelConfig.user().get());
-        }
-
-        openAiConfig.organizationId().ifPresent(builder::organizationId);
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
-            }
-        };
-    }
-
-    public Supplier<?> moderationModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
-        String apiKey = openAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
-        }
-        ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
-        var builder = OpenAiModerationModel.builder()
-                .baseUrl(openAiConfig.baseUrl())
-                .apiKey(apiKey)
-                .timeout(openAiConfig.timeout())
-                .maxRetries(openAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), openAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), openAiConfig.logResponses()))
-                .modelName(moderationModelConfig.modelName());
-
-        openAiConfig.organizationId().ifPresent(builder::organizationId);
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
-            }
-        };
-    }
-
-    public Supplier<?> imageModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
-        String apiKey = openAiConfig.apiKey();
-        if (DUMMY_KEY.equals(apiKey)) {
-            throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
-        }
-        ImageModelConfig imageModelConfig = openAiConfig.imageModel();
-        var builder = QuarkusOpenAiImageModel.builder()
-                .baseUrl(openAiConfig.baseUrl())
-                .apiKey(apiKey)
-                .timeout(openAiConfig.timeout())
-                .maxRetries(openAiConfig.maxRetries())
-                .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
-                .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
-                .modelName(imageModelConfig.modelName())
-                .size(imageModelConfig.size())
-                .quality(imageModelConfig.quality())
-                .style(imageModelConfig.style())
-                .responseFormat(imageModelConfig.responseFormat())
-                .user(imageModelConfig.user());
-
-        openAiConfig.organizationId().ifPresent(builder::organizationId);
-
-        // we persist if the directory was set explicitly and the boolean flag was not set to false
-        // or if the boolean flag was set explicitly to true
-        Optional<Path> persistDirectory = Optional.empty();
-        if (imageModelConfig.persist().isPresent()) {
-            if (imageModelConfig.persist().get()) {
-                persistDirectory = imageModelConfig.persistDirectory()
-                        .or(new Supplier<>() {
-                            @Override
-                            public Optional<? extends Path> get() {
-                                return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "dall-e-images"));
-                            }
-                        });
-            }
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
         } else {
-            if (imageModelConfig.persistDirectory().isPresent()) {
-                persistDirectory = imageModelConfig.persistDirectory();
-            }
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return new DisabledChatLanguageModel();
+                }
+            };
         }
+    }
 
-        builder.persistDirectory(persistDirectory);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
-        };
+            ChatModelConfig chatModelConfig = openAiConfig.chatModel();
+            var builder = OpenAiStreamingChatModel.builder()
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(chatModelConfig.modelName())
+                    .temperature(chatModelConfig.temperature())
+                    .topP(chatModelConfig.topP())
+                    .presencePenalty(chatModelConfig.presencePenalty())
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            if (chatModelConfig.maxTokens().isPresent()) {
+                builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return new DisabledStreamingChatLanguageModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<EmbeddingModel> embeddingModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKeyOpt = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKeyOpt)) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
+            }
+            EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
+            var builder = OpenAiEmbeddingModel.builder()
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKeyOpt)
+                    .timeout(openAiConfig.timeout())
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(embeddingModelConfig.modelName());
+
+            if (embeddingModelConfig.user().isPresent()) {
+                builder.user(embeddingModelConfig.user().get());
+            }
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return new DisabledEmbeddingModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<ModerationModel> moderationModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
+            }
+            ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
+            var builder = OpenAiModerationModel.builder()
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout())
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(moderationModelConfig.modelName());
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return new DisabledModerationModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<ImageModel> imageModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+
+        if (openAiConfig.enableIntegration()) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
+            }
+            ImageModelConfig imageModelConfig = openAiConfig.imageModel();
+            var builder = QuarkusOpenAiImageModel.builder()
+                    .baseUrl(openAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .timeout(openAiConfig.timeout())
+                    .maxRetries(openAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .modelName(imageModelConfig.modelName())
+                    .size(imageModelConfig.size())
+                    .quality(imageModelConfig.quality())
+                    .style(imageModelConfig.style())
+                    .responseFormat(imageModelConfig.responseFormat())
+                    .user(imageModelConfig.user());
+
+            openAiConfig.organizationId().ifPresent(builder::organizationId);
+
+            // we persist if the directory was set explicitly and the boolean flag was not set to false
+            // or if the boolean flag was set explicitly to true
+            Optional<Path> persistDirectory = Optional.empty();
+            if (imageModelConfig.persist().isPresent()) {
+                if (imageModelConfig.persist().get()) {
+                    persistDirectory = imageModelConfig.persistDirectory().or(new Supplier<>() {
+                        @Override
+                        public Optional<? extends Path> get() {
+                            return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "dall-e-images"));
+                        }
+                    });
+                }
+            } else {
+                if (imageModelConfig.persistDirectory().isPresent()) {
+                    persistDirectory = imageModelConfig.persistDirectory();
+                }
+            }
+
+            builder.persistDirectory(persistDirectory);
+
+            return new Supplier<>() {
+                @Override
+                public ImageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ImageModel get() {
+                    return new DisabledImageModel();
+                }
+            };
+        }
     }
 
     private Langchain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(Langchain4jOpenAiConfig runtimeConfig,

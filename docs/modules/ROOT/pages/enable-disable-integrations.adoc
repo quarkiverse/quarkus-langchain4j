@@ -1,0 +1,23 @@
+= Enabling and Disabling Integrations
+
+include::./includes/attributes.adoc[]
+
+By default, all integrations with AI providers (OpenAI, HuggingFace, Azure OpenAI, etc) are enabled. This means that live calls are made to the configured AI provider.
+
+Each provider has an `enable-integration` property (i.e. `quarkus.langchain4j.openai.enable-integration`, `quarkus.langchain4j.huggingface.enable-integration`, etc) that can be set to `false` to disable the integration. This property is read at runtime.
+
+When disabled, any call made to the AI provider will end up in an `dev.langchain4j.model.ModelDisabledException` runtime exception being thrown.
+
+In this case your xref:ai-services.adoc[AI Service] could use xref:fault-tolerance.adoc[fault tolerance] to handle this and serve a fallback response without making a live call to the AI provider. Below are a few examples of how it could be used:
+
+[source,java]
+.Handling disabled integration separately from other error conditions
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultToleranceAndOnDisabledIntegration.java[]
+----
+
+[source,java]
+.Handling only disabled integration
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultToleranceOnlyOnDisabledIntegration.java[]
+----

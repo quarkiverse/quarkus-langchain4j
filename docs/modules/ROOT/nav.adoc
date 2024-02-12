@@ -24,3 +24,4 @@
 
 * Advanced topics
 ** xref:fault-tolerance.adoc[Fault Tolerance]
+** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]

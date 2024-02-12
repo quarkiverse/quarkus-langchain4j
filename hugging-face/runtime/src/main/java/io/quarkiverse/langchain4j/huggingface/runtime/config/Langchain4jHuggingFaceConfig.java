@@ -70,5 +70,13 @@ public interface Langchain4jHuggingFaceConfig {
          */
         @ConfigDocDefault("false")
         Optional<Boolean> logResponses();
+
+        /**
+         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
+         * provider.
+         * Set to {@code false} to disable all requests.
+         */
+        @WithDefault("true")
+        Boolean enableIntegration();
     }
 }

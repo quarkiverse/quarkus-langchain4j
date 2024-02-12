@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.Langchain4jOpenshiftAiConfig;
@@ -19,39 +21,50 @@ public class OpenshiftAiRecorder {
     private static final String DUMMY_MODEL_ID = "dummy";
     public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<?> chatModel(Langchain4jOpenshiftAiConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(Langchain4jOpenshiftAiConfig runtimeConfig, String modelName) {
         Langchain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(runtimeConfig,
                 modelName);
-        ChatModelConfig chatModelConfig = openshiftAiConfig.chatModel();
 
-        List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
-        URL baseUrl = openshiftAiConfig.baseUrl();
-        if (DUMMY_URL.equals(baseUrl.toString())) {
-            configProblems.add(createBaseURLConfigProblem(modelName));
-        }
-        String modelId = chatModelConfig.modelId();
-        if (DUMMY_MODEL_ID.equals(modelId)) {
-            configProblems.add(createModelIdConfigProblem(modelName));
-        }
+        if (openshiftAiConfig.enableIntegration()) {
+            ChatModelConfig chatModelConfig = openshiftAiConfig.chatModel();
 
-        if (!configProblems.isEmpty()) {
-            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
-        }
+            List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
+            URL baseUrl = openshiftAiConfig.baseUrl();
 
-        var builder = OpenshiftAiChatModel.builder()
-                .url(baseUrl)
-                .timeout(openshiftAiConfig.timeout())
-                .logRequests(openshiftAiConfig.logRequests())
-                .logResponses(openshiftAiConfig.logResponses())
-
-                .modelId(modelId);
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+            if (DUMMY_URL.equals(baseUrl.toString())) {
+                configProblems.add(createBaseURLConfigProblem(modelName));
             }
-        };
+
+            String modelId = chatModelConfig.modelId();
+            if (DUMMY_MODEL_ID.equals(modelId)) {
+                configProblems.add(createModelIdConfigProblem(modelName));
+            }
+
+            if (!configProblems.isEmpty()) {
+                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+            }
+
+            var builder = OpenshiftAiChatModel.builder()
+                    .url(baseUrl)
+                    .timeout(openshiftAiConfig.timeout())
+                    .logRequests(openshiftAiConfig.logRequests())
+                    .logResponses(openshiftAiConfig.logResponses())
+                    .modelId(modelId);
+
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return new DisabledChatLanguageModel();
+                }
+            };
+        }
     }
 
     private Langchain4jOpenshiftAiConfig.OpenshiftAiConfig correspondingOpenshiftAiConfig(

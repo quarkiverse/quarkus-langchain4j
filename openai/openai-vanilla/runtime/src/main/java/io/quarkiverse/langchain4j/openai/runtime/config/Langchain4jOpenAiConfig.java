@@ -80,6 +80,14 @@ public interface Langchain4jOpenAiConfig {
         Optional<Boolean> logResponses();
 
         /**
+         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
+         * provider.
+         * Set to {@code false} to disable all requests.
+         */
+        @WithDefault("true")
+        Boolean enableIntegration();
+
+        /**
          * Chat model related settings
          */
         ChatModelConfig chatModel();

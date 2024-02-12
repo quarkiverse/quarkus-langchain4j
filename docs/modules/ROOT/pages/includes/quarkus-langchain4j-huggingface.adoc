@@ -361,6 +361,23 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
+a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-enable-integration]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-enable-integration[quarkus.langchain4j.huggingface.enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 h|[[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-named-config-named-model-config]]link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-named-config-named-model-config[Named model config]
 
 h|Type
@@ -664,6 +681,23 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__LOG_RESPO
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
+
+
+a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-enable-integration]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-enable-integration[quarkus.langchain4j.huggingface."model-name".enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
 
 |===
 ifndef::no-duration-note[]
