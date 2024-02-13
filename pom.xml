@@ -27,6 +27,7 @@
     <module>pinecone</module>
     <module>redis</module>
     <module>pgvector</module>
+    <module>infinispan</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
@@ -43,6 +44,7 @@
     <wiremock.version>3.3.1</wiremock.version>
     <pgvector-java.version>0.1.4</pgvector-java.version>
     <sundrio.version>0.103.1</sundrio.version>
+    <infinispan.version>15.0.0.Dev07</infinispan.version>
   </properties>
   <dependencyManagement>
     <dependencies>

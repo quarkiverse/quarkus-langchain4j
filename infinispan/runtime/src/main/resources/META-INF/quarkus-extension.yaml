@@ -1,0 +1,13 @@
+name: Langchain4j Infinispan embedding store
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the Infinispan Embedding store for Langchain4j
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - openai
+    - infinispan
+    - embedding
+  categories:
+    - "miscellaneous"
+  status: "experimental"
