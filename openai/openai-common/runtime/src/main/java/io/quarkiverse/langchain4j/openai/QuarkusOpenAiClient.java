@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
+import org.jboss.resteasy.reactive.client.api.QuarkusRestClientProperties;
 import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
 import dev.ai4j.openai4j.AsyncResponseHandling;
@@ -97,6 +98,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         }
                         InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
                         restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
+                    }
+                    if (builder.userAgent != null) {
+                        restApiBuilder.property(QuarkusRestClientProperties.USER_AGENT, builder.userAgent);
                     }
 
                     return restApiBuilder.build(OpenAiRestApi.class);
@@ -491,6 +495,13 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     public static class Builder extends OpenAiClient.Builder<QuarkusOpenAiClient, Builder> {
 
+        private String userAgent;
+
+        public Builder userAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return this;
+        }
+
         @Override
         public QuarkusOpenAiClient build() {
             return new QuarkusOpenAiClient(this);
@@ -515,14 +526,15 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                     && Objects.equals(connectTimeout, builder.connectTimeout)
                     && Objects.equals(readTimeout, builder.readTimeout) && Objects.equals(writeTimeout,
                             builder.writeTimeout)
-                    && Objects.equals(proxy, builder.proxy);
+                    && Objects.equals(proxy, builder.proxy)
+                    && Objects.equals(userAgent, builder.userAgent);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(baseUrl, apiVersion, openAiApiKey, azureApiKey, organizationId, callTimeout, connectTimeout,
                     readTimeout,
-                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses);
+                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses, userAgent);
         }
     }
 

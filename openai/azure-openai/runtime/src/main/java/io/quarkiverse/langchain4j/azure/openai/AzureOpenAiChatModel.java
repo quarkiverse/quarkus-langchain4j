@@ -21,6 +21,7 @@ import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 
 /**
  * Represents an OpenAI language model, hosted on Azure, that has a chat completion interface, such as gpt-3.5-turbo.
@@ -69,7 +70,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
-        this.client = OpenAiClient.builder()
+        this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
@@ -79,7 +80,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .writeTimeout(timeout)
                 .proxy(proxy)
                 .logRequests(logRequests)
-                .logResponses(logResponses)
+                .logResponses(logResponses))
+                .userAgent(Consts.DEFAULT_USER_AGENT)
                 .build();
         this.temperature = getOrDefault(temperature, 0.7);
         this.topP = topP;
