@@ -171,6 +171,11 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
+        public Boolean enableIntegration() {
+            return null;
+        }
+
+        @Override
         public ChatModelConfig chatModel() {
             return new ChatModelConfig() {
                 @Override

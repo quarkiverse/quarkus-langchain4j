@@ -5,6 +5,10 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import java.net.URL;
 import java.util.function.Supplier;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
@@ -20,74 +24,94 @@ public class HuggingFaceRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
 
-    public Supplier<?> chatModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
         Langchain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
                 modelName);
-        String apiKey = huggingFaceConfig.apiKey();
-        ChatModelConfig chatModelConfig = huggingFaceConfig.chatModel();
-        URL url = chatModelConfig.inferenceEndpointUrl();
 
-        if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
-            throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-        }
+        if (huggingFaceConfig.enableIntegration()) {
+            String apiKey = huggingFaceConfig.apiKey();
+            ChatModelConfig chatModelConfig = huggingFaceConfig.chatModel();
+            URL url = chatModelConfig.inferenceEndpointUrl();
 
-        var builder = QuarkusHuggingFaceChatModel.builder()
-                .url(url)
-                .timeout(huggingFaceConfig.timeout())
-                .temperature(chatModelConfig.temperature())
-                .waitForModel(chatModelConfig.waitForModel())
-                .doSample(chatModelConfig.doSample())
-                .topP(chatModelConfig.topP())
-                .topK(chatModelConfig.topK())
-                .repetitionPenalty(chatModelConfig.repetitionPenalty())
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), huggingFaceConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), huggingFaceConfig.logResponses()));
-
-        if (!DUMMY_KEY.equals(apiKey)) {
-            builder.accessToken(apiKey);
-        }
-        if (chatModelConfig.returnFullText().isPresent()) {
-            builder.returnFullText(chatModelConfig.returnFullText().get());
-        }
-
-        if (chatModelConfig.maxNewTokens().isPresent()) {
-            builder.maxNewTokens(chatModelConfig.maxNewTokens().get());
-        }
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+            if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
-        };
+
+            var builder = QuarkusHuggingFaceChatModel.builder()
+                    .url(url)
+                    .timeout(huggingFaceConfig.timeout())
+                    .temperature(chatModelConfig.temperature())
+                    .waitForModel(chatModelConfig.waitForModel())
+                    .doSample(chatModelConfig.doSample())
+                    .topP(chatModelConfig.topP())
+                    .topK(chatModelConfig.topK())
+                    .repetitionPenalty(chatModelConfig.repetitionPenalty())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), huggingFaceConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), huggingFaceConfig.logResponses()));
+
+            if (!DUMMY_KEY.equals(apiKey)) {
+                builder.accessToken(apiKey);
+            }
+            if (chatModelConfig.returnFullText().isPresent()) {
+                builder.returnFullText(chatModelConfig.returnFullText().get());
+            }
+
+            if (chatModelConfig.maxNewTokens().isPresent()) {
+                builder.maxNewTokens(chatModelConfig.maxNewTokens().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return new DisabledChatLanguageModel();
+                }
+            };
+        }
     }
 
-    public Supplier<?> embeddingModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
+    public Supplier<EmbeddingModel> embeddingModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
         Langchain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
                 modelName);
-        String apiKey = huggingFaceConfig.apiKey();
-        EmbeddingModelConfig embeddingModelConfig = huggingFaceConfig.embeddingModel();
-        URL url = embeddingModelConfig.inferenceEndpointUrl();
 
-        if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
-            throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-        }
+        if (huggingFaceConfig.enableIntegration()) {
+            String apiKey = huggingFaceConfig.apiKey();
+            EmbeddingModelConfig embeddingModelConfig = huggingFaceConfig.embeddingModel();
+            URL url = embeddingModelConfig.inferenceEndpointUrl();
 
-        var builder = QuarkusHuggingFaceEmbeddingModel.builder()
-                .url(url)
-                .timeout(huggingFaceConfig.timeout())
-                .waitForModel(embeddingModelConfig.waitForModel());
-
-        if (!DUMMY_KEY.equals(apiKey)) {
-            builder.accessToken(apiKey);
-        }
-
-        return new Supplier<>() {
-            @Override
-            public Object get() {
-                return builder.build();
+            if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
-        };
+
+            var builder = QuarkusHuggingFaceEmbeddingModel.builder()
+                    .url(url)
+                    .timeout(huggingFaceConfig.timeout())
+                    .waitForModel(embeddingModelConfig.waitForModel());
+
+            if (!DUMMY_KEY.equals(apiKey)) {
+                builder.accessToken(apiKey);
+            }
+
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return new DisabledEmbeddingModel();
+                }
+            };
+        }
     }
 
     private Langchain4jHuggingFaceConfig.HuggingFaceConfig correspondingHuggingFaceConfig(
