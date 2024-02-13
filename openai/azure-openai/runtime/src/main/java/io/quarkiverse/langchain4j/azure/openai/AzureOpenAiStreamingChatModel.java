@@ -200,7 +200,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
          *
          * @param endpoint The Azure OpenAI endpoint in the format:
-         *        https://{resource-name}.openai.azure.com/openai/deployments/{deployment-id}
+         *        https://{resource-name}.openai.azure.com/openai/deployments/{deployment-name}
          * @return builder
          */
         public Builder endpoint(String endpoint) {
