@@ -47,4 +47,12 @@ public interface ChatModelConfig {
      */
     @WithDefault("40")
     Integer topK();
+
+    /**
+     * With a static number the result is always the same. With a random number the result varies
+     * Example:
+     * Random random = new Random();
+     * int x = random.nextInt(Integer.MAX_VALUE);
+     */
+    Optional<Integer> seed();
 }
