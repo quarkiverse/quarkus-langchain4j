@@ -26,6 +26,7 @@ import io.quarkiverse.langchain4j.chroma.runtime.AddEmbeddingsRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaCollectionsRestApi;
 import io.quarkiverse.langchain4j.chroma.runtime.Collection;
 import io.quarkiverse.langchain4j.chroma.runtime.CreateCollectionRequest;
+import io.quarkiverse.langchain4j.chroma.runtime.DeleteEmbeddingsRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.QueryRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.QueryResponse;
 import io.quarkus.arc.impl.LazyValue;
@@ -193,6 +194,13 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
                 .collect(toList());
     }
 
+    // FIXME: we need to know the dimension to be able to construct a query that retrieves
+    // all IDs of embeddings in the collection. Is there a better way to do this, without
+    // having to pass the dimension explicitly?
+    public void deleteAll(int dimension) {
+        chromaClient.deleteAllEmbeddings(collectionId.get(), dimension);
+    }
+
     private static List<EmbeddingMatch<TextSegment>> toEmbeddingMatches(QueryResponse queryResponse) {
         List<EmbeddingMatch<TextSegment>> embeddingMatches = new ArrayList<>();
 
@@ -262,5 +270,17 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
             return chromaApi.queryCollection(collectionId, queryRequest);
         }
 
+        public void deleteAllEmbeddings(String collectionId, int dimension) {
+            List<Float> referenceEmbedding = new ArrayList<>();
+            for (int i = 0; i < dimension; i++) {
+                referenceEmbedding.add(0.0f);
+            }
+            QueryRequest queryRequest = new QueryRequest(referenceEmbedding, Integer.MAX_VALUE);
+            QueryResponse queryResponse = chromaApi.queryCollection(collectionId, queryRequest);
+            if (!queryResponse.getIds().get(0).isEmpty()) {
+                DeleteEmbeddingsRequest request = new DeleteEmbeddingsRequest(queryResponse.getIds().get(0));
+                List<String> deletedIds = chromaApi.deleteEmbeddings(collectionId, request);
+            }
+        }
     }
 }

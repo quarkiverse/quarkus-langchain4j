@@ -1,57 +1,49 @@
 package io.quarkiverse.langchain4j.chroma.deployment;
 
-import static dev.langchain4j.internal.Utils.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Percentage.withPercentage;
-
-import java.util.List;
-
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingMatch;
-import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
+import io.quarkus.logging.Log;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
  * Tests injecting a ChromaEmbeddingStore using CDI, configured using properties.
  */
-//@Disabled("seems to hang")
-class ChromaEmbeddingStoreCDITest {
+class ChromaEmbeddingStoreCDITest extends EmbeddingStoreIT {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    EmbeddingStore embeddingStore;
+    ChromaEmbeddingStore embeddingStore;
 
     private final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
 
-    @Test
-    void should_add_embedding() {
-        Embedding embedding = embeddingModel.embed(randomUUID()).content();
+    @Override
+    protected ChromaEmbeddingStore embeddingStore() {
+        return embeddingStore;
+    }
 
-        String id = embeddingStore.add(embedding);
-        assertThat(id).isNotNull();
+    @Override
+    protected EmbeddingModel embeddingModel() {
+        return embeddingModel;
+    }
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embedding, 10);
-        assertThat(relevant).hasSize(1);
-
-        EmbeddingMatch<TextSegment> match = relevant.get(0);
-        assertThat(match.score()).isCloseTo(1, withPercentage(1));
-        assertThat(match.embeddingId()).isEqualTo(id);
-        assertThat(match.embedding()).isEqualTo(embedding);
-        assertThat(match.embedded()).isNull();
+    @Override
+    protected void clearStore() {
+        try {
+            embeddingStore().deleteAll(384);
+        } catch (Exception e) {
+            Log.warn(e);
+        }
     }
 
 }

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.chroma.runtime;
 
+import java.util.List;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -31,6 +33,10 @@ public interface ChromaCollectionsRestApi {
     @Path("{collectionId}/query")
     @POST
     QueryResponse queryCollection(String collectionId, QueryRequest queryRequest);
+
+    @Path("{collectionId}/delete")
+    @POST
+    List<String> deleteEmbeddings(String collectionId, DeleteEmbeddingsRequest queryRequest);
 
     @ClientObjectMapper
     static ObjectMapper objectMapper(ObjectMapper defaultObjectMapper) {
