@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.azure.openai;
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
+import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
@@ -21,6 +22,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 
 /**
  * Represents an OpenAI embedding model, hosted on Azure, such as text-embedding-ada-002.
@@ -59,7 +61,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
-        this.client = OpenAiClient.builder()
+        this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
@@ -69,7 +71,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
                 .writeTimeout(timeout)
                 .proxy(proxy)
                 .logRequests(logRequests)
-                .logResponses(logResponses)
+                .logResponses(logResponses))
+                .userAgent(DEFAULT_USER_AGENT)
                 .build();
         this.maxRetries = getOrDefault(maxRetries, 3);
         this.tokenizer = tokenizer;
