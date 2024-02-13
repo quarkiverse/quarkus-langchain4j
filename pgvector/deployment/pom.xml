@@ -36,6 +36,14 @@
         <version>${project.version}</version>
     </dependency>
     <dependency>
+          <groupId>dev.langchain4j</groupId>
+          <artifactId>langchain4j-core</artifactId>
+          <classifier>tests</classifier>
+          <type>test-jar</type>
+          <scope>test</scope>
+          <version>${langchain4j.version}</version>
+    </dependency>
+    <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-junit5-internal</artifactId>
         <scope>test</scope>
