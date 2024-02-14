@@ -1,0 +1,81 @@
+
+:summaryTableId: quarkus-langchain4j-infinispan
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-infinispan_configuration]]link:#quarkus-langchain4j-infinispan_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name]]`link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-client-name[quarkus.langchain4j.infinispan.client-name]`
+
+
+[.description]
+--
+The name of the Infinispan client to use. These clients are configured by means of the `infinispan-client` extension. If unspecified, it will use the default Infinispan client.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension]]`link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-dimension[quarkus.langchain4j.infinispan.dimension]`
+
+
+[.description]
+--
+The dimension of the embedding vectors. This has to be the same as the dimension of vectors produced by the embedding model that you use. For example, AllMiniLmL6V2QuantizedEmbeddingModel produces vectors of dimension 384. OpenAI's text-embedding-ada-002 produces vectors of dimension 1536.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--|long 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name]]`link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-cache-name[quarkus.langchain4j.infinispan.cache-name]`
+
+
+[.description]
+--
+Name of the cache that will be used in Infinispan when searching for related embeddings. If this cache doesn't exist, it will be created.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_CACHE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_CACHE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`embeddings-cache`
+
+
+a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance]]`link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance[quarkus.langchain4j.infinispan.distance]`
+
+
+[.description]
+--
+Metric used to compute the distance between two vectors.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE_METRIC+++`
+endif::add-copy-button-to-env-var[]
+-- a|
+integer
+|`3`
+
+|===

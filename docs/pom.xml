@@ -41,6 +41,11 @@
             <artifactId>quarkus-langchain4j-pinecone</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-infinispan</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
@@ -71,6 +76,11 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-infinispan-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -127,6 +137,7 @@
                                     <include>quarkus-langchain4j-chroma.adoc</include>
                                     <include>quarkus-langchain4j-pinecone.adoc</include>
                                     <include>quarkus-langchain4j-pgvector.adoc</include>
+                                    <include>quarkus-langchain4j-infinispan.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>
