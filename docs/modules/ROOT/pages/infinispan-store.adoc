@@ -1,0 +1,103 @@
+= Redis Document Store for Retrieval Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+
+When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage Infinispan Server as the embeddings store.
+
+== Leveraging the Infinispan Embeddings Store
+
+To utilize the Infinispan as embedding store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-infinispan</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension relies on the Quarkus Infinispan client. Ensure the default Infinispan client is configured appropriately. For detailed guidance, refer to the link:https://quarkus.io/guides/infinispan-client[Quarkus Infinispan Client Quickstart] and the link:https://quarkus.io/guides/infinispan-client-reference[Quarkus Infinispan Client Reference].
+
+IMPORTANT: The Infinispan as embedding store functionality is based on Infinispan 15. If you want to use the Quarkus Dev Services for Infinispan, make sure to configure `quarkus.infinispan-client.devservices.image-name=quay.io/infinispan/server:15.0` in your `application.properties` file.
+
+IMPORTANT: The Infinispan document store requires the dimension of the vector to be set. Add the `quarkus.langchain4j.infinispan.dimension` property to your `application.properties` file and set it to the dimension of the vector. The dimension depends on the embedding model you use.
+For example, `AllMiniLmL6V2QuantizedEmbeddingModel` produces vectors of dimension 384. OpenAI’s `text-embedding-ada-002` produces vectors of dimension 1536.
+
+Upon installing the extension, you can utilize the Infinispan document store using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithInfinispan.java[]
+----
+
+== Configuration Settings
+
+By default, the extension utilizes the default Infinispan client for storing and indexing the documents. Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-redis.adoc[leveloffset=+1,opts=optional]
+
+
+== Under the Hood
+
+The extension will create and register, both in the client and the server, the protobuf schema needed to serialize and store the indexable embeddings in Infinispan.
+For example, for a dimension 384, the schema will register the following entity:
+
+[source, protobuf]
+----
+/**
+ * @Indexed
+ */
+message LangchainItem384 {
+
+   /**
+    * @Keyword
+    */
+   optional string id = 1;
+
+   /**
+    * @Vector(dimension=384, similarity=COSINE)
+    */
+   repeated float floatVector = 2;
+
+   optional string text = 3;
+
+   repeated string metadataKeys = 4;
+
+   repeated string metadataValues = 5;
+}
+----
+
+== Infinispan Cache
+
+The cache in Infinispan must be an indexed cache.
+If the cache does not exist, the following cache will be created.
+Note that the cache configuration points to the schema containing the right size of the dimension depending on the use case.
+
+[source, json]
+----
+{
+  "embeddings-cache": {
+    "distributed-cache": {
+      "mode": "SYNC",
+      "remote-timeout": "17500",
+      "statistics": true,
+      "locking": {
+        "concurrency-level": "1000",
+        "acquire-timeout": "15000",
+        "striping": false
+      },
+      "indexing": {
+        "enabled": true,
+        "storage": "local-heap",
+        "indexed-entities": [
+          "LangchainItem384"
+        ]
+      },
+      "state-transfer": {
+        "timeout": "60000"
+      }
+    }
+  }
+}
+----
