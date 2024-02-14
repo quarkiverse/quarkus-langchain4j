@@ -1,4 +1,4 @@
-= Redis Document Store for Retrieval Augmented Generation (RAG)
+= Infinispan Embedding Store for Retrieval Augmented Generation (RAG)
 
 include::./includes/attributes.adoc[]
 
@@ -35,7 +35,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithIn
 
 By default, the extension utilizes the default Infinispan client for storing and indexing the documents. Customize the behavior of the extension by exploring various configuration options:
 
-include::includes/quarkus-langchain4j-redis.adoc[leveloffset=+1,opts=optional]
+include::includes/quarkus-langchain4j-infinispan.adoc[leveloffset=+1,opts=optional]
 
 
 == Under the Hood
