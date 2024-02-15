@@ -19,8 +19,6 @@ To utilize the Infinispan as embedding store, you'll need to include the followi
 
 This extension relies on the Quarkus Infinispan client. Ensure the default Infinispan client is configured appropriately. For detailed guidance, refer to the link:https://quarkus.io/guides/infinispan-client[Quarkus Infinispan Client Quickstart] and the link:https://quarkus.io/guides/infinispan-client-reference[Quarkus Infinispan Client Reference].
 
-IMPORTANT: The Infinispan as embedding store functionality is based on Infinispan 15. If you want to use the Quarkus Dev Services for Infinispan, make sure to configure `quarkus.infinispan-client.devservices.image-name=quay.io/infinispan/server:15.0` in your `application.properties` file.
-
 IMPORTANT: The Infinispan document store requires the dimension of the vector to be set. Add the `quarkus.langchain4j.infinispan.dimension` property to your `application.properties` file and set it to the dimension of the vector. The dimension depends on the embedding model you use.
 For example, `AllMiniLmL6V2QuantizedEmbeddingModel` produces vectors of dimension 384. OpenAI’s `text-embedding-ada-002` produces vectors of dimension 1536.
 
