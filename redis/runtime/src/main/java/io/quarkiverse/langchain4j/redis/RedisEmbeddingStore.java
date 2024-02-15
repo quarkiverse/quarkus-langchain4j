@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,6 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.redis.runtime.RedisSchema;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
-import io.quarkus.redis.datasource.json.ReactiveJsonCommands;
 import io.quarkus.redis.datasource.keys.KeyScanArgs;
 import io.quarkus.redis.datasource.search.CreateArgs;
 import io.quarkus.redis.datasource.search.Document;
@@ -125,9 +125,8 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         if (ids.isEmpty() || ids.size() != embeddings.size() || (embedded != null && embedded.size() != embeddings.size())) {
             throw new IllegalArgumentException("ids, embeddings and embedded must be non-empty and of the same size");
         }
-        ReactiveJsonCommands<String> json = ds.json();
         int size = ids.size();
-        Uni[] unis = new Uni[size];
+        List<Request> commands = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             String id = ids.get(i);
             Embedding embedding = embeddings.get(i);
@@ -147,9 +146,9 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
                 fields.putAll(textSegment.metadata().asMap());
             }
             String key = schema.getPrefix() + id;
-            unis[i] = json.jsonSet(key, "$", fields);
+            commands.add(Request.cmd(Command.JSON_SET).arg(key).arg("$").arg(Json.toJson(fields)));
         }
-        Uni.join().all(unis).andFailFast().await().indefinitely();
+        ds.getRedis().batchAndAwait(commands);
     }
 
     @Override
