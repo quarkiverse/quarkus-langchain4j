@@ -21,7 +21,6 @@ public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.redis.dimension=384\n" +
-                            "quarkus.redis.devservices.image-name=redis/redis-stack:latest\n" +
                             "quarkus.langchain4j.redis.metadata-fields=test-key"),
                             "application.properties"));
 

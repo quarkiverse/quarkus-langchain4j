@@ -66,16 +66,15 @@ a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance]]`li
 
 [.description]
 --
-Metric used to compute the distance between two vectors.
+The maximum distance. The most distance between vectors is how close or far apart two embeddings are.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE_METRIC+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE+++`
 endif::add-copy-button-to-env-var[]
--- a|
-integer
+--|int 
 |`3`
 
 |===
