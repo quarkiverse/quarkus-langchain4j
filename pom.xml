@@ -44,7 +44,7 @@
     <wiremock.version>3.3.1</wiremock.version>
     <pgvector-java.version>0.1.4</pgvector-java.version>
     <sundrio.version>0.103.1</sundrio.version>
-    <infinispan.version>15.0.0.Dev08</infinispan.version>
+    <infinispan.version>15.0.0.Dev09</infinispan.version>
   </properties>
   <dependencyManagement>
     <dependencies>
