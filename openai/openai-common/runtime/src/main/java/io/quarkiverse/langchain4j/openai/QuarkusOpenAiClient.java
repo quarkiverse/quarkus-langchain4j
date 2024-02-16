@@ -14,8 +14,10 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
-import org.jboss.resteasy.reactive.client.api.QuarkusRestClientProperties;
 import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
 import dev.ai4j.openai4j.AsyncResponseHandling;
@@ -100,7 +102,13 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
                     }
                     if (builder.userAgent != null) {
-                        restApiBuilder.property(QuarkusRestClientProperties.USER_AGENT, builder.userAgent);
+                        // TODO: this can be replaced in the future with builder.userAgent()
+                        restApiBuilder.register(new ClientRequestFilter() {
+                            @Override
+                            public void filter(ClientRequestContext requestContext) {
+                                requestContext.getHeaders().putSingle("User-Agent", builder.userAgent);
+                            }
+                        });
                     }
 
                     return restApiBuilder.build(OpenAiRestApi.class);
