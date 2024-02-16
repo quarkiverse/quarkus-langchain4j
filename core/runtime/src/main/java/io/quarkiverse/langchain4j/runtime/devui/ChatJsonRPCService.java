@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.devui;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -13,17 +13,22 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
+import io.quarkus.arc.All;
 
 @ActivateRequestContext
 public class ChatJsonRPCService {
 
-    @Inject
-    ChatLanguageModel model;
+    private final ChatLanguageModel model;
 
-    @Inject
-    ChatMemoryProvider memoryProvider;
+    private final ChatMemoryProvider memoryProvider;
 
-    private AtomicReference<ChatMemory> currentMemory = new AtomicReference<>();
+    public ChatJsonRPCService(@All List<ChatLanguageModel> models, // don't use ChatLanguageModel model because it results in the default model not being configured
+            ChatMemoryProvider memoryProvider) {
+        this.model = models.get(0);
+        this.memoryProvider = memoryProvider;
+    }
+
+    private final AtomicReference<ChatMemory> currentMemory = new AtomicReference<>();
 
     public String reset(String systemMessage) {
         if (currentMemory.get() != null) {
