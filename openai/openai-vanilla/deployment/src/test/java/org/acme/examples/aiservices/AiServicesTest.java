@@ -351,14 +351,17 @@ public class AiServicesTest {
                                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: {\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}")));
     }
 
+    @SystemMessage("You are a professional chef. You are friendly, polite and concise.")
     interface ProfessionalChef {
 
-        @SystemMessage("You are a professional chef. You are friendly, polite and concise.")
         String answer(String question);
+
+        @SystemMessage("You are an amateur.")
+        String answer2(String question);
     }
 
     @Test
-    void test_with_system_message() throws IOException {
+    void test_with_system_message_of_first_method() throws IOException {
         wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
                 "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption."));
         ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
@@ -369,6 +372,22 @@ public class AiServicesTest {
         assertMultipleRequestMessage(getRequestAsMap(),
                 List.of(
                         new MessageContent("system", "You are a professional chef. You are friendly, polite and concise."),
+                        new MessageContent("user",
+                                "How long should I grill chicken?")));
+    }
+
+    @Test
+    void test_with_system_message_of_second_method() throws IOException {
+        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+                "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption."));
+        ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
+
+        String result = chef.answer2("How long should I grill chicken?");
+        assertThat(result).contains("Grilling chicken typically");
+
+        assertMultipleRequestMessage(getRequestAsMap(),
+                List.of(
+                        new MessageContent("system", "You are an amateur."),
                         new MessageContent("user",
                                 "How long should I grill chicken?")));
     }

@@ -660,13 +660,20 @@ public class AiServicesProcessor {
         for (DotName annotation : annotations) {
             Collection<AnnotationInstance> instances = index.getAnnotations(annotation);
             for (AnnotationInstance instance : instances) {
-                if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
-                    continue;
+                AnnotationTarget target = instance.target();
+                AnnotationTarget.Kind kind = target.kind();
+                if (kind == AnnotationTarget.Kind.METHOD) {
+                    ClassInfo declaringClass = target.asMethod().declaringClass();
+                    if (declaringClass.isInterface()) {
+                        detectedForCreate.add(declaringClass.name().toString());
+                    }
+                } else if (kind == AnnotationTarget.Kind.CLASS) {
+                    ClassInfo declaringClass = target.asClass();
+                    if (declaringClass.isInterface()) {
+                        detectedForCreate.add(declaringClass.name().toString());
+                    }
                 }
-                ClassInfo declaringClass = instance.target().asMethod().declaringClass();
-                if (declaringClass.isInterface()) {
-                    detectedForCreate.add(declaringClass.name().toString());
-                }
+
             }
         }
     }
@@ -755,6 +762,9 @@ public class AiServicesProcessor {
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams) {
         AnnotationInstance instance = method.annotation(Langchain4jDotNames.SYSTEM_MESSAGE);
+        if (instance == null) { // try and see if the class is annotated with @SystemMessage
+            instance = method.declaringClass().declaredAnnotation(Langchain4jDotNames.SYSTEM_MESSAGE);
+        }
         if (instance != null) {
             String systemMessageTemplate = "";
             AnnotationValue delimiterValue = instance.value("delimiter");
