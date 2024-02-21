@@ -15,8 +15,10 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.runtime.devui.representations.ChatMessageJson;
+import io.quarkiverse.langchain4j.runtime.devui.json.ChatMessagePojo;
+import io.quarkiverse.langchain4j.runtime.devui.json.ChatResultPojo;
 import io.quarkus.arc.All;
+import io.quarkus.logging.Log;
 
 @ActivateRequestContext
 public class ChatJsonRPCService {
@@ -45,29 +47,31 @@ public class ChatJsonRPCService {
         return "OK";
     }
 
-    public List<ChatMessageJson> newConversation(String systemMessage, String message) {
+    public ChatResultPojo newConversation(String systemMessage, String message) {
         reset(systemMessage);
         return chat(message);
     }
 
-    public List<ChatMessageJson> chat(String message) {
+    public ChatResultPojo chat(String message) {
         ChatMemory memory = currentMemory.get();
-        // create a backup of the chat memory, because we are now going to add a new message to it,
-        // and might have to remove it if it fails with an exception - but the ChatMessage API
-        // doesn't allow removing messages
+        // create a backup of the chat memory, because we are now going to
+        // add a new message to it, and might have to remove it if the chat
+        // request fails - unfortunately the ChatMemory API doesn't allow
+        // removing single messages
         List<ChatMessage> chatMemoryBackup = memory.messages();
         try {
             memory.add(new UserMessage(message));
             Response<AiMessage> modelResponse = model.generate(memory.messages());
             memory.add(modelResponse.content());
-            List<ChatMessageJson> response = ChatMessageJson.listFromMemory(memory);
+            List<ChatMessagePojo> response = ChatMessagePojo.listFromMemory(memory);
             Collections.reverse(response); // newest messages first
-            return response;
-        } catch (Exception e) {
+            return new ChatResultPojo(response, null);
+        } catch (Throwable t) {
             // restore the memory from the backup
             memory.clear();
             chatMemoryBackup.forEach(memory::add);
-            throw e;
+            Log.warn(t);
+            return new ChatResultPojo(null, t.getMessage());
         }
     }
 

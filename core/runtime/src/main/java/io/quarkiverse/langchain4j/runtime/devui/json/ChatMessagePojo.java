@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime.devui.representations;
+package io.quarkiverse.langchain4j.runtime.devui.json;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +10,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 
 // The representation of a chat message that it sent to the Dev UI as JSON
-public class ChatMessageJson {
+public class ChatMessagePojo {
 
     private MessageType type;
     private String message;
@@ -23,15 +23,15 @@ public class ChatMessageJson {
         return message;
     }
 
-    public static List<ChatMessageJson> listFromMemory(ChatMemory memory) {
+    public static List<ChatMessagePojo> listFromMemory(ChatMemory memory) {
         return memory.messages()
                 .stream()
-                .map(ChatMessageJson::fromMessage)
+                .map(ChatMessagePojo::fromMessage)
                 .collect(Collectors.toList());
     }
 
-    public static ChatMessageJson fromMessage(ChatMessage message) {
-        ChatMessageJson json = new ChatMessageJson();
+    public static ChatMessagePojo fromMessage(ChatMessage message) {
+        ChatMessagePojo json = new ChatMessagePojo();
         switch (message.type()) {
             case SYSTEM:
                 json.type = MessageType.SYSTEM;

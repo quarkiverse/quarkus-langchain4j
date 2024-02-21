@@ -53,15 +53,7 @@ a new system message, you have to use the New conversation button." style="width
             }
             this.requestUpdate();
             this.jsonRpc.newConversation({message: message, systemMessage: systemMessage}).then(jsonRpcResponse => {
-                if(jsonRpcResponse.result === false) {
-                    this._chatHistory = this._chatHistory.slice(1);
-                    this._showError(jsonRpcResponse);
-                } else {
-                    this._errorMessage = html``;
-                    this._chatHistory = jsonRpcResponse.result;
-                }
-                this._setSubmitButtonEnabled(true);
-                this.requestUpdate();
+                this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._chatHistory = this._chatHistory.slice(1);
                 this._setSubmitButtonEnabled(true);
@@ -71,15 +63,7 @@ a new system message, you have to use the New conversation button." style="width
             this._chatHistory = [{message: message, type: "USER"}].concat(this._chatHistory);
             this.requestUpdate();
             this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
-                if(jsonRpcResponse.result === false) {
-                    this._chatHistory = this._chatHistory.slice(1);
-                    this._showError(jsonRpcResponse);
-                } else {
-                    this._errorMessage = html``;
-                    this._chatHistory = jsonRpcResponse.result;
-                }
-                this._setSubmitButtonEnabled(true);
-                this.requestUpdate();
+                this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._chatHistory = this._chatHistory.slice(1);
                 this._setSubmitButtonEnabled(true);
@@ -88,10 +72,34 @@ a new system message, you have to use the New conversation button." style="width
         }
     }
 
+    _showResponse(jsonRpcResponse) {
+        if (jsonRpcResponse.result === false) {
+            // the JsonRPC method threw an exception, this should generally
+            // not happen, but just in case...
+            this._chatHistory = this._chatHistory.slice(1);
+            this._showError(jsonRpcResponse);
+        } else {
+            if (jsonRpcResponse.result.error) {
+                this._chatHistory = this._chatHistory.slice(1);
+                this._showError(jsonRpcResponse.result.error);
+            } else {
+                this._errorMessage = html``;
+                this._chatHistory = jsonRpcResponse.result.history;
+            }
+        }
+        this._setSubmitButtonEnabled(true);
+        this.requestUpdate();
+    }
+
     _showError(error) {
+        var errorString = JSON.stringify(error);
+        if(errorString === '{}') {
+            // assume the error is a string
+            errorString = error;
+        }
         this._errorMessage = html`
                     <qui-alert level="error" showIcon>
-                        <span>Error: ${JSON.stringify(error)}</span>
+                        <span>Error: ${errorString}</span>
                     </qui-alert>`;
     }
 
