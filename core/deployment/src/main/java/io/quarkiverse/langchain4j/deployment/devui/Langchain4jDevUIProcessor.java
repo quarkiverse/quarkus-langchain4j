@@ -9,6 +9,7 @@ import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.devui.ChatJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.devui.EmbeddingStoreJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
@@ -26,7 +27,7 @@ public class Langchain4jDevUIProcessor {
             ToolsMetadataBuildItem toolsMetadataBuildItem,
             List<EmbeddingModelBuildItem> embeddingModelBuildItem,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
-            List<ChatModelProviderCandidateBuildItem> chatModelCandidates) {
+            List<SelectedChatModelProviderBuildItem> chatModelProviders) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
         if (toolsMetadataBuildItem != null) {
@@ -37,7 +38,7 @@ public class Langchain4jDevUIProcessor {
         if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
             addEmbeddingStorePage(card);
         }
-        if (!chatModelCandidates.isEmpty()) {
+        if (!chatModelProviders.isEmpty()) {
             addChatPage(card);
         }
         return card;
