@@ -42,13 +42,14 @@ a new system message, you have to use the New conversation button." style="width
         // if no chat history exists, start a new conversation
         this.shadowRoot.getElementById('chat-message').value = "";
         this._setSubmitButtonEnabled(false);
+        this._errorMessage = html``;
         if(this._chatHistory.length === 0) {
             var systemMessage = this.shadowRoot.getElementById('system-message').value;
             if(systemMessage) {
-                this._chatHistory = [{message: message, type:"User"}, {type: "System", message: systemMessage}];
+                this._chatHistory = [{message: message, type:"USER"}, {type: "SYSTEM", message: systemMessage}];
             } else {
                 // don't show system message if empty
-                this._chatHistory = [{message: message, type:"User"}];
+                this._chatHistory = [{message: message, type:"USER"}];
             }
             this.requestUpdate();
             this.jsonRpc.newConversation({message: message, systemMessage: systemMessage}).then(jsonRpcResponse => {
@@ -57,7 +58,7 @@ a new system message, you have to use the New conversation button." style="width
                     this._showError(jsonRpcResponse);
                 } else {
                     this._errorMessage = html``;
-                    this._chatHistory = [{message: jsonRpcResponse.result, type:"AI"}].concat(this._chatHistory);
+                    this._chatHistory = jsonRpcResponse.result;
                 }
                 this._setSubmitButtonEnabled(true);
                 this.requestUpdate();
@@ -67,7 +68,7 @@ a new system message, you have to use the New conversation button." style="width
                 this._showError(error);
             });
         } else {
-            this._chatHistory = [{message: message, type: "User"}].concat(this._chatHistory);
+            this._chatHistory = [{message: message, type: "USER"}].concat(this._chatHistory);
             this.requestUpdate();
             this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
                 if(jsonRpcResponse.result === false) {
@@ -75,7 +76,7 @@ a new system message, you have to use the New conversation button." style="width
                     this._showError(jsonRpcResponse);
                 } else {
                     this._errorMessage = html``;
-                    this._chatHistory = [{message: jsonRpcResponse.result, type: "AI"}].concat(this._chatHistory);
+                    this._chatHistory = jsonRpcResponse.result;
                 }
                 this._setSubmitButtonEnabled(true);
                 this.requestUpdate();
