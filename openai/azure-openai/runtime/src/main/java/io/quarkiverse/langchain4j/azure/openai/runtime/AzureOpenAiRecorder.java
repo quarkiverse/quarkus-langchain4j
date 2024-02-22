@@ -2,8 +2,11 @@ package io.quarkiverse.langchain4j.azure.openai.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -12,8 +15,11 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.image.DisabledImageModel;
+import dev.langchain4j.model.image.ImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
@@ -145,6 +151,68 @@ public class AzureOpenAiRecorder {
                 @Override
                 public EmbeddingModel get() {
                     return new DisabledEmbeddingModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<ImageModel> imageModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
+        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+
+        if (azureAiConfig.enableIntegration()) {
+            var apiKey = azureAiConfig.apiKey();
+
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+            }
+
+            var imageModelConfig = azureAiConfig.imageModel();
+            var builder = AzureOpenAiImageModel.builder()
+                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .apiKey(apiKey)
+                    .apiVersion(azureAiConfig.apiVersion())
+                    .timeout(azureAiConfig.timeout())
+                    .maxRetries(azureAiConfig.maxRetries())
+                    .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), azureAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .modelName(imageModelConfig.modelName())
+                    .size(imageModelConfig.size())
+                    .quality(imageModelConfig.quality())
+                    .style(imageModelConfig.style())
+                    .responseFormat(imageModelConfig.responseFormat())
+                    .user(imageModelConfig.user());
+
+            // we persist if the directory was set explicitly and the boolean flag was not set to false
+            // or if the boolean flag was set explicitly to true
+            Optional<Path> persistDirectory = Optional.empty();
+            if (imageModelConfig.persist().isPresent()) {
+                if (imageModelConfig.persist().get()) {
+                    persistDirectory = imageModelConfig.persistDirectory().or(new Supplier<>() {
+                        @Override
+                        public Optional<? extends Path> get() {
+                            return Optional.of(Paths.get(System.getProperty("java.io.tmpdir"), "dall-e-images"));
+                        }
+                    });
+                }
+            } else {
+                if (imageModelConfig.persistDirectory().isPresent()) {
+                    persistDirectory = imageModelConfig.persistDirectory();
+                }
+            }
+
+            builder.persistDirectory(persistDirectory);
+
+            return new Supplier<>() {
+                @Override
+                public ImageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ImageModel get() {
+                    return new DisabledImageModel();
                 }
             };
         }

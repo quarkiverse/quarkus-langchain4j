@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.image.DisabledImageModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig.AzureAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
@@ -46,5 +47,12 @@ class DisabledModelsAzureOpenAiRecorderTest {
         assertThat(recorder.embeddingModel(config, NamedModelUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
+    }
+
+    @Test
+    void disabledImageModel() {
+        assertThat(recorder.imageModel(config, NamedModelUtil.DEFAULT_NAME).get())
+                .isNotNull()
+                .isExactlyInstanceOf(DisabledImageModel.class);
     }
 }
