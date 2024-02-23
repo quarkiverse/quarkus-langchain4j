@@ -121,5 +121,10 @@ public interface Langchain4jAzureOpenAiConfig {
          * Embedding model related settings
          */
         EmbeddingModelConfig embeddingModel();
+
+        /**
+         * Image model related settings
+         */
+        ImageModelConfig imageModel();
     }
 }

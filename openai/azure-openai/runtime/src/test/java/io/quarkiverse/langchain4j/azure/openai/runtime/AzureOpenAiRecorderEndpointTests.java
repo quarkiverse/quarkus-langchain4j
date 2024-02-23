@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.azure.openai.runtime;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.smallrye.config.ConfigValidationException;
@@ -218,6 +220,66 @@ class AzureOpenAiRecorderEndpointTests {
         @Override
         public EmbeddingModelConfig embeddingModel() {
             return new EmbeddingModelConfig() {
+                @Override
+                public Optional<Boolean> logRequests() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<Boolean> logResponses() {
+                    return Optional.empty();
+                }
+            };
+        }
+
+        @Override
+        public ImageModelConfig imageModel() {
+            return new ImageModelConfig() {
+                @Override
+                public String modelName() {
+                    return null;
+                }
+
+                @Override
+                public Optional<Boolean> persist() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<Path> persistDirectory() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public String responseFormat() {
+                    return null;
+                }
+
+                @Override
+                public String size() {
+                    return null;
+                }
+
+                @Override
+                public String quality() {
+                    return null;
+                }
+
+                @Override
+                public int number() {
+                    return 0;
+                }
+
+                @Override
+                public String style() {
+                    return null;
+                }
+
+                @Override
+                public Optional<String> user() {
+                    return Optional.empty();
+                }
+
                 @Override
                 public Optional<Boolean> logRequests() {
                     return Optional.empty();
