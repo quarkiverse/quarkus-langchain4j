@@ -16,6 +16,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.retriever.Retriever;
 import io.quarkiverse.langchain4j.ModelName;
@@ -84,14 +85,31 @@ public class AiServicesRecorder {
                         Supplier<? extends ChatLanguageModel> supplier = (Supplier<? extends ChatLanguageModel>) Thread
                                 .currentThread().getContextClassLoader().loadClass(info.getLanguageModelSupplierClassName())
                                 .getConstructor().newInstance();
+
                         quarkusAiServices.chatLanguageModel(supplier.get());
+
                     } else {
+
                         if (NamedModelUtil.isDefault(info.getChatModelName())) {
                             quarkusAiServices
                                     .chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
+
+                            if (info.getNeedsStreamingChatModel()) {
+                                quarkusAiServices
+                                        .streamingChatLanguageModel(
+                                                creationalContext.getInjectedReference(StreamingChatLanguageModel.class));
+                            }
+
                         } else {
+
                             quarkusAiServices.chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class,
                                     ModelName.Literal.of(info.getChatModelName())));
+
+                            if (info.getNeedsStreamingChatModel()) {
+                                quarkusAiServices.streamingChatLanguageModel(
+                                        creationalContext.getInjectedReference(StreamingChatLanguageModel.class,
+                                                ModelName.Literal.of(info.getChatModelName())));
+                            }
                         }
                     }
 
