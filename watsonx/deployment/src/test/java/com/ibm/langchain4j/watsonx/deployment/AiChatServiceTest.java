@@ -24,19 +24,19 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AiServiceTest {
+public class AiChatServiceTest {
 
     static WireMockServer watsonxServer;
     static WireMockServer iamServer;
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig langchain4jWatsonConfig;
+    Langchain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -53,7 +53,7 @@ public class AiServiceTest {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = WatsonRestApi.objectMapper(new ObjectMapper());
+        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
 
         watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
         watsonxServer.start();
@@ -85,7 +85,7 @@ public class AiServiceTest {
     @Test
     void chat() throws Exception {
 
-        Langchain4jWatsonConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+        Langchain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelId();
         String projectId = watsonConfig.projectId();

@@ -3,10 +3,10 @@ package com.ibm.langchain4j.watsonx.deployment;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.Duration;
 import java.util.Date;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -19,13 +19,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.Multi;
 
-public class DefaultPropertiesTest {
+public class AiStreamingServiceTest {
 
     static WireMockServer watsonxServer;
     static WireMockServer iamServer;
@@ -66,40 +71,45 @@ public class DefaultPropertiesTest {
         iamServer.stop();
     }
 
-    @Test
-    void generate() throws Exception {
-        var config = langchain4jWatsonConfig.defaultConfig();
-        assertEquals(Duration.ofSeconds(10), config.timeout());
-        assertEquals("2023-05-29", config.version());
-        assertEquals(false, config.logRequests());
-        assertEquals(false, config.logResponses());
-        assertEquals("meta-llama/llama-2-70b-chat", config.chatModel().modelId());
-        assertEquals("greedy", config.chatModel().decodingMethod());
-        assertEquals(1.0, config.chatModel().temperature());
-        assertEquals(0, config.chatModel().minNewTokens());
-        assertEquals(200, config.chatModel().maxNewTokens());
-        assertEquals(1.0, config.chatModel().temperature());
-        assertEquals(Duration.ofSeconds(10), config.iam().timeout());
-        assertEquals("urn:ibm:params:oauth:grant-type:apikey", config.iam().grantType());
+    @RegisterAiService
+    @Singleton
+    interface NewAIService {
 
-        String modelId = config.chatModel().modelId();
-        String projectId = config.projectId();
-        String input = "TEST";
+        @SystemMessage("This is a systemMessage")
+        @UserMessage("This is a userMessage {text}")
+        Multi<String> chat(String text);
+    }
+
+    @Inject
+    NewAIService service;
+
+    @Test
+    void chat() throws Exception {
+
+        Langchain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
+        String modelId = chatModelConfig.modelId();
+        String projectId = watsonConfig.projectId();
+        String input = new StringBuilder()
+                .append("This is a systemMessage")
+                .append("\n\n")
+                .append("This is a userMessage Hello")
+                .append("\n")
+                .toString();
         Parameters parameters = Parameters.builder()
-                .decodingMethod(config.chatModel().decodingMethod())
-                .temperature(config.chatModel().temperature())
-                .minNewTokens(config.chatModel().minNewTokens())
-                .maxNewTokens(config.chatModel().maxNewTokens())
+                .decodingMethod(chatModelConfig.decodingMethod())
+                .temperature(chatModelConfig.temperature())
+                .minNewTokens(chatModelConfig.minNewTokens())
+                .maxNewTokens(chatModelConfig.maxNewTokens())
                 .build();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input + "\n", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input, parameters);
 
         mockServers.mockIAMBuilder(200)
-                .response("token", new Date())
+                .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
         mockServers.mockWatsonBuilder(200)
-                .token("token")
                 .body(mapper.writeValueAsString(body))
                 .response("""
                             {
@@ -107,7 +117,7 @@ public class DefaultPropertiesTest {
                                 "created_at": "2024-01-21T17:06:14.052Z",
                                 "results": [
                                     {
-                                        "generated_text": "Response!",
+                                        "generated_text": "AI Response",
                                         "generated_token_count": 5,
                                         "input_token_count": 50,
                                         "stop_reason": "eos_token",
@@ -117,8 +127,7 @@ public class DefaultPropertiesTest {
                             }
                         """)
                 .build();
-        ;
 
-        assertEquals("Response!", model.generate(input));
+        service.chat("Hello").subscribe().with(result -> assertEquals("AI Response", result));
     }
 }

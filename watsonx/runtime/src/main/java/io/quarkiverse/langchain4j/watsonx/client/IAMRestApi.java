@@ -18,6 +18,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.IdentityTokenRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.IdentityTokenResponse;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Uni;
 
 @Path("")
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -26,7 +27,7 @@ public interface IAMRestApi {
 
     @POST
     @Path("identity/token")
-    IdentityTokenResponse generateBearer(IdentityTokenRequest request);
+    Uni<IdentityTokenResponse> generateBearer(IdentityTokenRequest request);
 
     @ClientExceptionMapper
     static WebApplicationException toException(jakarta.ws.rs.core.Response response) {

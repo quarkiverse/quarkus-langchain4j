@@ -332,10 +332,10 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
-            var injectStreamingChatModelBean = declarativeAiServiceClassInfo.methods().stream()
+            boolean injectStreamingChatModelBean = declarativeAiServiceClassInfo.methods().stream()
                     .map(MethodInfo::returnType)
                     .map(Type::name)
-                    .filter(dotName -> dotName.equals(Langchain4jDotNames.MULTI))
+                    .filter(Langchain4jDotNames.MULTI::equals)
                     .findFirst()
                     .isPresent();
 

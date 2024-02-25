@@ -9,7 +9,7 @@ public record IAMError(
 
     public static enum Code {
 
-        // Provided API key could not be found
+        // Provided API key is incorrect
         BXNIM0415E
     }
 }

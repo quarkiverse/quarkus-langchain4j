@@ -6,10 +6,14 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.bam.BamEmbeddingModel;
+import io.quarkiverse.langchain4j.bam.BamModel;
+import io.quarkiverse.langchain4j.bam.BamStreamingChatModel;
 import io.quarkiverse.langchain4j.bam.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
@@ -61,14 +65,68 @@ public class BamRecorder {
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return builder.build();
+                    return builder.build(BamChatModel.class);
                 }
             };
+
         } else {
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
                     return new DisabledChatLanguageModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jBamConfig runtimeConfig, String modelName) {
+        Langchain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+
+        if (bamConfig.enableIntegration()) {
+            ChatModelConfig chatModelConfig = bamConfig.chatModel();
+            String apiKey = bamConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+            }
+
+            var builder = BamStreamingChatModel.builder()
+                    .accessToken(bamConfig.apiKey())
+                    .timeout(bamConfig.timeout())
+                    .logRequests(bamConfig.logRequests())
+                    .logResponses(bamConfig.logResponses())
+                    .modelId(chatModelConfig.modelId())
+                    .version(bamConfig.version())
+                    .decodingMethod(chatModelConfig.decodingMethod())
+                    .minNewTokens(chatModelConfig.minNewTokens())
+                    .maxNewTokens(chatModelConfig.maxNewTokens())
+                    .temperature(chatModelConfig.temperature())
+                    .includeStopSequence(firstOrDefault(null, chatModelConfig.includeStopSequence()))
+                    .randomSeed(firstOrDefault(null, chatModelConfig.randomSeed()))
+                    .stopSequences(firstOrDefault(null, chatModelConfig.stopSequences()))
+                    .timeLimit(firstOrDefault(null, chatModelConfig.timeLimit()))
+                    .topK(firstOrDefault(null, chatModelConfig.topK()))
+                    .topP(firstOrDefault(null, chatModelConfig.topP()))
+                    .typicalP(firstOrDefault(null, chatModelConfig.typicalP()))
+                    .repetitionPenalty(firstOrDefault(null, chatModelConfig.repetitionPenalty()))
+                    .truncateInputTokens(firstOrDefault(null, chatModelConfig.truncateInputTokens()))
+                    .beamWidth(firstOrDefault(null, chatModelConfig.beamWidth()));
+
+            if (bamConfig.baseUrl().isPresent()) {
+                builder.url(bamConfig.baseUrl().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return builder.build(BamStreamingChatModel.class);
+                }
+            };
+
+        } else {
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return new DisabledStreamingChatLanguageModel();
                 }
             };
         }
@@ -84,7 +142,7 @@ public class BamRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
             }
 
-            var builder = BamEmbeddingModel.builder()
+            var builder = BamModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout())
                     .version(bamConfig.version())
@@ -97,7 +155,7 @@ public class BamRecorder {
             return new Supplier<>() {
                 @Override
                 public EmbeddingModel get() {
-                    return builder.build();
+                    return builder.build(BamEmbeddingModel.class);
                 }
             };
         } else {

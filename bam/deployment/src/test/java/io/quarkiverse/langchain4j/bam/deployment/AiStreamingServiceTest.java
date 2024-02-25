@@ -27,8 +27,9 @@ import io.quarkiverse.langchain4j.bam.Parameters;
 import io.quarkiverse.langchain4j.bam.TextGenerationRequest;
 import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.Multi;
 
-public class AiServiceTest {
+public class AiStreamingServiceTest {
 
     static WireMockServer wireMockServer;
     static ObjectMapper mapper;
@@ -59,7 +60,7 @@ public class AiServiceTest {
 
         @SystemMessage("This is a systemMessage")
         @UserMessage("This is a userMessage {text}")
-        String chat(String text);
+        Multi<String> chat(String text);
     }
 
     @Inject
@@ -104,6 +105,6 @@ public class AiServiceTest {
                         """)
                 .build();
 
-        assertEquals("AI Response", service.chat("Hello"));
+        service.chat("Hello").subscribe().with(message -> assertEquals("AI Response", message));
     }
 }

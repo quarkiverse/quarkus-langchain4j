@@ -25,8 +25,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class CacheTokenTest {
@@ -36,7 +36,7 @@ public class CacheTokenTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig config;
+    Langchain4jWatsonxConfig config;
 
     @Inject
     ChatLanguageModel model;
@@ -53,7 +53,7 @@ public class CacheTokenTest {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = WatsonRestApi.objectMapper(new ObjectMapper());
+        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
 
         watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
         watsonxServer.start();
