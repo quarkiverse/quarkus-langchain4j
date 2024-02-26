@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.jboss.logging.Logger;
@@ -41,7 +42,9 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.TokenStream;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.MultiEmitter;
 
 /**
  * Provides the basic building blocks that the generated Interface methods call into
@@ -128,6 +131,24 @@ public class AiServiceMethodImplementationSupport {
         Class<?> returnType = createInfo.getReturnType();
         if (returnType.equals(TokenStream.class)) {
             return new AiServiceTokenStream(messages, context, memoryId);
+        }
+
+        if (returnType.equals(Multi.class)) {
+            return Multi.createFrom().emitter(new Consumer<MultiEmitter<? super String>>() {
+                @Override
+                public void accept(MultiEmitter<? super String> em) {
+                    new AiServiceTokenStream(messages, context, memoryId)
+                            .onNext(em::emit)
+                            .onComplete(new Consumer<Response<AiMessage>>() {
+                                @Override
+                                public void accept(Response<AiMessage> message) {
+                                    em.complete();
+                                }
+                            })
+                            .onError(em::fail)
+                            .start();
+                }
+            });
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);

@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.NoContentException;
 
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,7 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -46,6 +48,12 @@ public interface BamRestApi {
     @POST
     @Path("text/chat")
     TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
+
+    @POST
+    @Path("text/chat_stream")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    Multi<String> chatStreaming(TextGenerationRequest request, @NotBody String token,
+            @QueryParam("version") String version);
 
     @POST
     @Path("/text/embeddings")
@@ -86,17 +94,19 @@ public interface BamRestApi {
     }
 
     /**
-     * Introduce a custom logger as the stock one logs at the DEBUG level by default...
+     * Introduce a custom logger as the stock one logs at the DEBUG level by
+     * default...
      */
-    class WatsonClientLogger implements ClientLogger {
-        private static final Logger log = Logger.getLogger(WatsonClientLogger.class);
+    class BamClientLogger implements ClientLogger {
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*sk-)(\\w{2})(\\w+)(\\w{2})");
+        private static final Logger log = Logger.getLogger(BamClientLogger.class);
+
+        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{4})(\\w+)(\\w{4})");
 
         private final boolean logRequests;
         private final boolean logResponses;
 
-        public WatsonClientLogger(boolean logRequests, boolean logResponses) {
+        public BamClientLogger(boolean logRequests, boolean logResponses) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
         }
@@ -112,7 +122,8 @@ public interface BamRestApi {
                 return;
             }
             try {
-                log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
+                log.infof(
+                        "Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
                         request.getMethod(),
                         request.absoluteURI(),
                         inOneLine(request.headers()),
@@ -128,6 +139,7 @@ public interface BamRestApi {
                 return;
             }
             response.bodyHandler(new Handler<>() {
+
                 @Override
                 public void handle(Buffer body) {
                     try {
@@ -175,7 +187,6 @@ public interface BamRestApi {
                 while (matcher.find()) {
                     matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
                 }
-                matcher.appendTail(sb);
 
                 return sb.toString();
             } catch (Exception e) {

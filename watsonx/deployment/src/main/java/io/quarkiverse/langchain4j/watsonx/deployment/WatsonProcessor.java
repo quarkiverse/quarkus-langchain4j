@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -12,8 +13,8 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
-import io.quarkiverse.langchain4j.watsonx.runtime.WatsonRecorder;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -24,7 +25,6 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 public class WatsonProcessor {
 
     private static final String FEATURE = "langchain4j-watsonx";
-
     private static final String PROVIDER = "watsonx";
 
     @BuildStep
@@ -44,9 +44,9 @@ public class WatsonProcessor {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void generateBeans(WatsonRecorder recorder,
+    void generateBeans(WatsonxRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            Langchain4jWatsonConfig config,
+            Langchain4jWatsonxConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -58,6 +58,17 @@ public class WatsonProcessor {
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.chatModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+            }
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.streamingChatModel(config, modelName));
                 addQualifierIfNecessary(builder, modelName);
                 beanProducer.produce(builder.done());
             }

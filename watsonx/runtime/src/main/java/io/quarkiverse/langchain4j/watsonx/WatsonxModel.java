@@ -1,45 +1,43 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import static io.quarkiverse.langchain4j.watsonx.Utility.retryOn;
-
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.ws.rs.WebApplicationException;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
-import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
-import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
-import io.quarkiverse.langchain4j.watsonx.client.filter.BearerRequestFilter;
+import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Uni;
 
-public class WatsonChatModel implements ChatLanguageModel {
+public abstract class WatsonxModel {
 
-    private final String modelId;
-    private final String version;
-    private final String projectId;
-    private final String decodingMethod;
-    private final Integer minNewTokens;
-    private final Integer maxNewTokens;
-    private Integer randomSeed;
-    private List<String> stopSequences;
-    private final Double temperature;
-    private final Double topP;
-    private final Integer topK;
-    private Double repetitionPenalty;
-    private final WatsonRestApi client;
+    private final TokenGenerator tokenGenerator;
 
-    public WatsonChatModel(Builder config) {
+    final String modelId;
+    final String version;
+    final String projectId;
+    final String decodingMethod;
+    final Integer minNewTokens;
+    final Integer maxNewTokens;
+    Integer randomSeed;
+    List<String> stopSequences;
+    final Double temperature;
+    final Double topP;
+    final Integer topK;
+    Double repetitionPenalty;
+    final WatsonxRestApi client;
+
+    public WatsonxModel(Builder config) {
 
         QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
                 .baseUrl(config.url)
@@ -48,16 +46,12 @@ public class WatsonChatModel implements ChatLanguageModel {
 
         if (config.logRequests || config.logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-            builder.clientLogger(new WatsonRestApi.WatsonClientLogger(
+            builder.clientLogger(new WatsonxRestApi.WatsonClientLogger(
                     config.logRequests,
                     config.logResponses));
         }
 
-        if (config.tokenGenerator != null) {
-            builder.register(new BearerRequestFilter(config.tokenGenerator));
-        }
-
-        this.client = builder.build(WatsonRestApi.class);
+        this.client = builder.build(WatsonxRestApi.class);
         this.modelId = config.modelId;
         this.version = config.version;
         this.projectId = config.projectId;
@@ -70,52 +64,18 @@ public class WatsonChatModel implements ChatLanguageModel {
         this.topP = config.topP;
         this.topK = config.topK;
         this.repetitionPenalty = config.repetitionPenalty;
+        this.tokenGenerator = config.tokenGenerator;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-
-        Parameters parameters = Parameters.builder()
-                .decodingMethod(decodingMethod)
-                .minNewTokens(minNewTokens)
-                .maxNewTokens(maxNewTokens)
-                .randomSeed(randomSeed)
-                .stopSequences(stopSequences)
-                .temperature(temperature)
-                .topP(topP)
-                .topK(topK)
-                .repetitionPenalty(repetitionPenalty)
-                .build();
-
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
-
-        // The response for will be always one.
-        Result result = retryOn(() -> client.chat(request, version)).results().get(0);
-
-        var finishReason = toFinishReason(result.stopReason());
-        var content = AiMessage.from(result.generatedText());
-        var tokenUsage = new TokenUsage(
-                result.inputTokenCount(),
-                result.generatedTokenCount());
-
-        return Response.from(content, tokenUsage, finishReason);
+    protected Uni<String> generateBearerToken() {
+        return tokenGenerator.generate();
     }
 
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        throw new IllegalArgumentException("Tools are currently not supported for Watsonx models");
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        throw new IllegalArgumentException("Tools are currently not supported for Watsonx models");
-    }
-
-    private String toInput(List<ChatMessage> messages) {
+    protected String toInput(List<ChatMessage> messages) {
         StringBuilder builder = new StringBuilder();
         for (ChatMessage message : messages) {
             switch (message.type()) {
@@ -135,16 +95,46 @@ public class WatsonChatModel implements ChatLanguageModel {
         return builder.toString();
     }
 
-    private FinishReason toFinishReason(String stopReason) {
-        switch (stopReason) {
-            case "max_tokens":
-                return FinishReason.LENGTH;
-            case "eos_token":
-            case "stop_sequence":
-                return FinishReason.STOP;
-            default:
-                throw new IllegalArgumentException("%s not supported".formatted(stopReason));
+    protected FinishReason toFinishReason(String stopReason) {
+        return switch (stopReason) {
+            case "max_tokens" -> FinishReason.LENGTH;
+            case "eos_token", "stop_sequence" -> FinishReason.STOP;
+            default -> throw new IllegalArgumentException("%s not supported".formatted(stopReason));
+        };
+    }
+
+    protected static <T> T retryOn(Callable<T> action) {
+
+        int maxAttempts = 1;
+        for (int i = 0; i <= maxAttempts; i++) {
+
+            try {
+
+                return action.call();
+
+            } catch (WatsonxException e) {
+
+                if (e.details() == null || e.details().errors() == null || e.details().errors().size() == 0)
+                    throw e;
+
+                Optional<WatsonError.Code> optional = Optional.empty();
+                for (WatsonError.Error error : e.details().errors()) {
+                    if (WatsonError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(error.code())) {
+                        optional = Optional.of(error.code());
+                        break;
+                    }
+                }
+
+                if (!optional.isPresent())
+                    throw e;
+
+            } catch (WebApplicationException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+        throw new RuntimeException("Failed after " + maxAttempts + " attempts");
     }
 
     public static final class Builder {
@@ -257,8 +247,12 @@ public class WatsonChatModel implements ChatLanguageModel {
             return this;
         }
 
-        public WatsonChatModel build() {
-            return new WatsonChatModel(this);
+        public <T> T build(Class<T> clazz) {
+            try {
+                return clazz.getConstructor(Builder.class).newInstance(this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

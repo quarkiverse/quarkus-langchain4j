@@ -39,7 +39,7 @@ public interface Langchain4jBamConfig {
     @ConfigGroup
     interface BamConfig {
         /**
-         * Base URL where the Ollama serving is running
+         * Base URL where the BAM serving is running
          */
         @ConfigDocDefault("https://bam-api.res.ibm.com")
         Optional<URL> baseUrl();
@@ -59,7 +59,7 @@ public interface Langchain4jBamConfig {
         /**
          * Version to use
          */
-        @WithDefault("2024-01-10")
+        @WithDefault("2024-02-20")
         String version();
 
         /**
@@ -75,8 +75,8 @@ public interface Langchain4jBamConfig {
         Boolean logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
-         * provider.
+         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the
+         * BAM provider.
          * Set to {@code false} to disable all requests.
          */
         @WithDefault("true")

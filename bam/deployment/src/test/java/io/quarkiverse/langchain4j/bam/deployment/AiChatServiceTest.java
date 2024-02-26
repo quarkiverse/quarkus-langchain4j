@@ -3,10 +3,10 @@ package io.quarkiverse.langchain4j.bam.deployment;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.Duration;
 import java.util.List;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -18,7 +18,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.Message;
 import io.quarkiverse.langchain4j.bam.Parameters;
@@ -26,7 +28,7 @@ import io.quarkiverse.langchain4j.bam.TextGenerationRequest;
 import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class DefaultPropertiesTest {
+public class AiChatServiceTest {
 
     static WireMockServer wireMockServer;
     static ObjectMapper mapper;
@@ -37,12 +39,6 @@ public class DefaultPropertiesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @Inject
-    Langchain4jBamConfig langchain4jBamConfig;
-
-    @Inject
-    ChatLanguageModel model;
 
     @BeforeAll
     static void beforeAll() {
@@ -57,20 +53,24 @@ public class DefaultPropertiesTest {
         wireMockServer.stop();
     }
 
-    @Test
-    void generate() throws Exception {
-        var config = langchain4jBamConfig.defaultConfig();
+    @RegisterAiService
+    @Singleton
+    interface NewAIService {
 
-        assertEquals(Duration.ofSeconds(10), config.timeout());
-        assertEquals(WireMockUtil.VERSION, config.version());
-        assertEquals(false, config.logRequests());
-        assertEquals(false, config.logResponses());
-        assertEquals("meta-llama/llama-2-70b-chat", config.chatModel().modelId());
-        assertEquals("greedy", config.chatModel().decodingMethod());
-        assertEquals(1.0, config.chatModel().temperature());
-        assertEquals(0, config.chatModel().minNewTokens());
-        assertEquals(200, config.chatModel().maxNewTokens());
-        assertEquals(1.0, config.chatModel().temperature());
+        @SystemMessage("This is a systemMessage")
+        @UserMessage("This is a userMessage {text}")
+        String chat(String text);
+    }
+
+    @Inject
+    NewAIService service;
+
+    @Inject
+    Langchain4jBamConfig langchain4jBamConfig;
+
+    @Test
+    void chat() throws Exception {
+        var config = langchain4jBamConfig.defaultConfig();
 
         var modelId = config.chatModel().modelId();
 
@@ -82,7 +82,8 @@ public class DefaultPropertiesTest {
                 .build();
 
         List<Message> messages = List.of(
-                new Message("user", "Hello how are you?"));
+                new Message("system", "This is a systemMessage"),
+                new Message("user", "This is a userMessage Hello"));
 
         var body = new TextGenerationRequest(modelId, messages, parameters);
 
@@ -90,23 +91,19 @@ public class DefaultPropertiesTest {
                 .body(mapper.writeValueAsString(body))
                 .response("""
                         {
-                            "id": "05a245ad-1da7-4b9d-9807-ae1733177c1d",
-                            "model_id": "meta-llama/llama-2-70b-chat",
-                            "created_at": "2023-09-01T09:28:29.378Z",
                             "results": [
                                 {
                                     "generated_token_count": 20,
                                     "input_token_count": 146,
                                     "stop_reason": "max_tokens",
                                     "seed": 40268626,
-                                    "generated_text": "Hello! I'm doing well, thanks for asking. I'm here to assist you"
+                                    "generated_text": "AI Response"
                                 }
-                            ],
-                            "conversation_id": "cd3a9bca-b88e-41e4-9d62-bab33098fe39"
+                            ]
                         }
                         """)
                 .build();
 
-        assertEquals("Hello! I'm doing well, thanks for asking. I'm here to assist you", model.generate("Hello how are you?"));
+        assertEquals("AI Response", service.chat("Hello"));
     }
 }

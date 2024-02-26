@@ -26,9 +26,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
-import io.quarkiverse.langchain4j.watsonx.exception.WatsonException;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class HttpErrorTest {
@@ -38,7 +38,7 @@ public class HttpErrorTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig config;
+    Langchain4jWatsonxConfig config;
 
     @Inject
     ChatLanguageModel model;
@@ -55,7 +55,7 @@ public class HttpErrorTest {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = WatsonRestApi.objectMapper(new ObjectMapper());
+        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
 
         watsonServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
         watsonServer.start();
@@ -81,7 +81,7 @@ public class HttpErrorTest {
     @Test
     void error_401_authorization_rejected() {
         mockServers.error_401_authorization_rejected();
-        WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> model.generate("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(401, ex.details().statusCode());
@@ -113,7 +113,7 @@ public class HttpErrorTest {
                         """)
                 .build();
 
-        WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> model.generate("message"));
         assertEquals(404, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
@@ -142,7 +142,7 @@ public class HttpErrorTest {
                         """)
                 .build();
 
-        WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> model.generate("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(400, ex.details().statusCode());
@@ -173,7 +173,7 @@ public class HttpErrorTest {
                         """)
                 .build();
 
-        WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> model.generate("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(400, ex.details().statusCode());
@@ -194,7 +194,7 @@ public class HttpErrorTest {
                 .response("{")
                 .build();
 
-        WatsonException ex = assertThrowsExactly(WatsonException.class, () -> model.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> model.generate("message"));
         assertEquals(500, ex.statusCode());
     }
 

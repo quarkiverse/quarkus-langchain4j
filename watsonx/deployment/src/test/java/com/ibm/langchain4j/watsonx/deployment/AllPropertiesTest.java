@@ -22,8 +22,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonRestApi;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AllPropertiesTest {
@@ -33,7 +33,7 @@ public class AllPropertiesTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonConfig langchain4jWatsonConfig;
+    Langchain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -66,7 +66,7 @@ public class AllPropertiesTest {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = WatsonRestApi.objectMapper(new ObjectMapper());
+        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
 
         watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
         watsonxServer.start();

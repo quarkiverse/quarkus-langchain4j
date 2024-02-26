@@ -14,7 +14,7 @@ import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonChatModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -89,6 +89,6 @@ public class MultipleChatProvidersTest {
 
     @Test
     void seventhNamedModel() {
-        assertThat(ClientProxy.unwrap(seventhNamedModel)).isInstanceOf(WatsonChatModel.class);
+        assertThat(ClientProxy.unwrap(seventhNamedModel)).isInstanceOf(WatsonxChatModel.class);
     }
 }

@@ -4,7 +4,7 @@ import java.util.List;
 
 public record TextGenerationResponse(List<Results> results) {
 
-    public record Results(String generatedText) {
+    public record Results(int generatedTokenCount, int inputTokenCount, String stopReason, String generatedText) {
 
     }
 }

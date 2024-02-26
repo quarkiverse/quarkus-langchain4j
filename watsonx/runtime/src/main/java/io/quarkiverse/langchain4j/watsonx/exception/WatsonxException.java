@@ -2,28 +2,28 @@ package io.quarkiverse.langchain4j.watsonx.exception;
 
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
 
-public class WatsonException extends RuntimeException {
+public class WatsonxException extends RuntimeException {
 
     Integer statusCode;
     WatsonError details;
 
-    public WatsonException(String message, Integer statusCode, WatsonError details) {
+    public WatsonxException(String message, Integer statusCode, WatsonError details) {
         super(message);
         this.statusCode = statusCode;
         this.details = details;
     }
 
-    public WatsonException(String message, Integer statusCode) {
+    public WatsonxException(String message, Integer statusCode) {
         super(message);
         this.statusCode = statusCode;
     }
 
-    public WatsonException(Integer statusCode, WatsonError details) {
+    public WatsonxException(Integer statusCode, WatsonError details) {
         this.statusCode = statusCode;
         this.details = details;
     }
 
-    public WatsonException(Throwable cause, Integer statusCode) {
+    public WatsonxException(Throwable cause, Integer statusCode) {
         super(cause.getMessage(), cause);
         this.statusCode = statusCode;
     }

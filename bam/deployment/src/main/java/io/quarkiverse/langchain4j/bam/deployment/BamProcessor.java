@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.bam.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -61,14 +62,25 @@ public class BamProcessor {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String modelName = selected.getModelName();
-                var builder = SyntheticBeanBuildItem
+                var chatBuilder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.chatModel(config, modelName));
-                addQualifierIfNecessary(builder, modelName);
-                beanProducer.produce(builder.done());
+
+                addQualifierIfNecessary(chatBuilder, modelName);
+                beanProducer.produce(chatBuilder.done());
+
+                var streamingBuilder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.streamingChatModel(config, modelName));
+
+                addQualifierIfNecessary(streamingBuilder, modelName);
+                beanProducer.produce(streamingBuilder.done());
             }
         }
 

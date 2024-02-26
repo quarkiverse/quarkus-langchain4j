@@ -14,7 +14,9 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,10 +24,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
-import io.quarkiverse.langchain4j.watsonx.exception.WatsonException;
+import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
+import io.quarkus.rest.client.reactive.NotBody;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -33,21 +39,33 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
 /**
- * This Microprofile REST client is used as the building block of all the API
- * calls to Watsonx. The implementation is provided by the Reactive REST Client
- * in Quarkus.
+ * This Microprofile REST client is used as the building block of all the API calls to Watsonx. The implementation is provided
+ * by
+ * the Reactive REST Client in Quarkus.
  */
 @Path("/ml/v1-beta")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public interface WatsonRestApi {
+@ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
+public interface WatsonxRestApi {
 
     @POST
     @Path("generation/text")
-    TextGenerationResponse chat(TextGenerationRequest request, @QueryParam("version") String version) throws WatsonException;
+    TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version)
+            throws WatsonxException;
+
+    @POST
+    @Path("generation/text_stream")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    Multi<String> chatStreaming(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
+
+    @POST
+    @Path("text/tokenization")
+    public TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
+            @QueryParam("version") String version);
 
     @ClientExceptionMapper
-    static WatsonException toException(jakarta.ws.rs.core.Response response) {
+    static WatsonxException toException(jakarta.ws.rs.core.Response response) {
         MediaType mediaType = response.getMediaType();
         if ((mediaType != null) && mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             try {
@@ -59,13 +77,13 @@ public interface WatsonRestApi {
                         joiner.add("%s: %s".formatted(error.code(), error.message()));
                 }
 
-                return new WatsonException(joiner.toString(), response.getStatus(), ex);
+                return new WatsonxException(joiner.toString(), response.getStatus(), ex);
             } catch (Exception e) {
-                return new WatsonException(response.readEntity(String.class), response.getStatus());
+                return new WatsonxException(response.readEntity(String.class), response.getStatus());
             }
         }
 
-        return new WatsonException(response.readEntity(String.class), response.getStatus());
+        return new WatsonxException(response.readEntity(String.class), response.getStatus());
     }
 
     @ClientObjectMapper
@@ -74,8 +92,7 @@ public interface WatsonRestApi {
     }
 
     /**
-     * Introduce a custom logger as the stock one logs at the DEBUG level by
-     * default...
+     * Introduce a custom logger as the stock one logs at the DEBUG level by default...
      */
     class WatsonClientLogger implements ClientLogger {
 

@@ -17,7 +17,7 @@ public class WireMockUtil {
     public static String URL_CHAT_API = "/v2/text/chat?version=%s";
     public static int PORT = 8089;
     public static String API_KEY = "my_super_token";
-    public static String VERSION = "2024-01-10";
+    public static String VERSION = "2024-02-20";
 
     WireMockServer server;
 

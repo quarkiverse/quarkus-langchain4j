@@ -91,6 +91,7 @@ import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.runtime.metrics.MetricsFactory;
+import io.smallrye.mutiny.Multi;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServicesProcessor {
@@ -122,7 +123,6 @@ public class AiServicesProcessor {
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
-    public static final ClassType CHAT_MODEL_CLASS_TYPE = ClassType.create(Langchain4jDotNames.CHAT_MODEL);
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -299,6 +299,7 @@ public class AiServicesProcessor {
             BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
 
         boolean needsChatModelBean = false;
+        boolean needsStreamingChatModelBean = false;
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
         boolean needsAuditServiceBean = false;
@@ -331,27 +332,56 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
+            // determine whether the method returns Multi<String>
+            boolean injectStreamingChatModelBean = false;
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (!Langchain4jDotNames.MULTI.equals(method.returnType().name())) {
+                    continue;
+                }
+                boolean isMultiString = false;
+                if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    Type multiType = method.returnType().asParameterizedType().arguments().get(0);
+                    if (Langchain4jDotNames.STRING.equals(multiType.name())) {
+                        isMultiString = true;
+                    }
+                }
+                if (!isMultiString) {
+                    throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
+                            + method.declaringClass().name().toString() + "#" + method.name() + "'");
+                }
+                injectStreamingChatModelBean = true;
+            }
+
             String chatModelName = bi.getChatModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
-                                    toolClassNames, chatMemoryProviderSupplierClassName,
-                                    retrieverClassName,
-                                    auditServiceClassSupplierName,
-                                    moderationModelSupplierClassName, chatModelName)))
+                                    toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
+                                    auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
+                                    injectStreamingChatModelBean)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
                     .done()
                     .scope(Dependent.class);
+
             if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
                 if (NamedModelUtil.isDefault(chatModelName)) {
-                    configurator.addInjectionPoint(CHAT_MODEL_CLASS_TYPE);
+                    configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL));
+                    if (injectStreamingChatModelBean) {
+                        configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.STREAMING_CHAT_MODEL));
+                        needsStreamingChatModelBean = true;
+                    }
                 } else {
-                    configurator.addInjectionPoint(CHAT_MODEL_CLASS_TYPE,
+                    configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL),
                             AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
 
+                    if (injectStreamingChatModelBean) {
+                        configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.STREAMING_CHAT_MODEL),
+                                AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
+                        needsStreamingChatModelBean = true;
+                    }
                 }
                 needsChatModelBean = true;
             }
@@ -390,6 +420,9 @@ public class AiServicesProcessor {
 
         if (needsChatModelBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MODEL));
+        }
+        if (needsStreamingChatModelBean) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.STREAMING_CHAT_MODEL));
         }
         if (needsChatMemoryProviderBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
@@ -794,7 +827,10 @@ public class AiServicesProcessor {
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams, Class<?> returnType) {
-        String outputFormatInstructions = outputFormatInstructions(returnType);
+
+        String outputFormatInstructions = "";
+        if (!returnType.equals(Multi.class))
+            outputFormatInstructions = outputFormatInstructions(returnType);
 
         Optional<Integer> userNameParamName = method.annotations(Langchain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();

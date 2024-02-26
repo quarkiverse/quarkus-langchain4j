@@ -17,7 +17,7 @@ import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.watsonx")
-public interface Langchain4jWatsonConfig {
+public interface Langchain4jWatsonxConfig {
 
     /**
      * Default model config.
