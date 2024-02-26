@@ -5,6 +5,8 @@ import '@vaadin/text-area';
 import '@vaadin/button';
 import { JsonRpc } from 'jsonrpc';
 
+import {moderationModelConfigurations} from 'build-time-data';
+
 export class QwcModerationModels extends LitElement {
 
     jsonRpc = new JsonRpc(this);
@@ -19,6 +21,10 @@ export class QwcModerationModels extends LitElement {
 
     constructor() {
         super();
+        this._moderationModelConfigurations = [];
+        moderationModelConfigurations.forEach((config) => {
+            this._moderationModelConfigurations = this._moderationModelConfigurations.concat([{label: config, value: config}]);
+        })
     }
 
     render() {
@@ -26,8 +32,20 @@ export class QwcModerationModels extends LitElement {
             <h3>Moderation model</h3>
             <vaadin-horizontal-layout>
                 <vaadin-select
+                        label="Model configuration"
+                        style="width:20%"
+                        helper-text="Name of the OpenAI configuration to use (this corresponds to NAME 
+                        in \`quarkus.langchain4j.openai.NAME.*\` properties)."
+                        id="configuration"
+                        .items="${this._moderationModelConfigurations}"
+                        .value="${this._moderationModelConfigurations[0].value}"
+                ></vaadin-select>
+                <vaadin-select
                         label="Model"
+                        style="width:20%"
                         id="model-name"
+                        helper-text="Allows to override the moderation model to use (this corresponds to 
+                        the \`quarkus.langchain4j.openai.NAME.moderation-model.model-name\` property)."
                         .items="${this.supportedModels}"
                         .value="${this.supportedModels[0].value}"
                 ></vaadin-select>
@@ -35,6 +53,7 @@ export class QwcModerationModels extends LitElement {
             <vaadin-text-area id="prompt" label="Prompt" style="width:90%"></vaadin-text-area><br/>
             
             <vaadin-button id="image-submit" @click=${() => this._doGenerate(
+                    this.shadowRoot.getElementById('configuration').value,
                     this.shadowRoot.getElementById('model-name').value,
                     this.shadowRoot.getElementById('prompt').value
             )}>Moderate the prompt
@@ -45,9 +64,9 @@ export class QwcModerationModels extends LitElement {
         `;
     }
 
-    _doGenerate(modelName, prompt) {
+    _doGenerate(configuration, modelName, prompt) {
         this._moderationResponse = html`Retrieving...<br/>`;
-        this.jsonRpc.moderate({modelName: modelName, prompt: prompt}).then((jsonRpcResponse) => {
+        this.jsonRpc.moderate({configuration: configuration, modelName: modelName, prompt: prompt}).then((jsonRpcResponse) => {
             this._moderationResponse = this._printResponse(jsonRpcResponse.result);
         }).catch((error) => {
             this._moderationResponse = html`

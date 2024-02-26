@@ -5,6 +5,8 @@ import '@vaadin/text-area';
 import '@vaadin/button';
 import { JsonRpc } from 'jsonrpc';
 
+import {imageModelConfigurations} from 'build-time-data';
+
 export class QwcImages extends LitElement {
 
     jsonRpc = new JsonRpc(this);
@@ -32,17 +34,30 @@ export class QwcImages extends LitElement {
     static properties = {
         "_generatedImages": {state: true},
         "_statusInfo": {state: true},
+        "_imageModelConfigurations": {state: true},
     }
 
     constructor() {
         super();
         this._generatedImages = [];
+        this._imageModelConfigurations = [];
+        imageModelConfigurations.forEach((config) => {
+            this._imageModelConfigurations = this._imageModelConfigurations.concat([{label: config, value: config}]);
+        })
     }
 
     render() {
         return html`
             <h3>Model configuration</h3>
             <vaadin-horizontal-layout>
+                <vaadin-select
+                        label="Model configuration"
+                        helper-text="Name of the configured OpenAI client (this corresponds to NAME 
+                        in \`quarkus.langchain4j.openai.NAME.*\` properties)."
+                        id="model-configuration"
+                        .items="${this._imageModelConfigurations}"
+                        .value="${this._imageModelConfigurations[0].value}"
+                ></vaadin-select>
                 <vaadin-select
                         label="Model"
                         id="model-name"
@@ -79,6 +94,7 @@ export class QwcImages extends LitElement {
             <vaadin-text-area id="image-prompt" label="Prompt" style="width:90%"></vaadin-text-area><br/>
             ${this._statusInfo}
             <vaadin-button id="image-submit" @click=${() => this._doGenerate(
+                    this.shadowRoot.getElementById('model-configuration').value,
                     this.shadowRoot.getElementById('model-name').value,
                     this.shadowRoot.getElementById('image-prompt').value,
                     this.shadowRoot.getElementById('size').value,
@@ -92,9 +108,10 @@ export class QwcImages extends LitElement {
         `;
     }
 
-    _doGenerate(modelName, prompt, size, quality, style) {
+    _doGenerate(configuration, modelName, prompt, size, quality, style) {
         this._statusInfo = html`Generating image...<br/>`;
-        this.jsonRpc.generate({modelName: modelName, prompt: prompt, size: size, quality: quality, style: style}).then((jsonRpcResponse) => {
+        this.jsonRpc.generate({configuration: configuration, modelName: modelName,
+                prompt: prompt, size: size, quality: quality, style: style}).then((jsonRpcResponse) => {
             this._statusInfo = html`<qui-alert level="success" showIcon>
                     <span>Image generated successfully.</span>
                 </qui-alert>`;
