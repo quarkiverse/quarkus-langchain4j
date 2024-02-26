@@ -8,14 +8,14 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.retriever.EmbeddingStoreRetriever;
 import dev.langchain4j.retriever.Retriever;
-import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 
 @ApplicationScoped
 public class RetrieverExample implements Retriever<TextSegment> {
 
     private final EmbeddingStoreRetriever retriever;
 
-    RetrieverExample(RedisEmbeddingStore store, EmbeddingModel model) {
+    RetrieverExample(EmbeddingStore store, EmbeddingModel model) {
         retriever = EmbeddingStoreRetriever.from(store, model, 20);
     }
 
