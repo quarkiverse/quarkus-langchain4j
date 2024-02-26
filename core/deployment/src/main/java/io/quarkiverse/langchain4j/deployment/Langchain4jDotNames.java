@@ -72,4 +72,5 @@ public class Langchain4jDotNames {
             QuarkusAiServiceContextQualifier.class);
 
     static final DotName MULTI = DotName.createSimple(Multi.class);
+    static final DotName STRING = DotName.createSimple(String.class);
 }

@@ -332,23 +332,34 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
-            boolean injectStreamingChatModelBean = declarativeAiServiceClassInfo.methods().stream()
-                    .map(MethodInfo::returnType)
-                    .map(Type::name)
-                    .filter(Langchain4jDotNames.MULTI::equals)
-                    .findFirst()
-                    .isPresent();
+            // determine whether the method returns Multi<String>
+            boolean injectStreamingChatModelBean = false;
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (!Langchain4jDotNames.MULTI.equals(method.returnType().name())) {
+                    continue;
+                }
+                boolean isMultiString = false;
+                if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                    Type multiType = method.returnType().asParameterizedType().arguments().get(0);
+                    if (Langchain4jDotNames.STRING.equals(multiType.name())) {
+                        isMultiString = true;
+                    }
+                }
+                if (!isMultiString) {
+                    throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
+                            + method.declaringClass().name().toString() + "#" + method.name() + "'");
+                }
+                injectStreamingChatModelBean = true;
+            }
 
             String chatModelName = bi.getChatModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .createWith(recorder.createDeclarativeAiService(
-                            new DeclarativeAiServiceCreateInfo(injectStreamingChatModelBean, serviceClassName,
-                                    chatLanguageModelSupplierClassName,
-                                    toolClassNames, chatMemoryProviderSupplierClassName,
-                                    retrieverClassName,
-                                    auditServiceClassSupplierName,
-                                    moderationModelSupplierClassName, chatModelName)))
+                            new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
+                                    toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
+                                    auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
+                                    injectStreamingChatModelBean)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)

@@ -11,19 +11,17 @@ public class DeclarativeAiServiceCreateInfo {
     private final List<String> toolsClassNames;
     private final String chatMemoryProviderSupplierClassName;
     private final String retrieverClassName;
-    private final boolean needsStreamingChatModel;
     private final String auditServiceClassSupplierName;
     private final String moderationModelSupplierClassName;
     private final String chatModelName;
+    private final boolean needsStreamingChatModel;
 
     @RecordableConstructor
-    public DeclarativeAiServiceCreateInfo(boolean needsStreamingChatModel, String serviceClassName,
-            String languageModelSupplierClassName,
+    public DeclarativeAiServiceCreateInfo(String serviceClassName, String languageModelSupplierClassName,
             List<String> toolsClassNames, String chatMemoryProviderSupplierClassName,
-            String retrieverClassName,
-            String auditServiceClassSupplierName,
-            String moderationModelSupplierClassName,
-            String chatModelName) {
+            String retrieverClassName, String auditServiceClassSupplierName,
+            String moderationModelSupplierClassName, String chatModelName,
+            boolean needsStreamingChatModel) {
         this.needsStreamingChatModel = needsStreamingChatModel;
         this.serviceClassName = serviceClassName;
         this.languageModelSupplierClassName = languageModelSupplierClassName;
@@ -33,10 +31,6 @@ public class DeclarativeAiServiceCreateInfo {
         this.auditServiceClassSupplierName = auditServiceClassSupplierName;
         this.moderationModelSupplierClassName = moderationModelSupplierClassName;
         this.chatModelName = chatModelName;
-    }
-
-    public boolean getNeedsStreamingChatModel() {
-        return needsStreamingChatModel;
     }
 
     public String getServiceClassName() {
@@ -69,5 +63,9 @@ public class DeclarativeAiServiceCreateInfo {
 
     public String getChatModelName() {
         return chatModelName;
+    }
+
+    public boolean getNeedsStreamingChatModel() {
+        return needsStreamingChatModel;
     }
 }
