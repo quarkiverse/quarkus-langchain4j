@@ -3,6 +3,8 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
 import static dev.langchain4j.service.ServiceOutputParser.outputFormatInstructions;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
+import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.NO_RETRIEVER;
 
 import java.io.IOException;
@@ -230,6 +232,35 @@ public class AiServicesProcessor {
                 }
             }
 
+            boolean customRetrievalAugmentorSupplierClassIsABean = false;
+            DotName retrievalAugmentorSupplierClassName = BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
+            AnnotationValue retrievalAugmentorSupplierValue = instance.value("retrievalAugmentor");
+            if (retrievalAugmentorSupplierValue != null && !BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER
+                    .equals(retrievalAugmentorSupplierValue.asClass().name())) {
+                if (NO_RETRIEVAL_AUGMENTOR_SUPPLIER.equals(retrievalAugmentorSupplierValue.asClass().name())) {
+                    retrievalAugmentorSupplierClassName = null;
+                } else {
+                    retrievalAugmentorSupplierClassName = retrievalAugmentorSupplierValue.asClass().name();
+                    // if the supplier is not a CDI bean, make sure can build an instance
+                    BuiltinScope declaredScope = BuiltinScope
+                            .from(index.getClassByName(retrievalAugmentorSupplierClassName));
+                    if (declaredScope != null) {
+                        customRetrievalAugmentorSupplierClassIsABean = true;
+                    } else {
+                        validateSupplierAndRegisterForReflection(retrievalAugmentorSupplierClassName, index,
+                                reflectiveClassProducer);
+                    }
+                }
+            }
+
+            if (retrieverClassDotName != null && retrievalAugmentorSupplierClassName != null) {
+                if (!retrievalAugmentorSupplierClassName.equals(BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER)) {
+                    throw new IllegalConfigurationException("Both 'retriever' and 'retrievalAugmentor' are set for "
+                            + declarativeAiServiceClassInfo.name().toString()
+                            + ". Only one of them can be set.");
+                }
+            }
+
             DotName auditServiceSupplierClassName = Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
             AnnotationValue auditServiceSupplierValue = instance.value("auditServiceSupplier");
             if (auditServiceSupplierValue != null) {
@@ -260,6 +291,8 @@ public class AiServicesProcessor {
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverClassDotName,
+                            retrievalAugmentorSupplierClassName,
+                            customRetrievalAugmentorSupplierClassIsABean,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
                             cdiScope,
@@ -302,6 +335,7 @@ public class AiServicesProcessor {
         boolean needsStreamingChatModelBean = false;
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
+        boolean needsRetrievalAugmentorBean = false;
         boolean needsAuditServiceBean = false;
         boolean needsModerationModelBean = false;
         Set<DotName> allToolNames = new HashSet<>();
@@ -322,6 +356,10 @@ public class AiServicesProcessor {
 
             String retrieverClassName = bi.getRetrieverClassDotName() != null
                     ? bi.getRetrieverClassDotName().toString()
+                    : null;
+
+            String retrievalAugmentorSupplierClassName = bi.getRetrievalAugmentorSupplierClassDotName() != null
+                    ? bi.getRetrievalAugmentorSupplierClassDotName().toString()
                     : null;
 
             String auditServiceClassSupplierName = bi.getAuditServiceClassSupplierDotName() != null
@@ -358,6 +396,7 @@ public class AiServicesProcessor {
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
+                                    retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
                                     injectStreamingChatModelBean)))
                     .setRuntimeInit()
@@ -404,6 +443,28 @@ public class AiServicesProcessor {
                 needsRetrieverBean = true;
             }
 
+            if (Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.toString()
+                    .equals(retrievalAugmentorSupplierClassName)) {
+                // Use a CDI bean of type `RetrievalAugmentor` if one exists, otherwise
+                // don't use an augmentor.
+                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                        new Type[] { ClassType.create(Langchain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
+                needsRetrievalAugmentorBean = true;
+            } else {
+                if (retrievalAugmentorSupplierClassName != null) {
+                    // Use the provided `Supplier<RetrievalAugmentor>`. If
+                    // the provided supplier, is a CDI bean, use it as such
+                    // and declare an injection point for it here. If it's
+                    // not a CDI bean, the recorder will call its no-arg
+                    // constructor to obtain an instance.
+                    if (bi.isCustomRetrievalAugmentorSupplierClassIsABean()) {
+                        configurator.addInjectionPoint(ClassType.create(retrievalAugmentorSupplierClassName));
+                        unremoveableProducer
+                                .produce(UnremovableBeanBuildItem.beanClassNames(retrievalAugmentorSupplierClassName));
+                    }
+                }
+            }
+
             if (Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
                         new Type[] { ClassType.create(Langchain4jDotNames.AUDIT_SERVICE) }, null));
@@ -429,6 +490,9 @@ public class AiServicesProcessor {
         }
         if (needsRetrieverBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.RETRIEVER));
+        }
+        if (needsRetrievalAugmentorBean) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.RETRIEVAL_AUGMENTOR));
         }
         if (needsAuditServiceBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.AUDIT_SERVICE));

@@ -18,6 +18,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -35,6 +36,9 @@ public class AiServicesRecorder {
 
     };
     private static final TypeLiteral<Instance<AuditService>> AUDIT_SERVICE_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
+    private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     // the key is the interface's class name
@@ -141,6 +145,31 @@ public class AiServicesRecorder {
                     if (info.getRetrieverClassName() != null) {
                         quarkusAiServices.retriever((Retriever<TextSegment>) creationalContext.getInjectedReference(
                                 Thread.currentThread().getContextClassLoader().loadClass(info.getRetrieverClassName())));
+                    }
+
+                    if (info.getRetrievalAugmentorSupplierClassName() != null) {
+                        if (RegisterAiService.BeanIfExistsRetrievalAugmentorSupplier.class.getName()
+                                .equals(info.getRetrievalAugmentorSupplierClassName())) {
+                            Instance<RetrievalAugmentor> instance = creationalContext
+                                    .getInjectedReference(RETRIEVAL_AUGMENTOR_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.retrievalAugmentor(instance.get());
+                            }
+                        } else {
+                            try {
+                                Supplier<RetrievalAugmentor> instance = (Supplier<RetrievalAugmentor>) creationalContext
+                                        .getInjectedReference(Thread.currentThread().getContextClassLoader()
+                                                .loadClass(info.getRetrievalAugmentorSupplierClassName()));
+                                quarkusAiServices.retrievalAugmentor(instance.get());
+                            } catch (IllegalArgumentException e) {
+                                // the provided Supplier is not a CDI bean, build it manually
+                                Supplier<? extends RetrievalAugmentor> supplier = (Supplier<? extends RetrievalAugmentor>) Thread
+                                        .currentThread().getContextClassLoader()
+                                        .loadClass(info.getRetrievalAugmentorSupplierClassName())
+                                        .getConstructor().newInstance();
+                                quarkusAiServices.retrievalAugmentor(supplier.get());
+                            }
+                        }
                     }
 
                     if (info.getAuditServiceClassSupplierName() != null) {
