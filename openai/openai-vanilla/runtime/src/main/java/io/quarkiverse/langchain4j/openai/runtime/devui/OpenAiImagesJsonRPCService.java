@@ -1,46 +1,35 @@
 package io.quarkiverse.langchain4j.openai.runtime.devui;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
+import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.vertx.core.json.JsonObject;
 
 public class OpenAiImagesJsonRPCService {
 
     @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.base-url")
-    String baseUrl;
+    Langchain4jOpenAiConfig config;
 
-    @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.api-key")
-    String apiKey;
-
-    @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.timeout")
-    Duration timeout;
-
-    @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.image-model.user")
-    Optional<String> user;
-
-    @Inject
-    @ConfigProperty(name = "quarkus.langchain4j.openai.max-retries")
-    Integer maxRetries;
-
-    public JsonObject generate(String modelName, String size, String prompt, String quality) {
+    public JsonObject generate(String configuration, String modelName, String size, String prompt, String quality) {
+        if (NamedModelUtil.isDefault(configuration) && config.defaultConfig().apiKey().equals("dummy")) {
+            // for non-default providers, we assume that Quarkus has verified by now that the api key is set
+            throw new RuntimeException("OpenAI API key is not configured. " +
+                    "Please specify the key in the `quarkus.langchain4j.openai.api-key` configuration property.");
+        }
+        Langchain4jOpenAiConfig.OpenAiConfig clientConfig = NamedModelUtil.isDefault(configuration) ? config.defaultConfig()
+                : config.namedConfig().get(configuration);
         ImageModel model = QuarkusOpenAiImageModel.builder()
-                .baseUrl(baseUrl)
-                .apiKey(apiKey)
-                .timeout(timeout)
-                .user(user)
-                .maxRetries(maxRetries)
+                .baseUrl(clientConfig.baseUrl())
+                .apiKey(clientConfig.apiKey())
+                .timeout(clientConfig.timeout())
+                .user(clientConfig.imageModel().user())
+                .maxRetries(clientConfig.maxRetries())
                 .persistDirectory(Optional.empty())
                 .modelName(modelName)
                 .quality(quality)
