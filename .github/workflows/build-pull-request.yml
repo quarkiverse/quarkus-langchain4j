@@ -64,10 +64,12 @@ jobs:
         id: set-matrix
         run: |
           cd integration-tests
+          # skip RAG module as it doesn't have any native-compatible tests now
           MATRIX='{"testModule":'$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
+                | grep -v rag \
                 | jq -R -s -c 'split("\n")[:-1]' \
           )'}'
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
