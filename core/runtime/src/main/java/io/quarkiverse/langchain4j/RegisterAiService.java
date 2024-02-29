@@ -105,7 +105,7 @@ public @interface RegisterAiService {
     /**
      * Configures the way to obtain the {@link ModerationModel} to use.
      * By default, no moderation model is used.
-     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanRetrieverSupplier}.
+     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanChatMemoryProviderSupplier}.
      * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
      * needs to be provided.
      */
