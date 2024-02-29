@@ -169,14 +169,14 @@ quarkus.langchain4j.huggingface.m2.api-key=sk-...
 As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
 
 The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the `dev.langchain4j.memory.chat.ChatMemoryProvider`. The default value of this annotation is `RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class`
-which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application, while falling back to no memory if no such bean exists.
+which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application.
 
 The extension provides a default implementation of `ChatMemoryProvider` which does two things:
 
 * It uses whatever bean `dev.langchain4j.store.memory.chat.ChatMemoryStore` bean is configured, as the backing store. The default implementation is `dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore`
 ** If the application provides its own `ChatMemoryStore` bean, that will be used instead of the default `InMemoryChatMemoryStore`,
 * It leverages the available configuration options under `quarkus.langchain4j.chat-memory` to construct the  `ChatMemoryProvider`.
-** The default configuration values result in the usage of `dev.langchain4j.memory.chat.MessageWindowChatMemory` with a window size of ten
+** The default configuration values result in the usage of `dev.langchain4j.memory.chat.MessageWindowChatMemory` with a window size of ten.
 ** By setting `quarkus.langchain4j.chat-memory.type=token-window`, a `dev.langchain4j.memory.chat.TokenWindowChatMemory` will be used. Note that this requires the presence of a `dev.langchain4j.model.Tokenizer` bean.
 
 [IMPORTANT]
@@ -185,6 +185,11 @@ The topic of `ChatMemory` cleanup is of paramount importance in order to avoid h
 the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope>> that such bean are `@RequestScoped` be default).
 
 However, in cases where more fine-grained control is needed (which is the case when the bean is declared as `@Singleton` or `@ApplicationScoped`) then `io.quarkiverse.langchain4j.ChatMemoryRemover` should be used to manually remove elements.
+====
+
+[CAUTION]
+====
+When using an AiService that is expected to use to chat memory, it is very important to use `@MemoryId` (as mentioned in a later section). Failure to do so, can lead to unexpected and hard to debug results.
 ====
 
 === Advanced usage
@@ -213,8 +218,6 @@ and configuring the AiService as so:
 ----
 
 TIP: For non-memory-reliant LLM interactions, you may skip memory configuration.
-
-IMPORTANT: When using tools, you need a memory of at least 3 messages to cover the tools interaction.
 
 === @MemoryId
 

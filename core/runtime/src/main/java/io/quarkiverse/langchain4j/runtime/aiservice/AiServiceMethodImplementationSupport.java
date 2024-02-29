@@ -42,6 +42,9 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.TokenStream;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+import io.quarkus.arc.ManagedContext;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiEmitter;
@@ -97,7 +100,7 @@ public class AiServiceMethodImplementationSupport {
             audit.initialMessages(systemMessage, userMessage);
         }
 
-        Object memoryId = memoryId(createInfo, methodArgs).orElse("default");
+        Object memoryId = memoryId(createInfo, methodArgs, context.chatMemoryProvider != null);
 
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
@@ -309,11 +312,22 @@ public class AiServiceMethodImplementationSupport {
         return value;
     }
 
-    private static Optional<Object> memoryId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+    private static Object memoryId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs, boolean hasChatMemoryProvider) {
         if (createInfo.getMemoryIdParamPosition().isPresent()) {
-            return Optional.of(methodArgs[createInfo.getMemoryIdParamPosition().get()]);
+            return methodArgs[createInfo.getMemoryIdParamPosition().get()];
         }
-        return Optional.empty();
+        if (hasChatMemoryProvider) {
+            // first we try to use the current context in order to make sure that we don't interleave chat messages of concurrent requests
+            ArcContainer container = Arc.container();
+            if (container != null) {
+                ManagedContext requestContext = container.requestContext();
+                if (requestContext.isActive()) {
+                    return requestContext.getState();
+                }
+            }
+        }
+        // fallback to the default since there is nothing else we can really use here
+        return "default";
     }
 
     //TODO: share these methods with Langchain4j
