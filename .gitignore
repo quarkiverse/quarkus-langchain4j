@@ -62,3 +62,6 @@ pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 release.properties
+
+# Quarkus CLI
+.quarkus
