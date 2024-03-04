@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.huggingface.deployment;
+package io.quarkiverse.langchain4j.openai.deployment;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
@@ -6,8 +6,8 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
 @ConfigRoot(phase = BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.huggingface")
-public interface Langchain4jHuggingFaceBuildConfig {
+@ConfigMapping(prefix = "quarkus.langchain4j.openai")
+public interface LangChain4jOpenAiBuildConfig {
 
     /**
      * Chat model related settings
@@ -23,4 +23,9 @@ public interface Langchain4jHuggingFaceBuildConfig {
      * Moderation model related settings
      */
     ModerationModelBuildConfig moderationModel();
+
+    /**
+     * Image model related settings
+     */
+    ImageModelBuildConfig imageModel();
 }

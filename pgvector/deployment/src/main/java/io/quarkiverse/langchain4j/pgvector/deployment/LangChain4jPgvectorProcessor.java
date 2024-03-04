@@ -26,7 +26,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
-class Langchain4jPgvectorProcessor {
+class LangChain4jPgvectorProcessor {
 
     public static final DotName PGVECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
 

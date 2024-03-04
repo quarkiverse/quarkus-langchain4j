@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
-import io.quarkiverse.langchain4j.huggingface.runtime.config.Langchain4jHuggingFaceConfig;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -24,8 +24,8 @@ public class HuggingFaceRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
-        Langchain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
                 modelName);
 
         if (huggingFaceConfig.enableIntegration()) {
@@ -76,8 +76,8 @@ public class HuggingFaceRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
-        Langchain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
                 modelName);
 
         if (huggingFaceConfig.enableIntegration()) {
@@ -114,9 +114,9 @@ public class HuggingFaceRecorder {
         }
     }
 
-    private Langchain4jHuggingFaceConfig.HuggingFaceConfig correspondingHuggingFaceConfig(
-            Langchain4jHuggingFaceConfig runtimeConfig, String modelName) {
-        Langchain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig;
+    private LangChain4jHuggingFaceConfig.HuggingFaceConfig correspondingHuggingFaceConfig(
+            LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             huggingFaceConfig = runtimeConfig.defaultConfig();
         } else {

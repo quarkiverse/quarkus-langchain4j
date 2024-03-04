@@ -44,7 +44,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 return ObjectMapperHolder.MAPPER.readValue(json, type);
             } catch (JsonProcessingException e) {
                 if ((e instanceof JsonParseException) && (type.isEnum())) {
-                    // this is the case where Langchain4j simply passes the string value of the enum to Json.fromJson()
+                    // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
                     // and Jackson does not handle it
                     Class<? extends Enum> enumClass = type.asSubclass(Enum.class);
                     return (T) Enum.valueOf(enumClass, json);

@@ -1,11 +1,11 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODEL_NAME;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODEL_NAME;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +33,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
-import io.quarkiverse.langchain4j.runtime.Langchain4jRecorder;
+import io.quarkiverse.langchain4j.runtime.LangChain4jRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -336,7 +336,7 @@ public class BeansProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    public void cleanUp(Langchain4jRecorder recorder, ShutdownContextBuildItem shutdown) {
+    public void cleanUp(LangChain4jRecorder recorder, ShutdownContextBuildItem shutdown) {
         recorder.cleanUp(shutdown);
     }
 

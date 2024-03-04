@@ -9,7 +9,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.openshiftai.runtime.config.Langchain4jOpenshiftAiConfig;
+import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -21,8 +21,8 @@ public class OpenshiftAiRecorder {
     private static final String DUMMY_MODEL_ID = "dummy";
     public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jOpenshiftAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(runtimeConfig,
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jOpenshiftAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(runtimeConfig,
                 modelName);
 
         if (openshiftAiConfig.enableIntegration()) {
@@ -67,10 +67,10 @@ public class OpenshiftAiRecorder {
         }
     }
 
-    private Langchain4jOpenshiftAiConfig.OpenshiftAiConfig correspondingOpenshiftAiConfig(
-            Langchain4jOpenshiftAiConfig runtimeConfig,
+    private LangChain4jOpenshiftAiConfig.OpenshiftAiConfig correspondingOpenshiftAiConfig(
+            LangChain4jOpenshiftAiConfig runtimeConfig,
             String modelName) {
-        Langchain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig;
+        LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             openshiftAiConfig = runtimeConfig.defaultConfig();
         } else {

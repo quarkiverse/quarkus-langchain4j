@@ -1,4 +1,4 @@
-= Quarkus Langchain4j
+= Quarkus LangChain4j
 
 include::./includes/attributes.adoc[]
 
@@ -20,7 +20,7 @@ image::llms-big-picture.png[width=600,align="center"]
 
 == Quick Overview
 
-To incorporate Quarkus Langchain4j into your Quarkus project, add the following Maven dependency:
+To incorporate Quarkus LangChain4j into your Quarkus project, add the following Maven dependency:
 
 [source,xml,subs=attributes+]
 ----
@@ -65,12 +65,12 @@ During interaction, the LLM can invoke these tools and reflect on their output.
 <4> The `@UserMessage` annotation serves as the _prompt_.
 <5> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
 
-== Advantages over vanilla Langchain4j
+== Advantages over vanilla LangChain4j
 
 The extension offers the following advantages over using the vanilla https://github.com/langchain4j/langchain4j[LangChain4j] library in Quarkus:
 
 * Seamless integration with the Quarkus programming model
-** CDI beans for the Langchain4j models
+** CDI beans for the LangChain4j models
 ** Standard configuration properties for configuring said models
 * xref:ai-services.adoc[Declarative AI Services]
 * Built-in observability

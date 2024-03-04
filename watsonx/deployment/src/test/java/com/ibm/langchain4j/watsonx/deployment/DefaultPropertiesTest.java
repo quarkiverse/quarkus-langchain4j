@@ -22,7 +22,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class DefaultPropertiesTest {
@@ -32,7 +32,7 @@ public class DefaultPropertiesTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonxConfig langchain4jWatsonConfig;
+    LangChain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;

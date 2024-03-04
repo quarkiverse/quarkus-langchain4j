@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.huggingface.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.huggingface.runtime.HuggingFaceRecorder;
-import io.quarkiverse.langchain4j.huggingface.runtime.config.Langchain4jHuggingFaceConfig;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -37,7 +37,7 @@ public class HuggingFaceProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-            Langchain4jHuggingFaceBuildConfig config) {
+            LangChain4jHuggingFaceBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -52,7 +52,7 @@ public class HuggingFaceProcessor {
     void generateBeans(HuggingFaceRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            Langchain4jHuggingFaceConfig config,
+            LangChain4jHuggingFaceConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {

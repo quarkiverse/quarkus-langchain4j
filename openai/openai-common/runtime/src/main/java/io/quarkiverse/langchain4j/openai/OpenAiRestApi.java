@@ -201,7 +201,7 @@ public interface OpenAiRestApi {
     class OpenAiRestApiJacksonReader extends AbstractJsonMessageBodyReader {
 
         /**
-         * Normally this is not necessary, but if one uses the 'demo' Langchain4j key, then the response comes back as type
+         * Normally this is not necessary, but if one uses the 'demo' LangChain4j key, then the response comes back as type
          * text/html
          * but the content is still JSON.
          */

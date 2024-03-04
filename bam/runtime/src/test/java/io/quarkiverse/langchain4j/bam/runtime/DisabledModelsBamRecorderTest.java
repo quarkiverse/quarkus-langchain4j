@@ -10,13 +10,13 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
-import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
-import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig.BamConfig;
+import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
+import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig.BamConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 
 class DisabledModelsBamRecorderTest {
 
-    Langchain4jBamConfig config = mock(Langchain4jBamConfig.class);
+    LangChain4jBamConfig config = mock(LangChain4jBamConfig.class);
     BamConfig defaultConfig = mock(BamConfig.class);
     BamRecorder recorder = new BamRecorder();
 

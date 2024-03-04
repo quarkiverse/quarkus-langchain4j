@@ -265,7 +265,7 @@ public class AiServiceMethodImplementationSupport {
         String userName = null;
         if (userMessageInfo.getUserNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.getUserNameParamPosition().get()]
-                    .toString(); // Langchain4j does this, but might want to make anything other than a String a build time error
+                    .toString(); // LangChain4j does this, but might want to make anything other than a String a build time error
         }
 
         if (userMessageInfo.getTemplate().isPresent()) {
@@ -306,7 +306,7 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object transformTemplateParamValue(Object value) {
         if (value.getClass().isArray()) {
-            // Qute does not transform these values but Langchain4j expects to be converted to a [item1, item2, item3] like systax
+            // Qute does not transform these values but LangChain4j expects to be converted to a [item1, item2, item3] like systax
             return Arrays.toString((Object[]) value);
         }
         return value;
@@ -330,7 +330,7 @@ public class AiServiceMethodImplementationSupport {
         return "default";
     }
 
-    //TODO: share these methods with Langchain4j
+    //TODO: share these methods with LangChain4j
 
     private static String toString(Object arg) {
         if (arg.getClass().isArray()) {

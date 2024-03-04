@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBui
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -34,7 +34,7 @@ public class WatsonProcessor {
 
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
-            Langchain4jWatsonBuildConfig config) {
+            LangChain4jWatsonBuildConfig config) {
 
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
@@ -46,7 +46,7 @@ public class WatsonProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(WatsonxRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            Langchain4jWatsonxConfig config,
+            LangChain4jWatsonxConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {

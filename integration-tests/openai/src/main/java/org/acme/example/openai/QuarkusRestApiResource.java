@@ -37,7 +37,7 @@ import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -50,9 +50,9 @@ public class QuarkusRestApiResource {
     private final String token;
     private final String organizationId;
 
-    public QuarkusRestApiResource(Langchain4jOpenAiConfig runtimeConfig)
+    public QuarkusRestApiResource(LangChain4jOpenAiConfig runtimeConfig)
             throws URISyntaxException {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = runtimeConfig.defaultConfig();
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = runtimeConfig.defaultConfig();
         this.restApi = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(new URI(openAiConfig.baseUrl()))
                 .build(OpenAiRestApi.class);

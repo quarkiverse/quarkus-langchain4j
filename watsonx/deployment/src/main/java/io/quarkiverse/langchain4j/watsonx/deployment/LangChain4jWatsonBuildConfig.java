@@ -7,7 +7,7 @@ import io.smallrye.config.ConfigMapping;
 
 @ConfigRoot(phase = BUILD_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.watsonx")
-public interface Langchain4jWatsonBuildConfig {
+public interface LangChain4jWatsonBuildConfig {
 
     /**
      * Chat model related settings

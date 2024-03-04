@@ -22,9 +22,9 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.audit.AuditService;
 
 /**
- * Used to create Langchain4j's {@link AiServices} in a declarative manner that the application can then use simply by
+ * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
  * using the class as a CDI bean.
- * Under the hood Langchain4j's {@link AiServices#builder(Class)} is called
+ * Under the hood LangChain4j's {@link AiServices#builder(Class)} is called
  * while also providing the builder with the proper {@link ChatLanguageModel} bean (mandatory), {@code tools} bean (optional),
  * {@link ChatMemoryProvider} and {@link Retriever} beans (which by default are configured if such beans exist).
  * <p>

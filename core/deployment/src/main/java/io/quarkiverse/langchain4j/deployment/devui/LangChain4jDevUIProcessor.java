@@ -20,7 +20,7 @@ import io.quarkus.devui.spi.JsonRPCProvidersBuildItem;
 import io.quarkus.devui.spi.page.CardPageBuildItem;
 import io.quarkus.devui.spi.page.Page;
 
-public class Langchain4jDevUIProcessor {
+public class LangChain4jDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     CardPageBuildItem cardPage(List<DeclarativeAiServiceBuildItem> aiServices,

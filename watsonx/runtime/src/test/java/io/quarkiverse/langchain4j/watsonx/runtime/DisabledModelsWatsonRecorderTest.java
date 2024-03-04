@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig.WatsonConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig.WatsonConfig;
 
 class DisabledModelsWatsonRecorderTest {
-    Langchain4jWatsonxConfig config = mock(Langchain4jWatsonxConfig.class);
+    LangChain4jWatsonxConfig config = mock(LangChain4jWatsonxConfig.class);
     WatsonConfig defaultConfig = mock(WatsonConfig.class);
     WatsonxRecorder recorder = new WatsonxRecorder();
 

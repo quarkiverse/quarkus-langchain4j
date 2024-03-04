@@ -16,7 +16,7 @@ import io.quarkiverse.langchain4j.bam.BamModel;
 import io.quarkiverse.langchain4j.bam.BamStreamingChatModel;
 import io.quarkiverse.langchain4j.bam.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.EmbeddingModelConfig;
-import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
+import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -26,8 +26,8 @@ public class BamRecorder {
 
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jBamConfig runtimeConfig, String modelName) {
-        Langchain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jBamConfig runtimeConfig, String modelName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
 
         if (bamConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = bamConfig.chatModel();
@@ -79,8 +79,8 @@ public class BamRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jBamConfig runtimeConfig, String modelName) {
-        Langchain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jBamConfig runtimeConfig, String modelName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
 
         if (bamConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = bamConfig.chatModel();
@@ -132,8 +132,8 @@ public class BamRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(Langchain4jBamConfig runtimeConfig, String modelName) {
-        Langchain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jBamConfig runtimeConfig, String modelName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
 
         if (bamConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = bamConfig.embeddingModel();
@@ -168,8 +168,8 @@ public class BamRecorder {
         }
     }
 
-    private Langchain4jBamConfig.BamConfig correspondingBamConfig(Langchain4jBamConfig runtimeConfig, String modelName) {
-        Langchain4jBamConfig.BamConfig bamConfig;
+    private LangChain4jBamConfig.BamConfig correspondingBamConfig(LangChain4jBamConfig runtimeConfig, String modelName) {
+        LangChain4jBamConfig.BamConfig bamConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             bamConfig = runtimeConfig.defaultConfig();
         } else {

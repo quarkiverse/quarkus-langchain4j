@@ -18,7 +18,7 @@ import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.azure-openai")
-public interface Langchain4jAzureOpenAiConfig {
+public interface LangChain4jAzureOpenAiConfig {
 
     /**
      * Default model config.
