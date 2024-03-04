@@ -10,6 +10,7 @@
 ** xref:llms.adoc[LLMs]
 ** xref:openai.adoc[OpenAI]
 ** xref:huggingface.adoc[HuggingFace]
+** xref:ollama.adoc[Ollama]
 
 * Document Stores
 ** xref:redis-store.adoc[Redis Store]

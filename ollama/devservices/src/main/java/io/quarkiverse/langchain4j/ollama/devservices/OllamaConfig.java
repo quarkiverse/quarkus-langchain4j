@@ -8,7 +8,7 @@ import io.smallrye.config.WithDefault;
 /**
  * Allows configuring the OLlama Container
  */
-@ConfigMapping(prefix = "quarkus.langchain4j.ollama")
+@ConfigMapping(prefix = "quarkus.langchain4j.ollama.devservices")
 @ConfigRoot(phase = ConfigPhase.BUILD_TIME)
 public interface OllamaConfig {
 

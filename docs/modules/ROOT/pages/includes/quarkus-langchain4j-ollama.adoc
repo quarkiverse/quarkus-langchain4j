@@ -1,0 +1,684 @@
+
+:summaryTableId: quarkus-langchain4j-ollama
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-ollama_configuration]]link:#quarkus-langchain4j-ollama_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-enabled]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-enabled[quarkus.langchain4j.ollama.chat-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-enabled]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-enabled[quarkus.langchain4j.ollama.embedding-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url[quarkus.langchain4j.ollama.base-url]`
+
+
+[.description]
+--
+Base URL where the Ollama serving is running
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`http://localhost:11434`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout[quarkus.langchain4j.ollama.timeout]`
+
+
+[.description]
+--
+Timeout for Ollama calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10S`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests[quarkus.langchain4j.ollama.log-requests]`
+
+
+[.description]
+--
+Whether the Ollama client should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-responses[quarkus.langchain4j.ollama.log-responses]`
+
+
+[.description]
+--
+Whether the Ollama client should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-enable-integration]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-enable-integration[quarkus.langchain4j.ollama.enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[quarkus.langchain4j.ollama.chat-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama2`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`llama2`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature[quarkus.langchain4j.ollama.chat-model.temperature]`
+
+
+[.description]
+--
+The temperature of the model. Increasing the temperature will make the model answer with more variability. A lower temperature will make the model answer more conservatively.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.8`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict[quarkus.langchain4j.ollama.chat-model.num-predict]`
+
+
+[.description]
+--
+Maximum number of tokens to predict when generating text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_NUM_PREDICT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_NUM_PREDICT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`128`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop[quarkus.langchain4j.ollama.chat-model.stop]`
+
+
+[.description]
+--
+Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-p]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-p[quarkus.langchain4j.ollama.chat-model.top-p]`
+
+
+[.description]
+--
+Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.9`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-k]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-k[quarkus.langchain4j.ollama.chat-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-seed]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-seed[quarkus.langchain4j.ollama.chat-model.seed]`
+
+
+[.description]
+--
+With a static number the result is always the same. With a random number the result varies Example: Random random = new Random(); int x = random.nextInt(Integer.MAX_VALUE);
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[quarkus.langchain4j.ollama.embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`nomic-embed-text`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature[quarkus.langchain4j.ollama.embedding-model.temperature]`
+
+
+[.description]
+--
+The temperature of the model. Increasing the temperature will make the model answer with more variability. A lower temperature will make the model answer more conservatively.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.8`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict[quarkus.langchain4j.ollama.embedding-model.num-predict]`
+
+
+[.description]
+--
+Maximum number of tokens to predict when generating text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_NUM_PREDICT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_NUM_PREDICT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`128`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-stop[quarkus.langchain4j.ollama.embedding-model.stop]`
+
+
+[.description]
+--
+Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-p]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-p[quarkus.langchain4j.ollama.embedding-model.top-p]`
+
+
+[.description]
+--
+Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.9`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-k]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-k[quarkus.langchain4j.ollama.embedding-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+
+h|[[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-named-config-named-model-config]]link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-named-config-named-model-config[Named model config]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url[quarkus.langchain4j.ollama."model-name".base-url]`
+
+
+[.description]
+--
+Base URL where the Ollama serving is running
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`http://localhost:11434`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout[quarkus.langchain4j.ollama."model-name".timeout]`
+
+
+[.description]
+--
+Timeout for Ollama calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10S`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests[quarkus.langchain4j.ollama."model-name".log-requests]`
+
+
+[.description]
+--
+Whether the Ollama client should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-responses[quarkus.langchain4j.ollama."model-name".log-responses]`
+
+
+[.description]
+--
+Whether the Ollama client should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-enable-integration]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-enable-integration[quarkus.langchain4j.ollama."model-name".enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id[quarkus.langchain4j.ollama."model-name".chat-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama2`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`llama2`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature[quarkus.langchain4j.ollama."model-name".chat-model.temperature]`
+
+
+[.description]
+--
+The temperature of the model. Increasing the temperature will make the model answer with more variability. A lower temperature will make the model answer more conservatively.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.8`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict[quarkus.langchain4j.ollama."model-name".chat-model.num-predict]`
+
+
+[.description]
+--
+Maximum number of tokens to predict when generating text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_NUM_PREDICT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_NUM_PREDICT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`128`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop[quarkus.langchain4j.ollama."model-name".chat-model.stop]`
+
+
+[.description]
+--
+Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-p]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-p[quarkus.langchain4j.ollama."model-name".chat-model.top-p]`
+
+
+[.description]
+--
+Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.9`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-k]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-k[quarkus.langchain4j.ollama."model-name".chat-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-seed]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-seed[quarkus.langchain4j.ollama."model-name".chat-model.seed]`
+
+
+[.description]
+--
+With a static number the result is always the same. With a random number the result varies Example: Random random = new Random(); int x = random.nextInt(Integer.MAX_VALUE);
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[quarkus.langchain4j.ollama."model-name".embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`nomic-embed-text`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature[quarkus.langchain4j.ollama."model-name".embedding-model.temperature]`
+
+
+[.description]
+--
+The temperature of the model. Increasing the temperature will make the model answer with more variability. A lower temperature will make the model answer more conservatively.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.8`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict[quarkus.langchain4j.ollama."model-name".embedding-model.num-predict]`
+
+
+[.description]
+--
+Maximum number of tokens to predict when generating text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_NUM_PREDICT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_NUM_PREDICT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`128`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-stop[quarkus.langchain4j.ollama."model-name".embedding-model.stop]`
+
+
+[.description]
+--
+Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_STOP+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_STOP+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-p]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-p[quarkus.langchain4j.ollama."model-name".embedding-model.top-p]`
+
+
+[.description]
+--
+Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.9`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-k]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-k[quarkus.langchain4j.ollama."model-name".embedding-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
