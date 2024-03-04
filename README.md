@@ -26,7 +26,7 @@ Check out the [samples](https://github.com/quarkiverse/quarkus-langchain4j/tree/
 
 ## Getting Started
 
-To incorporate Quarkus Langchain4j into your Quarkus project, add the following Maven dependency:
+To incorporate Quarkus LangChain4j into your Quarkus project, add the following Maven dependency:
 
 ```xml
 <dependency>
