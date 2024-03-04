@@ -13,9 +13,9 @@ public interface EmbeddingModelConfig {
     /**
      * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
      * docs</a>,
-     * the default value is {@code latest}
+     * the default value is {@code nomic-embed-text}
      */
-    @WithDefault("latest")
+    @WithDefault("nomic-embed-text")
     String modelId();
 
     /**
