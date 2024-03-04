@@ -7,7 +7,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService(retriever = RetrieverExample.class)
+@RegisterAiService(retrievalAugmentor = AugmentorExample.class)
 @Singleton // this is singleton because WebSockets currently never closes the scope
 public interface MovieMuse {
 

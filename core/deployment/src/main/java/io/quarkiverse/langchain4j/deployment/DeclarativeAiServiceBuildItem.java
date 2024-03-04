@@ -19,6 +19,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     private final DotName chatMemoryProviderSupplierClassDotName;
     private final DotName retrieverClassDotName;
+    private final DotName retrievalAugmentorSupplierClassDotName;
+    private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
     private final ScopeInfo cdiScope;
@@ -28,6 +30,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             List<DotName> toolDotNames,
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrieverClassDotName,
+            DotName retrievalAugmentorSupplierClassDotName,
+            boolean customRetrievalAugmentorSupplierClassIsABean,
             DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
             ScopeInfo cdiScope,
@@ -37,6 +41,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolDotNames = toolDotNames;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrieverClassDotName = retrieverClassDotName;
+        this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
+        this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.cdiScope = cdiScope;
@@ -61,6 +67,14 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getRetrieverClassDotName() {
         return retrieverClassDotName;
+    }
+
+    public DotName getRetrievalAugmentorSupplierClassDotName() {
+        return retrievalAugmentorSupplierClassDotName;
+    }
+
+    public boolean isCustomRetrievalAugmentorSupplierClassIsABean() {
+        return customRetrievalAugmentorSupplierClassIsABean;
     }
 
     public DotName getAuditServiceClassSupplierDotName() {

@@ -56,18 +56,36 @@ For instance, for CSV files with document representation separated by `\n`, `new
 
 == Retrieval Augmented Generation (RAG)
 
-Once documents are ingested, they can augment the LLM's capabilities. The following code illustrates the creation of a DocumentRetriever:
+Once documents are ingested, they can augment the LLM's capabilities. The following code illustrates the creation of a `RetrievalAugmentor`:
 
 [source,java]
 ----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/DocumentRetrieverExample.java[]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/RetrievalAugmentorExample.java[]
 ----
 
-The EmbeddingStoreRetriever necessitates a configured embedding store (Redis, Chroma, etc.) and an embedding model.
-Configure the maximum number of documents to retrieve (e.g., 20 in the example) and set the minimum relevance score if required.
+NOTE: This is the simplest example of retrieval augmentor, which only uses a
+`EmbeddingStoreContentRetriever` to retrieve documents from an embedding
+store to pass them directly to the LLM. A retrieval augmentor can use more
+sophisticated strategies to process queries, such as query compression,
+splitting a query into multiple queries and then routing them via different
+content retrievers (which may or may not be based on vector storage, but for
+example on a full-text search engine), using a scoring model to further
+filter the retrieved results, etc. For more information about advanced RAG
+strategies, refer to https://docs.langchain4j.dev/tutorials/rag/.
+
+The example above is a CDI bean that implements
+`Supplier<RetrievalAugmentor>`. An alternative way to wire things up is to
+create a CDI bean that directly implements `RetrievalAugmentor`, for example
+via a CDI producer, and letting Quarkus auto-discover it (by not specifying
+the `retrievalAugmentor` parameter of the `@RegisterAiService` annotation).
+
+The EmbeddingStoreContentRetriever necessitates a configured embedding store
+(Redis, Chroma, etc.) and an embedding model. Configure the maximum number
+of documents to retrieve (e.g., 20 in the example) and set the minimum
+relevance score if required.
 
 Make sure that the number of documents is not too high (or document too large).
 More document you have, more data you are adding to the LLM context, and you may exceed the limit.
 
-An AI service does not use a retriever by default, one needs to be configured explicitly via the `retriever` property of `@RegisterAiService` and the configured
-retriever is expected to be a CDI bean.
+An AI service does not use a retrieval augmentor by default, one needs to be configured explicitly via the `retrievalAugmentor` property of `@RegisterAiService` and the configured
+`Supplier<RetrievalAugmentor>` is expected to be a CDI bean.
