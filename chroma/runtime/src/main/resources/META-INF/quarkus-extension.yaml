@@ -1,6 +1,6 @@
-name: Langchain4j Chroma
+name: LangChain4j Chroma
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides integration of Quarkus Langchain4j with the Chroma vector database
+description: Provides integration of Quarkus LangChain4j with the Chroma vector database
 metadata:
   keywords:
     - ai

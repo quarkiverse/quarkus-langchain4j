@@ -1,4 +1,4 @@
-name: Build against Langchain4j main
+name: Build against LangChain4j main
 
 on:
   schedule:

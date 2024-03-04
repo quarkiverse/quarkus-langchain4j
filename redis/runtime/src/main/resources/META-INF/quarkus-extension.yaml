@@ -1,6 +1,6 @@
-name: Langchain4j Redis embedding store
+name: LangChain4j Redis embedding store
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides the Redis Embedding store for Langchain4j
+description: Provides the Redis Embedding store for LangChain4j
 metadata:
   keywords:
     - ai
