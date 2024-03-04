@@ -1,6 +1,6 @@
-name: Quarkus Langchain4j Watsonx
+name: Quarkus LangChain4j Watsonx
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides integration of Quarkus Langchain4j with the IBM Watsonx API
+description: Provides integration of Quarkus LangChain4j with the IBM Watsonx API
 metadata:
    keywords:
     - ai

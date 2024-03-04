@@ -1,6 +1,6 @@
-name: Langchain4j Hugging Face
+name: LangChain4j Hugging Face
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides integration of Quarkus Langchain4j with the Hugging Face API
+description: Provides integration of Quarkus LangChain4j with the Hugging Face API
 metadata:
   keywords:
     - ai

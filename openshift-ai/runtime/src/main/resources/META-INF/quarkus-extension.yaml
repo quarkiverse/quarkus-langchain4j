@@ -1,6 +1,6 @@
-name: Quarkus Langchain4j OpenShift AI
+name: Quarkus LangChain4j OpenShift AI
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides integration of Quarkus Langchain4j with the OpenShift AI
+description: Provides integration of Quarkus LangChain4j with the OpenShift AI
 metadata:
    keywords:
     - ai
