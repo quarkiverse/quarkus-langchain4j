@@ -26,7 +26,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiChatServiceTest {
@@ -36,7 +36,7 @@ public class AiChatServiceTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonxConfig langchain4jWatsonConfig;
+    LangChain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
     ChatLanguageModel model;
@@ -85,7 +85,7 @@ public class AiChatServiceTest {
     @Test
     void chat() throws Exception {
 
-        Langchain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelId();
         String projectId = watsonConfig.projectId();

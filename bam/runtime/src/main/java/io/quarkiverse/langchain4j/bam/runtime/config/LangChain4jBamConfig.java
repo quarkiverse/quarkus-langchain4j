@@ -19,7 +19,7 @@ import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.bam")
-public interface Langchain4jBamConfig {
+public interface LangChain4jBamConfig {
 
     /**
      * Default model config.

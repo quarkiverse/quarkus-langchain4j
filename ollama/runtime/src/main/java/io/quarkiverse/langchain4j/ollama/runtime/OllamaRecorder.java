@@ -11,15 +11,15 @@ import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
-import io.quarkiverse.langchain4j.ollama.runtime.config.Langchain4jOllamaConfig;
+import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class OllamaRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jOllamaConfig runtimeConfig, String modelName) {
-        Langchain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jOllamaConfig runtimeConfig, String modelName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
 
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
@@ -60,8 +60,8 @@ public class OllamaRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(Langchain4jOllamaConfig runtimeConfig, String modelName) {
-        Langchain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jOllamaConfig runtimeConfig, String modelName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
 
         if (ollamaConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = ollamaConfig.embeddingModel();
@@ -96,9 +96,9 @@ public class OllamaRecorder {
         }
     }
 
-    private Langchain4jOllamaConfig.OllamaConfig correspondingOllamaConfig(Langchain4jOllamaConfig runtimeConfig,
+    private LangChain4jOllamaConfig.OllamaConfig correspondingOllamaConfig(LangChain4jOllamaConfig runtimeConfig,
             String modelName) {
-        Langchain4jOllamaConfig.OllamaConfig ollamaConfig;
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             ollamaConfig = runtimeConfig.defaultConfig();
         } else {

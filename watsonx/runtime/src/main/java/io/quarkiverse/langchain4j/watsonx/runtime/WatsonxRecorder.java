@@ -17,7 +17,7 @@ import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxStreamingChatModel;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -29,8 +29,8 @@ public class WatsonxRecorder {
     private static final String DUMMY_PROJECT_ID = "dummy";
     public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jWatsonxConfig runtimeConfig, String modelName) {
-        Langchain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = watsonConfig.chatModel();
@@ -93,8 +93,8 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jWatsonxConfig runtimeConfig, String modelName) {
-        Langchain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = watsonConfig.chatModel();
@@ -157,9 +157,9 @@ public class WatsonxRecorder {
         }
     }
 
-    private Langchain4jWatsonxConfig.WatsonConfig correspondingWatsonConfig(Langchain4jWatsonxConfig runtimeConfig,
+    private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonConfig(LangChain4jWatsonxConfig runtimeConfig,
             String modelName) {
-        Langchain4jWatsonxConfig.WatsonConfig watsonConfig;
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             watsonConfig = runtimeConfig.defaultConfig();
         } else {

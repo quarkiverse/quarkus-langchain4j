@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.openshift.ai.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.openshiftai.runtime.OpenshiftAiRecorder;
-import io.quarkiverse.langchain4j.openshiftai.runtime.config.Langchain4jOpenshiftAiConfig;
+import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -34,7 +34,7 @@ public class OpenshiftAiProcessor {
 
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
-            Langchain4jOpenshiftAiBuildConfig config) {
+            LangChain4jOpenshiftAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -45,7 +45,7 @@ public class OpenshiftAiProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(OpenshiftAiRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            Langchain4jOpenshiftAiConfig config,
+            LangChain4jOpenshiftAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {

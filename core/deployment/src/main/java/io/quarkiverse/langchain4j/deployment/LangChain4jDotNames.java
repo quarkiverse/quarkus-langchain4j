@@ -26,7 +26,7 @@ import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 import io.smallrye.mutiny.Multi;
 
-public class Langchain4jDotNames {
+public class LangChain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
     public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);

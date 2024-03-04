@@ -28,7 +28,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.Langchain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class HttpErrorTest {
@@ -38,7 +38,7 @@ public class HttpErrorTest {
     static ObjectMapper mapper;
 
     @Inject
-    Langchain4jWatsonxConfig config;
+    LangChain4jWatsonxConfig config;
 
     @Inject
     ChatLanguageModel model;

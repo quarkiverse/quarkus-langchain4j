@@ -11,12 +11,12 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig.OpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig.OpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 
 class DisabledModelsOpenAiRecorderTest {
-    Langchain4jOpenAiConfig config = mock(Langchain4jOpenAiConfig.class);
+    LangChain4jOpenAiConfig config = mock(LangChain4jOpenAiConfig.class);
     OpenAiConfig defaultConfig = mock(OpenAiConfig.class);
     OpenAiRecorder recorder = new OpenAiRecorder();
 

@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.ShutdownContext;
@@ -38,8 +38,8 @@ public class AzureOpenAiRecorder {
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.openai.azure.com/openai/deployments/%s";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
@@ -80,9 +80,9 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jAzureOpenAiConfig runtimeConfig,
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAzureOpenAiConfig runtimeConfig,
             String modelName) {
-        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
@@ -122,8 +122,8 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
 
         if (azureAiConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
@@ -156,8 +156,8 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<ImageModel> imageModel(Langchain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
 
         if (azureAiConfig.enableIntegration()) {
             var apiKey = azureAiConfig.apiKey();
@@ -218,14 +218,14 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    static String getEndpoint(Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String modelName) {
+    static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String modelName) {
         var endpoint = azureAiConfig.endpoint();
 
         return (endpoint.isPresent() && !endpoint.get().trim().isBlank()) ? endpoint.get()
                 : constructEndpointFromConfig(azureAiConfig, modelName);
     }
 
-    private static String constructEndpointFromConfig(Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
+    private static String constructEndpointFromConfig(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
             String modelName) {
         var resourceName = azureAiConfig.resourceName();
         var deploymentName = azureAiConfig.deploymentName();
@@ -247,10 +247,10 @@ public class AzureOpenAiRecorder {
         return String.format(AZURE_ENDPOINT_URL_PATTERN, resourceName.get(), deploymentName.get());
     }
 
-    private Langchain4jAzureOpenAiConfig.AzureAiConfig correspondingAzureOpenAiConfig(
-            Langchain4jAzureOpenAiConfig runtimeConfig,
+    private LangChain4jAzureOpenAiConfig.AzureAiConfig correspondingAzureOpenAiConfig(
+            LangChain4jAzureOpenAiConfig runtimeConfig,
             String modelName) {
-        Langchain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig;
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             azureAiConfig = runtimeConfig.defaultConfig();
         } else {

@@ -1,11 +1,12 @@
-package io.quarkiverse.langchain4j.openshiftai.runtime.config;
+package io.quarkiverse.langchain4j.huggingface.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
-import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -16,14 +17,14 @@ import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.openshift-ai")
-public interface Langchain4jOpenshiftAiConfig {
+@ConfigMapping(prefix = "quarkus.langchain4j.huggingface")
+public interface LangChain4jHuggingFaceConfig {
 
     /**
      * Default model config.
      */
     @WithParentName
-    OpenshiftAiConfig defaultConfig();
+    HuggingFaceConfig defaultConfig();
 
     /**
      * Named model config.
@@ -32,34 +33,43 @@ public interface Langchain4jOpenshiftAiConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, OpenshiftAiConfig> namedConfig();
+    Map<String, HuggingFaceConfig> namedConfig();
 
     @ConfigGroup
-    interface OpenshiftAiConfig {
+    interface HuggingFaceConfig {
         /**
-         * Base URL where OpenShift AI serving is running, such as
-         * {@code https://flant5s-l-predictor-ch2023.apps.cluster-hj2qv.dynamic.redhatworkshops.io:443/api}
+         * HuggingFace API key
          */
-        @WithDefault("https://dummy.ai/api") // TODO: this should be Optional but Smallrye Config doesn't like it
-        URL baseUrl();
+        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it
+        String apiKey();
 
         /**
-         * Timeout for OpenShift AI calls
+         * Timeout for HuggingFace calls
          */
         @WithDefault("10s")
         Duration timeout();
 
         /**
-         * Whether the OpenShift AI client should log requests
+         * Chat model related settings
          */
-        @WithDefault("false")
-        Boolean logRequests();
+        ChatModelConfig chatModel();
 
         /**
-         * Whether the OpenShift AI client should log responses
+         * Embedding model related settings
          */
-        @WithDefault("false")
-        Boolean logResponses();
+        EmbeddingModelConfig embeddingModel();
+
+        /**
+         * Whether the HuggingFace client should log requests
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logRequests();
+
+        /**
+         * Whether the HuggingFace client should log responses
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> logResponses();
 
         /**
          * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
@@ -68,10 +78,5 @@ public interface Langchain4jOpenshiftAiConfig {
          */
         @WithDefault("true")
         Boolean enableIntegration();
-
-        /**
-         * Chat model related settings
-         */
-        ChatModelConfig chatModel();
     }
 }

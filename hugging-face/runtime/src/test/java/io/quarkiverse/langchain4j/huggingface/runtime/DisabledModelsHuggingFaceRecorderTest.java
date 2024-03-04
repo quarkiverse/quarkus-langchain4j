@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
-import io.quarkiverse.langchain4j.huggingface.runtime.config.Langchain4jHuggingFaceConfig;
-import io.quarkiverse.langchain4j.huggingface.runtime.config.Langchain4jHuggingFaceConfig.HuggingFaceConfig;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig.HuggingFaceConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 
 class DisabledModelsHuggingFaceRecorderTest {
-    Langchain4jHuggingFaceConfig config = mock(Langchain4jHuggingFaceConfig.class);
+    LangChain4jHuggingFaceConfig config = mock(LangChain4jHuggingFaceConfig.class);
     HuggingFaceConfig defaultConfig = mock(HuggingFaceConfig.class);
     HuggingFaceRecorder recorder = new HuggingFaceRecorder();
 

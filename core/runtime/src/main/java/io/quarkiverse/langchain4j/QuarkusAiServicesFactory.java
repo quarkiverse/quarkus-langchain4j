@@ -62,7 +62,7 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
                 List<ToolMethodCreateInfo> methodCreateInfos = lookup(objectWithTool);
                 if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
                     if ((methodCreateInfos == null) || methodCreateInfos.isEmpty()) {
-                        continue; // this is what Langchain4j does
+                        continue; // this is what LangChain4j does
                     }
                 }
                 for (ToolMethodCreateInfo methodCreateInfo : methodCreateInfos) {

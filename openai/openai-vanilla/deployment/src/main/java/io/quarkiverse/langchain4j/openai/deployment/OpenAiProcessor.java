@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.openai.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.MODERATION_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -49,7 +49,7 @@ public class OpenAiProcessor {
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
-            Langchain4jOpenAiBuildConfig config) {
+            LangChain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -73,7 +73,7 @@ public class OpenAiProcessor {
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<SelectedImageModelProviderBuildItem> selectedImage,
-            Langchain4jOpenAiConfig config,
+            LangChain4jOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {

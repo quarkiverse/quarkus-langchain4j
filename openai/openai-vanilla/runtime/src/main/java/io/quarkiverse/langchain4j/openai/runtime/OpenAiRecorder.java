@@ -26,7 +26,7 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.ShutdownContext;
@@ -38,8 +38,8 @@ public class OpenAiRecorder {
 
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -83,8 +83,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -127,8 +127,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKeyOpt = openAiConfig.apiKey();
@@ -167,8 +167,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ModerationModel> moderationModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -203,8 +203,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<ImageModel> imageModel(Langchain4jOpenAiConfig runtimeConfig, String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ImageModel> imageModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -264,9 +264,9 @@ public class OpenAiRecorder {
         }
     }
 
-    private Langchain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(Langchain4jOpenAiConfig runtimeConfig,
+    private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,
             String modelName) {
-        Langchain4jOpenAiConfig.OpenAiConfig openAiConfig;
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig;
         if (NamedModelUtil.isDefault(modelName)) {
             openAiConfig = runtimeConfig.defaultConfig();
         } else {

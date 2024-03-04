@@ -1,14 +1,12 @@
-package io.quarkiverse.langchain4j.watsonx.runtime.config;
+package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
-import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
-import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -16,14 +14,14 @@ import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.watsonx")
-public interface Langchain4jWatsonxConfig {
+@ConfigMapping(prefix = "quarkus.langchain4j.ollama")
+public interface LangChain4jOllamaConfig {
 
     /**
      * Default model config.
      */
     @WithParentName
-    WatsonConfig defaultConfig();
+    OllamaConfig defaultConfig();
 
     /**
      * Named model config.
@@ -32,48 +30,29 @@ public interface Langchain4jWatsonxConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, WatsonConfig> namedConfig();
+    Map<String, OllamaConfig> namedConfig();
 
-    @ConfigGroup
-    interface WatsonConfig {
+    interface OllamaConfig {
         /**
-         * Base URL
+         * Base URL where the Ollama serving is running
          */
-        @WithDefault("https://dummy.ai/api") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
-        URL baseUrl();
+        @WithDefault("http://localhost:11434")
+        String baseUrl();
 
         /**
-         * Watsonx API key
-         */
-        @WithDefault("dummy")
-        String apiKey();
-
-        /**
-         * Timeout for Watsonx API calls
+         * Timeout for Ollama calls
          */
         @WithDefault("10s")
         Duration timeout();
 
         /**
-         * Version to use
-         */
-        @WithDefault("2023-05-29")
-        String version();
-
-        /**
-         * Watsonx project id.
-         */
-        @WithDefault("dummy") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
-        String projectId();
-
-        /**
-         * Whether the Watsonx client should log requests
+         * Whether the Ollama client should log requests
          */
         @WithDefault("false")
         Boolean logRequests();
 
         /**
-         * Whether the Watsonx client should log responses
+         * Whether the Ollama client should log responses
          */
         @WithDefault("false")
         Boolean logResponses();
@@ -89,11 +68,11 @@ public interface Langchain4jWatsonxConfig {
         /**
          * Chat model related settings
          */
-        IAMConfig iam();
+        ChatModelConfig chatModel();
 
         /**
-         * Chat model related settings
+         * Embedding model related settings
          */
-        ChatModelConfig chatModel();
+        EmbeddingModelConfig embeddingModel();
     }
 }

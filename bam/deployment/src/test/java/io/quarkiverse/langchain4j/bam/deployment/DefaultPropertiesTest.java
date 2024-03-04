@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.Message;
 import io.quarkiverse.langchain4j.bam.Parameters;
 import io.quarkiverse.langchain4j.bam.TextGenerationRequest;
-import io.quarkiverse.langchain4j.bam.runtime.config.Langchain4jBamConfig;
+import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class DefaultPropertiesTest {
@@ -39,7 +39,7 @@ public class DefaultPropertiesTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    Langchain4jBamConfig langchain4jBamConfig;
+    LangChain4jBamConfig langchain4jBamConfig;
 
     @Inject
     ChatLanguageModel model;

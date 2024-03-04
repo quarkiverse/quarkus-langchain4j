@@ -17,13 +17,13 @@ import io.quarkus.test.QuarkusDevModeTest;
  * Tests for the EmbeddingStoreJsonRPCService class that is used as the backend
  * called by the Dev UI.
  */
-public class Langchain4jDevUIJsonRpcTest extends DevUIJsonRPCTest {
+public class LangChain4jDevUIJsonRpcTest extends DevUIJsonRPCTest {
 
     @RegisterExtension
     static final QuarkusDevModeTest config = new QuarkusDevModeTest()
             .withEmptyApplication();
 
-    public Langchain4jDevUIJsonRpcTest() {
+    public LangChain4jDevUIJsonRpcTest() {
         super("io.quarkiverse.langchain4j.quarkus-langchain4j-core");
     }
 

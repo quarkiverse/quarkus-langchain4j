@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
-import io.quarkiverse.langchain4j.ollama.runtime.config.Langchain4jOllamaConfig;
-import io.quarkiverse.langchain4j.ollama.runtime.config.Langchain4jOllamaConfig.OllamaConfig;
+import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
+import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig.OllamaConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 
 class DisabledModelsOllamaRecorderTest {
-    Langchain4jOllamaConfig config = mock(Langchain4jOllamaConfig.class);
+    LangChain4jOllamaConfig config = mock(LangChain4jOllamaConfig.class);
     OllamaConfig defaultConfig = mock(OllamaConfig.class);
     OllamaRecorder recorder = new OllamaRecorder();
 

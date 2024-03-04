@@ -10,12 +10,12 @@ import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig.AzureAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 
 class DisabledModelsAzureOpenAiRecorderTest {
-    Langchain4jAzureOpenAiConfig config = mock(Langchain4jAzureOpenAiConfig.class);
+    LangChain4jAzureOpenAiConfig config = mock(LangChain4jAzureOpenAiConfig.class);
     AzureAiConfig defaultConfig = mock(AzureAiConfig.class);
     AzureOpenAiRecorder recorder = new AzureOpenAiRecorder();
 

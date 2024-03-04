@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ImageModelConfig;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.smallrye.config.ConfigValidationException;
 import io.smallrye.config.ConfigValidationException.Problem;
@@ -21,7 +21,7 @@ import io.smallrye.config.ConfigValidationException.Problem;
 class AzureOpenAiRecorderEndpointTests {
     private static final String CONFIG_ERROR_MESSAGE_TEMPLATE = "SRCFG00014: The config property quarkus.langchain4j.azure-openai.%s is required but it could not be found in any config source";
 
-    Langchain4jAzureOpenAiConfig.AzureAiConfig config = spy(CustomAzureAiConfig.class);
+    LangChain4jAzureOpenAiConfig.AzureAiConfig config = spy(CustomAzureAiConfig.class);
 
     @Test
     void noEndpointConfigSet() {
@@ -107,7 +107,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName", "deploymentName"));
     }
 
-    static class CustomLangchain4JAzureOpenAiConfig implements Langchain4jAzureOpenAiConfig {
+    static class CustomLangchain4JAzureOpenAiConfig implements LangChain4jAzureOpenAiConfig {
 
         private final AzureAiConfig azureAiConfig;
 
@@ -126,7 +126,7 @@ class AzureOpenAiRecorderEndpointTests {
         }
     }
 
-    static class CustomAzureAiConfig implements Langchain4jAzureOpenAiConfig.AzureAiConfig {
+    static class CustomAzureAiConfig implements LangChain4jAzureOpenAiConfig.AzureAiConfig {
         @Override
         public Optional<String> resourceName() {
             return Optional.empty();

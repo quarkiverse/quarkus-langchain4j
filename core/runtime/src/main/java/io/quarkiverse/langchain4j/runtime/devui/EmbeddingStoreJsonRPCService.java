@@ -44,7 +44,7 @@ public class EmbeddingStoreJsonRPCService {
     }
 
     // FIXME: the limit argument can be changed to int after https://github.com/quarkusio/quarkus/issues/37481 is fixed
-    // Langchain4jDevUIJsonRpcTest will need to be adjusted accordingly
+    // LangChain4jDevUIJsonRpcTest will need to be adjusted accordingly
     public JsonArray findRelevant(String text, String limit) {
         int limitInt = Integer.parseInt(limit);
         JsonArray result = new JsonArray();

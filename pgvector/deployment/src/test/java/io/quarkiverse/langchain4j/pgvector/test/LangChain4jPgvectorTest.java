@@ -17,7 +17,7 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class Langchain4jPgvectorTest extends EmbeddingStoreIT {
+public class LangChain4jPgvectorTest extends EmbeddingStoreIT {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()

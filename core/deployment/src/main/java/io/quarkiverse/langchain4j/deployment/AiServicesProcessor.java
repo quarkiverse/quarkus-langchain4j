@@ -3,9 +3,9 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
 import static dev.langchain4j.service.ServiceOutputParser.outputFormatInstructions;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.NO_RETRIEVER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -131,7 +131,7 @@ public class AiServicesProcessor {
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         IndexView index = indexBuildItem.getIndex();
-        Collection<AnnotationInstance> instances = index.getAnnotations(Langchain4jDotNames.DESCRIPTION);
+        Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.DESCRIPTION);
         Set<ClassInfo> classesUsingDescription = new HashSet<>();
         for (AnnotationInstance instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.FIELD) {
@@ -174,7 +174,7 @@ public class AiServicesProcessor {
 
         Set<String> chatModelNames = new HashSet<>();
         boolean needModerationModelBean = false;
-        for (AnnotationInstance instance : index.getAnnotations(Langchain4jDotNames.REGISTER_AI_SERVICES)) {
+        for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
             }
@@ -184,7 +184,7 @@ public class AiServicesProcessor {
             AnnotationValue chatLanguageModelSupplierValue = instance.value("chatLanguageModelSupplier");
             if (chatLanguageModelSupplierValue != null) {
                 chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierValue.asClass().name();
-                if (chatLanguageModelSupplierClassDotName.equals(Langchain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER)) { // this is the case where the default was set, so we just ignore it
+                if (chatLanguageModelSupplierClassDotName.equals(LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER)) { // this is the case where the default was set, so we just ignore it
                     chatLanguageModelSupplierClassDotName = null;
                 } else {
                     validateSupplierAndRegisterForReflection(chatLanguageModelSupplierClassDotName, index,
@@ -212,12 +212,12 @@ public class AiServicesProcessor {
             }
 
             // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
-            DotName chatMemoryProviderSupplierClassDotName = Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
+            DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
                 if (!chatMemoryProviderSupplierClassDotName
-                        .equals(Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                        .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
                             reflectiveClassProducer);
                 }
@@ -261,7 +261,7 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName auditServiceSupplierClassName = Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
+            DotName auditServiceSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
             AnnotationValue auditServiceSupplierValue = instance.value("auditServiceSupplier");
             if (auditServiceSupplierValue != null) {
                 auditServiceSupplierClassName = auditServiceSupplierValue.asClass().name();
@@ -272,9 +272,9 @@ public class AiServicesProcessor {
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
                 moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
-                if (Langchain4jDotNames.NO_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
+                if (LangChain4jDotNames.NO_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
                     moderationModelSupplierClassName = null;
-                } else if (Langchain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
+                } else if (LangChain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
                     needModerationModelBean = true;
                 } else {
                     validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
@@ -373,13 +373,13 @@ public class AiServicesProcessor {
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                if (!Langchain4jDotNames.MULTI.equals(method.returnType().name())) {
+                if (!LangChain4jDotNames.MULTI.equals(method.returnType().name())) {
                     continue;
                 }
                 boolean isMultiString = false;
                 if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     Type multiType = method.returnType().asParameterizedType().arguments().get(0);
-                    if (Langchain4jDotNames.STRING.equals(multiType.name())) {
+                    if (LangChain4jDotNames.STRING.equals(multiType.name())) {
                         isMultiString = true;
                     }
                 }
@@ -401,23 +401,23 @@ public class AiServicesProcessor {
                                     injectStreamingChatModelBean)))
                     .setRuntimeInit()
                     .addQualifier()
-                    .annotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
+                    .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
                     .done()
                     .scope(Dependent.class);
 
             if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
                 if (NamedModelUtil.isDefault(chatModelName)) {
-                    configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL));
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL));
                     if (injectStreamingChatModelBean) {
-                        configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.STREAMING_CHAT_MODEL));
+                        configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.STREAMING_CHAT_MODEL));
                         needsStreamingChatModelBean = true;
                     }
                 } else {
-                    configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MODEL),
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL),
                             AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
 
                     if (injectStreamingChatModelBean) {
-                        configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.STREAMING_CHAT_MODEL),
+                        configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.STREAMING_CHAT_MODEL),
                                 AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
                         needsStreamingChatModelBean = true;
                     }
@@ -433,8 +433,8 @@ public class AiServicesProcessor {
                 }
             }
 
-            if (Langchain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
-                configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
+            if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
+                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
             }
 
@@ -443,12 +443,12 @@ public class AiServicesProcessor {
                 needsRetrieverBean = true;
             }
 
-            if (Langchain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.toString()
+            if (LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.toString()
                     .equals(retrievalAugmentorSupplierClassName)) {
                 // Use a CDI bean of type `RetrievalAugmentor` if one exists, otherwise
                 // don't use an augmentor.
                 configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
-                        new Type[] { ClassType.create(Langchain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
+                        new Type[] { ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
                 needsRetrievalAugmentorBean = true;
             } else {
                 if (retrievalAugmentorSupplierClassName != null) {
@@ -465,14 +465,14 @@ public class AiServicesProcessor {
                 }
             }
 
-            if (Langchain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
+            if (LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
-                        new Type[] { ClassType.create(Langchain4jDotNames.AUDIT_SERVICE) }, null));
+                        new Type[] { ClassType.create(LangChain4jDotNames.AUDIT_SERVICE) }, null));
                 needsAuditServiceBean = true;
             }
 
-            if (Langchain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.toString().equals(moderationModelSupplierClassName)) {
-                configurator.addInjectionPoint(ClassType.create(Langchain4jDotNames.MODERATION_MODEL));
+            if (LangChain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.toString().equals(moderationModelSupplierClassName)) {
+                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL));
                 needsModerationModelBean = true;
             }
 
@@ -480,25 +480,25 @@ public class AiServicesProcessor {
         }
 
         if (needsChatModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MODEL));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MODEL));
         }
         if (needsStreamingChatModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.STREAMING_CHAT_MODEL));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.STREAMING_CHAT_MODEL));
         }
         if (needsChatMemoryProviderBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.CHAT_MEMORY_PROVIDER));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
         }
         if (needsRetrieverBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.RETRIEVER));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVER));
         }
         if (needsRetrievalAugmentorBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.RETRIEVAL_AUGMENTOR));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVAL_AUGMENTOR));
         }
         if (needsAuditServiceBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.AUDIT_SERVICE));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AUDIT_SERVICE));
         }
         if (needsModerationModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(Langchain4jDotNames.MODERATION_MODEL));
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
@@ -521,7 +521,7 @@ public class AiServicesProcessor {
         IndexView index = indexBuildItem.getIndex();
 
         List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
-        for (ClassInfo classInfo : index.getKnownUsers(Langchain4jDotNames.AI_SERVICES)) {
+        for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.AI_SERVICES)) {
             String className = classInfo.name().toString();
             if (className.startsWith("io.quarkiverse.langchain4j") || className.startsWith("dev.langchain4j")) { // TODO: this can be made smarter if needed
                 continue;
@@ -551,7 +551,7 @@ public class AiServicesProcessor {
             if (classInfo == null) {
                 continue;
             }
-            if (!classInfo.annotations(Langchain4jDotNames.MEMORY_ID).isEmpty() && !entry.getValue()) {
+            if (!classInfo.annotations(LangChain4jDotNames.MEMORY_ID).isEmpty() && !entry.getValue()) {
                 log.warn("Class '" + className
                         + "' is used in AiServices and while it leverages @MemoryId, a ChatMemoryProvider has not been configured. This will likely result in an exception being thrown when the service is used.");
             }
@@ -653,7 +653,7 @@ public class AiServicesProcessor {
                             ctor.setModifiers(Modifier.PUBLIC);
                             ctor.addAnnotation(Inject.class);
                             ctor.getParameterAnnotations(0)
-                                    .addAnnotation(Langchain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
+                                    .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
                                     .add("value", ifaceName);
                             ctor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, ctor.getThis());
                             ctor.writeInstanceField(contextField, ctor.getThis(),
@@ -752,8 +752,8 @@ public class AiServicesProcessor {
     }
 
     private void addIfacesWithMessageAnns(IndexView index, Set<String> detectedForCreate) {
-        List<DotName> annotations = List.of(Langchain4jDotNames.SYSTEM_MESSAGE, Langchain4jDotNames.USER_MESSAGE,
-                Langchain4jDotNames.MODERATE);
+        List<DotName> annotations = List.of(LangChain4jDotNames.SYSTEM_MESSAGE, LangChain4jDotNames.USER_MESSAGE,
+                LangChain4jDotNames.MODERATE);
         for (DotName annotation : annotations) {
             Collection<AnnotationInstance> instances = index.getAnnotations(annotation);
             for (AnnotationInstance instance : instances) {
@@ -776,7 +776,7 @@ public class AiServicesProcessor {
     }
 
     private static void addCreatedAware(IndexView index, Set<String> detectedForCreate) {
-        Collection<AnnotationInstance> instances = index.getAnnotations(Langchain4jDotNames.CREATED_AWARE);
+        Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.CREATED_AWARE);
         for (var instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue;
@@ -791,7 +791,7 @@ public class AiServicesProcessor {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
 
-        boolean requiresModeration = method.hasAnnotation(Langchain4jDotNames.MODERATE);
+        boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
 
         List<MethodParameterInfo> params = method.parameters();
 
@@ -858,9 +858,9 @@ public class AiServicesProcessor {
 
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams) {
-        AnnotationInstance instance = method.annotation(Langchain4jDotNames.SYSTEM_MESSAGE);
+        AnnotationInstance instance = method.annotation(LangChain4jDotNames.SYSTEM_MESSAGE);
         if (instance == null) { // try and see if the class is annotated with @SystemMessage
-            instance = method.declaringClass().declaredAnnotation(Langchain4jDotNames.SYSTEM_MESSAGE);
+            instance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SYSTEM_MESSAGE);
         }
         if (instance != null) {
             String systemMessageTemplate = "";
@@ -884,7 +884,7 @@ public class AiServicesProcessor {
     }
 
     private Optional<Integer> gatherMemoryIdParamName(MethodInfo method) {
-        return method.annotations(Langchain4jDotNames.MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
+        return method.annotations(LangChain4jDotNames.MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
                 .map(METHOD_PARAMETER_POSITION_FUNCTION)
                 .findFirst();
     }
@@ -896,10 +896,10 @@ public class AiServicesProcessor {
         if (!returnType.equals(Multi.class))
             outputFormatInstructions = outputFormatInstructions(returnType);
 
-        Optional<Integer> userNameParamName = method.annotations(Langchain4jDotNames.USER_NAME).stream().filter(
+        Optional<Integer> userNameParamName = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
 
-        AnnotationInstance userMessageInstance = method.declaredAnnotation(Langchain4jDotNames.USER_MESSAGE);
+        AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
             AnnotationValue delimiterValue = userMessageInstance.value("delimiter");
             String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
@@ -920,7 +920,7 @@ public class AiServicesProcessor {
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
                     userNameParamName, outputFormatInstructions);
         } else {
-            Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(Langchain4jDotNames.USER_MESSAGE)
+            Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
                     .filter(IS_METHOD_PARAMETER_ANNOTATION).findFirst();
             if (userMessageOnMethodParam.isPresent()) {

@@ -4,7 +4,7 @@ import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
-public class Langchain4jRecorder {
+public class LangChain4jRecorder {
 
     public void cleanUp(ShutdownContext shutdown) {
         shutdown.addShutdownTask(new Runnable() {

@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.azure.openai.deployment;
+package io.quarkiverse.langchain4j.ollama.deployment;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
@@ -6,8 +6,8 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
 @ConfigRoot(phase = BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.azure-openai")
-public interface Langchain4jAzureOpenAiBuildConfig {
+@ConfigMapping(prefix = "quarkus.langchain4j.ollama")
+public interface LangChain4jOllamaOpenAiBuildConfig {
 
     /**
      * Chat model related settings
@@ -18,14 +18,4 @@ public interface Langchain4jAzureOpenAiBuildConfig {
      * Embedding model related settings
      */
     EmbeddingModelBuildConfig embeddingModel();
-
-    /**
-     * Moderation model related settings
-     */
-    ModerationModelBuildConfig moderationModel();
-
-    /**
-     * Image model related settings
-     */
-    ImageModelBuildConfig imageModel();
 }

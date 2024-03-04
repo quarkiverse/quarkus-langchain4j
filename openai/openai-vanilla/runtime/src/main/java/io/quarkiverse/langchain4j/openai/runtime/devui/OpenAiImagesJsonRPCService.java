@@ -7,14 +7,14 @@ import jakarta.inject.Inject;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
-import io.quarkiverse.langchain4j.openai.runtime.config.Langchain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.vertx.core.json.JsonObject;
 
 public class OpenAiImagesJsonRPCService {
 
     @Inject
-    Langchain4jOpenAiConfig config;
+    LangChain4jOpenAiConfig config;
 
     public JsonObject generate(String configuration, String modelName, String size, String prompt, String quality) {
         if (NamedModelUtil.isDefault(configuration) && config.defaultConfig().apiKey().equals("dummy")) {
@@ -22,7 +22,7 @@ public class OpenAiImagesJsonRPCService {
             throw new RuntimeException("OpenAI API key is not configured. " +
                     "Please specify the key in the `quarkus.langchain4j.openai.api-key` configuration property.");
         }
-        Langchain4jOpenAiConfig.OpenAiConfig clientConfig = NamedModelUtil.isDefault(configuration) ? config.defaultConfig()
+        LangChain4jOpenAiConfig.OpenAiConfig clientConfig = NamedModelUtil.isDefault(configuration) ? config.defaultConfig()
                 : config.namedConfig().get(configuration);
         ImageModel model = QuarkusOpenAiImageModel.builder()
                 .baseUrl(clientConfig.baseUrl())

@@ -1,9 +1,9 @@
 package io.quarkiverse.langchain4j.azure.openai.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.EMBEDDING_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.IMAGE_MODEL;
-import static io.quarkiverse.langchain4j.deployment.Langchain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import org.jboss.jandex.AnnotationInstance;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.Langchain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
@@ -45,7 +45,7 @@ public class AzureOpenAiProcessor {
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
             BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
-            Langchain4jAzureOpenAiBuildConfig config) {
+            LangChain4jAzureOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
@@ -64,7 +64,7 @@ public class AzureOpenAiProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedImageModelProviderBuildItem> selectedImage,
-            Langchain4jAzureOpenAiConfig config,
+            LangChain4jAzureOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {

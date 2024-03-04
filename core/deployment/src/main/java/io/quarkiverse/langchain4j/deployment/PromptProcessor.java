@@ -77,7 +77,7 @@ public class PromptProcessor {
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer) {
         IndexView index = combinedIndexBuildItem.getIndex();
 
-        Collection<AnnotationInstance> instances = index.getAnnotations(Langchain4jDotNames.STRUCTURED_PROMPT);
+        Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.STRUCTURED_PROMPT);
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() != AnnotationTarget.Kind.CLASS) {
@@ -125,7 +125,7 @@ public class PromptProcessor {
     private void warnForUnsafeUsage(IndexView index) {
         Set<String> candidates = new HashSet<>();
 
-        for (ClassInfo classInfo : index.getKnownUsers(Langchain4jDotNames.STRUCTURED_PROMPT_PROCESSOR)) {
+        for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.STRUCTURED_PROMPT_PROCESSOR)) {
             String className = classInfo.name().toString();
             if (className.startsWith("io.quarkiverse.langchain4j") || className.startsWith("dev.langchain4j")) { // TODO: this can be made smarter if needed
                 continue;
@@ -153,7 +153,7 @@ public class PromptProcessor {
             if (classInfo == null) {
                 continue;
             }
-            if (!classInfo.hasDeclaredAnnotation(Langchain4jDotNames.STRUCTURED_PROMPT)) {
+            if (!classInfo.hasDeclaredAnnotation(LangChain4jDotNames.STRUCTURED_PROMPT)) {
                 log.warn("Class '" + candidate
                         + "' is used in StructuredPromptProcessor but it is not annotated with @StructuredPrompt. This will likely result in an exception being thrown when the prompt is used.");
             }

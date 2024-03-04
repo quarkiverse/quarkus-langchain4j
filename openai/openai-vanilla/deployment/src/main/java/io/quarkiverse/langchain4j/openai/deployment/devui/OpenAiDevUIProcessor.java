@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
-import io.quarkiverse.langchain4j.openai.deployment.Langchain4jOpenAiBuildConfig;
+import io.quarkiverse.langchain4j.openai.deployment.LangChain4jOpenAiBuildConfig;
 import io.quarkiverse.langchain4j.openai.runtime.devui.OpenAiImagesJsonRPCService;
 import io.quarkiverse.langchain4j.openai.runtime.devui.OpenAiModerationModelsJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
@@ -20,7 +20,7 @@ public class OpenAiDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     CardPageBuildItem cardPage(
-            Langchain4jOpenAiBuildConfig config,
+            LangChain4jOpenAiBuildConfig config,
             List<SelectedImageModelProviderBuildItem> imageModels,
             List<SelectedModerationModelProviderBuildItem> moderationModels) {
         CardPageBuildItem card = new CardPageBuildItem();
@@ -31,7 +31,7 @@ public class OpenAiDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> rpcProviders,
-            Langchain4jOpenAiBuildConfig config) {
+            LangChain4jOpenAiBuildConfig config) {
         if (config.imageModel().enabled().orElse(true)) {
             rpcProviders.produce(new JsonRPCProvidersBuildItem(OpenAiImagesJsonRPCService.class));
         }
@@ -41,7 +41,7 @@ public class OpenAiDevUIProcessor {
     }
 
     private void addImageModelPage(
-            Langchain4jOpenAiBuildConfig config,
+            LangChain4jOpenAiBuildConfig config,
             CardPageBuildItem card,
             List<SelectedImageModelProviderBuildItem> imageModels) {
         List<String> configurations = new ArrayList<>();
@@ -65,7 +65,7 @@ public class OpenAiDevUIProcessor {
     }
 
     private void addModerationModelPage(
-            Langchain4jOpenAiBuildConfig config,
+            LangChain4jOpenAiBuildConfig config,
             CardPageBuildItem card,
             List<SelectedModerationModelProviderBuildItem> moderationModels) {
         List<String> configurations = new ArrayList<>();
