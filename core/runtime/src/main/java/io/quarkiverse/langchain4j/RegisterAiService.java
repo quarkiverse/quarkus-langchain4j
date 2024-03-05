@@ -15,6 +15,7 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -98,6 +99,18 @@ public @interface RegisterAiService {
     Class<? extends Retriever<TextSegment>> retriever() default NoRetriever.class;
 
     /**
+     * Configures the way to obtain the {@link ContentRetriever}.
+     * The Supplier may or may not be a CDI bean (but most
+     * typically it will, so consider adding a bean-defining annotation to
+     * it). If it is not a CDI bean, Quarkus will create an instance
+     * by calling its no-arg constructor.
+     *
+     * If unspecified, Quarkus will attempt to locate a CDI bean that
+     * implements {@link ContentRetriever} and use it if one exists.
+     */
+    Class<? extends Supplier<ContentRetriever>> contentRetriever() default BeanIfExistsContentRetrieverSupplier.class;
+
+    /**
      * Configures the way to obtain the {@link RetrievalAugmentor} to use
      * (when using RAG). The Supplier may or may not be a CDI bean (but most
      * typically it will, so consider adding a bean-defining annotation to
@@ -174,6 +187,18 @@ public @interface RegisterAiService {
 
         @Override
         public RetrievalAugmentor get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ContentRetriever} that the user has configured as a CDI bean.
+     * If no such bean exists, then no content retriever will be used.
+     */
+    final class BeanIfExistsContentRetrieverSupplier implements Supplier<ContentRetriever> {
+
+        @Override
+        public ContentRetriever get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

@@ -12,6 +12,7 @@ public class DeclarativeAiServiceCreateInfo {
     private final String chatMemoryProviderSupplierClassName;
     private final String retrieverClassName;
     private final String retrievalAugmentorSupplierClassName;
+    private final String contentRetrieverSupplierClassName;
     private final String auditServiceClassSupplierName;
     private final String moderationModelSupplierClassName;
     private final String chatModelName;
@@ -21,6 +22,7 @@ public class DeclarativeAiServiceCreateInfo {
     public DeclarativeAiServiceCreateInfo(String serviceClassName, String languageModelSupplierClassName,
             List<String> toolsClassNames, String chatMemoryProviderSupplierClassName,
             String retrieverClassName, String retrievalAugmentorSupplierClassName,
+            String contentRetrieverSupplierClassName,
             String auditServiceClassSupplierName,
             String moderationModelSupplierClassName, String chatModelName,
             boolean needsStreamingChatModel) {
@@ -31,6 +33,7 @@ public class DeclarativeAiServiceCreateInfo {
         this.chatMemoryProviderSupplierClassName = chatMemoryProviderSupplierClassName;
         this.retrieverClassName = retrieverClassName;
         this.retrievalAugmentorSupplierClassName = retrievalAugmentorSupplierClassName;
+        this.contentRetrieverSupplierClassName = contentRetrieverSupplierClassName;
         this.auditServiceClassSupplierName = auditServiceClassSupplierName;
         this.moderationModelSupplierClassName = moderationModelSupplierClassName;
         this.chatModelName = chatModelName;
@@ -58,6 +61,10 @@ public class DeclarativeAiServiceCreateInfo {
 
     public String getRetrievalAugmentorSupplierClassName() {
         return retrievalAugmentorSupplierClassName;
+    }
+
+    public String getContentRetrieverSupplierClassName() {
+        return contentRetrieverSupplierClassName;
     }
 
     public String getAuditServiceClassSupplierName() {

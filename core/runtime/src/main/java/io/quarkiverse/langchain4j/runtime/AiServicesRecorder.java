@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -32,10 +33,10 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
-    private static final TypeLiteral<Instance<Retriever<TextSegment>>> RETRIEVER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
-
-    };
     private static final TypeLiteral<Instance<AuditService>> AUDIT_SERVICE_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
+    private static final TypeLiteral<Instance<ContentRetriever>> CONTENT_RETRIEVER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
     private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
@@ -168,6 +169,29 @@ public class AiServicesRecorder {
                                         .loadClass(info.getRetrievalAugmentorSupplierClassName())
                                         .getConstructor().newInstance();
                                 quarkusAiServices.retrievalAugmentor(supplier.get());
+                            }
+                        }
+                    } else if (info.getContentRetrieverSupplierClassName() != null) {
+                        if (RegisterAiService.BeanIfExistsContentRetrieverSupplier.class.getName()
+                              .equals(info.getContentRetrieverSupplierClassName())) {
+                            Instance<ContentRetriever> instance = creationalContext
+                                  .getInjectedReference(CONTENT_RETRIEVER_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.contentRetriever(instance.get());
+                            }
+                        } else {
+                            try {
+                                Supplier<ContentRetriever> instance = (Supplier<ContentRetriever>) creationalContext
+                                      .getInjectedReference(Thread.currentThread().getContextClassLoader()
+                                            .loadClass(info.getContentRetrieverSupplierClassName()));
+                                quarkusAiServices.contentRetriever(instance.get());
+                            } catch (IllegalArgumentException e) {
+                                // the provided Supplier is not a CDI bean, build it manually
+                                Supplier<? extends ContentRetriever> supplier = (Supplier<? extends ContentRetriever>) Thread
+                                      .currentThread().getContextClassLoader()
+                                      .loadClass(info.getContentRetrieverSupplierClassName())
+                                      .getConstructor().newInstance();
+                                quarkusAiServices.contentRetriever(supplier.get());
                             }
                         }
                     }
