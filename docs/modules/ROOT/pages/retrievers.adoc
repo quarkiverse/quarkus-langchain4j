@@ -81,7 +81,7 @@ the `retrievalAugmentor` parameter of the `@RegisterAiService` annotation).
 
 The EmbeddingStoreContentRetriever necessitates a configured embedding store
 (Redis, Chroma, etc.) and an embedding model. Configure the maximum number
-of documents to retrieve (e.g., 20 in the example) and set the minimum
+of documents to retrieve (e.g., 3 in the example) and set the minimum
 relevance score if required.
 
 Make sure that the number of documents is not too high (or document too large).
