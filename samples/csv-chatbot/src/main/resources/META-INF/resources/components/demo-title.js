@@ -63,12 +63,15 @@ export class DemoTitle extends LitElement {
             
             <div class="explanation">
                 <ol>
-                    <li>The user send a question.</li>
-                    <li>The application asks the LLM to create a SQL query that retrieves the relevant data from the database.</li>
-                    <li>The application executes the SQL query.</li>
-                    <li>The relevant data is retrieved and added to the user's question.</li>
-                    <li>The extended question is sent to the LLM model.</li>
-                    <li>The response is received and sent back to the user.</li>
+                    <li>The user sends a question.</li>
+                    <li>The question and previous chat history go through a query compressing transformer to extract a concise question with all the relevant context.</li>
+                    <li>LLM is used to perform the compression.</li>
+                    <li>Now we need to generate a SQL query to fetch the relevant data.</li>
+                    <li>LLM is asked to generate the SQL query.</li>
+                    <li>The content retriever executes the generated SQL query.</li>
+                    <li>The fetched data is added back to the original question as a set of JSON objects.</li>
+                    <li>The question + fetched data are submitted to the LLM.</li>
+                    <li>The LLM's response is sent back to the user.</li>
                 </ol>
             </div>
         `
