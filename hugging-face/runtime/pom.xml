@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-hugging-face-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.9.0</version>
     </parent>
     <artifactId>quarkus-langchain4j-hugging-face</artifactId>
     <name>Quarkus LangChain4j - Hugging Face - Runtime</name>
