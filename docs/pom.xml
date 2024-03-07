@@ -93,6 +93,11 @@
             <artifactId>quarkus-langchain4j-infinispan-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-cohere-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -149,6 +154,7 @@
                                     <include>quarkus-langchain4j-pinecone.adoc</include>
                                     <include>quarkus-langchain4j-pgvector.adoc</include>
                                     <include>quarkus-langchain4j-infinispan.adoc</include>
+                                    <include>quarkus-langchain4j-cohere.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

@@ -1,0 +1,13 @@
+name: Quarkus LangChain4j Cohere
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with the Cohere API
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - cohere
+    - search
+    - reranking
+   categories:
+     - "miscellaneous"
+   status: "preview"

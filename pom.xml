@@ -13,6 +13,7 @@
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
     <module>chroma</module>
+    <module>cohere</module>
     <module>core</module>
     <module>docs</module>
     <module>hugging-face</module>
