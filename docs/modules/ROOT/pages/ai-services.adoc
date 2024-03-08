@@ -155,7 +155,7 @@ The configuration of the various models could look like so:
 ----
 # ensure that the model with the name 'm1', is provided by OpenAI
 quarkus.langchain4j.m1.chat-model.provider=openai
-# ensure that the model with the name 'm1', is provided by OpenAI
+# ensure that the model with the name 'm2', is provided by HuggingFace
 quarkus.langchain4j.m2.chat-model.provider=huggingface
 
 # configure the various aspects of each model
