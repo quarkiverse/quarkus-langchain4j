@@ -1,0 +1,47 @@
+= Reranking using scoring models
+
+include::./includes/attributes.adoc[]
+
+When using RAG, a scoring model can be used to rerank the top-k documents retrieved by the content retriever(s). This can specifically be useful in these cases:
+
+- The content retriever retrieves too much irrelevant data because, for example, scoring of documents based on vector similarity isn't accurate enough. A scoring model might be better tuned to apply domain-specific knowledge than a raw embedding model.
+- Multiple queries are involved, for example when using an
+  https://github.com/langchain4j/langchain4j/blob/main/langchain4j-core/src/main/java/dev/langchain4j/rag/query/transformer/ExpandingQueryTransformer.java[ExpandingQueryTransformer],
+  or multiple content retrievers are involved, and their scoring strategies are
+  mutually incomparable, so using the raw https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking[Reciprocal Rank Fusion] for merging the lists of documents retrieved by these retrievers is suboptimal.
+
+Quarkus-langchain4j currently supports scoring through `Cohere`. Configure a scoring model:
+----
+quarkus.langchain4j.cohere.api-key=YOUR_COHERE_API_KEY
+quarkus.langchain4j.cohere.scoring-model.model-id=MODEL_ID
+----
+
+NOTE: Currently supported model IDs can be found at https://docs.cohere.com/docs/models#rerank-beta.
+
+Then, an instance of `ScoringModel` is registered in CDI and can be integrated in a `RetrievalAugmentor`, like this:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
+    @Inject
+    ScoringModel scoringModel;
+
+    @Override
+    public RetrievalAugmentor get() {
+        return DefaultRetrievalAugmentor.builder()
+                // ... other components of the retrieval augmentor
+                .contentAggregator(new ReRankingContentAggregator(scoringModel,
+                    ReRankingContentAggregator.DEFAULT_QUERY_SELECTOR,
+                    minScore))
+                .build();
+    }
+}
+----
+
+The `minScore` value denotes the minimal score that contents must have to be included in the final result.
+
+If you're using multiple queries (for example because an `ExpandingQueryTransformer` is involved), you also
+have to provide a `QuerySelector` that selects the query which should be used as the relevant query for
+scoring all content (retrieved for all queries) - the default query selector as shown in the example
+works when there is only one query.

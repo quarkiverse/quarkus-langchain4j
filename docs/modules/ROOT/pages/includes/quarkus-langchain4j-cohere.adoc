@@ -1,0 +1,117 @@
+
+:summaryTableId: quarkus-langchain4j-cohere
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-cohere_configuration]]link:#quarkus-langchain4j-cohere_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url]]`link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url[quarkus.langchain4j.cohere.base-url]`
+
+
+[.description]
+--
+Base URL of the Cohere API.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COHERE_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`https://api.cohere.ai/`
+
+
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key]]`link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key[quarkus.langchain4j.cohere.api-key]`
+
+
+[.description]
+--
+Cohere API key.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COHERE_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name]]`link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name[quarkus.langchain4j.cohere.scoring-model.model-name]`
+
+
+[.description]
+--
+Reranking model to use. The current list of supported models can be found in the link:https://docs.cohere.com/docs/models[Cohere docs]
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`rerank-multilingual-v2.0`
+
+
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout]]`link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout[quarkus.langchain4j.cohere.scoring-model.timeout]`
+
+
+[.description]
+--
+Timeout for Cohere calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`30S`
+
+
+a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries]]`link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries[quarkus.langchain4j.cohere.scoring-model.max-retries]`
+
+
+[.description]
+--
+Maximum number of retries for Cohere API invocations.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`3`
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

@@ -63,7 +63,7 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
-  </dependency>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

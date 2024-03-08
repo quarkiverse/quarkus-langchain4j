@@ -23,6 +23,7 @@
 
 * Additional tools
 ** xref:dev-ui.adoc[Dev UI]
+** xref:reranking.adoc[Reranking]
 
 * Advanced topics
 ** xref:fault-tolerance.adoc[Fault Tolerance]
