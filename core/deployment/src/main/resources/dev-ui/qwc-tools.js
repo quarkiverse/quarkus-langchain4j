@@ -1,4 +1,4 @@
-import { LitElement, html} from 'lit';
+import { LitElement, html, css} from 'lit';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-sort-column.js';
 
@@ -6,6 +6,18 @@ import {tools} from 'build-time-data';
 
 
 export class QwcTools extends LitElement {
+
+    static styles = css`
+        :host {
+            height: 100%;
+            display: flex;
+        }
+        vaadin-grid {
+            margin-left: 15px;
+            margin-right: 15px;
+            height: 100%;
+        }
+    `;
 
     static properties = {
         "_tools": {state: true},

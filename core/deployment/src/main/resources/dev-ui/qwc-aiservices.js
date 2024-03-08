@@ -1,4 +1,4 @@
-import { LitElement, html} from 'lit';
+import { LitElement, html, css} from 'lit';
 import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/grid/vaadin-grid-sort-column.js';
@@ -7,6 +7,18 @@ import {aiservices} from 'build-time-data';
 
 
 export class QwcAiservices extends LitElement {
+
+    static styles = css`
+        :host {
+            height: 100%;
+            display: flex;
+        }
+        vaadin-grid {
+            margin-left: 15px;
+            margin-right: 15px;
+            height: 100%;
+        }
+    `;
 
     static properties = {
         "_aiservices": {state: true},
