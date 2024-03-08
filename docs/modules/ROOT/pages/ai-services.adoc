@@ -142,7 +142,7 @@ We'll explore an alternative approach to avoid manual memory handling in the <<m
 While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions. If you have a single chat language model, no specific configuration is required.
 
 However, when multiple model providers are present in the application (such as OpenAI, Azure OpenAI, HuggingFace, etc.)
-each model different model needs to be given a name, which is then referenced by the AI service like so:
+each model needs to be given a name, which is then referenced by the AI service like so:
 
 [source,java]
 ----
