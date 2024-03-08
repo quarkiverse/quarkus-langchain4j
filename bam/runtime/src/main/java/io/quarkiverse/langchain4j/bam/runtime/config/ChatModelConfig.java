@@ -12,7 +12,7 @@ public interface ChatModelConfig {
     /**
      * Model to use
      */
-    @WithDefault("meta-llama/llama-2-70b-chat")
+    @WithDefault("ibm/granite-13b-chat-v2")
     String modelId();
 
     /**
@@ -24,8 +24,7 @@ public interface ChatModelConfig {
      * This strategy can lead to repetitive results especially for longer output sequences.
      * The alternative sample strategy generates text by picking subsequent tokens based on the probability distribution of
      * possible next tokens defined by (i.e., conditioned on)
-     * the already-generated text and the top_k and top_p parameters described below. See this url for an informative article
-     * about text generation.
+     * the already-generated text and the top_k and top_p parameters described below.
      */
     @WithDefault("greedy")
     String decodingMethod();
@@ -72,14 +71,6 @@ public interface ChatModelConfig {
      * ignored. The list may contain up to 6 strings.
      */
     Optional<List<String>> stopSequences();
-
-    /**
-     * A value used to modify the next-token probabilities in sampling mode. Values
-     * less than 1.0 sharpen the probability distribution, resulting in "less
-     * random" output. Values greater than 1.0 flatten the probability distribution,
-     * resulting in "more random" output. A value of 1.0 has no effect and is the
-     * default. The allowed range is 0.0 to 2.0.
-     */
 
     /**
      * Time limit in milliseconds - if not completed within this time, generation

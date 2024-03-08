@@ -12,7 +12,7 @@ public interface ChatModelConfig {
     /**
      * Model to use
      */
-    @WithDefault("meta-llama/llama-2-70b-chat")
+    @WithDefault("ibm/granite-13b-chat-v2")
     String modelId();
 
     /**

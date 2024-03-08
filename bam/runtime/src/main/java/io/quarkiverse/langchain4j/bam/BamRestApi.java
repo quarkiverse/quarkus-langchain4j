@@ -101,7 +101,7 @@ public interface BamRestApi {
 
         private static final Logger log = Logger.getLogger(BamClientLogger.class);
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{4})(\\w+)(\\w{4})");
+        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{3})(.+)(\\w{3})");
 
         private final boolean logRequests;
         private final boolean logResponses;
