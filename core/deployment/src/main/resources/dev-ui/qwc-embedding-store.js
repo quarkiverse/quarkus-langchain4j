@@ -1,4 +1,4 @@
-import { LitElement, html} from 'lit';
+import { LitElement, html, css} from 'lit';
 import { JsonRpc } from 'jsonrpc';
 import '@vaadin/button';
 import '@vaadin/text-field';
@@ -12,6 +12,13 @@ import '@vaadin/grid/vaadin-grid-sort-column.js';
 export class QwcEmbeddingStore extends LitElement {
 
     jsonRpc = new JsonRpc(this);
+
+    static styles = css`
+        :host {
+            height: 100%;
+            display: flex;
+        }
+    `;
 
     static properties = {
         "_addEmbeddingConfirmation": {state: true},
