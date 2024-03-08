@@ -1,0 +1,91 @@
+= IBM BAM
+
+include::./includes/attributes.adoc[]
+
+IBM Research Big AI Model (BAM) is built by IBM Research as a test bed and incubator for helping accelerate generative AI research and its transition into IBM products.
+
+== Using BAM
+
+To employ BAM LLMs, integrate the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-bam</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured BAM dependency.
+
+=== Configuration
+
+Configuring BAM models requires an API key, which can be obtained from this link:https://bam.res.ibm.com/[page].
+
+The api key can be set in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.bam.api-key=pak-...
+----
+
+==== All configuration properties
+
+include::includes/quarkus-langchain4j-bam.adoc[leveloffset=+1,opts=optional]
+
+== Example
+
+An example usage is the following:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.bam.api-key=pak-...
+quarkus.langchain4j.bam.chat-model.model-id=ibm/granite-13b-chat-v2
+----
+
+[source,java]
+----
+public record Result(Integer result) {}
+----
+
+[source,java]
+----
+@RegisterAiService
+public interface LLMService {
+    
+    @SystemMessage("You are a calculator")
+    @UserMessage("""
+        You must perform the mathematical operation delimited by ---
+        ---
+        {firstNumber} + {secondNumber}
+        ---
+    """)
+    public Result calculator(int firstNumber, int secondNumber);
+}
+----
+
+[source,java]
+----
+@Path("/llm")
+public class LLMResource {
+
+    @Inject
+    LLMService llmService;
+
+    @GET
+    @Path("/calculator")
+    public Result calculator() {
+        return llmService.calculator(2, 2);
+    }
+}
+----
+
+[source,shell]
+----
+❯ curl http://localhost:8080/llm/calculator
+{"result":4}
+----
+
+NOTE: Sometimes it may be useful to use the `quarkus.langchain4j.bam.chat-model.stop-sequences` property to prevent the LLM model from returning more results than desired.
+

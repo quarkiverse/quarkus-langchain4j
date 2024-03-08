@@ -1,0 +1,120 @@
+= IBM watsonx.ai
+
+include::./includes/attributes.adoc[]
+
+You can develop generative AI solutions with foundation models in IBM watsonx.ai. You can use prompts to generate, classify, summarize, or extract content from your input text. Choose from IBM models or open source models from Hugging Face. You can tune foundation models to customize your prompt output or optimize inferencing performance.
+
+IMPORTANT: Supported only for IBM watsonx as a service on link:https://www.ibm.com/products/watsonx-ai/foundation-models[IBM Cloud].
+
+== Using watsonx.ai
+
+To employ watsonx.ai LLMs, integrate the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-watsonx</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured watsonx dependency.
+
+=== Configuration
+To use the watsonx.ai dependency, you must configure some required values in the `application.properties` file.
+
+==== Base URL
+The `base-url` property depends on the region of the provided service instance, use one of the following values:
+
+* Dallas: https://us-south.ml.cloud.ibm.com
+* Frankfurt: https://eu-de.ml.cloud.ibm.com
+* Tokyo: https://jp-tok.ml.cloud.ibm.com
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
+----
+
+==== Project ID
+To prompt foundation models in watsonx.ai programmatically, you need to pass the identifier (ID) of a project.
+
+To get the ID of a project, complete the following steps:
+
+1. Open the project, and then click the Manage tab.
+2. Copy the project ID from the Details section of the General page.
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.watsonx.project-id=23d...
+----
+
+==== API Key
+To prompt foundation models in IBM watsonx.ai programmatically, you need an IBM Cloud API key.
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.watsonx.api-key=hG-...
+----
+
+IMPORTANT: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and generate it.
+
+==== All configuration properties
+
+include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
+
+== Example
+
+An example usage is the following:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.watsonx.api-key=hG-...
+quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
+quarkus.langchain4j.watsonx.chat-model.model-id=ibm/granite-13b-chat-v2
+----
+
+[source,java]
+----
+public record Result(Integer result) {}
+----
+
+[source,java]
+----
+@RegisterAiService
+public interface LLMService {
+    
+    @SystemMessage("You are a calculator")
+    @UserMessage("""
+        You must perform the mathematical operation delimited by ---
+        ---
+        {firstNumber} + {secondNumber}
+        ---
+    """)
+    public Result calculator(int firstNumber, int secondNumber);
+}
+----
+
+[source,java]
+----
+@Path("/llm")
+public class LLMResource {
+
+    @Inject
+    LLMService llmService;
+
+    @GET
+    @Path("/calculator")
+    public Result calculator() {
+        return llmService.calculator(2, 2);
+    }
+}
+----
+
+[source,shell]
+----
+❯ curl http://localhost:8080/llm/calculator
+{"result":4}
+----
+
+NOTE: Sometimes it may be useful to use the `quarkus.langchain4j.watsonx.chat-model.stop-sequences` property to prevent the LLM model from returning more results than desired.

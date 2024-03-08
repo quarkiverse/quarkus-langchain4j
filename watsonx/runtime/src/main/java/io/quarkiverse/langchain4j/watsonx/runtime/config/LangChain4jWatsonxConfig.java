@@ -43,13 +43,13 @@ public interface LangChain4jWatsonxConfig {
         URL baseUrl();
 
         /**
-         * Watsonx API key
+         * IBM Cloud API key
          */
         @WithDefault("dummy")
         String apiKey();
 
         /**
-         * Timeout for Watsonx API calls
+         * Timeout for watsonx.ai API calls
          */
         @WithDefault("10s")
         Duration timeout();
@@ -61,25 +61,25 @@ public interface LangChain4jWatsonxConfig {
         String version();
 
         /**
-         * Watsonx project id.
+         * Watsonx.ai project id.
          */
         @WithDefault("dummy") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
         String projectId();
 
         /**
-         * Whether the Watsonx client should log requests
+         * Whether the watsonx.ai client should log requests
          */
         @WithDefault("false")
         Boolean logRequests();
 
         /**
-         * Whether the Watsonx client should log responses
+         * Whether the watsonx.ai client should log responses
          */
         @WithDefault("false")
         Boolean logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
+         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
          * provider.
          * Set to {@code false} to disable all requests.
          */

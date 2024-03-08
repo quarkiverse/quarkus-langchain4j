@@ -73,7 +73,7 @@ public class DefaultPropertiesTest {
         assertEquals("2023-05-29", config.version());
         assertEquals(false, config.logRequests());
         assertEquals(false, config.logResponses());
-        assertEquals("meta-llama/llama-2-70b-chat", config.chatModel().modelId());
+        assertEquals("ibm/granite-13b-chat-v2", config.chatModel().modelId());
         assertEquals("greedy", config.chatModel().decodingMethod());
         assertEquals(1.0, config.chatModel().temperature());
         assertEquals(0, config.chatModel().minNewTokens());
