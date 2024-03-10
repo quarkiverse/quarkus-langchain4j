@@ -9,7 +9,6 @@ import '@vaadin/progress-bar';
 import '@vaadin/text-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/tooltip';
 import { JsonRpc } from 'jsonrpc';
 
 export class QwcChat extends LitElement {
