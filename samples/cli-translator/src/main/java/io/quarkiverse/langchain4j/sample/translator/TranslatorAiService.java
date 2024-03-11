@@ -15,5 +15,4 @@ public interface TranslatorAiService {
                 {text}
             """)
     String translate(String text, String language);
-
 }
