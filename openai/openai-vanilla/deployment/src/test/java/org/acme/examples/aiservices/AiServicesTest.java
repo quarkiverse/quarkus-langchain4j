@@ -419,7 +419,7 @@ public class AiServicesTest {
     interface Summarizer {
 
         @SystemMessage("Summarize every message from user in {{n}} bullet points. Provide only bullet points.")
-        List<String> summarize(@UserMessage String text, int n);
+        List<String> summarize(@UserMessage String text, @MemoryId int n);
     }
 
     @Test

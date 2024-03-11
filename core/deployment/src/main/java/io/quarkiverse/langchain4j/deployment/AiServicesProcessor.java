@@ -4,6 +4,7 @@ import static dev.langchain4j.exception.IllegalConfigurationException.illegalCon
 import static dev.langchain4j.service.ServiceOutputParser.outputFormatInstructions;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
 
@@ -819,7 +820,10 @@ public class AiServicesProcessor {
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : params) {
-            if (effectiveParamAnnotations(param).isEmpty()) { // if a parameter has no annotations it is considered a template variable
+            List<AnnotationInstance> effectiveParamAnnotations = effectiveParamAnnotations(param);
+            if (effectiveParamAnnotations.isEmpty() // if a parameter has no annotations it is considered a template variable
+                    || effectiveParamAnnotations.stream().map(AnnotationInstance::name).anyMatch(MEMORY_ID::equals) // we allow @MemoryId parameters to be part of the template
+            ) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
             } else {
                 AnnotationInstance vInstance = param.annotation(V);
