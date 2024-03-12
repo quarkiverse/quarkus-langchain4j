@@ -245,7 +245,11 @@ public class AiServicesTest {
         assertThat(result.birthDate).isEqualTo(LocalDate.of(1968, JULY, 4));
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, marked the start of a new journey.\nYou must answer strictly in the following JSON format: {\n\"firstName\": (type: string),\n\"lastName\": (type: string),\n\"birthDate\": (type: date string (2023-12-31)),\n}");
+                "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, " +
+                        "a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, " +
+                        "marked the start of a new journey.\nYou must answer strictly in the following JSON format: " +
+                        "org.acme.examples.aiservices.AiServicesTest$Person: " +
+                        "{\n\"firstName\": (type: string),\n\"lastName\": (type: string),\n\"birthDate\": (type: date string (2023-12-31)),\n}");
     }
 
     static class Recipe {
@@ -303,7 +307,10 @@ public class AiServicesTest {
         assertThat(result.preparationTimeMinutes).isPositive();
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: {\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
+                "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
+                        +
+                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
+                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
     }
 
     @Test
@@ -322,7 +329,10 @@ public class AiServicesTest {
         assertThat(result.preparationTimeMinutes).isPositive();
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: {\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
+                "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
+                        +
+                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
+                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
     }
 
     @Test
@@ -348,7 +358,11 @@ public class AiServicesTest {
                 List.of(
                         new MessageContent("system", "You are a very funny chef"),
                         new MessageContent("user",
-                                "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: {\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}")));
+                                "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\n"
+                                        +
+                                        "You must answer strictly in the following JSON format: " +
+                                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
+                                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}")));
     }
 
     @SystemMessage("You are a professional chef. You are friendly, polite and concise.")

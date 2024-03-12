@@ -14,6 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -35,7 +36,18 @@ class InMemoryEmbeddingStoreTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
-    private final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
+    private static EmbeddingModel embeddingModel;
+
+    /**
+     * FIXME: This is a workaround to avoid loading the embedding model in this test class' static initializer,
+     * because otherwise we hit
+     * java.lang.UnsatisfiedLinkError: Native Library (/path/to/the/library) already loaded in another classloader
+     * because the test class is loaded by JUnit and by Quarkus in different class loaders.
+     */
+    @BeforeAll
+    public static void initEmbeddingModel() {
+        embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
+    }
 
     @Test
     void should_add_embedding() {
