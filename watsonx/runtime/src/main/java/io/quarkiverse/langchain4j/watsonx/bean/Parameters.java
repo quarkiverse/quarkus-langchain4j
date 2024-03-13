@@ -5,15 +5,14 @@ import java.util.List;
 public class Parameters {
 
     private final String decodingMethod;
-    private Boolean includeStopSequence;
     private final Integer minNewTokens;
     private final Integer maxNewTokens;
-    private Integer randomSeed;
-    private List<String> stopSequences;
+    private final Integer randomSeed;
+    private final List<String> stopSequences;
     private final Double temperature;
-    private Integer topK;
-    private Double topP;
-    private Double repetitionPenalty;
+    private final Integer topK;
+    private final Double topP;
+    private final Double repetitionPenalty;
 
     private Parameters(Builder builder) {
         this.decodingMethod = builder.decodingMethod;
@@ -45,10 +44,6 @@ public class Parameters {
 
     public Double getTemperature() {
         return temperature;
-    }
-
-    public Boolean getIncludeStopSequence() {
-        return includeStopSequence;
     }
 
     public Integer getRandomSeed() {

@@ -39,23 +39,22 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
 /**
- * This Microprofile REST client is used as the building block of all the API calls to Watsonx. The implementation is provided
- * by
- * the Reactive REST Client in Quarkus.
+ * This Microprofile REST client is used as the building block of all the API calls to watsonx.
+ * The implementation is provided by the Reactive REST Client in Quarkus.
  */
-@Path("/ml/v1-beta")
+@Path("/ml/v1")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
 public interface WatsonxRestApi {
 
     @POST
-    @Path("generation/text")
+    @Path("text/generation")
     TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST
-    @Path("generation/text_stream")
+    @Path("text/generation_stream")
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     Multi<String> chatStreaming(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
 
@@ -69,9 +68,10 @@ public interface WatsonxRestApi {
         MediaType mediaType = response.getMediaType();
         if ((mediaType != null) && mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             try {
-                WatsonError ex = response.readEntity(WatsonError.class);
 
+                WatsonError ex = response.readEntity(WatsonError.class);
                 StringJoiner joiner = new StringJoiner("\n");
+
                 if (ex.errors() != null && ex.errors().size() > 0) {
                     for (WatsonError.Error error : ex.errors())
                         joiner.add("%s: %s".formatted(error.code(), error.message()));
@@ -97,9 +97,7 @@ public interface WatsonxRestApi {
     class WatsonClientLogger implements ClientLogger {
 
         private static final Logger log = Logger.getLogger(WatsonClientLogger.class);
-
         private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{4})(\\w+)(\\w{4})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 

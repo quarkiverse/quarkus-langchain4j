@@ -22,19 +22,18 @@ import io.smallrye.mutiny.Uni;
 public abstract class WatsonxModel {
 
     private final TokenGenerator tokenGenerator;
-
     final String modelId;
     final String version;
     final String projectId;
     final String decodingMethod;
     final Integer minNewTokens;
     final Integer maxNewTokens;
-    Integer randomSeed;
-    List<String> stopSequences;
+    final Integer randomSeed;
+    final List<String> stopSequences;
     final Double temperature;
     final Double topP;
     final Integer topK;
-    Double repetitionPenalty;
+    final Double repetitionPenalty;
     final WatsonxRestApi client;
 
     public WatsonxModel(Builder config) {
