@@ -1,0 +1,17 @@
+name: LangChain4j Mistral AI
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with Mistral AI
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - mistral
+  #  guide: https://quarkiverse.github.io/quarkiverse-docs/langchain4j/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  categories:
+    - "miscellaneous"
+  status: "experimental"
+  codestart:
+    name: langchain4j-mistral
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-mistral-ai:codestarts:jar:${project.version}"
