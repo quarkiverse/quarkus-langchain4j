@@ -36,6 +36,7 @@ import org.objectweb.asm.Opcodes;
 
 import dev.langchain4j.agent.tool.JsonSchemaProperty;
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
@@ -72,9 +73,10 @@ public class ToolProcessor {
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
+    private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
-            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class);
+            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
@@ -183,7 +185,12 @@ public class ToolProcessor {
                             .name(toolName)
                             .description(toolDescription);
 
+                    MethodParameterInfo memoryIdParameter = null;
                     for (MethodParameterInfo parameter : toolMethod.parameters()) {
+                        if (parameter.hasAnnotation(TOOL_MEMORY_ID)) {
+                            memoryIdParameter = parameter;
+                            continue;
+                        }
                         builder.addParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
                     }
 
@@ -192,7 +199,8 @@ public class ToolProcessor {
 
                     String methodSignature = createUniqueSignature(toolMethod);
 
-                    String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition, methodSignature);
+                    String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition,
+                            memoryIdParameter != null ? memoryIdParameter.position() : null, methodSignature);
                     generatedInvokerClasses.add(invokerClassName);
                     String argumentMapperClassName = generateArgumentMapper(toolMethod, classOutput,
                             methodSignature);
@@ -257,7 +265,7 @@ public class ToolProcessor {
     }
 
     private static String generateInvoker(MethodInfo methodInfo, ClassOutput classOutput,
-            Map<String, Integer> nameToParamPosition, String methodSignature) {
+            Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, String methodSignature) {
         String implClassName = methodInfo.declaringClass().name() + "$$QuarkusInvoker$" + methodInfo.name() + "_"
                 + HashUtil.sha1(methodSignature);
         try (ClassCreator classCreator = ClassCreator.builder()
@@ -300,7 +308,10 @@ public class ToolProcessor {
             }
 
             ResultHandle resultHandle = methodMetadataMc.newInstance(METHOD_METADATA_CTOR,
-                    methodMetadataMc.load(toolReturnsVoid), nameToParamPositionHandle);
+                    methodMetadataMc.load(toolReturnsVoid),
+                    nameToParamPositionHandle,
+                    memoryIdParamPosition != null ? methodMetadataMc.load(Integer.valueOf(memoryIdParamPosition))
+                            : methodMetadataMc.loadNull());
             methodMetadataMc.returnValue(resultHandle);
         }
         return implClassName;

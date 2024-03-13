@@ -40,7 +40,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
         ToolInvoker invokerInstance = createInvokerInstance();
 
-        Object[] params = prepareArguments(toolExecutionRequest, invokerInstance.methodMetadata());
+        Object[] params = prepareArguments(toolExecutionRequest, invokerInstance.methodMetadata(), memoryId);
         try {
             if (log.isDebugEnabled()) {
                 log.debugv("Attempting to invoke tool {0} with parameters {1}", context.tool, Arrays.toString(params));
@@ -83,7 +83,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
     }
 
     private Object[] prepareArguments(ToolExecutionRequest toolExecutionRequest,
-            ToolInvoker.MethodMetadata methodMetadata) {
+            ToolInvoker.MethodMetadata methodMetadata, Object memoryId) {
         String argumentsJsonStr = toolExecutionRequest.arguments();
         Map<String, Object> argumentsFromRequest;
         try {
@@ -107,6 +107,9 @@ public class QuarkusToolExecutor implements ToolExecutor {
             } else {
                 finalArgs[pos] = entry.getValue();
             }
+        }
+        if (memoryId != null && methodMetadata.getMemoryIdParamPosition() != null) {
+            finalArgs[methodMetadata.getMemoryIdParamPosition()] = memoryId;
         }
         return finalArgs;
     }
