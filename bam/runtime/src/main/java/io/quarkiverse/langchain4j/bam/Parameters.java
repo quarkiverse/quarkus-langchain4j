@@ -5,19 +5,19 @@ import java.util.List;
 public class Parameters {
 
     private final String decodingMethod;
-    private Boolean includeStopSequence;
+    private final Boolean includeStopSequence;
     private final Integer minNewTokens;
     private final Integer maxNewTokens;
-    private Integer randomSeed;
-    private List<String> stopSequences;
+    private final Integer randomSeed;
+    private final List<String> stopSequences;
     private final Double temperature;
-    private Integer timeLimit;
-    private Integer topK;
-    private Double topP;
-    private Double typicalP;
-    private Double repetitionPenalty;
-    private Integer truncateInputTokens;
-    private Integer beamWidth;
+    private final Integer timeLimit;
+    private final Integer topK;
+    private final Double topP;
+    private final Double typicalP;
+    private final Double repetitionPenalty;
+    private final Integer truncateInputTokens;
+    private final Integer beamWidth;
 
     private Parameters(Builder builder) {
         this.decodingMethod = builder.decodingMethod;

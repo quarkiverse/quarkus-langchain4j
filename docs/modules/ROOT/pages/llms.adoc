@@ -24,3 +24,5 @@ Please check the specific documentation for the LLM you are using to see what fe
 - xref:openai.adoc[OpenAI (GPT-3/4)]
 - xref:huggingface.adoc[Hugging Face]
 - xref:ollama.adoc[Ollama]
+- xref:bam.adoc[IBM BAM]
+- xref:watsonx.adoc[IBM watsonx.ai]

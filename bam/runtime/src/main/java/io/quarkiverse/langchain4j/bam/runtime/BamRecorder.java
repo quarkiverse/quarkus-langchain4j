@@ -10,13 +10,17 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.moderation.DisabledModerationModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.bam.BamEmbeddingModel;
 import io.quarkiverse.langchain4j.bam.BamModel;
+import io.quarkiverse.langchain4j.bam.BamModerationModel;
 import io.quarkiverse.langchain4j.bam.BamStreamingChatModel;
 import io.quarkiverse.langchain4j.bam.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
+import io.quarkiverse.langchain4j.bam.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -146,7 +150,9 @@ public class BamRecorder {
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout())
                     .version(bamConfig.version())
-                    .modelId(embeddingModelConfig.modelId());
+                    .modelId(embeddingModelConfig.modelId())
+                    .logRequests(bamConfig.logRequests())
+                    .logResponses(bamConfig.logResponses());
 
             if (bamConfig.baseUrl().isPresent()) {
                 builder.url(bamConfig.baseUrl().get());
@@ -163,6 +169,51 @@ public class BamRecorder {
                 @Override
                 public EmbeddingModel get() {
                     return new DisabledEmbeddingModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<ModerationModel> moderationModel(LangChain4jBamConfig runtimeConfig, String modelName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+
+        if (bamConfig.enableIntegration()) {
+            String apiKey = bamConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+            }
+
+            ModerationModelConfig moderationModelConfig = bamConfig.moderationModel();
+            var implicitHate = moderationModelConfig.implicitHate().orElse(null);
+            var hap = moderationModelConfig.hap().orElse(null);
+            var stigma = moderationModelConfig.stigma().orElse(null);
+
+            var builder = BamModel.builder()
+                    .accessToken(bamConfig.apiKey())
+                    .timeout(bamConfig.timeout())
+                    .version(bamConfig.version())
+                    .messagesToModerate(moderationModelConfig.messagesToModerate())
+                    .implicitHate(implicitHate)
+                    .hap(hap)
+                    .stigma(stigma)
+                    .logRequests(bamConfig.logRequests())
+                    .logResponses(bamConfig.logResponses());
+
+            if (bamConfig.baseUrl().isPresent()) {
+                builder.url(bamConfig.baseUrl().get());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return builder.build(BamModerationModel.class);
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return new DisabledModerationModel();
                 }
             };
         }

@@ -6,11 +6,13 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
@@ -20,19 +22,23 @@ public abstract class BamModel {
     final String modelId;
     final String version;
     final String decodingMethod;
-    Boolean includeStopSequence;
+    final Boolean includeStopSequence;
     final Integer minNewTokens;
     final Integer maxNewTokens;
-    Integer randomSeed;
-    List<String> stopSequences;
+    final Integer randomSeed;
+    final List<String> stopSequences;
     final Double temperature;
-    Integer timeLimit;
+    final Integer timeLimit;
     final Double topP;
     final Integer topK;
-    Double typicalP;
-    Double repetitionPenalty;
-    Integer truncateInputTokens;
-    Integer beamWidth;
+    final Double typicalP;
+    final Double repetitionPenalty;
+    final Integer truncateInputTokens;
+    final Integer beamWidth;
+    final Set<ChatMessageType> messagesToModerate;
+    final Float implicitHate;
+    final Float hap;
+    final Float stigma;
     final BamRestApi client;
 
     public BamModel(Builder config) {
@@ -46,6 +52,12 @@ public abstract class BamModel {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new BamRestApi.BamClientLogger(config.logRequests,
                     config.logResponses));
+        }
+
+        if (config.messagesToModerate != null && config.messagesToModerate.size() > 0) {
+            this.messagesToModerate = Set.copyOf(config.messagesToModerate);
+        } else {
+            this.messagesToModerate = null;
         }
 
         this.client = builder.build(BamRestApi.class);
@@ -66,6 +78,9 @@ public abstract class BamModel {
         this.repetitionPenalty = config.repetitionPenalty;
         this.truncateInputTokens = config.truncateInputTokens;
         this.beamWidth = config.beamWidth;
+        this.implicitHate = config.implicitHate;
+        this.hap = config.hap;
+        this.stigma = config.stigma;
     }
 
     public static Builder builder() {
@@ -105,11 +120,11 @@ public abstract class BamModel {
         private String accessToken;
         private String modelId;
         private String version;
-        private Duration timeout = Duration.ofSeconds(15);
-        private String decodingMethod = "greedy";
+        private Duration timeout;
+        private String decodingMethod;
         private Boolean includeStopSequence;
-        private Integer minNewTokens = 0;
-        private Integer maxNewTokens = 200;
+        private Integer minNewTokens;
+        private Integer maxNewTokens;
         private Integer randomSeed;
         private List<String> stopSequences;
         private Double temperature;
@@ -121,6 +136,10 @@ public abstract class BamModel {
         private Double repetitionPenalty;
         private Integer truncateInputTokens;
         private Integer beamWidth;
+        private List<ChatMessageType> messagesToModerate;
+        private Float implicitHate;
+        private Float hap;
+        private Float stigma;
         public boolean logResponses;
         public boolean logRequests;
 
@@ -225,6 +244,26 @@ public abstract class BamModel {
 
         public Builder stopSequences(List<String> stopSequences) {
             this.stopSequences = stopSequences;
+            return this;
+        }
+
+        public Builder messagesToModerate(List<ChatMessageType> messagesToModerate) {
+            this.messagesToModerate = messagesToModerate;
+            return this;
+        }
+
+        public Builder implicitHate(Float implicitHate) {
+            this.implicitHate = implicitHate;
+            return this;
+        }
+
+        public Builder hap(Float hap) {
+            this.hap = hap;
+            return this;
+        }
+
+        public Builder stigma(Float stigma) {
+            this.stigma = stigma;
             return this;
         }
 

@@ -43,7 +43,7 @@ import io.vertx.core.http.HttpClientResponse;
 @Produces(MediaType.APPLICATION_JSON)
 public interface BamRestApi {
 
-    static Logger logger = Logger.getLogger(BamRestApi.class);
+    final static Logger logger = Logger.getLogger(BamRestApi.class);
 
     @POST
     @Path("text/chat")
@@ -60,8 +60,12 @@ public interface BamRestApi {
     EmbeddingResponse embeddings(EmbeddingRequest request, @NotBody String token, @QueryParam("version") String version);
 
     @POST
+    @Path("/text/moderations")
+    ModerationResponse moderations(ModerationRequest request, @NotBody String token, @QueryParam("version") String version);
+
+    @POST
     @Path("/text/tokenization")
-    public TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
+    TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
             @QueryParam("version") String version);
 
     @ClientObjectMapper
@@ -100,9 +104,7 @@ public interface BamRestApi {
     class BamClientLogger implements ClientLogger {
 
         private static final Logger log = Logger.getLogger(BamClientLogger.class);
-
         private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{3})(.+)(\\w{3})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 
