@@ -12,10 +12,13 @@ public interface ToolInvoker {
 
         private final boolean returnsVoid;
         private final Map<String, Integer> nameToParamPosition;
+        private final Integer memoryIdParamPosition;
 
-        public MethodMetadata(boolean returnsVoid, Map<String, Integer> nameToParamPosition) {
+        public MethodMetadata(boolean returnsVoid, Map<String, Integer> nameToParamPosition,
+                Integer memoryIdParamPosition) {
             this.returnsVoid = returnsVoid;
             this.nameToParamPosition = nameToParamPosition;
+            this.memoryIdParamPosition = memoryIdParamPosition;
         }
 
         public boolean isReturnsVoid() {
@@ -26,5 +29,8 @@ public interface ToolInvoker {
             return nameToParamPosition;
         }
 
+        public Integer getMemoryIdParamPosition() {
+            return memoryIdParamPosition;
+        }
     }
 }
