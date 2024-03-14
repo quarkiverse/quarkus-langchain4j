@@ -65,7 +65,7 @@ public class ModerationModelTest {
         wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
     }
 
-    @RegisterAiService(moderationModelSupplier = RegisterAiService.BeanModerationModelSupplier.class)
+    @RegisterAiService(moderationModelSupplier = RegisterAiService.BeanIfExistsModerationModelSupplier.class)
     interface ChatWithModeration {
 
         @Moderate

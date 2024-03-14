@@ -1,20 +1,26 @@
 package io.quarkiverse.langchain4j.bam.deployment;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,14 +28,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.service.Moderate;
+import dev.langchain4j.service.ModerationException;
+import dev.langchain4j.service.SystemMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.ModerationRequest;
 import io.quarkiverse.langchain4j.bam.ModerationRequest.Threshold;
+import io.quarkiverse.langchain4j.bam.deployment.AiModerationTest.AIServiceSupplier.MyModerationSupplier;
 import io.quarkiverse.langchain4j.bam.runtime.BamRecorder;
 import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
@@ -60,16 +72,167 @@ public class AiModerationTest {
         mockServers = new WireMockUtil(wireMockServer);
     }
 
+    @BeforeEach
+    void beforeEach() {
+        wireMockServer.resetScenarios();
+    }
+
     @AfterAll
     static void afterAll() {
         wireMockServer.stop();
     }
+
+    @RegisterAiService
+    @Singleton
+    interface NewAIService {
+
+        @Moderate
+        @SystemMessage("This is a systemMessage")
+        @dev.langchain4j.service.UserMessage("{text}")
+        String chat(String text);
+    }
+
+    @RegisterAiService(moderationModelSupplier = MyModerationSupplier.class)
+    @Singleton
+    interface AIServiceSupplier {
+
+        @Moderate
+        @SystemMessage("This is a systemMessage")
+        @dev.langchain4j.service.UserMessage("{text}")
+        String chat(String text);
+
+        public class MyModerationSupplier implements Supplier<ModerationModel> {
+
+            @Override
+            public ModerationModel get() {
+                return new ModerationModel() {
+
+                    @Override
+                    public Response<Moderation> moderate(String text) {
+                        throw new RuntimeException("BAAAM");
+                    }
+
+                    @Override
+                    public Response<Moderation> moderate(List<ChatMessage> messages) {
+                        throw new RuntimeException("BAAAM");
+                    }
+                };
+            }
+
+        }
+    }
+
+    @Inject
+    NewAIService service;
+
+    @Inject
+    AIServiceSupplier aiServiceSupplier;
 
     @Inject
     ModerationModel moderationModel;
 
     @Inject
     LangChain4jBamConfig langchain4jBamConfig;
+
+    @Test
+    void moderation() throws Exception {
+        var input = "I want to kill you!";
+
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 200)
+                .response("""
+                        {
+                            "results": [
+                                {
+                                    "generated_token_count": 20,
+                                    "input_token_count": 146,
+                                    "stop_reason": "max_tokens",
+                                    "seed": 40268626,
+                                    "generated_text": "AI Response"
+                                }
+                            ]
+                        }
+                        """)
+                .build();
+
+        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        mockServers
+                .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
+                .body(mapper.writeValueAsString(body))
+                .response("""
+                        {
+                            "results": [
+                                {
+                                    "implicit_hate": [
+                                        {
+                                            "score": 0.9571548104286194,
+                                            "flagged": true,
+                                            "success": true,
+                                            "position": {
+                                                "start": 0,
+                                                "end": 18
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                        """)
+                .build();
+
+        assertThrowsExactly(ModerationException.class, () -> service.chat(input));
+    }
+
+    @Test
+    void moderation_supplier() throws Exception {
+
+        var input = "I want to kill you!";
+
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 200)
+                .response("""
+                        {
+                            "results": [
+                                {
+                                    "generated_token_count": 20,
+                                    "input_token_count": 146,
+                                    "stop_reason": "max_tokens",
+                                    "seed": 40268626,
+                                    "generated_text": "AI Response"
+                                }
+                            ]
+                        }
+                        """)
+                .build();
+
+        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        mockServers
+                .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
+                .body(mapper.writeValueAsString(body))
+                .response("""
+                        {
+                            "results": [
+                                {
+                                    "implicit_hate": [
+                                        {
+                                            "score": 0.9571548104286194,
+                                            "flagged": true,
+                                            "success": true,
+                                            "position": {
+                                                "start": 0,
+                                                "end": 18
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                        """)
+                .build();
+
+        var ex = assertThrowsExactly(RuntimeException.class, () -> aiServiceSupplier.chat(input));
+        assertThat(ex.getMessage(), containsString("BAAAM"));
+    }
 
     @Test
     void moderation_implicit_hate() throws Exception {

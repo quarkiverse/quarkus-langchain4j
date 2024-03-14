@@ -21,7 +21,6 @@ public class WireMockUtil {
     public static int PORT = 8089;
     public static String API_KEY = "my_super_token";
     public static String VERSION = "2024-02-20";
-
     WireMockServer server;
 
     public WireMockUtil(WireMockServer server) {
@@ -59,6 +58,12 @@ public class WireMockUtil {
             builder = builder.inScenario("")
                     .whenScenarioStateIs(currentState)
                     .willSetStateTo(nextState);
+            return this;
+        }
+
+        public Builder scenario(String currentState) {
+            builder = builder.inScenario("")
+                    .whenScenarioStateIs(currentState);
             return this;
         }
 

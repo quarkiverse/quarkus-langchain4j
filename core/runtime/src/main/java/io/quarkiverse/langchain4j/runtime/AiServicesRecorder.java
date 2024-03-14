@@ -181,7 +181,6 @@ public class AiServicesRecorder {
                                 quarkusAiServices.auditService(instance.get());
                             }
                         } else {
-                            @SuppressWarnings("rawtypes")
                             Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
                                     .currentThread().getContextClassLoader().loadClass(info.getAuditServiceClassSupplierName())
                                     .getConstructor().newInstance();
@@ -189,18 +188,24 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    if (info.getModerationModelSupplierClassName() != null) {
-                        if (RegisterAiService.BeanModerationModelSupplier.class.getName()
+                    if (info.getModerationModelSupplierClassName() != null && info.getNeedsModerationModel()) {
+                        if (RegisterAiService.BeanIfExistsModerationModelSupplier.class.getName()
                                 .equals(info.getModerationModelSupplierClassName())) {
-                            ModerationModel moderationModel = creationalContext.getInjectedReference(ModerationModel.class);
-                            quarkusAiServices.moderationModel(moderationModel);
+
+                            if (NamedModelUtil.isDefault(info.getModerationModelName())) {
+                                quarkusAiServices
+                                        .moderationModel(creationalContext.getInjectedReference(ModerationModel.class));
+
+                            } else {
+                                quarkusAiServices.moderationModel(creationalContext.getInjectedReference(ModerationModel.class,
+                                        ModelName.Literal.of(info.getModerationModelName())));
+                            }
                         } else {
-                            @SuppressWarnings("rawtypes")
-                            Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
+                            Supplier<? extends ModerationModel> supplier = (Supplier<? extends ModerationModel>) Thread
                                     .currentThread().getContextClassLoader()
                                     .loadClass(info.getModerationModelSupplierClassName())
                                     .getConstructor().newInstance();
-                            quarkusAiServices.auditService(supplier.get());
+                            quarkusAiServices.moderationModel(supplier.get());
                         }
                     }
 

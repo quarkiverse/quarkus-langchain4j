@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.builder.item.MultiBuildItem;
 
 /**
@@ -11,9 +10,8 @@ public final class RequestModerationModelBeanBuildItem extends MultiBuildItem {
 
     private final String modelName;
 
-    // TODO: this is in anticipation of actually needing a configurable moderation model
-    public RequestModerationModelBeanBuildItem() {
-        this.modelName = NamedModelUtil.DEFAULT_NAME;
+    public RequestModerationModelBeanBuildItem(String modelName) {
+        this.modelName = modelName;
     }
 
     public String getModelName() {
