@@ -30,20 +30,8 @@ public interface MilvusBuildConfig {
         /**
          * Container image for Milvus.
          */
-        @WithDefault("docker.io/milvusdb/milvus:v2.3.3")
+        @WithDefault("docker.io/milvusdb/milvus:v2.3.4")
         String milvusImageName();
-
-        /**
-         * Container image for etcd.
-         */
-        @WithDefault("quay.io/coreos/etcd:v3.5.5")
-        String etcdImageName();
-
-        /**
-         * Container image for minio.
-         */
-        @WithDefault("docker.io/minio/minio:RELEASE.2023-12-13T23-28-55Z")
-        String minioImageName();
 
         /**
          * Optional fixed port the Milvus dev service will listen to.
