@@ -29,13 +29,15 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     }
 
     private void clearChatMemory() {
-        chatMemories.forEach(new BiConsumer<>() {
-            @Override
-            public void accept(Object memoryId, ChatMemory chatMemory) {
-                chatMemory.clear();
-            }
-        });
-        chatMemories = null;
+        if (chatMemories != null) {
+            chatMemories.forEach(new BiConsumer<>() {
+                @Override
+                public void accept(Object memoryId, ChatMemory chatMemory) {
+                    chatMemory.clear();
+                }
+            });
+            chatMemories = null;
+        }
     }
 
     /**
