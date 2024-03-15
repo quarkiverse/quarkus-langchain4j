@@ -192,6 +192,11 @@ However, in cases where more fine-grained control is needed (which is the case w
 When using an AiService that is expected to use to chat memory, it is very important to use `@MemoryId` (as mentioned in a later section). Failure to do so, can lead to unexpected and hard to debug results.
 ====
 
+[Tip]
+====
+If you use case requires that no memory should be used, then be sure to use `@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)`
+====
+
 === Advanced usage
 
 Although the extension's default `ChatMemoryProvider` is very configurable making unnecessary in most cases to resort to a custom implementation, such a capability is possible. Here is a possible example:

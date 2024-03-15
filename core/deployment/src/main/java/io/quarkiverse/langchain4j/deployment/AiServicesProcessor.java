@@ -220,7 +220,10 @@ public class AiServicesProcessor {
             AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
             if (chatMemoryProviderSupplierValue != null) {
                 chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
-                if (!chatMemoryProviderSupplierClassDotName
+                if (chatMemoryProviderSupplierClassDotName.equals(
+                        LangChain4jDotNames.NO_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                    chatMemoryProviderSupplierClassDotName = null;
+                } else if (!chatMemoryProviderSupplierClassDotName
                         .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
                             reflectiveClassProducer);

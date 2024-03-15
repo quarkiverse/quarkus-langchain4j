@@ -156,6 +156,17 @@ public @interface RegisterAiService {
     }
 
     /**
+     * Marker that is used when the user does not want any memory configured for the AiService
+     */
+    final class NoChatMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+
+        @Override
+        public ChatMemoryProvider get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
      * Marker class to indicate that no retriever should be used
      */
     final class NoRetriever implements Retriever<TextSegment> {

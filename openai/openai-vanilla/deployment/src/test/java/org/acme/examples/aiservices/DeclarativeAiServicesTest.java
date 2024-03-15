@@ -438,6 +438,44 @@ public class DeclarativeAiServicesTest {
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
     }
 
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    interface NoMemoryService {
+
+        String chat(@UserMessage String userMessage);
+    }
+
+    @Inject
+    NoMemoryService noMemoryService;
+
+    @Test
+    @ActivateRequestContext
+    void no_memory_should_be_used() throws IOException {
+
+        String firstUserMessage = "Hello, my name is Klaus";
+        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+                "Nice to meet you Klaus"));
+        String firstAiResponse = noMemoryService.chat(firstUserMessage);
+
+        // assert response
+        assertThat(firstAiResponse).isEqualTo("Nice to meet you Klaus");
+
+        // assert request
+        assertSingleRequestMessage(getRequestAsMap(), firstUserMessage);
+
+        wireMockServer.resetRequests();
+
+        String secondUserMessage = "What is my name";
+        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+                "I don't know"));
+        String secondAiResponse = noMemoryService.chat(secondUserMessage);
+
+        // assert response
+        assertThat(secondAiResponse).isEqualTo("I don't know");
+
+        // assert request only contains the second request, so no memory is used
+        assertSingleRequestMessage(getRequestAsMap(), secondUserMessage);
+    }
+
     private Map<String, Object> getRequestAsMap() throws IOException {
         return getRequestAsMap(getRequestBody());
     }
