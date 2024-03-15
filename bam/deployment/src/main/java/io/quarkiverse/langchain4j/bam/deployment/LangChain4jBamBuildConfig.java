@@ -18,4 +18,9 @@ public interface LangChain4jBamBuildConfig {
      * Embedding model related settings
      */
     EmbeddingModelBuildConfig embeddingModel();
+
+    /**
+     * Moteration model related settings
+     */
+    ModerationModelBuildConfig moderationModel();
 }

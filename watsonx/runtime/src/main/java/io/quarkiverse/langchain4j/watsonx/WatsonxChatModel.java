@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -75,15 +74,5 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
                 return client.tokenization(request, token, version).result().tokenCount();
             }
         });
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        throw new IllegalArgumentException("Tools are currently not supported for Watsonx models");
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        throw new IllegalArgumentException("Tools are currently not supported for Watsonx models");
     }
 }

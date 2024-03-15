@@ -91,5 +91,10 @@ public interface LangChain4jBamConfig {
          * Embedding model related settings
          */
         EmbeddingModelConfig embeddingModel();
+
+        /**
+         * Moderation model related settings
+         */
+        ModerationModelConfig moderationModel();
     }
 }

@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -62,15 +61,5 @@ public class BamChatModel extends BamModel implements ChatLanguageModel, TokenCo
 
         var request = new TokenizationRequest(modelId, input);
         return client.tokenization(request, token, version).results().get(0).tokenCount();
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        throw new IllegalArgumentException("Tools are currently not supported for BAM models");
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        throw new IllegalArgumentException("Tools are currently not supported for BAM models");
     }
 }

@@ -6,7 +6,6 @@ import io.quarkus.runtime.annotations.RecordableConstructor;
 
 public class DeclarativeAiServiceCreateInfo {
     private final String serviceClassName;
-
     private final String languageModelSupplierClassName;
     private final List<String> toolsClassNames;
     private final String chatMemoryProviderSupplierClassName;
@@ -15,16 +14,17 @@ public class DeclarativeAiServiceCreateInfo {
     private final String auditServiceClassSupplierName;
     private final String moderationModelSupplierClassName;
     private final String chatModelName;
+    private final String moderationModelName;
     private final boolean needsStreamingChatModel;
+    private final boolean needsModerationModel;
 
     @RecordableConstructor
     public DeclarativeAiServiceCreateInfo(String serviceClassName, String languageModelSupplierClassName,
             List<String> toolsClassNames, String chatMemoryProviderSupplierClassName,
             String retrieverClassName, String retrievalAugmentorSupplierClassName,
             String auditServiceClassSupplierName,
-            String moderationModelSupplierClassName, String chatModelName,
-            boolean needsStreamingChatModel) {
-        this.needsStreamingChatModel = needsStreamingChatModel;
+            String moderationModelSupplierClassName, String chatModelName, String moderationModelName,
+            boolean needsStreamingChatModel, boolean needsModerationModel) {
         this.serviceClassName = serviceClassName;
         this.languageModelSupplierClassName = languageModelSupplierClassName;
         this.toolsClassNames = toolsClassNames;
@@ -34,6 +34,9 @@ public class DeclarativeAiServiceCreateInfo {
         this.auditServiceClassSupplierName = auditServiceClassSupplierName;
         this.moderationModelSupplierClassName = moderationModelSupplierClassName;
         this.chatModelName = chatModelName;
+        this.moderationModelName = moderationModelName;
+        this.needsStreamingChatModel = needsStreamingChatModel;
+        this.needsModerationModel = needsModerationModel;
     }
 
     public String getServiceClassName() {
@@ -74,5 +77,13 @@ public class DeclarativeAiServiceCreateInfo {
 
     public boolean getNeedsStreamingChatModel() {
         return needsStreamingChatModel;
+    }
+
+    public boolean getNeedsModerationModel() {
+        return needsModerationModel;
+    }
+
+    public String getModerationModelName() {
+        return moderationModelName;
     }
 }

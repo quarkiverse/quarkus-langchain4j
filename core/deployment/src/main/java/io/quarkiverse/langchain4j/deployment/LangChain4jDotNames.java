@@ -70,11 +70,8 @@ public class LangChain4jDotNames {
     static final DotName BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsAuditServiceSupplier.class);
 
-    static final DotName BEAN_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanModerationModelSupplier.class);
-
-    static final DotName NO_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
-            RegisterAiService.NoModerationModelSupplier.class);
+    static final DotName BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsModerationModelSupplier.class);
 
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);

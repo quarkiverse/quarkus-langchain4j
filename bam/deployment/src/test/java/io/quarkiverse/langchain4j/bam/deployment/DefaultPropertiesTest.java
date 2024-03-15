@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.bam.deployment;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Duration;
 import java.util.List;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.Message;
@@ -71,6 +74,12 @@ public class DefaultPropertiesTest {
         assertEquals(0, config.chatModel().minNewTokens());
         assertEquals(200, config.chatModel().maxNewTokens());
         assertEquals(1.0, config.chatModel().temperature());
+        assertEquals("ibm/slate.125m.english.rtrvr", config.embeddingModel().modelId());
+        assertNotNull(config.moderationModel());
+        assertEquals(List.of(ChatMessageType.USER), config.moderationModel().messagesToModerate());
+        assertFalse(config.moderationModel().implicitHate().isPresent());
+        assertFalse(config.moderationModel().hap().isPresent());
+        assertFalse(config.moderationModel().stigma().isPresent());
 
         var modelId = config.chatModel().modelId();
 
@@ -86,7 +95,8 @@ public class DefaultPropertiesTest {
 
         var body = new TextGenerationRequest(modelId, messages, parameters);
 
-        mockServers.mockBuilder(200)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
                 .response("""
                         {

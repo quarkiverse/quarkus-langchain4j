@@ -120,12 +120,12 @@ public @interface RegisterAiService {
 
     /**
      * Configures the way to obtain the {@link ModerationModel} to use.
-     * By default, no moderation model is used.
-     * If a CDI bean of type {@link ChatMemory} is needed, the value should be {@link BeanChatMemoryProviderSupplier}.
-     * If an arbitrary {@link ChatMemory} instance is needed, a custom implementation of {@link Supplier<ChatMemory>}
+     * By default, Quarkus will look for a CDI bean that implements {@link ModerationModel} if at least one method is annotated
+     * with @Moderate.
+     * If an arbitrary {@link ModerationModel} instance is needed, a custom implementation of {@link Supplier<ModerationModel>}
      * needs to be provided.
      */
-    Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default NoModerationModelSupplier.class;
+    Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default BeanIfExistsModerationModelSupplier.class;
 
     /**
      * Marker that is used to tell Quarkus to use the {@link ChatLanguageModel} that has been configured as a CDI bean by
@@ -203,22 +203,10 @@ public @interface RegisterAiService {
     }
 
     /**
-     * Marker that is used to tell Quarkus to use the {@link ModerationModel} that has been configured as a CDI bean by
-     * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
-     * {@code quarkus-langchain4j-azure-openai}).
+     * Marker that is used to tell Quarkus to use the {@link ModerationModel} that the user has configured as a CDI bean.
+     * If no such bean exists, then no audit service will be used.
      */
-    final class BeanModerationModelSupplier implements Supplier<ModerationModel> {
-
-        @Override
-        public ModerationModel get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker class to indicate that no moderation model should be used
-     */
-    final class NoModerationModelSupplier implements Supplier<ModerationModel> {
+    final class BeanIfExistsModerationModelSupplier implements Supplier<ModerationModel> {
 
         @Override
         public ModerationModel get() {

@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.bam.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
@@ -15,8 +16,10 @@ import io.quarkiverse.langchain4j.bam.runtime.BamRecorder;
 import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -28,7 +31,6 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 public class BamProcessor {
 
     private static final String FEATURE = "langchain4j-bam";
-
     private static final String PROVIDER = "bam";
 
     @BuildStep
@@ -39,6 +41,7 @@ public class BamProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             LangChain4jBamBuildConfig config) {
 
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
@@ -48,6 +51,10 @@ public class BamProcessor {
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
         }
+
+        if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
+            moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
+        }
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -56,6 +63,7 @@ public class BamProcessor {
     void generateBeans(BamRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedModerationModelProviderBuildItem> selectedModeration,
             LangChain4jBamConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
@@ -93,6 +101,20 @@ public class BamProcessor {
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.embeddingModel(config, modelName));
+                addQualifierIfNecessary(builder, modelName);
+                beanProducer.produce(builder.done());
+            }
+        }
+
+        for (var selected : selectedModeration) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String modelName = selected.getModelName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(MODERATION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.moderationModel(config, modelName));
                 addQualifierIfNecessary(builder, modelName);
                 beanProducer.produce(builder.done());
             }

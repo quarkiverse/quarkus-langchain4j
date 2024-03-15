@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.bam.deployment;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
+import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.bam.BamRestApi;
 import io.quarkiverse.langchain4j.bam.Message;
@@ -56,6 +58,11 @@ public class AllPropertiesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.repetition-penalty", "2.0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.beam-width", "2")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.implicit-hate", "0.8")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.hap", "0.7")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.stigma", "0.6")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.messages-to-moderate", "user,system")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.embedding-model.model-id", "my_super_embedding_model")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
@@ -102,6 +109,14 @@ public class AllPropertiesTest {
         assertEquals(2.0, config.chatModel().repetitionPenalty().get());
         assertEquals(0, config.chatModel().truncateInputTokens().get());
         assertEquals(2, config.chatModel().beamWidth().get());
+        assertEquals("my_super_embedding_model", config.embeddingModel().modelId());
+        assertEquals(List.of(ChatMessageType.USER, ChatMessageType.SYSTEM), config.moderationModel().messagesToModerate());
+        assertTrue(config.moderationModel().implicitHate().isPresent());
+        assertTrue(config.moderationModel().hap().isPresent());
+        assertTrue(config.moderationModel().stigma().isPresent());
+        assertEquals(0.8f, config.moderationModel().implicitHate().get());
+        assertEquals(0.7f, config.moderationModel().hap().get());
+        assertEquals(0.6f, config.moderationModel().stigma().get());
 
         var modelId = config.chatModel().modelId();
 
@@ -127,7 +142,8 @@ public class AllPropertiesTest {
 
         var body = new TextGenerationRequest(modelId, messages, parameters);
 
-        mockServers.mockBuilder(200, config.version())
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 200, config.version())
                 .body(mapper.writeValueAsString(body))
                 .response("""
                         {

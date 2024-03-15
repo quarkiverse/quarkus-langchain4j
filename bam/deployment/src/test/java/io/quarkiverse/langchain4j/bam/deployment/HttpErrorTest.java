@@ -59,7 +59,8 @@ public class HttpErrorTest {
 
     @Test
     void error_401() {
-        mockServers.mockBuilder(401)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 401)
                 .response("""
                         {
                             "status_code": 401,
@@ -86,7 +87,8 @@ public class HttpErrorTest {
 
     @Test
     void error_400() {
-        mockServers.mockBuilder(400)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 400)
                 .response("""
                         {
                             "status_code": 400,
@@ -126,7 +128,8 @@ public class HttpErrorTest {
 
     @Test
     void error_429() {
-        mockServers.mockBuilder(429)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 429)
                 .response("""
                         {
                             "status_code": 429,
@@ -157,7 +160,8 @@ public class HttpErrorTest {
 
     @Test
     void error_503() {
-        mockServers.mockBuilder(503)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 503)
                 .response("""
                         {
                             "status_code": 503,
@@ -188,7 +192,8 @@ public class HttpErrorTest {
 
     @Test
     void unchecked_text_plain_error() {
-        mockServers.mockBuilder(500)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 500)
                 .responseMediaType(MediaType.TEXT_PLAIN)
                 .response("How do you handle me?")
                 .build();
@@ -203,7 +208,8 @@ public class HttpErrorTest {
 
     @Test
     void unchecked_text_plain_no_text_error() {
-        mockServers.mockBuilder(500)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 500)
                 .responseMediaType(MediaType.TEXT_PLAIN)
                 .build();
 
@@ -217,7 +223,8 @@ public class HttpErrorTest {
 
     @Test
     void unchecked_application_json_no_body_error() {
-        mockServers.mockBuilder(500)
+        mockServers
+                .mockBuilder(WireMockUtil.URL_CHAT_API, 500)
                 .build();
 
         var ex = assertThrowsExactly(BamException.class, () -> model.generate("Give me an error!"));

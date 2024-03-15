@@ -50,6 +50,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
+import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
@@ -174,7 +175,7 @@ public class AiServicesProcessor {
         IndexView index = indexBuildItem.getIndex();
 
         Set<String> chatModelNames = new HashSet<>();
-        boolean needModerationModelBean = false;
+        Set<String> moderationModelNames = new HashSet<>();
         for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
@@ -185,7 +186,9 @@ public class AiServicesProcessor {
             AnnotationValue chatLanguageModelSupplierValue = instance.value("chatLanguageModelSupplier");
             if (chatLanguageModelSupplierValue != null) {
                 chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierValue.asClass().name();
-                if (chatLanguageModelSupplierClassDotName.equals(LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER)) { // this is the case where the default was set, so we just ignore it
+                if (chatLanguageModelSupplierClassDotName.equals(LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER)) { // this is the case where the
+                                                                                                                  // default was set, so we just
+                                                                                                                  // ignore it
                     chatLanguageModelSupplierClassDotName = null;
                 } else {
                     validateSupplierAndRegisterForReflection(chatLanguageModelSupplierClassDotName, index,
@@ -193,16 +196,16 @@ public class AiServicesProcessor {
                 }
             }
 
-            String modeName = NamedModelUtil.DEFAULT_NAME;
+            String chatModelName = NamedModelUtil.DEFAULT_NAME;
             if (chatLanguageModelSupplierClassDotName == null) {
                 AnnotationValue modelNameValue = instance.value("modelName");
                 if (modelNameValue != null) {
                     String modelNameValueStr = modelNameValue.asString();
                     if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
-                        modeName = modelNameValueStr;
+                        chatModelName = modelNameValueStr;
                     }
                 }
-                chatModelNames.add(modeName);
+                chatModelNames.add(chatModelName);
             }
 
             List<DotName> toolDotNames = Collections.emptyList();
@@ -269,16 +272,28 @@ public class AiServicesProcessor {
                 validateSupplierAndRegisterForReflection(auditServiceSupplierClassName, index, reflectiveClassProducer);
             }
 
-            DotName moderationModelSupplierClassName = null;
+            DotName moderationModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER;
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
                 moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
-                if (LangChain4jDotNames.NO_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
-                    moderationModelSupplierClassName = null;
-                } else if (LangChain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.equals(moderationModelSupplierClassName)) {
-                    needModerationModelBean = true;
-                } else {
-                    validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+                validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+            }
+
+            // determine whether the method is annotated with @Moderate
+            String moderationModelName = NamedModelUtil.DEFAULT_NAME;
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (method.hasAnnotation(LangChain4jDotNames.MODERATE)) {
+                    if (moderationModelSupplierClassName.equals(LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER)) {
+                        AnnotationValue modelNameValue = instance.value("modelName");
+                        if (modelNameValue != null) {
+                            String modelNameValueStr = modelNameValue.asString();
+                            if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
+                                moderationModelName = modelNameValueStr;
+                            }
+                        }
+                        moderationModelNames.add(moderationModelName);
+                    }
+                    break;
                 }
             }
 
@@ -297,14 +312,15 @@ public class AiServicesProcessor {
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
                             cdiScope,
-                            modeName));
+                            chatModelName, moderationModelName));
         }
 
         for (String chatModelName : chatModelNames) {
             requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(chatModelName));
         }
-        if (needModerationModelBean) {
-            requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem());
+
+        for (String moderationModelName : moderationModelNames) {
+            requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem(moderationModelName));
         }
     }
 
@@ -391,7 +407,16 @@ public class AiServicesProcessor {
                 injectStreamingChatModelBean = true;
             }
 
+            boolean injectModerationModelBean = false;
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (method.hasAnnotation(Moderate.class)) {
+                    injectModerationModelBean = true;
+                    break;
+                }
+            }
+
             String chatModelName = bi.getChatModelName();
+            String moderationModelName = bi.getModerationModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .createWith(recorder.createDeclarativeAiService(
@@ -399,7 +424,8 @@ public class AiServicesProcessor {
                                     toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
-                                    injectStreamingChatModelBean)))
+                                    moderationModelName,
+                                    injectStreamingChatModelBean, injectModerationModelBean)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -472,8 +498,16 @@ public class AiServicesProcessor {
                 needsAuditServiceBean = true;
             }
 
-            if (LangChain4jDotNames.BEAN_MODERATION_MODEL_SUPPLIER.toString().equals(moderationModelSupplierClassName)) {
-                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL));
+            if (LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER.toString()
+                    .equals(moderationModelSupplierClassName) && injectModerationModelBean) {
+
+                if (NamedModelUtil.isDefault(moderationModelName)) {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL));
+
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL),
+                            AnnotationInstance.builder(ModelName.class).add("value", moderationModelName).build());
+                }
                 needsModerationModelBean = true;
             }
 
@@ -524,7 +558,8 @@ public class AiServicesProcessor {
         List<AiServicesUseAnalyzer.Result.Entry> aiServicesAnalysisResults = new ArrayList<>();
         for (ClassInfo classInfo : index.getKnownUsers(LangChain4jDotNames.AI_SERVICES)) {
             String className = classInfo.name().toString();
-            if (className.startsWith("io.quarkiverse.langchain4j") || className.startsWith("dev.langchain4j")) { // TODO: this can be made smarter if needed
+            if (className.startsWith("io.quarkiverse.langchain4j") || className.startsWith("dev.langchain4j")) { // TODO: this can be made smarter if
+                                                                                                                 // needed
                 continue;
             }
             try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(
@@ -822,7 +857,8 @@ public class AiServicesProcessor {
         for (MethodParameterInfo param : params) {
             List<AnnotationInstance> effectiveParamAnnotations = effectiveParamAnnotations(param);
             if (effectiveParamAnnotations.isEmpty() // if a parameter has no annotations it is considered a template variable
-                    || effectiveParamAnnotations.stream().map(AnnotationInstance::name).anyMatch(MEMORY_ID::equals) // we allow @MemoryId parameters to be part of the template
+                    || effectiveParamAnnotations.stream().map(AnnotationInstance::name).anyMatch(MEMORY_ID::equals) // we allow @MemoryId parameters to be
+                                                                                                                    // part of the template
             ) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
             } else {
