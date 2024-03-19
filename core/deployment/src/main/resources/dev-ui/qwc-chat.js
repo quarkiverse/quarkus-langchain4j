@@ -70,7 +70,7 @@ export class QwcChat extends LitElement {
         super();
         this._hideProgressBar();
         this._startNewConversation();
-        
+
         this._chatItems = [];
     }
 
@@ -120,11 +120,14 @@ export class QwcChat extends LitElement {
         this._systemMessage = null;
     }
 
-    _cementSystemMessage(){
-        if(!this._systemMessageDisabled){
+    _cementSystemMessage() {
+        if (!this._systemMessageDisabled) {
             this._disableSystemMessage();
             this._showNewConversationButton();
-            this._addSystemMessage(this._systemMessage);
+            this._chatItems = [];
+            if (this._systemMessage && this._systemMessage.trim().length > 0) {
+                this._addSystemMessage(this._systemMessage);
+            }
             this.jsonRpc.reset({systemMessage: this._systemMessage});
         }
     }
@@ -135,13 +138,13 @@ export class QwcChat extends LitElement {
             this._cementSystemMessage();
             this._addUserMessage(message);
             this._showProgressBar();
-            
-            this.jsonRpc.newConversation({message: message, systemMessage: this._systemMessage}).then(jsonRpcResponse => {
+
+            this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
                 this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._showError(error);
                 this._hideProgressBar();
-            });    
+            });
         }
 
       }
@@ -155,7 +158,7 @@ export class QwcChat extends LitElement {
             if (jsonRpcResponse.result.error) {
                 this._showError(jsonRpcResponse.result.error);
             } else {
-                this._addBotMessage(jsonRpcResponse.result.history[0].message);
+                this._renderHistory(jsonRpcResponse.result.history);
             }
         }
         this._hideProgressBar();
@@ -169,7 +172,20 @@ export class QwcChat extends LitElement {
         }
         this._addErrorMessage(errorString);
     }
-   
+
+    _renderHistory(history) {
+        this._chatItems = [];
+        history.forEach((item) => {
+            if(item.type === "AI") {
+                this._addBotMessage(item.message);
+            } else if(item.type === "USER") {
+                this._addUserMessage(item.message);
+            } else if(item.type === "SYSTEM") {
+                this._addSystemMessage(item.message);
+            }
+        });
+    }
+
     _addErrorMessage(message){
         this._addStyledMessage(message, "Error", 7, "errorMessage");
     }
@@ -205,7 +221,7 @@ export class QwcChat extends LitElement {
           };
     }
 
-    _addMessageItem(newItem){
+    _addMessageItem(newItem) {
         this._chatItems = [
             ...this._chatItems,
             newItem];
