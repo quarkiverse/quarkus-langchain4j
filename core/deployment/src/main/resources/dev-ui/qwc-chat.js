@@ -70,7 +70,7 @@ export class QwcChat extends LitElement {
         super();
         this._hideProgressBar();
         this._startNewConversation();
-        
+
         this._chatItems = [];
     }
 
@@ -120,12 +120,14 @@ export class QwcChat extends LitElement {
         this._systemMessage = null;
     }
 
-    _cementSystemMessage(){
-        if(!this._systemMessageDisabled){
+    _cementSystemMessage() {
+        if (!this._systemMessageDisabled) {
             this._disableSystemMessage();
             this._showNewConversationButton();
             this._chatItems = [];
-            this._addSystemMessage(this._systemMessage);
+            if (this._systemMessage && this._systemMessage.trim().length > 0) {
+                this._addSystemMessage(this._systemMessage);
+            }
             this.jsonRpc.reset({systemMessage: this._systemMessage});
         }
     }
@@ -136,13 +138,13 @@ export class QwcChat extends LitElement {
             this._cementSystemMessage();
             this._addUserMessage(message);
             this._showProgressBar();
-            
+
             this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
                 this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._showError(error);
                 this._hideProgressBar();
-            });    
+            });
         }
 
       }
@@ -183,7 +185,7 @@ export class QwcChat extends LitElement {
             }
         });
     }
-   
+
     _addErrorMessage(message){
         this._addStyledMessage(message, "Error", 7, "errorMessage");
     }
