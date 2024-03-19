@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vertx-http-deployment</artifactId>
+            <artifactId>quarkus-vertx-deployment</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.poi</groupId>
