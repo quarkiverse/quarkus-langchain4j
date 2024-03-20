@@ -1,6 +1,7 @@
 import {LitElement, html, css} from 'lit';
 import '@vaadin/text-area';
 import '@vaadin/button';
+import '@vaadin/checkbox';
 import '@vaadin/details';
 import '@vaadin/vertical-layout';
 import '@vaadin/message-input';
@@ -59,23 +60,32 @@ export class QwcChat extends LitElement {
     `;
 
     static properties = {
+        _unfilteredChatItems: {state: true},
         _chatItems: {state: true},
         _progressBarClass: {state: true},
         _newConversationButtonClass: {state: true},
         _systemMessage: {state: true},
-        _systemMessageDisabled: {state: true}
+        _systemMessageDisabled: {state: true},
+        _showToolRelatedMessages: {state: true}
     }
 
     constructor() {
         super();
+        this._showToolRelatedMessages = true;
         this._hideProgressBar();
         this._startNewConversation();
-
+        this._unfilteredChatItems = [];
         this._chatItems = [];
     }
 
     render() {
+        this._filterChatItems();
         return html`
+            <div><vaadin-checkbox checked label="Show tool-related messages"
+                                  @change="${(event) => {
+                                      this._showToolRelatedMessages = event.target.checked;
+                                      this.render();
+                                  }}"/></div>
             ${this._renderSystemPane()}
             <vaadin-message-list .items="${this._chatItems}"></vaadin-message-list>
             <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
@@ -87,7 +97,7 @@ export class QwcChat extends LitElement {
         return html`<div class="systemMessagePane">
             <vaadin-button class="${this._newConversationButtonClass}" @click="${this._startNewConversation}">Start a new conversation</vaadin-button>
             <vaadin-text-field class="systemMessageInput"
-                    placeholder="(Optional). Changing this will start a new converation"
+                    placeholder="(Optional). Changing this will start a new conversation"
                     @keypress="${this._checkForEnterOrTab}" 
                     @focusout="${this._checkForEnterOrTab}"
                     @input="${this._populateSystemMessage}" 
@@ -158,7 +168,7 @@ export class QwcChat extends LitElement {
             if (jsonRpcResponse.result.error) {
                 this._showError(jsonRpcResponse.result.error);
             } else {
-                this._renderHistory(jsonRpcResponse.result.history);
+                this._processResponse(jsonRpcResponse.result.history);
             }
         }
         this._hideProgressBar();
@@ -173,9 +183,9 @@ export class QwcChat extends LitElement {
         this._addErrorMessage(errorString);
     }
 
-    _renderHistory(history) {
-        this._chatItems = [];
-        history.forEach((item) => {
+    _processResponse(items) {
+        this._unfilteredChatItems = [];
+        items.forEach((item) => {
             if(item.type === "AI") {
                 if(item.message) {
                     this._addBotMessage(item.message);
@@ -198,6 +208,19 @@ arguments = ${toolExecutionRequest.arguments}\n`;
 tool name = ${item.toolExecutionResult.toolName},
 status = ${item.toolExecutionResult.text}`);
             }
+        });
+    }
+
+    _filterChatItems(){
+        this._chatItems = this._unfilteredChatItems.filter((item) => {
+            if(item.userName === "Me" || item.userName === "AI"){
+                return true;
+            }else if(this._showToolRelatedMessages && item.userName === "Tools"){
+                return true;
+            }else if(item.userName === "System"){
+                return true;
+            }
+            return false;
         });
     }
 
@@ -241,8 +264,8 @@ status = ${item.toolExecutionResult.text}`);
     }
 
     _addMessageItem(newItem) {
-        this._chatItems = [
-            ...this._chatItems,
+        this._unfilteredChatItems = [
+            ...this._unfilteredChatItems,
             newItem];
     }
 
