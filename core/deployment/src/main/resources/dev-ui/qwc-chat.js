@@ -177,13 +177,32 @@ export class QwcChat extends LitElement {
         this._chatItems = [];
         history.forEach((item) => {
             if(item.type === "AI") {
-                this._addBotMessage(item.message);
+                if(item.message) {
+                    this._addBotMessage(item.message);
+                }
+                if(item.toolExecutionRequests) {
+                    var toolMessage = "Request to execute the following tools:\n";
+                    item.toolExecutionRequests.forEach((toolExecutionRequest) => {
+                        toolMessage += `Request ID = ${toolExecutionRequest.id}, 
+tool name = ${toolExecutionRequest.name}, 
+arguments = ${toolExecutionRequest.arguments}\n`;
+                    });
+                    this._addToolMessage(toolMessage);
+                }
             } else if(item.type === "USER") {
                 this._addUserMessage(item.message);
             } else if(item.type === "SYSTEM") {
                 this._addSystemMessage(item.message);
+            } else if (item.type === "TOOL_EXECUTION_RESULT"){
+                this._addToolMessage(`Tool execution result for request ID = ${item.toolExecutionResult.id},
+tool name = ${item.toolExecutionResult.toolName},
+status = ${item.toolExecutionResult.text}`);
             }
         });
+    }
+
+    _addToolMessage(message){
+        this._addStyledMessage(message, "Tools", 9, "toolMessage");
     }
 
     _addErrorMessage(message){
