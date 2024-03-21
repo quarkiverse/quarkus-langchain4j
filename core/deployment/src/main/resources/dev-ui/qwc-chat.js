@@ -66,16 +66,20 @@ export class QwcChat extends LitElement {
         _newConversationButtonClass: {state: true},
         _systemMessage: {state: true},
         _systemMessageDisabled: {state: true},
+        _ragEnabled: {state: true},
         _showToolRelatedMessages: {state: true}
     }
 
     constructor() {
         super();
         this._showToolRelatedMessages = true;
+        this._ragEnabled = true;
+        this._systemMessage = "";
         this._hideProgressBar();
-        this._startNewConversation();
+        this._beginInputOfNewSystemMessage();
         this._unfilteredChatItems = [];
         this._chatItems = [];
+        this.jsonRpc.reset({systemMessage: ""});
     }
 
     render() {
@@ -84,6 +88,11 @@ export class QwcChat extends LitElement {
             <div><vaadin-checkbox checked label="Show tool-related messages"
                                   @change="${(event) => {
                                       this._showToolRelatedMessages = event.target.checked;
+                                      this.render();
+                                  }}"/></div>
+            <div><vaadin-checkbox checked label="Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)"
+                                  @change="${(event) => {
+                                      this._ragEnabled = event.target.checked;
                                       this.render();
                                   }}"/></div>
             ${this._renderSystemPane()}
@@ -95,14 +104,14 @@ export class QwcChat extends LitElement {
 
     _renderSystemPane(){
         return html`<div class="systemMessagePane">
-            <vaadin-button class="${this._newConversationButtonClass}" @click="${this._startNewConversation}">Start a new conversation</vaadin-button>
+            <vaadin-button class="${this._newConversationButtonClass}" @click="${this._beginInputOfNewSystemMessage}">Start a new conversation</vaadin-button>
             <vaadin-text-field class="systemMessageInput"
                     placeholder="(Optional). Changing this will start a new conversation"
                     @keypress="${this._checkForEnterOrTab}" 
                     @focusout="${this._checkForEnterOrTab}"
                     @input="${this._populateSystemMessage}" 
                     value="${this._systemMessage}" 
-                    ?disabled=${this._systemMessageDisabled}>
+                    ?disabled=${this._systemMessageInputFieldDisabled}>
                     <span slot="prefix">System message: </span> 
             </vaadin-text-field>
             </div>`;
@@ -110,7 +119,6 @@ export class QwcChat extends LitElement {
 
     _checkForEnterOrTab(e){
         if ((e.which == 13 || e.which == 0)){
-            if(this._systemMessage && this._systemMessage.trim().length > 0)
             this._cementSystemMessage();
             this.shadowRoot.querySelector('.systemMessageInput').focus();
         }
@@ -118,23 +126,23 @@ export class QwcChat extends LitElement {
 
     _populateSystemMessage(e){
         if(e.target.value.trim() === ''){
-            this._startNewConversation();
+            this._systemMessage = "";
         }else{
             this._systemMessage = e.target.value;
         }
     }
 
-    _startNewConversation(){
-        this._enableSystemMessage();
+    _beginInputOfNewSystemMessage(){
+        this._enableSystemMessageInputField();
         this._hideNewConversationButton();
-        this._systemMessage = null;
+        this._clearHistory();
     }
 
     _cementSystemMessage() {
-        if (!this._systemMessageDisabled) {
-            this._disableSystemMessage();
+        if (!this._systemMessageInputFieldDisabled) {
+            this._disableSystemMessageInputField();
             this._showNewConversationButton();
-            this._chatItems = [];
+            this._clearHistory();
             if (this._systemMessage && this._systemMessage.trim().length > 0) {
                 this._addSystemMessage(this._systemMessage);
             }
@@ -149,7 +157,7 @@ export class QwcChat extends LitElement {
             this._addUserMessage(message);
             this._showProgressBar();
 
-            this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
+            this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
                 this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._showError(error);
@@ -263,6 +271,11 @@ status = ${item.toolExecutionResult.text}`);
           };
     }
 
+    _clearHistory() {
+        this._chatItems = [];
+        this._unfilteredChatItems = [];
+    }
+
     _addMessageItem(newItem) {
         this._unfilteredChatItems = [
             ...this._unfilteredChatItems,
@@ -285,12 +298,12 @@ status = ${item.toolExecutionResult.text}`);
         this._progressBarClass = "show";
     }
 
-    _enableSystemMessage(){
-        this._systemMessageDisabled = null;
+    _enableSystemMessageInputField(){
+        this._systemMessageInputFieldDisabled = null;
     }
 
-    _disableSystemMessage(){
-        this._systemMessageDisabled = "disabled";
+    _disableSystemMessageInputField(){
+        this._systemMessageInputFieldDisabled = "disabled";
     }
 
 }
