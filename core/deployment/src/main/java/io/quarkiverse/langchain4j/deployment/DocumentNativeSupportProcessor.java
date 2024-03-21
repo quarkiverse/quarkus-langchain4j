@@ -49,6 +49,8 @@ public class DocumentNativeSupportProcessor {
                 "dev.langchain4j.model.embedding.HuggingFaceTokenizer",
                 "ai.djl.huggingface.tokenizers.HuggingFaceTokenizer",
                 "ai.djl.huggingface.tokenizers.jni.TokenizersLibrary",
+                "ai.djl.huggingface.tokenizers.jni.LibUtils",
+                "ai.djl.util.Platform",
                 "ai.onnxruntime.OrtEnvironment",
                 "ai.onnxruntime.OnnxRuntime",
                 "ai.onnxruntime.OnnxTensorLike",
