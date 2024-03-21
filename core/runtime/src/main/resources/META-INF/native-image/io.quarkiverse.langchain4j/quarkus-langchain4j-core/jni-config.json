@@ -1,5 +1,12 @@
 [
   {
+    "name":"[Lai.djl.huggingface.tokenizers.jni.CharSpan;"
+  },
+  {
+    "name":"ai.djl.huggingface.tokenizers.jni.CharSpan",
+    "methods":[{"name":"<init>","parameterTypes":["int","int"] }]
+  },
+  {
     "name": "[Lai.onnxruntime.OnnxValue;"
   },
   {
