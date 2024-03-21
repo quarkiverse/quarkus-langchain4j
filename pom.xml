@@ -28,6 +28,7 @@
     <module>openshift-ai</module>
     <module>pgvector</module>
     <module>pinecone</module>
+    <module>qdrant</module>
     <module>redis</module>
     <module>watsonx</module>
   </modules>
