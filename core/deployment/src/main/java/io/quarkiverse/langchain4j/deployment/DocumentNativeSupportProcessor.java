@@ -23,14 +23,16 @@ import io.quarkus.deployment.builditem.nativeimage.*;
 public class DocumentNativeSupportProcessor {
 
     @BuildStep
-    void onnxJni(
+    void nativeResources(
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
             BuildProducer<NativeImageResourcePatternsBuildItem> nativePatternProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectionProducer) {
         if (!inProcessEmbeddingBuildItems.isEmpty()) {
             // TODO: we can do better here and only include the target architecture's libs
             nativePatternProducer
-                    .produce(NativeImageResourcePatternsBuildItem.builder().includeGlobs("ai/onnxruntime/native/**").build());
+                    .produce(NativeImageResourcePatternsBuildItem.builder()
+                            .includeGlobs("ai/onnxruntime/native/**", "native/lib/**").build());
+
             reflectionProducer
                     .produce(ReflectiveClassBuildItem.builder("opennlp.tools.sentdetect.SentenceDetectorFactory").build());
             reflectionProducer.produce(ReflectiveClassBuildItem.builder("ai.onnxruntime.OnnxTensor").methods(true).build());
@@ -38,12 +40,17 @@ public class DocumentNativeSupportProcessor {
     }
 
     @BuildStep
-    void apachePoiRuntimeClasses(
+    void runtimeClasses(
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
             BuildProducer<RuntimeInitializedClassBuildItem> classProducer,
             BuildProducer<RuntimeInitializedPackageBuildItem> packageProducer) {
         Stream.of(
                 "dev.langchain4j.model.embedding.OnnxBertBiEncoder",
+                "dev.langchain4j.model.embedding.HuggingFaceTokenizer",
+                "ai.djl.huggingface.tokenizers.HuggingFaceTokenizer",
+                "ai.djl.huggingface.tokenizers.jni.TokenizersLibrary",
+                "ai.djl.huggingface.tokenizers.jni.LibUtils",
+                "ai.djl.util.Platform",
                 "ai.onnxruntime.OrtEnvironment",
                 "ai.onnxruntime.OnnxRuntime",
                 "ai.onnxruntime.OnnxTensorLike",

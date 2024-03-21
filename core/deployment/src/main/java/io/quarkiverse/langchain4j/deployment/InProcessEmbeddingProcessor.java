@@ -29,7 +29,7 @@ public class InProcessEmbeddingProcessor {
                 .isClassPresentAtRuntime("dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("all-minilm-l6-v2-q",
                     "dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel",
-                    "all-minilm-l6-v2-q.onnx", "bert-vocabulary-en.txt");
+                    "all-minilm-l6-v2-q.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -41,7 +41,7 @@ public class InProcessEmbeddingProcessor {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("all-minilm-l6-v2",
                     "dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel",
-                    "all-minilm-l6-v2.onnx", "bert-vocabulary-en.txt");
+                    "all-minilm-l6-v2.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -53,7 +53,7 @@ public class InProcessEmbeddingProcessor {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("bge-small-en-q",
                     "dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel",
-                    "bge-small-en-q.onnx", "bert-vocabulary-en.txt");
+                    "bge-small-en-q.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -64,7 +64,7 @@ public class InProcessEmbeddingProcessor {
     InProcessEmbeddingBuildItem bge_small_en() {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("bge-small-en", "dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel",
-                    "bge-small-en.onnx", "bert-vocabulary-en.txt");
+                    "bge-small-en.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -75,7 +75,7 @@ public class InProcessEmbeddingProcessor {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("bge-small-zh-q",
                     "dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel",
-                    "bge-small-zh-q.onnx", "bge-small-zh-vocabulary.txt");
+                    "bge-small-zh-q.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -86,7 +86,7 @@ public class InProcessEmbeddingProcessor {
     InProcessEmbeddingBuildItem bge_small_zh() {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("bge-small-zh", "dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel",
-                    "bge-small-zh.onnx", "bge-small-zh-vocabulary.txt");
+                    "bge-small-zh.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -98,7 +98,7 @@ public class InProcessEmbeddingProcessor {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("e5-small-v2-q",
                     "dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel",
-                    "e5-small-v2-q.onnx", "bert-vocabulary-en.txt");
+                    "e5-small-v2-q.onnx", "tokenizer.json");
         } else {
             return null;
         }
@@ -109,7 +109,7 @@ public class InProcessEmbeddingProcessor {
     InProcessEmbeddingBuildItem e5_small_v2() {
         if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel")) {
             return new InProcessEmbeddingBuildItem("e5-small-v2", "dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel",
-                    "e5-small-v2.onnx", "bert-vocabulary-en.txt");
+                    "e5-small-v2.onnx", "tokenizer.json");
         } else {
             return null;
         }
