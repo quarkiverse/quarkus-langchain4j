@@ -130,9 +130,9 @@ public class OllamaContainer extends GenericContainer<OllamaContainer> {
     protected void containerIsStarted(InspectContainerResponse containerInfo) {
         if (!this.dockerImageName.equals(DockerImageName.parse(this.localOllamaImage))) {
             try {
-                log.info("Start pulling the 'orca-mini' model (3GB) ... would take several minutes ...");
+                log.infof("Pulling the '%s' model . This could take several minutes", this.runtimeModelId);
                 execInContainer("ollama", "pull", this.runtimeModelId);
-                log.info("orca-mini pulling competed!");
+                log.info("Pull competed!");
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException("Error pulling orca-mini model", e);
             }
