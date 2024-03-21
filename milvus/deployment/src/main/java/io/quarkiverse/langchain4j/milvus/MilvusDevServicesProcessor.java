@@ -39,7 +39,7 @@ public class MilvusDevServicesProcessor {
     private static final Logger log = Logger.getLogger(MilvusDevServicesProcessor.class);
 
     /**
-     * Label to add to shared Dev Service for Chroma running in containers.
+     * Label to add to shared Dev Service for Milvus running in containers.
      * This allows other applications to discover the running service and use it instead of starting a new instance.
      */
     private static final String DEV_SERVICE_LABEL = "quarkus-dev-service-milvus";

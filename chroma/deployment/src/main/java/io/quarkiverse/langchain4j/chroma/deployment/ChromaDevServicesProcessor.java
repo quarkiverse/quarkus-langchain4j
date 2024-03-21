@@ -10,7 +10,7 @@ import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.chromadb.ChromaDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
@@ -231,7 +231,7 @@ public class ChromaDevServicesProcessor {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private static class ConfiguredChromaContainer extends GenericContainer<ConfiguredChromaContainer> {
+    private static class ConfiguredChromaContainer extends ChromaDBContainer {
         private final OptionalInt fixedExposedPort;
         private final boolean useSharedNetwork;
 
