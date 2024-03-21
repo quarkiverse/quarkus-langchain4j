@@ -66,12 +66,14 @@ export class QwcChat extends LitElement {
         _newConversationButtonClass: {state: true},
         _systemMessage: {state: true},
         _systemMessageDisabled: {state: true},
+        _ragEnabled: {state: true},
         _showToolRelatedMessages: {state: true}
     }
 
     constructor() {
         super();
         this._showToolRelatedMessages = true;
+        this._ragEnabled = true;
         this._hideProgressBar();
         this._startNewConversation();
         this._unfilteredChatItems = [];
@@ -84,6 +86,11 @@ export class QwcChat extends LitElement {
             <div><vaadin-checkbox checked label="Show tool-related messages"
                                   @change="${(event) => {
                                       this._showToolRelatedMessages = event.target.checked;
+                                      this.render();
+                                  }}"/></div>
+            <div><vaadin-checkbox checked label="Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)"
+                                  @change="${(event) => {
+                                      this._ragEnabled = event.target.checked;
                                       this.render();
                                   }}"/></div>
             ${this._renderSystemPane()}
@@ -149,7 +156,7 @@ export class QwcChat extends LitElement {
             this._addUserMessage(message);
             this._showProgressBar();
 
-            this.jsonRpc.chat({message: message}).then(jsonRpcResponse => {
+            this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
                 this._showResponse(jsonRpcResponse);
             }).catch((error) => {
                 this._showError(error);

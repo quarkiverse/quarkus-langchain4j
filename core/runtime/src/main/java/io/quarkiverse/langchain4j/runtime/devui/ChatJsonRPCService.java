@@ -118,12 +118,7 @@ public class ChatJsonRPCService {
         return "OK";
     }
 
-    public ChatResultPojo newConversation(String systemMessage, String message) {
-        reset(systemMessage);
-        return chat(message);
-    }
-
-    public ChatResultPojo chat(String message) {
+    public ChatResultPojo chat(String message, boolean ragEnabled) {
         ChatMemory memory = currentMemory.get();
         if (memory == null) {
             reset("");
@@ -135,7 +130,7 @@ public class ChatJsonRPCService {
         // removing single messages
         List<ChatMessage> chatMemoryBackup = memory.messages();
         try {
-            if (retrievalAugmentor != null) {
+            if (retrievalAugmentor != null && ragEnabled) {
                 UserMessage userMessage = UserMessage.from(message);
                 Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
                 memory.add(retrievalAugmentor.augment(userMessage, metadata));
