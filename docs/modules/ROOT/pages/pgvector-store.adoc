@@ -19,8 +19,6 @@ To utilize the Redis document store, you'll need to include the following depend
 
 This extension will check for a default datasource, ensure you have defined at least one datasource. For detailed guidance, refer to the link:https://quarkus.io/guides/datasource[CONFIGURE DATA SOURCES IN QUARKUS].
 
-IMPORTANT: If you plan to use `devservices` be sure to use this property : `quarkus.datasource.devservices.image-name=ankane/pgvector:v0.5.1`.
-
 IMPORTANT: The pgvector store requires the dimension of the vector to be set. Add the `quarkus.langchain4j.pgvector.dimension` property to your `application.properties` file and set it to the dimension of the vector. The dimension depends on the embedding model you use.
 For example, `AllMiniLmL6V2QuantizedEmbeddingModel` produces vectors of dimension 384. OpenAI’s `text-embedding-ada-002` produces vectors of dimension 1536.
 
