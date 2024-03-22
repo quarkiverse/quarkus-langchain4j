@@ -95,6 +95,7 @@ public class AzureOpenAiProcessor {
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
+                        .unremovable()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.embeddingModel(config, modelName));

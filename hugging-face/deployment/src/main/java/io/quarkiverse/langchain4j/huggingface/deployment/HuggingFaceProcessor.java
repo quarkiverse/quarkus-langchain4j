@@ -76,6 +76,7 @@ public class HuggingFaceProcessor {
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
+                        .unremovable()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.embeddingModel(config, modelName));
                 addQualifierIfNecessary(builder, modelName);

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/png" href="favicon.ico">
+
+    <script src="/_importmap/dynamic-importmap.js"></script>
+
+    <script type="module">
+        import 'icons/font-awesome.js';
+        import 'components/demo-title.js';
+        import 'components/demo-chat.js';
+        import 'wc-chatbot';
+    </script>
+
+    <link rel="stylesheet" href="fonts/red-hat-font.min.css">
+
+    <title>ChatBot</title>
+
+    <style>
+        :root {
+            --main-bg-color: hsla(0, 0%, 100%, 0.21);
+            --main-highlight-text-color: #e13245;
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            font-family: 'Red Hat Text', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: var(--lumo-body-text-color);
+            background: var(--main-bg-color);
+        }
+
+        chat-bot {
+            --chatbot-avatar-bg-color: var(--main-highlight-text-color);
+            --chatbot-avatar-margin: 10%;
+            --chatbot-header-bg-color: var(--main-highlight-text-color);;
+            --chatbot-header-title-color: #FFFFFF;
+            --chatbot-body-bg-color: var(--main-bg-color);
+            --chatbot-send-button-color: var(--main-highlight-text-color);;
+        }
+
+        .middle {
+            margin-top: 2em;
+            overflow: hidden;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<demo-title></demo-title>
+
+<div class="middle">
+    <demo-chat>
+        <chat-bot></chat-bot>
+    </demo-chat>
+</div>
+
+</body>
+
+</html>

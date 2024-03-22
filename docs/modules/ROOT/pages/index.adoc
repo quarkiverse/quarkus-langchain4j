@@ -89,3 +89,8 @@ The extension offers the following advantages over using the vanilla https://git
 ** Add embeddings into the embedding store
 ** Search for relevant embeddings in the embedding store
 
+== Retrieval Augmented Generation
+
+For the easiest possible way to get started with Retrieval Augmented Generation,
+refer to xref:easy-rag.adoc[Easy RAG].
+

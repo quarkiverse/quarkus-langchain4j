@@ -129,6 +129,7 @@ public class InProcessEmbeddingProcessor {
                     .types(EmbeddingModel.class)
                     .defaultBean()
                     .setRuntimeInit()
+                    .unremovable()
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.instantiate(embedding.className()))
                     .done());
