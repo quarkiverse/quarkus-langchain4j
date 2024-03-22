@@ -112,7 +112,7 @@ public class PgVectorEmbeddingStore implements EmbeddingStore<TextSegment> {
             if (exception.getMessage().contains("could not open extension control file")) {
                 Log.error(
                         "The PostgreSQL server does not seem to support pgvector."
-                                + "If using containers/devservices we suggest to use quarkus.datasource.devservices.image-name=ankane/pgvector:v0.5.1");
+                                + "If using containers/devservices we suggest to use quarkus.datasource.devservices.image-name=pgvector/pgvector:pg16");
             } else {
                 throw exception;
             }

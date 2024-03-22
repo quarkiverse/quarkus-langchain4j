@@ -23,8 +23,7 @@ public class LangChain4jPgvectorTest extends EmbeddingStoreIT {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("quarkus.langchain4j.pgvector.dimension=384\n" +
-                            "quarkus.datasource.devservices.image-name=ankane/pgvector:v0.5.1"),
+                    .addAsResource(new StringAsset("quarkus.langchain4j.pgvector.dimension=384\n"),
                             "application.properties"));
 
     @Inject
