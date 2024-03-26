@@ -14,48 +14,9 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
         </dependency>
-        <!-- temporal until Quarkus is updated to 15.0.0.Final -->
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-api</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-remote-query-client</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-client-hotrod</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-infinispan-client</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-client-hotrod-jakarta</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-query-dsl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-remote-query-client</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
