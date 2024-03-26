@@ -8,6 +8,15 @@
   </parent>
   <artifactId>quarkus-langchain4j-pgvector-deployment</artifactId>
   <name>Quarkus LangChain4j - pgvector - Deployment</name>
+
+  <!-- issue with parametrized test for certain condition linked to LangChain4j being compiled in java 8 ? -->
+  <properties>
+    <argLine>
+        --add-opens java.base/java.lang=ALL-UNNAMED
+        --add-opens java.base/java.util=ALL-UNNAMED
+    </argLine>
+  </properties>
+
   <dependencies>
      <dependency>
         <groupId>io.quarkiverse.langchain4j</groupId>
@@ -45,9 +54,14 @@
     </dependency>
     <dependency>
         <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-junit5-internal</artifactId>
+        <artifactId>quarkus-junit5-component</artifactId>
         <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>io.quarkus</groupId>
+          <artifactId>quarkus-junit5</artifactId>
+          <scope>test</scope>
+      </dependency>
     <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
@@ -85,6 +99,18 @@
               <version>${quarkus.version}</version>
             </path>
           </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- this is to avoid
+                java.lang.UnsatisfiedLinkError: Native Library
+                /home/user/.djl.ai/tokenizers/0.15.0-0.26.0-linux-x86_64/libtokenizers.so already loaded in another classloader
+             because we have two tests that are loaded with different class loaders
+        -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+            <reuseForks>false</reuseForks>
         </configuration>
       </plugin>
     </plugins>
