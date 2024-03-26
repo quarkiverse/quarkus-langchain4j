@@ -4,7 +4,8 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
-@RegisterAiService
+@RegisterAiService(chatMemoryProviderSupplier = // disable chat memory
+RegisterAiService.NoChatMemoryProviderSupplier.class)
 public interface TranslatorAiService {
 
     @SystemMessage("You are a professional translator.")
