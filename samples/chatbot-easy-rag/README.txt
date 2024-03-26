@@ -1,0 +1,1 @@
+For instructions related to this sample, refer to docs/modules/ROOT/pages/easy-rag.adoc

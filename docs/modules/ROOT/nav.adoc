@@ -24,6 +24,7 @@
 ** xref:csv.adoc[Loading CSV files]
 
 * Additional tools
+** xref:easy-rag.adoc[Easy RAG]
 ** xref:dev-ui.adoc[Dev UI]
 ** xref:reranking.adoc[Reranking]
 

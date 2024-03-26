@@ -23,6 +23,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
+import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
@@ -71,6 +72,7 @@ public class BeansProcessor {
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             LangChain4jBuildConfig buildConfig,
+            Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
             BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
@@ -161,6 +163,14 @@ public class BeansProcessor {
             if (provider != null) {
                 selectedEmbeddingProducer.produce(new SelectedEmbeddingModelCandidateBuildItem(provider, modelName));
             }
+        }
+        // If the Easy RAG extension requested to automatically generate an embedding model...
+        if (requestEmbeddingModels.isEmpty() && autoCreateEmbeddingModelBuildItem.isPresent()) {
+            String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                    Optional.empty(), "EmbeddingModel", "embedding-model");
+            selectedEmbeddingProducer
+                    .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedModelUtil.DEFAULT_NAME));
         }
 
         for (String modelName : requestedModerationModels) {

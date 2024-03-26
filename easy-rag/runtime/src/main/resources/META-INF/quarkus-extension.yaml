@@ -1,0 +1,10 @@
+name: LangChain4j Easy RAG
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the Easy RAG functionality with LangChain4j
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+  categories:
+    - "miscellaneous"
+  status: "experimental"
