@@ -13,12 +13,19 @@ import dev.langchain4j.store.embedding.filter.logical.Not;
 import dev.langchain4j.store.embedding.filter.logical.Or;
 import io.quarkus.logging.Log;
 
-class ColumnFilterMapper {
+class PgVectorFilterMapper {
 
-    public ColumnFilterMapper() {
-    }
+    final Map<Class<?>, String> SQL_TYPE_MAP = Map.of(
+            Integer.class, "int",
+            Long.class, "bigint",
+            Float.class, "numeric",
+            Double.class, "float8",
+            String.class, "text",
+            Boolean.class, "boolean",
+            // Default
+            Object.class, "text");
 
-    String map(Filter filter) {
+    public String map(Filter filter) {
         if (filter instanceof IsEqualTo) {
             return mapEqual((IsEqualTo) filter);
         } else if (filter instanceof IsNotEqualTo) {
@@ -46,79 +53,69 @@ class ColumnFilterMapper {
         }
     }
 
-    private String mapEqual(IsEqualTo isEqualTo) {
+    String mapEqual(IsEqualTo isEqualTo) {
         String key = formatKey(isEqualTo.key(), isEqualTo.comparisonValue().getClass());
         return format("%s is not null and %s = %s", key, key,
                 formatValue(isEqualTo.comparisonValue()));
     }
 
-    private String mapNotEqual(IsNotEqualTo isNotEqualTo) {
+    String mapNotEqual(IsNotEqualTo isNotEqualTo) {
         String key = formatKey(isNotEqualTo.key(), isNotEqualTo.comparisonValue().getClass());
         return format("%s is null or %s != %s", key, key,
                 formatValue(isNotEqualTo.comparisonValue()));
     }
 
-    private String mapGreaterThan(IsGreaterThan isGreaterThan) {
+    String mapGreaterThan(IsGreaterThan isGreaterThan) {
         return format("%s > %s", formatKey(isGreaterThan.key(), isGreaterThan.comparisonValue().getClass()),
                 formatValue(isGreaterThan.comparisonValue()));
     }
 
-    private String mapGreaterThanOrEqual(IsGreaterThanOrEqualTo isGreaterThanOrEqualTo) {
+    String mapGreaterThanOrEqual(IsGreaterThanOrEqualTo isGreaterThanOrEqualTo) {
         return format("%s >= %s", formatKey(isGreaterThanOrEqualTo.key(), isGreaterThanOrEqualTo.comparisonValue().getClass()),
                 formatValue(isGreaterThanOrEqualTo.comparisonValue()));
     }
 
-    private String mapLessThan(IsLessThan isLessThan) {
+    String mapLessThan(IsLessThan isLessThan) {
         return format("%s < %s", formatKey(isLessThan.key(), isLessThan.comparisonValue().getClass()),
                 formatValue(isLessThan.comparisonValue()));
     }
 
-    private String mapLessThanOrEqual(IsLessThanOrEqualTo isLessThanOrEqualTo) {
+    String mapLessThanOrEqual(IsLessThanOrEqualTo isLessThanOrEqualTo) {
         return format("%s <= %s", formatKey(isLessThanOrEqualTo.key(), isLessThanOrEqualTo.comparisonValue().getClass()),
                 formatValue(isLessThanOrEqualTo.comparisonValue()));
     }
 
-    public String mapIn(IsIn isIn) {
+    String mapIn(IsIn isIn) {
         return format("%s in %s", formatKeyAsText(isIn.key()), formatValuesAsString(isIn.comparisonValues()));
     }
 
-    public String mapNotIn(IsNotIn isNotIn) {
+    String mapNotIn(IsNotIn isNotIn) {
         String key = formatKeyAsText(isNotIn.key());
         return format("%s is null or %s not in %s", key, key, formatValuesAsString(isNotIn.comparisonValues()));
     }
 
-    private String mapAnd(And and) {
+    String mapAnd(And and) {
         return format("%s and %s", map(and.left()), map(and.right()));
     }
 
-    private String mapNot(Not not) {
+    String mapNot(Not not) {
         return format("not(%s)", map(not.expression()));
     }
 
-    private String mapOr(Or or) {
+    String mapOr(Or or) {
         return format("(%s or %s)", map(or.left()), map(or.right()));
     }
 
-    private String formatKeyAsText(String key) {
+    String formatKeyAsText(String key) {
         return key;
     }
 
-    private String formatKey(String key, Class<?> valueType) {
+    String formatKey(String key, Class<?> valueType) {
         Log.debugf("formatKey %s -> %s", key, valueType);
-        return String.format("%s::%s", key, castMap.get(valueType));
+        return String.format("%s::%s", key, SQL_TYPE_MAP.get(valueType));
     }
 
-    private final Map<Class<?>, String> castMap = Map.of(
-            Integer.class, "int",
-            Long.class, "bigint",
-            Float.class, "numeric",
-            Double.class, "float8",
-            String.class, "text",
-            Boolean.class, "boolean",
-            // Default
-            Object.class, "text");
-
-    private String formatValue(Object value) {
+    String formatValue(Object value) {
         if (value instanceof String) {
             return "'" + value + "'";
         } else {
@@ -126,7 +123,7 @@ class ColumnFilterMapper {
         }
     }
 
-    private String formatValuesAsString(Collection<?> values) {
+    String formatValuesAsString(Collection<?> values) {
         return "(" + values.stream().map(v -> String.format("'%s'", v))
                 .collect(Collectors.joining(",")) + ")";
     }

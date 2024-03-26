@@ -16,7 +16,7 @@ public class ColumnsMetadataHandler implements MetadataHandler {
 
     final String columnsDefinition;
     final List<String> columnsName;
-    final ColumnFilterMapper filterMapper;
+    final PgVectorFilterMapper filterMapper;
 
     final List<String> indexes;
 
@@ -26,7 +26,7 @@ public class ColumnsMetadataHandler implements MetadataHandler {
         this.columnsDefinition = config.definition();
         this.columnsName = Arrays.stream(columnsDefinition.split(","))
                 .map(d -> d.trim().split(" ")[0]).toList();
-        this.filterMapper = new ColumnFilterMapper();
+        this.filterMapper = new PgVectorFilterMapper();
         this.indexes = config.indexes().orElse(Collections.emptyList());
         this.indexType = config.indexType();
     }

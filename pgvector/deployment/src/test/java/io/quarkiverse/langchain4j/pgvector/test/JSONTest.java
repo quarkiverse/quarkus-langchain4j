@@ -5,5 +5,4 @@ import io.quarkus.test.junit.QuarkusTest;
 @QuarkusTest
 public class JSONTest extends LangChain4jPgvectorBaseTest {
     // Default behavior
-
 }

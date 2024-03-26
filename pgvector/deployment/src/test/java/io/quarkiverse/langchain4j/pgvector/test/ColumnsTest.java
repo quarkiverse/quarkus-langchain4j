@@ -8,8 +8,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
-//@QuarkusTest
-//@TestProfile(ColumnsTest.TestProfile.class)
 @QuarkusTest
 @TestProfile(ColumnsTest.TestProfile.class)
 class ColumnsTest extends LangChain4jPgvectorBaseTest {

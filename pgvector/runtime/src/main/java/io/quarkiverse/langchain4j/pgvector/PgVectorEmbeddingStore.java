@@ -245,8 +245,8 @@ public class PgVectorEmbeddingStore implements EmbeddingStore<TextSegment> {
                 }
                 result.add(new EmbeddingMatch<>(score, embeddingId, embedding, textSegment));
             }
-            selectStmt.close();
             resultSet.close();
+            selectStmt.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
