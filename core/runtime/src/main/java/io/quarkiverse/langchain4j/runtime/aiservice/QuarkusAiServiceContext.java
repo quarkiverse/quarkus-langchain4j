@@ -46,6 +46,9 @@ public class QuarkusAiServiceContext extends AiServiceContext {
      * via {@link io.quarkiverse.langchain4j.ChatMemoryRemover}
      */
     public void removeChatMemoryIds(Object... ids) {
+        if (chatMemories == null) {
+            return;
+        }
         for (Object id : ids) {
             ChatMemory chatMemory = chatMemories.remove(id);
             if (chatMemory != null) {
