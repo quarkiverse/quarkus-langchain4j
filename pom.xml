@@ -21,6 +21,7 @@
     <module>hugging-face</module>
     <module>infinispan</module>
     <module>milvus</module>
+    <module>mistral</module>
     <module>ollama</module>
     <module>openai/azure-openai</module>
     <module>openai/openai-common</module>
