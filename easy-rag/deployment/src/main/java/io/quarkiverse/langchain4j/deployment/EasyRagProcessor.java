@@ -16,6 +16,7 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.InMemoryEmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagConfig;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagRecorder;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRetrievalAugmentor;
@@ -53,7 +54,8 @@ public class EasyRagProcessor {
     public void createInMemoryEmbeddingStoreIfNoOtherExists(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             List<EmbeddingStoreBuildItem> embeddingStores,
-            EasyRagRecorder recorder) {
+            EasyRagRecorder recorder,
+            BuildProducer<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItemBuildProducer) {
         if (embeddingStores.isEmpty()) {
             beanProducer.produce(SyntheticBeanBuildItem
                     .configure(IN_MEMORY_EMBEDDING_STORE)
@@ -68,6 +70,7 @@ public class EasyRagProcessor {
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.inMemoryEmbeddingStoreSupplier())
                     .done());
+            inMemoryEmbeddingStoreBuildItemBuildProducer.produce(new InMemoryEmbeddingStoreBuildItem());
         }
 
     }
