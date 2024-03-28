@@ -128,4 +128,86 @@ endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
 
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-type]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-type[quarkus.langchain4j.pgvector.metadata.type]`
+
+
+[.description]
+--
+Metadata type:
+
+ - COLUMNS: for static metadata, when you know in advance the list of metadata
+ - JSON: For dynamic metadata, when you don't know the list of metadata that will be used.
+ - JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset.
+
+Default value: JSON
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`JSON`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-definition]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-definition[quarkus.langchain4j.pgvector.metadata.definition]`
+
+
+[.description]
+--
+Metadata Definition: SQL definition of metadata field(s). By default, "metadata JSON NULL" configured for JSON metadata type Ex: condominium_id uuid null, user uuid null
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_DEFINITION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_DEFINITION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`metadata JSON NULL`
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes[quarkus.langchain4j.pgvector.metadata.indexes]`
+
+
+[.description]
+--
+Metadata Indexes, list of fields to use as index example:
+
+ - JSON: metadata or (metadata->'key'), (metadata->'name'), (metadata->'age')
+ - JSONB: (metadata_b->'key'), (metadata_b->'name'), (metadata_b->'age')
+ - COLUMNS: key, name, age
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEXES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEXES+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type[quarkus.langchain4j.pgvector.metadata.index-type]`
+
+
+[.description]
+--
+Index Type:
+
+ - BTREE (default)
+ - GIN
+ - ... postgres indexes
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`BTREE`
+
 |===
