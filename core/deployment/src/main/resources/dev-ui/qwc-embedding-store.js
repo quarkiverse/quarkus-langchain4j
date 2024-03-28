@@ -17,6 +17,7 @@ export class QwcEmbeddingStore extends LitElement {
         :host {
             height: 100%;
             display: flex;
+	    flex-direction: column;
         }
     `;
 
