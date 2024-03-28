@@ -194,7 +194,7 @@ When using an AiService that is expected to use to chat memory, it is very impor
 
 [Tip]
 ====
-If you use case requires that no memory should be used, then be sure to use `@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)`
+If your use case requires that no memory should be used, then be sure to use `@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)`
 ====
 
 === Advanced usage
