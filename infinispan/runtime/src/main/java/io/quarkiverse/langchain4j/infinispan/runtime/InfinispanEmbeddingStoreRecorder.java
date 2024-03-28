@@ -17,7 +17,6 @@ public class InfinispanEmbeddingStoreRecorder {
         return new Function<>() {
             @Override
             public InfinispanEmbeddingStore apply(SyntheticCreationalContext<InfinispanEmbeddingStore> context) {
-                InfinispanEmbeddingStore.Builder builder = new InfinispanEmbeddingStore.Builder();
                 RemoteCacheManager cacheManager;
                 if (clientName == null) {
                     cacheManager = context.getInjectedReference(RemoteCacheManager.class);
@@ -25,9 +24,7 @@ public class InfinispanEmbeddingStoreRecorder {
                     cacheManager = context.getInjectedReference(RemoteCacheManager.class,
                             new InfinispanClientName.Literal(clientName));
                 }
-                builder.cacheManager(cacheManager);
-                builder.schema(new InfinispanSchema(config.cacheName(), config.dimension(), config.distance()));
-                return builder.build();
+                return new InfinispanEmbeddingStore(cacheManager, InfinispanEmbeddingStoreConfig.toStoreConfig(config));
             }
         };
     }
