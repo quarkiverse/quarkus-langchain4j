@@ -4,10 +4,10 @@
   <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
-        <version>0.10.2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
   <artifactId>quarkus-langchain4j-pgvector-parent</artifactId>
-  <version>0.10.2</version>
+  <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - pgvector - Parent</name>
   <modules>
