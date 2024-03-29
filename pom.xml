@@ -14,6 +14,7 @@
   <modules>
     <module>anthropic</module>
     <module>bam</module>
+    <module>memory-store-redis</module>
     <module>chroma</module>
     <module>cohere</module>
     <module>core</module>
