@@ -1,0 +1,37 @@
+= Mistral
+
+include::./includes/attributes.adoc[]
+
+https://mistral.ai/[Mistral] is a French company that provide open source LLM models.
+
+== Using Mistral Models
+
+To employ Mistral LLMs, integrate the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured Mistral model.
+
+=== Configuration
+
+Configuring Mistral models mandates an API key, obtainable by creating an account on the https://docs.mistral.ai/platform/overview/[Mistral platform].
+
+The API key can be set in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.mistralai.api-key=...
+----
+
+TIP: Alternatively, leverage the `QUARKUS_LANGCHAIN4J_MISTRALAI_API_KEY` environment variable.
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-mistralai.adoc[leveloffset=+1,opts=optional]
