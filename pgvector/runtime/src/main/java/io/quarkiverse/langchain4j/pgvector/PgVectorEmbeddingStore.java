@@ -12,7 +12,9 @@ import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig.
 /**
  * PGVector EmbeddingStore Implementation
  * <p>
- * Same as langChain4J DataSourcePgVectorEmbeddingStore but with quarkus datasource and config
+ * Same as langChain4J PgVectorEmbeddingStore but with quarkus datasource and config
+ * getConnection() does not need anymore to add PgVector datatype for each connection
+ * because it's done at datasource configuration in deployment phase.
  */
 public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore
         implements EmbeddingStore<TextSegment> {
@@ -49,7 +51,7 @@ public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgve
      * @throws SQLException exception
      */
     @Override
-    public Connection getConnection() throws SQLException {
+    protected Connection getConnection() throws SQLException {
         return datasource.getConnection();
     }
 
