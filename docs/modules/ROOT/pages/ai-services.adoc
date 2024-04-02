@@ -169,7 +169,7 @@ quarkus.langchain4j.huggingface.m2.api-key=sk-...
 As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
 
 The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the `dev.langchain4j.memory.chat.ChatMemoryProvider`. The default value of this annotation is `RegisterAiService.BeanIfExistsChatMemoryProviderSupplier.class`
-which means that the `AiWithUserFilterService` will use whatever `ChatMemoryProvider` bean is configured by the application.
+which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application.
 
 The extension provides a default implementation of `ChatMemoryProvider` which does two things:
 
