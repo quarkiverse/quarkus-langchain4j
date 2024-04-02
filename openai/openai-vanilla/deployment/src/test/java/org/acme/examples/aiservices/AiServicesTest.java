@@ -65,7 +65,11 @@ public class AiServicesTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class));
+                    () -> ShrinkWrap.create(JavaArchive.class)
+                            .addClasses(WiremockUtils.class, MessageAssertUtils.class)
+                            .addAsResource("messages/recipe-user.txt")
+                            .addAsResource("messages/translate-user.txt")
+                            .addAsResource("messages/translate-system"));
 
     static WireMockServer wireMockServer;
 
@@ -282,7 +286,7 @@ public class AiServicesTest {
 
     interface Chef {
 
-        @UserMessage("Create recipe using only {{it}}")
+        @UserMessage(fromResource = "messages/recipe-user.txt")
         Recipe createRecipeFrom(String... ingredients);
 
         Recipe createRecipeFrom(CreateRecipePrompt prompt);
@@ -404,8 +408,8 @@ public class AiServicesTest {
 
     interface Translator {
 
-        @SystemMessage("You are a professional translator into {{lang}}")
-        @UserMessage("Translate the following text: {{text}}")
+        @SystemMessage(fromResource = "messages/translate-system")
+        @UserMessage(fromResource = "/messages/translate-user.txt")
         String translate(@V("text") String text, @V("lang") String language);
     }
 
