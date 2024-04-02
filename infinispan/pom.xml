@@ -9,7 +9,10 @@
     <artifactId>quarkus-langchain4j-infinispan-parent</artifactId>
     <name>Quarkus LangChain4j - Infinispan embedding store - Parent</name>
     <packaging>pom</packaging>
-
+    <properties>
+        <!-- Infinispan Quarkus Langchain works with 3.9.0 or higher -->
+        <quarkus.version>3.9.0</quarkus.version>
+    </properties>
     <modules>
         <module>deployment</module>
         <module>runtime</module>

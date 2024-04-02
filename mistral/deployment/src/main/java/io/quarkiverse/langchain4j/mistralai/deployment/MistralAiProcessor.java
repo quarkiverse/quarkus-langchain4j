@@ -39,12 +39,14 @@ public class MistralAiProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer,
             LangChain4jMistralAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+            embeddingModelProducer.produce(new EmbeddingModelBuildItem());
         }
     }
 
@@ -55,8 +57,7 @@ public class MistralAiProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             LangChain4jMistralAiConfig config,
-            BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer) {
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
@@ -93,7 +94,6 @@ public class MistralAiProcessor {
                         .supplier(recorder.embeddingModel(config, modelName));
                 addQualifierIfNecessary(builder, modelName);
                 beanProducer.produce(builder.done());
-                embeddingModelProducer.produce(new EmbeddingModelBuildItem());
             }
         }
     }

@@ -906,13 +906,7 @@ public class AiServicesProcessor {
             instance = method.declaringClass().declaredAnnotation(LangChain4jDotNames.SYSTEM_MESSAGE);
         }
         if (instance != null) {
-            String systemMessageTemplate = "";
-            AnnotationValue delimiterValue = instance.value("delimiter");
-            String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
-            AnnotationValue value = instance.value();
-            if (value != null) {
-                systemMessageTemplate = String.join(delimiter, value.asStringArray());
-            }
+            String systemMessageTemplate = getTemplateFromAnnotationInstance(instance);
             if (systemMessageTemplate.isEmpty()) {
                 throw illegalConfigurationForMethod("@SystemMessage's template parameter cannot be empty", method);
             }
@@ -944,9 +938,7 @@ public class AiServicesProcessor {
 
         AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
-            AnnotationValue delimiterValue = userMessageInstance.value("delimiter");
-            String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
-            String userMessageTemplate = String.join(delimiter, userMessageInstance.value().asStringArray());
+            String userMessageTemplate = getTemplateFromAnnotationInstance(userMessageInstance);
 
             if (userMessageTemplate.contains("{{it}}")) {
                 if (method.parametersCount() != 1) {
@@ -984,6 +976,39 @@ public class AiServicesProcessor {
                         method);
             }
         }
+    }
+
+    /**
+     * Meant to be called with instances of {@link dev.langchain4j.service.SystemMessage} or
+     * {@link dev.langchain4j.service.UserMessage}
+     *
+     * @return the String value of the template or an empty string if not specified
+     */
+    private String getTemplateFromAnnotationInstance(AnnotationInstance instance) {
+        AnnotationValue fromResourceValue = instance.value("fromResource");
+        if (fromResourceValue != null) {
+            String fromResource = fromResourceValue.asString();
+            if (!fromResource.startsWith("/")) {
+                fromResource = "/" + fromResource;
+
+            }
+            try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fromResource)) {
+                if (is != null) {
+                    return new String(is.readAllBytes());
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        } else {
+            AnnotationValue valueValue = instance.value();
+            if (valueValue != null) {
+                AnnotationValue delimiterValue = instance.value("delimiter");
+                String delimiter = delimiterValue != null ? delimiterValue.asString() : DEFAULT_DELIMITER;
+                return String.join(delimiter, valueValue.asStringArray());
+            }
+
+        }
+        return "";
     }
 
     private Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> gatherMetricsTimedInfo(MethodInfo method,

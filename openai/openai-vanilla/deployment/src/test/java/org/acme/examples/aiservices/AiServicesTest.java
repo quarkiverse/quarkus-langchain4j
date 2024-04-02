@@ -65,7 +65,11 @@ public class AiServicesTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class));
+                    () -> ShrinkWrap.create(JavaArchive.class)
+                            .addClasses(WiremockUtils.class, MessageAssertUtils.class)
+                            .addAsResource("messages/recipe-user.txt")
+                            .addAsResource("messages/translate-user.txt")
+                            .addAsResource("messages/translate-system"));
 
     static WireMockServer wireMockServer;
 
@@ -248,7 +252,6 @@ public class AiServicesTest {
                 "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, " +
                         "a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, " +
                         "marked the start of a new journey.\nYou must answer strictly in the following JSON format: " +
-                        "org.acme.examples.aiservices.AiServicesTest$Person: " +
                         "{\n\"firstName\": (type: string),\n\"lastName\": (type: string),\n\"birthDate\": (type: date string (2023-12-31)),\n}");
     }
 
@@ -283,7 +286,7 @@ public class AiServicesTest {
 
     interface Chef {
 
-        @UserMessage("Create recipe using only {{it}}")
+        @UserMessage(fromResource = "messages/recipe-user.txt")
         Recipe createRecipeFrom(String... ingredients);
 
         Recipe createRecipeFrom(CreateRecipePrompt prompt);
@@ -309,7 +312,6 @@ public class AiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(),
                 "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
                         +
-                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
                         "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
     }
 
@@ -331,7 +333,6 @@ public class AiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(),
                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
                         +
-                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
                         "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
     }
 
@@ -361,7 +362,6 @@ public class AiServicesTest {
                                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\n"
                                         +
                                         "You must answer strictly in the following JSON format: " +
-                                        "org.acme.examples.aiservices.AiServicesTest$Recipe: " +
                                         "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}")));
     }
 
@@ -408,8 +408,8 @@ public class AiServicesTest {
 
     interface Translator {
 
-        @SystemMessage("You are a professional translator into {{lang}}")
-        @UserMessage("Translate the following text: {{text}}")
+        @SystemMessage(fromResource = "messages/translate-system")
+        @UserMessage(fromResource = "/messages/translate-user.txt")
         String translate(@V("text") String text, @V("lang") String language);
     }
 

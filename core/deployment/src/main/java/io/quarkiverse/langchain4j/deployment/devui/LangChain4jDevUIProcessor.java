@@ -3,12 +3,14 @@ package io.quarkiverse.langchain4j.deployment.devui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.InMemoryEmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.devui.ChatJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.devui.EmbeddingStoreJsonRPCService;
@@ -27,7 +29,8 @@ public class LangChain4jDevUIProcessor {
             ToolsMetadataBuildItem toolsMetadataBuildItem,
             List<EmbeddingModelBuildItem> embeddingModelBuildItem,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
-            List<SelectedChatModelProviderBuildItem> chatModelProviders) {
+            List<SelectedChatModelProviderBuildItem> chatModelProviders,
+            Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
         if (toolsMetadataBuildItem != null) {
@@ -35,7 +38,8 @@ public class LangChain4jDevUIProcessor {
         }
         // for now, add the embedding store page only if there is a single embedding model and a single embedding store
         // if we allow more in the future, we need a way to specify which ones to use for the page
-        if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
+        if (embeddingModelBuildItem.size() == 1 &&
+                (embeddingStoreBuildItem.size() == 1 || inMemoryEmbeddingStoreBuildItem.isPresent())) {
             addEmbeddingStorePage(card);
         }
         if (!chatModelProviders.isEmpty()) {
@@ -91,8 +95,10 @@ public class LangChain4jDevUIProcessor {
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> producers,
             List<EmbeddingModelBuildItem> embeddingModelBuildItem,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
-            List<ChatModelProviderCandidateBuildItem> chatModelCandidates) {
-        if (embeddingModelBuildItem.size() == 1 && embeddingStoreBuildItem.size() == 1) {
+            List<ChatModelProviderCandidateBuildItem> chatModelCandidates,
+            Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem) {
+        if (embeddingModelBuildItem.size() == 1 &&
+                (embeddingStoreBuildItem.size() == 1 || inMemoryEmbeddingStoreBuildItem.isPresent())) {
             producers.produce(new JsonRPCProvidersBuildItem(EmbeddingStoreJsonRPCService.class));
         }
         if (!chatModelCandidates.isEmpty()) {
