@@ -1,0 +1,611 @@
+
+:summaryTableId: quarkus-langchain4j-anthropic
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-anthropic_configuration]]link:#quarkus-langchain4j-anthropic_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-enabled]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-enabled[quarkus.langchain4j.anthropic.chat-model.enabled]`
+
+
+[.description]
+--
+Whether the model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-base-url]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-base-url[quarkus.langchain4j.anthropic.base-url]`
+
+
+[.description]
+--
+Base URL of the Anthropic API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`https://api.anthropic.com/v1/`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-api-key]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-api-key[quarkus.langchain4j.anthropic.api-key]`
+
+
+[.description]
+--
+Anthropic API key
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`dummy`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-version]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-version[quarkus.langchain4j.anthropic.version]`
+
+
+[.description]
+--
+The Anthropic version
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`2023-06-01`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-timeout]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-timeout[quarkus.langchain4j.anthropic.timeout]`
+
+
+[.description]
+--
+Timeout for Anthropic calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10S`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests[quarkus.langchain4j.anthropic.log-requests]`
+
+
+[.description]
+--
+Whether the Anthropic client should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-responses]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-responses[quarkus.langchain4j.anthropic.log-responses]`
+
+
+[.description]
+--
+Whether the Anthropic client should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-enable-integration]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-enable-integration[quarkus.langchain4j.anthropic.enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the Anthropic provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-model-name]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-model-name[quarkus.langchain4j.anthropic.chat-model.model-name]`
+
+
+[.description]
+--
+Model name to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`claude-3-haiku-20240307`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-temperature]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-temperature[quarkus.langchain4j.anthropic.chat-model.temperature]`
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.7`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-tokens]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-tokens[quarkus.langchain4j.anthropic.chat-model.max-tokens]`
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`1024`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-top-p]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-top-p[quarkus.langchain4j.anthropic.chat-model.top-p]`
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`1.0`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-top-k]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-top-k[quarkus.langchain4j.anthropic.chat-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-retries[quarkus.langchain4j.anthropic.chat-model.max-retries]`
+
+
+[.description]
+--
+The maximum number of retries for API requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`3`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-stop-sequences]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-stop-sequences[quarkus.langchain4j.anthropic.chat-model.stop-sequences]`
+
+
+[.description]
+--
+The custom text sequences that will cause the model to stop generating
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_STOP_SEQUENCES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_STOP_SEQUENCES+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-log-requests]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-log-requests[quarkus.langchain4j.anthropic.chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-log-responses]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-log-responses[quarkus.langchain4j.anthropic.chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+h|[[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-named-config-named-model-config]]link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-named-config-named-model-config[Named model config]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-base-url]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-base-url[quarkus.langchain4j.anthropic."model-name".base-url]`
+
+
+[.description]
+--
+Base URL of the Anthropic API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`https://api.anthropic.com/v1/`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-api-key]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-api-key[quarkus.langchain4j.anthropic."model-name".api-key]`
+
+
+[.description]
+--
+Anthropic API key
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`dummy`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-version]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-version[quarkus.langchain4j.anthropic."model-name".version]`
+
+
+[.description]
+--
+The Anthropic version
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__VERSION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`2023-06-01`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-timeout]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-timeout[quarkus.langchain4j.anthropic."model-name".timeout]`
+
+
+[.description]
+--
+Timeout for Anthropic calls
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10S`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests[quarkus.langchain4j.anthropic."model-name".log-requests]`
+
+
+[.description]
+--
+Whether the Anthropic client should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-responses]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-responses[quarkus.langchain4j.anthropic."model-name".log-responses]`
+
+
+[.description]
+--
+Whether the Anthropic client should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-enable-integration]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-enable-integration[quarkus.langchain4j.anthropic."model-name".enable-integration]`
+
+
+[.description]
+--
+Whether or not to enable the integration. Defaults to `true`, which means requests are made to the Anthropic provider. Set to `false` to disable all requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-model-name]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-model-name[quarkus.langchain4j.anthropic."model-name".chat-model.model-name]`
+
+
+[.description]
+--
+Model name to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`claude-3-haiku-20240307`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-temperature[quarkus.langchain4j.anthropic."model-name".chat-model.temperature]`
+
+
+[.description]
+--
+What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+It is generally recommended to set this or the `top-k` property but not both.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`0.7`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-tokens]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-tokens[quarkus.langchain4j.anthropic."model-name".chat-model.max-tokens]`
+
+
+[.description]
+--
+The maximum number of tokens to generate in the completion.
+
+The token count of your prompt plus `max_tokens` cannot exceed the model's context length
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`1024`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-top-p]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-top-p[quarkus.langchain4j.anthropic."model-name".chat-model.top-p]`
+
+
+[.description]
+--
+Double (0.0-1.0). Nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+
+It is generally recommended to set this or the `temperature` property but not both.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`1.0`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-top-k]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-top-k[quarkus.langchain4j.anthropic."model-name".chat-model.top-k]`
+
+
+[.description]
+--
+Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`40`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-max-retries[quarkus.langchain4j.anthropic."model-name".chat-model.max-retries]`
+
+
+[.description]
+--
+The maximum number of retries for API requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_RETRIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_RETRIES+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`3`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-stop-sequences]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-stop-sequences[quarkus.langchain4j.anthropic."model-name".chat-model.stop-sequences]`
+
+
+[.description]
+--
+The custom text sequences that will cause the model to stop generating
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-log-requests[quarkus.langchain4j.anthropic."model-name".chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-log-responses[quarkus.langchain4j.anthropic."model-name".chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

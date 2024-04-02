@@ -12,6 +12,7 @@
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
+    <module>anthropic</module>
     <module>bam</module>
     <module>chroma</module>
     <module>cohere</module>
