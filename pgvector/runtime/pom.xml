@@ -19,15 +19,6 @@
         <version>${project.version}</version>
     </dependency>
     <dependency>
-        <groupId>com.pgvector</groupId>
-        <artifactId>pgvector</artifactId>
-        <version>${pgvector-java.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-jackson</artifactId>
-    </dependency>
-    <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-agroal</artifactId>
     </dependency>

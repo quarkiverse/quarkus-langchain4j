@@ -46,7 +46,6 @@
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.25.3</assertj.version>
     <wiremock.version>3.5.2</wiremock.version>
-    <pgvector-java.version>0.1.4</pgvector-java.version>
     <sundrio.version>0.103.1</sundrio.version>
   </properties>
   <dependencyManagement>

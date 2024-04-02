@@ -1,12 +1,12 @@
 package io.quarkiverse.langchain4j.pgvector;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.Collections;
 
 import javax.sql.DataSource;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.pgvector.DefaultMetadataConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig.MetadataConfig;
 
 /**
@@ -40,19 +40,25 @@ public class PgVectorEmbeddingStore extends dev.langchain4j.store.embedding.pgve
             Boolean createTable,
             Boolean dropTableFirst,
             MetadataConfig metadataConfig) {
-        super(datasource, table, dimension, useIndex, indexListSize, createTable, dropTableFirst, metadataConfig);
+        super(datasource, table, dimension, useIndex, indexListSize, createTable, dropTableFirst,
+                toLangchainMetadataConfig(metadataConfig));
     }
 
-    /**
-     * Connection does not need to be configured each time like in standalone mode.
-     * Quarkus langchain does the configuration at startup in PgVectorConfigBuilderCustomizer
-     *
-     * @return the datasource connection.
-     * @throws SQLException exception
-     */
-    @Override
-    protected Connection getConnection() throws SQLException {
-        return datasource.getConnection();
+    // Needed for doc generation, ascii doctor generates twice the properties, one for each MetadataConfig
+    // And build fail.
+    private static dev.langchain4j.store.embedding.pgvector.MetadataConfig toLangchainMetadataConfig(
+            MetadataConfig metadataConfig) {
+        return DefaultMetadataConfig.builder()
+                .type(metadataConfig.type())
+                .definition(metadataConfig.definition())
+                .indexes(metadataConfig.indexes().orElse(Collections.emptyList()))
+                .indexType(metadataConfig.indexType())
+                .build();
+    }
+
+    // Needed for cdi
+    @SuppressWarnings("unused")
+    protected PgVectorEmbeddingStore() {
     }
 
 }

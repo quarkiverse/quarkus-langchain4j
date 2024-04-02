@@ -165,7 +165,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_DEFINITION+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|list of string 
 |`metadata JSON NULL`
 
 

@@ -58,7 +58,9 @@ public interface PgVectorEmbeddingStoreConfig {
     MetadataConfig metadata();
 
     @ConfigGroup
-    interface MetadataConfig extends dev.langchain4j.store.embedding.pgvector.MetadataConfig {
+    interface MetadataConfig {
+        // Could not extends dev.langchain4j.store.embedding.pgvector.MetadataConfig {
+        // because of asciidoctor generating twice the same properties and build fail.
         /**
          * Metadata type:
          * <ul>

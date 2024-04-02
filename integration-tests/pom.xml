@@ -27,5 +27,6 @@
     <module>embed-e5-small-v2-q</module>
     <module>embed-e5-small-v2</module>
     <module>rag</module>
+    <module>rag-with-pgvector</module>
   </modules>
 </project>

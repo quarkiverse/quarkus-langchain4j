@@ -24,9 +24,10 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
-class LangChain4jPgVectorProcessor {
+class PgVectorEmbeddingStoreProcessor {
 
     private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
 
@@ -35,6 +36,12 @@ class LangChain4jPgVectorProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
+        producer.produce(new IndexDependencyBuildItem("com.pgvector", "pgvector"));
+        producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-pgvector"));
     }
 
     @BuildStep
