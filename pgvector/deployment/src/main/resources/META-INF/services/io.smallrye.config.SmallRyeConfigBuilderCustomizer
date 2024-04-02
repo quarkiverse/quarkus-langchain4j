@@ -1,1 +1,1 @@
-io.quarkiverse.langchain4j.pgvector.deployment.DevServicesConfigBuilderCustomizer
+io.quarkiverse.langchain4j.pgvector.deployment.PgVectorConfigBuilderCustomizer

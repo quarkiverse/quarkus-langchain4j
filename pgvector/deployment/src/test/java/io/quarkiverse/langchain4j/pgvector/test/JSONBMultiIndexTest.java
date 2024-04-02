@@ -8,7 +8,7 @@ import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
 @TestProfile(JSONBMultiIndexTest.TestProfile.class)
-public class JSONBMultiIndexTest extends LangChain4jPgvectorBaseTest {
+public class JSONBMultiIndexTest extends LangChain4jPgVectorBaseTest {
 
     public static class TestProfile implements QuarkusTestProfile {
 

@@ -58,7 +58,7 @@ public interface PgVectorEmbeddingStoreConfig {
     MetadataConfig metadata();
 
     @ConfigGroup
-    interface MetadataConfig {
+    interface MetadataConfig extends dev.langchain4j.store.embedding.pgvector.MetadataConfig {
         /**
          * Metadata type:
          * <ul>
@@ -78,7 +78,7 @@ public interface PgVectorEmbeddingStoreConfig {
          * Ex: condominium_id uuid null, user uuid null
          */
         @WithDefault("metadata JSON NULL")
-        String definition();
+        List<String> definition();
 
         /**
          * Metadata Indexes, list of fields to use as index

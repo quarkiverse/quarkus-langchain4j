@@ -7,14 +7,17 @@ import io.smallrye.config.SmallRyeConfigBuilder;
 import io.smallrye.config.SmallRyeConfigBuilderCustomizer;
 
 /**
- * Ensure we set the pgvector stack image name so users don't have to
+ * Ensure we set the pgvector stack image name so users don't have to.
+ * And we configure jdbc connection with PG vector data type
  */
-public class DevServicesConfigBuilderCustomizer implements SmallRyeConfigBuilderCustomizer {
+public class PgVectorConfigBuilderCustomizer implements SmallRyeConfigBuilderCustomizer {
     @Override
     public void configBuilder(final SmallRyeConfigBuilder builder) {
         // use a priority of 50 to make sure that this is overridable by any of the standard methods
         builder.withSources(
-                new PropertiesConfigSource(Map.of("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16"),
+                new PropertiesConfigSource(Map.of(
+                        "quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16",
+                        "quarkus.datasource.jdbc.additional-jdbc-properties.datatype.vector", "com.pgvector.PGvector"),
                         "quarkus-langchain4j-pgvector", 50));
     }
 }

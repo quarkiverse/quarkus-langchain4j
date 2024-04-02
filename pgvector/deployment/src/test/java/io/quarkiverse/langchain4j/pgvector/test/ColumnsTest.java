@@ -10,7 +10,7 @@ import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
 @TestProfile(ColumnsTest.TestProfile.class)
-class ColumnsTest extends LangChain4jPgvectorBaseTest {
+class ColumnsTest extends LangChain4jPgVectorBaseTest {
 
     public static class TestProfile implements QuarkusTestProfile {
         @Override
