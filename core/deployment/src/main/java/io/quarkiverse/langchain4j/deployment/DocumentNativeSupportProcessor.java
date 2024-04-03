@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
+import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -77,6 +78,7 @@ public class DocumentNativeSupportProcessor {
         for (InProcessEmbeddingBuildItem inProcessEmbeddingBuildItem : inProcessEmbeddingBuildItems) {
             classProducer.produce(new RuntimeInitializedClassBuildItem(inProcessEmbeddingBuildItem.className()));
         }
+        classProducer.produce(new RuntimeInitializedClassBuildItem(CompressingQueryTransformer.class.getName()));
 
         packageProducer.produce(new RuntimeInitializedPackageBuildItem("com.microsoft.schemas.office"));
     }
