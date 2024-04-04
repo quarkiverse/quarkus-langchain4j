@@ -51,6 +51,13 @@ public class QuarkusPgVectorEmbeddingStore extends PgVectorEmbeddingStore
                 toLangchainMetadataConfig(metadataConfig));
     }
 
+    /**
+     * Default constructor for CDI
+     */
+    @SuppressWarnings("unused")
+    protected QuarkusPgVectorEmbeddingStore() {
+    }
+
     // Needed for doc generation, ascii doctor generates twice the properties, one for each MetadataConfig
     // And build fail.
     private static dev.langchain4j.store.embedding.pgvector.MetadataConfig toLangchainMetadataConfig(

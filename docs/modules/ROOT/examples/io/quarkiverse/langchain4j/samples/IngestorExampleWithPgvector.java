@@ -4,14 +4,13 @@ import static dev.langchain4j.data.document.splitter.DocumentSplitters.recursive
 
 import java.util.List;
 
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.store.embedding.EmbeddingStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
+import io.quarkiverse.langchain4j.pgvector.QuarkusPgVectorEmbeddingStore;
 
 @ApplicationScoped
 @SuppressWarnings("unused")
@@ -22,7 +21,7 @@ public class IngestorExampleWithPgvector {
      * The bean is provided by the quarkus-langchain4j-pgvector extension.
      */
     @Inject
-    EmbeddingStore<TextSegment> store;
+    QuarkusPgVectorEmbeddingStore store;
 
     /**
      * The embedding model (how is computed the vector of a document).
