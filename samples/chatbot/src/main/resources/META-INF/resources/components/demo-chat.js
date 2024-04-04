@@ -1,22 +1,8 @@
-import {css, LitElement} from 'lit';
-import '@vaadin/icon';
-import '@vaadin/button';
-import '@vaadin/text-field';
-import '@vaadin/text-area';
-import '@vaadin/form-layout';
-import '@vaadin/progress-bar';
-import '@vaadin/checkbox';
-import '@vaadin/horizontal-layout';
-import '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-sort-column.js';
+import {LitElement} from 'lit';
+
 
 export class DemoChat extends LitElement {
-    static styles = css`
-      .button {
-        cursor: pointer;
-      }
-    `;
-
+    
     connectedCallback() {
         const chatBot = document.getElementsByTagName("chat-bot")[0];
 

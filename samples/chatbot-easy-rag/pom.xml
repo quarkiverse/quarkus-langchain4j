@@ -49,21 +49,15 @@
 
         <!-- UI -->
         <dependency>
-            <groupId>org.mvnpm</groupId>
+            <groupId>io.mvnpm</groupId>
             <artifactId>importmap</artifactId>
-            <version>1.0.8</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mvnpm.at.mvnpm</groupId>
-            <artifactId>vaadin-webcomponents</artifactId>
-            <version>24.3.8</version>
-            <scope>runtime</scope>
+            <version>1.0.10</version>
         </dependency>
         <dependency>
             <groupId>org.mvnpm</groupId>
-            <artifactId>es-module-shims</artifactId>
+            <artifactId>lit</artifactId>
+            <version>3.1.2</version>
             <scope>runtime</scope>
-            <version>1.8.2</version>
         </dependency>
         <dependency>
             <groupId>org.mvnpm</groupId>
