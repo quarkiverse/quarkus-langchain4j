@@ -1,13 +1,4 @@
 import {LitElement, html, css} from 'lit';
-import '@vaadin/icon';
-import '@vaadin/button';
-import '@vaadin/text-field';
-import '@vaadin/text-area';
-import '@vaadin/form-layout';
-import '@vaadin/progress-bar';
-import '@vaadin/checkbox';
-import '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-sort-column.js';
 
 export class DemoTitle extends LitElement {
 

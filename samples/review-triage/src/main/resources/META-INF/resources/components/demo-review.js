@@ -1,14 +1,8 @@
 import {css, html, LitElement} from 'lit';
-import '@vaadin/icon';
 import '@vaadin/button';
-import '@vaadin/text-field';
 import '@vaadin/text-area';
-import '@vaadin/form-layout';
 import '@vaadin/progress-bar';
-import '@vaadin/checkbox';
 import '@vaadin/horizontal-layout';
-import '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-sort-column.js';
 
 /**
  * Contains a field to enter the review, the submit button and the message from the backend.
