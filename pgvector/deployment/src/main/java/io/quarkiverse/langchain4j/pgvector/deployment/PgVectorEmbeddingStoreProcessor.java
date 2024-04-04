@@ -14,7 +14,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.agroal.api.AgroalDataSource;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
-import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
+import io.quarkiverse.langchain4j.pgvector.QuarkusPgVectorEmbeddingStore;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreRecorder;
 import io.quarkus.agroal.DataSource;
@@ -29,7 +29,7 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 class PgVectorEmbeddingStoreProcessor {
 
-    private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
+    private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(QuarkusPgVectorEmbeddingStore.class);
 
     private static final String FEATURE = "langchain4j-pgvector";
 

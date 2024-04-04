@@ -6,7 +6,7 @@ import java.util.function.Function;
 import jakarta.enterprise.inject.Default;
 
 import io.agroal.api.AgroalDataSource;
-import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
+import io.quarkiverse.langchain4j.pgvector.QuarkusPgVectorEmbeddingStore;
 import io.quarkus.agroal.DataSource.DataSourceLiteral;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -14,7 +14,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class PgVectorEmbeddingStoreRecorder {
 
-    public Function<SyntheticCreationalContext<PgVectorEmbeddingStore>, PgVectorEmbeddingStore> embeddingStoreFunction(
+    public Function<SyntheticCreationalContext<QuarkusPgVectorEmbeddingStore>, QuarkusPgVectorEmbeddingStore> embeddingStoreFunction(
             PgVectorEmbeddingStoreConfig config, String datasourceName) {
         return context -> {
             AgroalDataSource dataSource = Optional.ofNullable(datasourceName)
@@ -22,7 +22,7 @@ public class PgVectorEmbeddingStoreRecorder {
                     .map(dl -> context.getInjectedReference(AgroalDataSource.class, dl))
                     .orElse(context.getInjectedReference(AgroalDataSource.class, new Default.Literal()));
 
-            return new PgVectorEmbeddingStore(dataSource, config.table(), config.dimension(), config.useIndex(),
+            return new QuarkusPgVectorEmbeddingStore(dataSource, config.table(), config.dimension(), config.useIndex(),
                     config.indexListSize(), config.createTable(), config.dropTableFirst(), config.metadata());
         };
     }

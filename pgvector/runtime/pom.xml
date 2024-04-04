@@ -46,6 +46,9 @@
             </goals>
             <configuration>
               <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
+              <parentFirstArtifacts>
+                <parentFirstArtifact>com.pgvector:pgvector</parentFirstArtifact>
+              </parentFirstArtifacts>
             </configuration>
           </execution>
         </executions>
