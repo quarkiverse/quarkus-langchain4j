@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.azure.openai;
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.model.openai.OpenAiModelName.DALL_E_2;
+import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,6 +66,7 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .writeTimeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .userAgent(DEFAULT_USER_AGENT)
                 .build();
     }
 
