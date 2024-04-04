@@ -61,6 +61,6 @@ public class AzureOpenAiChatLanguageModelSmokeTest {
         assertThat(wireMockServer.getAllServeEvents()).hasSize(1);
         ServeEvent serveEvent = wireMockServer.getAllServeEvents().get(0); // this works because we reset requests for Wiremock before each test
         LoggedRequest loggedRequest = serveEvent.getRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("langchain4j-azure-openai");
+        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("langchain4j-quarkus-azure-openai");
     }
 }
