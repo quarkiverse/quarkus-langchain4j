@@ -19,7 +19,7 @@ public class JSONBMultiIndexTest extends LangChain4jPgVectorBaseTest {
                     "quarkus.langchain4j.pgvector.metadata.definition", "metadata_b JSONB NULL",
                     "quarkus.langchain4j.pgvector.metadata.indexes",
                     "(metadata_b->'key'), (metadata_b->'name'), (metadata_b->'age')",
-                    "quarkus.langchain4j.pgvector.metadata.indexType", "GIN");
+                    "quarkus.langchain4j.pgvector.metadata.index-type", "GIN");
         }
     }
 

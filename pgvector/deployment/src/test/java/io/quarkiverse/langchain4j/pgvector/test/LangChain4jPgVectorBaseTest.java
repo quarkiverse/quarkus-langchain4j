@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.pgvector.PGvector;
-
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -44,8 +42,6 @@ abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreWithFilteringIT
     @Override
     protected void clearStore() {
         try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE EXTENSION IF NOT EXISTS vector");
-            PGvector.addVectorType(connection);
             statement.executeUpdate("TRUNCATE TABLE embeddings");
         } catch (SQLException exception) {
             Log.info("Table embeddings does not exists, no need to truncate it.");

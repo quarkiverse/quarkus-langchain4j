@@ -40,11 +40,6 @@
         <artifactId>quarkus-langchain4j-core-deployment</artifactId>
         <version>${project.version}</version>
     </dependency>
-      <dependency>
-          <groupId>dev.langchain4j</groupId>
-          <artifactId>langchain4j-pgvector</artifactId>
-          <version>${langchain4j.version}</version>
-      </dependency>
     <dependency>
           <groupId>dev.langchain4j</groupId>
           <artifactId>langchain4j-core</artifactId>

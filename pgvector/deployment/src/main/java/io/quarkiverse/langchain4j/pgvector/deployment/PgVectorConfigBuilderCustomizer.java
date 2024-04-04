@@ -16,16 +16,7 @@ public class PgVectorConfigBuilderCustomizer implements SmallRyeConfigBuilderCus
         // use a priority of 50 to make sure that this is overridable by any of the standard methods
         builder.withSources(
                 new PropertiesConfigSource(Map.of(
-                        "quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16"
-                // Weird behavior with this option: the first time the containers pg16 start,
-                // and the first time we create a connection, the pv vector type is added,
-                // but as the vector extension is not installed , the type is created with oid 0,
-                // means it is considered as unknown.
-                // For production we recommend to use sql script initialisation to add the extension
-                // and create the table
-                // For dev service a specific sql script will be triggered
-                //"quarkus.datasource.jdbc.additional-jdbc-properties.datatype.vector", "com.pgvector.PGvector"
-                ),
+                        "quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16"),
                         "quarkus-langchain4j-pgvector", 50));
     }
 }
