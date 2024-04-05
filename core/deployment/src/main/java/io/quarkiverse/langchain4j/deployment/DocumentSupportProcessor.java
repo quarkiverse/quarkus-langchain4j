@@ -9,19 +9,22 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
+import org.jboss.logmanager.Level;
+
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.builditem.LogCategoryBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.*;
 
 /**
  * TODO: we might want to make this more granular so all these document related dependencies don't always end up in the
  * application
  */
-public class DocumentNativeSupportProcessor {
+public class DocumentSupportProcessor {
 
     @BuildStep
     void nativeResources(
@@ -112,5 +115,10 @@ public class DocumentNativeSupportProcessor {
         if (!names.isEmpty()) {
             resourcesProducer.produce(new NativeImageResourceBuildItem(names));
         }
+    }
+
+    @BuildStep
+    void quietDownLogging(BuildProducer<LogCategoryBuildItem> producer) {
+        producer.produce(new LogCategoryBuildItem("ai.djl.util.Platform", Level.WARN));
     }
 }
