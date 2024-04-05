@@ -64,9 +64,12 @@ public interface PgVectorEmbeddingStoreConfig {
         /**
          * Metadata type:
          * <ul>
-         * <li>COLUMNS: for static metadata, when you know in advance the list of metadata
-         * <li>JSON: For dynamic metadata, when you don't know the list of metadata that will be used.
-         * <li>JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset.
+         * <li>COLUMNS: for static metadata, when you know in advance the list of metadata fields. In this case,
+         * you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to define the right columns.
+         * <li>JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+         * <li>JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case,
+         * you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to change the
+         * type of the `metadata` column to JSONB.
          * </ul>
          * <p>
          * Default value: JSON
@@ -76,8 +79,12 @@ public interface PgVectorEmbeddingStoreConfig {
 
         /**
          * Metadata Definition: SQL definition of metadata field(s).
-         * By default, "metadata JSON NULL" configured for JSON metadata type
-         * Ex: condominium_id uuid null, user uuid null
+         * By default, "metadata JSON NULL" configured. This is only suitable if using the JSON metadata type.
+         * <p>
+         * If using JSONB metadata type, this should in most cases be set to `metadata JSONB NULL`.
+         * <p>
+         * If using COLUMNS metadata type, this should be a list of columns, one column for each desired metadata field.
+         * Example: condominium_id uuid null, user uuid null
          */
         @WithDefault("metadata JSON NULL")
         List<String> definition();
@@ -86,8 +93,9 @@ public interface PgVectorEmbeddingStoreConfig {
          * Metadata Indexes, list of fields to use as index
          * example:
          * <ul>
-         * <li>JSON: metadata or (metadata->'key'), (metadata->'name'), (metadata->'age')
-         * <li>JSONB: (metadata_b->'key'), (metadata_b->'name'), (metadata_b->'age')
+         * <li>JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to
+         * JSONB metadata.
+         * <li>JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
          * <li>COLUMNS: key, name, age
          * </ul>
          */
