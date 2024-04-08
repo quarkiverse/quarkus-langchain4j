@@ -24,6 +24,7 @@
     <module>milvus</module>
     <module>mistral</module>
     <module>ollama</module>
+    <module>openai/testing-internal</module>
     <module>openai/azure-openai</module>
     <module>openai/openai-common</module>
     <module>openai/openai-vanilla</module>
@@ -49,7 +50,7 @@
     <wiremock.version>3.5.2</wiremock.version>
     <pgvector-java.version>0.1.4</pgvector-java.version>
     <sundrio.version>0.103.1</sundrio.version>
-    <quarkus-wiremock.version>1.3.0</quarkus-wiremock.version>
+    <quarkus-wiremock.version>1.3.1</quarkus-wiremock.version>
   </properties>
   <dependencyManagement>
     <dependencies>

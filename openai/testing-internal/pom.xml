@@ -7,25 +7,17 @@
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
         <version>999-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-
-    <artifactId>quarkus-langchain4j-testing-internal</artifactId>
-    <name>Quarkus LangChain4j - Internal Testing</name>
-    <description>A module that provides testing utilities used by other modules</description>
+    <artifactId>quarkus-langchain4j-openai-testing-internal</artifactId>
+    <name>Quarkus LangChain4j - OpenAI - Testing Internal</name>
 
     <dependencies>
         <dependency>
-            <groupId>io.quarkiverse.wiremock</groupId>
-            <artifactId>quarkus-wiremock-test</artifactId>
-            <version>${quarkus-wiremock.version}</version>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-testing-internal</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-        </dependency>
-
     </dependencies>
 
     <build>

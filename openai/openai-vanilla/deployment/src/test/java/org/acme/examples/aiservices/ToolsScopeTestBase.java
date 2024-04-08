@@ -4,51 +4,29 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
-
-import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 
 /**
  * Base class to verify the tools invocation in various scopes.
  */
-public class ToolsScopeTestBase {
-
-    static WireMockServer wireMockServer;
-
-    private static OpenAiChatModel createChatModel() {
-        return OpenAiChatModel.builder().baseUrl("http://localhost:8089/v1")
-                .apiKey("whatever").build();
-    }
-
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(8089));
-        wireMockServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
+public abstract class ToolsScopeTestBase extends OpenAiBaseTest {
 
     @BeforeEach
     void setup() {
-        wireMockServer.resetAll();
-        wireMockServer.stubFor(
+        resetRequests();
+        wiremock().register(
                 post(urlEqualTo("/v1/chat/completions"))
-                        .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario("Tool")
                         .whenScenarioStateIs(STARTED)
                         .willReturn(
@@ -83,7 +61,7 @@ public class ToolsScopeTestBase {
                                                   \s"""))
                         .willSetStateTo("Step two"));
 
-        wireMockServer.stubFor(
+        wiremock().register(
                 post(urlEqualTo("/v1/chat/completions"))
                         .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario("Tool")
@@ -139,10 +117,10 @@ public class ToolsScopeTestBase {
         private final MyService ai;
         private final MyTool tool;
 
-        public MyApp(MyTool tool) {
+        public MyApp(MyTool tool, @ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
             this.tool = tool;
             this.ai = AiServices.builder(MyService.class)
-                    .chatLanguageModel(createChatModel())
+                    .chatLanguageModel(createChatModel(wiremockPort))
                     .tools(tool)
                     .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                     .build();
@@ -157,6 +135,11 @@ public class ToolsScopeTestBase {
             String actual = ai.sayHello("ignored...");
             assertThat(actual).isEqualTo("Do something has been called.");
             assertThat(tool.called()).isEqualTo(expectedCalled);
+        }
+
+        private OpenAiChatModel createChatModel(Integer wiremockPort) {
+            return OpenAiChatModel.builder().baseUrl(String.format("http://localhost:%d/v1", wiremockPort))
+                    .apiKey("whatever").build();
         }
 
     }

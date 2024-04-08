@@ -10,6 +10,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusDevModeTest;
 
 public class PromptDevModeTest {
@@ -21,7 +22,8 @@ public class PromptDevModeTest {
                             Resource.ApplicationGlobals.class)
                     .addAsResource(
                             new StringAsset(
-                                    "quarkus.langchain4j.openai.api-key=whatever\nquarkus.langchain4j.openai.base-url= https://mockgpt.wiremockapi.cloud/v1"),
+                                    String.format("quarkus.langchain4j.openai.base-url=%s",
+                                            WiremockAware.wiremockUrlForConfig("/v1"))),
                             "application.properties"));
 
     @Test

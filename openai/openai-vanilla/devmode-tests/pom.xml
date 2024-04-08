@@ -39,10 +39,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wiremock</groupId>
-            <artifactId>wiremock-standalone</artifactId>
-            <version>${wiremock.version}</version>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-openai-testing-internal</artifactId>
             <scope>test</scope>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
