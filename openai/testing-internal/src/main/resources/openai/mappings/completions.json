@@ -1,0 +1,47 @@
+{
+  "mappings": [
+    {
+      "insertionIndex": 1,
+      "id": "ffe22fa0-6de2-4208-ac5a-16ff317a0832",
+      "name": "Create chat completion - default response",
+      "request": {
+        "urlPathTemplate": "/v1/chat/completions",
+        "method": "POST",
+        "pathParameters": { },
+        "formParameters": { },
+        "bodyPatterns": [
+          {
+            "matchesJsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"model\": {\n      \"type\": \"string\"\n    },\n    \"messages\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"required\": [\n          \"role\",\n          \"content\"\n        ],\n        \"properties\": {\n          \"role\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"user\",\n              \"system\",\n              \"function\",\n              \"assistant\"\n            ]\n          },\n          \"content\": {\n            \"type\": \"string\"\n          },\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"function_call\": {\n            \"type\": \"object\"\n          }\n        }\n      }\n    },\n    \"max_tokens\": {\n      \"type\": \"integer\"\n    },\n    \"temperature\": {\n      \"type\": \"number\"\n    },\n    \"top_p\": {\n      \"type\": \"number\"\n    },\n    \"n\": {\n      \"type\": \"integer\"\n    },\n    \"stream\": {\n      \"type\": \"boolean\"\n    },\n    \"presence_penalty\": {\n      \"type\": \"number\"\n    },\n    \"frequency_penalty\": {\n      \"type\": \"number\"\n    },\n    \"logit_bias\": {\n      \"type\": \"object\"\n    },\n    \"user\": {\n      \"type\": \"string\"\n    }\n  }\n}",
+            "schemaVersion": "V202012"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"id\": \"chatcmpl-123\",\n  \"object\": \"chat.completion\",\n  \"created\": {{{now format=\"unix\"}}},\n  \"choices\": [{\n    \"index\": 0,\n    \"message\": {\n      \"role\": \"assistant\",\n      \"content\": \"{{parameters.ChatCompletionMessageContent}}\"\n    },\n    \"finish_reason\": \"stop\"\n  }],\n  \"usage\": {\n    \"prompt_tokens\": 9,\n    \"completion_tokens\": 12,\n    \"total_tokens\": 21\n  }\n}\n",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "transformers": [
+          "completion-transformer",
+          "response-template"
+        ],
+        "transformerParameters": {
+          "ChatCompletionMessageContent": "dummy"
+        }
+      },
+      "uuid": "ffe22fa0-6de2-4208-ac5a-16ff317a0832",
+      "persistent": true,
+      "priority": 5,
+      "metadata": {
+        "mocklab": {
+          "created": {
+            "at": "2023-07-29T07:45:17.646522246Z",
+            "via": "SYSTEM"
+          }
+        }
+      },
+      "postServeActions": [ ]
+    }
+  ]
+}

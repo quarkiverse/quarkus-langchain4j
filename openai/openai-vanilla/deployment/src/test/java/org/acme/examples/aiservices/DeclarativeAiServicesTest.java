@@ -1,13 +1,13 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
-import static io.quarkiverse.langchain4j.openai.test.WiremockUtils.DEFAULT_TOKEN;
-import static org.acme.examples.aiservices.MessageAssertUtils.assertMultipleRequestMessage;
-import static org.acme.examples.aiservices.MessageAssertUtils.assertSingleRequestMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
@@ -15,26 +15,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.ChatMessage;
@@ -46,44 +40,25 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class DeclarativeAiServicesTest {
-
-    private static final int WIREMOCK_PORT = 8089;
+public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class))
+                    () -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1");
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
-    };
-
-    static WireMockServer wireMockServer;
-
-    static ObjectMapper mapper;
-
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(WIREMOCK_PORT));
-        wireMockServer.start();
-
-        mapper = new ObjectMapper();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
+                    WiremockAware.wiremockUrlForConfig("/v1"));
 
     @BeforeEach
     void setup() {
-        wireMockServer.resetAll();
-        wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
+        resetRequests();
+        resetMappings();
     }
 
     interface AssistantBase {
@@ -165,7 +140,7 @@ public class DeclarativeAiServicesTest {
     @Test
     @ActivateRequestContext
     void test_extract_enum() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "POSITIVE"));
+        setChatCompletionMessageContent("POSITIVE");
 
         Sentiment sentiment = sentimentAnalyzer
                 .analyzeSentimentOf("This LaptopPro X15 is wicked fast and that 4K screen is a dream.");
@@ -199,9 +174,16 @@ public class DeclarativeAiServicesTest {
     @Singleton
     public static class CalculatorAfter implements Runnable {
 
+        private final Integer wiremockPort;
+
+        public CalculatorAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
+            this.wiremockPort = wiremockPort;
+        }
+
         @Override
         public void run() {
-            wireMockServer.setScenarioState(scenario, secondState);
+            WireMock wireMock = new WireMock(wiremockPort);
+            wireMock.setSingleScenarioState(scenario, secondState);
         }
     }
 
@@ -302,18 +284,24 @@ public class DeclarativeAiServicesTest {
                         }
                 """;
 
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
+                        .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(firstResponse)));
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(firstResponse)));
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
+                        .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(secondState)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(secondResponse)));
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(secondResponse)));
 
-        wireMockServer.setScenarioState(scenario, Scenario.STARTED);
+        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
 
@@ -322,16 +310,16 @@ public class DeclarativeAiServicesTest {
         assertThat(answer).isEqualTo(
                 "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.");
 
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(2);
+        assertThat(wiremock().getServeEvents()).hasSize(2);
 
-        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(1))),
+        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1))),
                 "What is the square root of 485906798473894056 in scientific notation?");
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(0))),
+        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
                 List.of(
-                        new MessageAssertUtils.MessageContent("user",
+                        new MessageContent("user",
                                 "What is the square root of 485906798473894056 in scientific notation?"),
-                        new MessageAssertUtils.MessageContent("assistant", null),
-                        new MessageAssertUtils.MessageContent("function", "6.97070153193991E8")));
+                        new MessageContent("assistant", null),
+                        new MessageContent("function", "6.97070153193991E8")));
     }
 
     @RegisterAiService
@@ -354,8 +342,7 @@ public class DeclarativeAiServicesTest {
 
         /* **** First request for user 1 **** */
         String firstMessageFromFirstUser = "Hello, my name is Klaus";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
         String firstAiResponseToFirstUser = chatWithSeparateMemoryForEachUser.chat(firstMemoryId, firstMessageFromFirstUser);
 
         // assert response
@@ -370,11 +357,10 @@ public class DeclarativeAiServicesTest {
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String firstMessageFromSecondUser = "Hello, my name is Francine";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Francine"));
+        setChatCompletionMessageContent("Nice to meet you Francine");
         String firstAiResponseToSecondUser = chatWithSeparateMemoryForEachUser.chat(secondMemoryId, firstMessageFromSecondUser);
 
         // assert response
@@ -389,11 +375,10 @@ public class DeclarativeAiServicesTest {
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondsMessageFromFirstUser = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Klaus"));
+        setChatCompletionMessageContent("Your name is Klaus");
         String secondAiMessageToFirstUser = chatWithSeparateMemoryForEachUser.chat(firstMemoryId, secondsMessageFromFirstUser);
 
         // assert response
@@ -402,9 +387,9 @@ public class DeclarativeAiServicesTest {
         // assert request
         assertMultipleRequestMessage(getRequestAsMap(),
                 List.of(
-                        new MessageAssertUtils.MessageContent("user", firstMessageFromFirstUser),
-                        new MessageAssertUtils.MessageContent("assistant", firstAiResponseToFirstUser),
-                        new MessageAssertUtils.MessageContent("user", secondsMessageFromFirstUser)));
+                        new MessageContent("user", firstMessageFromFirstUser),
+                        new MessageContent("assistant", firstAiResponseToFirstUser),
+                        new MessageContent("user", secondsMessageFromFirstUser)));
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(4)
@@ -413,11 +398,10 @@ public class DeclarativeAiServicesTest {
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
         /* **** Second request for user 2 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondsMessageFromSecondUser = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Francine"));
+        setChatCompletionMessageContent("Your name is Francine");
         String secondAiMessageToSecondUser = chatWithSeparateMemoryForEachUser.chat(secondMemoryId,
                 secondsMessageFromSecondUser);
 
@@ -427,9 +411,9 @@ public class DeclarativeAiServicesTest {
         // assert request
         assertMultipleRequestMessage(getRequestAsMap(),
                 List.of(
-                        new MessageAssertUtils.MessageContent("user", firstMessageFromSecondUser),
-                        new MessageAssertUtils.MessageContent("assistant", firstAiResponseToSecondUser),
-                        new MessageAssertUtils.MessageContent("user", secondsMessageFromSecondUser)));
+                        new MessageContent("user", firstMessageFromSecondUser),
+                        new MessageContent("assistant", firstAiResponseToSecondUser),
+                        new MessageContent("user", secondsMessageFromSecondUser)));
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(4)
@@ -452,8 +436,7 @@ public class DeclarativeAiServicesTest {
     void no_memory_should_be_used() throws IOException {
 
         String firstUserMessage = "Hello, my name is Klaus";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
         String firstAiResponse = noMemoryService.chat(firstUserMessage);
 
         // assert response
@@ -462,11 +445,10 @@ public class DeclarativeAiServicesTest {
         // assert request
         assertSingleRequestMessage(getRequestAsMap(), firstUserMessage);
 
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondUserMessage = "What is my name";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "I don't know"));
+        setChatCompletionMessageContent("I don't know");
         String secondAiResponse = noMemoryService.chat(secondUserMessage);
 
         // assert response
@@ -474,25 +456,5 @@ public class DeclarativeAiServicesTest {
 
         // assert request only contains the second request, so no memory is used
         assertSingleRequestMessage(getRequestAsMap(), secondUserMessage);
-    }
-
-    private Map<String, Object> getRequestAsMap() throws IOException {
-        return getRequestAsMap(getRequestBody());
-    }
-
-    private Map<String, Object> getRequestAsMap(byte[] body) throws IOException {
-        return mapper.readValue(body, MAP_TYPE_REF);
-    }
-
-    private byte[] getRequestBody() {
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(1);
-        ServeEvent serveEvent = wireMockServer.getAllServeEvents().get(0); // this works because we reset requests for Wiremock before each test
-        return getRequestBody(serveEvent);
-    }
-
-    private byte[] getRequestBody(ServeEvent serveEvent) {
-        LoggedRequest request = serveEvent.getRequest();
-        assertThat(request.getBody()).isNotEmpty();
-        return request.getBody();
     }
 }

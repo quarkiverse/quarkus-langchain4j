@@ -1,34 +1,26 @@
 package org.acme.examples.aiservices;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static io.quarkiverse.langchain4j.openai.test.WiremockUtils.DEFAULT_TOKEN;
-import static org.acme.examples.aiservices.MessageAssertUtils.assertMultipleRequestMessage;
-import static org.acme.examples.aiservices.MessageAssertUtils.assertSingleRequestMessage;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
@@ -40,46 +32,20 @@ import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
-import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AuditingServiceTest {
-
-    private static final int WIREMOCK_PORT = 8089;
+public class AuditingServiceTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1");
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
-    };
-
-    static WireMockServer wireMockServer;
-
-    static ObjectMapper mapper;
-
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(WIREMOCK_PORT));
-        wireMockServer.start();
-
-        mapper = new ObjectMapper();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
-
-    @BeforeEach
-    void setup() {
-        wireMockServer.resetAll();
-        wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
-    }
+                    () -> ShrinkWrap.create(JavaArchive.class))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
+                    WiremockAware.wiremockUrlForConfig("/v1"));
 
     private static final String scenario = "tools";
     private static final String secondState = "second";
@@ -87,9 +53,16 @@ public class AuditingServiceTest {
     @Singleton
     public static class CalculatorAfter implements Runnable {
 
+        private final Integer wiremockPort;
+
+        public CalculatorAfter(@ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
+            this.wiremockPort = wiremockPort;
+        }
+
         @Override
         public void run() {
-            wireMockServer.setScenarioState(scenario, secondState);
+            WireMock wireMock = new WireMock(wiremockPort);
+            wireMock.setSingleScenarioState(scenario, secondState);
         }
     }
 
@@ -174,18 +147,22 @@ public class AuditingServiceTest {
                         }
                 """;
 
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(firstResponse)));
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(firstResponse)));
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(secondState)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(secondResponse)));
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(secondResponse)));
 
-        wireMockServer.setScenarioState(scenario, Scenario.STARTED);
+        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
 
@@ -194,16 +171,16 @@ public class AuditingServiceTest {
         String expectedResult = "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.";
         assertThat(answer).isEqualTo(expectedResult);
 
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(2);
+        assertThat(wiremock().getServeEvents()).hasSize(2);
 
-        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(1))),
+        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1))),
                 "What is the square root of 485906798473894056 in scientific notation?");
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(0))),
+        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
                 List.of(
-                        new MessageAssertUtils.MessageContent("user",
+                        new MessageContent("user",
                                 "What is the square root of 485906798473894056 in scientific notation?"),
-                        new MessageAssertUtils.MessageContent("assistant", null),
-                        new MessageAssertUtils.MessageContent("function", "6.97070153193991E8")));
+                        new MessageContent("assistant", null),
+                        new MessageContent("function", "6.97070153193991E8")));
 
         InstanceHandle<SimpleAuditService> auditServiceInstance = Arc.container().instance(SimpleAuditService.class);
         assertTrue(auditServiceInstance.isAvailable());
@@ -218,16 +195,6 @@ public class AuditingServiceTest {
         assertThat(audit.failed).isZero();
         assertThat(audit.failed).isZero();
 
-    }
-
-    private Map<String, Object> getRequestAsMap(byte[] body) throws IOException {
-        return mapper.readValue(body, MAP_TYPE_REF);
-    }
-
-    private byte[] getRequestBody(ServeEvent serveEvent) {
-        LoggedRequest request = serveEvent.getRequest();
-        assertThat(request.getBody()).isNotEmpty();
-        return request.getBody();
     }
 
     @Singleton

@@ -13,7 +13,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -74,9 +73,7 @@ class MistralAiChatLanguageModelSmokeTest extends WiremockAware {
         String response = chatLanguageModel.generate("hello");
         assertThat(response).isEqualTo("Nice to meet you");
 
-        assertThat(wiremock().getServeEvents()).hasSize(1);
-        ServeEvent serveEvent = wiremock().getServeEvents().get(0); // this works because we reset requests for Wiremock before each test
-        LoggedRequest loggedRequest = serveEvent.getRequest();
+        LoggedRequest loggedRequest = singleLoggedRequest();
         assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Resteasy Reactive Client");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello").contains(CHAT_MODEL_ID);
