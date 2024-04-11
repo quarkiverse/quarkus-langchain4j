@@ -9,7 +9,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -44,7 +44,8 @@ import io.quarkus.test.QuarkusUnitTest;
  * intermittent failures, it may mean that the delay isn't long enough...
  *
  */
-@EnabledIfEnvironmentVariable(named = "PINECONE_API_KEY", matches = ".+")
+//@EnabledIfEnvironmentVariable(named = "PINECONE_API_KEY", matches = ".+")
+@Disabled("This is pretty unstable and making our nightly builds useless")
 public class PineconeEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @RegisterExtension
