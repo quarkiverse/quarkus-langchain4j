@@ -43,6 +43,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-pgvector</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pinecone</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -61,62 +66,167 @@
             <artifactId>quarkus-langchain4j-watsonx</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.antora</groupId>
+            <artifactId>quarkus-antora</artifactId>
+            <version>${quarkus-antora.version}</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Make sure the doc is built after the other artifacts -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-redis-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pinecone-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-pgvector-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-ollama-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-infinispan-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-cohere-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-bam-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-watsonx-deployment</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

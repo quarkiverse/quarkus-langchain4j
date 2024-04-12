@@ -1,9 +1,9 @@
 package io.quarkiverse.langchain4j.samples;
 
-import java.util.concurrent.TimeUnit;
+import java.time.temporal.ChronoUnit;
 
 import org.eclipse.microprofile.faulttolerance.Fallback;
-import org.junit.jupiter.api.Timeout;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -14,7 +14,7 @@ public interface AiServiceWithFaultTolerance {
 
     @SystemMessage("You are a professional poet")
     @UserMessage("Write a poem about {topic}. The poem should be {lines} lines long.")
-    @Timeout(value = 60, unit = TimeUnit.SECONDS)
+    @Timeout(value = 60, unit = ChronoUnit.SECONDS)
     @Fallback(fallbackMethod = "fallback")
     String writeAPoem(String topic, int lines);
 
