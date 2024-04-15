@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
+import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.jboss.logmanager.Level;
 
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
@@ -82,6 +83,9 @@ public class DocumentSupportProcessor {
             classProducer.produce(new RuntimeInitializedClassBuildItem(inProcessEmbeddingBuildItem.className()));
         }
         classProducer.produce(new RuntimeInitializedClassBuildItem(CompressingQueryTransformer.class.getName()));
+        classProducer.produce(new RuntimeInitializedClassBuildItem(CompressorStreamFactory.class.getName()));
+        classProducer.produce(new RuntimeInitializedClassBuildItem(
+                "org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream"));
 
         packageProducer.produce(new RuntimeInitializedPackageBuildItem("com.microsoft.schemas.office"));
     }
