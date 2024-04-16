@@ -61,3 +61,12 @@ at startup, use the following properties:
 
 To control the number of retrieved documents, use
 `quarkus.langchain4j.easy-rag.max-results`. The default is 5.
+
+To control the path matcher denoting which files to ingest, use
+`quarkus.langchain4j.easy-rag.path-matcher`. The default is `glob:**`,
+meaning all files recursively.
+
+For finer-grained control of the Apache Tika parsers (for example, to turn
+off OCR capabilities), you can use a regular XML config file recognized by
+Tika (see https://tika.apache.org/2.9.2/configuring.html[Tika
+documentation]), and specify `-Dtika.config` to point at the file.
