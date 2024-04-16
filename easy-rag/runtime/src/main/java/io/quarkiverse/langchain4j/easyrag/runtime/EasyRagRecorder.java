@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.easyrag.runtime;
 
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -31,8 +33,16 @@ public class EasyRagRecorder {
     public void ingest(EasyRagConfig config, BeanContainer beanContainer) {
         EmbeddingStore<TextSegment> embeddingStore = beanContainer.beanInstance(EmbeddingStore.class);
         EmbeddingModel embeddingModel = beanContainer.beanInstance(EmbeddingModel.class);
-        LOGGER.info("Ingesting documents from path: " + config.path());
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(config.path());
+
+        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(config.pathMatcher());
+        LOGGER.info("Ingesting documents from path: " + config.path() +
+                ", path matcher = " + config.pathMatcher() + ", recursive = " + config.recursive());
+        List<Document> documents = null;
+        if (config.recursive()) {
+            documents = FileSystemDocumentLoader.loadDocumentsRecursively(config.path(), pathMatcher);
+        } else {
+            documents = FileSystemDocumentLoader.loadDocuments(config.path(), pathMatcher);
+        }
         DocumentSplitter documentSplitter = DocumentSplitters.recursive(config.maxSegmentSize(),
                 config.maxOverlapSize(), new HuggingFaceTokenizer());
         List<Document> splitDocuments = documentSplitter
