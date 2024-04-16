@@ -61,7 +61,10 @@ public interface AnthropicRestApi {
         @HeaderParam("anthropic-version")
         public final String anthropicVersion;
 
-        private ApiMetadata(String apiKey, String anthropicVersion) {
+        @HeaderParam("anthropic-beta")
+        public final String beta;
+
+        private ApiMetadata(String apiKey, String anthropicVersion, String beta) {
             if ((apiKey == null) || apiKey.isBlank()) {
                 throw new IllegalArgumentException("apiKey cannot be null or blank");
             }
@@ -72,6 +75,7 @@ public interface AnthropicRestApi {
 
             this.apiKey = apiKey;
             this.anthropicVersion = anthropicVersion;
+            this.beta = beta;
         }
 
         public static ApiMetadata.Builder builder() {
@@ -81,9 +85,10 @@ public interface AnthropicRestApi {
         public static class Builder {
             private String apiKey;
             private String anthropicVersion;
+            private String beta;
 
             public ApiMetadata build() {
-                return new ApiMetadata(this.apiKey, this.anthropicVersion);
+                return new ApiMetadata(this.apiKey, this.anthropicVersion, this.beta);
             }
 
             public ApiMetadata.Builder apiKey(String apiKey) {
@@ -93,6 +98,11 @@ public interface AnthropicRestApi {
 
             public ApiMetadata.Builder anthropicVersion(String anthropicVersion) {
                 this.anthropicVersion = anthropicVersion;
+                return this;
+            }
+
+            public ApiMetadata.Builder beta(String beta) {
+                this.beta = beta;
                 return this;
             }
         }

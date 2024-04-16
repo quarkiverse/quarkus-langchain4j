@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.anthropic;
 
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
+import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.model.anthropic.AnthropicMapper.toFinishReason;
 import static java.util.Collections.synchronizedList;
 import static java.util.stream.Collectors.joining;
@@ -26,7 +27,11 @@ import dev.langchain4j.model.anthropic.AnthropicClientBuilderFactory;
 import dev.langchain4j.model.anthropic.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.AnthropicHttpException;
+import dev.langchain4j.model.anthropic.AnthropicMessage;
+import dev.langchain4j.model.anthropic.AnthropicMessageContent;
 import dev.langchain4j.model.anthropic.AnthropicStreamingData;
+import dev.langchain4j.model.anthropic.AnthropicToolResultContent;
+import dev.langchain4j.model.anthropic.AnthropicToolUseContent;
 import dev.langchain4j.model.anthropic.AnthropicUsage;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
@@ -39,6 +44,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
 public class QuarkusAnthropicClient extends AnthropicClient {
+    public static final String BETA = "tools-2024-04-04";
     private final String apiKey;
     private final String anthropicVersion;
     private final AnthropicRestApi restApi;
@@ -65,21 +71,40 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
     @Override
     public AnthropicCreateMessageResponse createMessage(AnthropicCreateMessageRequest request) {
-        return restApi.createMessage(request, createMetadata());
+        return restApi.createMessage(request, createMetadata(request));
     }
 
     @Override
     public void createMessage(AnthropicCreateMessageRequest request, StreamingResponseHandler<AiMessage> handler) {
-        restApi.streamMessage(request, createMetadata())
+        restApi.streamMessage(request, createMetadata(request))
                 .subscribe()
                 .withSubscriber(new AnthropicStreamingSubscriber(handler));
     }
 
-    private AnthropicRestApi.ApiMetadata createMetadata() {
-        return AnthropicRestApi.ApiMetadata.builder()
+    private AnthropicRestApi.ApiMetadata createMetadata(AnthropicCreateMessageRequest request) {
+        var builder = AnthropicRestApi.ApiMetadata.builder()
                 .apiKey(apiKey)
-                .anthropicVersion(anthropicVersion)
-                .build();
+                .anthropicVersion(anthropicVersion);
+        if (hasTools(request)) {
+            builder.beta(BETA);
+        }
+        return builder.build();
+    }
+
+    private boolean hasTools(AnthropicCreateMessageRequest request) {
+        if (!isNullOrEmpty(request.getTools())) {
+            return true;
+        }
+        List<AnthropicMessage> messages = request.getMessages();
+        for (AnthropicMessage message : messages) {
+            List<AnthropicMessageContent> contents = message.getContent();
+            for (AnthropicMessageContent content : contents) {
+                if ((content instanceof AnthropicToolUseContent) || (content instanceof AnthropicToolResultContent)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static class AnthropicStreamingSubscriber implements MultiSubscriber<AnthropicStreamingData> {
