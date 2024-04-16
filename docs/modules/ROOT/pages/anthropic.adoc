@@ -1,0 +1,37 @@
+= Anthropic
+
+include::./includes/attributes.adoc[]
+
+https://www.anthropic.com/[Anthropic] is an AI safety and research company based in San Francisco which provides the https://www.anthropic.com/claude[Claude] LLM models.
+
+== Using Anthropic Models
+
+To employ Anthropic LLMs, integrate the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-anthropic</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured Anthropic model.
+
+=== Configuration
+
+Configuring Anthropic models mandates an API key, obtainable by creating an account on the https://docs.anthropic.com/claude/docs/getting-access-to-claude[Claude platform].
+
+The API key can be set in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.anthropic.api-key=...
+----
+
+TIP: Alternatively, leverage the `QUARKUS_LANGCHAIN4J_ANTHROPIC_API_KEY` environment variable.
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-anthropic.adoc[leveloffset=+1,opts=optional]

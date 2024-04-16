@@ -18,6 +18,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-anthropic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -58,6 +63,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-bam</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -85,6 +95,11 @@
         </dependency>
 
         <!-- Make sure the doc is built after the other artifacts -->
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-anthropic-deployment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
@@ -136,6 +151,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mistral-ai-deployment</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
@@ -276,9 +296,11 @@
                                 <resource>
                                     <directory>${project.basedir}/../target/asciidoc/generated/config/</directory>
                                     <include>quarkus-langchain4j.adoc</include>
+                                    <include>quarkus-langchain4j-anthropic.adoc</include>
                                     <include>quarkus-langchain4j-openai.adoc</include>
                                     <include>quarkus-langchain4j-huggingface.adoc</include>
                                     <include>quarkus-langchain4j-ollama.adoc</include>
+                                    <include>quarkus-langchain4j-mistralai.adoc</include>
                                     <include>quarkus-langchain4j-redis.adoc</include>
                                     <include>quarkus-langchain4j-chroma.adoc</include>
                                     <include>quarkus-langchain4j-pinecone.adoc</include>
