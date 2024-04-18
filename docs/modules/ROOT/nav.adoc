@@ -11,8 +11,11 @@
 ** xref:openai.adoc[OpenAI]
 ** xref:huggingface.adoc[HuggingFace]
 ** xref:ollama.adoc[Ollama]
+** xref:anthropic.adoc[Anthropic (Claude)]
+** xref:mistral.adoc[Mistral AI]
 ** xref:bam.adoc[IBM BAM]
 ** xref:watsonx.adoc[IBM watsonx.ai]
+** xref:mistral.adoc[Mistral AI]
 
 * Document Stores
 ** xref:redis-store.adoc[Redis Store]

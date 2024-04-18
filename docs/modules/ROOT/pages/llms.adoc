@@ -26,3 +26,5 @@ Please check the specific documentation for the LLM you are using to see what fe
 - xref:ollama.adoc[Ollama]
 - xref:bam.adoc[IBM BAM]
 - xref:watsonx.adoc[IBM watsonx.ai]
+- xref:mistral.adoc[Mistral AI]
+

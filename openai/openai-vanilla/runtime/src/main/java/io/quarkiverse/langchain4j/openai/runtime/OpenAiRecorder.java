@@ -37,13 +37,14 @@ import io.smallrye.config.ConfigValidationException;
 public class OpenAiRecorder {
 
     private static final String DUMMY_KEY = "dummy";
+    private static final String OPENAI_BASE_URL = "https://api.openai.com/v1/";
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jOpenAiConfig runtimeConfig, String modelName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
@@ -88,7 +89,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
@@ -131,14 +132,14 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, modelName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKeyOpt = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKeyOpt)) {
+            String apiKey = openAiConfig.apiKey();
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
             EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
             var builder = OpenAiEmbeddingModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
-                    .apiKey(apiKeyOpt)
+                    .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
@@ -172,7 +173,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
             ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
@@ -208,7 +209,7 @@ public class OpenAiRecorder {
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
+            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(modelName));
             }
             ImageModelConfig imageModelConfig = openAiConfig.imageModel();

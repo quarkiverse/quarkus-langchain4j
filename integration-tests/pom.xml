@@ -11,6 +11,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>anthropic</module>
     <module>openai</module>
     <module>hugging-face</module>
     <module>bam</module>

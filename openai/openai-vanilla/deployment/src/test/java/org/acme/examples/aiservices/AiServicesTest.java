@@ -1,15 +1,15 @@
 package org.acme.examples.aiservices;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
-import static io.quarkiverse.langchain4j.openai.test.WiremockUtils.DEFAULT_TOKEN;
 import static java.time.Month.JULY;
-import static org.acme.examples.aiservices.MessageAssertUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -21,24 +21,19 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.validation.constraints.NotNull;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.ChatMessage;
@@ -57,33 +52,28 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AiServicesTest {
+public class AiServicesTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
-                            .addClasses(WiremockUtils.class, MessageAssertUtils.class)
                             .addAsResource("messages/recipe-user.txt")
                             .addAsResource("messages/translate-user.txt")
                             .addAsResource("messages/translate-system"));
 
-    static WireMockServer wireMockServer;
-
-    static ObjectMapper mapper;
-
-    private static OpenAiChatModel createChatModel() {
-        return OpenAiChatModel.builder().baseUrl("http://localhost:8089/v1")
+    private OpenAiChatModel createChatModel() {
+        return OpenAiChatModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
                 .logRequests(true)
                 .logResponses(true)
                 .apiKey("whatever").build();
     }
 
-    private static OpenAiModerationModel createModerationModel() {
-        return OpenAiModerationModel.builder().baseUrl("http://localhost:8089/v1")
+    private OpenAiModerationModel createModerationModel() {
+        return OpenAiModerationModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
                 .logRequests(true)
                 .logResponses(true)
                 .apiKey("whatever").build();
@@ -93,23 +83,10 @@ public class AiServicesTest {
         return MessageWindowChatMemory.withMaxMessages(10);
     }
 
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(8089));
-        wireMockServer.start();
-
-        mapper = new ObjectMapper();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
-
     @BeforeEach
     void setup() {
-        wireMockServer.resetAll();
-        wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
+        resetRequests();
+        resetMappings();
     }
 
     interface Assistant {
@@ -156,7 +133,7 @@ public class AiServicesTest {
 
     @Test
     void test_extract_date() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "1968-07-04"));
+        setChatCompletionMessageContent("1968-07-04");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalDate result = dateTimeExtractor.extractDateFrom(
@@ -169,7 +146,7 @@ public class AiServicesTest {
 
     @Test
     void test_extract_time() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "23:45:00"));
+        setChatCompletionMessageContent("23:45:00");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalTime result = dateTimeExtractor.extractTimeFrom(
@@ -182,7 +159,7 @@ public class AiServicesTest {
 
     @Test
     void test_extract_date_time() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "1968-07-04T23:45:00"));
+        setChatCompletionMessageContent("1968-07-04T23:45:00");
         DateTimeExtractor dateTimeExtractor = AiServices.create(DateTimeExtractor.class, createChatModel());
 
         LocalDateTime result = dateTimeExtractor.extractDateTimeFrom(
@@ -207,7 +184,7 @@ public class AiServicesTest {
 
     @Test
     void test_extract_enum() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(), "POSITIVE"));
+        setChatCompletionMessageContent("POSITIVE");
         SentimentAnalyzer sentimentAnalyzer = AiServices.create(SentimentAnalyzer.class, createChatModel());
 
         Sentiment sentiment = sentimentAnalyzer.analyzeSentimentOf(
@@ -233,9 +210,9 @@ public class AiServicesTest {
 
     @Test
     void test_extract_custom_POJO() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+        setChatCompletionMessageContent(
                 // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"firstName\\\": \\\"John\\\",\\n\\\"lastName\\\": \\\"Doe\\\",\\n\\\"birthDate\\\": \\\"1968-07-04\\\"\\n}"));
+                "{\\n\\\"firstName\\\": \\\"John\\\",\\n\\\"lastName\\\": \\\"Doe\\\",\\n\\\"birthDate\\\": \\\"1968-07-04\\\"\\n}");
         PersonExtractor personExtractor = AiServices.create(PersonExtractor.class, createChatModel());
 
         String text = "In 1968, amidst the fading echoes of Independence Day, "
@@ -252,7 +229,7 @@ public class AiServicesTest {
                 "Extract information about a person from In 1968, amidst the fading echoes of Independence Day, " +
                         "a child named John arrived under the calm evening sky. This newborn, bearing the surname Doe, " +
                         "marked the start of a new journey.\nYou must answer strictly in the following JSON format: " +
-                        "{\n\"firstName\": (type: string),\n\"lastName\": (type: string),\n\"birthDate\": (type: date string (2023-12-31)),\n}");
+                        "{\n\"firstName\": (type: string),\n\"lastName\": (type: string),\n\"birthDate\": (type: date string (2023-12-31))\n}");
     }
 
     static class Recipe {
@@ -297,9 +274,9 @@ public class AiServicesTest {
 
     @Test
     void test_create_recipe_from_list_of_ingredients() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+        setChatCompletionMessageContent(
                 // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}"));
+                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
@@ -312,14 +289,14 @@ public class AiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(),
                 "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
                         +
-                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
+                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
     }
 
     @Test
     void test_create_recipe_using_structured_prompt() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+        setChatCompletionMessageContent(
                 // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}"));
+                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef
@@ -333,14 +310,14 @@ public class AiServicesTest {
         assertSingleRequestMessage(getRequestAsMap(),
                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
                         +
-                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}");
+                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
     }
 
     @Test
     void test_create_recipe_using_structured_prompt_and_system_message() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
+        setChatCompletionMessageContent(
                 // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Medley Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with a Mediterranean twist.\\\",\\n\\\"steps\\\": [\\n\\\"Slice and dice, precise!\\\",\\n\\\"Mix and toss, no loss!\\\",\\n\\\"Sprinkle feta, get betta!\\\",\\n\\\"Garnish with olives, no jives!\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}"));
+                "{\\n\\\"title\\\": \\\"Greek Medley Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with a Mediterranean twist.\\\",\\n\\\"steps\\\": [\\n\\\"Slice and dice, precise!\\\",\\n\\\"Mix and toss, no loss!\\\",\\n\\\"Sprinkle feta, get betta!\\\",\\n\\\"Garnish with olives, no jives!\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef
@@ -362,7 +339,7 @@ public class AiServicesTest {
                                 "Create a recipe of a salad that can be prepared using only [cucumber, tomato, feta, onion, olives]\n"
                                         +
                                         "You must answer strictly in the following JSON format: " +
-                                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer),\n}")));
+                                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}")));
     }
 
     @SystemMessage("You are a professional chef. You are friendly, polite and concise.")
@@ -376,8 +353,8 @@ public class AiServicesTest {
 
     @Test
     void test_with_system_message_of_first_method() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption."));
+        setChatCompletionMessageContent(
+                "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption.");
         ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
 
         String result = chef.answer("How long should I grill chicken?");
@@ -392,8 +369,8 @@ public class AiServicesTest {
 
     @Test
     void test_with_system_message_of_second_method() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption."));
+        setChatCompletionMessageContent(
+                "Grilling chicken typically takes around 10-15 minutes per side, depending on the thickness of the chicken. It's important to ensure the internal temperature reaches 165°F (74°C) for safe consumption.");
         ProfessionalChef chef = AiServices.create(ProfessionalChef.class, createChatModel());
 
         String result = chef.answer2("How long should I grill chicken?");
@@ -415,8 +392,7 @@ public class AiServicesTest {
 
     @Test
     void test_with_system_and_user_messages() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Hallo, wie geht es dir?"));
+        setChatCompletionMessageContent("Hallo, wie geht es dir?");
         Translator translator = AiServices.create(Translator.class, createChatModel());
 
         String translation = translator.translate("Hello, how are you?", "german");
@@ -438,8 +414,8 @@ public class AiServicesTest {
 
     @Test
     void test_with_system_message_and_user_message_as_argument() throws IOException {
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "- AI is a branch of computer science\\n- AI aims to create machines that mimic human intelligence\\n- AI can perform tasks like recognizing patterns, making decisions, and predictions"));
+        setChatCompletionMessageContent(
+                "- AI is a branch of computer science\\n- AI aims to create machines that mimic human intelligence\\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
         Summarizer summarizer = AiServices.create(Summarizer.class, createChatModel());
 
         String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
@@ -468,7 +444,8 @@ public class AiServicesTest {
 
     @Test
     void should_throw_when_text_is_flagged() {
-        wireMockServer.stubFor(WiremockUtils.moderationMapping(DEFAULT_TOKEN)
+        wiremock().register(post(urlEqualTo("/v1/moderations"))
+                .withHeader("Authorization", equalTo("Bearer whatever"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(
@@ -521,7 +498,8 @@ public class AiServicesTest {
 
     @Test
     void should_not_throw_when_text_is_not_flagged() {
-        wireMockServer.stubFor(WiremockUtils.moderationMapping(DEFAULT_TOKEN)
+        wiremock().register(post(urlEqualTo("/v1/moderations"))
+                .withHeader("Authorization", equalTo("Bearer whatever"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(
@@ -592,8 +570,7 @@ public class AiServicesTest {
 
         /* **** First request **** */
         String firstUserMessage = "Hello, my name is Klaus";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
         String firstAiMessage = chatWithMemory.chatWithoutSystemMessage(firstUserMessage);
 
         // assert response
@@ -608,11 +585,10 @@ public class AiServicesTest {
                 .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondUserMessage = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Klaus"));
+        setChatCompletionMessageContent("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithoutSystemMessage(secondUserMessage);
 
         // assert response
@@ -645,8 +621,7 @@ public class AiServicesTest {
         String systemMessage = "You are helpful assistant";
         String firstUserMessage = "Hello, my name is Klaus";
 
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
 
         String firstAiMessage = chatWithMemory.chatWithSystemMessage(firstUserMessage);
 
@@ -665,11 +640,10 @@ public class AiServicesTest {
                 .containsExactly(tuple(SYSTEM, systemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondUserMessage = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Klaus"));
+        setChatCompletionMessageContent("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithSystemMessage(secondUserMessage);
 
         // assert response
@@ -704,8 +678,7 @@ public class AiServicesTest {
         String firstSystemMessage = "You are helpful assistant";
         String firstUserMessage = "Hello, my name is Klaus";
 
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
 
         String firstAiMessage = chatWithMemory.chatWithSystemMessage(firstUserMessage);
 
@@ -724,12 +697,11 @@ public class AiServicesTest {
                 .containsExactly(tuple(SYSTEM, firstSystemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondSystemMessage = "You are funny assistant";
         String secondUserMessage = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Klaus"));
+        setChatCompletionMessageContent("Your name is Klaus");
         String secondAiMessage = chatWithMemory.chatWithAnotherSystemMessage(secondUserMessage);
 
         // assert response
@@ -795,8 +767,7 @@ public class AiServicesTest {
 
         /* **** First request for user 1 **** */
         String firstMessageFromFirstUser = "Hello, my name is Klaus";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Klaus"));
+        setChatCompletionMessageContent("Nice to meet you Klaus");
         String firstAiResponseToFirstUser = chatWithMemory.chat(firstMemoryId, firstMessageFromFirstUser);
 
         // assert response
@@ -811,11 +782,10 @@ public class AiServicesTest {
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String firstMessageFromSecondUser = "Hello, my name is Francine";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Nice to meet you Francine"));
+        setChatCompletionMessageContent("Nice to meet you Francine");
         String firstAiResponseToSecondUser = chatWithMemory.chat(secondMemoryId, firstMessageFromSecondUser);
 
         // assert response
@@ -830,11 +800,10 @@ public class AiServicesTest {
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondsMessageFromFirstUser = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Klaus"));
+        setChatCompletionMessageContent("Your name is Klaus");
         String secondAiMessageToFirstUser = chatWithMemory.chat(firstMemoryId, secondsMessageFromFirstUser);
 
         // assert response
@@ -854,11 +823,10 @@ public class AiServicesTest {
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
         /* **** Second request for user 2 **** */
-        wireMockServer.resetRequests();
+        resetRequests();
 
         String secondsMessageFromSecondUser = "What is my name?";
-        wireMockServer.stubFor(WiremockUtils.chatCompletionsMessageContent(Optional.empty(),
-                "Your name is Francine"));
+        setChatCompletionMessageContent("Your name is Francine");
         String secondAiMessageToSecondUser = chatWithMemory.chat(secondMemoryId, secondsMessageFromSecondUser);
 
         // assert response
@@ -951,23 +919,30 @@ public class AiServicesTest {
         String scenario = "tools";
         String secondState = "second";
 
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
+                        .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(firstResponse)));
-        wireMockServer.stubFor(
-                WiremockUtils.chatCompletionMapping(DEFAULT_TOKEN)
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(firstResponse)));
+        wiremock().register(
+                post(urlEqualTo("/v1/chat/completions"))
+                        .withHeader("Authorization", equalTo("Bearer whatever"))
                         .inScenario(scenario)
                         .whenScenarioStateIs(secondState)
-                        .willReturn(WiremockUtils.CHAT_RESPONSE_WITHOUT_BODY.withBody(secondResponse)));
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(secondResponse)));
 
-        wireMockServer.setScenarioState(scenario, Scenario.STARTED);
+        wiremock().setSingleScenarioState(scenario, Scenario.STARTED);
 
+        AtomicReference<WireMock> wiremockRef = new AtomicReference<>(wiremock());
         Assistant assistant = AiServices.builder(Assistant.class)
                 .chatLanguageModel(createChatModel())
                 .chatMemory(createChatMemory())
-                .tools(new Calculator(() -> wireMockServer.setScenarioState(scenario, secondState)))
+                .tools(new Calculator(() -> wiremockRef.get().setSingleScenarioState(scenario, secondState)))
                 .build();
 
         String userMessage = "What is the square root of 485906798473894056 in scientific notation?";
@@ -977,34 +952,14 @@ public class AiServicesTest {
         assertThat(answer).isEqualTo(
                 "The square root of 485,906,798,473,894,056 in scientific notation is approximately 6.97070153193991E8.");
 
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(2);
+        assertThat(wiremock().getServeEvents()).hasSize(2);
 
-        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(1))),
+        assertSingleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(1))),
                 "What is the square root of 485906798473894056 in scientific notation?");
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wireMockServer.getAllServeEvents().get(0))),
+        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
                 List.of(
                         new MessageContent("user", "What is the square root of 485906798473894056 in scientific notation?"),
                         new MessageContent("assistant", null),
                         new MessageContent("function", "6.97070153193991E8")));
-    }
-
-    private Map<String, Object> getRequestAsMap() throws IOException {
-        return getRequestAsMap(getRequestBody());
-    }
-
-    private Map<String, Object> getRequestAsMap(byte[] body) throws IOException {
-        return mapper.readValue(body, MAP_TYPE_REF);
-    }
-
-    private byte[] getRequestBody() {
-        assertThat(wireMockServer.getAllServeEvents()).hasSize(1);
-        ServeEvent serveEvent = wireMockServer.getAllServeEvents().get(0); // this works because we reset requests for Wiremock before each test
-        return getRequestBody(serveEvent);
-    }
-
-    private byte[] getRequestBody(ServeEvent serveEvent) {
-        LoggedRequest request = serveEvent.getRequest();
-        assertThat(request.getBody()).isNotEmpty();
-        return request.getBody();
     }
 }

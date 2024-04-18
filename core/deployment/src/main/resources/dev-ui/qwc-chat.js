@@ -221,7 +221,7 @@ status = ${item.toolExecutionResult.text}`);
 
     _filterChatItems(){
         this._chatItems = this._unfilteredChatItems.filter((item) => {
-            if(item.userName === "Me" || item.userName === "AI"){
+            if(item.userName === "Me" || item.userName === "AI" || item.userName === "Error"){
                 return true;
             }else if(this._showToolRelatedMessages && item.userName === "Tools"){
                 return true;

@@ -1,69 +1,34 @@
 package org.acme.examples.aiservices;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static io.quarkiverse.langchain4j.openai.test.WiremockUtils.DEFAULT_TOKEN;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.util.Map;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.ModerationException;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class ModerationModelTest {
-
-    private static final int WIREMOCK_PORT = 8089;
+public class ModerationModelTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class, MessageAssertUtils.class))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url", "http://localhost:" + WIREMOCK_PORT + "/v1");
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
-    };
-
-    static WireMockServer wireMockServer;
-
-    static ObjectMapper mapper;
-
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(WIREMOCK_PORT));
-        wireMockServer.start();
-
-        mapper = new ObjectMapper();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
-
-    @BeforeEach
-    void setup() {
-        wireMockServer.resetAll();
-        wireMockServer.stubFor(WiremockUtils.defaultChatCompletionsStub());
-    }
+                    () -> ShrinkWrap.create(JavaArchive.class))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
+                    WiremockAware.wiremockUrlForConfig("/v1"));
 
     @RegisterAiService(moderationModelSupplier = RegisterAiService.BeanIfExistsModerationModelSupplier.class)
     interface ChatWithModeration {
@@ -78,7 +43,7 @@ public class ModerationModelTest {
     @Test
     @ActivateRequestContext
     void should_throw_when_text_is_flagged() {
-        wireMockServer.stubFor(WiremockUtils.moderationMapping(DEFAULT_TOKEN)
+        wiremock().register(post(urlEqualTo("/v1/moderations"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(
@@ -128,7 +93,7 @@ public class ModerationModelTest {
     @Test
     @ActivateRequestContext
     void should_not_throw_when_text_is_not_flagged() {
-        wireMockServer.stubFor(WiremockUtils.moderationMapping(DEFAULT_TOKEN)
+        wiremock().register(post(urlEqualTo("/v1/moderations"))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(

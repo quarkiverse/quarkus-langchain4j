@@ -16,6 +16,21 @@ public interface EasyRagConfig {
     String path();
 
     /**
+     * Matcher used for filtering which files from the directory should be ingested.
+     * This uses the {@link java.nio.file.FileSystem} path matcher syntax.
+     * Example: `glob:**.txt` to recursively match all files with the `.txt` extension.
+     * The default is `glob:**`, recursively matching all files.
+     */
+    @WithDefault("glob:**")
+    String pathMatcher();
+
+    /**
+     * Whether to recursively ingest documents from subdirectories.
+     */
+    @WithDefault("true")
+    Boolean recursive();
+
+    /**
      * Maximum segment size when splitting documents, in tokens.
      */
     @WithDefault("300")

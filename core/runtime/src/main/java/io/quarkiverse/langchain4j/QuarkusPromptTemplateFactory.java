@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -14,21 +15,28 @@ import io.quarkus.qute.TemplateInstance;
 
 public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
 
-    private final LazyValue<Engine> engineLazyValue;
+    private static final AtomicReference<LazyValue<Engine>> engineLazyValue = new AtomicReference<>();
 
     public QuarkusPromptTemplateFactory() {
-        engineLazyValue = new LazyValue<>(new Supplier<Engine>() {
+        engineLazyValue.set(new LazyValue<>(new Supplier<Engine>() {
             @Override
             public Engine get() {
                 return Arc.container().instance(Engine.class).get().newBuilder()
                         .addParserHook(new MustacheTemplateVariableStyleParserHook()).build();
             }
-        });
+        }));
+    }
+
+    public static void clear() {
+        LazyValue<Engine> lazyValue = engineLazyValue.get();
+        if (lazyValue != null) {
+            lazyValue.clear();
+        }
     }
 
     @Override
     public Template create(Input input) {
-        return new QuteTemplate(engineLazyValue.get().parse(input.getTemplate()));
+        return new QuteTemplate(engineLazyValue.get().get().parse(input.getTemplate()));
     }
 
     public static class MustacheTemplateVariableStyleParserHook implements ParserHook {

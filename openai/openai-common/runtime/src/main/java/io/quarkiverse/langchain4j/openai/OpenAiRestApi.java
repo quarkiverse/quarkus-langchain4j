@@ -373,6 +373,8 @@ public interface OpenAiRestApi {
                             headerValue = maskAuthorizationHeaderValue(headerValue);
                         } else if (headerKey.equals("api-key")) {
                             headerValue = maskApiKeyHeaderValue(headerValue);
+                        } else if (headerKey.equals("Set-Cookie")) {
+                            headerValue = maskCookieHeaderValue(headerValue);
                         }
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
@@ -406,6 +408,19 @@ public interface OpenAiRestApi {
                         + apiKeyHeaderValue.substring(apiKeyHeaderValue.length() - 2);
             } catch (Exception e) {
                 return "Failed to mask the API key.";
+            }
+        }
+
+        private static String maskCookieHeaderValue(String cookieHeaderValue) {
+            try {
+                if (cookieHeaderValue.length() <= 4) {
+                    return cookieHeaderValue;
+                }
+                return cookieHeaderValue.substring(0, 2)
+                        + "..."
+                        + cookieHeaderValue.substring(cookieHeaderValue.length() - 2);
+            } catch (Exception e) {
+                return "Failed to mask the cookie value.";
             }
         }
     }

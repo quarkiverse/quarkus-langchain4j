@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.Tool;
-import io.quarkiverse.langchain4j.openai.test.WiremockUtils;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -23,8 +22,7 @@ public class ToolsApplicationScopedWithInterceptorTest extends ToolsScopeTestBas
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WiremockUtils.class,
-                    MyToolImpl.class, MyApp.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(MyToolImpl.class, MyApp.class));
 
     @Inject
     MyApp app;
