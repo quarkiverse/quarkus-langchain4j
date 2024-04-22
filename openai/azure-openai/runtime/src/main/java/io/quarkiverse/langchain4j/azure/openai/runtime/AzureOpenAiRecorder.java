@@ -58,7 +58,8 @@ public class AzureOpenAiRecorder {
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
                     .presencePenalty(chatModelConfig.presencePenalty())
-                    .frequencyPenalty(chatModelConfig.frequencyPenalty());
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -100,7 +101,8 @@ public class AzureOpenAiRecorder {
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
                     .presencePenalty(chatModelConfig.presencePenalty())
-                    .frequencyPenalty(chatModelConfig.frequencyPenalty());
+                    .frequencyPenalty(chatModelConfig.frequencyPenalty())
+                    .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());

@@ -254,7 +254,7 @@ public class AiServiceMethodImplementationSupport {
         for (var entry : nameToParamPosition.entrySet()) {
             templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
         }
-        Prompt prompt = PromptTemplate.from(systemMessageInfo.getText()).apply(templateParams);
+        Prompt prompt = PromptTemplate.from(systemMessageInfo.getText().get()).apply(templateParams);
         return Optional.of(prompt.toSystemMessage());
     }
 
@@ -276,8 +276,14 @@ public class AiServiceMethodImplementationSupport {
                 Object value = transformTemplateParamValue(methodArgs[entry.getValue()]);
                 templateParams.put(entry.getKey(), value);
             }
+            String templateText;
+            if (templateInfo.getText().isPresent()) {
+                templateText = templateInfo.getText().get();
+            } else {
+                templateText = (String) methodArgs[templateInfo.getMethodParamPosition().get()];
+            }
             // we do not need to apply the instructions as they have already been added to the template text at build time
-            Prompt prompt = PromptTemplate.from(templateInfo.getText()).apply(templateParams);
+            Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
 
             return createUserMessage(userName, prompt.text());
         } else if (userMessageInfo.getParamPosition().isPresent()) {

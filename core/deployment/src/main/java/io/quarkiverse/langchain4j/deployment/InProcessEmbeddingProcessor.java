@@ -120,8 +120,7 @@ public class InProcessEmbeddingProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void exposeInProcessEmbeddingBeans(InProcessEmbeddingRecorder recorder,
             List<InProcessEmbeddingBuildItem> embeddings,
-            BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer) {
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
             beanProducer.produce(SyntheticBeanBuildItem
@@ -133,7 +132,6 @@ public class InProcessEmbeddingProcessor {
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.instantiate(embedding.className()))
                     .done());
-            embeddingModelProducer.produce(new EmbeddingModelBuildItem());
         }
 
     }
