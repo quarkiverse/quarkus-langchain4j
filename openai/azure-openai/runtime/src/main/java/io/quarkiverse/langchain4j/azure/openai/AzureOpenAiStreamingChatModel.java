@@ -58,6 +58,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final Tokenizer tokenizer;
+    private final String responseFormat;
 
     public AzureOpenAiStreamingChatModel(String endpoint,
             String apiVersion,
@@ -70,6 +71,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             Double frequencyPenalty,
             Duration timeout,
             Proxy proxy,
+            String responseFormat,
             Boolean logRequests,
             Boolean logResponses) {
 
@@ -94,6 +96,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
         this.tokenizer = tokenizer;
+        this.responseFormat = responseFormat;
     }
 
     @Override
@@ -124,7 +127,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                 .topP(topP)
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
-                .frequencyPenalty(frequencyPenalty);
+                .frequencyPenalty(frequencyPenalty)
+                .responseFormat(responseFormat);
 
         Integer inputTokenCount = tokenizer == null ? null : tokenizer.estimateTokenCountInMessages(messages);
 
@@ -193,6 +197,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         private Double frequencyPenalty;
         private Duration timeout;
         private Proxy proxy;
+        private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
 
@@ -270,6 +275,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             return this;
         }
 
+        public Builder responseFormat(String responseFormat) {
+            this.responseFormat = responseFormat;
+            return this;
+        }
+
         public Builder logRequests(Boolean logRequests) {
             this.logRequests = logRequests;
             return this;
@@ -292,6 +302,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                     frequencyPenalty,
                     timeout,
                     proxy,
+                    responseFormat,
                     logRequests,
                     logResponses);
         }

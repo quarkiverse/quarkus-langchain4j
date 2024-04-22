@@ -52,6 +52,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
     private final Double frequencyPenalty;
     private final Integer maxRetries;
     private final Tokenizer tokenizer;
+    private final String responseFormat;
 
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
@@ -65,6 +66,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             Duration timeout,
             Integer maxRetries,
             Proxy proxy,
+            String responseFormat,
             Boolean logRequests,
             Boolean logResponses) {
 
@@ -83,6 +85,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .logResponses(logResponses))
                 .userAgent(Consts.DEFAULT_USER_AGENT)
                 .build();
+
         this.temperature = getOrDefault(temperature, 0.7);
         this.topP = topP;
         this.maxTokens = maxTokens;
@@ -90,6 +93,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         this.frequencyPenalty = frequencyPenalty;
         this.maxRetries = getOrDefault(maxRetries, 3);
         this.tokenizer = tokenizer;
+        this.responseFormat = responseFormat;
     }
 
     @Override
@@ -116,7 +120,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .topP(topP)
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
-                .frequencyPenalty(frequencyPenalty);
+                .frequencyPenalty(frequencyPenalty)
+                .responseFormat(responseFormat);
 
         if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
             requestBuilder.functions(toFunctions(toolSpecifications));
@@ -158,6 +163,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         private Duration timeout;
         private Integer maxRetries;
         private Proxy proxy;
+        private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
 
@@ -240,6 +246,11 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             return this;
         }
 
+        public Builder responseFormat(String responseFormat) {
+            this.responseFormat = responseFormat;
+            return this;
+        }
+
         public Builder logRequests(Boolean logRequests) {
             this.logRequests = logRequests;
             return this;
@@ -263,6 +274,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                     timeout,
                     maxRetries,
                     proxy,
+                    responseFormat,
                     logRequests,
                     logResponses);
         }
