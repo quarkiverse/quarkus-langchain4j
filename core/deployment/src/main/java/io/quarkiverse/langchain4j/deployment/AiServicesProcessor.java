@@ -7,6 +7,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +52,6 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
-import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -102,7 +102,6 @@ public class AiServicesProcessor {
 
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
-    private static final DotName V = DotName.createSimple(V.class);
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     private static final String DEFAULT_DELIMITER = "\n";
@@ -913,7 +912,7 @@ public class AiServicesProcessor {
 
             // TODO: we should probably add a lot more template validation here
             return Optional.of(
-                    new AiServiceMethodCreateInfo.TemplateInfo(
+                    AiServiceMethodCreateInfo.TemplateInfo.fromText(
                             systemMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)));
         }
@@ -951,7 +950,7 @@ public class AiServicesProcessor {
 
             // TODO: we should probably add a lot more template validation here
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
-                    new AiServiceMethodCreateInfo.TemplateInfo(userMessageTemplate,
+                    AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
                     userNameParamName, outputFormatInstructions);
         } else {
@@ -959,9 +958,19 @@ public class AiServicesProcessor {
                     .stream()
                     .filter(IS_METHOD_PARAMETER_ANNOTATION).findFirst();
             if (userMessageOnMethodParam.isPresent()) {
-                return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
-                        userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                        userNameParamName, outputFormatInstructions);
+                if (DotNames.STRING.equals(userMessageOnMethodParam.get().target().asMethodParameter().type().name())
+                        && !templateParams.isEmpty()) {
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
+                            AiServiceMethodCreateInfo.TemplateInfo.fromMethodParam(
+                                    Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
+                                            .intValue(),
+                                    TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
+                            userNameParamName, outputFormatInstructions);
+                } else {
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
+                            userMessageOnMethodParam.get().target().asMethodParameter().position(),
+                            userNameParamName, outputFormatInstructions);
+                }
             } else {
                 if (method.parametersCount() == 0) {
                     throw illegalConfigurationForMethod("Method should have at least one argument", method);

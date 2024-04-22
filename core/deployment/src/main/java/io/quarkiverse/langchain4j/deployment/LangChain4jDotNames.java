@@ -19,6 +19,7 @@ import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -42,6 +43,7 @@ public class LangChain4jDotNames {
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
+    static final DotName V = DotName.createSimple(dev.langchain4j.service.V.class);
 
     static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);

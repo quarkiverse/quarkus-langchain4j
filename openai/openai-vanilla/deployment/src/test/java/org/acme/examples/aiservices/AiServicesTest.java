@@ -9,6 +9,7 @@ import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
+import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static java.time.Month.JULY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -164,6 +165,24 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         LocalDateTime result = dateTimeExtractor.extractDateTimeFrom(
                 "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.");
+        assertThat(result).isEqualTo(LocalDateTime.of(1968, JULY, 4, 23, 45, 0));
+
+        assertSingleRequestMessage(getRequestAsMap(),
+                "Extract date and time from The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.\nYou must answer strictly in the following format: yyyy-MM-ddTHH:mm:ss");
+    }
+
+    interface TextOperator {
+        LocalDateTime doAnythingWithText(@UserMessage String userMessage, @V("text") String text);
+    }
+
+    @Test
+    void test_extract_date_from_text() throws IOException {
+        setChatCompletionMessageContent("1968-07-04T23:45:00");
+        TextOperator textOperator = AiServices.create(TextOperator.class, createChatModel());
+
+        String text = "The tranquility pervaded the evening of 1968, just fifteen minutes shy of midnight, following the celebrations of Independence Day.";
+
+        LocalDateTime result = textOperator.doAnythingWithText("Extract date and time from {{text}}", text);
         assertThat(result).isEqualTo(LocalDateTime.of(1968, JULY, 4, 23, 45, 0));
 
         assertSingleRequestMessage(getRequestAsMap(),
