@@ -206,6 +206,11 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
+                public Optional<String> responseFormat() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Optional<Boolean> logRequests() {
                     return Optional.empty();
                 }
@@ -214,6 +219,7 @@ class AzureOpenAiRecorderEndpointTests {
                 public Optional<Boolean> logResponses() {
                     return Optional.empty();
                 }
+
             };
         }
 
