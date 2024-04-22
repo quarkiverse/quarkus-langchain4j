@@ -125,8 +125,7 @@ public class InProcessEmbeddingProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void exposeInProcessEmbeddingBeans(InProcessEmbeddingRecorder recorder,
             List<InProcessEmbeddingBuildItem> embeddings,
-            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding) {
 
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
             Optional<String> modelName = selectedEmbedding.stream()
@@ -142,7 +141,7 @@ public class InProcessEmbeddingProcessor {
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.instantiate(embedding.className()));
             modelName.ifPresent(m -> addQualifierIfNecessary(builder, m));
-            beanProducer.produce(builder.done());
+            builder.done();
         }
 
     }

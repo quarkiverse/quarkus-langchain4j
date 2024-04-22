@@ -11,7 +11,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.jandex.AnnotationInstance;
 
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.deployment.EmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
@@ -39,14 +38,12 @@ public class MistralAiProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
-            BuildProducer<EmbeddingModelBuildItem> embeddingModelProducer,
             LangChain4jMistralAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
-            embeddingModelProducer.produce(new EmbeddingModelBuildItem());
         }
     }
 
