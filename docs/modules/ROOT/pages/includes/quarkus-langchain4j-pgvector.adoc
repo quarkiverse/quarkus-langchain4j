@@ -129,41 +129,46 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-type]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-type[quarkus.langchain4j.pgvector.metadata.type]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode[quarkus.langchain4j.pgvector.metadata.storage-mode]`
 
 
 [.description]
 --
 Metadata type:
 
- - COLUMNS: for static metadata, when you know in advance the list of metadata
- - JSON: For dynamic metadata, when you don't know the list of metadata that will be used.
- - JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset.
+ - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to define the right columns.
+ - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+ - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to change the type of the `metadata` column to COMBINED_JSONB.
 
-Default value: JSON
+Default value: COMBINED_JSON
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_TYPE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_STORAGE_MODE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_TYPE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_STORAGE_MODE+++`
 endif::add-copy-button-to-env-var[]
---|string 
-|`JSON`
+-- a|
+`column-per-key`, `combined-json`, `combined-jsonb` 
+|`combined-json`
 
 
-a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-definition]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-definition[quarkus.langchain4j.pgvector.metadata.definition]`
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions]]`link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions[quarkus.langchain4j.pgvector.metadata.column-definitions]`
 
 
 [.description]
 --
-Metadata Definition: SQL definition of metadata field(s). By default, "metadata JSON NULL" configured for JSON metadata type Ex: condominium_id uuid null, user uuid null
+Metadata Definition: SQL definition of metadata field(s). By default, "metadata JSON NULL" configured. This is only suitable if using the JSON metadata type.
+
+If using JSONB metadata type, this should in most cases be set to `metadata JSONB NULL`.
+
+If using COLUMNS metadata type, this should be a list of columns, one column for each desired metadata field. Example: condominium_id uuid null, user uuid null
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_DEFINITION+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_COLUMN_DEFINITIONS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_DEFINITION+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_COLUMN_DEFINITIONS+++`
 endif::add-copy-button-to-env-var[]
 --|list of string 
 |`metadata JSON NULL`
@@ -176,8 +181,8 @@ a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes]
 --
 Metadata Indexes, list of fields to use as index example:
 
- - JSON: metadata or (metadata->'key'), (metadata->'name'), (metadata->'age')
- - JSONB: (metadata_b->'key'), (metadata_b->'name'), (metadata_b->'age')
+ - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
+ - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
  - COLUMNS: key, name, age
 
 ifdef::add-copy-button-to-env-var[]

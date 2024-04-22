@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.pgvector.DefaultMetadataConfig;
+import dev.langchain4j.store.embedding.pgvector.DefaultMetadataStorageConfig;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig.MetadataConfig;
 
@@ -56,11 +56,11 @@ public class QuarkusPgVectorEmbeddingStore extends PgVectorEmbeddingStore
 
     // Needed for doc generation, ascii doctor generates twice the properties, one for each MetadataConfig
     // And build fail.
-    private static dev.langchain4j.store.embedding.pgvector.MetadataConfig toLangchainMetadataConfig(
+    private static dev.langchain4j.store.embedding.pgvector.MetadataStorageConfig toLangchainMetadataConfig(
             MetadataConfig metadataConfig) {
-        return DefaultMetadataConfig.builder()
-                .type(metadataConfig.type())
-                .definition(metadataConfig.definition())
+        return DefaultMetadataStorageConfig.builder()
+                .storageMode(metadataConfig.storageMode())
+                .columnDefinitions(metadataConfig.columnDefinitions())
                 .indexes(metadataConfig.indexes().orElse(Collections.emptyList()))
                 .indexType(metadataConfig.indexType())
                 .build();

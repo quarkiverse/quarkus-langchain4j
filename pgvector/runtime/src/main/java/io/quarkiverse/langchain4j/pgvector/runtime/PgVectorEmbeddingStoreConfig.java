@@ -5,6 +5,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 import java.util.List;
 import java.util.Optional;
 
+import dev.langchain4j.store.embedding.pgvector.MetadataStorageMode;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -64,18 +65,18 @@ public interface PgVectorEmbeddingStoreConfig {
         /**
          * Metadata type:
          * <ul>
-         * <li>COLUMNS: for static metadata, when you know in advance the list of metadata fields. In this case,
+         * <li>COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case,
          * you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to define the right columns.
-         * <li>JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
-         * <li>JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case,
+         * <li>COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
+         * <li>COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case,
          * you should also override the `quarkus.langchain4j.pgvector.metadata.definition` property to change the
-         * type of the `metadata` column to JSONB.
+         * type of the `metadata` column to COMBINED_JSONB.
          * </ul>
          * <p>
-         * Default value: JSON
+         * Default value: COMBINED_JSON
          */
-        @WithDefault("JSON")
-        String type();
+        @WithDefault("COMBINED_JSON")
+        MetadataStorageMode storageMode();
 
         /**
          * Metadata Definition: SQL definition of metadata field(s).
@@ -87,7 +88,7 @@ public interface PgVectorEmbeddingStoreConfig {
          * Example: condominium_id uuid null, user uuid null
          */
         @WithDefault("metadata JSON NULL")
-        List<String> definition();
+        List<String> columnDefinitions();
 
         /**
          * Metadata Indexes, list of fields to use as index

@@ -16,8 +16,8 @@ class ColumnsTest extends LangChain4jPgVectorBaseTest {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                    "quarkus.langchain4j.pgvector.metadata.type", "COLUMNS",
-                    "quarkus.langchain4j.pgvector.metadata.definition", "key text NULL, name text NULL, " +
+                    "quarkus.langchain4j.pgvector.metadata.storage-mode", "COLUMN_PER_KEY",
+                    "quarkus.langchain4j.pgvector.metadata.column-definitions", "key text NULL, name text NULL, " +
                             "age float NULL, city varchar null, country varchar null",
                     "quarkus.langchain4j.pgvector.metadata.indexes", "key, name, age");
         }
