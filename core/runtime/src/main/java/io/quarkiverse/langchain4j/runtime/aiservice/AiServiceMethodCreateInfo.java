@@ -128,21 +128,38 @@ public class AiServiceMethodCreateInfo {
 
     public static class TemplateInfo {
 
-        private final String text;
+        private final Optional<String> text;
         private final Map<String, Integer> nameToParamPosition;
+        // this is used to determine the position of the parameter that holds the template,
+        // and it is never set if 'text' is set
+        private final Optional<Integer> methodParamPosition;
 
         @RecordableConstructor
-        public TemplateInfo(String text, Map<String, Integer> nameToParamPosition) {
+        public TemplateInfo(Optional<String> text, Map<String, Integer> nameToParamPosition,
+                Optional<Integer> methodParamPosition) {
             this.text = text;
             this.nameToParamPosition = nameToParamPosition;
+            this.methodParamPosition = methodParamPosition;
         }
 
-        public String getText() {
+        public Optional<String> getText() {
             return text;
         }
 
         public Map<String, Integer> getNameToParamPosition() {
             return nameToParamPosition;
+        }
+
+        public Optional<Integer> getMethodParamPosition() {
+            return methodParamPosition;
+        }
+
+        public static TemplateInfo fromText(String text, Map<String, Integer> nameToParamPosition) {
+            return new TemplateInfo(Optional.of(text), nameToParamPosition, Optional.empty());
+        }
+
+        public static TemplateInfo fromMethodParam(Integer methodParamPosition, Map<String, Integer> nameToParamPosition) {
+            return new TemplateInfo(Optional.empty(), nameToParamPosition, Optional.of(methodParamPosition));
         }
     }
 
