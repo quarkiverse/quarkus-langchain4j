@@ -16,6 +16,7 @@ import io.quarkiverse.langchain4j.runtime.InProcessEmbeddingRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
+import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
@@ -124,7 +125,8 @@ public class InProcessEmbeddingProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void exposeInProcessEmbeddingBeans(InProcessEmbeddingRecorder recorder,
             List<InProcessEmbeddingBuildItem> embeddings,
-            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding) {
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
             Optional<String> modelName = selectedEmbedding.stream()
@@ -140,7 +142,7 @@ public class InProcessEmbeddingProcessor {
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.instantiate(embedding.className()));
             modelName.ifPresent(m -> addQualifierIfNecessary(builder, m));
-            builder.done();
+            beanProducer.produce(builder.done());
         }
 
     }
