@@ -11,6 +11,7 @@ import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.InMemoryEmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.devui.ChatJsonRPCService;
 import io.quarkiverse.langchain4j.runtime.devui.EmbeddingStoreJsonRPCService;
@@ -27,7 +28,8 @@ public class LangChain4jDevUIProcessor {
     @BuildStep(onlyIf = IsDevelopment.class)
     CardPageBuildItem cardPage(List<DeclarativeAiServiceBuildItem> aiServices,
             ToolsMetadataBuildItem toolsMetadataBuildItem,
-            List<EmbeddingModelProviderCandidateBuildItem> embeddingModelBuildItem,
+            List<EmbeddingModelProviderCandidateBuildItem> embeddingModelCandidateBuildItems,
+            List<InProcessEmbeddingBuildItem> inProcessEmbeddingModelBuildItems,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
             List<SelectedChatModelProviderBuildItem> chatModelProviders,
             Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem) {
@@ -40,7 +42,7 @@ public class LangChain4jDevUIProcessor {
         // - there is at least one embedding model (use the default one if there's more)
         // - there is a single embedding store (in case there's more, we need a way to select
         //   it via a qualifier or something to avoid ambiguity)
-        if (!embeddingModelBuildItem.isEmpty() &&
+        if ((!embeddingModelCandidateBuildItems.isEmpty() || !inProcessEmbeddingModelBuildItems.isEmpty()) &&
                 (embeddingStoreBuildItem.size() == 1 || inMemoryEmbeddingStoreBuildItem.isPresent())) {
             addEmbeddingStorePage(card);
         }
@@ -95,11 +97,12 @@ public class LangChain4jDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> producers,
-            List<EmbeddingModelProviderCandidateBuildItem> embeddingModelBuildItem,
+            List<InProcessEmbeddingBuildItem> inProcessEmbeddingModelBuildItems,
+            List<EmbeddingModelProviderCandidateBuildItem> embeddingModelCandidateBuildItems,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
             List<ChatModelProviderCandidateBuildItem> chatModelCandidates,
             Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem) {
-        if (!embeddingModelBuildItem.isEmpty() &&
+        if ((!embeddingModelCandidateBuildItems.isEmpty() || !inProcessEmbeddingModelBuildItems.isEmpty()) &&
                 (embeddingStoreBuildItem.size() == 1 || inMemoryEmbeddingStoreBuildItem.isPresent())) {
             producers.produce(new JsonRPCProvidersBuildItem(EmbeddingStoreJsonRPCService.class));
         }
