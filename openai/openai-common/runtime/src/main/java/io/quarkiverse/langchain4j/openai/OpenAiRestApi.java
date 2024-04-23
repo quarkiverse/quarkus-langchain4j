@@ -423,9 +423,20 @@ public interface OpenAiRestApi {
         @HeaderParam("OpenAI-Organization")
         public final String organizationId;
 
-        private ApiMetadata(String openaiApiKey, String azureApiKey,
-                String apiVersion, String organizationId) {
-            this.authorization = (openaiApiKey != null) ? "Bearer " + openaiApiKey : null;
+        private ApiMetadata(
+                String openaiApiKey,
+                String azureApiKey,
+                String azureAdToken,
+                String apiVersion,
+                String organizationId) {
+            if (azureAdToken != null) {
+                this.authorization = "Bearer " + azureAdToken;
+            } else if (openaiApiKey != null) {
+                this.authorization = "Bearer " + openaiApiKey;
+            } else {
+                this.authorization = null;
+            }
+
             this.azureApiKey = azureApiKey;
             this.apiVersion = apiVersion;
             this.organizationId = organizationId;
@@ -437,20 +448,26 @@ public interface OpenAiRestApi {
 
         public static class Builder {
             private String azureApiKey;
+            private String azureAdToken;
             private String openAiApiKey;
             private String apiVersion;
             private String organizationId;
 
             public ApiMetadata build() {
-                if ((azureApiKey != null) && (openAiApiKey != null)) {
-                    return new ApiMetadata(openAiApiKey, azureApiKey, apiVersion, organizationId);
+                if (azureAdToken != null) {
+                    return new ApiMetadata(null, null, azureAdToken, apiVersion, organizationId);
                 } else if (azureApiKey != null) {
-                    return new ApiMetadata(null, azureApiKey, apiVersion, organizationId);
+                    return new ApiMetadata(null, azureApiKey, null, apiVersion, organizationId);
                 } else if (openAiApiKey != null) {
-                    return new ApiMetadata(openAiApiKey, null, apiVersion, organizationId);
+                    return new ApiMetadata(openAiApiKey, null, null, apiVersion, organizationId);
                 }
 
-                return new ApiMetadata(null, null, apiVersion, organizationId);
+                return new ApiMetadata(null, null, null, apiVersion, organizationId);
+            }
+
+            public ApiMetadata.Builder azureAdToken(String azureAdToken) {
+                this.azureAdToken = azureAdToken;
+                return this;
             }
 
             public ApiMetadata.Builder azureApiKey(String azureApiKey) {
