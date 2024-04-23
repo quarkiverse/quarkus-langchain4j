@@ -9,6 +9,8 @@ import static dev.langchain4j.service.ServiceOutputParser.parse;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +42,10 @@ import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
-import io.quarkus.arc.Arc;
-import io.quarkus.arc.ArcContainer;
-import io.quarkus.arc.ManagedContext;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiEmitter;
@@ -57,6 +58,24 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
 
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
+
+    private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
+
+    static {
+        var defaultMemoryIdProviders = ServiceHelper.loadFactories(
+                DefaultMemoryIdProvider.class);
+        if (defaultMemoryIdProviders.isEmpty()) {
+            DEFAULT_MEMORY_ID_PROVIDERS = Collections.emptyList();
+        } else {
+            DEFAULT_MEMORY_ID_PROVIDERS = new ArrayList<>(defaultMemoryIdProviders);
+            DEFAULT_MEMORY_ID_PROVIDERS.sort(new Comparator<>() {
+                @Override
+                public int compare(DefaultMemoryIdProvider o1, DefaultMemoryIdProvider o2) {
+                    return Integer.compare(o1.priority(), o2.priority());
+                }
+            });
+        }
+    }
 
     /**
      * This method is called by the implementations of each ai service method.
@@ -322,16 +341,16 @@ public class AiServiceMethodImplementationSupport {
         if (createInfo.getMemoryIdParamPosition().isPresent()) {
             return methodArgs[createInfo.getMemoryIdParamPosition().get()];
         }
+
         if (hasChatMemoryProvider) {
-            // first we try to use the current context in order to make sure that we don't interleave chat messages of concurrent requests
-            ArcContainer container = Arc.container();
-            if (container != null) {
-                ManagedContext requestContext = container.requestContext();
-                if (requestContext.isActive()) {
-                    return requestContext.getState();
+            for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
+                Object memoryId = provider.getMemoryId();
+                if (memoryId != null) {
+                    return memoryId;
                 }
             }
         }
+
         // fallback to the default since there is nothing else we can really use here
         return "default";
     }

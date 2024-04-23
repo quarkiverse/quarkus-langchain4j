@@ -56,6 +56,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.RequestScopeStateDefaultMemoryIdProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
@@ -65,16 +66,17 @@ import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
-import io.quarkus.arc.processor.ScopeInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -86,6 +88,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -130,7 +133,8 @@ public class AiServicesProcessor {
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
         IndexView index = indexBuildItem.getIndex();
         Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.DESCRIPTION);
         Set<ClassInfo> classesUsingDescription = new HashSet<>();
@@ -163,10 +167,14 @@ public class AiServicesProcessor {
                     .constructors(false)
                     .build());
         }
+
+        serviceProviderProducer.produce(new ServiceProviderBuildItem(DefaultMemoryIdProvider.class.getName(),
+                RequestScopeStateDefaultMemoryIdProvider.class.getName()));
     }
 
     @BuildStep
     public void findDeclarativeServices(CombinedIndexBuildItem indexBuildItem,
+            CustomScopeAnnotationsBuildItem customScopes,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
@@ -299,8 +307,11 @@ public class AiServicesProcessor {
                 }
             }
 
-            BuiltinScope declaredScope = BuiltinScope.from(declarativeAiServiceClassInfo);
-            ScopeInfo cdiScope = declaredScope != null ? declaredScope.getInfo() : BuiltinScope.REQUEST.getInfo();
+            DotName cdiScope = BuiltinScope.REQUEST.getInfo().getDotName();
+            Optional<AnnotationInstance> scopeAnnotation = customScopes.getScope(declarativeAiServiceClassInfo.annotations());
+            if (scopeAnnotation.isPresent()) {
+                cdiScope = scopeAnnotation.get().name();
+            }
 
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
@@ -670,12 +681,12 @@ public class AiServicesProcessor {
                 try (ClassCreator classCreator = classCreatorBuilder.build()) {
                     if (isRegisteredService) {
                         // we need to make this a bean, so we need to add the proper scope annotation
-                        ScopeInfo scopeInfo = declarativeAiServiceItems.stream()
+                        DotName scopeInfo = declarativeAiServiceItems.stream()
                                 .filter(bi -> bi.getServiceClassInfo().equals(iface))
                                 .findFirst().orElseThrow(() -> new IllegalStateException(
                                         "Unable to determine the CDI scope of " + iface))
                                 .getCdiScope();
-                        classCreator.addAnnotation(scopeInfo.getDotName().toString());
+                        classCreator.addAnnotation(scopeInfo.toString());
                     }
 
                     FieldDescriptor contextField = classCreator.getFieldCreator("context", QuarkusAiServiceContext.class)
