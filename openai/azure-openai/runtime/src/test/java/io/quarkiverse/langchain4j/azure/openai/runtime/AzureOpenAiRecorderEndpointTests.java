@@ -143,13 +143,18 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
+        public Optional<String> adToken() {
+            return Optional.empty();
+        }
+
+        @Override
         public String apiVersion() {
             return null;
         }
 
         @Override
-        public String apiKey() {
-            return "my-key";
+        public Optional<String> apiKey() {
+            return Optional.of("my-key");
         }
 
         @Override

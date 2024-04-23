@@ -52,6 +52,7 @@ import io.smallrye.mutiny.subscription.Cancellable;
 public class QuarkusOpenAiClient extends OpenAiClient {
 
     private final String azureApiKey;
+    private final String azureAdToken;
     private final String openaiApiKey;
     private final String apiVersion;
     private final String organizationId;
@@ -77,6 +78,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         this.openaiApiKey = builder.openAiApiKey;
         this.apiVersion = builder.apiVersion;
         this.organizationId = builder.organizationId;
+        this.azureAdToken = builder.azureAdToken;
         // cache the client the builder could be called with the same parameters from multiple models
         this.restApi = cache.compute(builder, new BiFunction<Builder, OpenAiRestApi, OpenAiRestApi>() {
             @Override
@@ -129,6 +131,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         CompletionRequest.builder().from(request).stream(null).build(),
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -187,6 +190,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         ChatCompletionRequest.builder().from(request).stream(null).build(),
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -244,6 +248,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         .blockingChatCompletion(request,
                                 OpenAiRestApi.ApiMetadata.builder()
                                         .azureApiKey(azureApiKey)
+                                        .azureAdToken(azureAdToken)
                                         .openAiApiKey(openaiApiKey)
                                         .apiVersion(apiVersion)
                                         .organizationId(organizationId)
@@ -315,6 +320,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 return restApi.blockingEmbedding(request,
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -352,6 +358,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 return restApi.blockingEmbedding(request,
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -388,6 +395,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 return restApi.blockingModeration(request,
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -426,6 +434,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 return restApi.blockingModeration(request,
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -462,6 +471,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 return restApi.blockingImagesGenerations(generateImagesRequest,
                         OpenAiRestApi.ApiMetadata.builder()
                                 .azureApiKey(azureApiKey)
+                                .azureAdToken(azureAdToken)
                                 .openAiApiKey(openaiApiKey)
                                 .apiVersion(apiVersion)
                                 .organizationId(organizationId)
@@ -504,9 +514,27 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     public static class Builder extends OpenAiClient.Builder<QuarkusOpenAiClient, Builder> {
 
         private String userAgent;
+        private String azureAdToken;
 
         public Builder userAgent(String userAgent) {
             this.userAgent = userAgent;
+            return this;
+        }
+
+        public Builder azureAdToken(String azureAdToken) {
+            this.azureAdToken = azureAdToken;
+            return this;
+        }
+
+        @Override
+        public Builder openAiApiKey(String openAiApiKey) {
+            this.openAiApiKey = openAiApiKey;
+            return this;
+        }
+
+        @Override
+        public Builder azureApiKey(String azureApiKey) {
+            this.azureApiKey = azureApiKey;
             return this;
         }
 
@@ -535,6 +563,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                     && Objects.equals(readTimeout, builder.readTimeout) && Objects.equals(writeTimeout,
                             builder.writeTimeout)
                     && Objects.equals(proxy, builder.proxy)
+                    && Objects.equals(azureAdToken, builder.azureAdToken)
                     && Objects.equals(userAgent, builder.userAgent);
         }
 
@@ -542,7 +571,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         public int hashCode() {
             return Objects.hash(baseUrl, apiVersion, openAiApiKey, azureApiKey, organizationId, callTimeout, connectTimeout,
                     readTimeout,
-                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses, userAgent);
+                    writeTimeout, proxy, logRequests, logResponses, logStreamingResponses, userAgent, azureAdToken);
         }
     }
 

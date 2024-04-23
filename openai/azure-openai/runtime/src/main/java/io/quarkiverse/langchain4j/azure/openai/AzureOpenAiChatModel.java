@@ -57,6 +57,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
             String apiKey,
+            String adToken,
             Tokenizer tokenizer,
             Double temperature,
             Double topP,
@@ -74,7 +75,6 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
-                .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
                 .connectTimeout(timeout)
@@ -84,6 +84,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .logRequests(logRequests)
                 .logResponses(logResponses))
                 .userAgent(Consts.DEFAULT_USER_AGENT)
+                .azureAdToken(adToken)
+                .azureApiKey(apiKey)
                 .build();
 
         this.temperature = getOrDefault(temperature, 0.7);
@@ -154,6 +156,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         private String endpoint;
         private String apiVersion;
         private String apiKey;
+        private String adToken;
         private Tokenizer tokenizer;
         private Double temperature;
         private Double topP;
@@ -198,6 +201,11 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
          */
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder adToken(String adToken) {
+            this.adToken = adToken;
             return this;
         }
 
@@ -265,6 +273,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             return new AzureOpenAiChatModel(endpoint,
                     apiVersion,
                     apiKey,
+                    adToken,
                     tokenizer,
                     temperature,
                     topP,

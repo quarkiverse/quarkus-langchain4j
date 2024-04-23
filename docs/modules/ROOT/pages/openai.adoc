@@ -60,10 +60,17 @@ When this extension is used, the following configuration properties are required
 
 [source, properties]
 ----
-quarkus.langchain4j.azure-openai.api-key=
 quarkus.langchain4j.azure-openai.resource-name=
 quarkus.langchain4j.azure-openai.deployment-name=
+
+# And one of the below depending on your scenario
+quarkus.langchain4j.azure-openai.api-key=
+quarkus.langchain4j.azure-openai.ad-token=
 ----
+
+In the case of Azure, the `api-key` and `ad-token` properties are mutually exclusive. The `api-key` property should  be used when the Azure OpenAI service is configured to use API keys, while the `ad-token` property should be used when the Azure OpenAI service is configured to use Azure Active Directory tokens.
+
+In both cases, the key will be placed in the Authorization header when communicating with the Azure OpenAI service.
 
 == Advanced usage
 

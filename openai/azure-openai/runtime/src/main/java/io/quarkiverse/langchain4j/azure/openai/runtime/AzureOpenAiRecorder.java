@@ -34,7 +34,6 @@ import io.smallrye.config.ConfigValidationException.Problem;
 @Recorder
 public class AzureOpenAiRecorder {
 
-    private static final String DUMMY_KEY = "dummy";
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.openai.azure.com/openai/deployments/%s";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
@@ -43,13 +42,15 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-            String apiKey = azureAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-            }
+            String apiKey = azureAiConfig.apiKey().orElse(null);
+            String adToken = azureAiConfig.adToken().orElse(null);
+
+            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
+
             var builder = AzureOpenAiChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, modelName))
                     .apiKey(apiKey)
+                    .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
@@ -87,13 +88,15 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-            String apiKey = azureAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-            }
+            String apiKey = azureAiConfig.apiKey().orElse(null);
+            String adToken = azureAiConfig.adToken().orElse(null);
+
+            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
+
             var builder = AzureOpenAiStreamingChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, modelName))
                     .apiKey(apiKey)
+                    .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
@@ -129,13 +132,15 @@ public class AzureOpenAiRecorder {
 
         if (azureAiConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
-            String apiKey = azureAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+            String apiKey = azureAiConfig.apiKey().orElse(null);
+            String adToken = azureAiConfig.adToken().orElse(null);
+            if (apiKey == null && adToken == null) {
+                throw new ConfigValidationException(createKeyMisconfigurationProblem(modelName));
             }
             var builder = AzureOpenAiEmbeddingModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, modelName))
                     .apiKey(apiKey)
+                    .adToken(apiKey)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
@@ -162,16 +167,15 @@ public class AzureOpenAiRecorder {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
 
         if (azureAiConfig.enableIntegration()) {
-            var apiKey = azureAiConfig.apiKey();
-
-            if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
-            }
+            var apiKey = azureAiConfig.apiKey().orElse(null);
+            String adToken = azureAiConfig.adToken().orElse(null);
+            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, modelName))
                     .apiKey(apiKey)
+                    .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
@@ -261,12 +265,20 @@ public class AzureOpenAiRecorder {
         return azureAiConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String modelName) {
-        return createConfigProblems("api-key", modelName);
+    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, String modelName) {
+        if ((apiKey != null) == (adToken != null)) {
+            throw new ConfigValidationException(createKeyMisconfigurationProblem(modelName));
+        }
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private ConfigValidationException.Problem[] createKeyMisconfigurationProblem(String modelName) {
+        return new ConfigValidationException.Problem[] {
+                new ConfigValidationException.Problem(
+                        String.format(
+                                "SRCFG00014: Exactly of the configuration properties must be present: quarkus.langchain4j.azure-openai%s%s or quarkus.langchain4j.azure-openai%s%s",
+                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), "api-key",
+                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), "ad-token"))
+        };
     }
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {

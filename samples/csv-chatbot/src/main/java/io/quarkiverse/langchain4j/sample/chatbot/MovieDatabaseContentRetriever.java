@@ -30,7 +30,7 @@ public class MovieDatabaseContentRetriever implements ContentRetriever {
     @Override
     public List<Content> retrieve(Query query) {
         String question = query.text();
-        String sqlQuery = support.createSqlQuery(question);
+        String sqlQuery = support.createSqlQuery(question, MovieSchemaSupport.getSchemaString());
         if (sqlQuery.contains("```sql")) { // strip the formatting if it's there
             sqlQuery = sqlQuery.substring(sqlQuery.indexOf("```sql") + 6, sqlQuery.lastIndexOf("```"));
         }

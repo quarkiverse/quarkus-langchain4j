@@ -69,6 +69,13 @@ public interface LangChain4jAzureOpenAiConfig {
         Optional<String> endpoint();
 
         /**
+         * The Azure AD token to use for this operation.
+         * If present, then the requests towards OpenAI will include this in the Authorization header.
+         * Note that this property overrides the functionality of {@code quarkus.langchain4j.azure-openai.api-key}.
+         */
+        Optional<String> adToken();
+
+        /**
          * The API version to use for this operation. This follows the YYYY-MM-DD format
          */
         @WithDefault("2023-05-15")
@@ -77,8 +84,7 @@ public interface LangChain4jAzureOpenAiConfig {
         /**
          * Azure OpenAI API key
          */
-        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it..
-        String apiKey();
+        Optional<String> apiKey();
 
         /**
          * Timeout for OpenAI calls

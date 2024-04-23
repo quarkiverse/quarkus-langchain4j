@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
+import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.ModelName;
@@ -24,6 +25,10 @@ public class MultipleEmbeddingModelsTest {
     @Inject
     @ModelName("e2")
     EmbeddingModel secondNamedModel;
+
+    @Inject
+    @ModelName("e3")
+    EmbeddingModel fifthNamedModel;
 
     @Inject
     @ModelName("c1")
@@ -51,5 +56,10 @@ public class MultipleEmbeddingModelsTest {
     @Test
     void fourthNamedModel() {
         assertThat(ClientProxy.unwrap(fourthNamedModel)).isInstanceOf(AzureOpenAiEmbeddingModel.class);
+    }
+
+    @Test
+    void fifthNamedModel() {
+        assertThat(ClientProxy.unwrap(fifthNamedModel)).isInstanceOf(AllMiniLmL6V2EmbeddingModel.class);
     }
 }

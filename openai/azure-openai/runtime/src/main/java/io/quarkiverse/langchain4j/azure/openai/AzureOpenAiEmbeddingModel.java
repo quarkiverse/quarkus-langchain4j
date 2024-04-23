@@ -52,6 +52,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
     public AzureOpenAiEmbeddingModel(String endpoint,
             String apiVersion,
             String apiKey,
+            String adToken,
             Tokenizer tokenizer,
             Duration timeout,
             Integer maxRetries,
@@ -63,7 +64,6 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
 
         this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
-                .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
                 .connectTimeout(timeout)
@@ -73,6 +73,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
                 .logRequests(logRequests)
                 .logResponses(logResponses))
                 .userAgent(DEFAULT_USER_AGENT)
+                .azureAdToken(adToken)
+                .azureApiKey(apiKey)
                 .build();
         this.maxRetries = getOrDefault(maxRetries, 3);
         this.tokenizer = tokenizer;
@@ -143,6 +145,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         private Proxy proxy;
         private Boolean logRequests;
         private Boolean logResponses;
+        private String adToken;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -175,6 +178,11 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
          */
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder adToken(String adToken) {
+            this.adToken = adToken;
             return this;
         }
 
@@ -212,6 +220,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
             return new AzureOpenAiEmbeddingModel(endpoint,
                     apiVersion,
                     apiKey,
+                    adToken,
                     tokenizer,
                     timeout,
                     maxRetries,
