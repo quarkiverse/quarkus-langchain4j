@@ -43,7 +43,8 @@ public class AzureOpenAiImageModel implements ImageModel {
 
     private final QuarkusOpenAiClient client;
 
-    public AzureOpenAiImageModel(String endpoint, String apiKey, String apiVersion, String modelName, String size,
+    public AzureOpenAiImageModel(String endpoint, String apiKey, String adToken, String apiVersion, String modelName,
+            String size,
             String quality, String style, Optional<String> user, String responseFormat, Duration timeout,
             Integer maxRetries, Boolean logRequests, Boolean logResponses,
             Optional<Path> persistDirectory) {
@@ -58,7 +59,6 @@ public class AzureOpenAiImageModel implements ImageModel {
 
         this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
-                .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
                 .connectTimeout(timeout)
@@ -67,6 +67,8 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .logRequests(logRequests)
                 .logResponses(logResponses)
                 .userAgent(DEFAULT_USER_AGENT)
+                .azureAdToken(adToken)
+                .azureApiKey(apiKey)
                 .build();
     }
 
@@ -144,6 +146,7 @@ public class AzureOpenAiImageModel implements ImageModel {
     public static class Builder {
         private String endpoint;
         private String apiKey;
+        private String adToken;
         private String apiVersion;
         private String modelName;
         private String size;
@@ -164,6 +167,11 @@ public class AzureOpenAiImageModel implements ImageModel {
 
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder adToken(String adToken) {
+            this.adToken = adToken;
             return this;
         }
 
@@ -228,7 +236,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         }
 
         public AzureOpenAiImageModel build() {
-            return new AzureOpenAiImageModel(endpoint, apiKey, apiVersion, modelName, size, quality, style, user,
+            return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, style, user,
                     responseFormat, timeout, maxRetries, logRequests, logResponses,
                     persistDirectory);
         }

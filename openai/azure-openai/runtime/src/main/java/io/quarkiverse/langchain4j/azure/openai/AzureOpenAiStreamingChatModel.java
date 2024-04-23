@@ -63,6 +63,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     public AzureOpenAiStreamingChatModel(String endpoint,
             String apiVersion,
             String apiKey,
+            String adToken,
             Tokenizer tokenizer,
             Double temperature,
             Double topP,
@@ -79,7 +80,6 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
 
         this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
-                .azureApiKey(apiKey)
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
                 .connectTimeout(timeout)
@@ -89,6 +89,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                 .logRequests(logRequests)
                 .logStreamingResponses(logResponses))
                 .userAgent(DEFAULT_USER_AGENT)
+                .azureAdToken(adToken)
+                .azureApiKey(apiKey)
                 .build();
         this.temperature = getOrDefault(temperature, 0.7);
         this.topP = topP;
@@ -189,6 +191,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         private String endpoint;
         private String apiVersion;
         private String apiKey;
+        private String adToken;
         private Tokenizer tokenizer;
         private Double temperature;
         private Double topP;
@@ -232,6 +235,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
          */
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder adToken(String adToken) {
+            this.adToken = adToken;
             return this;
         }
 
@@ -294,6 +302,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             return new AzureOpenAiStreamingChatModel(endpoint,
                     apiVersion,
                     apiKey,
+                    adToken,
                     tokenizer,
                     temperature,
                     topP,
