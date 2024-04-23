@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.Comment;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
@@ -32,9 +34,11 @@ public class Movie {
 
     @Column(name = "run_time")
     @JsonProperty("run_time")
+    @Comment("in minutes")
     private int runTime;
 
     @Column(name = "genre")
+    @Comment("this is a comma-separated list of genres")
     private String genre;
 
     @Column(name = "imdb_rating")
@@ -46,6 +50,7 @@ public class Movie {
 
     @Column(name = "gross_total")
     @JsonProperty("gross_total")
+    @Comment("in millions of US dollars")
     private float grossTotal;
 
     public int getId() {
