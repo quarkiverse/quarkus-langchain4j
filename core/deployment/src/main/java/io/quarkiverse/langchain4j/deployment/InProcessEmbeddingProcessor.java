@@ -1,14 +1,19 @@
 package io.quarkiverse.langchain4j.deployment;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.runtime.InProcessEmbeddingRecorder;
+import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -120,20 +125,30 @@ public class InProcessEmbeddingProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void exposeInProcessEmbeddingBeans(InProcessEmbeddingRecorder recorder,
             List<InProcessEmbeddingBuildItem> embeddings,
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
-            beanProducer.produce(SyntheticBeanBuildItem
+            Optional<String> modelName = selectedEmbedding.stream()
+                    .filter(se -> se.getProvider().equals(embedding.getProvider()))
+                    .map(SelectedEmbeddingModelCandidateBuildItem::getModelName)
+                    .findFirst();
+            var builder = SyntheticBeanBuildItem
                     .configure(DotName.createSimple(embedding.className()))
                     .types(EmbeddingModel.class)
                     .defaultBean()
                     .setRuntimeInit()
                     .unremovable()
                     .scope(ApplicationScoped.class)
-                    .supplier(recorder.instantiate(embedding.className()))
-                    .done());
+                    .supplier(recorder.instantiate(embedding.className()));
+            modelName.ifPresent(m -> addQualifierIfNecessary(builder, m));
+            beanProducer.produce(builder.done());
         }
-
     }
 
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
+        if (!NamedModelUtil.isDefault(modelName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+        }
+    }
 }
