@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "movie", schema = "public")
 public class Movie {
@@ -18,27 +20,32 @@ public class Movie {
     private int index;
 
     @Column(name = "movie_name")
+    @JsonProperty("movie_name")
     private String movieName;
 
     @Column(name = "year_of_release")
+    @JsonProperty("year_of_release")
     private int yearOfRelease;
 
     @Column(name = "category")
     private String category;
 
     @Column(name = "run_time")
+    @JsonProperty("run_time")
     private int runTime;
 
     @Column(name = "genre")
     private String genre;
 
     @Column(name = "imdb_rating")
+    @JsonProperty("imdb_rating")
     private float imdbRating;
 
     @Column(name = "votes")
-    private int votes;
+    private Integer votes;
 
     @Column(name = "gross_total")
+    @JsonProperty("gross_total")
     private float grossTotal;
 
     public int getId() {
@@ -105,11 +112,11 @@ public class Movie {
         this.imdbRating = imdbRating;
     }
 
-    public int getVotes() {
+    public Integer getVotes() {
         return votes;
     }
 
-    public void setVotes(int votes) {
+    public void setVotes(Integer votes) {
         this.votes = votes;
     }
 
