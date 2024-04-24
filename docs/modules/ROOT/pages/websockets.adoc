@@ -1,0 +1,70 @@
+= Using AI services in WebSockets
+
+include::./includes/attributes.adoc[]
+
+Using a chatbot in a WebSockets environment is quite common, which is why the extension provides a few facilities to make such usages as easy as possible.
+
+* 1. Start by adding the link:https://quarkus.io/guides/websockets-next-tutorial[quarkus-websockets-next] dependency to your `pom.xml` file:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-websockets-next</artifactId>
+</dependency>
+----
+
+IMPORTANT: `quarkus-websockets-next` is available as of Quarkus 3.9.
+
+* 2. Annotated your AiService with `@SessionScoped`
+
+[source,java]
+----
+import dev.langchain4j.service.SystemMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import jakarta.enterprise.context.SessionScoped;
+
+@RegisterAiService
+@SessionScoped
+public interface SessionScopedChatBot {
+
+    @SystemMessage("You are chatbot that helps users with their queries")
+    String chat(String message);
+}
+----
+
+* 3. Create a WebSocket endpoint
+
+[source,java]
+----
+import io.quarkus.websockets.next.OnOpen;
+import io.quarkus.websockets.next.OnTextMessage;
+import io.quarkus.websockets.next.WebSocket;
+
+@WebSocket(path = "/websocket")
+public static class WebSocketChatBot {
+
+    private final SessionScopedChatBot bot;
+
+    public WebSocketChatBot(SessionScopedChatBot bot) {
+        this.bot = bot;
+    }
+
+    @OnOpen
+    public String onOpen() {
+        return bot.chat("Hello, how can I help you?");
+    }
+
+    @OnTextMessage
+    public String onMessage(String message) {
+        return bot.chat(message);
+    }
+}
+----
+
+Two things are important to note in the snippets above:
+
+* There is no `@MemoryId` field being used in the AI service. Quarkus will automatically all the WebSocket connection ID as the memory ID.
+This ensures that each WebSocket session has its own chat memory.
+* The use of `@SessionScoped` is important as the scope of the AI service is tied to the scope of the WebSocket endpoint.
+This allows Quarkus to automatically clear chat memory when the WebSocket connection is closed for whatever reason.
