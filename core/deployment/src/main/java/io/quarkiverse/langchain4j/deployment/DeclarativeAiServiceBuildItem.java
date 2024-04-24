@@ -5,7 +5,6 @@ import java.util.List;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
-import io.quarkus.arc.processor.ScopeInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 
 /**
@@ -23,7 +22,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
-    private final ScopeInfo cdiScope;
+    private final DotName cdiScope;
     private final String chatModelName;
     private final String moderationModelName;
 
@@ -35,7 +34,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             boolean customRetrievalAugmentorSupplierClassIsABean,
             DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
-            ScopeInfo cdiScope,
+            DotName cdiScope,
             String chatModelName,
             String moderationModelName) {
         this.serviceClassInfo = serviceClassInfo;
@@ -88,7 +87,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return moderationModelSupplierDotName;
     }
 
-    public ScopeInfo getCdiScope() {
+    public DotName getCdiScope() {
         return cdiScope;
     }
 

@@ -35,6 +35,7 @@
     <module>qdrant</module>
     <module>redis</module>
     <module>watsonx</module>
+    <module>websockets-next</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
