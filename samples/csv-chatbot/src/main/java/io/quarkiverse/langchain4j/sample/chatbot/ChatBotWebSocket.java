@@ -1,55 +1,26 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
-import java.io.IOException;
+import io.quarkus.websockets.next.OnOpen;
+import io.quarkus.websockets.next.OnTextMessage;
+import io.quarkus.websockets.next.WebSocket;
 
-import jakarta.inject.Inject;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
-import jakarta.websocket.server.ServerEndpoint;
-
-import org.eclipse.microprofile.context.ManagedExecutor;
-
-import io.quarkiverse.langchain4j.ChatMemoryRemover;
-
-@ServerEndpoint("/chatbot")
+@WebSocket(path = "/chatbot")
 public class ChatBotWebSocket {
 
-    @Inject
-    MovieMuse bot;
+    private final MovieMuse bot;
 
-    @Inject
-    ManagedExecutor managedExecutor;
+    public ChatBotWebSocket(MovieMuse bot) {
+        this.bot = bot;
+    }
 
     @OnOpen
-    public void onOpen(Session session) {
-        managedExecutor.execute(() -> {
-            String response = bot.chat(session, "hello");
-            try {
-                session.getBasicRemote().sendText(response);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public String onOpen() {
+        return "Hello, I'm MovieMuse, how can I help you?";
     }
 
-    @OnClose
-    void onClose(Session session) {
-        ChatMemoryRemover.remove(bot, session);
-    }
-
-    @OnMessage
-    public void onMessage(String message, Session session) {
-        managedExecutor.execute(() -> {
-            String response = bot.chat(session, message);
-            try {
-                session.getBasicRemote().sendText(response);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
+    @OnTextMessage
+    public String onMessage(String message) {
+        return bot.chat(message);
     }
 
 }
