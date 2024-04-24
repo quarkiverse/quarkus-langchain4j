@@ -638,7 +638,7 @@ public class AiServicesProcessor {
             ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
-                Set<MethodInfo> allMethods = new HashSet<>(iface.methods());
+                List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
                 JandexUtil.getAllSuperinterfaces(iface, index).forEach(ci -> allMethods.addAll(ci.methods()));
 
                 List<MethodInfo> methodsToImplement = new ArrayList<>();
@@ -647,6 +647,10 @@ public class AiServicesProcessor {
                     short modifiers = method.flags();
                     if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers) || JandexUtil.isDefault(
                             modifiers)) {
+                        continue;
+                    }
+
+                    if (methodsToImplement.stream().anyMatch(m -> MethodUtil.methodSignaturesMatch(m, method))) {
                         continue;
                     }
                     methodsToImplement.add(method);
