@@ -62,9 +62,12 @@ public interface LangChain4jOpenAiConfig {
         Duration timeout();
 
         /**
-         * The maximum number of times to retry
+         * The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
+         *
+         * @deprecated Using the built-in fault tolerance mechanisms is not recommended. If possible,
+         *             use MicroProfile Fault Tolerance instead.
          */
-        @WithDefault("3")
+        @WithDefault("1")
         Integer maxRetries();
 
         /**

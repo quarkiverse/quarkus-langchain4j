@@ -40,6 +40,9 @@ public class QuarkusCohereScoringModel implements ScoringModel {
             Integer maxRetries) {
         this.model = model;
         this.maxRetries = maxRetries;
+        if (this.maxRetries < 1) {
+            throw new IllegalArgumentException("max-retries must be at least 1");
+        }
         ClientHeadersFactory factory = new ClientHeadersFactory() {
             @Override
             public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
