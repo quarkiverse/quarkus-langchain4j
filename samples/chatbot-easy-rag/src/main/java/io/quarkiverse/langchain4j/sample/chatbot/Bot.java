@@ -1,14 +1,12 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
-import jakarta.inject.Singleton;
-
-import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import jakarta.enterprise.context.SessionScoped;
 
 @RegisterAiService // no need to declare a retrieval augmentor here, it is automatically generated and discovered
-@Singleton // this is singleton because WebSockets currently never closes the scope
+@SessionScoped
 public interface Bot {
 
     @SystemMessage("""
@@ -16,8 +14,6 @@ public interface Bot {
             Your response must be polite, use the same language as the question, and be relevant to the question.
 
             When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
-
-            Introduce yourself with: "Hello, I'm Bob, how can I help you?"
             """)
-    String chat(@MemoryId Object session, @UserMessage String question);
+    String chat(@UserMessage String question);
 }
