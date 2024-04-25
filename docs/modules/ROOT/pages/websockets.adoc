@@ -64,7 +64,7 @@ public static class WebSocketChatBot {
 
 Two things are important to note in the snippets above:
 
-* There is no `@MemoryId` field being used in the AI service. Quarkus will automatically use the WebSocket connection ID as the memory ID.
+* There is no `@MemoryId` field being used in the AI service. Quarkus will automatically assign the WebSocket connection ID as the memory ID.
 This ensures that each WebSocket session has its own chat memory.
 * The use of `@SessionScoped` is important as the scope of the AI service is tied to the scope of the WebSocket endpoint.
 This allows Quarkus to automatically clear chat memory when the WebSocket connection is closed for whatever reason.
