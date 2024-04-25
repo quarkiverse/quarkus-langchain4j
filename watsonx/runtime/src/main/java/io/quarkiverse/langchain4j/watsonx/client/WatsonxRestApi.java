@@ -22,11 +22,13 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
-import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
+import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.NotBody;
@@ -39,8 +41,9 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
 /**
- * This Microprofile REST client is used as the building block of all the API calls to watsonx.
- * The implementation is provided by the Reactive REST Client in Quarkus.
+ * This Microprofile REST client is used as the building block of all the API calls to watsonx. The implementation is provided
+ * by
+ * the Reactive REST Client in Quarkus.
  */
 @Path("/ml/v1")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -63,17 +66,22 @@ public interface WatsonxRestApi {
     public TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
             @QueryParam("version") String version);
 
+    @POST
+    @Path("/text/embeddings")
+    public EmbeddingResponse embeddings(EmbeddingRequest request, @NotBody String token,
+            @QueryParam("version") String version);
+
     @ClientExceptionMapper
     static WatsonxException toException(jakarta.ws.rs.core.Response response) {
         MediaType mediaType = response.getMediaType();
         if ((mediaType != null) && mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             try {
 
-                WatsonError ex = response.readEntity(WatsonError.class);
+                WatsonxError ex = response.readEntity(WatsonxError.class);
                 StringJoiner joiner = new StringJoiner("\n");
 
                 if (ex.errors() != null && ex.errors().size() > 0) {
-                    for (WatsonError.Error error : ex.errors())
+                    for (WatsonxError.Error error : ex.errors())
                         joiner.add("%s: %s".formatted(error.code(), error.message()));
                 }
 

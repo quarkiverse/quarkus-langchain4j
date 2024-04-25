@@ -13,7 +13,7 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.FinishReason;
-import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
+import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -116,9 +116,9 @@ public abstract class WatsonxModel {
                 if (e.details() == null || e.details().errors() == null || e.details().errors().size() == 0)
                     throw e;
 
-                Optional<WatsonError.Code> optional = Optional.empty();
-                for (WatsonError.Error error : e.details().errors()) {
-                    if (WatsonError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(error.code())) {
+                Optional<WatsonxError.Code> optional = Optional.empty();
+                for (WatsonxError.Error error : e.details().errors()) {
+                    if (WatsonxError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(error.code())) {
                         optional = Optional.of(error.code());
                         break;
                     }

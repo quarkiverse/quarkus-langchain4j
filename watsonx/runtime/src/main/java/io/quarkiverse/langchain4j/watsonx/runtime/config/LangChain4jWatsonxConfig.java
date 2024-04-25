@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.watsonx.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
-import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 
@@ -39,8 +38,8 @@ public interface LangChain4jWatsonxConfig {
         /**
          * Base URL
          */
-        @WithDefault("https://dummy.ai/api") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
-        URL baseUrl();
+        @WithDefault("https://dummy.ai/api")
+        String baseUrl();
 
         /**
          * IBM Cloud API key
@@ -55,15 +54,15 @@ public interface LangChain4jWatsonxConfig {
         Duration timeout();
 
         /**
-         * Version to use
+         * The version date for the API of the form YYYY-MM-DD
          */
-        @WithDefault("2023-05-29")
+        @WithDefault("2024-03-14")
         String version();
 
         /**
          * Watsonx.ai project id.
          */
-        @WithDefault("dummy") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
+        @WithDefault("dummy")
         String projectId();
 
         /**
@@ -95,5 +94,10 @@ public interface LangChain4jWatsonxConfig {
          * Chat model related settings
          */
         ChatModelConfig chatModel();
+
+        /**
+         * Embedding model related settings
+         */
+        EmbeddingModelConfig embeddingModel();
     }
 }

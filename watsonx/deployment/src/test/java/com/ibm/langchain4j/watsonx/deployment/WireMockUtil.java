@@ -20,6 +20,7 @@ public class WireMockUtil {
     public static final int PORT_WATSONX_SERVER = 8089;
     public static final String URL_WATSONX_SERVER = "http://localhost:8089";
     public static final String URL_WATSONX_CHAT_API = "/ml/v1/text/generation?version=%s";
+    public static final String URL_WATSONX_EMBEDDING_API = "/ml/v1/text/embeddings?version=%s";
 
     public static final int PORT_IAM_SERVER = 8090;
     public static final String URL_IAM_SERVER = "http://localhost:8090";
@@ -29,7 +30,9 @@ public class WireMockUtil {
     public static final String BEARER_TOKEN = "my_super_token";
     public static final String PROJECT_ID = "123123321321";
     public static final String GRANT_TYPE = "urn:ibm:params:oauth:grant-type:apikey";
-    public static final String VERSION = "2023-05-29";
+    public static final String VERSION = "2024-03-14";
+    public static final String DEFAULT_CHAT_MODEL = "ibm/granite-20b-multilingual";
+    public static final String DEFAULT_EMBEDDING_MODEL = "ibm/slate-125m-english-rtrvr";
 
     // ------- SCENARIO -------
     final String ERROR_401_TOKEN_EXPIRED = "ERROR_401_TOKEN_EXPIRED";
@@ -71,7 +74,7 @@ public class WireMockUtil {
         // The second call to the watsonServer will return an error message 401 -
         // authentication_token_expired
         //
-        new WatsonBuilder(watsonServer, 401)
+        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 401)
                 .scenario(Scenario.STARTED, ERROR_401_TOKEN_EXPIRED)
                 .token("tokenExpired")
                 .response("""
@@ -100,7 +103,7 @@ public class WireMockUtil {
         //
         // The last call to the watsonServer will return correctly a response.
         //
-        new WatsonBuilder(watsonServer, 200)
+        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 200)
                 .scenario(ERROR_401_TOKEN_EXPIRED, ERROR)
                 .token(BEARER_TOKEN)
                 .response("""
@@ -125,7 +128,7 @@ public class WireMockUtil {
                 .scenario(ERROR, Scenario.STARTED)
                 .build();
 
-        new WatsonBuilder(watsonServer, 500)
+        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 500)
                 .scenario(ERROR, Scenario.STARTED)
                 .build();
     }
@@ -144,7 +147,7 @@ public class WireMockUtil {
         // The second call to the watsonServer will return an error message 401 -
         // authentication_token_expired
         //
-        new WatsonBuilder(watsonServer, 401)
+        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 401)
                 .scenario(Scenario.STARTED, ERROR_401_TOKEN_EXPIRED)
                 .token("tokenNotCorrect")
                 .response(
@@ -169,7 +172,7 @@ public class WireMockUtil {
                 .scenario(ERROR, Scenario.STARTED)
                 .build();
 
-        new WatsonBuilder(watsonServer, 500)
+        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 500)
                 .scenario(ERROR, Scenario.STARTED)
                 .build();
     }
@@ -178,15 +181,15 @@ public class WireMockUtil {
         return new IAMBuilder(iamServer, status);
     }
 
-    public WatsonBuilder mockWatsonBuilder(int status) {
-        return new WatsonBuilder(watsonServer, status);
+    public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status) {
+        return new WatsonxBuilder(watsonServer, apiURL, status);
     }
 
-    public WatsonBuilder mockWatsonBuilder(int status, String version) {
-        return new WatsonBuilder(watsonServer, status, version);
+    public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status, String version) {
+        return new WatsonxBuilder(watsonServer, apiURL, status, version);
     }
 
-    public static class WatsonBuilder {
+    public static class WatsonxBuilder {
 
         private MappingBuilder builder;
         private String token = BEARER_TOKEN;
@@ -195,41 +198,41 @@ public class WireMockUtil {
         private int status;
         private WireMockServer watsonServer;
 
-        protected WatsonBuilder(WireMockServer watsonServer, int status, String version) {
+        protected WatsonxBuilder(WireMockServer watsonServer, String apiURL, int status, String version) {
             this.watsonServer = watsonServer;
             this.status = status;
-            this.builder = post(urlEqualTo(WireMockUtil.URL_WATSONX_CHAT_API.formatted(version)));
+            this.builder = post(urlEqualTo(apiURL.formatted(version)));
         }
 
-        protected WatsonBuilder(WireMockServer watsonServer, int status) {
+        protected WatsonxBuilder(WireMockServer watsonServer, String apiURL, int status) {
             this.watsonServer = watsonServer;
             this.status = status;
-            this.builder = post(urlEqualTo(WireMockUtil.URL_WATSONX_CHAT_API.formatted(VERSION)));
+            this.builder = post(urlEqualTo(apiURL.formatted(VERSION)));
         }
 
-        public WatsonBuilder scenario(String currentState, String nextState) {
+        public WatsonxBuilder scenario(String currentState, String nextState) {
             builder = builder.inScenario("")
                     .whenScenarioStateIs(currentState)
                     .willSetStateTo(nextState);
             return this;
         }
 
-        public WatsonBuilder body(String body) {
+        public WatsonxBuilder body(String body) {
             builder.withRequestBody(equalToJson(body));
             return this;
         }
 
-        public WatsonBuilder token(String token) {
+        public WatsonxBuilder token(String token) {
             this.token = token;
             return this;
         }
 
-        public WatsonBuilder responseMediaType(String mediaType) {
+        public WatsonxBuilder responseMediaType(String mediaType) {
             this.responseMediaType = mediaType;
             return this;
         }
 
-        public WatsonBuilder response(String response) {
+        public WatsonxBuilder response(String response) {
             this.response = response;
             return this;
         }

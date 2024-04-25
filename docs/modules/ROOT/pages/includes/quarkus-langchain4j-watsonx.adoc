@@ -27,6 +27,23 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled[quarkus.langchain4j.watsonx.embedding-model.enabled]`
+
+
+[.description]
+--
+Whether the embedding model should be enabled
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url[quarkus.langchain4j.watsonx.base-url]`
 
 
@@ -40,8 +57,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
- 
+--|string 
 |`https://dummy.ai/api`
 
 
@@ -85,7 +101,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]]`link:#qua
 
 [.description]
 --
-Version to use
+The version date for the API of the form YYYY-MM-DD
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_VERSION+++[]
@@ -94,7 +110,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`2023-05-29`
+|`2024-03-14`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id[quarkus.langchain4j.watsonx.project-id]`
@@ -223,7 +239,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id
 
 [.description]
 --
-Model to use
+Model to use.
+
+For a complete list of models, visit: `https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++[]
@@ -232,7 +250,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`ibm/granite-13b-chat-v2`
+|`ibm/granite-20b-multilingual`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-decoding-method]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-decoding-method[quarkus.langchain4j.watsonx.chat-model.decoding-method]`
@@ -390,6 +408,23 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id[quarkus.langchain4j.watsonx.embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`ibm/slate-125m-english-rtrvr`
+
+
 h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config[Named model config]
 
 h|Type
@@ -408,8 +443,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
- 
+--|string 
 |`https://dummy.ai/api`
 
 
@@ -453,7 +487,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]
 
 [.description]
 --
-Version to use
+The version date for the API of the form YYYY-MM-DD
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__VERSION+++[]
@@ -462,7 +496,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__VERSION+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`2023-05-29`
+|`2024-03-14`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id[quarkus.langchain4j.watsonx."model-name".project-id]`
@@ -591,7 +625,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Model to use
+Model to use.
+
+For a complete list of models, visit: `https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
@@ -600,7 +636,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`ibm/granite-13b-chat-v2`
+|`ibm/granite-20b-multilingual`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-decoding-method]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-decoding-method[quarkus.langchain4j.watsonx."model-name".chat-model.decoding-method]`
@@ -756,6 +792,23 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_RE
 endif::add-copy-button-to-env-var[]
 --|double 
 |
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id[quarkus.langchain4j.watsonx."model-name".embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`ibm/slate-125m-english-rtrvr`
 
 |===
 ifndef::no-duration-note[]
