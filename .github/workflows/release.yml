@@ -49,7 +49,7 @@ jobs:
 
       - name: Maven release ${{steps.metadata.outputs.current-version}}
         run: |
-          ./mvnw -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
+          ./mvnw -B release:prepare -Prelease -Darguments=-DperformRelease -DperformRelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
           ./mvnw -B release:perform -Darguments=-DperformRelease -DperformRelease -Prelease
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
