@@ -89,7 +89,12 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>rewrite-poms-for-release</id>
+                        <id>prepare</id>
+                        <!-- ensure that the release plugin does not attempt to update the version and fail at it -->
+                        <phase/>
+                    </execution>
+                    <execution>
+                        <id>perform</id>
                         <!-- ensure that the release plugin does not attempt to update the version and fail at it -->
                         <phase/>
                     </execution>
