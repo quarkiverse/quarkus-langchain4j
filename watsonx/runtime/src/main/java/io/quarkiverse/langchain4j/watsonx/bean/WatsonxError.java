@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record WatsonError(Integer statusCode, String trace, List<Error> errors) {
+public record WatsonxError(Integer statusCode, String trace, List<Error> errors) {
 
     public static record Error(Code code, String message) {
     }

@@ -108,7 +108,7 @@ public class AiChatServiceTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
                 .response("""
                             {

@@ -70,10 +70,10 @@ public class DefaultPropertiesTest {
     void generate() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         assertEquals(Duration.ofSeconds(10), config.timeout());
-        assertEquals("2023-05-29", config.version());
+        assertEquals(WireMockUtil.VERSION, config.version());
         assertEquals(false, config.logRequests());
         assertEquals(false, config.logResponses());
-        assertEquals("ibm/granite-13b-chat-v2", config.chatModel().modelId());
+        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, config.chatModel().modelId());
         assertEquals("greedy", config.chatModel().decodingMethod());
         assertEquals(1.0, config.chatModel().temperature());
         assertEquals(0, config.chatModel().minNewTokens());
@@ -81,6 +81,7 @@ public class DefaultPropertiesTest {
         assertEquals(1.0, config.chatModel().temperature());
         assertEquals(Duration.ofSeconds(10), config.iam().timeout());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", config.iam().grantType());
+        assertEquals(WireMockUtil.DEFAULT_EMBEDDING_MODEL, config.embeddingModel().modelId());
 
         String modelId = config.chatModel().modelId();
         String projectId = config.projectId();
@@ -98,7 +99,7 @@ public class DefaultPropertiesTest {
                 .response("token", new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
                 .token("token")
                 .body(mapper.writeValueAsString(body))
                 .response("""

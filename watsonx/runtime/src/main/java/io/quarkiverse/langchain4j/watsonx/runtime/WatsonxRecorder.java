@@ -4,16 +4,22 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkiverse.langchain4j.watsonx.TokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxStreamingChatModel;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
@@ -27,44 +33,39 @@ public class WatsonxRecorder {
     private static final String DUMMY_URL = "https://dummy.ai/api";
     private static final String DUMMY_API_KEY = "dummy";
     private static final String DUMMY_PROJECT_ID = "dummy";
-    public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
+    private static final Map<String, TokenGenerator> tokenGeneratorCache = new HashMap<>();
+    private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-
-            List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
-            URL baseUrl = watsonConfig.baseUrl();
-            if (DUMMY_URL.equals(baseUrl.toString())) {
-                configProblems.add(createBaseURLConfigProblem(modelName));
-            }
-            String apiKey = watsonConfig.apiKey();
-            if (DUMMY_API_KEY.equals(apiKey)) {
-                configProblems.add(createApiKeyConfigProblem(modelName));
-            }
-            String projectId = watsonConfig.projectId();
-            if (DUMMY_PROJECT_ID.equals(projectId)) {
-                configProblems.add(createProjectIdProblem(modelName));
-            }
+            var configProblems = checkConfigurations(watsonConfig, modelName);
 
             if (!configProblems.isEmpty()) {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
             }
 
-            IAMConfig iamConfig = watsonConfig.iam();
-            var tokenGenerator = new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout(), iamConfig.grantType(),
-                    watsonConfig.apiKey());
+            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
+            TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
+                    createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
+
+            URL url;
+            try {
+                url = new URL(watsonConfig.baseUrl());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             var builder = WatsonxChatModel.builder()
                     .tokenGenerator(tokenGenerator)
-                    .url(baseUrl)
+                    .url(url)
                     .timeout(watsonConfig.timeout())
                     .logRequests(watsonConfig.logRequests())
                     .logResponses(watsonConfig.logResponses())
                     .version(watsonConfig.version())
-                    .projectId(projectId)
+                    .projectId(watsonConfig.projectId())
                     .modelId(chatModelConfig.modelId())
                     .decodingMethod(chatModelConfig.decodingMethod())
                     .minNewTokens(chatModelConfig.minNewTokens())
@@ -98,37 +99,31 @@ public class WatsonxRecorder {
 
         if (watsonConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-
-            List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
-            URL baseUrl = watsonConfig.baseUrl();
-            if (DUMMY_URL.equals(baseUrl.toString())) {
-                configProblems.add(createBaseURLConfigProblem(modelName));
-            }
-            String apiKey = watsonConfig.apiKey();
-            if (DUMMY_API_KEY.equals(apiKey)) {
-                configProblems.add(createApiKeyConfigProblem(modelName));
-            }
-            String projectId = watsonConfig.projectId();
-            if (DUMMY_PROJECT_ID.equals(projectId)) {
-                configProblems.add(createProjectIdProblem(modelName));
-            }
+            var configProblems = checkConfigurations(watsonConfig, modelName);
 
             if (!configProblems.isEmpty()) {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
             }
 
-            IAMConfig iamConfig = watsonConfig.iam();
-            var tokenGenerator = new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout(), iamConfig.grantType(),
-                    watsonConfig.apiKey());
+            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
+            TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
+                    createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
+
+            URL url;
+            try {
+                url = new URL(watsonConfig.baseUrl());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
             var builder = WatsonxStreamingChatModel.builder()
                     .tokenGenerator(tokenGenerator)
-                    .url(baseUrl)
+                    .url(url)
                     .timeout(watsonConfig.timeout())
                     .logRequests(watsonConfig.logRequests())
                     .logResponses(watsonConfig.logResponses())
                     .version(watsonConfig.version())
-                    .projectId(projectId)
+                    .projectId(watsonConfig.projectId())
                     .modelId(chatModelConfig.modelId())
                     .decodingMethod(chatModelConfig.decodingMethod())
                     .minNewTokens(chatModelConfig.minNewTokens())
@@ -157,6 +152,64 @@ public class WatsonxRecorder {
         }
     }
 
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+
+        if (watsonConfig.enableIntegration()) {
+            var configProblems = checkConfigurations(watsonConfig, modelName);
+
+            if (!configProblems.isEmpty()) {
+                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+            }
+
+            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
+            TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
+                    createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
+
+            URL url;
+            try {
+                url = new URL(watsonConfig.baseUrl());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            var builder = WatsonxEmbeddingModel.builder()
+                    .tokenGenerator(tokenGenerator)
+                    .url(url)
+                    .timeout(watsonConfig.timeout())
+                    .logRequests(watsonConfig.logRequests())
+                    .logResponses(watsonConfig.logResponses())
+                    .version(watsonConfig.version())
+                    .projectId(watsonConfig.projectId())
+                    .modelId(watsonConfig.embeddingModel().modelId());
+
+            return new Supplier<>() {
+                @Override
+                public WatsonxEmbeddingModel get() {
+                    return builder.build(WatsonxEmbeddingModel.class);
+                }
+            };
+
+        } else {
+            return new Supplier<>() {
+                @Override
+                public EmbeddingModel get() {
+                    return new DisabledEmbeddingModel();
+                }
+            };
+        }
+    }
+
+    private Function<? super String, ? extends TokenGenerator> createTokenGenerator(IAMConfig iamConfig, String apiKey) {
+        return new Function<String, TokenGenerator>() {
+
+            @Override
+            public TokenGenerator apply(String iamUrl) {
+                return new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout(), iamConfig.grantType(), apiKey);
+            }
+        };
+    }
+
     private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonConfig(LangChain4jWatsonxConfig runtimeConfig,
             String modelName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig;
@@ -166,6 +219,25 @@ public class WatsonxRecorder {
             watsonConfig = runtimeConfig.namedConfig().get(modelName);
         }
         return watsonConfig;
+    }
+
+    private List<ConfigValidationException.Problem> checkConfigurations(LangChain4jWatsonxConfig.WatsonConfig watsonConfig,
+            String modelName) {
+        List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
+
+        if (DUMMY_URL.equals(watsonConfig.baseUrl())) {
+            configProblems.add(createBaseURLConfigProblem(modelName));
+        }
+        String apiKey = watsonConfig.apiKey();
+        if (DUMMY_API_KEY.equals(apiKey)) {
+            configProblems.add(createApiKeyConfigProblem(modelName));
+        }
+        String projectId = watsonConfig.projectId();
+        if (DUMMY_PROJECT_ID.equals(projectId)) {
+            configProblems.add(createProjectIdProblem(modelName));
+        }
+
+        return configProblems;
     }
 
     private ConfigValidationException.Problem createBaseURLConfigProblem(String modelName) {
