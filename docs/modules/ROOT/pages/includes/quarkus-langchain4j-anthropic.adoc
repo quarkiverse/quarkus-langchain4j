@@ -243,7 +243,7 @@ a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-max-
 
 [.description]
 --
-The maximum number of retries for API requests.
+The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_RETRIES+++[]
@@ -252,7 +252,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_MAX_RETRIES+++`
 endif::add-copy-button-to-env-var[]
 --|int 
-|`3`
+|`1`
 
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-stop-sequences]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-stop-sequences[quarkus.langchain4j.anthropic.chat-model.stop-sequences]`
@@ -527,7 +527,7 @@ a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat
 
 [.description]
 --
-The maximum number of retries for API requests.
+The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_RETRIES+++[]
@@ -536,7 +536,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_MAX_RETRIES+++`
 endif::add-copy-button-to-env-var[]
 --|int 
-|`3`
+|`1`
 
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-stop-sequences]]`link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-stop-sequences[quarkus.langchain4j.anthropic."model-name".chat-model.stop-sequences]`
