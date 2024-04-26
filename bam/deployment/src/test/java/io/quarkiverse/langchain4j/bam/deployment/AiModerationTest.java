@@ -57,9 +57,8 @@ public class AiModerationTest {
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.implicit-hate", "0.8")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.hap", "0.7")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.stigma", "0.6")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.hap", "0.8")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.social-bias", "0.6")
 
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class).addClass(BamRecordUtil.class));
@@ -155,7 +154,7 @@ public class AiModerationTest {
                         """)
                 .build();
 
-        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.6f));
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -163,7 +162,7 @@ public class AiModerationTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
+                                    "hap": [
                                         {
                                             "score": 0.9571548104286194,
                                             "flagged": true,
@@ -205,7 +204,7 @@ public class AiModerationTest {
                         """)
                 .build();
 
-        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        var body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.6f));
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -213,7 +212,7 @@ public class AiModerationTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
+                                    "hap": [
                                         {
                                             "score": 0.9571548104286194,
                                             "flagged": true,
@@ -235,59 +234,9 @@ public class AiModerationTest {
     }
 
     @Test
-    void moderation_implicit_hate() throws Exception {
-        var input = "I want to kill you!";
-        ModerationRequest body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
-
-        mockServers
-                .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
-                .body(mapper.writeValueAsString(body))
-                .response("""
-                        {
-                            "results": [
-                                {
-                                    "implicit_hate": [
-                                        {
-                                            "score": 0.9571548104286194,
-                                            "flagged": true,
-                                            "success": true,
-                                            "position": {
-                                                "start": 0,
-                                                "end": 18
-                                            }
-                                        }
-                                    ],
-                                    "hap": [
-                                        {
-                                            "score": 0.0001,
-                                            "flagged": false,
-                                            "success": true
-                                        }
-                                    ],
-                                    "stigma": [
-                                        {
-                                            "score": 0.0001,
-                                            "flagged": false,
-                                            "success": true
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                        """)
-                .build();
-
-        Response<Moderation> response = moderationModel.moderate(input);
-        assertNotNull(response);
-        assertNotNull(response.content());
-        assertTrue(response.content().flagged());
-        assertEquals(input, response.content().flaggedText());
-    }
-
-    @Test
     void moderation_hap() throws Exception {
         var input = "I want to kill you!";
-        ModerationRequest body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        ModerationRequest body = new ModerationRequest(input, new Threshold(0.7f), new Threshold(0.6f));
 
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
@@ -296,13 +245,6 @@ public class AiModerationTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
-                                        {
-                                            "score": 0.1,
-                                            "flagged": false,
-                                            "success": true
-                                        }
-                                    ],
                                     "hap": [
                                         {
                                             "score": 0.8,
@@ -314,7 +256,7 @@ public class AiModerationTest {
                                             }
                                         }
                                     ],
-                                    "stigma": [
+                                    "social_bias": [
                                         {
                                             "score": 0.0001,
                                             "flagged": false,
@@ -335,9 +277,9 @@ public class AiModerationTest {
     }
 
     @Test
-    void moderation_stigma() throws Exception {
+    void moderation_social_bias() throws Exception {
         var input = "I want to kill you!";
-        ModerationRequest body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.7f), new Threshold(0.6f));
+        ModerationRequest body = new ModerationRequest(input, new Threshold(0.8f), new Threshold(0.6f));
 
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
@@ -346,13 +288,6 @@ public class AiModerationTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
-                                        {
-                                            "score": 0.1,
-                                            "flagged": false,
-                                            "success": true
-                                        }
-                                    ],
                                     "hap": [
                                         {
                                             "score": 0.1,
@@ -360,7 +295,7 @@ public class AiModerationTest {
                                             "success": true
                                         }
                                     ],
-                                    "stigma": [
+                                    "social_bias": [
                                         {
                                             "score": 0.7,
                                             "flagged": true,
@@ -390,7 +325,7 @@ public class AiModerationTest {
         BamRecordUtil recordUtil = new BamRecordUtil(langchain4jBamConfig);
 
         var input = "I want to kill you!";
-        var moderationRequest = new ModerationRequest(input, new Threshold(0.1f), new Threshold(0.1f), new Threshold(0.1f));
+        var moderationRequest = new ModerationRequest(input, new Threshold(0.1f), new Threshold(0.1f));
 
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
@@ -399,17 +334,6 @@ public class AiModerationTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
-                                        {
-                                            "score": 0.9,
-                                            "flagged": true,
-                                            "success": true,
-                                            "position": {
-                                                "start": 0,
-                                                "end": 18
-                                            }
-                                        }
-                                    ],
                                     "hap": [
                                         {
                                             "score": 0.9,
@@ -421,7 +345,7 @@ public class AiModerationTest {
                                             }
                                         }
                                     ],
-                                    "stigma": [
+                                    "social_bias": [
                                         {
                                             "score": 0.9,
                                             "flagged": true,
@@ -438,7 +362,7 @@ public class AiModerationTest {
                         """)
                 .build();
 
-        var overrideConfig = recordUtil.override(List.of(ChatMessageType.SYSTEM), 0.1f, 0.1f, 0.1f);
+        var overrideConfig = recordUtil.override(List.of(ChatMessageType.SYSTEM), 0.1f, 0.1f);
         var m = recorder.moderationModel(overrideConfig, NamedModelUtil.DEFAULT_NAME).get();
         var response = m.moderate(List.of(UserMessage.from(input)));
 
@@ -456,30 +380,25 @@ public class AiModerationTest {
         // TEST: No kind of thresholds
         assertRecorderModeration("", null);
 
-        // TEST: Only implicitHate threshold.
-        assertRecorderModeration("implicit_hate", new ModerationRequest("input", new Threshold(0.3f), null, null));
-
         // TEST: Only hap threshold.
-        assertRecorderModeration("hap", new ModerationRequest("input", null, new Threshold(0.3f), null));
+        assertRecorderModeration("hap", new ModerationRequest("input", new Threshold(0.3f), null));
 
-        // TEST: Only stigma threshold.
-        assertRecorderModeration("stigma", new ModerationRequest("input", null, null, new Threshold(0.3f)));
+        // TEST: Only social_bias threshold.
+        assertRecorderModeration("social_bias", new ModerationRequest("input", null, new Threshold(0.3f)));
     }
 
     private void assertRecorderModeration(String moderation, ModerationRequest moderationRequest)
             throws JsonProcessingException {
 
         Float hap = null;
-        Float stigma = null;
-        Float implicitHate = null;
+        Float socialBias = null;
         BamRecorder recorder = new BamRecorder();
         BamRecordUtil recordUtil = new BamRecordUtil(langchain4jBamConfig);
 
         if (moderationRequest != null) {
 
             hap = moderationRequest.hap() == null ? null : moderationRequest.hap().threshold();
-            stigma = moderationRequest.stigma() == null ? null : moderationRequest.stigma().threshold();
-            implicitHate = moderationRequest.implicitHate() == null ? null : moderationRequest.implicitHate().threshold();
+            socialBias = moderationRequest.socialBias() == null ? null : moderationRequest.socialBias().threshold();
 
             mockServers
                     .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
@@ -506,7 +425,7 @@ public class AiModerationTest {
                     .build();
         }
 
-        var m = recorder.moderationModel(recordUtil.override(implicitHate, hap, stigma), NamedModelUtil.DEFAULT_NAME).get();
+        var m = recorder.moderationModel(recordUtil.override(hap, socialBias), NamedModelUtil.DEFAULT_NAME).get();
         var response = m.moderate("input");
 
         if (moderationRequest != null) {

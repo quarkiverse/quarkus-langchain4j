@@ -20,8 +20,7 @@ public class BamRecordUtil {
         this.langchain4jBamConfig = langchain4jBamConfig;
     }
 
-    public LangChain4jBamConfig override(List<ChatMessageType> messagesToModerate, Float implicitHate, Float hap,
-            Float stigma) {
+    public LangChain4jBamConfig override(List<ChatMessageType> messagesToModerate, Float hap, Float socialBias) {
         return override(new ModerationModelConfig() {
 
             @Override
@@ -34,24 +33,19 @@ public class BamRecordUtil {
             }
 
             @Override
-            public Optional<Float> implicitHate() {
-                return Optional.ofNullable(implicitHate);
-            }
-
-            @Override
             public Optional<Float> hap() {
                 return Optional.ofNullable(hap);
             }
 
             @Override
-            public Optional<Float> stigma() {
-                return Optional.ofNullable(stigma);
+            public Optional<Float> socialBias() {
+                return Optional.ofNullable(socialBias);
             }
         });
     }
 
-    public LangChain4jBamConfig override(Float implicitHate, Float hap, Float stigma) {
-        return override(null, implicitHate, hap, stigma);
+    public LangChain4jBamConfig override(Float hap, Float socialBias) {
+        return override(null, hap, socialBias);
     }
 
     private LangChain4jBamConfig override(ModerationModelConfig config) {

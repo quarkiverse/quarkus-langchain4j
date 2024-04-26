@@ -77,9 +77,8 @@ public class DefaultPropertiesTest {
         assertEquals("ibm/slate.125m.english.rtrvr", config.embeddingModel().modelId());
         assertNotNull(config.moderationModel());
         assertEquals(List.of(ChatMessageType.USER), config.moderationModel().messagesToModerate());
-        assertFalse(config.moderationModel().implicitHate().isPresent());
         assertFalse(config.moderationModel().hap().isPresent());
-        assertFalse(config.moderationModel().stigma().isPresent());
+        assertFalse(config.moderationModel().socialBias().isPresent());
 
         var modelId = config.chatModel().modelId();
 

@@ -21,34 +21,25 @@ public class BamModerationModel extends BamModel implements ModerationModel {
     @Override
     public Response<Moderation> moderate(String text) {
 
-        if (Objects.isNull(implicitHate) && Objects.isNull(hap) && Objects.isNull(stigma))
+        if (Objects.isNull(hap) && Objects.isNull(socialBias))
             return Response.from(Moderation.notFlagged());
 
-        var request = ModerationRequest.of(text, implicitHate, hap, stigma);
+        var request = ModerationRequest.of(text, hap, socialBias);
         var response = client.moderations(request, token, version).results().get(0);
 
-        Moderation moderation = response.isImplicitHate()
+        Moderation moderation = response.isHap()
                 .or(new Supplier<Optional<? extends ModerationResponse.Position>>() {
 
                     @Override
                     public Optional<? extends ModerationResponse.Position> get() {
-                        return response.isHap();
+                        return response.isSocialBias();
                     }
-
-                }).or(new Supplier<Optional<? extends ModerationResponse.Position>>() {
-
-                    @Override
-                    public Optional<? extends ModerationResponse.Position> get() {
-                        return response.isStigma();
-                    }
-
                 }).map(new Function<ModerationResponse.Position, Moderation>() {
 
                     @Override
                     public Moderation apply(Position position) {
                         return Moderation.flagged(text.substring(position.start(), position.end() + 1));
                     }
-
                 }).orElse(Moderation.notFlagged());
 
         return Response.from(moderation);
@@ -57,7 +48,7 @@ public class BamModerationModel extends BamModel implements ModerationModel {
     @Override
     public Response<Moderation> moderate(List<ChatMessage> messages) {
 
-        if (Objects.isNull(implicitHate) && Objects.isNull(hap) && Objects.isNull(stigma))
+        if (Objects.isNull(hap) && Objects.isNull(socialBias))
             return Response.from(Moderation.notFlagged());
 
         for (ChatMessage message : messages) {

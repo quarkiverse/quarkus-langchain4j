@@ -1,13 +1,15 @@
 package io.quarkiverse.langchain4j.bam;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.bam.EmbeddingResponse.Result;
 
 public class BamEmbeddingModel extends BamModel implements EmbeddingModel, TokenCountEstimator {
 
@@ -18,17 +20,22 @@ public class BamEmbeddingModel extends BamModel implements EmbeddingModel, Token
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
 
-        List<Embedding> result = new ArrayList<>();
-        for (TextSegment textSegment : textSegments) {
+        if (Objects.isNull(textSegments) || textSegments.isEmpty())
+            return Response.from(List.of());
 
-            var request = new EmbeddingRequest(modelId, textSegment.text());
-            var response = client.embeddings(request, token, version);
+        var inputs = textSegments.stream()
+                .map(TextSegment::text)
+                .collect(Collectors.toList());
 
-            var vector = response.results().get(0);
-            result.add(Embedding.from(vector));
-        }
+        EmbeddingRequest request = new EmbeddingRequest(modelId, inputs);
+        var result = client.embeddings(request, token, version);
 
-        return Response.from(result);
+        return Response.from(
+                result.results()
+                        .stream()
+                        .map(Result::embedding)
+                        .map(Embedding::from)
+                        .collect(Collectors.toList()));
     }
 
     @Override

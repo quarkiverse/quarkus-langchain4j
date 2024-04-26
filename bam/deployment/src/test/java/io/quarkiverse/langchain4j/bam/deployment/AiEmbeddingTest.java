@@ -86,7 +86,7 @@ public class AiEmbeddingTest {
     }
 
     @Test
-    void test_embed_list_textsegment() throws Exception {
+    void test_embed_list_of_one_textsegment() throws Exception {
         var input = "Embedding THIS!";
         var vector = mockEmbeddingServer(input);
 
@@ -96,6 +96,60 @@ public class AiEmbeddingTest {
         assertEquals(1, response.content().size());
         assertEquals(vector.size(), response.content().get(0).vectorAsList().size());
         assertEquals(vector, response.content().get(0).vectorAsList());
+    }
+
+    @Test
+    void test_embed_list_of_three_textsegment() throws Exception {
+        var input = "Embedding THIS!";
+        var config = langchain4jBamConfig.defaultConfig();
+        var modelId = config.embeddingModel().modelId();
+
+        EmbeddingRequest body = new EmbeddingRequest(modelId, List.of(input, input, input));
+
+        mockServers
+                .mockBuilder(WireMockUtil.URL_EMBEDDING_API, 200)
+                .body(mapper.writeValueAsString(body))
+                .response("""
+                            {
+                                "results": [
+                                        {
+                                            "embedding": [
+                                              -0.006929283,
+                                              -0.005336422,
+                                              -0.024047505
+                                            ]
+                                        },
+                                        {
+                                            "embedding": [
+                                              -0.006929283,
+                                              -0.005336422,
+                                              -0.024047505
+                                            ]
+                                        },
+                                        {
+                                            "embedding": [
+                                              -0.006929283,
+                                              -0.005336422,
+                                              -0.024047505
+                                            ]
+                                        }
+                                ]
+                            }
+                        """)
+                .build();
+
+        var vector = List.of(-0.006929283f, -0.005336422f, -0.024047505f);
+        Response<List<Embedding>> response = embeddingModel.embedAll(
+                List.of(TextSegment.textSegment(input), TextSegment.textSegment(input), TextSegment.textSegment(input)));
+        assertNotNull(response);
+        assertNotNull(response.content());
+        assertEquals(3, response.content().size());
+        assertEquals(3, response.content().get(0).vectorAsList().size());
+        assertEquals(3, response.content().get(1).vectorAsList().size());
+        assertEquals(3, response.content().get(2).vectorAsList().size());
+        assertEquals(vector, response.content().get(0).vectorAsList());
+        assertEquals(vector, response.content().get(1).vectorAsList());
+        assertEquals(vector, response.content().get(2).vectorAsList());
     }
 
     @Test
@@ -126,18 +180,7 @@ public class AiEmbeddingTest {
         var config = langchain4jBamConfig.defaultConfig();
         var modelId = config.embeddingModel().modelId();
 
-        EmbeddingRequest body = new EmbeddingRequest(modelId, input);
-        List<Float> vector = List.of(
-                0.034409549087285995f,
-                -0.06014774367213249f,
-                -0.007886524312198162f,
-                -0.02949192374944687f,
-                -0.017030615359544754f,
-                -0.01926456019282341f,
-                -0.010459166020154953f,
-                -0.011677900329232216f,
-                0.041361115872859955f,
-                0.011406932026147842f);
+        EmbeddingRequest body = new EmbeddingRequest(modelId, List.of(input));
 
         mockServers
                 .mockBuilder(WireMockUtil.URL_EMBEDDING_API, 200)
@@ -145,23 +188,18 @@ public class AiEmbeddingTest {
                 .response("""
                             {
                                 "results": [
-                                    [
-                                        0.034409549087285995,
-                                        -0.06014774367213249,
-                                        -0.007886524312198162,
-                                        -0.02949192374944687,
-                                        -0.017030615359544754,
-                                        -0.01926456019282341,
-                                        -0.010459166020154953,
-                                        -0.011677900329232216,
-                                        0.041361115872859955,
-                                        0.011406932026147842
+                                        {
+                                            "embedding": [
+                                              -0.006929283,
+                                              -0.005336422,
+                                              -0.024047505
+                                            ]
+                                        }
                                     ]
-                                ]
                             }
                         """)
                 .build();
 
-        return vector;
+        return List.of(-0.006929283f, -0.005336422f, -0.024047505f);
     }
 }
