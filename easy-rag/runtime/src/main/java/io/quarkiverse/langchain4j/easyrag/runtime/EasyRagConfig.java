@@ -48,4 +48,12 @@ public interface EasyRagConfig {
     @WithDefault("5")
     Integer maxResults();
 
+    /**
+     * The strategy to decide whether document ingestion into the store should happen at startup or not.
+     * The default is ON. Changing to OFF generally only makes sense if running against a persistent embedding store
+     * that was already populated.
+     */
+    @WithDefault("ON")
+    IngestionStrategy ingestionStrategy();
+
 }
