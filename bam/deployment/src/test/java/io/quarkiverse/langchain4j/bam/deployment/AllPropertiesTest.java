@@ -58,9 +58,8 @@ public class AllPropertiesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.repetition-penalty", "2.0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.chat-model.beam-width", "2")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.implicit-hate", "0.8")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.hap", "0.7")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.stigma", "0.6")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.social-bias", "0.6")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.moderation-model.messages-to-moderate", "user,system")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.embedding-model.model-id", "my_super_embedding_model")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
@@ -111,12 +110,10 @@ public class AllPropertiesTest {
         assertEquals(2, config.chatModel().beamWidth().get());
         assertEquals("my_super_embedding_model", config.embeddingModel().modelId());
         assertEquals(List.of(ChatMessageType.USER, ChatMessageType.SYSTEM), config.moderationModel().messagesToModerate());
-        assertTrue(config.moderationModel().implicitHate().isPresent());
         assertTrue(config.moderationModel().hap().isPresent());
-        assertTrue(config.moderationModel().stigma().isPresent());
-        assertEquals(0.8f, config.moderationModel().implicitHate().get());
+        assertTrue(config.moderationModel().socialBias().isPresent());
         assertEquals(0.7f, config.moderationModel().hap().get());
-        assertEquals(0.6f, config.moderationModel().stigma().get());
+        assertEquals(0.6f, config.moderationModel().socialBias().get());
 
         var modelId = config.chatModel().modelId();
 

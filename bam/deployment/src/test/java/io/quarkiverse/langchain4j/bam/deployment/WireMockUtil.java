@@ -20,7 +20,7 @@ public class WireMockUtil {
     public static String URL_MODERATION_API = "/v2/text/moderations?version=%s";
     public static int PORT = 8089;
     public static String API_KEY = "my_super_token";
-    public static String VERSION = "2024-02-20";
+    public static String VERSION = "2024-04-15";
     WireMockServer server;
 
     public WireMockUtil(WireMockServer server) {

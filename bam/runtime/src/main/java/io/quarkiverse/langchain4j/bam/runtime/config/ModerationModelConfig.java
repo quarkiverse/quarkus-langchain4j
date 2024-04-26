@@ -17,23 +17,18 @@ public interface ModerationModelConfig {
     List<ChatMessageType> messagesToModerate();
 
     /**
-     * The implicit hate detector is intended to identify subtle forms of hate speech. The float is a value from 0.1 to 1 that
-     * allows
-     * you to control when a content must be flagged by the detector.
-     */
-    Optional<Float> implicitHate();
-
-    /**
-     * The HAP detector is intended to identify hateful, abusive, and/or profane language. The float is a value from 0.1 to 1
-     * that
-     * allows you to control when a content must be flagged by the detector.
+     * The HAP detector is intended to identify hateful, abusive, and/or profane language.
+     * <p>
+     * The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
      */
     Optional<Float> hap();
 
     /**
-     * The stigma detector is intended to identify discrimination that is based on social attributes or characteristics. The
-     * float is
-     * a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+     * The social bias detector is intended to identify subtle forms of hate speech and discriminatory content which may easily
+     * go
+     * undetected by keyword detection systems or HAP classifiers.
+     * <p>
+     * The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
      */
-    Optional<Float> stigma();
+    Optional<Float> socialBias();
 }

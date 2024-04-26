@@ -36,9 +36,8 @@ public abstract class BamModel {
     final Integer truncateInputTokens;
     final Integer beamWidth;
     final Set<ChatMessageType> messagesToModerate;
-    final Float implicitHate;
     final Float hap;
-    final Float stigma;
+    final Float socialBias;
     final BamRestApi client;
 
     public BamModel(Builder config) {
@@ -78,9 +77,8 @@ public abstract class BamModel {
         this.repetitionPenalty = config.repetitionPenalty;
         this.truncateInputTokens = config.truncateInputTokens;
         this.beamWidth = config.beamWidth;
-        this.implicitHate = config.implicitHate;
         this.hap = config.hap;
-        this.stigma = config.stigma;
+        this.socialBias = config.socialBias;
     }
 
     public static Builder builder() {
@@ -137,9 +135,8 @@ public abstract class BamModel {
         private Integer truncateInputTokens;
         private Integer beamWidth;
         private List<ChatMessageType> messagesToModerate;
-        private Float implicitHate;
         private Float hap;
-        private Float stigma;
+        private Float socialBias;
         public boolean logResponses;
         public boolean logRequests;
 
@@ -252,18 +249,13 @@ public abstract class BamModel {
             return this;
         }
 
-        public Builder implicitHate(Float implicitHate) {
-            this.implicitHate = implicitHate;
-            return this;
-        }
-
         public Builder hap(Float hap) {
             this.hap = hap;
             return this;
         }
 
-        public Builder stigma(Float stigma) {
-            this.stigma = stigma;
+        public Builder socialBias(Float socialBias) {
+            this.socialBias = socialBias;
             return this;
         }
 

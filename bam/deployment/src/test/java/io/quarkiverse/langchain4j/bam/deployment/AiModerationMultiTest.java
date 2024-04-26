@@ -38,15 +38,13 @@ public class AiModerationMultiTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.moderation-model.implicit-hate", "0.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.moderation-model.hap", "0.5")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.moderation-model.stigma", "0.5")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service1.moderation-model.social-bias", "0.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.moderation-model.implicit-hate", "0.1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.moderation-model.hap", "0.1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.moderation-model.stigma", "0.1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.service2.moderation-model.social-bias", "0.1")
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class).addClass(BamRecordUtil.class));
 
@@ -116,7 +114,7 @@ public class AiModerationMultiTest {
                         """)
                 .build();
 
-        var body = new ModerationRequest(input, new Threshold(0.5f), new Threshold(0.5f), new Threshold(0.5f));
+        var body = new ModerationRequest(input, new Threshold(0.5f), new Threshold(0.5f));
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -124,7 +122,7 @@ public class AiModerationMultiTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
+                                    "hap": [
                                         {
                                             "score": 0.9571548104286194,
                                             "flagged": true,
@@ -164,7 +162,7 @@ public class AiModerationMultiTest {
                         """)
                 .build();
 
-        var body = new ModerationRequest(input, new Threshold(0.1f), new Threshold(0.1f), new Threshold(0.1f));
+        var body = new ModerationRequest(input, new Threshold(0.1f), new Threshold(0.1f));
         mockServers
                 .mockBuilder(WireMockUtil.URL_MODERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -172,7 +170,7 @@ public class AiModerationMultiTest {
                         {
                             "results": [
                                 {
-                                    "implicit_hate": [
+                                    "hap": [
                                         {
                                             "score": 0.9571548104286194,
                                             "flagged": true,
