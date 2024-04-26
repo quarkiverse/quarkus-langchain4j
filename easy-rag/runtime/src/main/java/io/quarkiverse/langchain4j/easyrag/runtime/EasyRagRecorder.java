@@ -31,6 +31,10 @@ public class EasyRagRecorder {
     private static final Logger LOGGER = Logger.getLogger(EasyRagRecorder.class);
 
     public void ingest(EasyRagConfig config, BeanContainer beanContainer) {
+        if (config.ingestionStrategy() == IngestionStrategy.OFF) {
+            LOGGER.info("Skipping document ingestion as per configuration");
+            return;
+        }
         EmbeddingStore<TextSegment> embeddingStore = beanContainer.beanInstance(EmbeddingStore.class);
         EmbeddingModel embeddingModel = beanContainer.beanInstance(EmbeddingModel.class);
 
