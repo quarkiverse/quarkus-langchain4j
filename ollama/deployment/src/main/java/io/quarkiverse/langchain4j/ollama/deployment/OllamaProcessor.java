@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ollama.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -66,6 +67,15 @@ public class OllamaProcessor {
                         .supplier(recorder.chatModel(config, modelName));
                 addQualifierIfNecessary(builder, modelName);
                 beanProducer.produce(builder.done());
+
+                var streamingBuilder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.streamingChatModel(config, modelName));
+                addQualifierIfNecessary(streamingBuilder, modelName);
+                beanProducer.produce(streamingBuilder.done());
             }
         }
 
@@ -83,6 +93,7 @@ public class OllamaProcessor {
                 beanProducer.produce(builder.done());
             }
         }
+
     }
 
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
