@@ -37,6 +37,7 @@
     <module>redis</module>
     <module>watsonx</module>
     <module>websockets-next</module>
+    <module>vertex-ai</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
