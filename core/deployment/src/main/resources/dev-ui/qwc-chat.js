@@ -265,7 +265,11 @@ status = ${item.toolExecutionResult.text}`);
     _createNewItem(message, user, colorIndex) {
         return {
             text: message,
-            time: new Date().toLocaleString(),
+            // FIXME: figure out how to store the correct timestamp
+            // for each message? This is hard because we retrieve
+            // the messages from the ChatMemory, which doesn't support
+            // storing additional metadata with messages
+            // time: new Date().toLocaleString(),
             userName: user,
             userColorIndex: colorIndex,
           };
