@@ -77,8 +77,9 @@ public class EasyRagRecorder {
         return new Function<>() {
             @Override
             public RetrievalAugmentor apply(SyntheticCreationalContext<RetrievalAugmentor> context) {
-                EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, new Default.Literal());
-                EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class, new Default.Literal());
+                EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, Default.Literal.INSTANCE);
+                EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class,
+                        Default.Literal.INSTANCE);
                 return new EasyRetrievalAugmentor(config.maxResults(), model, store);
             }
         };
