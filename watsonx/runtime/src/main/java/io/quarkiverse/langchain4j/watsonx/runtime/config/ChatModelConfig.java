@@ -10,9 +10,12 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * Model to use
+     * Model to use.
+     * <p>
+     * For a complete list of models, visit:
+     * {@link https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx}
      */
-    @WithDefault("ibm/granite-13b-chat-v2")
+    @WithDefault("ibm/granite-20b-multilingual")
     String modelId();
 
     /**

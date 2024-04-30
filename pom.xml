@@ -14,6 +14,7 @@
   <modules>
     <module>anthropic</module>
     <module>bam</module>
+    <module>memory-store-redis</module>
     <module>chroma</module>
     <module>cohere</module>
     <module>core</module>
@@ -35,6 +36,8 @@
     <module>qdrant</module>
     <module>redis</module>
     <module>watsonx</module>
+    <module>websockets-next</module>
+    <module>vertex-ai</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
@@ -49,7 +52,7 @@
     <quarkus-antora.version>0.0.2</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.25.3</assertj.version>
-    <wiremock.version>3.5.3</wiremock.version>
+    <wiremock.version>3.5.4</wiremock.version>
     <sundrio.version>0.103.1</sundrio.version>
     <quarkus-wiremock.version>1.3.1</quarkus-wiremock.version>
   </properties>

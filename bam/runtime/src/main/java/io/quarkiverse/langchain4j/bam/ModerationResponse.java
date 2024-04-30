@@ -11,18 +11,14 @@ public record ModerationResponse(List<Results> results) {
     public record Position(int start, int end) {
     };
 
-    public record Results(List<ModerateScore> implicitHate, List<ModerateScore> hap, List<ModerateScore> stigma) {
-
-        public Optional<Position> isImplicitHate() {
-            return Optional.ofNullable(toModerate(implicitHate));
-        }
+    public record Results(List<ModerateScore> hap, List<ModerateScore> socialBias) {
 
         public Optional<Position> isHap() {
             return Optional.ofNullable(toModerate(hap));
         }
 
-        public Optional<Position> isStigma() {
-            return Optional.ofNullable(toModerate(stigma));
+        public Optional<Position> isSocialBias() {
+            return Optional.ofNullable(toModerate(socialBias));
         }
 
         private Position toModerate(List<ModerateScore> list) {

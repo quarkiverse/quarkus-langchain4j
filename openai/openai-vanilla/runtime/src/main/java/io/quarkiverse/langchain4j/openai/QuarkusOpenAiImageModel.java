@@ -49,6 +49,9 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         this.user = user;
         this.responseFormat = responseFormat;
         this.maxRetries = maxRetries;
+        if (this.maxRetries < 1) {
+            throw new IllegalArgumentException("max-retries must be at least 1");
+        }
         this.persistDirectory = persistDirectory;
 
         this.client = QuarkusOpenAiClient.builder()

@@ -61,6 +61,9 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
             Boolean logResponses) {
 
         timeout = getOrDefault(timeout, ofSeconds(60));
+        if (maxRetries < 1) {
+            throw new IllegalArgumentException("max-retries must be at least 1");
+        }
 
         this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))

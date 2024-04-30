@@ -50,9 +50,12 @@ public interface ChatModelConfig {
     Integer topK();
 
     /**
-     * The maximum number of retries for API requests.
+     * The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.
+     *
+     * @deprecated Using the fault tolerance mechanisms built in Langchain4j is not recommended. If possible,
+     *             use MicroProfile Fault Tolerance instead.
      */
-    @WithDefault("3")
+    @WithDefault("1")
     Integer maxRetries();
 
     /**

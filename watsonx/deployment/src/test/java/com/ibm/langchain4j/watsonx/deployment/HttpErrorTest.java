@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import io.quarkiverse.langchain4j.watsonx.bean.WatsonError;
+import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
@@ -87,7 +87,7 @@ public class HttpErrorTest {
         assertEquals(401, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
-        assertEquals(WatsonError.Code.AUTHORIZATION_REJECTED, ex.details().errors().get(0).code());
+        assertEquals(WatsonxError.Code.AUTHORIZATION_REJECTED, ex.details().errors().get(0).code());
     }
 
     @Test
@@ -97,7 +97,7 @@ public class HttpErrorTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(404)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 404)
                 .responseMediaType(MediaType.APPLICATION_JSON)
                 .response("""
                         {
@@ -117,7 +117,7 @@ public class HttpErrorTest {
         assertEquals(404, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
-        assertEquals(WatsonError.Code.MODEL_NOT_SUPPORTED, ex.details().errors().get(0).code());
+        assertEquals(WatsonxError.Code.MODEL_NOT_SUPPORTED, ex.details().errors().get(0).code());
     }
 
     @Test
@@ -127,7 +127,7 @@ public class HttpErrorTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(400)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 400)
                 .response("""
                         {
                             "errors": [
@@ -148,7 +148,7 @@ public class HttpErrorTest {
         assertEquals(400, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
-        assertEquals(WatsonError.Code.JSON_VALIDATION_ERROR, ex.details().errors().get(0).code());
+        assertEquals(WatsonxError.Code.JSON_VALIDATION_ERROR, ex.details().errors().get(0).code());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class HttpErrorTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(400)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 400)
                 .response("""
                         {
                             "errors": [
@@ -179,7 +179,7 @@ public class HttpErrorTest {
         assertEquals(400, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
-        assertEquals(WatsonError.Code.INVALID_REQUEST_ENTITY, ex.details().errors().get(0).code());
+        assertEquals(WatsonxError.Code.INVALID_REQUEST_ENTITY, ex.details().errors().get(0).code());
         assertEquals("Missing either space_id or project_id or wml_instance_crn", ex.details().errors().get(0).message());
     }
 
@@ -190,7 +190,7 @@ public class HttpErrorTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(500)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 500)
                 .response("{")
                 .build();
 

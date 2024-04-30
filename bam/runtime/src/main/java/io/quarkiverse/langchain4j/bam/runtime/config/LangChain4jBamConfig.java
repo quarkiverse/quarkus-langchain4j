@@ -47,7 +47,7 @@ public interface LangChain4jBamConfig {
         /**
          * BAM API key
          */
-        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it
+        @WithDefault("dummy")
         String apiKey();
 
         /**
@@ -59,7 +59,7 @@ public interface LangChain4jBamConfig {
         /**
          * Version to use
          */
-        @WithDefault("2024-02-20")
+        @WithDefault("2024-04-15")
         String version();
 
         /**

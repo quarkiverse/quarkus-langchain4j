@@ -31,6 +31,10 @@ public class EasyRagRecorder {
     private static final Logger LOGGER = Logger.getLogger(EasyRagRecorder.class);
 
     public void ingest(EasyRagConfig config, BeanContainer beanContainer) {
+        if (config.ingestionStrategy() == IngestionStrategy.OFF) {
+            LOGGER.info("Skipping document ingestion as per configuration");
+            return;
+        }
         EmbeddingStore<TextSegment> embeddingStore = beanContainer.beanInstance(EmbeddingStore.class);
         EmbeddingModel embeddingModel = beanContainer.beanInstance(EmbeddingModel.class);
 
@@ -73,8 +77,9 @@ public class EasyRagRecorder {
         return new Function<>() {
             @Override
             public RetrievalAugmentor apply(SyntheticCreationalContext<RetrievalAugmentor> context) {
-                EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, new Default.Literal());
-                EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class, new Default.Literal());
+                EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, Default.Literal.INSTANCE);
+                EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class,
+                        Default.Literal.INSTANCE);
                 return new EasyRetrievalAugmentor(config.maxResults(), model, store);
             }
         };

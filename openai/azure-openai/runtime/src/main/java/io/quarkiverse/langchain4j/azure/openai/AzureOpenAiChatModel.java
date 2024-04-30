@@ -93,7 +93,10 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         this.maxTokens = maxTokens;
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
-        this.maxRetries = getOrDefault(maxRetries, 3);
+        this.maxRetries = getOrDefault(maxRetries, 1);
+        if (this.maxRetries < 1) {
+            throw new IllegalArgumentException("max-retries must be at least 1");
+        }
         this.tokenizer = tokenizer;
         this.responseFormat = responseFormat;
     }

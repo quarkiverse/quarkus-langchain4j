@@ -129,7 +129,7 @@ public class AllPropertiesTest {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonBuilder(200, "aaaa-mm-dd")
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response("""
                             {

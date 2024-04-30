@@ -248,18 +248,15 @@ public interface OpenAiRestApi {
          * @return result if it is valid
          */
         private Object validateResponse(Object result) {
-            if (result instanceof ChatCompletionResponse) {
-                ChatCompletionResponse r = (ChatCompletionResponse) result;
+            if (result instanceof ChatCompletionResponse r) {
                 if (r.id() == null) {
                     throw new OpenAiApiException(ChatCompletionResponse.class);
                 }
-            } else if (result instanceof CompletionResponse) {
-                CompletionResponse r = (CompletionResponse) result;
+            } else if (result instanceof CompletionResponse r) {
                 if (r.id() == null) {
                     throw new OpenAiApiException(CompletionResponse.class);
                 }
-            } else if (result instanceof ModerationResponse) {
-                ModerationResponse r = (ModerationResponse) result;
+            } else if (result instanceof ModerationResponse r) {
                 if (r.id() == null) {
                     throw new OpenAiApiException(ModerationResponse.class);
                 }
@@ -277,8 +274,7 @@ public interface OpenAiRestApi {
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             Object entity = context.getEntity();
-            if (entity instanceof ChatCompletionRequest) {
-                ChatCompletionRequest request = (ChatCompletionRequest) entity;
+            if (entity instanceof ChatCompletionRequest request) {
                 MultivaluedMap<String, Object> headers = context.getHeaders();
                 List<Object> acceptList = headers.get(HttpHeaders.ACCEPT);
                 if ((acceptList != null) && (acceptList.size() == 1)) {

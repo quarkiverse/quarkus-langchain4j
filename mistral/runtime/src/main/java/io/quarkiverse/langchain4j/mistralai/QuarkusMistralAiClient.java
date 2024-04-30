@@ -79,7 +79,10 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 MistralAiChatCompletionChoice choice = response.getChoices().get(0);
                 String chunk = choice.getDelta().getContent();
                 contentBuilder.get().append(chunk);
-                handler.onNext(chunk);
+
+                if (chunk != null) {
+                    handler.onNext(chunk);
+                }
 
                 MistralAiUsage usageInfo = response.getUsage();
                 if (usageInfo != null) {

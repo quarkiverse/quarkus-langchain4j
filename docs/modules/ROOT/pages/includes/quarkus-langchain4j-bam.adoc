@@ -128,7 +128,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`2024-02-20`
+|`2024-04-15`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests[quarkus.langchain4j.bam.log-requests]`
@@ -474,29 +474,14 @@ endif::add-copy-button-to-env-var[]
 |`user`
 
 
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-implicit-hate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-implicit-hate[quarkus.langchain4j.bam.moderation-model.implicit-hate]`
-
-
-[.description]
---
-The implicit hate detector is intended to identify subtle forms of hate speech. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_IMPLICIT_HATE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_IMPLICIT_HATE+++`
-endif::add-copy-button-to-env-var[]
---|float 
-|
-
-
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap[quarkus.langchain4j.bam.moderation-model.hap]`
 
 
 [.description]
 --
-The HAP detector is intended to identify hateful, abusive, and/or profane language. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+The HAP detector is intended to identify hateful, abusive, and/or profane language.
+
+The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_HAP+++[]
@@ -508,18 +493,20 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-stigma]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-stigma[quarkus.langchain4j.bam.moderation-model.stigma]`
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias[quarkus.langchain4j.bam.moderation-model.social-bias]`
 
 
 [.description]
 --
-The stigma detector is intended to identify discrimination that is based on social attributes or characteristics. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+The social bias detector is intended to identify subtle forms of hate speech and discriminatory content which may easily go undetected by keyword detection systems or HAP classifiers.
+
+The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_STIGMA+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_SOCIAL_BIAS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_STIGMA+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_SOCIAL_BIAS+++`
 endif::add-copy-button-to-env-var[]
 --|float 
 |
@@ -597,7 +584,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__VERSION+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`2024-02-20`
+|`2024-04-15`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests[quarkus.langchain4j.bam."model-name".log-requests]`
@@ -943,29 +930,14 @@ endif::add-copy-button-to-env-var[]
 |`user`
 
 
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-implicit-hate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-implicit-hate[quarkus.langchain4j.bam."model-name".moderation-model.implicit-hate]`
-
-
-[.description]
---
-The implicit hate detector is intended to identify subtle forms of hate speech. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_IMPLICIT_HATE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_IMPLICIT_HATE+++`
-endif::add-copy-button-to-env-var[]
---|float 
-|
-
-
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap[quarkus.langchain4j.bam."model-name".moderation-model.hap]`
 
 
 [.description]
 --
-The HAP detector is intended to identify hateful, abusive, and/or profane language. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+The HAP detector is intended to identify hateful, abusive, and/or profane language.
+
+The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_HAP+++[]
@@ -977,18 +949,20 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-stigma]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-stigma[quarkus.langchain4j.bam."model-name".moderation-model.stigma]`
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias[quarkus.langchain4j.bam."model-name".moderation-model.social-bias]`
 
 
 [.description]
 --
-The stigma detector is intended to identify discrimination that is based on social attributes or characteristics. The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+The social bias detector is intended to identify subtle forms of hate speech and discriminatory content which may easily go undetected by keyword detection systems or HAP classifiers.
+
+The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_STIGMA+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_SOCIAL_BIAS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_STIGMA+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_SOCIAL_BIAS+++`
 endif::add-copy-button-to-env-var[]
 --|float 
 |

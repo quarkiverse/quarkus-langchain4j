@@ -184,18 +184,16 @@ public class BamRecorder {
             }
 
             ModerationModelConfig moderationModelConfig = bamConfig.moderationModel();
-            var implicitHate = moderationModelConfig.implicitHate().orElse(null);
             var hap = moderationModelConfig.hap().orElse(null);
-            var stigma = moderationModelConfig.stigma().orElse(null);
+            var socialBias = moderationModelConfig.socialBias().orElse(null);
 
             var builder = BamModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout())
                     .version(bamConfig.version())
                     .messagesToModerate(moderationModelConfig.messagesToModerate())
-                    .implicitHate(implicitHate)
                     .hap(hap)
-                    .stigma(stigma)
+                    .socialBias(socialBias)
                     .logRequests(bamConfig.logRequests())
                     .logResponses(bamConfig.logResponses());
 

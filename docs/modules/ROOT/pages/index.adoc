@@ -84,10 +84,14 @@ The extension offers the following advantages over using the vanilla https://git
 ** REST calls and JSON handling are performed using the libraries used throughout Quarkus
 *** Results in reduces library footprint
 *** Enables GraalVM native image compilation
+* Dev Services
+** Quarkus starts embedding stores and chat memory stores for dev and test mode automatically
 * Dev UI features
 ** View table with information about AI services and tools
 ** Add embeddings into the embedding store
 ** Search for relevant embeddings in the embedding store
+* Automatic chat memory management
+** For REST and WebSocket contexts, Quarkus can automatically handle the lifecycle of chat memory
 
 == Retrieval Augmented Generation
 
