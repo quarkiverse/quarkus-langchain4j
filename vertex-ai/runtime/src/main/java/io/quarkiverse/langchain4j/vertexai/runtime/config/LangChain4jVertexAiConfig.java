@@ -55,6 +55,11 @@ public interface LangChain4jVertexAiConfig {
         String publisher();
 
         /**
+         * Meant to be used for testing only in order to override the base URL used by the client
+         */
+        Optional<String> baseUrl();
+
+        /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic
          * provider.
          * Set to {@code false} to disable all requests.
