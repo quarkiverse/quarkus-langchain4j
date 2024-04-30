@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -45,8 +46,9 @@ public class VertexAiChatLanguageModel implements ChatLanguageModel {
                 .build();
 
         try {
+            String baseUrl = builder.baseUrl.orElse(String.format("https://%s-aiplatform.googleapis.com", builder.location));
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
-                    .baseUri(new URI(String.format("https://%s-aiplatform.googleapis.com", builder.location)))
+                    .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
@@ -94,7 +96,9 @@ public class VertexAiChatLanguageModel implements ChatLanguageModel {
         return new Builder();
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static final class Builder {
+        private Optional<String> baseUrl = Optional.empty();
 
         private String projectId;
         private String location;
@@ -107,6 +111,11 @@ public class VertexAiChatLanguageModel implements ChatLanguageModel {
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
+
+        public Builder baseUrl(Optional<String> baseUrl) {
+            this.baseUrl = baseUrl;
+            return this;
+        }
 
         public Builder projectId(String projectId) {
             this.projectId = projectId;

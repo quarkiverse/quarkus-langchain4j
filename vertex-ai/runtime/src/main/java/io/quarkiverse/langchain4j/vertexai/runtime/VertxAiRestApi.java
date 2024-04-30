@@ -3,10 +3,13 @@ package io.quarkiverse.langchain4j.vertexai.runtime;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -20,6 +23,7 @@ import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilte
 
 import com.google.auth.oauth2.GoogleCredentials;
 
+import io.quarkus.arc.DefaultBean;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -90,12 +94,35 @@ public interface VertxAiRestApi {
         }
     }
 
+    interface AuthProvider {
+
+        String getBearerToken();
+    }
+
+    @ApplicationScoped
+    @DefaultBean
+    class ApplicationDefaultAuthProvider implements AuthProvider {
+
+        @Override
+        public String getBearerToken() {
+            try {
+                var credentials = GoogleCredentials.getApplicationDefault();
+                credentials.refreshIfExpired();
+                return credentials.getAccessToken().getTokenValue();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
     class TokenFilter implements ResteasyReactiveClientRequestFilter {
 
         private final ExecutorService executorService;
+        private final AuthProvider authProvider;
 
-        public TokenFilter(ExecutorService executorService) {
+        public TokenFilter(ExecutorService executorService, AuthProvider authProvider) {
             this.executorService = executorService;
+            this.authProvider = authProvider;
         }
 
         @Override
@@ -105,10 +132,7 @@ public interface VertxAiRestApi {
                 @Override
                 public void run() {
                     try {
-                        var credentials = GoogleCredentials.getApplicationDefault();
-                        credentials.refreshIfExpired();
-                        String bearerToken = credentials.getAccessToken().getTokenValue();
-                        context.getHeaders().add("Authorization", "Bearer " + bearerToken);
+                        context.getHeaders().add("Authorization", "Bearer " + authProvider.getBearerToken());
                         context.resume();
                     } catch (Exception e) {
                         context.resume(e);

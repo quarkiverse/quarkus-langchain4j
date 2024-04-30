@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.vertexai.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -20,16 +21,18 @@ public class VertexAiRecorder {
 
         if (vertexAiConfig.enableIntegration()) {
             var chatModelConfig = vertexAiConfig.chatModel();
+            Optional<String> baseUrl = vertexAiConfig.baseUrl();
 
             String location = vertexAiConfig.location();
-            if (DUMMY_KEY.equals(location)) {
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(location)) {
                 throw new ConfigValidationException(createConfigProblems("location", modelName));
             }
             String projectId = vertexAiConfig.projectId();
-            if (DUMMY_KEY.equals(projectId)) {
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(projectId)) {
                 throw new ConfigValidationException(createConfigProblems("project-id", modelName));
             }
             var builder = VertexAiChatLanguageModel.builder()
+                    .baseUrl(baseUrl)
                     .location(location)
                     .projectId(projectId)
                     .publisher(vertexAiConfig.publisher())
