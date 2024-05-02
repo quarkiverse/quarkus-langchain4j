@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -51,8 +52,27 @@ public interface ChatModelConfig {
     /**
      * With a static number the result is always the same. With a random number the result varies
      * Example:
+     *
+     * <pre>
+     * {@code
      * Random random = new Random();
      * int x = random.nextInt(Integer.MAX_VALUE);
+     * }
+     * </pre>
      */
     Optional<Integer> seed();
+
+    /**
+     * Whether chat model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.ollama.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether chat model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.ollama.log-responses}")
+    Optional<Boolean> logResponses();
 }

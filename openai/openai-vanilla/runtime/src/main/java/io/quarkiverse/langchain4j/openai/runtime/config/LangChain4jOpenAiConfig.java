@@ -74,16 +74,18 @@ public interface LangChain4jOpenAiConfig {
          * Whether the OpenAI client should log requests
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
         Optional<Boolean> logRequests();
 
         /**
          * Whether the OpenAI client should log responses
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
          * provider.
          * Set to {@code false} to disable all requests.
          */

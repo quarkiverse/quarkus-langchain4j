@@ -65,17 +65,19 @@ public interface LangChain4jBamConfig {
         /**
          * Whether the BAM client should log requests
          */
-        @WithDefault("false")
-        Boolean logRequests();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
+        Optional<Boolean> logRequests();
 
         /**
          * Whether the BAM client should log responses
          */
-        @WithDefault("false")
-        Boolean logResponses();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
+        Optional<Boolean> logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the
          * BAM provider.
          * Set to {@code false} to disable all requests.
          */

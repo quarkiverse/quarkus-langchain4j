@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import dev.langchain4j.data.message.ChatMessageType;
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -31,4 +32,18 @@ public interface ModerationModelConfig {
      * The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
      */
     Optional<Float> socialBias();
+
+    /**
+     * Whether the BAM moderation model should log requests
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.bam.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether the BAM moderation model should log requests
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.log-responses}")
+    Optional<Boolean> logResponses();
 }

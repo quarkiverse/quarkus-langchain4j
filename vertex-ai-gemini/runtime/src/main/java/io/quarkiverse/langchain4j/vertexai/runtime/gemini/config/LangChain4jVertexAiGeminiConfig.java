@@ -71,12 +71,14 @@ public interface LangChain4jVertexAiGeminiConfig {
          * Whether the Vertex AI client should log requests
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
         Optional<Boolean> logRequests();
 
         /**
          * Whether the Vertex AI client should log responses
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
 
         /**

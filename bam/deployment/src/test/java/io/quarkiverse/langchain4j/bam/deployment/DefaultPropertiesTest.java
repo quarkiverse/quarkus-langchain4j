@@ -66,8 +66,8 @@ public class DefaultPropertiesTest {
 
         assertEquals(Duration.ofSeconds(10), config.timeout());
         assertEquals(WireMockUtil.VERSION, config.version());
-        assertEquals(false, config.logRequests());
-        assertEquals(false, config.logResponses());
+        assertEquals(false, config.logRequests().orElse(false));
+        assertEquals(false, config.logResponses().orElse(false));
         assertEquals("ibm/granite-13b-chat-v2", config.chatModel().modelId());
         assertEquals("greedy", config.chatModel().decodingMethod());
         assertEquals(1.0, config.chatModel().temperature());

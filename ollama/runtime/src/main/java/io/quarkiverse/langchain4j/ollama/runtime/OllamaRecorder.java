@@ -39,8 +39,8 @@ public class OllamaRecorder {
             var builder = OllamaChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl())
                     .timeout(ollamaConfig.timeout())
-                    .logRequests(ollamaConfig.logRequests())
-                    .logResponses(ollamaConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .model(chatModelConfig.modelId())
                     .options(optionsBuilder.build());
 
@@ -78,7 +78,9 @@ public class OllamaRecorder {
             var builder = OllamaEmbeddingModel.builder()
                     .baseUrl(ollamaConfig.baseUrl())
                     .timeout(ollamaConfig.timeout())
-                    .model(embeddingModelConfig.modelId());
+                    .model(embeddingModelConfig.modelId())
+                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false));
 
             return new Supplier<>() {
                 @Override

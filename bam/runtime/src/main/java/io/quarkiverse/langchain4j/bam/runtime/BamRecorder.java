@@ -43,8 +43,8 @@ public class BamRecorder {
             var builder = BamChatModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout())
-                    .logRequests(bamConfig.logRequests())
-                    .logResponses(bamConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(chatModelConfig.modelId())
                     .version(bamConfig.version())
                     .decodingMethod(chatModelConfig.decodingMethod())
@@ -96,8 +96,8 @@ public class BamRecorder {
             var builder = BamStreamingChatModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout())
-                    .logRequests(bamConfig.logRequests())
-                    .logResponses(bamConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(chatModelConfig.modelId())
                     .version(bamConfig.version())
                     .decodingMethod(chatModelConfig.decodingMethod())
@@ -151,8 +151,8 @@ public class BamRecorder {
                     .timeout(bamConfig.timeout())
                     .version(bamConfig.version())
                     .modelId(embeddingModelConfig.modelId())
-                    .logRequests(bamConfig.logRequests())
-                    .logResponses(bamConfig.logResponses());
+                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false));
 
             if (bamConfig.baseUrl().isPresent()) {
                 builder.url(bamConfig.baseUrl().get());
@@ -194,8 +194,8 @@ public class BamRecorder {
                     .messagesToModerate(moderationModelConfig.messagesToModerate())
                     .hap(hap)
                     .socialBias(socialBias)
-                    .logRequests(bamConfig.logRequests())
-                    .logResponses(bamConfig.logResponses());
+                    .logRequests(moderationModelConfig.logRequests().orElse(false))
+                    .logResponses(moderationModelConfig.logResponses().orElse(false));
 
             if (bamConfig.baseUrl().isPresent()) {
                 builder.url(bamConfig.baseUrl().get());
