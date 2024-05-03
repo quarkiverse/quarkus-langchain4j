@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.ollama.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -35,7 +36,7 @@ public interface EmbeddingModelConfig {
     /**
      * Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
      */
-    Optional<String> stop();
+    Optional<List<String>> stop();
 
     /**
      * Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5)

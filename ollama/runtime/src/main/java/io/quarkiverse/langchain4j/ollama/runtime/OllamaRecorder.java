@@ -45,6 +45,7 @@ public class OllamaRecorder {
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .model(chatModelConfig.modelId())
+                    .format(chatModelConfig.format().orElse(null))
                     .options(optionsBuilder.build());
 
             return new Supplier<>() {

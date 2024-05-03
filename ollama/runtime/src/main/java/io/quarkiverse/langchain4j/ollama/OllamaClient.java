@@ -32,12 +32,12 @@ public class OllamaClient {
         }
     }
 
-    public CompletionResponse completion(CompletionRequest request) {
-        return restApi.generate(request);
+    public ChatResponse chat(ChatRequest request) {
+        return restApi.chat(request);
     }
 
-    public Multi<CompletionResponse> streamingCompletion(CompletionRequest request) {
-        return restApi.streamingGenerate(request);
+    public Multi<ChatResponse> streamingChat(ChatRequest request) {
+        return restApi.streamingChat(request);
     }
 
     public EmbeddingResponse embedding(EmbeddingRequest request) {

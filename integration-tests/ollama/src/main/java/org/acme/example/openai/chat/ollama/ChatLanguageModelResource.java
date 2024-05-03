@@ -6,6 +6,9 @@ import java.util.Map;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -38,7 +41,7 @@ public class ChatLanguageModelResource {
 
     @GET
     @Path("streaming")
-    //@RestStreamElementType(MediaType.TEXT_PLAIN)
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> streaming() {
         return Multi.createFrom().emitter(
                 emitter -> {
