@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.openai.runtime;
 
-import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -53,8 +51,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelName(chatModelConfig.modelName())
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
@@ -97,8 +95,8 @@ public class OpenAiRecorder {
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
-                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelName(chatModelConfig.modelName())
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
@@ -142,8 +140,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
                     .modelName(embeddingModelConfig.modelName());
 
             if (embeddingModelConfig.user().isPresent()) {
@@ -182,8 +180,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), openAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logRequests(moderationModelConfig.logRequests().orElse(false))
+                    .logResponses(moderationModelConfig.logResponses().orElse(false))
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
@@ -218,8 +216,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout())
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logRequests(imageModelConfig.logRequests().orElse(false))
+                    .logResponses(imageModelConfig.logResponses().orElse(false))
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())

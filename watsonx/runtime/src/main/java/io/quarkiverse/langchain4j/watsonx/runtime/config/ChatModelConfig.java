@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime.config;
 import java.util.List;
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -91,4 +92,18 @@ public interface ChatModelConfig {
      * penalty).
      */
     Optional<Double> repetitionPenalty();
+
+    /**
+     * Whether chat model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.watsonx.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether chat model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.watsonx.log-responses}")
+    Optional<Boolean> logResponses();
 }

@@ -41,6 +41,16 @@ public class BamRecordUtil {
             public Optional<Float> socialBias() {
                 return Optional.ofNullable(socialBias);
             }
+
+            @Override
+            public Optional<Boolean> logRequests() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<Boolean> logResponses() {
+                return Optional.empty();
+            }
         });
     }
 
@@ -76,12 +86,12 @@ public class BamRecordUtil {
                     }
 
                     @Override
-                    public Boolean logRequests() {
+                    public Optional<Boolean> logRequests() {
                         return langchain4jBamConfig.defaultConfig().logRequests();
                     }
 
                     @Override
-                    public Boolean logResponses() {
+                    public Optional<Boolean> logResponses() {
                         return langchain4jBamConfig.defaultConfig().logResponses();
                     }
 

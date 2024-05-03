@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.azure.openai.runtime;
 
-import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -54,8 +52,8 @@ public class AzureOpenAiRecorder {
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
                     .presencePenalty(chatModelConfig.presencePenalty())
@@ -99,8 +97,8 @@ public class AzureOpenAiRecorder {
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
-                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
                     .presencePenalty(chatModelConfig.presencePenalty())
@@ -144,8 +142,8 @@ public class AzureOpenAiRecorder {
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
+                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false));
 
             return new Supplier<>() {
                 @Override
@@ -179,8 +177,8 @@ public class AzureOpenAiRecorder {
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout())
                     .maxRetries(azureAiConfig.maxRetries())
-                    .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), azureAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), azureAiConfig.logResponses()))
+                    .logRequests(imageModelConfig.logRequests().orElse(false))
+                    .logResponses(imageModelConfig.logResponses().orElse(false))
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())

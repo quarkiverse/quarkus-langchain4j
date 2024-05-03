@@ -22,6 +22,7 @@ import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxStreamingChatModel;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.runtime.annotations.Recorder;
@@ -62,8 +63,8 @@ public class WatsonxRecorder {
                     .tokenGenerator(tokenGenerator)
                     .url(url)
                     .timeout(watsonConfig.timeout())
-                    .logRequests(watsonConfig.logRequests())
-                    .logResponses(watsonConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .version(watsonConfig.version())
                     .projectId(watsonConfig.projectId())
                     .modelId(chatModelConfig.modelId())
@@ -120,8 +121,8 @@ public class WatsonxRecorder {
                     .tokenGenerator(tokenGenerator)
                     .url(url)
                     .timeout(watsonConfig.timeout())
-                    .logRequests(watsonConfig.logRequests())
-                    .logResponses(watsonConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .version(watsonConfig.version())
                     .projectId(watsonConfig.projectId())
                     .modelId(chatModelConfig.modelId())
@@ -173,15 +174,16 @@ public class WatsonxRecorder {
                 throw new RuntimeException(e);
             }
 
+            EmbeddingModelConfig embeddingModelConfig = watsonConfig.embeddingModel();
             var builder = WatsonxEmbeddingModel.builder()
                     .tokenGenerator(tokenGenerator)
                     .url(url)
                     .timeout(watsonConfig.timeout())
-                    .logRequests(watsonConfig.logRequests())
-                    .logResponses(watsonConfig.logResponses())
+                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
                     .version(watsonConfig.version())
                     .projectId(watsonConfig.projectId())
-                    .modelId(watsonConfig.embeddingModel().modelId());
+                    .modelId(embeddingModelConfig.modelId());
 
             return new Supplier<>() {
                 @Override

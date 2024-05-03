@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.openshiftai.runtime.config;
 
+import java.util.Optional;
+
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -11,4 +14,18 @@ public interface ChatModelConfig {
      */
     @WithDefault("dummy") // TODO: this is set to a dummy value because otherwise Smallrye Config cannot give a proper error for named models
     String modelId();
+
+    /**
+     * Whether chat model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.openshift-ai.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether chat model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.openshift-ai.log-responses}")
+    Optional<Boolean> logResponses();
 }

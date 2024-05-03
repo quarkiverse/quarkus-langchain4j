@@ -90,8 +90,8 @@ public class AllPropertiesTest {
         assertEquals(WireMockUtil.URL, config.baseUrl().get().toString());
         assertEquals(WireMockUtil.API_KEY, config.apiKey());
         assertEquals(Duration.ofSeconds(60), config.timeout());
-        assertEquals(true, config.logRequests());
-        assertEquals(true, config.logResponses());
+        assertEquals(true, config.logRequests().orElse(false));
+        assertEquals(true, config.logResponses().orElse(false));
         assertEquals("aaaa-mm-dd", config.version());
         assertEquals("my_super_model", config.chatModel().modelId());
         assertEquals("greedy", config.chatModel().decodingMethod());

@@ -89,11 +89,13 @@ public interface ImageModelConfig {
      * Whether image model requests should be logged
      */
     @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.openai.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether image model responses should be logged
      */
     @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.openai.log-responses}")
     Optional<Boolean> logResponses();
 }

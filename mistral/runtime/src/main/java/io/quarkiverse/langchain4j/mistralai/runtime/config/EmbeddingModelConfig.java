@@ -19,12 +19,14 @@ public interface EmbeddingModelConfig {
      * Whether embedding model requests should be logged
      */
     @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.mistralai.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether embedding model responses should be logged
      */
     @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.mistralai.log-responses}")
     Optional<Boolean> logResponses();
 
 }

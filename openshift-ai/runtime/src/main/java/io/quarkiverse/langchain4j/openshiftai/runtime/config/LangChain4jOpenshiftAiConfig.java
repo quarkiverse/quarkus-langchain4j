@@ -5,7 +5,9 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -52,17 +54,19 @@ public interface LangChain4jOpenshiftAiConfig {
         /**
          * Whether the OpenShift AI client should log requests
          */
-        @WithDefault("false")
-        Boolean logRequests();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
+        Optional<Boolean> logRequests();
 
         /**
          * Whether the OpenShift AI client should log responses
          */
-        @WithDefault("false")
-        Boolean logResponses();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
+        Optional<Boolean> logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
          * provider.
          * Set to {@code false} to disable all requests.
          */

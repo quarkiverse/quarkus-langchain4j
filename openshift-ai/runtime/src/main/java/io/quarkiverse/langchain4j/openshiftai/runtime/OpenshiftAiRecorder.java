@@ -47,8 +47,8 @@ public class OpenshiftAiRecorder {
             var builder = OpenshiftAiChatModel.builder()
                     .url(baseUrl)
                     .timeout(openshiftAiConfig.timeout())
-                    .logRequests(openshiftAiConfig.logRequests())
-                    .logResponses(openshiftAiConfig.logResponses())
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(modelId);
 
             return new Supplier<>() {

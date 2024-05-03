@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
-import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
-
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -38,8 +36,8 @@ public class VertexAiGeminiRecorder {
                     .publisher(vertexAiConfig.publisher())
                     .modelId(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
-                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
+                    .logRequests(chatModelConfig.logRequests().orElse(false))
+                    .logResponses(chatModelConfig.logResponses().orElse(false));
 
             if (chatModelConfig.temperature().isEmpty()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
