@@ -52,6 +52,10 @@ quarkus.langchain4j.openai.api-key=sk-...
 
 TIP: Alternatively, utilize the `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable.
 
+TIP: If you want to see the LLM requests or responses in the console log,
+also set `quarkus.langchain4j.log-requests=true` and/or
+`quarkus.langchain4j.log-responses=true`.
+
 Once you've added the dependency and configuration, the next step involves creating an _AI service_, serving as the integration point. This service is the interface your application code will utilize to interact with the LLM. A basic example is demonstrated below:
 
 [source,java]
