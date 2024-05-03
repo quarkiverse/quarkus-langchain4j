@@ -53,20 +53,18 @@ export class QwcEmbeddingStore extends LitElement {
             `;
     }
 
-    _addEmbedding(id, text, metadata){
+    _addEmbedding(id, text, metadata) {
         this._addEmbeddingConfirmation = html`Working...<br/>`;
         this.jsonRpc.add({id: id, text: text, metadata: metadata}).then(jsonRpcResponse => {
-            if(jsonRpcResponse.result === false) {
-                this._addEmbeddingConfirmation = html`
-                    <qui-alert level="error" showIcon>
-                        <span>The embedding could not be added: ${jsonRpcResponse}</span>
-                    </qui-alert>`;
-            } else {
-                this._addEmbeddingConfirmation = html`
-                    <qui-alert level="success" showIcon>
-                        <span>The embedding was added with ID <code>${jsonRpcResponse.result}</code>.</span>
-                    </qui-alert>`;
-            }
+            this._addEmbeddingConfirmation = html`
+                <qui-alert level="success" showIcon>
+                    <span>The embedding was added with ID <code>${jsonRpcResponse.result}</code>.</span>
+                </qui-alert>`;
+        }).catch((error) => {
+            this._addEmbeddingConfirmation = html`
+                <qui-alert level="error" showIcon>
+                    <span>${JSON.stringify(error.error)}</span>
+                </qui-alert>`;
         });
     }
 
