@@ -13,7 +13,7 @@ public class CompletionResponse {
     private final Integer promptEvalCount;
     private final Integer evalCount;
 
-    private CompletionResponse(Builder builder) {
+    protected CompletionResponse(Builder builder) {
         model = builder.model;
         createdAt = builder.createdAt;
         response = builder.response;

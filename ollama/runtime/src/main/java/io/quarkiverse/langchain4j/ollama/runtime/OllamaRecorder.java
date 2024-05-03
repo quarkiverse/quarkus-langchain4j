@@ -4,10 +4,13 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
+import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
@@ -93,6 +96,48 @@ public class OllamaRecorder {
                 @Override
                 public EmbeddingModel get() {
                     return new DisabledEmbeddingModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOllamaConfig runtimeConfig, String modelName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, modelName);
+
+        if (ollamaConfig.enableIntegration()) {
+            ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
+
+            Options.Builder optionsBuilder = Options.builder()
+                    .temperature(chatModelConfig.temperature())
+                    .topK(chatModelConfig.topK())
+                    .topP(chatModelConfig.topP())
+                    .numPredict(chatModelConfig.numPredict());
+
+            if (chatModelConfig.stop().isPresent()) {
+                optionsBuilder.stop(chatModelConfig.stop().get());
+            }
+            if (chatModelConfig.seed().isPresent()) {
+                optionsBuilder.seed(chatModelConfig.seed().get());
+            }
+            var builder = OllamaStreamingChatLanguageModel.builder()
+                    .baseUrl(ollamaConfig.baseUrl())
+                    .timeout(ollamaConfig.timeout())
+                    .logRequests(ollamaConfig.logRequests().orElse(false))
+                    .logResponses(ollamaConfig.logResponses().orElse(false))
+                    .model(chatModelConfig.modelId())
+                    .options(optionsBuilder.build());
+
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return new DisabledStreamingChatLanguageModel();
                 }
             };
         }
