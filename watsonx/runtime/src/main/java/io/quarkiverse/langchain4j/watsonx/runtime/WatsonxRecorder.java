@@ -20,8 +20,10 @@ import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
 import io.quarkiverse.langchain4j.watsonx.TokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxStreamingChatModel;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig.LengthPenaltyConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
@@ -41,42 +43,8 @@ public class WatsonxRecorder {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
-            ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-            var configProblems = checkConfigurations(watsonConfig, modelName);
 
-            if (!configProblems.isEmpty()) {
-                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
-            }
-
-            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-            TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                    createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
-
-            URL url;
-            try {
-                url = new URL(watsonConfig.baseUrl());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            var builder = WatsonxChatModel.builder()
-                    .tokenGenerator(tokenGenerator)
-                    .url(url)
-                    .timeout(watsonConfig.timeout())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .version(watsonConfig.version())
-                    .projectId(watsonConfig.projectId())
-                    .modelId(chatModelConfig.modelId())
-                    .decodingMethod(chatModelConfig.decodingMethod())
-                    .minNewTokens(chatModelConfig.minNewTokens())
-                    .maxNewTokens(chatModelConfig.maxNewTokens())
-                    .temperature(chatModelConfig.temperature())
-                    .randomSeed(firstOrDefault(null, chatModelConfig.randomSeed()))
-                    .stopSequences(firstOrDefault(null, chatModelConfig.stopSequences()))
-                    .topK(firstOrDefault(null, chatModelConfig.topK()))
-                    .topP(firstOrDefault(null, chatModelConfig.topP()))
-                    .repetitionPenalty(firstOrDefault(null, chatModelConfig.repetitionPenalty()));
+            var builder = generateChatBuilder(watsonConfig, modelName);
 
             return new Supplier<>() {
                 @Override
@@ -99,42 +67,8 @@ public class WatsonxRecorder {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
-            ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-            var configProblems = checkConfigurations(watsonConfig, modelName);
 
-            if (!configProblems.isEmpty()) {
-                throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
-            }
-
-            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-            TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                    createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
-
-            URL url;
-            try {
-                url = new URL(watsonConfig.baseUrl());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            var builder = WatsonxStreamingChatModel.builder()
-                    .tokenGenerator(tokenGenerator)
-                    .url(url)
-                    .timeout(watsonConfig.timeout())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .version(watsonConfig.version())
-                    .projectId(watsonConfig.projectId())
-                    .modelId(chatModelConfig.modelId())
-                    .decodingMethod(chatModelConfig.decodingMethod())
-                    .minNewTokens(chatModelConfig.minNewTokens())
-                    .maxNewTokens(chatModelConfig.maxNewTokens())
-                    .temperature(chatModelConfig.temperature())
-                    .randomSeed(firstOrDefault(null, chatModelConfig.randomSeed()))
-                    .stopSequences(firstOrDefault(null, chatModelConfig.stopSequences()))
-                    .topK(firstOrDefault(null, chatModelConfig.topK()))
-                    .topP(firstOrDefault(null, chatModelConfig.topP()))
-                    .repetitionPenalty(firstOrDefault(null, chatModelConfig.repetitionPenalty()));
+            var builder = generateChatBuilder(watsonConfig, modelName);
 
             return new Supplier<>() {
                 @Override
@@ -210,6 +144,58 @@ public class WatsonxRecorder {
                 return new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout(), iamConfig.grantType(), apiKey);
             }
         };
+    }
+
+    private WatsonxModel.Builder generateChatBuilder(LangChain4jWatsonxConfig.WatsonConfig watsonConfig, String modelName) {
+
+        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
+        var configProblems = checkConfigurations(watsonConfig, modelName);
+
+        if (!configProblems.isEmpty()) {
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+        }
+
+        String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
+        TokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
+                createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
+
+        URL url;
+        try {
+            url = new URL(watsonConfig.baseUrl());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        Double decayFactor = null;
+        Integer startIndex = null;
+
+        if (chatModelConfig.lengthPenalty().isPresent()) {
+            decayFactor = chatModelConfig.lengthPenalty().map(LengthPenaltyConfig::decayFactor).get().orElse(null);
+            startIndex = chatModelConfig.lengthPenalty().map(LengthPenaltyConfig::startIndex).get().orElse(null);
+        }
+
+        return WatsonxChatModel.builder()
+                .tokenGenerator(tokenGenerator)
+                .url(url)
+                .timeout(watsonConfig.timeout())
+                .logRequests(chatModelConfig.logRequests().orElse(false))
+                .logResponses(chatModelConfig.logResponses().orElse(false))
+                .version(watsonConfig.version())
+                .projectId(watsonConfig.projectId())
+                .modelId(chatModelConfig.modelId())
+                .decodingMethod(chatModelConfig.decodingMethod())
+                .decayFactor(decayFactor)
+                .startIndex(startIndex)
+                .maxNewTokens(chatModelConfig.maxNewTokens())
+                .minNewTokens(chatModelConfig.minNewTokens())
+                .temperature(chatModelConfig.temperature())
+                .randomSeed(firstOrDefault(null, chatModelConfig.randomSeed()))
+                .stopSequences(firstOrDefault(null, chatModelConfig.stopSequences()))
+                .topK(firstOrDefault(null, chatModelConfig.topK()))
+                .topP(firstOrDefault(null, chatModelConfig.topP()))
+                .repetitionPenalty(firstOrDefault(null, chatModelConfig.repetitionPenalty()))
+                .truncateInputTokens(chatModelConfig.truncateInputTokens().orElse(null))
+                .includeStopSequence(chatModelConfig.includeStopSequence().orElse(null));
     }
 
     private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonConfig(LangChain4jWatsonxConfig runtimeConfig,
