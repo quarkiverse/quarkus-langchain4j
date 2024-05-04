@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ollama;
 
-import static java.util.stream.Collectors.joining;
+import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
+import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -20,11 +21,13 @@ import io.smallrye.mutiny.Context;
 public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageModel {
     private final OllamaClient client;
     private final String model;
+    private final String format;
     private final Options options;
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
         model = builder.model;
+        format = builder.format;
         options = builder.options;
     }
 
@@ -34,30 +37,33 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
     @Override
     public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        CompletionRequest request = CompletionRequest.builder()
-                .prompt(messages.stream()
-                        .map(ChatMessage::text)
-                        .collect(joining("\n")))
+        ensureNotEmpty(messages, "messages");
+
+        ChatRequest request = ChatRequest.builder()
                 .model(model)
+                .messages(toOllamaMessages(messages))
                 .options(options)
+                .format(format)
                 .stream(true)
                 .build();
 
-        Context context = Context.of("response", new ArrayList<CompletionResponse>());
+        Context context = Context.of("response", new ArrayList<ChatResponse>());
 
-        client.streamingCompletion(request)
+        client.streamingChat(request)
                 .subscribe()
                 .with(context,
-                        new Consumer<CompletionResponse>() {
+                        new Consumer<ChatResponse>() {
                             @Override
                             @SuppressWarnings("unchecked")
-                            public void accept(CompletionResponse response) {
+                            public void accept(ChatResponse response) {
                                 try {
-                                    if ((response == null) || response.getResponse().isBlank()) {
+                                    if ((response == null) || (response.message() == null)
+                                            || (response.message().content() == null)
+                                            || response.message().content().isBlank()) {
                                         return;
                                     }
-                                    ((List<CompletionResponse>) context.get("response")).add(response);
-                                    handler.onNext(response.getResponse());
+                                    ((List<ChatResponse>) context.get("response")).add(response);
+                                    handler.onNext(response.message().content());
                                 } catch (Exception e) {
                                     handler.onError(e);
                                 }
@@ -73,10 +79,10 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                             @Override
                             @SuppressWarnings("unchecked")
                             public void run() {
-                                var list = ((List<CompletionResponse>) context.get("response"));
+                                var list = ((List<ChatResponse>) context.get("response"));
                                 StringBuilder builder = new StringBuilder();
-                                for (CompletionResponse response : list) {
-                                    builder.append(response.getResponse());
+                                for (ChatResponse response : list) {
+                                    builder.append(response.message().content());
                                 }
                                 AiMessage message = new AiMessage(builder.toString());
                                 handler.onComplete(Response.from(message));
@@ -96,6 +102,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
         private String baseUrl = "http://localhost:11434";
         private Duration timeout = Duration.ofSeconds(10);
         private String model;
+        private String format;
         private Options options;
 
         private boolean logRequests = false;
@@ -113,6 +120,11 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
         public OllamaStreamingChatLanguageModel.Builder model(String val) {
             model = val;
+            return this;
+        }
+
+        public OllamaStreamingChatLanguageModel.Builder format(String val) {
+            format = val;
             return this;
         }
 

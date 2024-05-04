@@ -1,81 +1,32 @@
 package io.quarkiverse.langchain4j.ollama;
 
+import java.util.List;
+
 /**
  * request options in completion/embedding API
  *
  * @see <a href="https://github.com/jmorganca/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values">Ollama REST API
  *      Doc</a>
  */
-public class Options {
-    private final Double temperature;
-    private final Integer numPredict;
-    private final String stop;
-    private final Double topP;
-    private final Integer topK;
-    private final Integer seed;
-
-    private Options(Builder builder) {
-        temperature = builder.temperature;
-        numPredict = builder.numPredict;
-        stop = builder.stop;
-        topP = builder.topP;
-        topK = builder.topK;
-        seed = builder.seed;
-    }
+public record Options(Double temperature, Integer topK, Double topP, Double repeatPenalty, Integer seed, Integer numPredict,
+        Integer numCtx, List<String> stop) {
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public Double getTemperature() {
-        return temperature;
-    }
-
-    public Integer getNumPredict() {
-        return numPredict;
-    }
-
-    public String getStop() {
-        return stop;
-    }
-
-    public Double getTopP() {
-        return topP;
-    }
-
-    public Integer getTopK() {
-        return topK;
-    }
-
-    public Integer getSeed() {
-        return seed;
-    }
-
-    public static final class Builder {
-        private Double temperature = 0.8;
-        private Integer numPredict = 128;
-        private String stop;
-        private Double topP = 0.9;
-        private Integer topK = 40;
+    public static class Builder {
+        private Double temperature;
+        private Integer topK;
+        private Double topP;
+        private Double repeatPenalty;
         private Integer seed;
+        private Integer numPredict;
+        private Integer numCtx;
+        private List<String> stop;
 
-        public Builder temperature(Double val) {
-            temperature = val;
-            return this;
-        }
-
-        public Builder numPredict(Integer numPredict) {
-            this.numPredict = numPredict;
-            return this;
-        }
-
-        public Builder stop(String stop) {
-            this.stop = stop;
-            return this;
-        }
-
-        public Builder topP(Double topP) {
-            this.topP = topP;
+        public Builder temperature(Double temperature) {
+            this.temperature = temperature;
             return this;
         }
 
@@ -84,13 +35,39 @@ public class Options {
             return this;
         }
 
+        public Builder topP(Double topP) {
+            this.topP = topP;
+            return this;
+        }
+
+        public Builder repeatPenalty(Double repeatPenalty) {
+            this.repeatPenalty = repeatPenalty;
+            return this;
+        }
+
         public Builder seed(Integer seed) {
             this.seed = seed;
             return this;
         }
 
+        public Builder numPredict(Integer numPredict) {
+            this.numPredict = numPredict;
+            return this;
+        }
+
+        public Builder numCtx(Integer numCtx) {
+            this.numCtx = numCtx;
+            return this;
+        }
+
+        public Builder stop(List<String> stop) {
+            this.stop = stop;
+            return this;
+        }
+
         public Options build() {
-            return new Options(this);
+            return new Options(temperature, topK, topP, repeatPenalty, seed, numPredict, numCtx, stop);
         }
     }
+
 }

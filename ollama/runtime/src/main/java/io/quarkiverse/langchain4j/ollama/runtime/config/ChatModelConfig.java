@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.ollama.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -12,9 +13,9 @@ public interface ChatModelConfig {
     /**
      * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
      * docs</a>,
-     * the default value is {@code llama2}
+     * the default value is {@code llama3}
      */
-    @WithDefault("llama2")
+    @WithDefault("llama3")
     String modelId();
 
     /**
@@ -33,7 +34,7 @@ public interface ChatModelConfig {
     /**
      * Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
      */
-    Optional<String> stop();
+    Optional<List<String>> stop();
 
     /**
      * Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5)
@@ -61,6 +62,11 @@ public interface ChatModelConfig {
      * </pre>
      */
     Optional<Integer> seed();
+
+    /**
+     * the format to return a response in. Currently, the only accepted value is {@code json}
+     */
+    Optional<String> format();
 
     /**
      * Whether chat model requests should be logged
