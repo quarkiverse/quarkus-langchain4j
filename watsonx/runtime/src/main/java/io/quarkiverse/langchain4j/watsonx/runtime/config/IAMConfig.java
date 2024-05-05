@@ -10,19 +10,19 @@ import io.smallrye.config.WithDefault;
 public interface IAMConfig {
 
     /**
-     * IAM base URL
+     * Base URL of the IAM Authentication API.
      */
     @WithDefault("https://iam.cloud.ibm.com")
     URL baseUrl();
 
     /**
-     * Timeout for IAM API calls
+     * Timeout for IAM authentication calls.
      */
     @WithDefault("10s")
     Duration timeout();
 
     /**
-     * IAM grant type
+     * Grant type for the IAM Authentication API.
      */
     @WithDefault("urn:ibm:params:oauth:grant-type:apikey")
     String grantType();

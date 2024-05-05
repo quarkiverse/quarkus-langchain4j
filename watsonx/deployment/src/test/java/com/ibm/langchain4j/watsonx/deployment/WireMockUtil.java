@@ -20,6 +20,7 @@ public class WireMockUtil {
     public static final int PORT_WATSONX_SERVER = 8089;
     public static final String URL_WATSONX_SERVER = "http://localhost:8089";
     public static final String URL_WATSONX_CHAT_API = "/ml/v1/text/generation?version=%s";
+    public static final String URL_WATSONX_CHAT_STREAMING_API = "/ml/v1/text/generation_stream?version=%s";
     public static final String URL_WATSONX_EMBEDDING_API = "/ml/v1/text/embeddings?version=%s";
 
     public static final int PORT_IAM_SERVER = 8090;

@@ -30,6 +30,7 @@ The `base-url` property depends on the region of the provided service instance, 
 * Dallas: https://us-south.ml.cloud.ibm.com
 * Frankfurt: https://eu-de.ml.cloud.ibm.com
 * Tokyo: https://jp-tok.ml.cloud.ibm.com
+* London: https://eu-gb.ml.cloud.ibm.com
 
 [source,properties,subs=attributes+]
 ----
@@ -44,6 +45,8 @@ To get the ID of a project, complete the following steps:
 1. Open the project, and then click the Manage tab.
 2. Copy the project ID from the Details section of the General page.
 
+NOTE: To view the list of projects, go to https://dataplatform.cloud.ibm.com/projects/?context=wx.
+
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.project-id=23d...
@@ -57,7 +60,7 @@ To prompt foundation models in IBM watsonx.ai programmatically, you need an IBM 
 quarkus.langchain4j.watsonx.api-key=hG-...
 ----
 
-IMPORTANT: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and generate it.
+NOTE: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and generate it.
 
 ==== All configuration properties
 

@@ -15,7 +15,7 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-lan
 
 [.description]
 --
-Whether the model should be enabled
+Whether the model should be enabled.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_ENABLED+++[]
@@ -32,7 +32,7 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-lan
 
 [.description]
 --
-Whether the embedding model should be enabled
+Whether the embedding model should be enabled.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_ENABLED+++[]
@@ -49,7 +49,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]]`link:#qu
 
 [.description]
 --
-Base URL
+Base URL of the watsonx.ai API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BASE_URL+++[]
@@ -66,7 +66,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]]`link:#qua
 
 [.description]
 --
-IBM Cloud API key
+IBM Cloud API key.
+
+To create a new API key, follow this link:https://cloud.ibm.com/iam/apikeys[link].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_API_KEY+++[]
@@ -83,7 +85,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout]]`link:#qua
 
 [.description]
 --
-Timeout for watsonx.ai API calls
+Timeout for watsonx.ai calls.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TIMEOUT+++[]
@@ -101,7 +103,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]]`link:#qua
 
 [.description]
 --
-The version date for the API of the form YYYY-MM-DD
+The version date for the API of the form YYYY-MM-DD.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_VERSION+++[]
@@ -118,7 +120,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id]]`link:#
 
 [.description]
 --
-Watsonx.ai project id.
+The project that contains the watsonx.ai resource.
+
+To look up your project id, link:https://dataplatform.cloud.ibm.com/projects/?context=wx[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_PROJECT_ID+++[]
@@ -135,7 +139,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests]]`link
 
 [.description]
 --
-Whether the watsonx.ai client should log requests
+Whether the watsonx.ai client should log requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_LOG_REQUESTS+++[]
@@ -152,7 +156,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses]]`lin
 
 [.description]
 --
-Whether the watsonx.ai client should log responses
+Whether the watsonx.ai client should log responses.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_LOG_RESPONSES+++[]
@@ -169,7 +173,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration]
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the watsonx.ai provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the watsonx.ai provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_ENABLE_INTEGRATION+++[]
@@ -186,7 +190,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url]]`link
 
 [.description]
 --
-IAM base URL
+Base URL of the IAM Authentication API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_BASE_URL+++[]
@@ -204,7 +208,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout]]`link:
 
 [.description]
 --
-Timeout for IAM API calls
+Timeout for IAM authentication calls.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_TIMEOUT+++[]
@@ -222,7 +226,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]]`li
 
 [.description]
 --
-IAM grant type
+Grant type for the IAM Authentication API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_GRANT_TYPE+++[]
@@ -239,9 +243,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id
 
 [.description]
 --
-Model to use.
+Model id to use.
 
-For a complete list of models, visit: `https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx`
+To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++[]
@@ -258,9 +262,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-decoding
 
 [.description]
 --
-Represents the strategy used for picking the tokens during generation of the output text. Options are greedy and sample. Value defaults to sample if not specified.
+Represents the strategy used for picking the tokens during generation of the output text. During text generation when parameter value is set to `greedy`, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative `sample` strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the `top_k` and `top_p` parameters.
 
-During text generation when parameter value is set to greedy, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative sample strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the top_k and top_p parameters described below. See this url for an informative article about text generation.
+*Allowable values:* `++[++sample,greedy++]++`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DECODING_METHOD+++[]
@@ -272,46 +276,14 @@ endif::add-copy-button-to-env-var[]
 |`greedy`
 
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature[quarkus.langchain4j.watsonx.chat-model.temperature]`
-
-
-[.description]
---
-A value used to modify the next-token probabilities in sampling mode. Values less than 1.0 sharpen the probability distribution, resulting in "less random" output. Values greater than 1.0 flatten the probability distribution, resulting in "more random" output. A value of 1.0 has no effect and is the default. The allowed range is 0.0 to 2.0.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TEMPERATURE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TEMPERATURE+++`
-endif::add-copy-button-to-env-var[]
---|double 
-|`1.0`
-
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-min-new-tokens[quarkus.langchain4j.watsonx.chat-model.min-new-tokens]`
-
-
-[.description]
---
-If stop sequences are given, they are ignored until minimum tokens are generated. Defaults to 0.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MIN_NEW_TOKENS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MIN_NEW_TOKENS+++`
-endif::add-copy-button-to-env-var[]
---|int 
-|`0`
-
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-new-tokens[quarkus.langchain4j.watsonx.chat-model.max-new-tokens]`
 
 
 [.description]
 --
-The maximum number of new tokens to be generated. The range is 0 to 1024.
+The maximum number of new tokens to be generated. The maximum supported value for this field depends on the model being used. How the "token" is defined depends on the tokenizer and vocabulary size, which in turn depends on the model. Often the tokens are a mix of full words and sub-words. Depending on the users plan, and on the model being used, there may be an enforced maximum number of new tokens.
+
+*Possible values:* `≥ 0`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MAX_NEW_TOKENS+++[]
@@ -323,12 +295,33 @@ endif::add-copy-button-to-env-var[]
 |`200`
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-min-new-tokens[quarkus.langchain4j.watsonx.chat-model.min-new-tokens]`
+
+
+[.description]
+--
+If stop sequences are given, they are ignored until minimum tokens are generated.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MIN_NEW_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MIN_NEW_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`0`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-random-seed]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-random-seed[quarkus.langchain4j.watsonx.chat-model.random-seed]`
 
 
 [.description]
 --
-Random number generator seed to use in sampling mode for experimental repeatability. Must be >= 1.
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+*Possible values:* `≥ 1`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_RANDOM_SEED+++[]
@@ -345,7 +338,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop-seq
 
 [.description]
 --
-Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored. The list may contain up to 6 strings.
+Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 6, contains only unique items`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_STOP_SEQUENCES+++[]
@@ -357,12 +352,33 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature[quarkus.langchain4j.watsonx.chat-model.temperature]`
+
+
+[.description]
+--
+A value used to modify the next-token probabilities in `sampling` mode. Values less than `1.0` sharpen the probability distribution, resulting in "less random" output. Values greater than `1.0` flatten the probability distribution, resulting in "more random" output. A value of `1.0` has no effect.
+
+*Possible values:* `0 ≤ value ≤ 2`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`1.0`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-k]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-k[quarkus.langchain4j.watsonx.chat-model.top-k]`
 
 
 [.description]
 --
-The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for sampling mode, with range from 1 to 100. When decoding_strategy is set to sample, only the top_k most likely tokens are considered as candidates for the next generated token.
+The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for `sampling` mode. When decoding_strategy is set to `sample`, only the `top_k` most likely tokens are considered as candidates for the next generated token.
+
+*Possible values:* `1 ≤ value ≤ 100`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOP_K+++[]
@@ -379,7 +395,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p]]`
 
 [.description]
 --
-Similar to top_k except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least top_p. The valid range is 0.0 to 1.0 where 1.0 is equivalent to disabled and is the default. Also known as nucleus sampling.
+Similar to `top_k` except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least `top_p`. Also known as nucleus sampling. A value of `1.0` is equivalent to disabled.
+
+*Possible values:* `0 < value ≤ 1`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOP_P+++[]
@@ -396,7 +414,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-repetiti
 
 [.description]
 --
-Represents the penalty for penalizing tokens that have already been generated or belong to the context. The range is 1.0 to 2.0 and defaults to 1.0 (no penalty).
+Represents the penalty for penalizing tokens that have already been generated or belong to the context. The value `1.0` means that there is no penalty.
+
+*Possible values:* `1 ≤ value ≤ 2`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_REPETITION_PENALTY+++[]
@@ -408,12 +428,82 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-truncate-input-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-truncate-input-tokens[quarkus.langchain4j.watsonx.chat-model.truncate-input-tokens]`
+
+
+[.description]
+--
+Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the start of the input (on the left), so the end of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length. Zero means don't truncate.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-include-stop-sequence]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-include-stop-sequence[quarkus.langchain4j.watsonx.chat-model.include-stop-sequence]`
+
+
+[.description]
+--
+Pass `false` to omit matched stop sequences from the end of the output text. The default is `true`, meaning that the output will end with the stop sequence text when matched.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[quarkus.langchain4j.watsonx.chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[quarkus.langchain4j.watsonx.chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id[quarkus.langchain4j.watsonx.embedding-model.model-id]`
 
 
 [.description]
 --
-Model to use
+Model id to use. To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID+++[]
@@ -423,6 +513,83 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --|string 
 |`ibm/slate-125m-english-rtrvr`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests[quarkus.langchain4j.watsonx.embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses[quarkus.langchain4j.watsonx.embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated[It can be used to exponentially increase the likelihood of the text generation terminating once a specified number of tokens have been generated]
+This configuration section is optional
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx.chat-model.length-penalty.decay-factor]`
+
+
+[.description]
+--
+Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
+
+*Possible values:* `> 1`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx.chat-model.length-penalty.start-index]`
+
+
+[.description]
+--
+A number of generated tokens after which this should take effect.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
 
 
 h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config[Named model config]
@@ -435,7 +602,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url
 
 [.description]
 --
-Base URL
+Base URL of the watsonx.ai API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__BASE_URL+++[]
@@ -452,7 +619,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]
 
 [.description]
 --
-IBM Cloud API key
+IBM Cloud API key.
+
+To create a new API key, follow this link:https://cloud.ibm.com/iam/apikeys[link].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__API_KEY+++[]
@@ -469,7 +638,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout]
 
 [.description]
 --
-Timeout for watsonx.ai API calls
+Timeout for watsonx.ai calls.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TIMEOUT+++[]
@@ -487,7 +656,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]
 
 [.description]
 --
-The version date for the API of the form YYYY-MM-DD
+The version date for the API of the form YYYY-MM-DD.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__VERSION+++[]
@@ -504,7 +673,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-
 
 [.description]
 --
-Watsonx.ai project id.
+The project that contains the watsonx.ai resource.
+
+To look up your project id, link:https://dataplatform.cloud.ibm.com/projects/?context=wx[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__PROJECT_ID+++[]
@@ -521,7 +692,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requ
 
 [.description]
 --
-Whether the watsonx.ai client should log requests
+Whether the watsonx.ai client should log requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__LOG_REQUESTS+++[]
@@ -538,7 +709,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-resp
 
 [.description]
 --
-Whether the watsonx.ai client should log responses
+Whether the watsonx.ai client should log responses.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__LOG_RESPONSES+++[]
@@ -555,7 +726,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-i
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the watsonx.ai provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the watsonx.ai provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__ENABLE_INTEGRATION+++[]
@@ -572,7 +743,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base
 
 [.description]
 --
-IAM base URL
+Base URL of the IAM Authentication API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_BASE_URL+++[]
@@ -590,7 +761,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-time
 
 [.description]
 --
-Timeout for IAM API calls
+Timeout for IAM authentication calls.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_TIMEOUT+++[]
@@ -608,7 +779,7 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-gran
 
 [.description]
 --
-IAM grant type
+Grant type for the IAM Authentication API.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_GRANT_TYPE+++[]
@@ -625,9 +796,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Model to use.
+Model id to use.
 
-For a complete list of models, visit: `https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx`
+To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
@@ -644,9 +815,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Represents the strategy used for picking the tokens during generation of the output text. Options are greedy and sample. Value defaults to sample if not specified.
+Represents the strategy used for picking the tokens during generation of the output text. During text generation when parameter value is set to `greedy`, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative `sample` strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the `top_k` and `top_p` parameters.
 
-During text generation when parameter value is set to greedy, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative sample strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the top_k and top_p parameters described below. See this url for an informative article about text generation.
+*Allowable values:* `++[++sample,greedy++]++`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DECODING_METHOD+++[]
@@ -658,46 +829,14 @@ endif::add-copy-button-to-env-var[]
 |`greedy`
 
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature[quarkus.langchain4j.watsonx."model-name".chat-model.temperature]`
-
-
-[.description]
---
-A value used to modify the next-token probabilities in sampling mode. Values less than 1.0 sharpen the probability distribution, resulting in "less random" output. Values greater than 1.0 flatten the probability distribution, resulting in "more random" output. A value of 1.0 has no effect and is the default. The allowed range is 0.0 to 2.0.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
-endif::add-copy-button-to-env-var[]
---|double 
-|`1.0`
-
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-min-new-tokens[quarkus.langchain4j.watsonx."model-name".chat-model.min-new-tokens]`
-
-
-[.description]
---
-If stop sequences are given, they are ignored until minimum tokens are generated. Defaults to 0.
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++`
-endif::add-copy-button-to-env-var[]
---|int 
-|`0`
-
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-new-tokens[quarkus.langchain4j.watsonx."model-name".chat-model.max-new-tokens]`
 
 
 [.description]
 --
-The maximum number of new tokens to be generated. The range is 0 to 1024.
+The maximum number of new tokens to be generated. The maximum supported value for this field depends on the model being used. How the "token" is defined depends on the tokenizer and vocabulary size, which in turn depends on the model. Often the tokens are a mix of full words and sub-words. Depending on the users plan, and on the model being used, there may be an enforced maximum number of new tokens.
+
+*Possible values:* `≥ 0`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++[]
@@ -709,12 +848,33 @@ endif::add-copy-button-to-env-var[]
 |`200`
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-min-new-tokens[quarkus.langchain4j.watsonx."model-name".chat-model.min-new-tokens]`
+
+
+[.description]
+--
+If stop sequences are given, they are ignored until minimum tokens are generated.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`0`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-random-seed]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-random-seed[quarkus.langchain4j.watsonx."model-name".chat-model.random-seed]`
 
 
 [.description]
 --
-Random number generator seed to use in sampling mode for experimental repeatability. Must be >= 1.
+Random number generator seed to use in sampling mode for experimental repeatability.
+
+*Possible values:* `≥ 1`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++[]
@@ -731,7 +891,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored. The list may contain up to 6 strings.
+Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored.
+
+*Possible values:* `0 ≤ number of items ≤ 6, contains only unique items`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++[]
@@ -743,12 +905,33 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature[quarkus.langchain4j.watsonx."model-name".chat-model.temperature]`
+
+
+[.description]
+--
+A value used to modify the next-token probabilities in `sampling` mode. Values less than `1.0` sharpen the probability distribution, resulting in "less random" output. Values greater than `1.0` flatten the probability distribution, resulting in "more random" output. A value of `1.0` has no effect.
+
+*Possible values:* `0 ≤ value ≤ 2`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|`1.0`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-k]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-k[quarkus.langchain4j.watsonx."model-name".chat-model.top-k]`
 
 
 [.description]
 --
-The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for sampling mode, with range from 1 to 100. When decoding_strategy is set to sample, only the top_k most likely tokens are considered as candidates for the next generated token.
+The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for `sampling` mode. When decoding_strategy is set to `sample`, only the `top_k` most likely tokens are considered as candidates for the next generated token.
+
+*Possible values:* `1 ≤ value ≤ 100`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
@@ -765,7 +948,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Similar to top_k except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least top_p. The valid range is 0.0 to 1.0 where 1.0 is equivalent to disabled and is the default. Also known as nucleus sampling.
+Similar to `top_k` except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least `top_p`. Also known as nucleus sampling. A value of `1.0` is equivalent to disabled.
+
+*Possible values:* `0 < value ≤ 1`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
@@ -782,7 +967,9 @@ a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-mod
 
 [.description]
 --
-Represents the penalty for penalizing tokens that have already been generated or belong to the context. The range is 1.0 to 2.0 and defaults to 1.0 (no penalty).
+Represents the penalty for penalizing tokens that have already been generated or belong to the context. The value `1.0` means that there is no penalty.
+
+*Possible values:* `1 ≤ value ≤ 2`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++[]
@@ -794,12 +981,82 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-truncate-input-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-truncate-input-tokens[quarkus.langchain4j.watsonx."model-name".chat-model.truncate-input-tokens]`
+
+
+[.description]
+--
+Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the start of the input (on the left), so the end of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length. Zero means don't truncate.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-include-stop-sequence]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-include-stop-sequence[quarkus.langchain4j.watsonx."model-name".chat-model.include-stop-sequence]`
+
+
+[.description]
+--
+Pass `false` to omit matched stop sequences from the end of the output text. The default is `true`, meaning that the output will end with the stop sequence text when matched.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[quarkus.langchain4j.watsonx."model-name".chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[quarkus.langchain4j.watsonx."model-name".chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id[quarkus.langchain4j.watsonx."model-name".embedding-model.model-id]`
 
 
 [.description]
 --
-Model to use
+Model id to use. To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp[click here].
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
@@ -809,6 +1066,83 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --|string 
 |`ibm/slate-125m-english-rtrvr`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests[quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether embedding model requests should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses[quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether embedding model responses should be logged.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated[It can be used to exponentially increase the likelihood of the text generation terminating once a specified number of tokens have been generated]
+This configuration section is optional
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.decay-factor]`
+
+
+[.description]
+--
+Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
+
+*Possible values:* `> 1`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.start-index]`
+
+
+[.description]
+--
+A number of generated tokens after which this should take effect.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
 
 |===
 ifndef::no-duration-note[]

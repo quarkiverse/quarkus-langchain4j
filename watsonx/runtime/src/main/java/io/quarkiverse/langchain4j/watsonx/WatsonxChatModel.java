@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.joining;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -13,6 +14,7 @@ import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
+import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
@@ -27,8 +29,14 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages) {
 
+        LengthPenalty lengthPenalty = null;
+        if (Objects.nonNull(decayFactor) || Objects.nonNull(startIndex)) {
+            lengthPenalty = new LengthPenalty(decayFactor, startIndex);
+        }
+
         Parameters parameters = Parameters.builder()
                 .decodingMethod(decodingMethod)
+                .lengthPenalty(lengthPenalty)
                 .minNewTokens(minNewTokens)
                 .maxNewTokens(maxNewTokens)
                 .randomSeed(randomSeed)
@@ -37,6 +45,8 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
                 .topP(topP)
                 .topK(topK)
                 .repetitionPenalty(repetitionPenalty)
+                .truncateInputTokens(truncateInputTokens)
+                .includeStopSequence(includeStopSequence)
                 .build();
 
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);

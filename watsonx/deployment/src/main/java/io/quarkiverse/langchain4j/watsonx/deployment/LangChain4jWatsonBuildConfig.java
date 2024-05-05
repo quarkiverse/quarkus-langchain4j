@@ -10,12 +10,12 @@ import io.smallrye.config.ConfigMapping;
 public interface LangChain4jWatsonBuildConfig {
 
     /**
-     * Chat model related settings
+     * Chat model related settings.
      */
     ChatModelBuildConfig chatModel();
 
     /**
-     * Embedding model related settings
+     * Embedding model related settings.
      */
     EmbeddingModelBuildConfig embeddingModel();
 }

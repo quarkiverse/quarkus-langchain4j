@@ -4,18 +4,25 @@ import java.util.List;
 
 public class Parameters {
 
+    public record LengthPenalty(Double decayFactor, Integer startIndex) {
+    };
+
     private final String decodingMethod;
-    private final Integer minNewTokens;
+    private final LengthPenalty lengthPenalty;
     private final Integer maxNewTokens;
+    private final Integer minNewTokens;
     private final Integer randomSeed;
     private final List<String> stopSequences;
     private final Double temperature;
     private final Integer topK;
     private final Double topP;
     private final Double repetitionPenalty;
+    private final Integer truncateInputTokens;
+    private final Boolean includeStopSequence;
 
     private Parameters(Builder builder) {
         this.decodingMethod = builder.decodingMethod;
+        this.lengthPenalty = builder.lengthPenalty;
         this.minNewTokens = builder.minNewTokens;
         this.maxNewTokens = builder.maxNewTokens;
         this.randomSeed = builder.randomSeed;
@@ -24,6 +31,8 @@ public class Parameters {
         this.topK = builder.topK;
         this.topP = builder.topP;
         this.repetitionPenalty = builder.repetitionPenalty;
+        this.truncateInputTokens = builder.truncateInputTokens;
+        this.includeStopSequence = builder.includeStopSequence;
     }
 
     public static Builder builder() {
@@ -32,6 +41,10 @@ public class Parameters {
 
     public String getDecodingMethod() {
         return decodingMethod;
+    }
+
+    public LengthPenalty getLengthPenalty() {
+        return lengthPenalty;
     }
 
     public Integer getMinNewTokens() {
@@ -66,9 +79,18 @@ public class Parameters {
         return repetitionPenalty;
     }
 
+    public Integer getTruncateInputTokens() {
+        return truncateInputTokens;
+    }
+
+    public Boolean getIncludeStopSequence() {
+        return includeStopSequence;
+    }
+
     public static class Builder {
 
         private String decodingMethod;
+        private LengthPenalty lengthPenalty;
         private Integer minNewTokens;
         private Integer maxNewTokens;
         private Integer randomSeed;
@@ -77,9 +99,16 @@ public class Parameters {
         private Integer topK;
         private Double topP;
         private Double repetitionPenalty;
+        private Integer truncateInputTokens;
+        private Boolean includeStopSequence;
 
         public Builder decodingMethod(String decodingMethod) {
             this.decodingMethod = decodingMethod;
+            return this;
+        }
+
+        public Builder lengthPenalty(LengthPenalty lengthPenalty) {
+            this.lengthPenalty = lengthPenalty;
             return this;
         }
 
@@ -95,11 +124,6 @@ public class Parameters {
 
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
-            return this;
-        }
-
-        public Builder decondingMethod(String decodingMethod) {
-            this.decodingMethod = decodingMethod;
             return this;
         }
 
@@ -125,6 +149,16 @@ public class Parameters {
 
         public Builder stopSequences(List<String> stopSequences) {
             this.stopSequences = stopSequences;
+            return this;
+        }
+
+        public Builder truncateInputTokens(Integer truncateInputTokens) {
+            this.truncateInputTokens = truncateInputTokens;
+            return this;
+        }
+
+        public Builder includeStopSequence(Boolean includeStopSequence) {
+            this.includeStopSequence = includeStopSequence;
             return this;
         }
 
