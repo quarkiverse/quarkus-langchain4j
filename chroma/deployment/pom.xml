@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-chroma-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.13.0</version>
     </parent>
     <artifactId>quarkus-langchain4j-chroma-deployment</artifactId>
     <name>Quarkus LangChain4j - Chroma - Deployment</name>
