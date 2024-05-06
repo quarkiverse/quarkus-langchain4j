@@ -5,6 +5,45 @@ icon:lock[title=Fixed at build time] Configuration property fixed at build time 
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
 |===
 
+h|[[quarkus-langchain4j_configuration]]link:#quarkus-langchain4j_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j_quarkus-langchain4j-log-requests]]`link:#quarkus-langchain4j_quarkus-langchain4j-log-requests[quarkus.langchain4j.log-requests]`
+
+
+[.description]
+--
+Whether clients should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j_quarkus-langchain4j-log-responses]]`link:#quarkus-langchain4j_quarkus-langchain4j-log-responses[quarkus.langchain4j.log-responses]`
+
+
+[.description]
+--
+Whether clients should log responses
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 h|[[quarkus-langchain4j_quarkus-langchain4j-default-config-default-model-config]]link:#quarkus-langchain4j_quarkus-langchain4j-default-config-default-model-config[Default model config]
 
 h|Type

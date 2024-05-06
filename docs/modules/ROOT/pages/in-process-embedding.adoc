@@ -65,6 +65,16 @@ The following table lists the supported models, and the corresponding dependency
 | 384
 | `dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel`
 
+Furthermore, when using these models, the following dependency should be added:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-parsers-base</artifactId>
+</dependency>
+----
+
 |===
 
 == Injecting an embedding model

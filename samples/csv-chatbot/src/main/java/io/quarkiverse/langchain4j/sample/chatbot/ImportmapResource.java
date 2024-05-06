@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
+import io.mvnpm.importmap.model.Imports;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
@@ -13,6 +15,7 @@ import io.mvnpm.importmap.Aggregator;
  */
 @ApplicationScoped
 @Path("/_importmap")
+@RegisterForReflection(targets = {Aggregator.class, Imports.class})
 public class ImportmapResource {
     private String importmap;
 

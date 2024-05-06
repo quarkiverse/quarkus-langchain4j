@@ -118,7 +118,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-enable-integration]]`
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_ENABLE_INTEGRATION+++[]
@@ -135,7 +135,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]]
 
 [.description]
 --
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama2`
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++[]
@@ -144,7 +144,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`llama2`
+|`llama3`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature[quarkus.langchain4j.ollama.chat-model.temperature]`
@@ -194,7 +194,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_STOP+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|list of string 
 |
 
 
@@ -237,7 +237,13 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-seed]]`lin
 
 [.description]
 --
-With a static number the result is always the same. With a random number the result varies Example: Random random = new Random(); int x = random.nextInt(Integer.MAX_VALUE);
+With a static number the result is always the same. With a random number the result varies Example:
+
+```
+```
+
+`Random random = new Random();
+int x = random.nextInt(Integer.MAX_VALUE);`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_SEED+++[]
@@ -247,6 +253,57 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_SEED+++`
 endif::add-copy-button-to-env-var[]
 --|int 
 |
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-format]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-format[quarkus.langchain4j.ollama.chat-model.format]`
+
+
+[.description]
+--
+the format to return a response in. Currently, the only accepted value is `json`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-requests[quarkus.langchain4j.ollama.chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-responses[quarkus.langchain4j.ollama.chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[quarkus.langchain4j.ollama.embedding-model.model-id]`
@@ -313,7 +370,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_STOP+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|list of string 
 |
 
 
@@ -349,6 +406,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
 --|int 
 |`40`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-requests[quarkus.langchain4j.ollama.embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-responses[quarkus.langchain4j.ollama.embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 h|[[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-named-config-named-model-config]]link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-named-config-named-model-config[Named model config]
@@ -430,7 +521,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-enable-int
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__ENABLE_INTEGRATION+++[]
@@ -447,7 +538,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model
 
 [.description]
 --
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama2`
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
@@ -456,7 +547,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`llama2`
+|`llama3`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature[quarkus.langchain4j.ollama."model-name".chat-model.temperature]`
@@ -506,7 +597,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_STOP+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|list of string 
 |
 
 
@@ -549,7 +640,13 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model
 
 [.description]
 --
-With a static number the result is always the same. With a random number the result varies Example: Random random = new Random(); int x = random.nextInt(Integer.MAX_VALUE);
+With a static number the result is always the same. With a random number the result varies Example:
+
+```
+```
+
+`Random random = new Random();
+int x = random.nextInt(Integer.MAX_VALUE);`
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_SEED+++[]
@@ -559,6 +656,57 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_SEE
 endif::add-copy-button-to-env-var[]
 --|int 
 |
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-format]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-format[quarkus.langchain4j.ollama."model-name".chat-model.format]`
+
+
+[.description]
+--
+the format to return a response in. Currently, the only accepted value is `json`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_FORMAT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_FORMAT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-requests[quarkus.langchain4j.ollama."model-name".chat-model.log-requests]`
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-responses[quarkus.langchain4j.ollama."model-name".chat-model.log-responses]`
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[quarkus.langchain4j.ollama."model-name".embedding-model.model-id]`
@@ -625,7 +773,7 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_STOP+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--|list of string 
 |
 
 
@@ -661,6 +809,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODE
 endif::add-copy-button-to-env-var[]
 --|int 
 |`40`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-requests[quarkus.langchain4j.ollama."model-name".embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether embedding model requests should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-responses]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-responses[quarkus.langchain4j.ollama."model-name".embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether embedding model responses should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 |===
 ifndef::no-duration-note[]
