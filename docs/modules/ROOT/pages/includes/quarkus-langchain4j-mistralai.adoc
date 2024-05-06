@@ -328,7 +328,7 @@ a| [[quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-enable-integrat
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_ENABLE_INTEGRATION+++[]
@@ -629,7 +629,7 @@ a| [[quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-model-name-enab
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Mistral AI provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__ENABLE_INTEGRATION+++[]
