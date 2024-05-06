@@ -77,20 +77,6 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.poi</groupId>
-            <artifactId>quarkus-poi</artifactId>
-            <version>${quarkus-poi.version}</version>
-        </dependency>
-
         <!-- Local embeddings -->
         <!-- The consumer must add the embeddings as dependencies to enable the support -->
         <dependency>

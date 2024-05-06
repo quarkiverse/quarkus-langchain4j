@@ -20,6 +20,7 @@
     <module>core</module>
     <module>docs</module>
     <module>testing-internal</module>
+    <module>parsers-base</module>
     <module>easy-rag</module>
     <module>hugging-face</module>
     <module>infinispan</module>

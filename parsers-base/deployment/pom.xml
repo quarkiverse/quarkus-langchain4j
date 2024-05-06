@@ -3,46 +3,27 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-core-parent</artifactId>
+        <artifactId>quarkus-langchain4j-parsers-base-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-core-deployment</artifactId>
-    <name>Quarkus LangChain4j - Core - Deployment</name>
+    <artifactId>quarkus-langchain4j-parsers-base-deployment</artifactId>
+    <name>Quarkus LangChain4j - Parsers Base - Deployment</name>
     <dependencies>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc-deployment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jackson-deployment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-qute-deployment</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vertx-deployment</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-core</artifactId>
+            <artifactId>quarkus-langchain4j-core-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-websockets-next-deployment</artifactId>
+            <artifactId>quarkus-langchain4j-parsers-base</artifactId>
             <version>${project.version}</version>
-            <optional>true</optional>  <!-- conditional dependency -->
         </dependency>
-
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-vertx-http-dev-ui-tests</artifactId>
-            <scope>test</scope>
+            <groupId>io.quarkiverse.poi</groupId>
+            <artifactId>quarkus-poi-deployment</artifactId>
+            <version>${quarkus-poi.version}</version>
         </dependency>
 
         <dependency>
@@ -55,12 +36,6 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wiremock</groupId>
-            <artifactId>wiremock-standalone</artifactId>
-            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -90,7 +65,14 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- FIXME: workaround for https://github.com/langchain4j/langchain4j/issues/776 -->
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-    
+
 </project>
