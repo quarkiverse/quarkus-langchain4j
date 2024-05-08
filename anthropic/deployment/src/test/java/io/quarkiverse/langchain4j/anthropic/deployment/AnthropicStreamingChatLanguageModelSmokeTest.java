@@ -226,7 +226,20 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
         assertThat(loggedRequest.getHeader("User-Agent"))
                 .isEqualTo("Resteasy Reactive Client");
 
-        var requestBody = "{\"model\":\"claude-3-haiku-20240307\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Hello, how are you today?\"}]}],\"max_tokens\":1024,\"stream\":true,\"top_k\":40}";
+        var requestBody = """
+                {
+                  "model" : "claude-3-haiku-20240307",
+                  "messages" : [ {
+                    "role" : "user",
+                    "content" : [ {
+                      "type" : "text",
+                      "text" : "Hello, how are you today?"
+                    } ]
+                  } ],
+                  "max_tokens" : 1024,
+                  "stream" : true,
+                  "top_k" : 40
+                }""";
         assertThat(new String(loggedRequest.getBody()))
                 .isEqualTo(requestBody)
                 .contains(CHAT_MODEL_ID);
