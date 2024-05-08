@@ -23,7 +23,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -35,18 +35,18 @@ public class AzureOpenAiRecorder {
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.openai.azure.com/openai/deployments/%s";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
 
-            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
+            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiChatModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .endpoint(getEndpoint(azureAiConfig, configName))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -81,18 +81,18 @@ public class AzureOpenAiRecorder {
     }
 
     public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAzureOpenAiConfig runtimeConfig,
-            String modelName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+            String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
 
-            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
+            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiStreamingChatModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .endpoint(getEndpoint(azureAiConfig, configName))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -125,18 +125,18 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
             if (apiKey == null && adToken == null) {
-                throw new ConfigValidationException(createKeyMisconfigurationProblem(modelName));
+                throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
             }
             var builder = AzureOpenAiEmbeddingModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .endpoint(getEndpoint(azureAiConfig, configName))
                     .apiKey(apiKey)
                     .adToken(apiKey)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -161,17 +161,17 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig, String modelName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, modelName);
+    public Supplier<ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             var apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            throwIfApiKeysNotConfigured(apiKey, adToken, modelName);
+            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, modelName))
+                    .endpoint(getEndpoint(azureAiConfig, configName))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -222,15 +222,15 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String modelName) {
+    static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName) {
         var endpoint = azureAiConfig.endpoint();
 
         return (endpoint.isPresent() && !endpoint.get().trim().isBlank()) ? endpoint.get()
-                : constructEndpointFromConfig(azureAiConfig, modelName);
+                : constructEndpointFromConfig(azureAiConfig, configName);
     }
 
     private static String constructEndpointFromConfig(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
-            String modelName) {
+            String configName) {
         var resourceName = azureAiConfig.resourceName();
         var deploymentName = azureAiConfig.deploymentName();
 
@@ -238,11 +238,11 @@ public class AzureOpenAiRecorder {
             List<Problem> configProblems = new ArrayList<>();
 
             if (resourceName.isEmpty()) {
-                configProblems.add(createConfigProblem("resource-name", modelName));
+                configProblems.add(createConfigProblem("resource-name", configName));
             }
 
             if (deploymentName.isEmpty()) {
-                configProblems.add(createConfigProblem("deployment-name", modelName));
+                configProblems.add(createConfigProblem("deployment-name", configName));
             }
 
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -253,36 +253,36 @@ public class AzureOpenAiRecorder {
 
     private LangChain4jAzureOpenAiConfig.AzureAiConfig correspondingAzureOpenAiConfig(
             LangChain4jAzureOpenAiConfig runtimeConfig,
-            String modelName) {
+            String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig;
-        if (NamedModelUtil.isDefault(modelName)) {
+        if (NamedConfigUtil.isDefault(configName)) {
             azureAiConfig = runtimeConfig.defaultConfig();
         } else {
-            azureAiConfig = runtimeConfig.namedConfig().get(modelName);
+            azureAiConfig = runtimeConfig.namedConfig().get(configName);
         }
         return azureAiConfig;
     }
 
-    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, String modelName) {
+    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, String configName) {
         if ((apiKey != null) == (adToken != null)) {
-            throw new ConfigValidationException(createKeyMisconfigurationProblem(modelName));
+            throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
         }
     }
 
-    private ConfigValidationException.Problem[] createKeyMisconfigurationProblem(String modelName) {
+    private ConfigValidationException.Problem[] createKeyMisconfigurationProblem(String configName) {
         return new ConfigValidationException.Problem[] {
                 new ConfigValidationException.Problem(
                         String.format(
                                 "SRCFG00014: Exactly of the configuration properties must be present: quarkus.langchain4j.azure-openai%s%s or quarkus.langchain4j.azure-openai%s%s",
-                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), "api-key",
-                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), "ad-token"))
+                                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "api-key",
+                                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "ad-token"))
         };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.azure-openai%s%s is required but it could not be found in any config source",
-                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 
     public void cleanUp(ShutdownContext shutdown) {

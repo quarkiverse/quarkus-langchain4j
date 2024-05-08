@@ -8,7 +8,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProvid
 import io.quarkiverse.langchain4j.openai.deployment.LangChain4jOpenAiBuildConfig;
 import io.quarkiverse.langchain4j.openai.runtime.devui.OpenAiImagesJsonRPCService;
 import io.quarkiverse.langchain4j.openai.runtime.devui.OpenAiModerationModelsJsonRPCService;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -46,7 +46,7 @@ public class OpenAiDevUIProcessor {
             List<SelectedImageModelProviderBuildItem> imageModels) {
         List<String> configurations = new ArrayList<>();
         for (SelectedImageModelProviderBuildItem imageModel : imageModels) {
-            configurations.add(imageModel.getModelName());
+            configurations.add(imageModel.getConfigName());
         }
         if (configurations.isEmpty()) {
             // Even if the default OpenAI config instance is not injected
@@ -54,7 +54,7 @@ public class OpenAiDevUIProcessor {
             // around with images out of the box (even with an empty
             // application). If the API key isn't configured, don't fail the
             // startup - the image page will show an error.
-            configurations.add(NamedModelUtil.DEFAULT_NAME);
+            configurations.add(NamedConfigUtil.DEFAULT_NAME);
         }
         if (config.imageModel().enabled().orElse(true)) {
             card.addBuildTimeData("imageModelConfigurations", configurations);
@@ -70,10 +70,10 @@ public class OpenAiDevUIProcessor {
             List<SelectedModerationModelProviderBuildItem> moderationModels) {
         List<String> configurations = new ArrayList<>();
         for (SelectedModerationModelProviderBuildItem imageModel : moderationModels) {
-            configurations.add(imageModel.getModelName());
+            configurations.add(imageModel.getConfigName());
         }
         if (configurations.isEmpty()) {
-            configurations.add(NamedModelUtil.DEFAULT_NAME);
+            configurations.add(NamedConfigUtil.DEFAULT_NAME);
         }
         if (config.moderationModel().enabled().orElse(true)) {
             card.addBuildTimeData("moderationModelConfigurations", configurations);

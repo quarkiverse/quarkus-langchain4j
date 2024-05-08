@@ -12,7 +12,7 @@ import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -22,9 +22,9 @@ public class HuggingFaceRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
-                modelName);
+                configName);
 
         if (huggingFaceConfig.enableIntegration()) {
             String apiKey = huggingFaceConfig.apiKey();
@@ -32,7 +32,7 @@ public class HuggingFaceRecorder {
             URL url = chatModelConfig.inferenceEndpointUrl();
 
             if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = QuarkusHuggingFaceChatModel.builder()
@@ -74,9 +74,9 @@ public class HuggingFaceRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
-                modelName);
+                configName);
 
         if (huggingFaceConfig.enableIntegration()) {
             String apiKey = huggingFaceConfig.apiKey();
@@ -84,7 +84,7 @@ public class HuggingFaceRecorder {
             URL url = embeddingModelConfig.inferenceEndpointUrl();
 
             if (DUMMY_KEY.equals(apiKey) && url.toExternalForm().contains(HUGGING_FACE_URL_MARKER)) { // when using the default base URL an API key is required
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = QuarkusHuggingFaceEmbeddingModel.builder()
@@ -113,27 +113,27 @@ public class HuggingFaceRecorder {
     }
 
     private LangChain4jHuggingFaceConfig.HuggingFaceConfig correspondingHuggingFaceConfig(
-            LangChain4jHuggingFaceConfig runtimeConfig, String modelName) {
+            LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig;
-        if (NamedModelUtil.isDefault(modelName)) {
+        if (NamedConfigUtil.isDefault(configName)) {
             huggingFaceConfig = runtimeConfig.defaultConfig();
         } else {
-            huggingFaceConfig = runtimeConfig.namedConfig().get(modelName);
+            huggingFaceConfig = runtimeConfig.namedConfig().get(configName);
         }
         return huggingFaceConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String modelName) {
-        return createConfigProblems("api-key", modelName);
+    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
+        return createConfigProblems("api-key", configName);
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.huggingface%s%s is required but it could not be found in any config source",
-                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }

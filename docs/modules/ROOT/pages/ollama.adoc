@@ -2,59 +2,29 @@
 
 include::./includes/attributes.adoc[]
 
-https://ollama.com/[Ollama] proposes a way to run large language models (LLMs) locally.
-You can run many https://ollama.com/library[models] such as LLama2, Mistral, or CodeLlama on your local machine.
+https://ollama.com/[Ollama] provides a way to run large language models (LLMs) locally.
+You can run many https://ollama.com/library[models] such as LLama3, Mistral, CodeLlama and many others on your machine, with full CPU and GPU support.
 
 [#_prerequisites]
 == Prerequisites
 
-To use Ollama, you need to have a running Ollama _server_.
-Go to the https://ollama.com/download[Ollama download page] and download the server for your platform.
+To use Ollama, you need to have a running Ollama installed.
+Ollama is available for all major platforms and its installation is quite easy, simply visit https://ollama.com/download[Ollama download page] and follow the instructions.
 
 Once installed, check that Ollama is running using:
 
 [source,shell]
 ----
-> ollama list
+> ollama --version
 ----
 
-It may not display any model, which is fine, let's pull the `llama2` model:
+=== Dev Service
 
-[source,shell]
-----
-> ollama pull llama2
-----
+Quarkus LangChain4j automatically handles the pulling of the models configured by the application, so there is no need for users to do so manually.
 
-WARNING: Models are huge. For example Llama2 is 3.8Gb. Make sure you have enough disk space.
+WARNING: Models are huge. For example Llama3 is 4.7Gb, so make sure you have enough disk space.
 
-Let's also pull the _default_ embedding model:
-
-[source,shell]
-----
-> ollama pull nomic-embed-text
-----
-
-[NOTE]
-.Dev Service
-====
-If you have Ollama running locally, you do not need a dev service.
-However, if you want to use the Ollama dev service, add the following dependency to your project:
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-ollama-devservices</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
-Then, in your `application.properties` file add:
-
-[source,properties,subs=attributes+]
-----
-quarkus.langchain4j.ollama.devservices.model=mistral # It uses orca-mini by default
-----
-The dev service will start an Ollama server for you, using a docker container. Note that the provisioning can take some time.
-====
+NOTE: Due to model's large size, pulling them can take time
 
 == Using Ollama
 
@@ -71,12 +41,11 @@ To integrate with models running on Ollama, add the following dependency into yo
 
 If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured Ollama model.
 
-By default, the extension uses `llama2`, the model we pulled in the previous section.
+By default, the extension uses `llama3`, the model we pulled in the previous section.
 You can change it by setting the `quarkus.langchain4j.ollama.chat-model.model-id` property in the `application.properties` file:
 
 [source,properties,subs=attributes+]
 ----
-# Do not forget to pull the model before using it using `ollama pull <model-id>`
 quarkus.langchain4j.ollama.chat-model.model-id=mistral
 ----
 
@@ -89,14 +58,14 @@ include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]
 == Document Retriever and Embedding
 
 Ollama also provides embedding models.
-By default, it uses `nomic-embed-text` (make sure you pulled that model as indicated in xref:#_prerequisites[the prerequisites section]).
+By default, it uses `nomic-embed-text`.
 
 You can change the default embedding model by setting the `quarkus.langchain4j.ollama.embedding-model.model-id` property in the `application.properties` file:
 
 [source,properties,subs=attributes+]
 ----
-quarkus.langchain4j.ollama.log-requests=true
-quarkus.langchain4j.ollama.log-responses=true
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
 
 quarkus.langchain4j.ollama.chat-model.model-id=mistral
 quarkus.langchain4j.ollama.embedding-model.model-id=mistral
@@ -108,6 +77,4 @@ If no other LLM extension is installed, retrieve the embedding model as follows:
 ----
 @Inject EmbeddingModel model; // Injects the embedding model
 ----
-
-However, in general, we recommend using xref:in-process-embedding.adoc[local embedding models], as Ollama embeddings are rather slow.
 

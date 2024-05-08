@@ -38,8 +38,7 @@ public interface LangChain4jOllamaConfig {
         /**
          * Base URL where the Ollama serving is running
          */
-        @WithDefault("http://localhost:11434")
-        String baseUrl();
+        Optional<String> baseUrl();
 
         /**
          * Timeout for Ollama calls

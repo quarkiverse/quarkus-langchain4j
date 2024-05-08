@@ -10,16 +10,6 @@ import io.smallrye.config.WithDefault;
 @ConfigGroup
 public interface EmbeddingModelConfig {
 
-    // TODO: we need to check if these are the correct settings...
-
-    /**
-     * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
-     * docs</a>,
-     * the default value is {@code nomic-embed-text}
-     */
-    @WithDefault("nomic-embed-text")
-    String modelId();
-
     /**
      * The temperature of the model. Increasing the temperature will make the model answer with
      * more variability. A lower temperature will make the model answer more conservatively.

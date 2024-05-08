@@ -10,10 +10,12 @@ import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig.OllamaConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 
 class DisabledModelsOllamaRecorderTest {
     LangChain4jOllamaConfig config = mock(LangChain4jOllamaConfig.class);
+    LangChain4jOllamaFixedRuntimeConfig fixedConfig = mock(LangChain4jOllamaFixedRuntimeConfig.class);
     OllamaConfig defaultConfig = mock(OllamaConfig.class);
     OllamaRecorder recorder = new OllamaRecorder();
 
@@ -28,14 +30,14 @@ class DisabledModelsOllamaRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, fixedConfig, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(config, fixedConfig, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }

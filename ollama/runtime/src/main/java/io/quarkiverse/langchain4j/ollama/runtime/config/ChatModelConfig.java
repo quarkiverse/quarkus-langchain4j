@@ -11,14 +11,6 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
-     * docs</a>,
-     * the default value is {@code llama3}
-     */
-    @WithDefault("llama3")
-    String modelId();
-
-    /**
      * The temperature of the model. Increasing the temperature will make the model answer with
      * more variability. A lower temperature will make the model answer more conservatively.
      */

@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.runtime.InProcessEmbeddingRecorder;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -131,7 +131,7 @@ public class InProcessEmbeddingProcessor {
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
             Optional<String> modelName = selectedEmbedding.stream()
                     .filter(se -> se.getProvider().equals(embedding.getProvider()))
-                    .map(SelectedEmbeddingModelCandidateBuildItem::getModelName)
+                    .map(SelectedEmbeddingModelCandidateBuildItem::getConfigName)
                     .findFirst();
             var builder = SyntheticBeanBuildItem
                     .configure(DotName.createSimple(embedding.className()))
@@ -146,9 +146,9 @@ public class InProcessEmbeddingProcessor {
         }
     }
 
-    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
-        if (!NamedModelUtil.isDefault(modelName)) {
-            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 }

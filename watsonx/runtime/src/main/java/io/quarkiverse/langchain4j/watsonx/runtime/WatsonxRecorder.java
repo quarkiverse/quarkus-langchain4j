@@ -16,7 +16,7 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.TokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
@@ -39,12 +39,12 @@ public class WatsonxRecorder {
     private static final Map<String, TokenGenerator> tokenGeneratorCache = new HashMap<>();
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, configName);
 
         if (watsonConfig.enableIntegration()) {
 
-            var builder = generateChatBuilder(watsonConfig, modelName);
+            var builder = generateChatBuilder(watsonConfig, configName);
 
             return new Supplier<>() {
                 @Override
@@ -63,12 +63,12 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, configName);
 
         if (watsonConfig.enableIntegration()) {
 
-            var builder = generateChatBuilder(watsonConfig, modelName);
+            var builder = generateChatBuilder(watsonConfig, configName);
 
             return new Supplier<>() {
                 @Override
@@ -87,11 +87,11 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, configName);
 
         if (watsonConfig.enableIntegration()) {
-            var configProblems = checkConfigurations(watsonConfig, modelName);
+            var configProblems = checkConfigurations(watsonConfig, configName);
 
             if (!configProblems.isEmpty()) {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -146,10 +146,10 @@ public class WatsonxRecorder {
         };
     }
 
-    private WatsonxModel.Builder generateChatBuilder(LangChain4jWatsonxConfig.WatsonConfig watsonConfig, String modelName) {
+    private WatsonxModel.Builder generateChatBuilder(LangChain4jWatsonxConfig.WatsonConfig watsonConfig, String configName) {
 
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        var configProblems = checkConfigurations(watsonConfig, modelName);
+        var configProblems = checkConfigurations(watsonConfig, configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -199,50 +199,50 @@ public class WatsonxRecorder {
     }
 
     private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonConfig(LangChain4jWatsonxConfig runtimeConfig,
-            String modelName) {
+            String configName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig;
-        if (NamedModelUtil.isDefault(modelName)) {
+        if (NamedConfigUtil.isDefault(configName)) {
             watsonConfig = runtimeConfig.defaultConfig();
         } else {
-            watsonConfig = runtimeConfig.namedConfig().get(modelName);
+            watsonConfig = runtimeConfig.namedConfig().get(configName);
         }
         return watsonConfig;
     }
 
     private List<ConfigValidationException.Problem> checkConfigurations(LangChain4jWatsonxConfig.WatsonConfig watsonConfig,
-            String modelName) {
+            String configName) {
         List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
 
         if (DUMMY_URL.equals(watsonConfig.baseUrl())) {
-            configProblems.add(createBaseURLConfigProblem(modelName));
+            configProblems.add(createBaseURLConfigProblem(configName));
         }
         String apiKey = watsonConfig.apiKey();
         if (DUMMY_API_KEY.equals(apiKey)) {
-            configProblems.add(createApiKeyConfigProblem(modelName));
+            configProblems.add(createApiKeyConfigProblem(configName));
         }
         String projectId = watsonConfig.projectId();
         if (DUMMY_PROJECT_ID.equals(projectId)) {
-            configProblems.add(createProjectIdProblem(modelName));
+            configProblems.add(createProjectIdProblem(configName));
         }
 
         return configProblems;
     }
 
-    private ConfigValidationException.Problem createBaseURLConfigProblem(String modelName) {
-        return createConfigProblem("base-url", modelName);
+    private ConfigValidationException.Problem createBaseURLConfigProblem(String configName) {
+        return createConfigProblem("base-url", configName);
     }
 
-    private ConfigValidationException.Problem createApiKeyConfigProblem(String modelName) {
-        return createConfigProblem("api-key", modelName);
+    private ConfigValidationException.Problem createApiKeyConfigProblem(String configName) {
+        return createConfigProblem("api-key", configName);
     }
 
-    private ConfigValidationException.Problem createProjectIdProblem(String modelName) {
-        return createConfigProblem("project-id", modelName);
+    private ConfigValidationException.Problem createProjectIdProblem(String configName) {
+        return createConfigProblem("project-id", configName);
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.watsonx%s%s is required but it could not be found in any config source",
-                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }
