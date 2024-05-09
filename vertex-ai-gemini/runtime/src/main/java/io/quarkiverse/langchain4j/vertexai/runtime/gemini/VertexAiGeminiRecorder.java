@@ -80,7 +80,7 @@ public class VertexAiGeminiRecorder {
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
         return new ConfigValidationException.Problem(
-                "SRCFG00014: The config property quarkus.langchain4j.vertexai%s%s is required but it could not be found in any config source"
+                "SRCFG00014: The config property quarkus.langchain4j.vertexai.gemini%s%s is required but it could not be found in any config source"
                         .formatted(
                                 NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
     }
