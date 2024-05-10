@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -54,6 +55,21 @@ public interface WatsonxRestApi {
     @POST
     @Path("text/generation")
     TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version)
+            throws WatsonxException;
+
+    @POST
+    @Path("/deployments/{deploymentId}/text/generation")
+    TextGenerationResponse chat(@PathParam("deploymentId") String deploymentId, TextGenerationRequest request,
+            @NotBody String token,
+            @QueryParam("version") String version)
+            throws WatsonxException;
+
+    @POST
+    @Path("/deployments/{deploymentId}/text/generation_stream")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    Multi<String> chatStreaming(@PathParam("deploymentId") String deploymentId, TextGenerationRequest request,
+            @NotBody String token,
+            @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST

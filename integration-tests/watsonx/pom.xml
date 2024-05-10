@@ -7,7 +7,7 @@
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-test-bam</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - BAM</name>
+    <name>Quarkus LangChain4j - Integration Tests - Watsonx</name>
     <properties>
         <skipITs>true</skipITs>
     </properties>
@@ -15,6 +15,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-watsonx</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
@@ -46,7 +51,7 @@
         <!-- Make sure the deployment artifact is built before executing this module -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-bam-deployment</artifactId>
+            <artifactId>quarkus-langchain4j-watsonx-deployment</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
             <scope>test</scope>

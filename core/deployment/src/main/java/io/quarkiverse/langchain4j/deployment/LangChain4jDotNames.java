@@ -19,7 +19,6 @@ import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
-import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -35,8 +34,8 @@ public class LangChain4jDotNames {
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
-    static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
-    static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
+    public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
+    public static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
@@ -46,7 +45,7 @@ public class LangChain4jDotNames {
     static final DotName V = DotName.createSimple(dev.langchain4j.service.V.class);
 
     static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
-    static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
+    public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
 
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatLanguageModelSupplier.class);

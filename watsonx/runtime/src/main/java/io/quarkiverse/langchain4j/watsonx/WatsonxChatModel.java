@@ -52,11 +52,14 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
 
         Result result = retryOn(new Callable<TextGenerationResponse>() {
-
             @Override
             public TextGenerationResponse call() throws Exception {
                 var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.chat(request, token, version);
+
+                if (Objects.isNull(deploymentId))
+                    return client.chat(request, token, version);
+                else
+                    return client.chat(deploymentId, request, token, version);
             }
         }).results().get(0);
 

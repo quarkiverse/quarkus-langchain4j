@@ -256,7 +256,6 @@ public class AllPropertiesTest {
 
             @Override
             public void onComplete(Response<AiMessage> response) {
-                System.out.println(response);
                 streamingResponse.set(response.content());
             }
         });

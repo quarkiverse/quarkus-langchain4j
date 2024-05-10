@@ -14,7 +14,7 @@
     <module>anthropic</module>
     <module>openai</module>
     <module>hugging-face</module>
-    <module>bam</module>
+    <module>watsonx</module>
     <module>ollama</module>
     <module>simple-ollama</module>
     <module>azure-openai</module>

@@ -39,12 +39,12 @@ public class WatsonxRecorder {
     private static final Map<String, TokenGenerator> tokenGeneratorCache = new HashMap<>();
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName, String deployment) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
 
-            var builder = generateChatBuilder(watsonConfig, modelName);
+            var builder = generateChatBuilder(watsonConfig, modelName, deployment);
 
             return new Supplier<>() {
                 @Override
@@ -63,12 +63,13 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName) {
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig, String modelName,
+            String deployment) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, modelName);
 
         if (watsonConfig.enableIntegration()) {
 
-            var builder = generateChatBuilder(watsonConfig, modelName);
+            var builder = generateChatBuilder(watsonConfig, modelName, deployment);
 
             return new Supplier<>() {
                 @Override
@@ -146,7 +147,8 @@ public class WatsonxRecorder {
         };
     }
 
-    private WatsonxModel.Builder generateChatBuilder(LangChain4jWatsonxConfig.WatsonConfig watsonConfig, String modelName) {
+    private WatsonxModel.Builder generateChatBuilder(LangChain4jWatsonxConfig.WatsonConfig watsonConfig, String modelName,
+            String deployment) {
 
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         var configProblems = checkConfigurations(watsonConfig, modelName);
@@ -177,6 +179,7 @@ public class WatsonxRecorder {
         return WatsonxChatModel.builder()
                 .tokenGenerator(tokenGenerator)
                 .url(url)
+                .deploymentId(deployment)
                 .timeout(watsonConfig.timeout())
                 .logRequests(chatModelConfig.logRequests().orElse(false))
                 .logResponses(chatModelConfig.logResponses().orElse(false))

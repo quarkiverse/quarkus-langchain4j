@@ -67,7 +67,11 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
                 .transformToMulti(new Function<String, Publisher<? extends String>>() {
                     @Override
                     public Publisher<? extends String> apply(String token) {
-                        return client.chatStreaming(request, token, version);
+
+                        if (Objects.isNull(deploymentId))
+                            return client.chatStreaming(request, token, version);
+                        else
+                            return client.chatStreaming(deploymentId, request, token, version);
                     }
                 })
                 .subscribe()

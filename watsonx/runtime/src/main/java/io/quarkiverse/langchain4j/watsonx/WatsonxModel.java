@@ -22,6 +22,7 @@ import io.smallrye.mutiny.Uni;
 public abstract class WatsonxModel {
 
     private final TokenGenerator tokenGenerator;
+    final String deploymentId;
     final String modelId;
     final String version;
     final String projectId;
@@ -55,6 +56,7 @@ public abstract class WatsonxModel {
         }
 
         this.client = builder.build(WatsonxRestApi.class);
+        this.deploymentId = config.deploymentId;
         this.modelId = config.modelId;
         this.version = config.version;
         this.projectId = config.projectId;
@@ -146,6 +148,7 @@ public abstract class WatsonxModel {
 
     public static final class Builder {
 
+        private String deploymentId;
         private String modelId;
         private String version;
         private String projectId;
@@ -167,6 +170,11 @@ public abstract class WatsonxModel {
         public boolean logResponses;
         public boolean logRequests;
         private TokenGenerator tokenGenerator;
+
+        public Builder deploymentId(String deploymentId) {
+            this.deploymentId = deploymentId;
+            return this;
+        }
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;

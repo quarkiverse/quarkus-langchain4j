@@ -30,11 +30,11 @@ class DisabledModelsWatsonRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME, null).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
 
-        assertThat(recorder.streamingChatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.streamingChatModel(config, NamedModelUtil.DEFAULT_NAME, null).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
 
