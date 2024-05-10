@@ -76,13 +76,11 @@
             <artifactId>quarkus-langchain4j-watsonx</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- remove as does not work on podman machine 
-            <dependency>
+        <dependency>
             <groupId>io.quarkiverse.antora</groupId>
             <artifactId>quarkus-antora</artifactId>
             <version>${quarkus-antora.version}</version>
         </dependency>
-        -->
 
         <!-- Test dependencies -->
         <dependency>
