@@ -11,6 +11,7 @@ import '@vaadin/text-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import { JsonRpc } from 'jsonrpc';
+import { systemMessages } from 'build-time-data';
 
 export class QwcChat extends LitElement {
 
@@ -65,6 +66,7 @@ export class QwcChat extends LitElement {
         _progressBarClass: {state: true},
         _newConversationButtonClass: {state: true},
         _systemMessage: {state: true},
+        _systemMessages: {state: true},
         _systemMessageDisabled: {state: true},
         _ragEnabled: {state: true},
         _showToolRelatedMessages: {state: true}
@@ -74,12 +76,13 @@ export class QwcChat extends LitElement {
         super();
         this._showToolRelatedMessages = true;
         this._ragEnabled = true;
-        this._systemMessage = "";
+        this._systemMessages = systemMessages;
+        this._systemMessage = systemMessages.length == 1 ? systemMessages[0] : "";
         this._hideProgressBar();
         this._beginInputOfNewSystemMessage();
         this._unfilteredChatItems = [];
         this._chatItems = [];
-        this.jsonRpc.reset({systemMessage: ""});
+        this.jsonRpc.reset({systemMessage: this._systemMessage});
     }
 
     render() {
