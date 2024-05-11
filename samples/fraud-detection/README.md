@@ -2,6 +2,12 @@
 
 This demo showcases the implementation of a simple fraud detection system using LLMs (GPT-4 in this case).
 
+The demo is using two different methods to detect fraud:
+
+- Based on the amount of the transactions
+- Based on the distance between two cities
+
+
 ## The Demo
 
 ### Setup
@@ -83,6 +89,44 @@ For each message, the prompt is engineered to help the LLM understand the contex
 String detectAmountFraudForCustomer(long customerId);
 ```
 
+A similar method is defined for detecting fraud based on the distance between two cities:
+**Note**: The distance calculation requires a tool that can calculate the distance between two cities (e.g., GPT-4). 
+When using GPT-3.5, the distance will always be calculated as 0 
+
+```java
+    @SystemMessage("""
+            You are a bank account fraud detection AI. You have to detect frauds in transactions.
+            """)
+    @UserMessage("""
+            Detect frauds based on the distance between two transactions for the customer: {{customerId}}.
+
+            To detect a fraud, perform the following actions:
+            1- First, retrieve the name of the customer {{customerId}}
+            2 - Retrieve the transactions for the customer {{customerId}} for the last 15 minutes.
+            3 - Retrieve the city for each transaction.
+            4 - Check if the distance between 2 cities is greater than 500km, if so, a fraud is detected.
+            5 - If a fraud is detected, find the two transactions associated with these cities.
+
+            Answer with a **single** JSON document containing:
+            - the customer name in the 'customer-name' key
+            - the amount of the first transaction in the 'first-amount' key
+            - the amount of the second transaction in the 'second-amount' key
+            - the city of the first transaction in the 'first-city' key
+            - the city of the second transaction in the 'second-city' key
+            - the 'fraud' key set to a boolean value indicating if a fraud was detected (so the distance is greater than 500 km)
+            - the 'distance' key set to the distance between the two cities
+            - the 'explanation' key containing a explanation of your answer.
+            - the 'cities' key containing all the cities for the transactions for the customer {{customerId}} in the last 15 minutes.
+            - if there is a fraud, the 'email' key containing an email to the customer {{customerId}} to warn him about the fraud. The text must be formal and polite. It must ask the customer to contact the bank ASAP.
+
+            Your response must be just the raw JSON document, without ```json, ``` or anything else.
+
+            """)
+    @Timeout(value = 2, unit = ChronoUnit.MINUTES)
+    String detectDistanceFraudForCustomer(long customerId);
+
+```
+
 _Note:_ You can also use fault tolerance annotations in combination with the prompt annotations.
 
 ### Using the AI service
@@ -102,16 +146,22 @@ public class FraudDetectionResource {
     }
 
     @GET
+    @Path("/amount")
+    public String detectBaseOnAmount(@RestQuery long customerId) {
+        return service.detectAmountFraudForCustomer(customerId);
+    }
+
+    /**
+     * Detect fraud based on the distance between two cities.
+     * Requires a model that can calculate the distance between two cities (e.g. gpt-4).
+     * When used with gpt-3.5 distances will always be calucalated as 0.
+     */
+    @GET
     @Path("/distance")
     public String detectBasedOnDistance(@RestQuery long customerId) {
         return service.detectDistanceFraudForCustomer(customerId);
     }
 
-    @GET
-    @Path("/amount")
-    public String detectBaseOnAmount(@RestQuery long customerId) {
-        return service.detectAmountFraudForCustomer(customerId);
-    }
     // ...
 }
 ```
