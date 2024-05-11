@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email me a poem</title>
+  </head>
+  <body>
+    <h3>Email me a poem</h3>
+    Click on the button to get a poem.  
+    </p>
+    <div id="status"></div>
+    </p>
+    <textarea id="poem" rows="10" cols="50" readonly></textarea>
+    </p>
+    <button id="emailMe">Email me a poem</button>
+    <button id="clear" disabled>Clear</button>
+
+    <script>
+        document.getElementById('emailMe').addEventListener('click', function() {
+          fetch('http://localhost:8080/email-me-a-poem')
+            .then(response => response.text())
+            .then(data => {
+              document.getElementById('poem').value = data;
+              document.getElementById('clear').disabled = false;
+            })
+            .catch(error => {
+              document.getElementById('status').textContent = 'Failed! Have you started the mock mail container? ';
+            });
+        });
+
+        document.getElementById('clear').addEventListener('click', function() {
+          document.getElementById('poem').value = '';
+          this.disabled = true;
+        });
+    </script>
+  </body>
+</html>
