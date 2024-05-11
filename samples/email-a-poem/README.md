@@ -1,8 +1,7 @@
 # AI Service example with Tools that can write a poem and send it by email
 
-This example demonstrates how to create a chatbot with RAG using
-`quarkus-langchain4j`. This chatbot internally uses LLM-generated SQL
-queries to retrieve the relevant information from a PostgreSQL database.
+This example demonstrates how to create an AI service that can discover
+and use locally implemented tools.
 
 ## Running the example
 
