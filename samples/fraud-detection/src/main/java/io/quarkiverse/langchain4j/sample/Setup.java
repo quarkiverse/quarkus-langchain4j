@@ -39,6 +39,16 @@ public class Setup {
             customer3.name = "Olivia Williams";
             customer3.email = "olivia.williams@mail.com";
             customers.persist(customer3);
+
+           var customer4 = new Customer();
+            customer4.name = "Robin Banks";
+            customer4.email = "robin.banks@mail.com";
+            customers.persist(customer4);
+
+           var customer5 = new Customer();
+            customer5.name = "Miles Faux";
+            customer5.email = "miles.faux@mail.com";
+            customers.persist(customer5);
         }
 
         transactions.deleteAll(); // Delete all transactions
@@ -53,8 +63,38 @@ public class Setup {
             transactions.persist(transaction);
         }
 
+        // Ensure that the customer 4. Robin Banks has a transaction sum greater than 10000
+        var transaction41 = new Transaction();
+        transaction41.customerId = 4;
+        transaction41.amount = 10001;
+        transaction41.time = LocalDateTime.now();
+        transaction41.city = getARandomCity();
+        transactions.persist(transaction41);
+        
+        // Ensure that the customer 5. Miles Faux has traveled to cities with distance greater than 500km
+        // So, let's go with Brest and Nice that are 1000km apart
+        var transaction51 = new Transaction();
+        transaction51.customerId = 5;
+        transaction51.amount = 1000;
+        transaction51.time = LocalDateTime.now();
+        transaction51.city = "Brest";
+        transactions.persist(transaction51);
+        
+        var transaction52 = new Transaction();
+        transaction52.customerId = 5;
+        transaction52.amount = 1000;
+        transaction52.time = LocalDateTime.now();
+        transaction52.city = "Nice";
+        transactions.persist(transaction52);
+
         for (Customer customer : customers.listAll()) {
-            System.out.println("Customer: " + customer.name + " - " + customer.id);
+            if (customer.id == 4) {
+                System.out.println("Customer: " + customer.name + " - " + customer.id + " has a transaction sum greater than 10000");
+            } else if (customer.id == 5) {
+                System.out.println("Customer: " + customer.name + " - " + customer.id + " has traveled to cities with distance greater than 500km");
+            } else {
+              System.out.println("Customer: " + customer.name + " - " + customer.id);
+            }
         }
     }
 }
