@@ -7,6 +7,7 @@ metadata:
     - langchain4j
     - openai
     - pinecone
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
   categories:
     - "miscellaneous"
   status: "experimental"
