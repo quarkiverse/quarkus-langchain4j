@@ -86,6 +86,25 @@ Several configuration properties are available:
 
 include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]
 
+[TIP]
+
+If the Ollama server is running behind an authentication proxy, then the authentication header can easily be added to each HTTP request by adding
+a https://quarkus.io/guides/rest-client#customizing-the-request[ClientRequestFilter] like so:
+
+[source, java]
+----
+@Provider
+public class OllamaClientAuthHeaderFilter implements ClientRequestFilter {
+
+    @Override
+    public void filter(ClientRequestContext requestContext) {
+        requestContext.getHeaders().add("Authentication", "Bearer someToken");
+    }
+}
+----
+
+This class is a CDI bean which gives the ability to utilize other CDI beans if necessary.
+
 == Document Retriever and Embedding
 
 Ollama also provides embedding models.
