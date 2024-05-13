@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -47,7 +48,7 @@ public class LangChain4jDevUIProcessor {
             addEmbeddingStorePage(card);
         }
         if (!chatModelProviders.isEmpty()) {
-            addChatPage(card);
+            addChatPage(card, aiServices);
         }
         return card;
     }
@@ -89,7 +90,15 @@ public class LangChain4jDevUIProcessor {
                 .icon("font-awesome-solid:toolbox"));
     }
 
-    private void addChatPage(CardPageBuildItem card) {
+    private void addChatPage(CardPageBuildItem card, List<DeclarativeAiServiceBuildItem> aiServices) {
+        List<String> systemMessages = aiServices.stream()
+                .map(s -> s.getServiceClassInfo())
+                .flatMap(c -> c.annotations().stream()) //This includes method annotations
+                .filter(a -> a.name().equals(LangChain4jDotNames.SYSTEM_MESSAGE))
+                .map(a -> String.join("", a.value().asStringArray()))
+                .toList();
+
+        card.addBuildTimeData("systemMessages", systemMessages);
         card.addPage(Page.webComponentPageBuilder().title("Chat")
                 .componentLink("qwc-chat.js")
                 .icon("font-awesome-solid:comments"));

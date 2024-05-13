@@ -35,7 +35,7 @@ public class LangChain4jDotNames {
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
-    static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
+    public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
     static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
