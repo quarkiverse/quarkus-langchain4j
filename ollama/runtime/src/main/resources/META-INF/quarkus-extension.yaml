@@ -6,7 +6,7 @@ metadata:
     - ai
     - langchain4j
     - openai
-  #  guide: https://quarkiverse.github.io/quarkiverse-docs/langchain4j/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
   categories:
     - "miscellaneous"
   status: "experimental"
