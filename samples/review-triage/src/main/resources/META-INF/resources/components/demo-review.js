@@ -72,10 +72,10 @@ export class DemoReview extends LitElement {
               <p>Things you can try:</p>
               <ul>
                 <li>
-                  <a href="#" @click=${() => { this.review = "You are great! Keep up the good work!"; }}>You are great! Keep up the good work!</a><
-                /li>
+                  <a href="#" @click=${() => { this.review = "You are great! Keep up the good work!"; }}>You are great! Keep up the good work!</a>
+                </li>
                 <li>
-                  <a href="#" @click=${() => { this.review = "You are thieves! I want my moeny back!"; }}>You are thieves! I want my moeny back!</a>
+                  <a href="#" @click=${() => { this.review = "You are thieves! I want my money back!"; }}>You are thieves! I want my money back!</a>
                 </li>
               </ul>
             </vaadin-vertical-layout>
