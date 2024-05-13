@@ -65,25 +65,27 @@ export class QwcImages extends LitElement {
         { label: "dall-e-3",  value: "dall-e-3"}]
 
     supportedSizes = [
-        { label: "256x256",  value: "256x256"},
-        { label: "512x512",  value: "512x512"},
-        { label: "1024x1024",  value: "1024x1024"},
-        { label: "1024x1792",  value: "1024x1792"},
-        { label: "1792x1024",  value: "1792x1024"}
+        { label: "256x256",  value: "256x256", supportedModels: ["dall-e-2"]},
+        { label: "512x512",  value: "512x512", supportedModels: ["dall-e-2"]},
+        { label: "1024x1024",  value: "1024x1024", supportedModels: ["dall-e-2", "dall-e-3"]},
+        { label: "1792x1024",  value: "1792x1024", supportedModels: ["dall-e-3"]},
+        { label: "1024x1792",  value: "1024x1792", supportedModels: ["dall-e-3"]},
+        { label: "1792x1024",  value: "1792x1024", supportedModels: ["dall-e-3"]}
     ]
 
     supportedQualities = [
-        { label: "standard",  value: "standard"},
-        { label: "hd",  value: "hd"}]
+        { label: "standard",  value: "standard", supportedModels: ["dall-e-2", "dall-e-3"]},
+        { label: "hd",  value: "hd", supportedModels: ["dall-e-3"]}]
 
     supportedStyles = [
-        { label: "vivid",  value: "vivid"},
-        { label: "natural",  value: "natural"}]
+        { label: "vivid",  value: "vivid", supportedModels: ["dall-e-2", "dall-e-3"]},
+        { label: "natural",  value: "natural", supportedModels: ["dall-e-3"]}]
 
     static properties = {
         _progressBarClass: {state: true},
         _generatedImages: {state: true},
         _imageModelConfigurations: {state: true},
+        selectedModel: { state: true },
     }
 
     constructor() {
@@ -95,6 +97,8 @@ export class QwcImages extends LitElement {
         imageModelConfigurations.forEach((config) => {
             this._imageModelConfigurations = this._imageModelConfigurations.concat([{label: config, value: config}]);
         })
+       
+        this.selectedModel = this.supportedModels[0].value;
     }
 
     render() {
@@ -104,7 +108,44 @@ export class QwcImages extends LitElement {
         `;
     }
 
-    _renderConfig(){
+    _onModelChange(e) {
+        this.selectedModel = e.target.value;
+
+        const availableSizes = this._getSupportedSizesForModel(this.selectedModel);
+        const availableQualities = this._getSupportedQualitiesForModel(this.selectedModel);
+        const availableStyles = this._getSupportedStylesForModel(this.selectedModel);
+        
+        this.selectedSize = this._getSupportedSizesForModel(this.selectedModel)[0].value;
+        this.selectedQuality = this._getSupportedQualitiesForModel(this.selectedModel)[0].value;
+        this.selectedStyle = this._getSupportedStylesForModel(this.selectedModel)[0].value;
+       
+        // Reset the values if the selected model does not support the current value
+        if (!availableSizes.map(s => s.value).includes(this.shadowRoot.getElementById('size').value)) {
+          this.shadowRoot.getElementById('size').value = availableSizes[0].value;
+        }
+        
+        if (!availableQualities.map(s => s.value).includes(this.shadowRoot.getElementById('quality').value)) {
+          this.shadowRoot.getElementById('quality').value = availableQualities[0].value;
+        }
+        
+        if (!availableStyles.map(s => s.value).includes(this.shadowRoot.getElementById('style').value)) {
+          this.shadowRoot.getElementById('style').value = availableStyles[0].value;
+        }
+    }
+     
+    _getSupportedSizesForModel(model) {
+        return this.supportedSizes.filter(size => size.supportedModels.includes(model));
+    }
+
+    _getSupportedQualitiesForModel(model) {
+        return this.supportedQualities.filter(quality => quality.supportedModels.includes(model));
+    }
+    
+    _getSupportedStylesForModel(model) {
+        return this.supportedStyles.filter(style => style.supportedModels.includes(model));
+    }
+
+    _renderConfig() {
         return html`
             <div class="config">
                 <vaadin-vertical-layout>
@@ -120,21 +161,22 @@ export class QwcImages extends LitElement {
                             label="Model"
                             id="model-name"
                             .items="${this.supportedModels}"
-                            .value="${this.supportedModels[0].value}">
+                            .value="${this.supportedModels[0].value}"
+                            @change="${this._onModelChange}">
                     </vaadin-select>
                     <vaadin-select
                             label="Size"
                             id="size"
-                            .items="${this.supportedSizes}"
-                            .value="${this.supportedSizes[0].value}">
+                            .items="${this._getSupportedSizesForModel(this.selectedModel) }"
+                            .value="${this._getSupportedSizesForModel(this.selectedModel)[0].value}">
                             <vaadin-tooltip slot="tooltip" text="Must be one of 1024x1024, 1792x1024, or 1024x1792 when the model is dall-e-3. 
                                 Must be one of 256x256, 512x512, or 1024x1024 when the model is dall-e-2." position="bottom"></vaadin-tooltip>
                     </vaadin-select>
                     <vaadin-select
                             label="Quality"
                             id="quality"
-                            .items="${this.supportedQualities}"
-                            .value="${this.supportedQualities[0].value}">
+                            .items="${this._getSupportedQualitiesForModel(this.selectedModel) }"
+                            .value="${this._getSupportedQualitiesForModel(this.selectedModel)[0].value}">
                             <vaadin-tooltip slot="tooltip" text="The quality of the image that will be generated.
                                 'hd' creates images with finer details and greater consistency across the image.
                                 This param is only supported for when the model is dall-e-3." position="bottom"></vaadin-tooltip>
@@ -142,8 +184,8 @@ export class QwcImages extends LitElement {
                     <vaadin-select
                             label="Style"
                             id="style"
-                            .items="${this.supportedStyles}"
-                            .value="${this.supportedStyles[0].value}">
+                            .items="${this._getSupportedStylesForModel(this.selectedModel) }"
+                            .value="${this._getSupportedStylesForModel(this.selectedModel)[0].value}">
                             <vaadin-tooltip slot="tooltip" text="Vivid causes the model to lean towards generating hyper-real and dramatic images.
                                 Natural causes the model to produce more natural, less hyper-real looking images. 
                                 This param is only supported for when the model is dall-e-3." position="bottom"></vaadin-tooltip>
