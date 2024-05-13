@@ -15,7 +15,10 @@ public interface MyAiService {
      * @return the poem
      */
     @SystemMessage("You are a professional poet")
-    @UserMessage("Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email. Your response should include the poem")
+    @UserMessage("""
+            Write a poem about {topic}. The poem should be {lines} lines long.
+            Then send this poem by email. Your response should include the poem.
+            """)
     String writeAPoem(String topic, int lines);
 
 }
