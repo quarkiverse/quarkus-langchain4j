@@ -4,6 +4,7 @@ import '@vaadin/button';
 import '@vaadin/text-field';
 import '@vaadin/text-area';
 import '@vaadin/grid';
+import '@vaadin/progress-bar';
 import 'qui-alert';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/grid/vaadin-grid-sort-column.js';
@@ -36,6 +37,7 @@ export class QwcEmbeddingStore extends LitElement {
                                   helper-text="Key-value pairs separated by commas or line breaks"
                                   pattern="^(([a-zA-Z0-9_]+=[a-zA-Z0-9_]+)(,|\\n))*([a-zA-Z0-9_]+=[a-zA-Z0-9_]+)$"
                                   label="(Optional) Metadata"></vaadin-text-area><br/>
+
                 <vaadin-button @click=${() => this._addEmbedding(
                     this.shadowRoot.getElementById('embedding-id').value,
                     this.shadowRoot.getElementById('embedding-text').value,
@@ -54,7 +56,8 @@ export class QwcEmbeddingStore extends LitElement {
     }
 
     _addEmbedding(id, text, metadata) {
-        this._addEmbeddingConfirmation = html`Working...<br/>`;
+        this._addEmbeddingConfirmation = html`<vaadin-progress-bar class="show" indeterminate></vaadin-progress-bar>
+`;
         this.jsonRpc.add({id: id, text: text, metadata: metadata}).then(jsonRpcResponse => {
             this._addEmbeddingConfirmation = html`
                 <qui-alert level="success" showIcon>
@@ -69,7 +72,7 @@ export class QwcEmbeddingStore extends LitElement {
     }
 
     _findRelevant(text, limit){
-        this._relevantEmbeddingsOutput = html`Working...<br/>`;
+        this._relevantEmbeddingsOutput = html`<vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>`;
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
                 <vaadin-grid  theme="wrap-cell-content" id="relevant-embeddings" .items=${jsonRpcResponse.result}>
