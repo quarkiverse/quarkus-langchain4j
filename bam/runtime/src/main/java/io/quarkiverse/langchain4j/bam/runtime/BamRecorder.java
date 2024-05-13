@@ -21,7 +21,7 @@ import io.quarkiverse.langchain4j.bam.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
 import io.quarkiverse.langchain4j.bam.runtime.config.ModerationModelConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -30,14 +30,14 @@ public class BamRecorder {
 
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jBamConfig runtimeConfig, String modelName) {
-        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jBamConfig runtimeConfig, String configName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, configName);
 
         if (bamConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = bamConfig.chatModel();
             String apiKey = bamConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = BamChatModel.builder()
@@ -83,14 +83,14 @@ public class BamRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jBamConfig runtimeConfig, String modelName) {
-        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jBamConfig runtimeConfig, String configName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, configName);
 
         if (bamConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = bamConfig.chatModel();
             String apiKey = bamConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = BamStreamingChatModel.builder()
@@ -136,14 +136,14 @@ public class BamRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jBamConfig runtimeConfig, String modelName) {
-        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jBamConfig runtimeConfig, String configName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, configName);
 
         if (bamConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = bamConfig.embeddingModel();
             String apiKey = bamConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = BamModel.builder()
@@ -174,13 +174,13 @@ public class BamRecorder {
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(LangChain4jBamConfig runtimeConfig, String modelName) {
-        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, modelName);
+    public Supplier<ModerationModel> moderationModel(LangChain4jBamConfig runtimeConfig, String configName) {
+        LangChain4jBamConfig.BamConfig bamConfig = correspondingBamConfig(runtimeConfig, configName);
 
         if (bamConfig.enableIntegration()) {
             String apiKey = bamConfig.apiKey();
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             ModerationModelConfig moderationModelConfig = bamConfig.moderationModel();
@@ -217,27 +217,27 @@ public class BamRecorder {
         }
     }
 
-    private LangChain4jBamConfig.BamConfig correspondingBamConfig(LangChain4jBamConfig runtimeConfig, String modelName) {
+    private LangChain4jBamConfig.BamConfig correspondingBamConfig(LangChain4jBamConfig runtimeConfig, String configName) {
         LangChain4jBamConfig.BamConfig bamConfig;
-        if (NamedModelUtil.isDefault(modelName)) {
+        if (NamedConfigUtil.isDefault(configName)) {
             bamConfig = runtimeConfig.defaultConfig();
         } else {
-            bamConfig = runtimeConfig.namedConfig().get(modelName);
+            bamConfig = runtimeConfig.namedConfig().get(configName);
         }
         return bamConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String modelName) {
-        return createConfigProblems("api-key", modelName);
+    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
+        return createConfigProblems("api-key", configName);
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.bam%s%s is required but it could not be found in any config source",
-                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }

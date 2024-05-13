@@ -14,7 +14,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ImageModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.smallrye.config.ConfigValidationException;
 import io.smallrye.config.ConfigValidationException.Problem;
 
@@ -26,7 +26,7 @@ class AzureOpenAiRecorderEndpointTests {
     @Test
     void noEndpointConfigSet() {
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedModelUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -50,7 +50,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .resourceName();
 
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedModelUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -69,7 +69,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .deploymentName();
 
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedModelUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -87,7 +87,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .endpoint();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedModelUtil.DEFAULT_NAME))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isEqualTo("https://somewhere.com");
     }
@@ -102,7 +102,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .deploymentName();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedModelUtil.DEFAULT_NAME))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME))
                 .isNotNull()
                 .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName", "deploymentName"));
     }

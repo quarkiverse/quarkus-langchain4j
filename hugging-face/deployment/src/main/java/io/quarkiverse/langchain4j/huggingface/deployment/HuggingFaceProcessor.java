@@ -16,7 +16,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.huggingface.runtime.HuggingFaceRecorder;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -57,37 +57,37 @@ public class HuggingFaceProcessor {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
-                String modelName = selected.getModelName();
+                String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, modelName));
-                addQualifierIfNecessary(builder, modelName);
+                        .supplier(recorder.chatModel(config, configName));
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
         }
 
         for (var selected : selectedEmbedding) {
             if (PROVIDER.equals(selected.getProvider())) {
-                String modelName = selected.getModelName();
+                String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, modelName));
-                addQualifierIfNecessary(builder, modelName);
+                        .supplier(recorder.embeddingModel(config, configName));
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
         }
     }
 
-    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
-        if (!NamedModelUtil.isDefault(modelName)) {
-            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 }

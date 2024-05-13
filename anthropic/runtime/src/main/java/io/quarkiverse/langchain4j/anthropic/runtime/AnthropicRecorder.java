@@ -9,7 +9,7 @@ import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -17,15 +17,15 @@ import io.smallrye.config.ConfigValidationException;
 public class AnthropicRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String modelName) {
-        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String configName) {
+        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
 
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();
             var apiKey = anthropicConfig.apiKey();
 
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = AnthropicChatModel.builder()
@@ -68,15 +68,16 @@ public class AnthropicRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAnthropicConfig runtimeConfig, String modelName) {
-        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, modelName);
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAnthropicConfig runtimeConfig,
+            String configName) {
+        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
 
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();
             var apiKey = anthropicConfig.apiKey();
 
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = AnthropicStreamingChatModel.builder()
@@ -119,23 +120,24 @@ public class AnthropicRecorder {
     }
 
     private LangChain4jAnthropicConfig.AnthropicConfig correspondingAnthropicConfig(
-            LangChain4jAnthropicConfig runtimeConfig, String modelName) {
+            LangChain4jAnthropicConfig runtimeConfig, String configName) {
 
-        return NamedModelUtil.isDefault(modelName) ? runtimeConfig.defaultConfig() : runtimeConfig.namedConfig().get(modelName);
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
+                : runtimeConfig.namedConfig().get(configName);
     }
 
-    private static ConfigValidationException.Problem[] createApiKeyConfigProblem(String modelName) {
-        return createConfigProblems("api-key", modelName);
+    private static ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
+        return createConfigProblems("api-key", configName);
     }
 
-    private static ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(
                 "SRCFG00014: The config property quarkus.langchain4j.anthropic%s%s is required but it could not be found in any config source"
                         .formatted(
-                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }

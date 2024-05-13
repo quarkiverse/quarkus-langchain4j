@@ -61,7 +61,7 @@ public abstract class WiremockAware {
         return wireMock;
     }
 
-    private Integer getResolvedWiremockPort() {
+    protected Integer getResolvedWiremockPort() {
         return ConfigProvider.getConfig().getValue("quarkus.wiremock.devservices.port", Integer.class);
     }
 

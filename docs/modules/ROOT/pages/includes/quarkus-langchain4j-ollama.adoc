@@ -44,6 +44,40 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[quarkus.langchain4j.ollama.chat-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`llama3`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[quarkus.langchain4j.ollama.embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`nomic-embed-text`
+
+
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url[quarkus.langchain4j.ollama.base-url]`
 
 
@@ -58,7 +92,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`http://localhost:11434`
+|
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout[quarkus.langchain4j.ollama.timeout]`
@@ -128,23 +162,6 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
-
-
-a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[quarkus.langchain4j.ollama.chat-model.model-id]`
-
-
-[.description]
---
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`llama3`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature[quarkus.langchain4j.ollama.chat-model.temperature]`
@@ -306,23 +323,6 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[quarkus.langchain4j.ollama.embedding-model.model-id]`
-
-
-[.description]
---
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`nomic-embed-text`
-
-
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature[quarkus.langchain4j.ollama.embedding-model.temperature]`
 
 
@@ -447,6 +447,40 @@ h|[[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-named-config-named-mod
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id[quarkus.langchain4j.ollama."model-name".chat-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`llama3`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[quarkus.langchain4j.ollama."model-name".embedding-model.model-id]`
+
+
+[.description]
+--
+Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`nomic-embed-text`
+
+
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url[quarkus.langchain4j.ollama."model-name".base-url]`
 
 
@@ -461,7 +495,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`http://localhost:11434`
+|
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout[quarkus.langchain4j.ollama."model-name".timeout]`
@@ -531,23 +565,6 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__ENABLE_INTEGRA
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
-
-
-a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id[quarkus.langchain4j.ollama."model-name".chat-model.model-id]`
-
-
-[.description]
---
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`llama3`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature[quarkus.langchain4j.ollama."model-name".chat-model.temperature]`
@@ -707,23 +724,6 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_LOG
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
-
-
-a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[quarkus.langchain4j.ollama."model-name".embedding-model.model-id]`
-
-
-[.description]
---
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `nomic-embed-text`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`nomic-embed-text`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature[quarkus.langchain4j.ollama."model-name".embedding-model.temperature]`

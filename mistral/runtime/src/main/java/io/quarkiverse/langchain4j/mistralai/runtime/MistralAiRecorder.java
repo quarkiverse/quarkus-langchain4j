@@ -14,7 +14,7 @@ import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -22,16 +22,16 @@ import io.smallrye.config.ConfigValidationException;
 public class MistralAiRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String modelName) {
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                modelName);
+                configName);
 
         if (mistralAiConfig.enableIntegration()) {
             String apiKey = mistralAiConfig.apiKey();
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
 
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = MistralAiChatModel.builder()
@@ -74,16 +74,17 @@ public class MistralAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jMistralAiConfig runtimeConfig, String modelName) {
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jMistralAiConfig runtimeConfig,
+            String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                modelName);
+                configName);
 
         if (mistralAiConfig.enableIntegration()) {
             String apiKey = mistralAiConfig.apiKey();
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
 
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = MistralAiStreamingChatModel.builder()
@@ -126,16 +127,16 @@ public class MistralAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jMistralAiConfig runtimeConfig, String modelName) {
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                modelName);
+                configName);
 
         if (mistralAiConfig.enableIntegration()) {
             String apiKey = mistralAiConfig.apiKey();
             EmbeddingModelConfig embeddingModelConfig = mistralAiConfig.embeddingModel();
 
             if (DUMMY_KEY.equals(apiKey)) {
-                throw new ConfigValidationException(createApiKeyConfigProblem(modelName));
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = MistralAiEmbeddingModel.builder()
@@ -163,27 +164,27 @@ public class MistralAiRecorder {
     }
 
     private LangChain4jMistralAiConfig.MistralAiConfig correspondingMistralAiConfig(
-            LangChain4jMistralAiConfig runtimeConfig, String modelName) {
+            LangChain4jMistralAiConfig runtimeConfig, String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig huggingFaceConfig;
-        if (NamedModelUtil.isDefault(modelName)) {
+        if (NamedConfigUtil.isDefault(configName)) {
             huggingFaceConfig = runtimeConfig.defaultConfig();
         } else {
-            huggingFaceConfig = runtimeConfig.namedConfig().get(modelName);
+            huggingFaceConfig = runtimeConfig.namedConfig().get(configName);
         }
         return huggingFaceConfig;
     }
 
-    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String modelName) {
-        return createConfigProblems("api-key", modelName);
+    private ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {
+        return createConfigProblems("api-key", configName);
     }
 
-    private ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.mistralai%s%s is required but it could not be found in any config source",
-                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }

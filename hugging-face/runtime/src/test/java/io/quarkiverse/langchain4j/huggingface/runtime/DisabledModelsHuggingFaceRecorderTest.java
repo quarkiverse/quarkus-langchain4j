@@ -10,7 +10,7 @@ import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig.HuggingFaceConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 
 class DisabledModelsHuggingFaceRecorderTest {
     LangChain4jHuggingFaceConfig config = mock(LangChain4jHuggingFaceConfig.class);
@@ -28,14 +28,14 @@ class DisabledModelsHuggingFaceRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }

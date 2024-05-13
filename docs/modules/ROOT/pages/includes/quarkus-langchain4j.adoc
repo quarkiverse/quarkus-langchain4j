@@ -10,6 +10,42 @@ h|[[quarkus-langchain4j_configuration]]link:#quarkus-langchain4j_configuration[C
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-devservices-enabled]]`link:#quarkus-langchain4j_quarkus-langchain4j-devservices-enabled[quarkus.langchain4j.devservices.enabled]`
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically serve a model if there are any matching ones.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-devservices-port]]`link:#quarkus-langchain4j_quarkus-langchain4j-devservices-port[quarkus.langchain4j.devservices.port]`
+
+
+[.description]
+--
+The default port where the inference server listens for requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`11434`
+
+
 a| [[quarkus-langchain4j_quarkus-langchain4j-log-requests]]`link:#quarkus-langchain4j_quarkus-langchain4j-log-requests[quarkus.langchain4j.log-requests]`
 
 

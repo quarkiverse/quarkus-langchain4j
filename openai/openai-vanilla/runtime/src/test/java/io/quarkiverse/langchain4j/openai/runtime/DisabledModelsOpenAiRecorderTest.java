@@ -13,7 +13,7 @@ import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig.OpenAiConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 
 class DisabledModelsOpenAiRecorderTest {
     LangChain4jOpenAiConfig config = mock(LangChain4jOpenAiConfig.class);
@@ -31,35 +31,35 @@ class DisabledModelsOpenAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }
 
     @Test
     void disabledStreamingChatModel() {
-        assertThat(recorder.streamingChatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
 
     @Test
     void disabledImageModel() {
-        assertThat(recorder.imageModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.imageModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledImageModel.class);
     }
 
     @Test
     void disabledModerationModel() {
-        assertThat(recorder.moderationModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.moderationModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledModerationModel.class);
     }

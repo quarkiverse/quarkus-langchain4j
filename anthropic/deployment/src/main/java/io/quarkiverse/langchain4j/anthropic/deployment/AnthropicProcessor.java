@@ -14,7 +14,7 @@ import io.quarkiverse.langchain4j.anthropic.runtime.AnthropicRecorder;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -46,15 +46,15 @@ public class AnthropicProcessor {
             LangChain4jAnthropicConfig config, BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
-                var modelName = selected.getModelName();
+                var configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, modelName));
+                        .supplier(recorder.chatModel(config, configName));
 
-                addQualifierIfNecessary(builder, modelName);
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
                 var streamingBuilder = SyntheticBeanBuildItem
@@ -62,17 +62,17 @@ public class AnthropicProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, modelName));
+                        .supplier(recorder.streamingChatModel(config, configName));
 
-                addQualifierIfNecessary(streamingBuilder, modelName);
+                addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
         }
     }
 
-    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
-        if (!NamedModelUtil.isDefault(modelName)) {
-            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 }

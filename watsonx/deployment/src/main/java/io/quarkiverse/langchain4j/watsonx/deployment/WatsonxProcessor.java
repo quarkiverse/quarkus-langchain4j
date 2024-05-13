@@ -15,7 +15,7 @@ import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBui
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -58,15 +58,15 @@ public class WatsonxProcessor {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
-                String modelName = selected.getModelName();
+                String configName = selected.getConfigName();
 
                 var chatBuilder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, modelName));
-                addQualifierIfNecessary(chatBuilder, modelName);
+                        .supplier(recorder.chatModel(config, configName));
+                addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
 
                 var streamingBuilder = SyntheticBeanBuildItem
@@ -74,32 +74,32 @@ public class WatsonxProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, modelName));
-                addQualifierIfNecessary(streamingBuilder, modelName);
+                        .supplier(recorder.streamingChatModel(config, configName));
+                addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
         }
 
         for (var selected : selectedEmbedding) {
             if (PROVIDER.equals(selected.getProvider())) {
-                String modelName = selected.getModelName();
+                String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, modelName));
-                addQualifierIfNecessary(builder, modelName);
+                        .supplier(recorder.embeddingModel(config, configName));
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
         }
 
     }
 
-    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
-        if (!NamedModelUtil.isDefault(modelName)) {
-            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 }

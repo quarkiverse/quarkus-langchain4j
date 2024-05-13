@@ -11,7 +11,7 @@ import org.jboss.jandex.AnnotationInstance;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiRecorder;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -46,23 +46,23 @@ public class VertexAiGeminiProcessor {
             LangChain4jVertexAiGeminiConfig config, BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
-                var modelName = selected.getModelName();
+                var configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, modelName));
+                        .supplier(recorder.chatModel(config, configName));
 
-                addQualifierIfNecessary(builder, modelName);
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
         }
     }
 
-    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String modelName) {
-        if (!NamedModelUtil.isDefault(modelName)) {
-            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", modelName).build());
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 }

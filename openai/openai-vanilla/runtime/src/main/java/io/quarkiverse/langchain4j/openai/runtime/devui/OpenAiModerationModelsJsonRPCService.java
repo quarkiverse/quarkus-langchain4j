@@ -10,7 +10,7 @@ import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
 import dev.langchain4j.internal.RetryUtils;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -20,12 +20,12 @@ public class OpenAiModerationModelsJsonRPCService {
     LangChain4jOpenAiConfig config;
 
     public JsonObject moderate(String configuration, String modelName, String prompt) {
-        if (NamedModelUtil.isDefault(configuration) && config.defaultConfig().apiKey().equals("dummy")) {
+        if (NamedConfigUtil.isDefault(configuration) && config.defaultConfig().apiKey().equals("dummy")) {
             // for non-default configurations, we assume that Quarkus has verified by now that the api key is set
             throw new RuntimeException("OpenAI API key is not configured. " +
                     "Please specify the key in the `quarkus.langchain4j.openai.api-key` configuration property.");
         }
-        LangChain4jOpenAiConfig.OpenAiConfig clientConfig = NamedModelUtil.isDefault(configuration) ? config.defaultConfig()
+        LangChain4jOpenAiConfig.OpenAiConfig clientConfig = NamedConfigUtil.isDefault(configuration) ? config.defaultConfig()
                 : config.namedConfig().get(configuration);
         OpenAiClient client = OpenAiClient.builder().openAiApiKey(clientConfig.apiKey()).baseUrl(clientConfig.baseUrl())
                 .callTimeout(clientConfig.timeout()).connectTimeout(clientConfig.timeout())

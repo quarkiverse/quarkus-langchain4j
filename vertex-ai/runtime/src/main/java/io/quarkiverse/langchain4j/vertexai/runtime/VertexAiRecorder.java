@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.config.LangChain4jVertexAiConfig;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -14,8 +14,8 @@ import io.smallrye.config.ConfigValidationException;
 public class VertexAiRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jVertexAiConfig config, String modelName) {
-        var vertexAiConfig = correspondingVertexAiConfig(config, modelName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jVertexAiConfig config, String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
 
         if (vertexAiConfig.enableIntegration()) {
             var chatModelConfig = vertexAiConfig.chatModel();
@@ -23,11 +23,11 @@ public class VertexAiRecorder {
 
             String location = vertexAiConfig.location();
             if (baseUrl.isEmpty() && DUMMY_KEY.equals(location)) {
-                throw new ConfigValidationException(createConfigProblems("location", modelName));
+                throw new ConfigValidationException(createConfigProblems("location", configName));
             }
             String projectId = vertexAiConfig.projectId();
             if (baseUrl.isEmpty() && DUMMY_KEY.equals(projectId)) {
-                throw new ConfigValidationException(createConfigProblems("project-id", modelName));
+                throw new ConfigValidationException(createConfigProblems("project-id", configName));
             }
             var builder = VertexAiChatLanguageModel.builder()
                     .baseUrl(baseUrl)
@@ -62,19 +62,20 @@ public class VertexAiRecorder {
     }
 
     private LangChain4jVertexAiConfig.VertexAiConfig correspondingVertexAiConfig(
-            LangChain4jVertexAiConfig runtimeConfig, String modelName) {
+            LangChain4jVertexAiConfig runtimeConfig, String configName) {
 
-        return NamedModelUtil.isDefault(modelName) ? runtimeConfig.defaultConfig() : runtimeConfig.namedConfig().get(modelName);
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
+                : runtimeConfig.namedConfig().get(configName);
     }
 
-    private static ConfigValidationException.Problem[] createConfigProblems(String key, String modelName) {
-        return new ConfigValidationException.Problem[] { createConfigProblem(key, modelName) };
+    private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {
+        return new ConfigValidationException.Problem[] { createConfigProblem(key, configName) };
     }
 
-    private static ConfigValidationException.Problem createConfigProblem(String key, String modelName) {
+    private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
         return new ConfigValidationException.Problem(
                 "SRCFG00014: The config property quarkus.langchain4j.vertexai%s%s is required but it could not be found in any config source"
                         .formatted(
-                                NamedModelUtil.isDefault(modelName) ? "." : ("." + modelName + "."), key));
+                                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 }
