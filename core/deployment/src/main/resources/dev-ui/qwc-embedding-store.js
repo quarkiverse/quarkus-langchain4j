@@ -30,7 +30,6 @@ export class QwcEmbeddingStore extends LitElement {
     render() {
             return html`
                 <h3>Add a new embedding</h3>
-                ${this._addEmbeddingConfirmation}
                 <vaadin-text-area id="embedding-text" label="Text segment" required min-length="1"></vaadin-text-area><br/>
                 <vaadin-text-area id="embedding-id" label="(Optional) Embedding ID"></vaadin-text-area><br/>
                 <vaadin-text-area id="metadata"
@@ -43,6 +42,7 @@ export class QwcEmbeddingStore extends LitElement {
                     this.shadowRoot.getElementById('embedding-text').value,
                     this.shadowRoot.getElementById('metadata').value
                 )}>Create and store</vaadin-button>
+                ${this._addEmbeddingConfirmation}
                 
                 <h3>Search for relevant embeddings</h3>
                 <vaadin-text-area id="search-text" label="Search text" required min-length="1"></vaadin-text-area><br/>
