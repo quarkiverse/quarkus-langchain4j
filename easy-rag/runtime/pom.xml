@@ -11,7 +11,7 @@
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-core</artifactId>
+            <artifactId>quarkus-langchain4j-parsers-base</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

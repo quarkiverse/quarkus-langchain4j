@@ -35,7 +35,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRecorder;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BeanStream;
@@ -101,10 +101,10 @@ public class BeansProcessor {
             }
         }
         for (var bi : requestChatModelBeanItems) {
-            requestedChatModels.add(bi.getModelName());
+            requestedChatModels.add(bi.getConfigName());
         }
         for (var bi : requestModerationModelBeanBuildItems) {
-            requestedModerationModels.add(bi.getModelName());
+            requestedModerationModels.add(bi.getConfigName());
         }
 
         if (!requestedChatModels.isEmpty() || !requestedStreamingChatModels.isEmpty()) {
@@ -113,7 +113,7 @@ public class BeansProcessor {
             for (String modelName : allChatModelNames) {
                 Optional<String> userSelectedProvider;
                 String configNamespace;
-                if (NamedModelUtil.isDefault(modelName)) {
+                if (NamedConfigUtil.isDefault(modelName)) {
                     userSelectedProvider = buildConfig.defaultConfig().chatModel().provider();
                     configNamespace = "chat-model";
                 } else {
@@ -141,7 +141,7 @@ public class BeansProcessor {
         for (String modelName : requestEmbeddingModels) {
             Optional<String> userSelectedProvider;
             String configNamespace;
-            if (NamedModelUtil.isDefault(modelName)) {
+            if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
                 configNamespace = "embedding-model";
             } else {
@@ -170,13 +170,13 @@ public class BeansProcessor {
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
                     Optional.empty(), "EmbeddingModel", "embedding-model");
             selectedEmbeddingProducer
-                    .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedModelUtil.DEFAULT_NAME));
+                    .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
         }
 
         for (String modelName : requestedModerationModels) {
             Optional<String> userSelectedProvider;
             String configNamespace;
-            if (NamedModelUtil.isDefault(modelName)) {
+            if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().moderationModel().provider();
                 configNamespace = "moderation-model";
             } else {
@@ -202,7 +202,7 @@ public class BeansProcessor {
         for (String modelName : requestedImageModels) {
             Optional<String> userSelectedProvider;
             String configNamespace;
-            if (NamedModelUtil.isDefault(modelName)) {
+            if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().imageModel().provider();
                 configNamespace = "image-model";
             } else {
@@ -235,7 +235,7 @@ public class BeansProcessor {
                 return value;
             }
         }
-        return NamedModelUtil.DEFAULT_NAME;
+        return NamedConfigUtil.DEFAULT_NAME;
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

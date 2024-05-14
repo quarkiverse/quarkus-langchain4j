@@ -44,7 +44,7 @@ import io.quarkiverse.langchain4j.bam.ModerationRequest.Threshold;
 import io.quarkiverse.langchain4j.bam.deployment.AiModerationTest.AIServiceSupplier.MyModerationSupplier;
 import io.quarkiverse.langchain4j.bam.runtime.BamRecorder;
 import io.quarkiverse.langchain4j.bam.runtime.config.LangChain4jBamConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiModerationTest {
@@ -363,7 +363,7 @@ public class AiModerationTest {
                 .build();
 
         var overrideConfig = recordUtil.override(List.of(ChatMessageType.SYSTEM), 0.1f, 0.1f);
-        var m = recorder.moderationModel(overrideConfig, NamedModelUtil.DEFAULT_NAME).get();
+        var m = recorder.moderationModel(overrideConfig, NamedConfigUtil.DEFAULT_NAME).get();
         var response = m.moderate(List.of(UserMessage.from(input)));
 
         //
@@ -425,7 +425,7 @@ public class AiModerationTest {
                     .build();
         }
 
-        var m = recorder.moderationModel(recordUtil.override(hap, socialBias), NamedModelUtil.DEFAULT_NAME).get();
+        var m = recorder.moderationModel(recordUtil.override(hap, socialBias), NamedConfigUtil.DEFAULT_NAME).get();
         var response = m.moderate("input");
 
         if (moderationRequest != null) {

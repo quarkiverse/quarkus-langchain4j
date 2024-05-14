@@ -9,7 +9,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 public interface EmbeddingModelBuildConfig {
 
     /**
-     * Whether the embedding model should be enabled
+     * Whether the embedding model should be enabled.
      */
     @ConfigDocDefault("true")
     Optional<Boolean> enabled();

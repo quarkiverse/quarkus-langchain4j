@@ -55,7 +55,7 @@ import dev.langchain4j.service.Moderate;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.RequestScopeStateDefaultMemoryIdProvider;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
@@ -203,7 +203,7 @@ public class AiServicesProcessor {
                 }
             }
 
-            String chatModelName = NamedModelUtil.DEFAULT_NAME;
+            String chatModelName = NamedConfigUtil.DEFAULT_NAME;
             if (chatLanguageModelSupplierClassDotName == null) {
                 AnnotationValue modelNameValue = instance.value("modelName");
                 if (modelNameValue != null) {
@@ -290,7 +290,7 @@ public class AiServicesProcessor {
             }
 
             // determine whether the method is annotated with @Moderate
-            String moderationModelName = NamedModelUtil.DEFAULT_NAME;
+            String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 if (method.hasAnnotation(LangChain4jDotNames.MODERATE)) {
                     if (moderationModelSupplierClassName.equals(LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER)) {
@@ -446,7 +446,7 @@ public class AiServicesProcessor {
                     .scope(Dependent.class);
 
             if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
-                if (NamedModelUtil.isDefault(chatModelName)) {
+                if (NamedConfigUtil.isDefault(chatModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL));
                     if (injectStreamingChatModelBean) {
                         configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.STREAMING_CHAT_MODEL));
@@ -514,7 +514,7 @@ public class AiServicesProcessor {
             if (LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER.toString()
                     .equals(moderationModelSupplierClassName) && injectModerationModelBean) {
 
-                if (NamedModelUtil.isDefault(moderationModelName)) {
+                if (NamedConfigUtil.isDefault(moderationModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL));
 
                 } else {

@@ -26,14 +26,18 @@ public abstract class WatsonxModel {
     final String version;
     final String projectId;
     final String decodingMethod;
-    final Integer minNewTokens;
+    final Double decayFactor;
+    final Integer startIndex;
     final Integer maxNewTokens;
+    final Integer minNewTokens;
     final Integer randomSeed;
     final List<String> stopSequences;
     final Double temperature;
     final Double topP;
     final Integer topK;
     final Double repetitionPenalty;
+    final Integer truncateInputTokens;
+    final Boolean includeStopSequence;
     final WatsonxRestApi client;
 
     public WatsonxModel(Builder config) {
@@ -55,14 +59,18 @@ public abstract class WatsonxModel {
         this.version = config.version;
         this.projectId = config.projectId;
         this.decodingMethod = config.decodingMethod;
-        this.minNewTokens = config.minNewTokens;
+        this.decayFactor = config.decayFactor;
+        this.startIndex = config.startIndex;
         this.maxNewTokens = config.maxNewTokens;
+        this.minNewTokens = config.minNewTokens;
         this.randomSeed = config.randomSeed;
         this.stopSequences = config.stopSequences;
         this.temperature = config.temperature;
         this.topP = config.topP;
         this.topK = config.topK;
         this.repetitionPenalty = config.repetitionPenalty;
+        this.truncateInputTokens = config.truncateInputTokens;
+        this.includeStopSequence = config.includeStopSequence;
         this.tokenGenerator = config.tokenGenerator;
     }
 
@@ -143,15 +151,19 @@ public abstract class WatsonxModel {
         private String projectId;
         private Duration timeout;
         private String decodingMethod;
-        private Integer minNewTokens;
+        private Double decayFactor;
+        private Integer startIndex;
         private Integer maxNewTokens;
+        private Integer minNewTokens;
         private Integer randomSeed;
         private List<String> stopSequences;
         private Double temperature;
-        private URL url;
         private Integer topK;
         private Double topP;
         private Double repetitionPenalty;
+        private Integer truncateInputTokens;
+        private Boolean includeStopSequence;
+        private URL url;
         public boolean logResponses;
         public boolean logRequests;
         private TokenGenerator tokenGenerator;
@@ -186,6 +198,16 @@ public abstract class WatsonxModel {
             return this;
         }
 
+        public Builder decayFactor(Double decayFactor) {
+            this.decayFactor = decayFactor;
+            return this;
+        }
+
+        public Builder startIndex(Integer startIndex) {
+            this.startIndex = startIndex;
+            return this;
+        }
+
         public Builder minNewTokens(Integer minNewTokens) {
             this.minNewTokens = minNewTokens;
             return this;
@@ -211,11 +233,6 @@ public abstract class WatsonxModel {
             return this;
         }
 
-        public Builder decondingMethod(String decodingMethod) {
-            this.decodingMethod = decodingMethod;
-            return this;
-        }
-
         public Builder randomSeed(Integer randomSeed) {
             this.randomSeed = randomSeed;
             return this;
@@ -228,6 +245,16 @@ public abstract class WatsonxModel {
 
         public Builder stopSequences(List<String> stopSequences) {
             this.stopSequences = stopSequences;
+            return this;
+        }
+
+        public Builder truncateInputTokens(Integer truncateInputTokens) {
+            this.truncateInputTokens = truncateInputTokens;
+            return this;
+        }
+
+        public Builder includeStopSequence(Boolean includeStopSequence) {
+            this.includeStopSequence = includeStopSequence;
             return this;
         }
 

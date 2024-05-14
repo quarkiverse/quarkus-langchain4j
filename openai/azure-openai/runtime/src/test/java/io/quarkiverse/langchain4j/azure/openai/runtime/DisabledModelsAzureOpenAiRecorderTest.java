@@ -12,7 +12,7 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig;
-import io.quarkiverse.langchain4j.runtime.NamedModelUtil;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 
 class DisabledModelsAzureOpenAiRecorderTest {
     LangChain4jAzureOpenAiConfig config = mock(LangChain4jAzureOpenAiConfig.class);
@@ -30,28 +30,28 @@ class DisabledModelsAzureOpenAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }
 
     @Test
     void disabledStreamingChatModel() {
-        assertThat(recorder.streamingChatModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
 
     @Test
     void disabledImageModel() {
-        assertThat(recorder.imageModel(config, NamedModelUtil.DEFAULT_NAME).get())
+        assertThat(recorder.imageModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledImageModel.class);
     }

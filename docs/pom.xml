@@ -76,13 +76,11 @@
             <artifactId>quarkus-langchain4j-watsonx</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- remove as does not work on podman machine 
-            <dependency>
+        <dependency>
             <groupId>io.quarkiverse.antora</groupId>
             <artifactId>quarkus-antora</artifactId>
             <version>${quarkus-antora.version}</version>
         </dependency>
-        -->
 
         <!-- Test dependencies -->
         <dependency>
@@ -250,6 +248,19 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-neo4j-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>
@@ -312,6 +323,7 @@
                                     <include>quarkus-langchain4j-bam.adoc</include>
                                     <include>quarkus-langchain4j-watsonx.adoc</include>
                                     <include>quarkus-langchain4j-mistralai.adoc</include>
+                                    <include>quarkus-langchain4j-neo4j.adoc</include>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>

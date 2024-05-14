@@ -1,22 +1,14 @@
 package io.quarkiverse.langchain4j.ollama.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface EmbeddingModelConfig {
-
-    // TODO: we need to check if these are the correct settings...
-
-    /**
-     * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
-     * docs</a>,
-     * the default value is {@code nomic-embed-text}
-     */
-    @WithDefault("nomic-embed-text")
-    String modelId();
 
     /**
      * The temperature of the model. Increasing the temperature will make the model answer with
@@ -34,7 +26,7 @@ public interface EmbeddingModelConfig {
     /**
      * Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
      */
-    Optional<String> stop();
+    Optional<List<String>> stop();
 
     /**
      * Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5)
@@ -49,4 +41,18 @@ public interface EmbeddingModelConfig {
      */
     @WithDefault("40")
     Integer topK();
+
+    /**
+     * Whether embedding model requests should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.ollama.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether embedding model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.ollama.log-responses}")
+    Optional<Boolean> logResponses();
 }

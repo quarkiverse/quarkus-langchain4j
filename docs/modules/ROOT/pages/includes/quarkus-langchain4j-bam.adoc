@@ -170,7 +170,7 @@ a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-enable-integration]]`link:#
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_ENABLE_INTEGRATION+++[]
@@ -439,6 +439,40 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests[quarkus.langchain4j.bam.chat-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM chat model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses[quarkus.langchain4j.bam.chat-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM chat model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id[quarkus.langchain4j.bam.embedding-model.model-id]`
 
 
@@ -454,6 +488,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
 |`ibm/slate.125m.english.rtrvr`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests[quarkus.langchain4j.bam.embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM embedding model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses[quarkus.langchain4j.bam.embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM embedding model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate[quarkus.langchain4j.bam.moderation-model.messages-to-moderate]`
@@ -510,6 +578,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_SOCIAL_BIAS++
 endif::add-copy-button-to-env-var[]
 --|float 
 |
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests[quarkus.langchain4j.bam.moderation-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM moderation model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses[quarkus.langchain4j.bam.moderation-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM moderation model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 h|[[quarkus-langchain4j-bam_quarkus-langchain4j-bam-named-config-named-model-config]]link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-named-config-named-model-config[Named model config]
@@ -626,7 +728,7 @@ a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-enable-integrati
 
 [.description]
 --
-Whether or not to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
+Whether to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__ENABLE_INTEGRATION+++[]
@@ -895,6 +997,40 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests[quarkus.langchain4j.bam."model-name".chat-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM chat model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses[quarkus.langchain4j.bam."model-name".chat-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM chat model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id[quarkus.langchain4j.bam."model-name".embedding-model.model-id]`
 
 
@@ -910,6 +1046,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_M
 endif::add-copy-button-to-env-var[]
 --|string 
 |`ibm/slate.125m.english.rtrvr`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests[quarkus.langchain4j.bam."model-name".embedding-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM embedding model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses[quarkus.langchain4j.bam."model-name".embedding-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM embedding model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate[quarkus.langchain4j.bam."model-name".moderation-model.messages-to-moderate]`
@@ -966,6 +1136,40 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_
 endif::add-copy-button-to-env-var[]
 --|float 
 |
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests[quarkus.langchain4j.bam."model-name".moderation-model.log-requests]`
+
+
+[.description]
+--
+Whether the BAM moderation model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses[quarkus.langchain4j.bam."model-name".moderation-model.log-responses]`
+
+
+[.description]
+--
+Whether the BAM moderation model should log requests
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
 
 |===
 ifndef::no-duration-note[]

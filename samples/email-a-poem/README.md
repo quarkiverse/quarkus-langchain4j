@@ -1,8 +1,7 @@
 # AI Service example with Tools that can write a poem and send it by email
 
-This example demonstrates how to create a chatbot with RAG using
-`quarkus-langchain4j`. This chatbot internally uses LLM-generated SQL
-queries to retrieve the relevant information from a PostgreSQL database.
+This example demonstrates how to create an AI service that can discover
+and use locally implemented tools.
 
 ## Running the example
 
@@ -12,8 +11,13 @@ A prerequisite to running this example is to provide your OpenAI API key.
 export QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-To allow the application to send emails, start a mock SMTP server (replace
-Podman with your own container runtime):
+To allow the application to send emails, start a mock SMTP server container:
+
+```
+docker run -p 8025:8025 -p 1025:1025 docker.io/mailhog/mailhog
+```
+
+Alternatively, for podman users can use the following command:
 
 ```
 podman run -p 8025:8025 -p 1025:1025 docker.io/mailhog/mailhog

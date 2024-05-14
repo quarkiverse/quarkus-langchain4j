@@ -94,7 +94,7 @@ public class AiServicesRecorder {
 
                     } else {
 
-                        if (NamedModelUtil.isDefault(info.getChatModelName())) {
+                        if (NamedConfigUtil.isDefault(info.getChatModelName())) {
                             quarkusAiServices
                                     .chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
 
@@ -192,7 +192,7 @@ public class AiServicesRecorder {
                         if (RegisterAiService.BeanIfExistsModerationModelSupplier.class.getName()
                                 .equals(info.getModerationModelSupplierClassName())) {
 
-                            if (NamedModelUtil.isDefault(info.getModerationModelName())) {
+                            if (NamedConfigUtil.isDefault(info.getModerationModelName())) {
                                 quarkusAiServices
                                         .moderationModel(creationalContext.getInjectedReference(ModerationModel.class));
 

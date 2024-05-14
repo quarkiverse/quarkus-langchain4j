@@ -64,16 +64,18 @@ public interface LangChain4jAnthropicConfig {
          * Whether the Anthropic client should log requests
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
         Optional<Boolean> logRequests();
 
         /**
          * Whether the Anthropic client should log responses
          */
         @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic
          * provider.
          * Set to {@code false} to disable all requests.
          */

@@ -25,6 +25,7 @@
 ** xref:pgvector-store.adoc[PgVector (PostgreSQL) Store]
 ** xref:in-process-embedding.adoc[In-Process Embeddings]
 ** xref:csv.adoc[Loading CSV files]
+** xref:neo4j.adoc[Neo4j Store]
 
 * Additional tools
 ** xref:easy-rag.adoc[Easy RAG]

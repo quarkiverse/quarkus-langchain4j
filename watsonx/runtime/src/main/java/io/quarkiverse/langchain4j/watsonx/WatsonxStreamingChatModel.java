@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.joining;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Flow.Publisher;
 import java.util.function.Consumer;
@@ -22,6 +23,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
+import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
@@ -38,9 +40,14 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
     @Override
     public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
 
+        LengthPenalty lengthPenalty = null;
+        if (Objects.nonNull(decayFactor) || Objects.nonNull(startIndex)) {
+            lengthPenalty = new LengthPenalty(decayFactor, startIndex);
+        }
+
         Parameters parameters = Parameters.builder()
                 .decodingMethod(decodingMethod)
-                .stopSequences(stopSequences)
+                .lengthPenalty(lengthPenalty)
                 .minNewTokens(minNewTokens)
                 .maxNewTokens(maxNewTokens)
                 .randomSeed(randomSeed)
@@ -49,6 +56,8 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
                 .topP(topP)
                 .topK(topK)
                 .repetitionPenalty(repetitionPenalty)
+                .truncateInputTokens(truncateInputTokens)
+                .includeStopSequence(includeStopSequence)
                 .build();
 
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);

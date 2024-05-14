@@ -8,13 +8,13 @@ import io.quarkus.builder.item.MultiBuildItem;
  */
 public final class RequestModerationModelBeanBuildItem extends MultiBuildItem {
 
-    private final String modelName;
+    private final String configName;
 
-    public RequestModerationModelBeanBuildItem(String modelName) {
-        this.modelName = modelName;
+    public RequestModerationModelBeanBuildItem(String configName) {
+        this.configName = configName;
     }
 
-    public String getModelName() {
-        return modelName;
+    public String getConfigName() {
+        return configName;
     }
 }

@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Multi;
 
 public class OllamaClient {
 
@@ -31,8 +32,12 @@ public class OllamaClient {
         }
     }
 
-    public CompletionResponse completion(CompletionRequest request) {
-        return restApi.generate(request);
+    public ChatResponse chat(ChatRequest request) {
+        return restApi.chat(request);
+    }
+
+    public Multi<ChatResponse> streamingChat(ChatRequest request) {
+        return restApi.streamingChat(request);
     }
 
     public EmbeddingResponse embedding(EmbeddingRequest request) {

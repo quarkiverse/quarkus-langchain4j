@@ -4,7 +4,9 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -36,67 +38,73 @@ public interface LangChain4jWatsonxConfig {
     @ConfigGroup
     interface WatsonConfig {
         /**
-         * Base URL
+         * Base URL of the watsonx.ai API.
          */
         @WithDefault("https://dummy.ai/api")
         String baseUrl();
 
         /**
-         * IBM Cloud API key
+         * IBM Cloud API key.
+         * <p>
+         * To create a new API key, follow this <a href="https://cloud.ibm.com/iam/apikeys">link</a>.
          */
         @WithDefault("dummy")
         String apiKey();
 
         /**
-         * Timeout for watsonx.ai API calls
+         * Timeout for watsonx.ai calls.
          */
         @WithDefault("10s")
         Duration timeout();
 
         /**
-         * The version date for the API of the form YYYY-MM-DD
+         * The version date for the API of the form YYYY-MM-DD.
          */
         @WithDefault("2024-03-14")
         String version();
 
         /**
-         * Watsonx.ai project id.
+         * The project that contains the watsonx.ai resource.
+         * <p>
+         * To look up your project id, <a href="https://dataplatform.cloud.ibm.com/projects/?context=wx">click here</a>.
          */
         @WithDefault("dummy")
         String projectId();
 
         /**
-         * Whether the watsonx.ai client should log requests
+         * Whether the watsonx.ai client should log requests.
          */
-        @WithDefault("false")
-        Boolean logRequests();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
+        Optional<Boolean> logRequests();
 
         /**
-         * Whether the watsonx.ai client should log responses
+         * Whether the watsonx.ai client should log responses.
          */
-        @WithDefault("false")
-        Boolean logResponses();
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
+        Optional<Boolean> logResponses();
 
         /**
-         * Whether or not to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
-         * provider.
-         * Set to {@code false} to disable all requests.
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
+         * provider. Set to
+         * {@code false} to disable all requests.
          */
         @WithDefault("true")
         Boolean enableIntegration();
 
         /**
-         * Chat model related settings
+         * IAM authentication related settings.
          */
         IAMConfig iam();
 
         /**
-         * Chat model related settings
+         * Chat model related settings.
          */
         ChatModelConfig chatModel();
 
         /**
-         * Embedding model related settings
+         * Embedding model related settings.
          */
         EmbeddingModelConfig embeddingModel();
     }

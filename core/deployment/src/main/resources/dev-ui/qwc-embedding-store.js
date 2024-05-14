@@ -4,6 +4,7 @@ import '@vaadin/button';
 import '@vaadin/text-field';
 import '@vaadin/text-area';
 import '@vaadin/grid';
+import '@vaadin/progress-bar';
 import 'qui-alert';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import '@vaadin/grid/vaadin-grid-sort-column.js';
@@ -29,18 +30,19 @@ export class QwcEmbeddingStore extends LitElement {
     render() {
             return html`
                 <h3>Add a new embedding</h3>
-                ${this._addEmbeddingConfirmation}
                 <vaadin-text-area id="embedding-text" label="Text segment" required min-length="1"></vaadin-text-area><br/>
                 <vaadin-text-area id="embedding-id" label="(Optional) Embedding ID"></vaadin-text-area><br/>
                 <vaadin-text-area id="metadata"
                                   helper-text="Key-value pairs separated by commas or line breaks"
                                   pattern="^(([a-zA-Z0-9_]+=[a-zA-Z0-9_]+)(,|\\n))*([a-zA-Z0-9_]+=[a-zA-Z0-9_]+)$"
                                   label="(Optional) Metadata"></vaadin-text-area><br/>
+
                 <vaadin-button @click=${() => this._addEmbedding(
                     this.shadowRoot.getElementById('embedding-id').value,
                     this.shadowRoot.getElementById('embedding-text').value,
                     this.shadowRoot.getElementById('metadata').value
                 )}>Create and store</vaadin-button>
+                ${this._addEmbeddingConfirmation}
                 
                 <h3>Search for relevant embeddings</h3>
                 <vaadin-text-area id="search-text" label="Search text" required min-length="1"></vaadin-text-area><br/>
@@ -53,25 +55,24 @@ export class QwcEmbeddingStore extends LitElement {
             `;
     }
 
-    _addEmbedding(id, text, metadata){
-        this._addEmbeddingConfirmation = html`Working...<br/>`;
+    _addEmbedding(id, text, metadata) {
+        this._addEmbeddingConfirmation = html`<vaadin-progress-bar class="show" indeterminate></vaadin-progress-bar>
+`;
         this.jsonRpc.add({id: id, text: text, metadata: metadata}).then(jsonRpcResponse => {
-            if(jsonRpcResponse.result === false) {
-                this._addEmbeddingConfirmation = html`
-                    <qui-alert level="error" showIcon>
-                        <span>The embedding could not be added: ${jsonRpcResponse}</span>
-                    </qui-alert>`;
-            } else {
-                this._addEmbeddingConfirmation = html`
-                    <qui-alert level="success" showIcon>
-                        <span>The embedding was added with ID <code>${jsonRpcResponse.result}</code>.</span>
-                    </qui-alert>`;
-            }
+            this._addEmbeddingConfirmation = html`
+                <qui-alert level="success" showIcon>
+                    <span>The embedding was added with ID <code>${jsonRpcResponse.result}</code>.</span>
+                </qui-alert>`;
+        }).catch((error) => {
+            this._addEmbeddingConfirmation = html`
+                <qui-alert level="error" showIcon>
+                    <span>${JSON.stringify(error.error)}</span>
+                </qui-alert>`;
         });
     }
 
     _findRelevant(text, limit){
-        this._relevantEmbeddingsOutput = html`Working...<br/>`;
+        this._relevantEmbeddingsOutput = html`<vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>`;
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
                 <vaadin-grid  theme="wrap-cell-content" id="relevant-embeddings" .items=${jsonRpcResponse.result}>

@@ -1,0 +1,17 @@
+name: LangChain4j Vertex AI Gemini
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with Vertex AI Gemini
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - vertex
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+  categories:
+    - "miscellaneous"
+  status: "experimental"
+  codestart:
+    name: langchain4j-vertex-ai-gemini
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-vertex-ai:codestarts:jar:${project.version}"
