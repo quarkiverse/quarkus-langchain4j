@@ -11,17 +11,19 @@
     </p>
     <div id="status"></div>
     </p>
-    <textarea id="poem" rows="10" cols="50" readonly></textarea>
+    <div id="poem" style="white-space: pre-wrap;"></div>
     </p>
     <button id="emailMe">Email me a poem</button>
     <button id="clear" disabled>Clear</button>
 
     <script>
         document.getElementById('emailMe').addEventListener('click', function() {
+          document.getElementById('status').textContent = 'Working...';
           fetch('http://localhost:8080/email-me-a-poem')
             .then(response => response.text())
             .then(data => {
-              document.getElementById('poem').value = data;
+              document.getElementById('status').textContent = '';
+              document.getElementById('poem').innerHTML = data;
               document.getElementById('clear').disabled = false;
             })
             .catch(error => {
@@ -30,7 +32,7 @@
         });
 
         document.getElementById('clear').addEventListener('click', function() {
-          document.getElementById('poem').value = '';
+          document.getElementById('poem').innerHTML = '';
           this.disabled = true;
         });
     </script>
