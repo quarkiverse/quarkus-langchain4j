@@ -39,7 +39,7 @@ public interface VertxAiGeminiRestApi {
 
     @Path("{modelId}:generateContent")
     @POST
-    GenerateContentResponse predict(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
+    GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
 
     @ClientObjectMapper
     static ObjectMapper mapper(ObjectMapper defaultObjectMapper) {
