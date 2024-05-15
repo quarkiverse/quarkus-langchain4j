@@ -10,6 +10,7 @@ import '@vaadin/progress-bar';
 import '@vaadin/text-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import 'qui-alert';
 import { JsonRpc } from 'jsonrpc';
 import { systemMessages } from 'build-time-data';
 
@@ -69,7 +70,10 @@ export class QwcChat extends LitElement {
         _systemMessages: {state: true},
         _systemMessageDisabled: {state: true},
         _ragEnabled: {state: true},
-        _showToolRelatedMessages: {state: true}
+        _streamingChatSupported: {state: true},
+        _streaminChatEnabled: {state: true},
+        _showToolRelatedMessages: {state: true},
+        _observer: {state:false},
     }
 
     constructor() {
@@ -83,8 +87,29 @@ export class QwcChat extends LitElement {
         this._unfilteredChatItems = [];
         this._chatItems = [];
         this.jsonRpc.reset({systemMessage: this._systemMessage});
+        this._streamingChatSupported = this.jsonRpc.isStreamingChatSupported();
+        this._streamingChatEnabled = this._streamingChatSupported && !this._ragEnabled;
     }
 
+    _connect() {
+    }
+
+    _disconnect() {
+      if (this._observer) {
+        this._observer.unsubscribe();
+      }
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this._connect();
+    }
+    
+    disconnectedCallback() {
+        this._disconnect();
+        super.disconnectedCallback();
+    }
+    
     render() {
         this._filterChatItems();
         return html`
@@ -96,6 +121,15 @@ export class QwcChat extends LitElement {
             <div><vaadin-checkbox checked label="Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)"
                                   @change="${(event) => {
                                       this._ragEnabled = event.target.checked;
+                                      this._streamingChatEnabled = this._streamingChatEnabled && !this._ragEnabled;
+                                      this.render();
+                                  }}"/></div>
+            <div><vaadin-checkbox label="Enable Streaming Chat (if supported by model & rag disabled)"
+                                  class="${this._streamingChatSupported ? 'show' : 'hide'}"
+                                  ?checked="${this._streamingChatEnabled}"
+                                  ?disabled="${!this._streamingChatSupported || this._ragEnabled}"
+                                  @change="${(event) => {
+                                      this._streamingChatEnabled = event.target.checked;
                                       this.render();
                                   }}"/></div>
             ${this._renderSystemPane()}
@@ -119,7 +153,7 @@ export class QwcChat extends LitElement {
             </vaadin-text-field>
             </div>`;
     }
-
+   
     _checkForEnterOrTab(e){
         if ((e.which == 13 || e.which == 0)){
             this._cementSystemMessage();
@@ -159,13 +193,40 @@ export class QwcChat extends LitElement {
             this._cementSystemMessage();
             this._addUserMessage(message);
             this._showProgressBar();
-
-            this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
-                this._showResponse(jsonRpcResponse);
-            }).catch((error) => {
-                this._showError(error);
-                this._hideProgressBar();
-            });
+            
+           if (this._streamingChatEnabled) {
+                var msg = "";
+                var index = this._addBotMessage(msg);
+               try {
+               this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled})
+                .onNext(jsonRpcResponse => {
+                  if (jsonRpcResponse.result.error) {
+                    this._showError(jsonRpcResponse.result.error);
+                    this._hideProgressBar();
+                  } else if (jsonRpcResponse.result.message) {
+                    this._updateMessage(index, jsonRpcResponse.result.message);
+                    this._hideProgressBar();
+                  } else {
+                    msg += jsonRpcResponse.result.token;
+                    this._updateMessage(index, msg);
+                  }
+                })
+                .onError((error) => {
+                    this._showError(error);
+                    this._hideProgressBar();
+                });
+               } catch(error) {
+                   this._showError(error);
+                   this._hideProgressBar();
+               }
+            } else {
+                this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
+                    this._showResponse(jsonRpcResponse);
+                }).catch((error) => {
+                    this._showError(error);
+                    this._hideProgressBar();
+                });
+            }
         }
 
       }
@@ -248,7 +309,12 @@ status = ${item.toolExecutionResult.text}`);
     }
 
     _addBotMessage(message){
-        this._addMessage(message, "AI", 3);
+      return this._addMessage(message, "AI", 3);
+    }
+
+    _updateMessage(index, message) {
+        this._unfilteredChatItems[index].text = message;
+        this._unfilteredChatItems = [...this._unfilteredChatItems];
     }
 
     _addUserMessage(message){
@@ -262,7 +328,7 @@ status = ${item.toolExecutionResult.text}`);
     }
 
     _addMessage(message, user, colorIndex){
-        this._addMessageItem(this._createNewItem(message, user, colorIndex));
+       return this._addMessageItem(this._createNewItem(message, user, colorIndex));
     }
 
     _createNewItem(message, user, colorIndex) {
@@ -284,9 +350,11 @@ status = ${item.toolExecutionResult.text}`);
     }
 
     _addMessageItem(newItem) {
+        var newIndex = this._unfilteredChatItems.length;
         this._unfilteredChatItems = [
             ...this._unfilteredChatItems,
             newItem];
+      return newIndex;
     }
 
     _hideNewConversationButton(){

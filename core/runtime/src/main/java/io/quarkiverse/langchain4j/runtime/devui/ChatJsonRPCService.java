@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -21,7 +22,9 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -35,11 +38,14 @@ import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.arc.All;
 import io.quarkus.arc.Arc;
 import io.quarkus.logging.Log;
+import io.smallrye.mutiny.Multi;
+import io.vertx.core.json.JsonObject;
 
 @ActivateRequestContext
 public class ChatJsonRPCService {
 
     private final ChatLanguageModel model;
+    private final Optional<StreamingChatLanguageModel> streamingModel;
 
     private final ChatMemoryProvider memoryProvider;
 
@@ -52,11 +58,13 @@ public class ChatJsonRPCService {
     private final Map<String, ToolExecutor> toolExecutors;
 
     public ChatJsonRPCService(@All List<ChatLanguageModel> models, // don't use ChatLanguageModel model because it results in the default model not being configured
+            @All List<StreamingChatLanguageModel> streamingModels,
             @All List<Supplier<RetrievalAugmentor>> retrievalAugmentorSuppliers,
             @All List<RetrievalAugmentor> retrievalAugmentors,
             ChatMemoryProvider memoryProvider,
             QuarkusToolExecutorFactory toolExecutorFactory) {
         this.model = models.get(0);
+        this.streamingModel = streamingModels.isEmpty() ? Optional.empty() : Optional.of(streamingModels.get(0));
         this.retrievalAugmentor = null;
         for (Supplier<RetrievalAugmentor> supplier : retrievalAugmentorSuppliers) {
             this.retrievalAugmentor = supplier.get();
@@ -116,6 +124,66 @@ public class ChatJsonRPCService {
             memory.add(new SystemMessage(systemMessage));
         }
         return "OK";
+    }
+
+    public boolean isStreamingChatSupported() {
+        return streamingModel.isPresent();
+    }
+
+    public Multi<JsonObject> streamingChat(String message, boolean ragEnabled) {
+        ChatMemory m = currentMemory.get();
+        if (m == null) {
+            reset("");
+            m = currentMemory.get();
+        }
+        final ChatMemory memory = m;
+
+        // create a backup of the chat memory, because we are now going to
+        // add a new message to it, and might have to remove it if the chat
+        // request fails - unfortunately the ChatMemory API doesn't allow
+        // removing single messages
+        List<ChatMessage> chatMemoryBackup = memory.messages();
+
+        return Multi.createFrom().emitter(em -> {
+            try {
+                if (retrievalAugmentor != null && ragEnabled) {
+                    UserMessage userMessage = UserMessage.from(message);
+                    Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
+                    memory.add(retrievalAugmentor.augment(userMessage, metadata));
+                } else {
+
+                    memory.add(new UserMessage(message));
+                }
+
+                StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
+
+                streamingModel.generate(memory.messages(), new StreamingResponseHandler<AiMessage>() {
+                    @Override
+                    public void onComplete(Response<AiMessage> response) {
+                        memory.add(response.content());
+                        String message = response.content().text();
+                        em.emit(new JsonObject().put("message", message));
+                        em.complete();
+                    }
+
+                    @Override
+                    public void onNext(String token) {
+                        em.emit(new JsonObject().put("token", token));
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        em.fail(error);
+                    }
+                });
+            } catch (Throwable t) {
+                // restore the memory from the backup
+                memory.clear();
+                chatMemoryBackup.forEach(memory::add);
+                Log.warn(t);
+                em.fail(t);
+            }
+        });
     }
 
     public ChatResultPojo chat(String message, boolean ragEnabled) {
