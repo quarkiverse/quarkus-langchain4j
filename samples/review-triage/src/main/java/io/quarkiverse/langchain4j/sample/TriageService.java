@@ -21,7 +21,7 @@ public interface TriageService {
             - "J'adore votre banque", this is a 'POSITIVE' review
             - "I hate your bank, you are the worst!", this is a 'NEGATIVE' review
 
-             Answer with a JSON document containing:
+             Your answer needs to contain the following information:
             - the 'evaluation' key set to 'POSITIVE' if the review is positive, 'NEGATIVE' otherwise, depending if the review is positive or negative
             - the 'message' key set to a message thanking the customer in the case of a positive review, or an apology and a note that the bank is going to contact the customer in the case of a negative review. These messages must be polite and use the same language as the passed review.
 
