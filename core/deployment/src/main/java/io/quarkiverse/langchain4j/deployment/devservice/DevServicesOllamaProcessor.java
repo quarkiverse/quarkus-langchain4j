@@ -139,6 +139,14 @@ public class DevServicesOllamaProcessor {
                     throw new RuntimeException(e.getCause());
                 }
             }
+
+            // preload model - it only makes sense to load a single model
+            if ((ollamaChatModels.size() == 1) && (config.devservices().preload())) {
+                String modelName = ollamaChatModels.get(0).getModelName();
+                LOGGER.infof("Preloading model %s", modelName);
+                client.preloadChatModel(modelName);
+            }
+
             compressor.close();
 
             String ollamaBaseUrl = String.format("http://localhost:%d", config.devservices().port());

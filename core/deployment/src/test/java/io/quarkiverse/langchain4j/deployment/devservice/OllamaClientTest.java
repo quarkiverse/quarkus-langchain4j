@@ -220,4 +220,26 @@ public class OllamaClientTest extends WiremockAware {
         failedSubscriber.assertCompleted();
     }
 
+    @Test
+    public void testPreLoad() {
+        wiremock().register(
+                post(urlEqualTo("/api/chat"))
+                        .willReturn(aResponse()
+                                .withHeader("Content-Type", "application/json")
+                                .withBody(
+                                        """
+                                                {
+                                                  "model": "llama3",
+                                                  "created_at": "2024-05-15T06:20:50.537329742Z",
+                                                  "message": {
+                                                    "role": "assistant",
+                                                    "content": ""
+                                                  },
+                                                  "done_reason": "load",
+                                                  "done": true
+                                                }""")));
+
+        client.preloadChatModel("llama3");
+    }
+
 }

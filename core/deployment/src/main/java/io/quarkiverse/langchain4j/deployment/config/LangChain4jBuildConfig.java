@@ -74,5 +74,11 @@ public interface LangChain4jBuildConfig {
          */
         @WithDefault("11434")
         Integer port();
+
+        /**
+         * Instructs Ollama to preload a model in order to get faster response times
+         */
+        @WithDefault("true")
+        boolean preload();
     }
 }
