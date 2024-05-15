@@ -124,6 +124,33 @@ public class JdkOllamaClient implements OllamaClient {
         }
     }
 
+    @Override
+    public void preloadChatModel(String modelName) {
+        String serverUrl = String.format("http://%s:%d/api/chat", options.host(), options.port());
+        try {
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(new URI(serverUrl))
+                    .POST(HttpRequest.BodyPublishers.ofString(String.format("{\"model\": \"%s\"}", modelName)))
+                    .build();
+
+            HttpResponse<String> httpResponse = HttpClient.newHttpClient().send(httpRequest,
+                    HttpResponse.BodyHandlers.ofString());
+            if (httpResponse.statusCode() != 200) {
+                throw new RuntimeException(
+                        "Unexpected response code: " + httpResponse.statusCode() + " response body: "
+                                + httpResponse.body());
+            }
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Unable to convert " + serverUrl + " to URI", e);
+        } catch (ConnectException e) {
+            throw new OllamaClient.ServerUnavailableException(options.host(), options.port());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private record PullAsyncLineSubscriber(MultiEmitter<? super PullAsyncLine> emitter, ObjectMapper objectMapper,
             String modelName) implements Flow.Subscriber<String> {
 

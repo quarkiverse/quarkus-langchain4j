@@ -29,6 +29,14 @@ public interface OllamaClient {
      */
     Flow.Publisher<PullAsyncLine> pullAsync(String modelName);
 
+    /**
+     * Instructs Ollama to preload a model in order to get faster response times.
+     * See <a href=
+     * "https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-pre-load-a-model-to-get-faster-response-times">this</a>
+     * for more information
+     */
+    void preloadChatModel(String modelName);
+
     record ModelInfo(String name, @JsonProperty("modelfile") String modelFile, String parameters, Details details) {
 
         public record Details(String family, String parameterSize) {
