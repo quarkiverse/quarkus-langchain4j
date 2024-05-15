@@ -1,0 +1,42 @@
+= Podman AI Lab
+
+include::./includes/attributes.adoc[]
+
+https://developers.redhat.com/products/podman-desktop/podman-ai-lab/[Podman AI Lab] simplifies getting started and developing with AI in a local environment.
+A curated catalogue of recipes help navigate the jungle of AI use cases and AI models. You can also import your models to run them locally (currently only with CPU support).
+
+== Prerequisites
+
+To use Podman AI Lab, you need to first have installed https://podman-desktop.io/docs/installation[Podman Desktop] which is available for all major platforms.
+
+Once Podman Desktop is up in running, Podman AI Lab can be installed from the UI by locating it in the e Extensions catalog (see https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-file#installation[this] for more details).
+
+== Using Podman AI Lab
+
+Podman AI Lab provides an inference server that is compatible with the OpenAI REST API, meaning that the `quarkus-langchain4j-openai` dependency can be used to interact with it from Quarkus.
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+Before proceeding, a model (`granite-7b` for example) needs to be downloaded in the Podman AI Lab UI and the inference server started.
+See https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-file#usage[this] for screenshots on how this can be accomplished.
+
+Assuming the inference server was started on port `44079`, the application needs to be configured like so:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.base-url=http://localhost:44079/v1
+# Responses might be a bit slow, so we increase the timeout
+quarkus.langchain4j.openai.timeout=60s
+----
+
+[IMPORTANT]
+====
+The model configuration completely ignored when using Podman Desktop AI, as the inference server runs a single model
+====
