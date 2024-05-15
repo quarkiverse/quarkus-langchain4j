@@ -60,7 +60,7 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
     public Response<AiMessage> generate(List<ChatMessage> messages) {
         GenerateContentRequest request = ContentMapper.map(messages, Collections.emptyList(), generationConfig);
 
-        GenerateContentResponse response = restApi.predict(request, apiMetadata);
+        GenerateContentResponse response = restApi.generateContent(request, apiMetadata);
 
         return Response.from(
                 AiMessage.from(GenerateContentResponseHandler.getText(response)),
