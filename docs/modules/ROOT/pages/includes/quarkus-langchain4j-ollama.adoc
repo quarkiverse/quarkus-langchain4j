@@ -195,7 +195,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_NUM_PREDICT+++`
 endif::add-copy-button-to-env-var[]
 --|int 
-|`128`
+|
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop[quarkus.langchain4j.ollama.chat-model.stop]`
@@ -598,7 +598,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_NUM_PREDICT+++`
 endif::add-copy-button-to-env-var[]
 --|int 
-|`128`
+|
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop[quarkus.langchain4j.ollama."model-name".chat-model.stop]`

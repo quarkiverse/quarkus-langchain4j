@@ -36,9 +36,11 @@ public class OllamaRecorder {
             Options.Builder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
-                    .topP(chatModelConfig.topP())
-                    .numPredict(chatModelConfig.numPredict());
+                    .topP(chatModelConfig.topP());
 
+            if (chatModelConfig.numPredict().isPresent()) {
+                optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
+            }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());
             }
@@ -123,9 +125,11 @@ public class OllamaRecorder {
             Options.Builder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
-                    .topP(chatModelConfig.topP())
-                    .numPredict(chatModelConfig.numPredict());
+                    .topP(chatModelConfig.topP());
 
+            if (chatModelConfig.numPredict().isPresent()) {
+                optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
+            }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());
             }
