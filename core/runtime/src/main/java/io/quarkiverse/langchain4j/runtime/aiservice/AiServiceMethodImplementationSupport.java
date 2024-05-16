@@ -346,7 +346,8 @@ public class AiServiceMethodImplementationSupport {
             for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
                 Object memoryId = provider.getMemoryId();
                 if (memoryId != null) {
-                    return memoryId;
+                    String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
+                    return memoryId + perServiceSuffix;
                 }
             }
         }
