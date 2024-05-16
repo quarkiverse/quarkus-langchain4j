@@ -4,8 +4,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -70,7 +70,7 @@ public class DefaultPropertiesTest {
     @Test
     void generate() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        assertEquals(Duration.ofSeconds(10), config.timeout());
+        assertEquals(Optional.empty(), config.timeout());
         assertEquals(WireMockUtil.VERSION, config.version());
         assertEquals(false, config.logRequests().orElse(false));
         assertEquals(false, config.logResponses().orElse(false));
@@ -86,7 +86,7 @@ public class DefaultPropertiesTest {
         assertTrue(config.chatModel().repetitionPenalty().isEmpty());
         assertTrue(config.chatModel().truncateInputTokens().isEmpty());
         assertTrue(config.chatModel().includeStopSequence().isEmpty());
-        assertEquals(Duration.ofSeconds(10), config.iam().timeout());
+        assertEquals(Optional.empty(), config.iam().timeout());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", config.iam().grantType());
         assertEquals(WireMockUtil.DEFAULT_EMBEDDING_MODEL, config.embeddingModel().modelId());
 

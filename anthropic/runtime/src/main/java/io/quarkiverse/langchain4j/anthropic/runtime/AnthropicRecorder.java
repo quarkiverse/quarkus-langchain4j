@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.anthropic.runtime;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
@@ -35,7 +36,7 @@ public class AnthropicRecorder {
                     .modelName(chatModelConfig.modelName())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .timeout(anthropicConfig.timeout())
+                    .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .topK(chatModelConfig.topK())
                     .maxTokens(chatModelConfig.maxTokens())
                     .maxRetries(chatModelConfig.maxRetries());
@@ -87,7 +88,7 @@ public class AnthropicRecorder {
                     .modelName(chatModelConfig.modelName())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .timeout(anthropicConfig.timeout())
+                    .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .topK(chatModelConfig.topK())
                     .maxTokens(chatModelConfig.maxTokens());
 

@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.ollama.runtime;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -49,7 +50,7 @@ public class OllamaRecorder {
             }
             var builder = OllamaChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout())
+                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())
@@ -92,7 +93,7 @@ public class OllamaRecorder {
 
             var builder = OllamaEmbeddingModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout())
+                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .model(ollamaFixedConfig.embeddingModel().modelId())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false));
@@ -138,7 +139,7 @@ public class OllamaRecorder {
             }
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout())
+                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(ollamaConfig.logRequests().orElse(false))
                     .logResponses(ollamaConfig.logResponses().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())

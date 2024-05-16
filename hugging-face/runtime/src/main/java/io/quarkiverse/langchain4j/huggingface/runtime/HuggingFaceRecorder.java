@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.huggingface.runtime;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -37,7 +38,7 @@ public class HuggingFaceRecorder {
 
             var builder = QuarkusHuggingFaceChatModel.builder()
                     .url(url)
-                    .timeout(huggingFaceConfig.timeout())
+                    .timeout(huggingFaceConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .temperature(chatModelConfig.temperature())
                     .waitForModel(chatModelConfig.waitForModel())
                     .doSample(chatModelConfig.doSample())
@@ -89,7 +90,7 @@ public class HuggingFaceRecorder {
 
             var builder = QuarkusHuggingFaceEmbeddingModel.builder()
                     .url(url)
-                    .timeout(huggingFaceConfig.timeout())
+                    .timeout(huggingFaceConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .waitForModel(embeddingModelConfig.waitForModel());
 
             if (!DUMMY_KEY.equals(apiKey)) {

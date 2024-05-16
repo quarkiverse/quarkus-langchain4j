@@ -46,8 +46,9 @@ public interface LangChain4jHuggingFaceConfig {
         /**
          * Timeout for HuggingFace calls
          */
-        @WithDefault("10s")
-        Duration timeout();
+        @ConfigDocDefault("10s")
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * Chat model related settings

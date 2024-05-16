@@ -110,7 +110,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests[quarkus.langchain4j.ollama.log-requests]`
@@ -513,7 +513,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests[quarkus.langchain4j.ollama."model-name".log-requests]`

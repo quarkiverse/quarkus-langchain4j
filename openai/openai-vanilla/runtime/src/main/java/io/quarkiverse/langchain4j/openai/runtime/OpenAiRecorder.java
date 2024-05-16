@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.openai.runtime;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -49,7 +50,7 @@ public class OpenAiRecorder {
             var builder = OpenAiChatModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
-                    .timeout(openAiConfig.timeout())
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
@@ -94,7 +95,7 @@ public class OpenAiRecorder {
             var builder = OpenAiStreamingChatModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
-                    .timeout(openAiConfig.timeout())
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelName(chatModelConfig.modelName())
@@ -138,7 +139,7 @@ public class OpenAiRecorder {
             var builder = OpenAiEmbeddingModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
-                    .timeout(openAiConfig.timeout())
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false))
@@ -178,7 +179,7 @@ public class OpenAiRecorder {
             var builder = OpenAiModerationModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
-                    .timeout(openAiConfig.timeout())
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(moderationModelConfig.logRequests().orElse(false))
                     .logResponses(moderationModelConfig.logResponses().orElse(false))
@@ -214,7 +215,7 @@ public class OpenAiRecorder {
             var builder = QuarkusOpenAiImageModel.builder()
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
-                    .timeout(openAiConfig.timeout())
+                    .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(imageModelConfig.logRequests().orElse(false))
                     .logResponses(imageModelConfig.logResponses().orElse(false))

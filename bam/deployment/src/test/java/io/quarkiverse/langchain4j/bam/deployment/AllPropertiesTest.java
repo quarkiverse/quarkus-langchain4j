@@ -38,7 +38,7 @@ public class AllPropertiesTest {
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bam.timeout", "60s")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.log-responses", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.timeout", "60s")
@@ -89,7 +89,7 @@ public class AllPropertiesTest {
 
         assertEquals(WireMockUtil.URL, config.baseUrl().get().toString());
         assertEquals(WireMockUtil.API_KEY, config.apiKey());
-        assertEquals(Duration.ofSeconds(60), config.timeout());
+        assertEquals(Duration.ofSeconds(60), config.timeout().get());
         assertEquals(true, config.logRequests().orElse(false));
         assertEquals(true, config.logResponses().orElse(false));
         assertEquals("aaaa-mm-dd", config.version());

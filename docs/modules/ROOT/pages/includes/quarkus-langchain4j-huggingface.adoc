@@ -93,7 +93,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url[quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url]`
@@ -415,7 +415,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__TIMEOUT++
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url[quarkus.langchain4j.huggingface."model-name".chat-model.inference-endpoint-url]`

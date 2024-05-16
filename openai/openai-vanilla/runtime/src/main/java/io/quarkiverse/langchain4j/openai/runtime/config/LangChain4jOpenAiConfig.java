@@ -58,8 +58,9 @@ public interface LangChain4jOpenAiConfig {
         /**
          * Timeout for OpenAI calls
          */
-        @WithDefault("10s")
-        Duration timeout();
+        @ConfigDocDefault("10s")
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * The maximum number of times to retry. 1 means exactly one attempt, with retrying disabled.

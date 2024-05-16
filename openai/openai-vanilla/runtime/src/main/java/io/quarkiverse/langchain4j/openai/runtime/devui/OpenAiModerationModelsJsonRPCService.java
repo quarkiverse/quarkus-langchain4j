@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.openai.runtime.devui;
 
+import java.time.Duration;
+
 import jakarta.inject.Inject;
 
 import dev.ai4j.openai4j.OpenAiClient;
@@ -28,8 +30,10 @@ public class OpenAiModerationModelsJsonRPCService {
         LangChain4jOpenAiConfig.OpenAiConfig clientConfig = NamedConfigUtil.isDefault(configuration) ? config.defaultConfig()
                 : config.namedConfig().get(configuration);
         OpenAiClient client = OpenAiClient.builder().openAiApiKey(clientConfig.apiKey()).baseUrl(clientConfig.baseUrl())
-                .callTimeout(clientConfig.timeout()).connectTimeout(clientConfig.timeout())
-                .readTimeout(clientConfig.timeout()).writeTimeout(clientConfig.timeout()).build();
+                .callTimeout(clientConfig.timeout().orElse(Duration.ofSeconds(10)))
+                .connectTimeout(clientConfig.timeout().orElse(Duration.ofSeconds(10)))
+                .readTimeout(clientConfig.timeout().orElse(Duration.ofSeconds(10)))
+                .writeTimeout(clientConfig.timeout().orElse(Duration.ofSeconds(10))).build();
         try {
             ModerationRequest request = ModerationRequest.builder().model(modelName).input(prompt).build();
             ModerationResponse response = RetryUtils.withRetry(() -> client.moderation(request).execute(),

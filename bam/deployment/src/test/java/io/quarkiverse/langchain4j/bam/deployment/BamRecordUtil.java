@@ -76,7 +76,7 @@ public class BamRecordUtil {
                     }
 
                     @Override
-                    public Duration timeout() {
+                    public Optional<Duration> timeout() {
                         return langchain4jBamConfig.defaultConfig().timeout();
                     }
 

@@ -53,8 +53,9 @@ public interface LangChain4jBamConfig {
         /**
          * Timeout for BAM calls
          */
-        @WithDefault("10s")
-        Duration timeout();
+        @ConfigDocDefault("10s")
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * Version to use

@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mistralai.runtime;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -40,7 +41,7 @@ public class MistralAiRecorder {
                     .modelName(chatModelConfig.modelName())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .timeout(mistralAiConfig.timeout());
+                    .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
@@ -93,7 +94,7 @@ public class MistralAiRecorder {
                     .modelName(chatModelConfig.modelName())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .timeout(mistralAiConfig.timeout());
+                    .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
@@ -145,7 +146,7 @@ public class MistralAiRecorder {
                     .modelName(embeddingModelConfig.modelName())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false))
-                    .timeout(mistralAiConfig.timeout());
+                    .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             return new Supplier<>() {
                 @Override

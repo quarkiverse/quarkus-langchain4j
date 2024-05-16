@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.azure.openai.runtime;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +51,7 @@ public class AzureOpenAiRecorder {
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
-                    .timeout(azureAiConfig.timeout())
+                    .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
@@ -96,7 +97,7 @@ public class AzureOpenAiRecorder {
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
-                    .timeout(azureAiConfig.timeout())
+                    .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .temperature(chatModelConfig.temperature())
@@ -140,7 +141,7 @@ public class AzureOpenAiRecorder {
                     .apiKey(apiKey)
                     .adToken(apiKey)
                     .apiVersion(azureAiConfig.apiVersion())
-                    .timeout(azureAiConfig.timeout())
+                    .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false));
@@ -175,7 +176,7 @@ public class AzureOpenAiRecorder {
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
-                    .timeout(azureAiConfig.timeout())
+                    .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(imageModelConfig.logRequests().orElse(false))
                     .logResponses(imageModelConfig.logResponses().orElse(false))
