@@ -30,14 +30,14 @@ export class DemoReview extends LitElement {
 
     static properties = {
         last_message: String,
-        review: String,
+        post: String,
         in_progress: {state: true, type: Boolean},
         complete: {state: true, type: Boolean}
     }
 
     constructor() {
         super();
-        this.review = "";
+        this.post = "";
         this.last_message = "";
         this.in_progress = false;
         this.complete = false;
@@ -48,7 +48,7 @@ export class DemoReview extends LitElement {
         if (this.in_progress) {
             outcome = html`
                 <div class="outcome">
-                    <div>Analyzing your review...</div>
+                    <div>Analyzing your post...</div>
                     <vaadin-progress-bar indeterminate theme="contrast"></vaadin-progress-bar>
                 </div>`;
         } else if (this.complete) {
@@ -69,15 +69,6 @@ export class DemoReview extends LitElement {
                                       style="align-items: baseline">
 
               ${outcome}
-              <p>Things you can try:</p>
-              <ul>
-                <li>
-                  <a href="#" @click=${() => { this.review = "You are great! Keep up the good work!"; }}>You are great! Keep up the good work!</a>
-                </li>
-                <li>
-                  <a href="#" @click=${() => { this.review = "You are thieves! I want my money back!"; }}>You are thieves! I want my money back!</a>
-                </li>
-              </ul>
             </vaadin-vertical-layout>
 
             </vaadin-horizontal-layout>
@@ -86,17 +77,17 @@ export class DemoReview extends LitElement {
 
 
                 <vaadin-text-area
-                        label="Write your review:"
+                        label="Add your post:"
                         .maxlength=1024
-                        .helperText="${`${this.review.length}/1024`}"
-                        .value=${this.review}
+                        .helperText="${`${this.post.length}/1024`}"
+                        .value=${this.post}
                         @value-changed="${event => {
-                            this.review = event.detail.value;
+                            this.post = event.detail.value;
                         }}"
                 >
                 </vaadin-text-area>
                 <vaadin-button
-                        arial-label="Submit your review"
+                        arial-label="Submit your post"
                         @click=${this._submit} class="button primary">
                     Submit
                 </vaadin-button>
@@ -110,7 +101,7 @@ export class DemoReview extends LitElement {
         fetch(`/review`, {
             method: "POST",
             body: JSON.stringify({
-                review: this.review
+                post: this.post
             }),
             headers: {
                 "Content-Type": "application/json",
@@ -119,8 +110,8 @@ export class DemoReview extends LitElement {
             .then(data => {
                 this.in_progress = false;
                 this.complete = true;
-                this.review = "";
-                this.last_message = data.message;
+                this.post = "";
+                this.last_message = "Sarcasm detected: " + data.sarcasmDetected;
             })
             .catch((error) => {
                 console.error('Error:', error);

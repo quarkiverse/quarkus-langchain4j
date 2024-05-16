@@ -10,12 +10,16 @@ public class ReviewResource {
     @Inject
     TriageService triage;
 
-    record Review(String review) {
+    public record Request(String post) {
+    }
+
+    public record Response(boolean sarcasmDetected) {
+
     }
 
     @POST
-    public TriagedReview triage(Review review) {
-        return triage.triage(review.review());
+    public Response triage(Request request) {
+        return new Response(triage.triage(request.post()));
     }
 
 }

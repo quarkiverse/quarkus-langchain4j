@@ -40,12 +40,10 @@ export class DemoTitle extends LitElement {
     render() {
         return html`
             <div class="title">
-                <h1>Cash Critique</h1>
+                <h1>Sarcasm detector</h1>
             </div>
             <div class="explanation">
-                This demo shows how an LLM can triage reviews automatically.
-                This frontend lets you write a review about a financial product and submit it to the backend.
-                The backend use LLM (GPT 3.5) to evaluate the review and provide a response.
+                This demo shows how an LLM can detect sarcasm content
             </div>
         `
     }
