@@ -46,6 +46,23 @@ endif::add-copy-button-to-env-var[]
 |`11434`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-devservices-preload]]`link:#quarkus-langchain4j_quarkus-langchain4j-devservices-preload[quarkus.langchain4j.devservices.preload]`
+
+
+[.description]
+--
+Instructs Ollama to preload a model in order to get faster response times
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PRELOAD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PRELOAD+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a| [[quarkus-langchain4j_quarkus-langchain4j-log-requests]]`link:#quarkus-langchain4j_quarkus-langchain4j-log-requests[quarkus.langchain4j.log-requests]`
 
 
