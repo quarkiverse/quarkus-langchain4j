@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.openai.runtime.devui;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -27,7 +28,7 @@ public class OpenAiImagesJsonRPCService {
         ImageModel model = QuarkusOpenAiImageModel.builder()
                 .baseUrl(clientConfig.baseUrl())
                 .apiKey(clientConfig.apiKey())
-                .timeout(clientConfig.timeout())
+                .timeout(clientConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .user(clientConfig.imageModel().user())
                 .maxRetries(clientConfig.maxRetries())
                 .persistDirectory(Optional.empty())

@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.openshiftai.runtime;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -46,7 +47,7 @@ public class OpenshiftAiRecorder {
 
             var builder = OpenshiftAiChatModel.builder()
                     .url(baseUrl)
-                    .timeout(openshiftAiConfig.timeout())
+                    .timeout(openshiftAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(modelId);

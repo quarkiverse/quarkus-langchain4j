@@ -93,7 +93,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-chat-model-model-name]]`link:#quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-chat-model-model-name[quarkus.langchain4j.mistralai.chat-model.model-name]`
@@ -394,7 +394,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name]]`link:#quarkus-langchain4j-mistralai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name[quarkus.langchain4j.mistralai."model-name".chat-model.model-name]`

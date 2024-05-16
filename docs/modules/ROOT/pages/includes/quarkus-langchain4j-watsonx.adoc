@@ -95,7 +95,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version[quarkus.langchain4j.watsonx.version]`
@@ -218,7 +218,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type[quarkus.langchain4j.watsonx.iam.grant-type]`
@@ -648,7 +648,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version[quarkus.langchain4j.watsonx."model-name".version]`
@@ -771,7 +771,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_TIMEOUT++
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type[quarkus.langchain4j.watsonx."model-name".iam.grant-type]`

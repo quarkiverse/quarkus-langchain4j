@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -64,7 +64,7 @@ public class DefaultPropertiesTest {
     void generate() throws Exception {
         var config = langchain4jBamConfig.defaultConfig();
 
-        assertEquals(Duration.ofSeconds(10), config.timeout());
+        assertEquals(Optional.empty(), config.timeout());
         assertEquals(WireMockUtil.VERSION, config.version());
         assertEquals(false, config.logRequests().orElse(false));
         assertEquals(false, config.logResponses().orElse(false));

@@ -54,8 +54,9 @@ public interface LangChain4jWatsonxConfig {
         /**
          * Timeout for watsonx.ai calls.
          */
-        @WithDefault("10s")
-        Duration timeout();
+        @ConfigDocDefault("10s")
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * The version date for the API of the form YYYY-MM-DD.

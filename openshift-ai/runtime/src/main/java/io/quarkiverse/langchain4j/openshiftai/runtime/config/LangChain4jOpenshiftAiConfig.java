@@ -48,8 +48,9 @@ public interface LangChain4jOpenshiftAiConfig {
         /**
          * Timeout for OpenShift AI calls
          */
-        @WithDefault("10s")
-        Duration timeout();
+        @ConfigDocDefault("10s")
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * Whether the OpenShift AI client should log requests

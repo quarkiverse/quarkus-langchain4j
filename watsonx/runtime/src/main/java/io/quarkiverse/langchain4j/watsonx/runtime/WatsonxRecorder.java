@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,7 +113,7 @@ public class WatsonxRecorder {
             var builder = WatsonxEmbeddingModel.builder()
                     .tokenGenerator(tokenGenerator)
                     .url(url)
-                    .timeout(watsonConfig.timeout())
+                    .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false))
                     .version(watsonConfig.version())
@@ -141,7 +142,8 @@ public class WatsonxRecorder {
 
             @Override
             public TokenGenerator apply(String iamUrl) {
-                return new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout(), iamConfig.grantType(), apiKey);
+                return new TokenGenerator(iamConfig.baseUrl(), iamConfig.timeout().orElse(Duration.ofSeconds(10)),
+                        iamConfig.grantType(), apiKey);
             }
         };
     }
@@ -177,7 +179,7 @@ public class WatsonxRecorder {
         return WatsonxChatModel.builder()
                 .tokenGenerator(tokenGenerator)
                 .url(url)
-                .timeout(watsonConfig.timeout())
+                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(chatModelConfig.logRequests().orElse(false))
                 .logResponses(chatModelConfig.logResponses().orElse(false))
                 .version(watsonConfig.version())

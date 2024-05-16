@@ -111,8 +111,8 @@ public class AllPropertiesTest {
         assertEquals(WireMockUtil.URL_IAM_SERVER, config.iam().baseUrl().toString());
         assertEquals(WireMockUtil.API_KEY, config.apiKey());
         assertEquals(WireMockUtil.PROJECT_ID, config.projectId());
-        assertEquals(Duration.ofSeconds(60), config.timeout());
-        assertEquals(Duration.ofSeconds(60), config.iam().timeout());
+        assertEquals(Duration.ofSeconds(60), config.timeout().get());
+        assertEquals(Duration.ofSeconds(60), config.iam().timeout().get());
         assertEquals("grantME", config.iam().grantType());
         assertEquals(true, config.logRequests().orElse(false));
         assertEquals(true, config.logResponses().orElse(false));

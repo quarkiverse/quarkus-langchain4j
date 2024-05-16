@@ -158,8 +158,8 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
-        public Duration timeout() {
-            return null;
+        public Optional<Duration> timeout() {
+            return Optional.empty();
         }
 
         @Override

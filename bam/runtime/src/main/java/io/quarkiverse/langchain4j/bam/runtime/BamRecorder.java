@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.bam.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -42,7 +43,7 @@ public class BamRecorder {
 
             var builder = BamChatModel.builder()
                     .accessToken(bamConfig.apiKey())
-                    .timeout(bamConfig.timeout())
+                    .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(chatModelConfig.modelId())
@@ -95,7 +96,7 @@ public class BamRecorder {
 
             var builder = BamStreamingChatModel.builder()
                     .accessToken(bamConfig.apiKey())
-                    .timeout(bamConfig.timeout())
+                    .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .modelId(chatModelConfig.modelId())
@@ -148,7 +149,7 @@ public class BamRecorder {
 
             var builder = BamModel.builder()
                     .accessToken(bamConfig.apiKey())
-                    .timeout(bamConfig.timeout())
+                    .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .version(bamConfig.version())
                     .modelId(embeddingModelConfig.modelId())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
@@ -189,7 +190,7 @@ public class BamRecorder {
 
             var builder = BamModel.builder()
                     .accessToken(bamConfig.apiKey())
-                    .timeout(bamConfig.timeout())
+                    .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .version(bamConfig.version())
                     .messagesToModerate(moderationModelConfig.messagesToModerate())
                     .hap(hap)

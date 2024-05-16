@@ -111,7 +111,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-version]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-version[quarkus.langchain4j.bam.version]`
@@ -669,7 +669,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
   link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
-|`10S`
+|`10s`
 
 
 a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version[quarkus.langchain4j.bam."model-name".version]`
