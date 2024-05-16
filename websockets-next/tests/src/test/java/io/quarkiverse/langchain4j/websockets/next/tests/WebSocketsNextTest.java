@@ -32,7 +32,6 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.arc.InjectableContext;
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.websockets.next.OnOpen;
@@ -77,7 +76,7 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
                 .statusCode(200);
 
         assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)
-                .hasOnlyElementsOfType(InjectableContext.ContextState.class);
+                .hasOnlyElementsOfType(String.class);
         assertThat(chatMemoryStore.idsFromGetMessages).hasSameElementsAs(chatMemoryStore.idsFromDeleteMessaged);
 
         when()
@@ -86,7 +85,7 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
                 .statusCode(200);
 
         assertThat(chatMemoryStore.idsFromGetMessages).hasSize(2)
-                .hasOnlyElementsOfType(InjectableContext.ContextState.class);
+                .hasOnlyElementsOfType(String.class);
         assertThat(chatMemoryStore.idsFromGetMessages).hasSameElementsAs(chatMemoryStore.idsFromDeleteMessaged);
     }
 
