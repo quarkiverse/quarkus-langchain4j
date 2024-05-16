@@ -1,6 +1,6 @@
 //DEPS io.quarkus.platform:quarkus-bom:3.9.4@pom
 //DEPS io.quarkus:quarkus-vertx-http:3.9.4
-//DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.13.1
+//DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.14.0
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.vertx.ext.web.Router;
