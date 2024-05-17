@@ -139,7 +139,7 @@ public class AzureOpenAiRecorder {
             var builder = AzureOpenAiEmbeddingModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName))
                     .apiKey(apiKey)
-                    .adToken(apiKey)
+                    .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
