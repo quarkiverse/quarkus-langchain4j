@@ -59,7 +59,7 @@ jobs:
       - name: Update dependency versions for the samples
         run: |
           for pom in `find samples/ -name pom.xml`; 
-            ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f $(dirname "$pom"); 
+            ../mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f $(dirname "$pom"); 
           done
           git commit -a -m "Update dependencies in samples"
 
