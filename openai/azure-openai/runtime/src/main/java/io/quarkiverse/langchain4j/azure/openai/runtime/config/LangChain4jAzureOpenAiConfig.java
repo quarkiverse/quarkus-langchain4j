@@ -5,6 +5,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
@@ -137,5 +138,53 @@ public interface LangChain4jAzureOpenAiConfig {
          * Image model related settings
          */
         ImageModelConfig imageModel();
+
+        default Optional<String> endPointFor(EndpointType type) {
+            var deepEndpoint = switch (type) {
+                case CHAT -> chatModel().endpoint();
+                case EMBEDDING -> embeddingModel().endpoint();
+                case IMAGE -> imageModel().endpoint();
+            };
+            return deepEndpoint.or(new Supplier<Optional<String>>() {
+                @Override
+                public Optional<String> get() {
+                    return endpoint();
+                }
+            });
+        }
+
+        default Optional<String> resourceNameFor(EndpointType type) {
+            var deepResourceName = switch (type) {
+                case CHAT -> chatModel().resourceName();
+                case EMBEDDING -> embeddingModel().resourceName();
+                case IMAGE -> imageModel().resourceName();
+            };
+            return deepResourceName.or(new Supplier<Optional<String>>() {
+                @Override
+                public Optional<String> get() {
+                    return resourceName();
+                }
+            });
+        }
+
+        default Optional<String> deploymentNameFor(EndpointType type) {
+            var deepDeploymentName = switch (type) {
+                case CHAT -> chatModel().deploymentName();
+                case EMBEDDING -> embeddingModel().deploymentName();
+                case IMAGE -> imageModel().deploymentName();
+            };
+            return deepDeploymentName.or(new Supplier<Optional<String>>() {
+                @Override
+                public Optional<String> get() {
+                    return deploymentName();
+                }
+            });
+        }
+
+        enum EndpointType {
+            CHAT,
+            EMBEDDING,
+            IMAGE
+        }
     }
 }

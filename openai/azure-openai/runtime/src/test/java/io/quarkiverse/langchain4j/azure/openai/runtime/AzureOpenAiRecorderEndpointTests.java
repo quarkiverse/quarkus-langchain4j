@@ -26,7 +26,7 @@ class AzureOpenAiRecorderEndpointTests {
     @Test
     void noEndpointConfigSet() {
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -50,7 +50,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .resourceName();
 
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -69,7 +69,7 @@ class AzureOpenAiRecorderEndpointTests {
                 .deploymentName();
 
         var configValidationException = catchThrowableOfType(() -> AzureOpenAiRecorder.getEndpoint(this.config,
-                NamedConfigUtil.DEFAULT_NAME),
+                NamedConfigUtil.DEFAULT_NAME, LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT),
                 ConfigValidationException.class);
 
         assertThat(configValidationException.getProblemCount())
@@ -87,7 +87,8 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .endpoint();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT))
                 .isNotNull()
                 .isEqualTo("https://somewhere.com");
     }
@@ -102,7 +103,8 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .deploymentName();
 
-        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME))
+        assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
+                LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT))
                 .isNotNull()
                 .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName", "deploymentName"));
     }
@@ -186,6 +188,21 @@ class AzureOpenAiRecorderEndpointTests {
         public ChatModelConfig chatModel() {
             return new ChatModelConfig() {
                 @Override
+                public Optional<String> resourceName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> deploymentName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> endpoint() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Double temperature() {
                     return null;
                 }
@@ -232,6 +249,21 @@ class AzureOpenAiRecorderEndpointTests {
         public EmbeddingModelConfig embeddingModel() {
             return new EmbeddingModelConfig() {
                 @Override
+                public Optional<String> resourceName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> deploymentName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> endpoint() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Optional<Boolean> logRequests() {
                     return Optional.empty();
                 }
@@ -246,6 +278,21 @@ class AzureOpenAiRecorderEndpointTests {
         @Override
         public ImageModelConfig imageModel() {
             return new ImageModelConfig() {
+                @Override
+                public Optional<String> resourceName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> deploymentName() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> endpoint() {
+                    return Optional.empty();
+                }
+
                 @Override
                 public String modelName() {
                     return null;

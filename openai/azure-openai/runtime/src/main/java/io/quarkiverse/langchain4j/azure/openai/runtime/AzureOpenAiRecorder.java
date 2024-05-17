@@ -23,6 +23,7 @@ import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
+import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.ShutdownContext;
@@ -47,7 +48,7 @@ public class AzureOpenAiRecorder {
             throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiChatModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, configName))
+                    .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -93,7 +94,7 @@ public class AzureOpenAiRecorder {
             throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiStreamingChatModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, configName))
+                    .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -137,7 +138,7 @@ public class AzureOpenAiRecorder {
                 throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
             }
             var builder = AzureOpenAiEmbeddingModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, configName))
+                    .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.EMBEDDING))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -172,7 +173,7 @@ public class AzureOpenAiRecorder {
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()
-                    .endpoint(getEndpoint(azureAiConfig, configName))
+                    .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.IMAGE))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .apiVersion(azureAiConfig.apiVersion())
@@ -223,17 +224,19 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName) {
-        var endpoint = azureAiConfig.endpoint();
+    static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName, EndpointType type) {
+        var endpoint = azureAiConfig.endPointFor(type);
 
         return (endpoint.isPresent() && !endpoint.get().trim().isBlank()) ? endpoint.get()
-                : constructEndpointFromConfig(azureAiConfig, configName);
+                : constructEndpointFromConfig(azureAiConfig, configName, type);
     }
 
-    private static String constructEndpointFromConfig(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
-            String configName) {
-        var resourceName = azureAiConfig.resourceName();
-        var deploymentName = azureAiConfig.deploymentName();
+    private static String constructEndpointFromConfig(
+            LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig,
+            String configName,
+            EndpointType type) {
+        var resourceName = azureAiConfig.resourceNameFor(type);
+        var deploymentName = azureAiConfig.deploymentNameFor(type);
 
         if (resourceName.isEmpty() || deploymentName.isEmpty()) {
             List<Problem> configProblems = new ArrayList<>();
@@ -275,7 +278,9 @@ public class AzureOpenAiRecorder {
                 new ConfigValidationException.Problem(
                         String.format(
                                 "SRCFG00014: Exactly of the configuration properties must be present: quarkus.langchain4j.azure-openai%s%s or quarkus.langchain4j.azure-openai%s%s",
-                                NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "api-key",
+                                io.quarkiverse.langchain4j.runtime.NamedConfigUtil.isDefault(configName) ? "."
+                                        : ("." + configName + "."),
+                                "api-key",
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "ad-token"))
         };
     }
@@ -294,4 +299,5 @@ public class AzureOpenAiRecorder {
             }
         });
     }
+
 }

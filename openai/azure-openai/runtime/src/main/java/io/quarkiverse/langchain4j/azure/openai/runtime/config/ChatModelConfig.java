@@ -8,6 +8,23 @@ import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface ChatModelConfig {
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.resource-name}
+     * specifically for chat models if it is set.
+     */
+    Optional<String> resourceName();
+
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.deployment-name}
+     * specifically for chat models if it is set.
+     */
+    Optional<String> deploymentName();
+
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.endpoint}
+     * specifically for chat models if it is set.
+     */
+    Optional<String> endpoint();
 
     /**
      * What sampling temperature to use, with values between 0 and 2.

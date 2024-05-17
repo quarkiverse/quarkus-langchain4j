@@ -8,6 +8,23 @@ import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface EmbeddingModelConfig {
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.resource-name}
+     * specifically for embedding models if it is set.
+     */
+    Optional<String> resourceName();
+
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.deployment-name}
+     * specifically for embedding models if it is set.
+     */
+    Optional<String> deploymentName();
+
+    /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.endpoint}
+     * specifically for embedding models if it is set.
+     */
+    Optional<String> endpoint();
 
     /**
      * Whether embedding model requests should be logged
