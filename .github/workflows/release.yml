@@ -58,13 +58,9 @@ jobs:
 
       - name: Update dependency versions for the samples
         run: |
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/email-a-poem
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/fraud-detection
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/review-triage
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/chatbot
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/csv-chatbot
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/cli-translator
-          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{steps.metadata.outputs.current-version}} -pl samples/chatbot-easy-rag
+          for pom in `find samples/ -name pom.xml`; 
+            ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f $(dirname "$pom"); 
+          done
           git commit -a -m "Update dependencies in samples"
 
       - name: Push changes to ${{github.base_ref}} branch
