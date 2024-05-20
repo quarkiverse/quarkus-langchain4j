@@ -11,8 +11,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.BeanParam;
@@ -300,8 +298,6 @@ public interface OpenAiRestApi {
     class OpenAiClientLogger implements ClientLogger {
         private static final Logger log = Logger.getLogger(OpenAiClientLogger.class);
 
-        private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*sk-)(\\w{2})(\\w+)(\\w{2})");
-
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -365,36 +361,17 @@ public interface OpenAiRestApi {
                     .map(header -> {
                         String headerKey = header.getKey();
                         String headerValue = header.getValue();
-                        if (headerKey.equals("Authorization")) {
-                            headerValue = maskAuthorizationHeaderValue(headerValue);
-                        } else if (headerKey.equals("api-key")) {
-                            headerValue = maskApiKeyHeaderValue(headerValue);
-                        } else if (headerKey.equals("Set-Cookie")) {
-                            headerValue = maskCookieHeaderValue(headerValue);
-                        }
+                        headerValue = switch (headerKey) {
+                            case "Authorization", "api-key" -> maskHeaderValue(headerValue);
+                            case "Set-Cookie" -> maskCookieHeaderValue(headerValue);
+                            default -> headerValue;
+                        };
                         return String.format("[%s: %s]", headerKey, headerValue);
                     })
                     .collect(joining(", "));
         }
 
-        private static String maskAuthorizationHeaderValue(String authorizationHeaderValue) {
-            try {
-
-                Matcher matcher = BEARER_PATTERN.matcher(authorizationHeaderValue);
-
-                StringBuilder sb = new StringBuilder();
-                while (matcher.find()) {
-                    matcher.appendReplacement(sb, matcher.group(1) + matcher.group(2) + "..." + matcher.group(4));
-                }
-                matcher.appendTail(sb);
-
-                return sb.toString();
-            } catch (Exception e) {
-                return "Failed to mask the API key.";
-            }
-        }
-
-        private static String maskApiKeyHeaderValue(String apiKeyHeaderValue) {
+        private static String maskHeaderValue(String apiKeyHeaderValue) {
             try {
                 if (apiKeyHeaderValue.length() <= 4) {
                     return apiKeyHeaderValue;
