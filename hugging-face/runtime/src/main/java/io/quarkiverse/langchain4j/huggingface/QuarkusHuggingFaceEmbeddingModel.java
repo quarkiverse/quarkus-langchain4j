@@ -15,6 +15,7 @@ import dev.langchain4j.model.huggingface.client.EmbeddingRequest;
 import dev.langchain4j.model.huggingface.client.HuggingFaceClient;
 import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
 
 /**
  * This is a Quarkus specific version of the HuggingFace model.
@@ -81,7 +82,7 @@ public class QuarkusHuggingFaceEmbeddingModel implements EmbeddingModel {
         private String accessToken;
         private Duration timeout = Duration.ofSeconds(15);
         private Boolean waitForModel = true;
-        private URI url;
+        private URI url = URI.create(EmbeddingModelConfig.DEFAULT_INFERENCE_ENDPOINT_EMBEDDING);
 
         public Builder accessToken(String accessToken) {
             this.accessToken = accessToken;

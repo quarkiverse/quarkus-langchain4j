@@ -22,6 +22,7 @@ import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
 import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 
 /**
  * This is a Quarkus specific version of the HuggingFace model.
@@ -121,7 +122,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
         private Integer maxNewTokens;
         private Boolean returnFullText;
         private Boolean waitForModel = true;
-        private URI url;
+        private URI url = URI.create(ChatModelConfig.DEFAULT_INFERENCE_ENDPOINT);
         private Optional<Boolean> doSample;
 
         private OptionalInt topK;
