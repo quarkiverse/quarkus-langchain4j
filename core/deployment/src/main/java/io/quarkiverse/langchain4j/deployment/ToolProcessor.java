@@ -30,7 +30,6 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
-import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -69,8 +68,6 @@ import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 
 public class ToolProcessor {
-
-    private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);

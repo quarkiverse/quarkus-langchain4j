@@ -1,35 +1,45 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import dev.langchain4j.agent.tool.ToolExecutor;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import io.quarkus.runtime.annotations.RecordableConstructor;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class AiServiceMethodCreateInfo {
-
+public final class AiServiceMethodCreateInfo {
     private final String interfaceName;
     private final String methodName;
-
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
-
     private final boolean requiresModeration;
     private final Class<?> returnType;
-
     private final Optional<MetricsTimedInfo> metricsTimedInfo;
     private final Optional<MetricsCountedInfo> metricsCountedInfo;
     private final Optional<SpanInfo> spanInfo;
+    // support @Toolbox
+    private final List<String> toolClassNames;
+
+    // these are populated when the AiService method is first called which can happen on any thread
+    private transient final List<ToolSpecification> toolSpecifications = new CopyOnWriteArrayList<>();
+    private transient final Map<String, ToolExecutor> toolExecutors = new ConcurrentHashMap<>();
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName, String methodName,
-            Optional<TemplateInfo> systemMessageInfo, UserMessageInfo userMessageInfo,
+            Optional<TemplateInfo> systemMessageInfo,
+            UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
-            boolean requiresModeration, Class<?> returnType,
+            boolean requiresModeration,
+            Class<?> returnType,
             Optional<MetricsTimedInfo> metricsTimedInfo,
             Optional<MetricsCountedInfo> metricsCountedInfo,
-            Optional<SpanInfo> spanInfo) {
+            Optional<SpanInfo> spanInfo,
+            List<String> toolClassNames) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
@@ -40,6 +50,7 @@ public class AiServiceMethodCreateInfo {
         this.metricsTimedInfo = metricsTimedInfo;
         this.metricsCountedInfo = metricsCountedInfo;
         this.spanInfo = spanInfo;
+        this.toolClassNames = toolClassNames;
     }
 
     public String getInterfaceName() {
@@ -82,20 +93,22 @@ public class AiServiceMethodCreateInfo {
         return spanInfo;
     }
 
-    public static class UserMessageInfo {
-        private final Optional<TemplateInfo> template;
-        private final Optional<Integer> paramPosition;
-        private final Optional<Integer> userNameParamPosition;
-        private final String outputFormatInstructions;
+    public List<String> getToolClassNames() {
+        return toolClassNames;
+    }
 
-        @RecordableConstructor
-        public UserMessageInfo(Optional<TemplateInfo> template, Optional<Integer> paramPosition,
-                Optional<Integer> userNameParamPosition, String outputFormatInstructions) {
-            this.template = template;
-            this.paramPosition = paramPosition;
-            this.userNameParamPosition = userNameParamPosition;
-            this.outputFormatInstructions = outputFormatInstructions == null ? "" : outputFormatInstructions;
-        }
+    public List<ToolSpecification> getToolSpecifications() {
+        return toolSpecifications;
+    }
+
+    public Map<String, ToolExecutor> getToolExecutors() {
+        return toolExecutors;
+    }
+
+    public record UserMessageInfo(Optional<TemplateInfo> template,
+            Optional<Integer> paramPosition,
+            Optional<Integer> userNameParamPosition,
+            String outputFormatInstructions) {
 
         public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition,
                 String outputFormatInstructions) {
@@ -108,103 +121,30 @@ public class AiServiceMethodCreateInfo {
             return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition,
                     outputFormatInstructions);
         }
-
-        public Optional<TemplateInfo> getTemplate() {
-            return template;
-        }
-
-        public Optional<Integer> getParamPosition() {
-            return paramPosition;
-        }
-
-        public Optional<Integer> getUserNameParamPosition() {
-            return userNameParamPosition;
-        }
-
-        public String getOutputFormatInstructions() {
-            return outputFormatInstructions;
-        }
     }
 
-    public static class TemplateInfo {
-
-        private final Optional<String> text;
-        private final Map<String, Integer> nameToParamPosition;
-        // this is used to determine the position of the parameter that holds the template,
-        // and it is never set if 'text' is set
-        private final Optional<Integer> methodParamPosition;
-
-        @RecordableConstructor
-        public TemplateInfo(Optional<String> text, Map<String, Integer> nameToParamPosition,
-                Optional<Integer> methodParamPosition) {
-            this.text = text;
-            this.nameToParamPosition = nameToParamPosition;
-            this.methodParamPosition = methodParamPosition;
-        }
-
-        public Optional<String> getText() {
-            return text;
-        }
-
-        public Map<String, Integer> getNameToParamPosition() {
-            return nameToParamPosition;
-        }
-
-        public Optional<Integer> getMethodParamPosition() {
-            return methodParamPosition;
-        }
+    /**
+     * @param methodParamPosition this is used to determine the position of the parameter that holds the template, and
+     *        it is never set if 'text' is set
+     */
+    public record TemplateInfo(Optional<String> text, Map<String, Integer> nameToParamPosition,
+            Optional<Integer> methodParamPosition) {
 
         public static TemplateInfo fromText(String text, Map<String, Integer> nameToParamPosition) {
             return new TemplateInfo(Optional.of(text), nameToParamPosition, Optional.empty());
         }
 
-        public static TemplateInfo fromMethodParam(Integer methodParamPosition, Map<String, Integer> nameToParamPosition) {
+        public static TemplateInfo fromMethodParam(Integer methodParamPosition,
+                Map<String, Integer> nameToParamPosition) {
             return new TemplateInfo(Optional.empty(), nameToParamPosition, Optional.of(methodParamPosition));
         }
     }
 
-    public static class MetricsTimedInfo {
-        private final String name;
-        private final boolean longTask;
-        private final String[] extraTags;
-        private final double[] percentiles;
-        private final boolean histogram;
-        private final String description;
-
-        @RecordableConstructor
-        public MetricsTimedInfo(String name, boolean longTask, String[] extraTags, double[] percentiles, boolean histogram,
-                String description) {
-            this.name = name;
-            this.longTask = longTask;
-            this.extraTags = extraTags;
-            this.percentiles = percentiles;
-            this.histogram = histogram;
-            this.description = description;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isLongTask() {
-            return longTask;
-        }
-
-        public String[] getExtraTags() {
-            return extraTags;
-        }
-
-        public double[] getPercentiles() {
-            return percentiles;
-        }
-
-        public boolean isHistogram() {
-            return histogram;
-        }
-
-        public String getDescription() {
-            return description;
-        }
+    public record MetricsTimedInfo(String name,
+            boolean longTask,
+            String[] extraTags,
+            double[] percentiles,
+            boolean histogram, String description) {
 
         public static class Builder {
             private final String name;
@@ -250,36 +190,10 @@ public class AiServiceMethodCreateInfo {
         }
     }
 
-    public static class MetricsCountedInfo {
-        private final String name;
-        private final boolean recordFailuresOnly;
-        private final String[] extraTags;
-        private final String description;
-
-        @RecordableConstructor
-        public MetricsCountedInfo(String name, String[] extraTags,
-                boolean recordFailuresOnly, String description) {
-            this.name = name;
-            this.extraTags = extraTags;
-            this.recordFailuresOnly = recordFailuresOnly;
-            this.description = description;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String[] getExtraTags() {
-            return extraTags;
-        }
-
-        public boolean isRecordFailuresOnly() {
-            return recordFailuresOnly;
-        }
-
-        public String getDescription() {
-            return description;
-        }
+    public record MetricsCountedInfo(String name,
+            String[] extraTags,
+            boolean recordFailuresOnly,
+            String description) {
 
         public static class Builder {
             private final String name;
@@ -312,16 +226,6 @@ public class AiServiceMethodCreateInfo {
         }
     }
 
-    public static class SpanInfo {
-        private final String name;
-
-        @RecordableConstructor
-        public SpanInfo(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    public record SpanInfo(String name) {
     }
 }

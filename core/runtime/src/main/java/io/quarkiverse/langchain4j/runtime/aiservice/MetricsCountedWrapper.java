@@ -20,7 +20,7 @@ public class MetricsCountedWrapper implements AiServiceMethodImplementationSuppo
             AiServiceMethodCreateInfo.MetricsCountedInfo metricsCountedInfo = metricsInfoOpt.get();
             try {
                 Object result = fun.apply(input);
-                if (!metricsCountedInfo.isRecordFailuresOnly()) {
+                if (!metricsCountedInfo.recordFailuresOnly()) {
                     record(metricsCountedInfo, null);
                 }
                 return result;
@@ -34,11 +34,11 @@ public class MetricsCountedWrapper implements AiServiceMethodImplementationSuppo
     }
 
     private void record(AiServiceMethodCreateInfo.MetricsCountedInfo metricsCountedInfo, Throwable throwable) {
-        Counter.Builder builder = Counter.builder(metricsCountedInfo.getName())
-                .tags(metricsCountedInfo.getExtraTags())
+        Counter.Builder builder = Counter.builder(metricsCountedInfo.name())
+                .tags(metricsCountedInfo.extraTags())
                 .tag("exception", getExceptionTag(throwable))
                 .tag("result", throwable == null ? RESULT_TAG_SUCCESS_VALUE : RESULT_TAG_FAILURE_VALUE);
-        String description = metricsCountedInfo.getDescription();
+        String description = metricsCountedInfo.description();
         if (!description.isEmpty()) {
             builder.description(description);
         }

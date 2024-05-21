@@ -53,6 +53,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -581,6 +582,7 @@ public class AiServicesProcessor {
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<AiServicesMethodBuildItem> aiServicesMethodProducer,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             Capabilities capabilities) {
 
@@ -716,8 +718,13 @@ public class AiServicesProcessor {
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
-                        perMethodMetadata.put(methodId,
-                                gatherMethodMetadata(methodInfo, addMicrometerMetrics, addOpenTelemetrySpan));
+                        AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, addMicrometerMetrics,
+                                addOpenTelemetrySpan);
+                        if (!methodCreateInfo.getToolClassNames().isEmpty()) {
+                            unremovableBeanProducer.produce(UnremovableBeanBuildItem
+                                    .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
+                        }
+                        perMethodMetadata.put(methodId, methodCreateInfo);
                         {
                             MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
                                     QuarkusAiServiceContext.class);
@@ -877,10 +884,11 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
                 addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
+        List<String> methodToolClassNames = gatherMethodToolClassNames(method);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo);
+                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo, methodToolClassNames);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -1183,29 +1191,34 @@ public class AiServicesProcessor {
         return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(name));
     }
 
+    private List<String> gatherMethodToolClassNames(MethodInfo method) {
+        AnnotationInstance toolBoxInstance = method.declaredAnnotation(ToolBox.class);
+        if (toolBoxInstance == null) {
+            return Collections.emptyList();
+        }
+
+        AnnotationValue toolBoxValue = toolBoxInstance.value();
+        if (toolBoxValue == null) {
+            return Collections.emptyList();
+        }
+
+        Type[] toolClasses = toolBoxValue.asClassArray();
+        if (toolClasses.length == 0) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(toolClasses).map(t -> t.name().toString()).collect(Collectors.toList());
+    }
+
     private String defaultAiServiceSpanName(MethodInfo method) {
         return "langchain4j.aiservices." + method.declaringClass().name().withoutPackagePrefix() + "." + method.name();
     }
 
-    private static class TemplateParameterInfo {
-        private final int position;
-        private final String name;
-
-        public TemplateParameterInfo(int position, String name) {
-            this.position = position;
-            this.name = name;
-        }
-
-        public int getPosition() {
-            return position;
-        }
-
-        public String getName() {
-            return name;
-        }
+    private record TemplateParameterInfo(int position, String name) {
 
         static Map<String, Integer> toNameToArgsPositionMap(List<TemplateParameterInfo> list) {
-            return list.stream().collect(Collectors.toMap(TemplateParameterInfo::getName, TemplateParameterInfo::getPosition));
+            return list.stream()
+                    .collect(Collectors.toMap(TemplateParameterInfo::name, TemplateParameterInfo::position));
         }
     }
 

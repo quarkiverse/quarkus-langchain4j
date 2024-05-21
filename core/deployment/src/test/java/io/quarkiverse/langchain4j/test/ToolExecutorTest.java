@@ -285,13 +285,13 @@ class ToolExecutorTest {
 
         ToolExecutor toolExecutor = null;
         for (ToolMethodCreateInfo methodCreateInfo : methodCreateInfos) {
-            String invokerClassName = methodCreateInfo.getInvokerClassName();
-            ToolSpecification toolSpecification = methodCreateInfo.getToolSpecification();
+            String invokerClassName = methodCreateInfo.invokerClassName();
+            ToolSpecification toolSpecification = methodCreateInfo.toolSpecification();
             if (methodName.equals(
                     toolSpecification.name())) { // this only works because TestTool does not contain overloaded methods
                 toolExecutor = new QuarkusToolExecutor(
-                        new QuarkusToolExecutor.Context(testTool, invokerClassName, methodCreateInfo.getMethodName(),
-                                methodCreateInfo.getArgumentMapperClassName()));
+                        new QuarkusToolExecutor.Context(testTool, invokerClassName, methodCreateInfo.methodName(),
+                                methodCreateInfo.argumentMapperClassName()));
                 break;
             }
         }

@@ -79,8 +79,8 @@ public class LangChain4jDevUIProcessor {
         for (Map.Entry<String, List<ToolMethodCreateInfo>> toolClassEntry : metadata.entrySet()) {
             for (ToolMethodCreateInfo toolMethodCreateInfo : toolClassEntry.getValue()) {
                 infos.add(new ToolMethodInfo(toolClassEntry.getKey(),
-                        toolMethodCreateInfo.getToolSpecification().name(),
-                        toolMethodCreateInfo.getToolSpecification().description()));
+                        toolMethodCreateInfo.toolSpecification().name(),
+                        toolMethodCreateInfo.toolSpecification().description()));
             }
         }
         card.addBuildTimeData("tools", infos);

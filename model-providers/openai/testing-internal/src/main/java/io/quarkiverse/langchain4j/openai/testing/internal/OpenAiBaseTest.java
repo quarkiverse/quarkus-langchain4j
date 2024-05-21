@@ -51,6 +51,8 @@ public abstract class OpenAiBaseTest extends WiremockAware {
 
     private static final InstanceOfAssertFactory<Map, MapAssert<String, String>> MAP_STRING_STRING = map(String.class,
             String.class);
+    private static final InstanceOfAssertFactory<Map, MapAssert<String, Object>> MAP_STRING_OBJECT = map(String.class,
+            Object.class);
     private static final InstanceOfAssertFactory<List, ListAssert<Map>> LIST_MAP = list(Map.class);
 
     protected static void assertSingleRequestMessage(Map<String, Object> requestAsMap, String value) {
@@ -92,6 +94,20 @@ public abstract class OpenAiBaseTest extends WiremockAware {
     }
 
     public record MessageContent(String role, String content) {
+    }
+
+    protected static void assertSingleFunction(Map<String, Object> requestAsMap, String functionName) {
+        assertFunctions(requestAsMap, (listOfMessages -> {
+            assertThat(listOfMessages).singleElement(as(MAP_STRING_OBJECT)).satisfies(tool -> {
+                assertThat(tool).containsEntry("type", "function").containsKey("function");
+                assertThat(tool.get("function")).asInstanceOf(MAP_STRING_OBJECT).containsEntry("name", functionName);
+            });
+        }));
+    }
+
+    protected static void assertFunctions(Map<String, Object> requestAsMap, Consumer<List<? extends Map>> functionAssertions) {
+        assertThat(requestAsMap).hasEntrySatisfying("tools",
+                o -> assertThat(o).asInstanceOf(list(Map.class)).satisfies(functionAssertions));
     }
 
 }

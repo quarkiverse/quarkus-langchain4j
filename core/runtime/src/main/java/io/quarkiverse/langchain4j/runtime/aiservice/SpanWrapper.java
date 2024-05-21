@@ -27,7 +27,7 @@ public class SpanWrapper implements AiServiceMethodImplementationSupport.Wrapper
             return fun.apply(input);
         }
 
-        Span span = tracer.spanBuilder(spanInfoOpt.get().getName()).startSpan();
+        Span span = tracer.spanBuilder(spanInfoOpt.get().name()).startSpan();
         try (Scope scope = span.makeCurrent()) {
             return fun.apply(input);
         } catch (Throwable t) {
