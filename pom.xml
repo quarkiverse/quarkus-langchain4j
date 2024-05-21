@@ -12,6 +12,9 @@
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
+    <module>core</module>
+    <module>docs</module>
+
     <module>anthropic</module>
     <module>bam</module>
     
@@ -25,12 +28,14 @@
     <module>embedding-stores/redis</module>
 
     <module>memory-stores/memory-store-redis</module>
+
+    <module>rag/easy-rag</module>
+    <module>rag/parsers-base</module>
+
     <module>cohere</module>
-    <module>core</module>
-    <module>docs</module>
+
     <module>testing-internal</module>
-    <module>parsers-base</module>
-    <module>easy-rag</module>
+
     <module>hugging-face</module>
 
 
