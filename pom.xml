@@ -14,9 +14,6 @@
   <modules>
     <module>core</module>
     <module>docs</module>
-
-    <module>anthropic</module>
-    <module>bam</module>
     
     <module>embedding-stores/chroma</module>
     <module>embedding-stores/infinispan</module>
@@ -29,30 +26,27 @@
 
     <module>memory-stores/memory-store-redis</module>
 
+    <module>model-providers/anthropic</module>
+    <module>model-providers/bam</module>
+    <module>model-providers/cohere</module>
+    <module>model-providers/hugging-face</module>
+    <module>model-providers/mistral</module>
+    <module>model-providers/ollama</module>
+    <module>model-providers/openai/testing-internal</module>
+    <module>model-providers/openai/azure-openai</module>
+    <module>model-providers/openai/openai-common</module>
+    <module>model-providers/openai/openai-vanilla</module>
+    <module>model-providers/openshift-ai</module>
+    <module>model-providers/vertex-ai</module>
+    <module>model-providers/vertex-ai-gemini</module>
+    <module>model-providers/watsonx</module>
+
     <module>rag/easy-rag</module>
     <module>rag/parsers-base</module>
 
-    <module>cohere</module>
-
     <module>testing-internal</module>
 
-    <module>hugging-face</module>
-
-
-    <module>mistral</module>
-
-    <module>ollama</module>
-    <module>openai/testing-internal</module>
-    <module>openai/azure-openai</module>
-    <module>openai/openai-common</module>
-    <module>openai/openai-vanilla</module>
-    <module>openshift-ai</module>
-
-
-    <module>watsonx</module>
     <module>websockets-next</module>
-    <module>vertex-ai</module>
-    <module>vertex-ai-gemini</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>

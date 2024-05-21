@@ -7,13 +7,15 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-azure-openai-parent</artifactId>
-    <name>Quarkus LangChain4j - Azure OpenAI - Parent</name>
+    <artifactId>quarkus-langchain4j-ollama-parent</artifactId>
+    <name>Quarkus LangChain4j - Ollama - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
         <module>deployment</module>
         <module>runtime</module>
+        <module>devservices</module>
     </modules>
+
     
 </project>

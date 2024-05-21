@@ -7,13 +7,14 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-openai-common-parent</artifactId>
-    <name>Quarkus LangChain4j - OpenAI - Common - Parent</name>
+    <artifactId>quarkus-langchain4j-anthropic-parent</artifactId>
+    <name>Quarkus LangChain4j - Anthropic - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
         <module>deployment</module>
         <module>runtime</module>
     </modules>
-    
+
+
 </project>
