@@ -92,38 +92,44 @@ var ingestor = EmbeddingStoreIngestor.builder()
 ingestor.ingest(documents);
 ----
 
-== Implementing the Retriever
+== Implementing the Retrieval augmentor
 
-With the documents ingested, you can now implement the retriever:
+With the documents ingested, you can now implement the retrieval augmentor:
 
 [source, java]
 ----
 package io.quarkiverse.langchain4j.sample.chatbot;
 
-import java.util.List;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.retriever.EmbeddingStoreRetriever;
-import dev.langchain4j.retriever.Retriever;
-import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
+import dev.langchain4j.rag.DefaultRetrievalAugmentor;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
+import dev.langchain4j.store.embedding.EmbeddingStore;
 
 @ApplicationScoped
-public class RetrieverExample implements Retriever<TextSegment> {
+public class AugmentorExample implements Supplier<RetrievalAugmentor> {
 
-    private final EmbeddingStoreRetriever retriever;
+    private final EmbeddingStoreContentRetriever retriever;
 
-    RetrieverExample(RedisEmbeddingStore store, EmbeddingModel model) {
-        // Limit the number of documents to avoid exceeding the context size.
-        retriever = EmbeddingStoreRetriever.from(store, model, 10);
+    AugmentorExample(EmbeddingStore store, EmbeddingModel model) {
+        retriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingModel(model)
+                .embeddingStore(store)
+                .maxResults(10)
+                .build();
     }
 
     @Override
-    public List<TextSegment> findRelevant(String s) {
-        return retriever.findRelevant(s);
+    public RetrievalAugmentor get() {
+        return DefaultRetrievalAugmentor.builder()
+                .contentRetriever(retriever)
+                .build();
     }
 }
+
 ----
 
