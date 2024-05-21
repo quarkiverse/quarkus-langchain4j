@@ -8,6 +8,9 @@ public class EmbeddingResponse {
 
     private float[] embedding;
 
+    public EmbeddingResponse() {
+    }
+
     private EmbeddingResponse(Builder builder) {
         embedding = builder.embedding;
     }
