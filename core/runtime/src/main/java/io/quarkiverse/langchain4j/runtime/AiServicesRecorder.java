@@ -32,9 +32,6 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
-    private static final TypeLiteral<Instance<Retriever<TextSegment>>> RETRIEVER_INSTANCE_TYPE_LITERAL = new TypeLiteral<>() {
-
-    };
     private static final TypeLiteral<Instance<AuditService>> AUDIT_SERVICE_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
@@ -72,7 +69,7 @@ public class AiServicesRecorder {
     }
 
     public <T> Function<SyntheticCreationalContext<T>, T> createDeclarativeAiService(DeclarativeAiServiceCreateInfo info) {
-        return new Function<SyntheticCreationalContext<T>, T>() {
+        return new Function<>() {
             @SuppressWarnings("unchecked")
             @Override
             public T apply(SyntheticCreationalContext<T> creationalContext) {
