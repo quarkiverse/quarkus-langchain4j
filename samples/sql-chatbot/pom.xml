@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-sample-csv-chatbot</artifactId>
-    <name>Quarkus LangChain4j - Sample - Chatbot &amp; RAG loading a CSV file</name>
+    <artifactId>quarkus-langchain4j-sample-sql-chatbot</artifactId>
+    <name>Quarkus LangChain4j - Sample - Chatbot &amp; RAG from a SQL database</name>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
