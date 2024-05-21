@@ -13,6 +13,7 @@
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
     <module>core</module>
+    
     <module>docs</module>
     
     <module>embedding-stores/chroma</module>
@@ -41,12 +42,12 @@
     <module>model-providers/vertex-ai-gemini</module>
     <module>model-providers/watsonx</module>
 
+    <module>quarkus-integrations/websockets-next</module>
+
     <module>rag/easy-rag</module>
     <module>rag/parsers-base</module>
 
     <module>testing-internal</module>
-
-    <module>websockets-next</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
