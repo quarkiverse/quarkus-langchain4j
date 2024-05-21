@@ -14,8 +14,17 @@
   <modules>
     <module>anthropic</module>
     <module>bam</module>
+    
+    <module>embedding-stores/chroma</module>
+    <module>embedding-stores/infinispan</module>
+    <module>embedding-stores/milvus</module>
+    <module>embedding-stores/neo4j</module>
+    <module>embedding-stores/pgvector</module>
+    <module>embedding-stores/pinecone</module>
+    <module>embedding-stores/qdrant</module>
+    <module>embedding-stores/redis</module>
+
     <module>memory-stores/memory-store-redis</module>
-    <module>chroma</module>
     <module>cohere</module>
     <module>core</module>
     <module>docs</module>
@@ -23,20 +32,18 @@
     <module>parsers-base</module>
     <module>easy-rag</module>
     <module>hugging-face</module>
-    <module>infinispan</module>
-    <module>milvus</module>
+
+
     <module>mistral</module>
-    <module>neo4j</module>
+
     <module>ollama</module>
     <module>openai/testing-internal</module>
     <module>openai/azure-openai</module>
     <module>openai/openai-common</module>
     <module>openai/openai-vanilla</module>
     <module>openshift-ai</module>
-    <module>pgvector</module>
-    <module>pinecone</module>
-    <module>qdrant</module>
-    <module>redis</module>
+
+
     <module>watsonx</module>
     <module>websockets-next</module>
     <module>vertex-ai</module>
