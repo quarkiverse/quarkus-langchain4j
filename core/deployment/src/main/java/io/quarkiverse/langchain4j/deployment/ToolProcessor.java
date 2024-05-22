@@ -292,7 +292,7 @@ public class ToolProcessor {
 
             boolean toolReturnsVoid = methodInfo.returnType().kind() == Type.Kind.VOID;
             if (toolReturnsVoid) {
-                invokeMc.returnValue(invokeMc.load("Success"));
+                invokeMc.returnValue(invokeMc.load("\\\"Success\\\""));
             } else {
                 invokeMc.returnValue(result);
             }
