@@ -7,8 +7,10 @@ import jakarta.inject.Inject;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
+import io.netty.util.internal.StringUtil;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.openai.runtime.utils.ValidationUtil;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.vertx.core.json.JsonObject;
 
@@ -18,16 +20,12 @@ public class OpenAiImagesJsonRPCService {
     LangChain4jOpenAiConfig config;
 
     public JsonObject generate(String configuration, String modelName, String size, String prompt, String quality) {
-        if (NamedConfigUtil.isDefault(configuration) && config.defaultConfig().apiKey().equals("dummy")) {
-            // for non-default providers, we assume that Quarkus has verified by now that the api key is set
-            throw new RuntimeException("OpenAI API key is not configured. " +
-                    "Please specify the key in the `quarkus.langchain4j.openai.api-key` configuration property.");
-        }
+        ValidationUtil.isValidDefaultConfig(configuration, config);
         LangChain4jOpenAiConfig.OpenAiConfig clientConfig = NamedConfigUtil.isDefault(configuration) ? config.defaultConfig()
                 : config.namedConfig().get(configuration);
         ImageModel model = QuarkusOpenAiImageModel.builder()
                 .baseUrl(clientConfig.baseUrl())
-                .apiKey(clientConfig.apiKey())
+                .apiKey(clientConfig.apiKey().orElse(StringUtil.EMPTY_STRING))
                 .timeout(clientConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .user(clientConfig.imageModel().user())
                 .maxRetries(clientConfig.maxRetries())
