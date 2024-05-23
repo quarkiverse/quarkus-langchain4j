@@ -24,17 +24,24 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
-class LangChain4jPgvectorProcessor {
+class PgVectorEmbeddingStoreProcessor {
 
-    public static final DotName PGVECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
+    private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
 
     private static final String FEATURE = "langchain4j-pgvector";
 
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
+        producer.produce(new IndexDependencyBuildItem("com.pgvector", "pgvector"));
+        producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-pgvector"));
     }
 
     @BuildStep
@@ -45,18 +52,13 @@ class LangChain4jPgvectorProcessor {
             PgVectorEmbeddingStoreConfig config,
             PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
-        String datasourceName = buildTimeConfig.datasource().orElse(null);
-        AnnotationInstance datasourceQualifier;
-        if (datasourceName == null) {
-            datasourceQualifier = AnnotationInstance.builder(Default.class).build();
 
-        } else {
-            datasourceQualifier = AnnotationInstance.builder(DataSource.class)
-                    .add("value", datasourceName)
-                    .build();
-        }
+        AnnotationInstance datasourceQualifier = buildTimeConfig.datasource()
+                .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
+                .orElse(AnnotationInstance.builder(Default.class).build());
+
         beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PGVECTOR_EMBEDDING_STORE)
+                .configure(PG_VECTOR_EMBEDDING_STORE)
                 .types(ClassType.create(EmbeddingStore.class),
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
@@ -65,6 +67,7 @@ class LangChain4jPgvectorProcessor {
                 .createWith(recorder.embeddingStoreFunction(config, buildTimeConfig.datasource().orElse(null)))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)
                 .done());
+
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
 

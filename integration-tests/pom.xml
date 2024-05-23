@@ -29,5 +29,7 @@
     <module>embed-e5-small-v2-q</module>
     <module>embed-e5-small-v2</module>
     <module>rag</module>
+    <module>rag-pgvector</module>
+    <module>rag-pgvector-flyway</module>
   </modules>
 </project>

@@ -19,9 +19,14 @@
         <version>${project.version}</version>
     </dependency>
     <dependency>
-        <groupId>com.pgvector</groupId>
-        <artifactId>pgvector</artifactId>
-        <version>${pgvector-java.version}</version>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-pgvector</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
         <groupId>io.quarkus</groupId>
