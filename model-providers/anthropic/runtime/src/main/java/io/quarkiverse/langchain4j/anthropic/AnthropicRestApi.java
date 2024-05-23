@@ -30,9 +30,9 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import dev.langchain4j.model.anthropic.AnthropicCreateMessageRequest;
-import dev.langchain4j.model.anthropic.AnthropicCreateMessageResponse;
-import dev.langchain4j.model.anthropic.AnthropicStreamingData;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.smallrye.mutiny.Multi;
 
