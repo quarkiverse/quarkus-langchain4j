@@ -57,7 +57,7 @@
   </scm>
   <properties>
     <quarkus.version>3.8.2</quarkus.version>
-    <langchain4j.version>0.30.0</langchain4j.version>
+    <langchain4j.version>0.31.0</langchain4j.version>
     <langchain4j-embeddings.version>0.30.0</langchain4j-embeddings.version>
     <quarkus-antora.version>0.0.4</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
