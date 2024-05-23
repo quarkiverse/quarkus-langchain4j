@@ -1,14 +1,9 @@
 package io.quarkiverse.langchain4j.pgvector.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
-
-import javax.sql.DataSource;
 
 import jakarta.inject.Inject;
 
@@ -31,8 +26,6 @@ abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreWithFilteringIT
     private static final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
     @Inject
     protected EmbeddingStore<TextSegment> pgvectorEmbeddingStore;
-    @Inject
-    DataSource dataSource;
 
     @Override
     protected EmbeddingModel embeddingModel() {
@@ -41,11 +34,7 @@ abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreWithFilteringIT
 
     @Override
     protected void clearStore() {
-        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
-            statement.executeUpdate("TRUNCATE TABLE embeddings");
-        } catch (SQLException exception) {
-            Log.info("Table embeddings does not exists, no need to truncate it.");
-        }
+        pgvectorEmbeddingStore.removeAll();
     }
 
     @Override
