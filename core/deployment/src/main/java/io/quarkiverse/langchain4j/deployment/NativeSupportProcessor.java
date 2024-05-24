@@ -14,11 +14,12 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 
-public class OpenNlpProcessor {
+public class NativeSupportProcessor {
 
     @BuildStep
-    void nativeResources(
+    void openNlp(
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectionProducer,
             BuildProducer<NativeImageResourceBuildItem> nativeImageResourceProducer) {
@@ -32,6 +33,12 @@ public class OpenNlpProcessor {
         if (!names.isEmpty()) {
             nativeImageResourceProducer.produce(new NativeImageResourceBuildItem(names));
         }
+    }
+
+    // this will come into play when the upstream LangChain4j in-memory-embeddings dependencies are used
+    @BuildStep
+    void aiDlj(BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
+        runtimeInitializedClassProducer.produce(new RuntimeInitializedClassBuildItem("ai.djl.engine.Engine"));
     }
 
 }
