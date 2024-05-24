@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -17,6 +18,13 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 
 public class NativeSupportProcessor {
+
+    // this is needed because under some circumstances GraalVM seems to try and load it at build tiume
+    @BuildStep
+    void jackson(BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
+        runtimeInitializedClassProducer.produce(new RuntimeInitializedClassBuildItem(
+                QuarkusJsonCodecFactory.ObjectMapperHolder.class.getName()));
+    }
 
     @BuildStep
     void openNlp(
