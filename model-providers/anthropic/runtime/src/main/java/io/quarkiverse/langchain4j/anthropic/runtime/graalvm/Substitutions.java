@@ -3,7 +3,7 @@ package io.quarkiverse.langchain4j.anthropic.runtime.graalvm;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 
-import dev.langchain4j.model.anthropic.AnthropicClient;
+import dev.langchain4j.model.anthropic.internal.client.AnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 
 public class Substitutions {

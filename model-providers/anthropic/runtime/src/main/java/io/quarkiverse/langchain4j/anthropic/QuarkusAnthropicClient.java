@@ -2,7 +2,7 @@ package io.quarkiverse.langchain4j.anthropic;
 
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
-import static dev.langchain4j.model.anthropic.AnthropicMapper.toFinishReason;
+import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.toFinishReason;
 import static java.util.Collections.synchronizedList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
@@ -22,17 +22,17 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
-import dev.langchain4j.model.anthropic.AnthropicClient;
-import dev.langchain4j.model.anthropic.AnthropicClientBuilderFactory;
-import dev.langchain4j.model.anthropic.AnthropicCreateMessageRequest;
-import dev.langchain4j.model.anthropic.AnthropicCreateMessageResponse;
-import dev.langchain4j.model.anthropic.AnthropicHttpException;
-import dev.langchain4j.model.anthropic.AnthropicMessage;
-import dev.langchain4j.model.anthropic.AnthropicMessageContent;
-import dev.langchain4j.model.anthropic.AnthropicStreamingData;
-import dev.langchain4j.model.anthropic.AnthropicToolResultContent;
-import dev.langchain4j.model.anthropic.AnthropicToolUseContent;
-import dev.langchain4j.model.anthropic.AnthropicUsage;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicMessageContent;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicToolResultContent;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicToolUseContent;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
+import dev.langchain4j.model.anthropic.internal.client.AnthropicClient;
+import dev.langchain4j.model.anthropic.internal.client.AnthropicClientBuilderFactory;
+import dev.langchain4j.model.anthropic.internal.client.AnthropicHttpException;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -97,7 +97,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
         List<AnthropicMessage> messages = request.getMessages();
         for (AnthropicMessage message : messages) {
-            List<AnthropicMessageContent> contents = message.getContent();
+            List<AnthropicMessageContent> contents = message.content;
             for (AnthropicMessageContent content : contents) {
                 if ((content instanceof AnthropicToolUseContent) || (content instanceof AnthropicToolResultContent)) {
                     return true;
