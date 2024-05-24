@@ -5,77 +5,30 @@ import java.util.function.BiFunction;
 import jakarta.inject.Inject;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
 
-    private static final String INSTRUMENTATION_NAME = "io.quarkus.opentelemetry";
-
-    private final Instrumenter<ToolExecutionRequest, Void> instrumenter;
+    private final Tracer tracer;
 
     @Inject
-    public ToolSpanWrapper(OpenTelemetry openTelemetry) {
-        InstrumenterBuilder<ToolExecutionRequest, Void> builder = Instrumenter.builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                InputSpanNameExtractor.INSTANCE);
-
-        // TODO: there is probably more information here we need to set
-        this.instrumenter = builder
-                .buildInstrumenter(new SpanKindExtractor<>() {
-                    @Override
-                    public SpanKind extract(ToolExecutionRequest toolExecutionRequest) {
-                        return SpanKind.INTERNAL;
-                    }
-                });
+    public ToolSpanWrapper(Tracer tracer) {
+        this.tracer = tracer;
     }
 
     @Override
     public String wrap(ToolExecutionRequest toolExecutionRequest, Object memoryId,
             BiFunction<ToolExecutionRequest, Object, String> fun) {
-        Context parentContext = Context.current();
-        Context spanContext = null;
-        Scope scope = null;
-        boolean shouldStart = instrumenter.shouldStart(parentContext, toolExecutionRequest);
-        if (shouldStart) {
-            spanContext = instrumenter.start(parentContext, toolExecutionRequest);
-            scope = spanContext.makeCurrent();
-        }
-
-        try {
-            String result = fun.apply(toolExecutionRequest, memoryId);
-
-            if (shouldStart) {
-                instrumenter.end(spanContext, toolExecutionRequest, null, null);
-            }
-
-            return result;
+        Span span = tracer.spanBuilder("langchain4j.tools." + toolExecutionRequest.name()).startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            return fun.apply(toolExecutionRequest, memoryId);
         } catch (Throwable t) {
-            if (shouldStart) {
-                instrumenter.end(spanContext, toolExecutionRequest, null, t);
-            }
+            span.recordException(t);
             throw t;
         } finally {
-            if (scope != null) {
-                scope.close();
-            }
-        }
-    }
-
-    private static class InputSpanNameExtractor implements SpanNameExtractor<ToolExecutionRequest> {
-
-        private static final InputSpanNameExtractor INSTANCE = new InputSpanNameExtractor();
-
-        @Override
-        public String extract(ToolExecutionRequest toolExecutionRequest) {
-            return "langchain4j.tools." + toolExecutionRequest.name();
+            span.end();
         }
     }
 }
