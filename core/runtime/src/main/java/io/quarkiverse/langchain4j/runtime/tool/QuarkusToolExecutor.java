@@ -61,7 +61,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     private static String handleResult(ToolInvoker invokerInstance, Object invocationResult) {
         if (invokerInstance.methodMetadata().isReturnsVoid()) {
-            return "\\\"Success\\\"";
+            return "\"Success\"";
         }
         return Json.toJson(invocationResult);
     }
