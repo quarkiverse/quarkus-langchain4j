@@ -202,6 +202,7 @@
         <module>samples/chatbot</module>
         <module>samples/chatbot-easy-rag</module>
         <module>samples/sql-chatbot</module>
+        <module>samples/secure-vertex-ai-gemini-poem</module>
       </modules>
     </profile>
   </profiles>

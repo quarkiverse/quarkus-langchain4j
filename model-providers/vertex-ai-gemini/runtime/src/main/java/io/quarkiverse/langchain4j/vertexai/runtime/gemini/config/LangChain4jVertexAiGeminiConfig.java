@@ -60,7 +60,7 @@ public interface LangChain4jVertexAiGeminiConfig {
         Optional<String> baseUrl();
 
         /**
-         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Vertex AI
          * provider.
          * Set to {@code false} to disable all requests.
          */
@@ -86,4 +86,13 @@ public interface LangChain4jVertexAiGeminiConfig {
          */
         ChatModelConfig chatModel();
     }
+
+    /**
+     * Whether to use the current security identity's access token to access Vertex AI provider.
+     * If it is set to {@code true} but the security identity has no access token then default Google application credentials
+     * which must be setup in your environment will be used.
+     * Set to {@code false} to access Vertex AI provider only with the default Google application credentials.
+     */
+    @WithDefault("false")
+    Boolean useSecurityIdentityToken();
 }

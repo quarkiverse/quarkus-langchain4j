@@ -10,6 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -27,6 +29,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 
 import io.quarkus.arc.DefaultBean;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.quarkus.security.credential.TokenCredential;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -128,6 +131,9 @@ public interface VertxAiGeminiRestApi {
         private final ExecutorService executorService;
         private final AuthProvider authProvider;
 
+        @Inject
+        Instance<TokenCredential> tokenCredential;
+
         public TokenFilter(ExecutorService executorService, AuthProvider authProvider) {
             this.executorService = executorService;
             this.authProvider = authProvider;
@@ -136,11 +142,13 @@ public interface VertxAiGeminiRestApi {
         @Override
         public void filter(ResteasyReactiveClientRequestContext context) {
             context.suspend();
+            final String currentToken = tokenCredential.isResolvable() ? tokenCredential.get().getToken() : null;
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        context.getHeaders().add("Authorization", "Bearer " + authProvider.getBearerToken());
+                        context.getHeaders().add("Authorization", "Bearer " +
+                                (currentToken != null ? currentToken : authProvider.getBearerToken()));
                         context.resume();
                     } catch (Exception e) {
                         context.resume(e);
