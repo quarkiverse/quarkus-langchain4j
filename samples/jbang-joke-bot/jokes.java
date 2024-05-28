@@ -1,7 +1,7 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //DEPS io.quarkus.platform:quarkus-bom:3.9.4@pom
 //DEPS io.quarkus:quarkus-picocli
-//DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.14.0
+//DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.14.2
 //Q:CONFIG quarkus.banner.enabled=false
 //Q:CONFIG quarkus.log.level=WARN
 import dev.langchain4j.model.chat.ChatLanguageModel;
