@@ -126,6 +126,11 @@ class AzureOpenAiRecorderEndpointTests {
         public Map<String, AzureAiConfig> namedConfig() {
             throw new IllegalStateException("should not be called");
         }
+
+        @Override
+        public Boolean useSecurityIdentityToken() {
+            return Boolean.TRUE;
+        }
     }
 
     static class CustomAzureAiConfig implements LangChain4jAzureOpenAiConfig.AzureAiConfig {

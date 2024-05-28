@@ -45,7 +45,9 @@ public class AzureOpenAiRecorder {
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
 
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            if (!runtimeConfig.useSecurityIdentityToken()) {
+                throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            }
 
             var builder = AzureOpenAiChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -91,7 +93,9 @@ public class AzureOpenAiRecorder {
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
 
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            if (!runtimeConfig.useSecurityIdentityToken()) {
+                throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            }
 
             var builder = AzureOpenAiStreamingChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -134,8 +138,10 @@ public class AzureOpenAiRecorder {
             EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            if (apiKey == null && adToken == null) {
-                throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
+            if (!runtimeConfig.useSecurityIdentityToken()) {
+                if (apiKey == null && adToken == null) {
+                    throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
+                }
             }
             var builder = AzureOpenAiEmbeddingModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.EMBEDDING))
@@ -169,7 +175,9 @@ public class AzureOpenAiRecorder {
         if (azureAiConfig.enableIntegration()) {
             var apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            if (!runtimeConfig.useSecurityIdentityToken()) {
+                throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            }
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()

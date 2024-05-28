@@ -187,4 +187,13 @@ public interface LangChain4jAzureOpenAiConfig {
             IMAGE
         }
     }
+
+    /**
+     * Whether to use the current security identity's access token to access Azure OpenAI provider.
+     * If it is set to {@code true} but the security identity has no access token then either OpenAI key or pre-configured Azure
+     * token must be used.
+     * Set to {@code false} to access Azure OpenAI provider only with the OpenAI key or pre-configured Azure token.
+     */
+    @WithDefault("false")
+    Boolean useSecurityIdentityToken();
 }

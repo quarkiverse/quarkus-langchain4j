@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
@@ -38,6 +40,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.SseEventFilter;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,6 +60,7 @@ import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
+import io.quarkus.security.credential.TokenCredential;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Handler;
@@ -76,6 +81,7 @@ import io.vertx.core.http.HttpClientResponse;
 @RegisterProvider(OpenAiRestApi.OpenAiRestApiJacksonWriter.class)
 @RegisterProvider(OpenAiRestApi.OpenAiRestApiReaderInterceptor.class)
 @RegisterProvider(OpenAiRestApi.OpenAiRestApiWriterInterceptor.class)
+@RegisterProvider(OpenAiRestApi.TokenCredentialFilter.class)
 public interface OpenAiRestApi {
 
     /**
@@ -289,6 +295,19 @@ public interface OpenAiRestApi {
                 }
             }
             context.proceed();
+        }
+    }
+
+    class TokenCredentialFilter implements ResteasyReactiveClientRequestFilter {
+
+        @Inject
+        Instance<TokenCredential> tokenCredential;
+
+        @Override
+        public void filter(ResteasyReactiveClientRequestContext context) {
+            if (tokenCredential.isResolvable() && tokenCredential.get() != null) {
+                context.getHeaders().add("Authorization", "Bearer " + tokenCredential.get().getToken());
+            }
         }
     }
 
