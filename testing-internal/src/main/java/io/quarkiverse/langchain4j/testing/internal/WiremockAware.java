@@ -61,6 +61,13 @@ public abstract class WiremockAware {
         return wireMock;
     }
 
+    protected WireMock wiremock(Integer port) {
+        if (wireMock == null) {
+            wireMock = new WireMock(port);
+        }
+        return wireMock;
+    }
+
     protected Integer getResolvedWiremockPort() {
         return ConfigProvider.getConfig().getValue("quarkus.wiremock.devservices.port", Integer.class);
     }
@@ -74,7 +81,11 @@ public abstract class WiremockAware {
     }
 
     protected LoggedRequest singleLoggedRequest() {
-        assertThat(wiremock().getServeEvents()).hasSize(1);
+        return singleLoggedRequest(wiremock());
+    }
+
+    protected LoggedRequest singleLoggedRequest(WireMock wireMock) {
+        assertThat(wireMock.getServeEvents()).hasSize(1);
         ServeEvent serveEvent = wiremock().getServeEvents().get(0);
         return serveEvent.getRequest();
     }

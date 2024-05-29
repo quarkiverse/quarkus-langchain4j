@@ -87,6 +87,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
+import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
@@ -551,6 +552,22 @@ public class AiServicesProcessor {
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
+        }
+    }
+
+    @BuildStep
+    public void watchResourceFiles(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<HotDeploymentWatchedFileBuildItem> producer) {
+        IndexView index = indexBuildItem.getIndex();
+        List<AnnotationInstance> instances = new ArrayList<>();
+        instances.addAll(index.getAnnotations(LangChain4jDotNames.SYSTEM_MESSAGE));
+        instances.addAll(index.getAnnotations(LangChain4jDotNames.USER_MESSAGE));
+
+        for (AnnotationInstance instance : instances) {
+            AnnotationValue fromResource = instance.value("fromResource");
+            if (fromResource != null) {
+                producer.produce(new HotDeploymentWatchedFileBuildItem(fromResource.asString()));
+            }
         }
     }
 
