@@ -48,6 +48,9 @@ public class VertexAiGeminiRecorder {
             if (chatModelConfig.topP().isPresent()) {
                 builder.topP(chatModelConfig.topP().getAsDouble());
             }
+            if (chatModelConfig.timeout().isPresent()) {
+                builder.timeout(chatModelConfig.timeout().get());
+            }
 
             // TODO: add the rest of the properties
 
