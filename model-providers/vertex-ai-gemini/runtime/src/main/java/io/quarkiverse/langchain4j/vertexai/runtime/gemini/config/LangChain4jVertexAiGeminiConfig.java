@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -80,6 +81,12 @@ public interface LangChain4jVertexAiGeminiConfig {
         @ConfigDocDefault("false")
         @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
+
+        /**
+         * Timeout for requests to gemini APIs
+         */
+        @WithDefault("${quarkus.langchain4j.timeout}")
+        Optional<Duration> timeout();
 
         /**
          * Chat model related settings

@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini.config;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -91,4 +92,12 @@ public interface ChatModelConfig {
     @ConfigDocDefault("false")
     @WithDefault("${quarkus.langchain4j.vertexai.gemini.log-responses}")
     Optional<Boolean> logResponses();
+
+    /**
+     * Global timeout for requests to gemini APIs
+     */
+    @ConfigDocDefault("10s")
+    @WithDefault("${quarkus.langchain4j.vertexai.gemini.timeout}")
+    Optional<Duration> timeout();
+
 }
