@@ -88,11 +88,11 @@ public class ChatJsonRPCService {
                         throw new RuntimeException(e);
                     }
                     QuarkusToolExecutor.Context executorContext = new QuarkusToolExecutor.Context(objectWithTool,
-                            methodCreateInfo.getInvokerClassName(), methodCreateInfo.getMethodName(),
-                            methodCreateInfo.getArgumentMapperClassName());
-                    toolExecutors.put(methodCreateInfo.getToolSpecification().name(),
+                            methodCreateInfo.invokerClassName(), methodCreateInfo.methodName(),
+                            methodCreateInfo.argumentMapperClassName());
+                    toolExecutors.put(methodCreateInfo.toolSpecification().name(),
                             toolExecutorFactory.create(executorContext));
-                    toolSpecifications.add(methodCreateInfo.getToolSpecification());
+                    toolSpecifications.add(methodCreateInfo.toolSpecification());
                 }
             }
         } else {

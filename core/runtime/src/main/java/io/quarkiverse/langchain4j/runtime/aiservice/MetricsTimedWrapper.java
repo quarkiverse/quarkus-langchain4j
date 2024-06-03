@@ -16,27 +16,27 @@ public class MetricsTimedWrapper implements AiServiceMethodImplementationSupport
         Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsInfoOpt = input.createInfo.getMetricsTimedInfo();
         if (metricsInfoOpt.isPresent()) {
             AiServiceMethodCreateInfo.MetricsTimedInfo metricsTimedInfo = metricsInfoOpt.get();
-            if (metricsTimedInfo.isLongTask()) {
-                LongTaskTimer timer = LongTaskTimer.builder(metricsTimedInfo.getName())
-                        .description(metricsTimedInfo.getDescription())
-                        .publishPercentiles(metricsTimedInfo.getPercentiles())
-                        .publishPercentileHistogram(metricsTimedInfo.isHistogram())
-                        .tags(metricsTimedInfo.getExtraTags())
+            if (metricsTimedInfo.longTask()) {
+                LongTaskTimer timer = LongTaskTimer.builder(metricsTimedInfo.name())
+                        .description(metricsTimedInfo.description())
+                        .publishPercentiles(metricsTimedInfo.percentiles())
+                        .publishPercentileHistogram(metricsTimedInfo.histogram())
+                        .tags(metricsTimedInfo.extraTags())
                         .register(Metrics.globalRegistry);
-                return timer.record(new Supplier<Object>() {
+                return timer.record(new Supplier<>() {
                     @Override
                     public Object get() {
                         return fun.apply(input);
                     }
                 });
             } else {
-                Timer timer = Timer.builder(metricsTimedInfo.getName())
-                        .description(metricsTimedInfo.getDescription())
-                        .publishPercentiles(metricsTimedInfo.getPercentiles())
-                        .publishPercentileHistogram(metricsTimedInfo.isHistogram())
-                        .tags(metricsTimedInfo.getExtraTags())
+                Timer timer = Timer.builder(metricsTimedInfo.name())
+                        .description(metricsTimedInfo.description())
+                        .publishPercentiles(metricsTimedInfo.percentiles())
+                        .publishPercentileHistogram(metricsTimedInfo.histogram())
+                        .tags(metricsTimedInfo.extraTags())
                         .register(Metrics.globalRegistry);
-                return timer.record(new Supplier<Object>() {
+                return timer.record(new Supplier<>() {
                     @Override
                     public Object get() {
                         return fun.apply(input);

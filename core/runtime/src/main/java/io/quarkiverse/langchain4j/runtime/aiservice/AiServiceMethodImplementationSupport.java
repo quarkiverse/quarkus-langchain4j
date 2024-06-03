@@ -25,6 +25,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -110,16 +111,16 @@ public class AiServiceMethodImplementationSupport {
         }
     }
 
-    private static Object doImplement(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+    private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             QuarkusAiServiceContext context, Audit audit) {
-        Optional<SystemMessage> systemMessage = prepareSystemMessage(createInfo, methodArgs);
-        UserMessage userMessage = prepareUserMessage(context, createInfo, methodArgs);
+        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs);
+        UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
 
         if (audit != null) {
             audit.initialMessages(systemMessage, userMessage);
         }
 
-        Object memoryId = memoryId(createInfo, methodArgs, context.chatMemoryProvider != null);
+        Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
 
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
@@ -130,7 +131,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         // TODO give user ability to provide custom OutputParser
-        String outputFormatInstructions = createInfo.getUserMessageInfo().getOutputFormatInstructions();
+        String outputFormatInstructions = methodCreateInfo.getUserMessageInfo().outputFormatInstructions();
         userMessage = UserMessage.from(userMessage.text() + outputFormatInstructions);
 
         if (context.hasChatMemory()) {
@@ -150,7 +151,7 @@ public class AiServiceMethodImplementationSupport {
             messages.add(userMessage);
         }
 
-        Class<?> returnType = createInfo.getReturnType();
+        Class<?> returnType = methodCreateInfo.getReturnType();
         if (returnType.equals(TokenStream.class)) {
             return new AiServiceTokenStream(messages, context, memoryId);
         }
@@ -161,7 +162,7 @@ public class AiServiceMethodImplementationSupport {
                 public void accept(MultiEmitter<? super String> em) {
                     new AiServiceTokenStream(messages, context, memoryId)
                             .onNext(em::emit)
-                            .onComplete(new Consumer<Response<AiMessage>>() {
+                            .onComplete(new Consumer<>() {
                                 @Override
                                 public void accept(Response<AiMessage> message) {
                                     em.complete();
@@ -173,12 +174,21 @@ public class AiServiceMethodImplementationSupport {
             });
         }
 
-        Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, createInfo, messages);
+        Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messages);
 
         log.debug("Attempting to obtain AI response");
-        Response<AiMessage> response = context.toolSpecifications == null
+
+        List<ToolSpecification> toolSpecifications = context.toolSpecifications;
+        Map<String, ToolExecutor> toolExecutors = context.toolExecutors;
+        // override with method specific info
+        if (methodCreateInfo.getToolClassNames() != null && !methodCreateInfo.getToolClassNames().isEmpty()) {
+            toolSpecifications = methodCreateInfo.getToolSpecifications();
+            toolExecutors = methodCreateInfo.getToolExecutors();
+        }
+
+        Response<AiMessage> response = toolSpecifications == null
                 ? context.chatModel.generate(messages)
-                : context.chatModel.generate(messages, context.toolSpecifications);
+                : context.chatModel.generate(messages, toolSpecifications);
         log.debug("AI response obtained");
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
@@ -209,7 +219,7 @@ public class AiServiceMethodImplementationSupport {
 
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
-                ToolExecutor toolExecutor = context.toolExecutors.get(toolExecutionRequest.name());
+                ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
                 if (toolExecutor == null) {
                     throw runtime("Tool executor %s not found", toolExecutionRequest.name());
                 }
@@ -225,7 +235,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             log.debug("Attempting to obtain AI response");
-            response = context.chatModel.generate(chatMemory.messages(), context.toolSpecifications);
+            response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
             log.debug("AI response obtained");
 
             if (audit != null) {
@@ -269,11 +279,11 @@ public class AiServiceMethodImplementationSupport {
         }
         AiServiceMethodCreateInfo.TemplateInfo systemMessageInfo = createInfo.getSystemMessageInfo().get();
         Map<String, Object> templateParams = new HashMap<>();
-        Map<String, Integer> nameToParamPosition = systemMessageInfo.getNameToParamPosition();
+        Map<String, Integer> nameToParamPosition = systemMessageInfo.nameToParamPosition();
         for (var entry : nameToParamPosition.entrySet()) {
             templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
         }
-        Prompt prompt = PromptTemplate.from(systemMessageInfo.getText().get()).apply(templateParams);
+        Prompt prompt = PromptTemplate.from(systemMessageInfo.text().get()).apply(templateParams);
         return Optional.of(prompt.toSystemMessage());
     }
 
@@ -282,31 +292,31 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = createInfo.getUserMessageInfo();
 
         String userName = null;
-        if (userMessageInfo.getUserNameParamPosition().isPresent()) {
-            userName = methodArgs[userMessageInfo.getUserNameParamPosition().get()]
+        if (userMessageInfo.userNameParamPosition().isPresent()) {
+            userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a build time error
         }
 
-        if (userMessageInfo.getTemplate().isPresent()) {
-            AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.getTemplate().get();
+        if (userMessageInfo.template().isPresent()) {
+            AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.template().get();
             Map<String, Object> templateParams = new HashMap<>();
-            Map<String, Integer> nameToParamPosition = templateInfo.getNameToParamPosition();
+            Map<String, Integer> nameToParamPosition = templateInfo.nameToParamPosition();
             for (var entry : nameToParamPosition.entrySet()) {
                 Object value = transformTemplateParamValue(methodArgs[entry.getValue()]);
                 templateParams.put(entry.getKey(), value);
             }
             String templateText;
-            if (templateInfo.getText().isPresent()) {
-                templateText = templateInfo.getText().get();
+            if (templateInfo.text().isPresent()) {
+                templateText = templateInfo.text().get();
             } else {
-                templateText = (String) methodArgs[templateInfo.getMethodParamPosition().get()];
+                templateText = (String) methodArgs[templateInfo.methodParamPosition().get()];
             }
             // we do not need to apply the instructions as they have already been added to the template text at build time
             Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
 
             return createUserMessage(userName, prompt.text());
-        } else if (userMessageInfo.getParamPosition().isPresent()) {
-            Integer paramIndex = userMessageInfo.getParamPosition().get();
+        } else if (userMessageInfo.paramPosition().isPresent()) {
+            Integer paramIndex = userMessageInfo.paramPosition().get();
             Object argValue = methodArgs[paramIndex];
             if (argValue == null) {
                 throw new IllegalArgumentException(

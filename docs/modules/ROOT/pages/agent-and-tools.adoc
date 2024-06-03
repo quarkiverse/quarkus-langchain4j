@@ -83,6 +83,13 @@ public interface MyAiService {
 
 When employing tools, configuring the memory provider is necessary. Since tools necessitate a sequence of messages, maintaining this conversation is essential. A minimum memory of three messages is necessary for optimal tool functionality.
 
+[TIP]
+====
+If a method of an AI Service needs to use tools other than the ones configured of the `tools` property of `@RegisterForReflection`, then that method can be annotated with `@Toolbox`.
+
+In this case  `@Toolbox` completely overrides `@RegisterForReflection(tools=...)`
+====
+
 == How do tools work?
 
 The question of how tools work naturally arises given the fact that no code needs to be written that wires up their usage.
