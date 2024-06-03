@@ -58,9 +58,10 @@ jobs:
 
       - name: Update dependency versions for the samples
         run: |
-          for pom in `find samples/ -name pom.xml`; 
-            ../../mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f $(dirname "$pom"); 
-          done
+          while IFS= read -r -d '' pom
+          do
+          ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f "$(dirname "$pom")";
+          done  <   <(find samples/ -name pom.xml -print0)          
           git commit -a -m "Update dependencies in samples"
 
       - name: Push changes to ${{github.base_ref}} branch
