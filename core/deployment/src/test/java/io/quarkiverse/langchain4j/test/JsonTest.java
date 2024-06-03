@@ -87,7 +87,7 @@ public class JsonTest {
                  - option 1
                  - option 2
                 """;
-        Response expectedResponse  = new Response(text);
+        Response expectedResponse = new Response(text);
 
         String json = "{  " +
                 "\"answer\" : \"" + text + "\"" +
@@ -97,12 +97,11 @@ public class JsonTest {
         assertThat(actualResponse.getAnswer()).isEqualTo(expectedResponse.getAnswer());
     }
 
-
     private static class Response {
         private final String answer;
 
         @JsonCreator
-        public Response (String answer) {
+        public Response(String answer) {
             this.answer = answer;
         }
 
