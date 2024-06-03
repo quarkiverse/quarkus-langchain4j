@@ -58,7 +58,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
             Integer maxRetries,
             Proxy proxy,
             Boolean logRequests,
-            Boolean logResponses) {
+            Boolean logResponses,
+            String configName) {
 
         timeout = getOrDefault(timeout, ofSeconds(60));
         if (maxRetries < 1) {
@@ -78,6 +79,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
+                .configName(configName)
                 .build();
         this.maxRetries = getOrDefault(maxRetries, 3);
         this.tokenizer = tokenizer;
@@ -149,6 +151,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         private Boolean logRequests;
         private Boolean logResponses;
         private String adToken;
+        private String configName;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -219,6 +222,11 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
             return this;
         }
 
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
+
         public AzureOpenAiEmbeddingModel build() {
             return new AzureOpenAiEmbeddingModel(endpoint,
                     apiVersion,
@@ -229,7 +237,8 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
                     maxRetries,
                     proxy,
                     logRequests,
-                    logResponses);
+                    logResponses,
+                    configName);
         }
     }
 }

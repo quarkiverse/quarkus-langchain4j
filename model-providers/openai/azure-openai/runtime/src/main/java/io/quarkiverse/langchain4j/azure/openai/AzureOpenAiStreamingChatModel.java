@@ -74,7 +74,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             Proxy proxy,
             String responseFormat,
             Boolean logRequests,
-            Boolean logResponses) {
+            Boolean logResponses,
+            String configName) {
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
@@ -91,6 +92,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
+                .configName(configName)
                 .build();
         this.temperature = getOrDefault(temperature, 0.7);
         this.topP = topP;
@@ -203,6 +205,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
+        private String configName;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -298,6 +301,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             return this;
         }
 
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
+
         public AzureOpenAiStreamingChatModel build() {
             return new AzureOpenAiStreamingChatModel(endpoint,
                     apiVersion,
@@ -313,7 +321,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                     proxy,
                     responseFormat,
                     logRequests,
-                    logResponses);
+                    logResponses,
+                    configName);
         }
     }
 }

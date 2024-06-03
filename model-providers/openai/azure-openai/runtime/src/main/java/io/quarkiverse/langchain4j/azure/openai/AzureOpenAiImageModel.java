@@ -47,7 +47,7 @@ public class AzureOpenAiImageModel implements ImageModel {
             String size,
             String quality, String style, Optional<String> user, String responseFormat, Duration timeout,
             Integer maxRetries, Boolean logRequests, Boolean logResponses,
-            Optional<Path> persistDirectory) {
+            Optional<Path> persistDirectory, String configName) {
         this.modelName = modelName;
         this.size = size;
         this.quality = quality;
@@ -69,6 +69,7 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
+                .configName(configName)
                 .build();
     }
 
@@ -159,6 +160,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         private Boolean logRequests;
         private Boolean logResponses;
         private Optional<Path> persistDirectory;
+        private String configName;
 
         public Builder endpoint(String endpoint) {
             this.endpoint = endpoint;
@@ -235,10 +237,15 @@ public class AzureOpenAiImageModel implements ImageModel {
             return this;
         }
 
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
+
         public AzureOpenAiImageModel build() {
             return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, style, user,
                     responseFormat, timeout, maxRetries, logRequests, logResponses,
-                    persistDirectory);
+                    persistDirectory, configName);
         }
     }
 
