@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -71,7 +72,8 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             MAPPER = Arc.container().instance(ObjectMapper.class).get()
                     .copy()
                     .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
-                    .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+                    .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
         }
     }
@@ -81,7 +83,8 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 .copy()
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .enable(SerializationFeature.INDENT_OUTPUT);
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
     }
 
 }
