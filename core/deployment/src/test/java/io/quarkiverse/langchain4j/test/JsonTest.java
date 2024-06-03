@@ -80,6 +80,37 @@ public class JsonTest {
         }
     }
 
+    @Test
+    void illegalUnquotedChar() {
+        String text = """
+                Here is the options:
+                 - option 1
+                 - option 2
+                """;
+        Response expectedResponse  = new Response(text);
+
+        String json = "{  " +
+                "\"answer\" : \"" + text + "\"" +
+                "}";
+        Response actualResponse = Json.fromJson(json, Response.class);
+
+        assertThat(actualResponse.getAnswer()).isEqualTo(expectedResponse.getAnswer());
+    }
+
+
+    private static class Response {
+        private final String answer;
+
+        @JsonCreator
+        public Response (String answer) {
+            this.answer = answer;
+        }
+
+        public String getAnswer() {
+            return this.answer;
+        }
+    }
+
     private static class TestObject {
         private final String name;
         private final LocalDate date;
