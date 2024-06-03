@@ -95,6 +95,8 @@ public class LangChain4jDevUIProcessor {
                 .map(s -> s.getServiceClassInfo())
                 .flatMap(c -> c.annotations().stream()) //This includes method annotations
                 .filter(a -> a.name().equals(LangChain4jDotNames.SYSTEM_MESSAGE))
+                // TODO: remove and support 'fromResource'
+                .filter(a -> a.value() != null)
                 .map(a -> String.join("", a.value().asStringArray()))
                 .toList();
 
