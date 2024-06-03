@@ -69,7 +69,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             Proxy proxy,
             String responseFormat,
             Boolean logRequests,
-            Boolean logResponses) {
+            Boolean logResponses,
+            String configName) {
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
@@ -86,6 +87,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .userAgent(Consts.DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
+                .configName(configName)
                 .build();
 
         this.temperature = getOrDefault(temperature, 0.7);
@@ -172,6 +174,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
+        private String configName;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -193,6 +196,11 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
          */
         public Builder apiVersion(String apiVersion) {
             this.apiVersion = apiVersion;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 
@@ -288,7 +296,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                     proxy,
                     responseFormat,
                     logRequests,
-                    logResponses);
+                    logResponses,
+                    configName);
         }
     }
 }

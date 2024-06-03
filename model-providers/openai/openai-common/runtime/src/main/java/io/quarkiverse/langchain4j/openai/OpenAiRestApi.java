@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Predicate;
@@ -38,6 +39,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.SseEventFilter;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMessageBodyReader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -176,6 +179,38 @@ public interface OpenAiRestApi {
         @Override
         public boolean test(SseEvent<String> event) {
             return !"[DONE]".equals(event.data());
+        }
+    }
+
+    interface AuthProvider {
+        String getAuthorization(Input input);
+
+        interface Input {
+            String method();
+
+            URI uri();
+
+            MultivaluedMap<String, Object> headers();
+        }
+    }
+
+    class OpenAIRestAPIFilter implements ResteasyReactiveClientRequestFilter {
+        AuthProvider authorizer;
+
+        public OpenAIRestAPIFilter(AuthProvider authorizer) {
+            this.authorizer = authorizer;
+        }
+
+        @Override
+        public void filter(ResteasyReactiveClientRequestContext requestContext) {
+            requestContext.getHeaders().putSingle("Authorization", authorizer.getAuthorization(
+                    new AuthInputImpl(requestContext.getMethod(), requestContext.getUri(), requestContext.getHeaders())));
+        }
+
+        private record AuthInputImpl(
+                String method,
+                URI uri,
+                MultivaluedMap<String, Object> headers) implements AuthProvider.Input {
         }
     }
 
