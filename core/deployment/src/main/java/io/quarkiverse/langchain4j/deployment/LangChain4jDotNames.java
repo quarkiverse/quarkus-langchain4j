@@ -20,6 +20,8 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.service.V;
+import dev.langchain4j.web.search.WebSearchEngine;
+import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -83,4 +85,7 @@ public class LangChain4jDotNames {
 
     static final DotName MULTI = DotName.createSimple(Multi.class);
     static final DotName STRING = DotName.createSimple(String.class);
+
+    static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
+    static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
 }

@@ -30,6 +30,7 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.Type;
+import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -77,6 +78,7 @@ public class ToolProcessor {
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
+    private static final Logger log = Logger.getLogger(ToolProcessor.class);
 
     @BuildStep
     public void telemetry(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
@@ -171,6 +173,10 @@ public class ToolProcessor {
 
                 for (MethodInfo toolMethod : toolMethods) {
                     AnnotationInstance instance = toolMethod.annotation(TOOL);
+                    boolean ignoreToolMethod = ignoreToolMethod(toolMethod, index);
+                    if (ignoreToolMethod) {
+                        continue;
+                    }
 
                     AnnotationValue nameValue = instance.value("name");
                     AnnotationValue descriptionValue = instance.value();
@@ -230,6 +236,21 @@ public class ToolProcessor {
 
         toolsMetadataProducer.produce(new ToolsMetadataBuildItem(metadata));
         recorder.setMetadata(metadata);
+    }
+
+    private boolean ignoreToolMethod(MethodInfo toolMethod, IndexView indexView) {
+        ClassInfo declaringClass = toolMethod.declaringClass();
+        if (LangChain4jDotNames.WEB_SEARCH_TOOL.equals(declaringClass.name())) {
+            // WebSearchTool is included in LangChain4j and is annotated with @Tool
+            // However, we can't add this automatically since there is no bean that implements it
+            // As a heuristic, we simply ignore it if there is no implementation of WebSearchEngine available
+            if (indexView.getAllKnownImplementors(LangChain4jDotNames.WEB_SEARCH_ENGINE).isEmpty()) {
+                log.debug("Ignoring tool " + LangChain4jDotNames.WEB_SEARCH_TOOL + "#" + toolMethod.name()
+                        + " as there is no implementation of " + LangChain4jDotNames.WEB_SEARCH_ENGINE + " on the classpath");
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String createUniqueSignature(MethodInfo toolMethod) {
