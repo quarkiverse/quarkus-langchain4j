@@ -20,6 +20,7 @@
     <module>azure-openai</module>
     <module>multiple-providers</module>
     <module>mistralai</module>
+    <module>cache</module>
     <module>devui</module>
     <module>devui-multiple-embedding-models</module>
     <module>embed-all-minilm-l6-v2-q</module>
