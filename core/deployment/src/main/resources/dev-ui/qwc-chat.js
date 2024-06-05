@@ -98,10 +98,22 @@ export class QwcChat extends LitElement {
                                       this._ragEnabled = event.target.checked;
                                       this.render();
                                   }}"/></div>
+            <vaadin-select
+                    label="Select a sample system message"
+                    @change="${(event) => {
+                        this._systemMessage = event.target.value.systemMessage;
+                        this.shadowRoot.querySelector('.userMessageInput').value = event.target.value.userMessage;
+                        this._enableSystemMessageInputField();
+                        this._cementSystemMessage();
+                        this.render();
+                    }}"
+                    .items="${this._sampleSystemMessages}"
+                    .value="${this._sampleSystemMessages[0].value}"
+            ></vaadin-select>
             ${this._renderSystemPane()}
             <vaadin-message-list .items="${this._chatItems}"></vaadin-message-list>
             <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
-            <vaadin-message-input @submit="${this._handleSendChat}"></vaadin-message-input>
+            <vaadin-message-input class="userMessageInput" @submit="${this._handleSendChat}"></vaadin-message-input>
         `;
     }
 
@@ -312,6 +324,98 @@ status = ${item.toolExecutionResult.text}`);
     _disableSystemMessageInputField(){
         this._systemMessageInputFieldDisabled = "disabled";
     }
+
+    _sampleSystemMessages = [
+        {
+            label: "",
+            value: {
+                systemMessage: "",
+                userMessage: ""
+            }
+        },
+        {
+            label: "Summarize git diff",
+            value: {
+                systemMessage: "# IDENTITY and PURPOSE\n" +
+                    "\n" +
+                    "You are an expert project manager and developer, and you specialize in creating super clean updates for what changed in a Git diff.\n" +
+                    "\n" +
+                    "# STEPS\n" +
+                    "\n" +
+                    "- Read the input and figure out what the major changes and upgrades were that happened.\n" +
+                    "\n" +
+                    "- Create a section called CHANGES with a set of 7-10 word bullets that describe the feature changes and updates.\n" +
+                    "\n" +
+                    "- If there are a lot of changes include more bullets. If there are only a few changes, be more terse.\n" +
+                    "\n" +
+                    "# OUTPUT INSTRUCTIONS\n" +
+                    "\n" +
+                    "- Output a maximum 100 character intro sentence that says something like, \"chore: refactored the `foobar` method to support new 'update' arg\"\n" +
+                    "\n" +
+                    "- Use conventional commits - i.e. prefix the commit title with \"chore:\" (if it's a minor change like refactoring or linting), \"feat:\" (if it's a new feature), \"fix:\" if its a bug fix\n" +
+                    "\n" +
+                    "- You only output human readable Markdown, except for the links, which should be in HTML format.\n",
+                userMessage: "diff --git a/samples/jbang-joke-bot/README.md b/samples/jbang-joke-bot/README.md\n" +
+                    "new file mode 100644\n" +
+                    "index 00000000..45435977\n" +
+                    "--- /dev/null\n" +
+                    "+++ b/samples/jbang-joke-bot/README.md\n" +
+                    "@@ -0,0 +1,30 @@\n" +
+                    "+# JBang sample aka getting an AI-powered bot in 13 lines of Java\n" +
+                    "+\n" +
+                    "+To run the sample, you need JBang installed. If you don't have it, choose\n" +
+                    "+one of the installation options from the [JBang\n" +
+                    "+website](https://www.jbang.dev/download/).\n" +
+                    "+\n" +
+                    "+You also have to set your OpenAI API key:\n" +
+                    "+\n" +
+                    "+```\n" +
+                    "+export QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>\n" +
+                    "+```\n" +
+                    "+\n" +
+                    "+Then, run the example with:\n" +
+                    "+\n" +
+                    "+```\n" +
+                    "+jbang jokes.java\n" +
+                    "+```\n" +
+                    "+\n" +
+                    "+To have it tell you a joke, call `http://localhost:8080/joke` with a GET\n" +
+                    "+request.\n" +
+                    "+\n" +
+                    "+Explanation: The code contains a single method which injects a\n" +
+                    "+`io.vertx.ext.web.Router`, which is a class from the `quarkus-vertx-http`\n" +
+                    "+extension responsible for routing requests to appropriate handlers. The\n" +
+                    "+method is called during application boot thanks to the `@Observes`\n" +
+                    "+annotation, and it uses the injected `Router` to define a single route on\n" +
+                    "+the `/joke` path. The route's handler (the lambda expression that accepts a `rc` -\n" +
+                    "+`RoutingContext` parameter) invokes the model and sets the HTTP response.\n" +
+                    "+See [Quarkus documentation](https://quarkus.io/guides/reactive-routes#using-the-vert-x-web-router)\n" +
+                    "+for more information.\n" +
+                    "\\ No newline at end of file\n" +
+                    "diff --git a/samples/jbang-joke-bot/jokes.java b/samples/jbang-joke-bot/jokes.java\n" +
+                    "new file mode 100755\n" +
+                    "index 00000000..51b02913\n" +
+                    "--- /dev/null\n" +
+                    "+++ b/samples/jbang-joke-bot/jokes.java\n" +
+                    "@@ -0,0 +1,13 @@\n" +
+                    "+//DEPS io.quarkus.platform:quarkus-bom:3.9.4@pom\n" +
+                    "+//DEPS io.quarkus:quarkus-vertx-http:3.9.4\n" +
+                    "+//DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.12.0\n" +
+                    "+\n" +
+                    "+import dev.langchain4j.model.chat.ChatLanguageModel;\n" +
+                    "+import io.vertx.ext.web.Router;\n" +
+                    "+import jakarta.enterprise.event.Observes;\n" +
+                    "+\n" +
+                    "+public class jokes {\n" +
+                    "+    void route(@Observes Router router, ChatLanguageModel ai) {\n" +
+                    "+        router.get(\"/joke\").blockingHandler(rc -> rc.end(ai.generate(\"tell me a joke\")));\n" +
+                    "+    }\n" +
+                    "+}\n" +
+                    "\\ No newline at end of file"
+            }
+        },
+        // TODO: add more sample system+user messages
+    ]
 
 }
 
