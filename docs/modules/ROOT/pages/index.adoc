@@ -90,6 +90,7 @@ The extension offers the following advantages over using the vanilla https://git
 *** Enables GraalVM native image compilation
 * Dev Services
 ** Quarkus starts embedding stores and chat memory stores for dev and test mode automatically
+** Quarkus integrates with Ollama in order to automatically pull and preload the models that users have configured
 * Dev UI features
 ** View table with information about AI services and tools
 ** Add embeddings into the embedding store
