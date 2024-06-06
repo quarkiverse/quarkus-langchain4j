@@ -451,6 +451,13 @@ public class AiServicesProcessor {
             String aiCacheEmbeddingModelName = aiCacheBuildItem.getEmbeddingModelName();
             boolean enableCache = aiCacheBuildItem.isEnable();
 
+            // It is not possible to use the cache in combination with the tools.
+            if (!toolClassNames.isEmpty() && enableCache
+                    && declarativeAiServiceClassInfo.hasAnnotation(LangChain4jDotNames.CACHE_RESULT)) {
+                throw new RuntimeException("The cache cannot be used in combination with the tools. Affected class: %s"
+                        .formatted(serviceClassName));
+            }
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .forceApplicationClass()

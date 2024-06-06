@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -64,7 +63,6 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
-    private static final Map<UserMessage, Embedding> CACHE = new ConcurrentHashMap<>();
 
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
