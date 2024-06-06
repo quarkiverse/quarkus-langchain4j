@@ -4,10 +4,10 @@ import java.time.Duration;
 import java.util.function.Function;
 
 import io.quarkiverse.langchain4j.runtime.cache.AiCache;
-import io.quarkiverse.langchain4j.runtime.cache.AiCacheConfig;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
 import io.quarkiverse.langchain4j.runtime.cache.MessageWindowAiCache;
+import io.quarkiverse.langchain4j.runtime.cache.config.AiCacheConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 

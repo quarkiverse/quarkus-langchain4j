@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime.cache;
+package io.quarkiverse.langchain4j.runtime.cache.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 

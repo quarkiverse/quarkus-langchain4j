@@ -207,7 +207,6 @@ public class AiServicesProcessor {
 
             String chatModelName = NamedConfigUtil.DEFAULT_NAME;
             String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
-            String embeddingModelName = getModelName(instance.value("modelName"));
 
             if (chatLanguageModelSupplierClassDotName == null) {
                 AnnotationValue modelNameValue = instance.value("modelName");
@@ -333,8 +332,7 @@ public class AiServicesProcessor {
                             moderationModelSupplierClassName,
                             cdiScope,
                             chatModelName,
-                            moderationModelName,
-                            embeddingModelName));
+                            moderationModelName));
         }
 
         for (String chatModelName : chatModelNames) {
@@ -446,7 +444,7 @@ public class AiServicesProcessor {
 
             String chatModelName = bi.getChatModelName();
             String moderationModelName = bi.getModerationModelName();
-            String embeddingModelName = bi.getEmbeddingModelName();
+            String aiCacheEmbeddingModelName = aiCacheBuildItem.getEmbeddingModelName();
             boolean enableCache = aiCacheBuildItem.isEnable();
 
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
@@ -459,7 +457,7 @@ public class AiServicesProcessor {
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
                                     moderationModelName,
-                                    embeddingModelName,
+                                    aiCacheEmbeddingModelName,
                                     needsStreamingChatModel,
                                     needsModerationModel,
                                     enableCache)))
@@ -549,11 +547,19 @@ public class AiServicesProcessor {
             }
 
             if (enableCache) {
+
                 if (LangChain4jDotNames.BEAN_AI_CACHE_PROVIDER_SUPPLIER.toString().equals(aiCacheProviderSupplierClassName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
                 }
-                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
-                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL));
+
+                if (NamedConfigUtil.isDefault(aiCacheEmbeddingModelName)) {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL));
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL),
+                            AnnotationInstance.builder(ModelName.class).add("value", aiCacheEmbeddingModelName).build());
+                }
                 needsAiCacheProvider = true;
             }
 

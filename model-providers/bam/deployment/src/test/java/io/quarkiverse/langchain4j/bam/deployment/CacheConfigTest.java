@@ -1,13 +1,19 @@
 package io.quarkiverse.langchain4j.bam.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -20,8 +26,6 @@ import io.quarkiverse.langchain4j.CacheResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
 import io.quarkus.test.QuarkusUnitTest;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 public class CacheConfigTest {
 
