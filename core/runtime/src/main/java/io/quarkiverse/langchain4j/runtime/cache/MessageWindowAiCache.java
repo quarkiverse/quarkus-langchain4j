@@ -8,8 +8,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.CosineSimilarity;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore.CacheRecord;
 
@@ -23,6 +25,9 @@ public class MessageWindowAiCache implements AiCache {
     private final AiCacheStore store;
     private final Double threshold;
     private final Duration ttl;
+    private final String queryPrefix;
+    private final String passagePrefix;
+    private final EmbeddingModel embeddingModel;
     private final ReentrantLock lock;
 
     public MessageWindowAiCache(Builder builder) {
@@ -31,6 +36,9 @@ public class MessageWindowAiCache implements AiCache {
         this.store = builder.store;
         this.ttl = builder.ttl;
         this.threshold = builder.threshold;
+        this.queryPrefix = builder.queryPrefix;
+        this.passagePrefix = builder.passagePrefix;
+        this.embeddingModel = builder.embeddingModel;
         this.lock = new ReentrantLock();
     }
 
@@ -40,11 +48,17 @@ public class MessageWindowAiCache implements AiCache {
     }
 
     @Override
-    public void add(Embedding query, AiMessage response) {
+    public void add(SystemMessage systemMessage, UserMessage userMessage, AiMessage aiResponse) {
 
-        if (Objects.isNull(query) || Objects.isNull(response)) {
+        if (Objects.isNull(userMessage) || Objects.isNull(aiResponse)) {
             return;
         }
+
+        String query;
+        if (Objects.isNull(systemMessage) || Objects.isNull(systemMessage.text()) || systemMessage.text().isBlank())
+            query = userMessage.text();
+        else
+            query = "%s%s%s".formatted(passagePrefix, systemMessage.text(), userMessage.text());
 
         try {
 
@@ -55,7 +69,7 @@ public class MessageWindowAiCache implements AiCache {
                 elements.remove(0);
             }
 
-            List<CacheRecord> update = new LinkedList<>();
+            List<CacheRecord> items = new LinkedList<>();
             for (int i = 0; i < elements.size(); i++) {
 
                 var expiredTime = Date.from(elements.get(i).creation().plus(ttl));
@@ -64,11 +78,11 @@ public class MessageWindowAiCache implements AiCache {
                 if (currentTime.after(expiredTime))
                     continue;
 
-                update.add(elements.get(i));
+                items.add(elements.get(i));
             }
 
-            update.add(CacheRecord.of(query, response));
-            store.updateCache(id, update);
+            items.add(CacheRecord.of(embeddingModel.embed(query).content(), aiResponse));
+            store.updateCache(id, items);
 
         } finally {
             lock.unlock();
@@ -76,10 +90,16 @@ public class MessageWindowAiCache implements AiCache {
     }
 
     @Override
-    public Optional<AiMessage> search(Embedding query) {
+    public Optional<AiMessage> search(SystemMessage systemMessage, UserMessage userMessage) {
 
-        if (Objects.isNull(query))
+        if (Objects.isNull(userMessage))
             return Optional.empty();
+
+        String query;
+        if (Objects.isNull(systemMessage) || Objects.isNull(systemMessage.text()) || systemMessage.text().isBlank())
+            query = userMessage.text();
+        else
+            query = "%s%s%s".formatted(queryPrefix, systemMessage.text(), userMessage.text());
 
         var elements = store.getAll(id);
         double maxScore = 0;
@@ -95,7 +115,7 @@ public class MessageWindowAiCache implements AiCache {
                     continue;
             }
 
-            var relevanceScore = CosineSimilarity.between(query, cacheRecord.embedded());
+            var relevanceScore = CosineSimilarity.between(embeddingModel.embed(query).content(), cacheRecord.embedded());
             var score = (float) CosineSimilarity.fromRelevanceScore(relevanceScore);
 
             if (score >= threshold.doubleValue() && score >= maxScore) {
@@ -119,6 +139,9 @@ public class MessageWindowAiCache implements AiCache {
         AiCacheStore store;
         Double threshold;
         Duration ttl;
+        String queryPrefix;
+        String passagePrefix;
+        EmbeddingModel embeddingModel;
 
         private Builder(Object id) {
             this.id = id;
@@ -145,6 +168,21 @@ public class MessageWindowAiCache implements AiCache {
 
         public Builder ttl(Duration ttl) {
             this.ttl = ttl;
+            return this;
+        }
+
+        public Builder queryPrefix(String queryPrefix) {
+            this.queryPrefix = queryPrefix;
+            return this;
+        }
+
+        public Builder passagePrefix(String passagePrefix) {
+            this.passagePrefix = passagePrefix;
+            return this;
+        }
+
+        public Builder embeddingModel(EmbeddingModel embeddingModel) {
+            this.embeddingModel = embeddingModel;
             return this;
         }
 

@@ -12,5 +12,5 @@ public interface AiCacheBuildConfig {
     /**
      * Ai Cache embedding model related settings
      */
-    CacheEmbeddingModelConfig embeddingModel();
+    CacheEmbeddingModelConfig embedding();
 }

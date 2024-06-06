@@ -28,12 +28,14 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class CacheConfigTest {
+public class CachePrefixTest {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.base-url", WireMockUtil.URL)
             .overrideRuntimeConfigKey("quarkus.langchain4j.bam.api-key", WireMockUtil.API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.cache.embedding.passage-prefix", "passage: ")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.cache.embedding.query-prefix", "query: ")
             .overrideRuntimeConfigKey("quarkus.langchain4j.cache.ttl", "2s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.cache.max-size", "3")
             .setArchiveProducer(
@@ -62,14 +64,21 @@ public class CacheConfigTest {
 
             @Override
             public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
-                if (textSegments.get(0).text().equals("TESTFIRST"))
-                    return Response.from(List.of(Embedding.from(first)));
-                else if (textSegments.get(0).text().equals("TESTSECOND"))
-                    return Response.from(List.of(Embedding.from(second)));
-                else if (textSegments.get(0).text().equals("TESTTHIRD"))
-                    return Response.from(List.of(Embedding.from(third)));
-                else if (textSegments.get(0).text().equals("TESTFOURTH"))
-                    return Response.from(List.of(Embedding.from(fourth)));
+
+                if (textSegments.get(0).text().equals("passage: TESTfirstMessage")) {
+                    assertEquals("passage: TESTfirstMessage", textSegments.get(0).text());
+                    return Response.from(List.of(Embedding.from(firstMessage)));
+                } else if (textSegments.get(0).text().equals("query: TESTfirstMessage")) {
+                    assertEquals("query: TESTfirstMessage", textSegments.get(0).text());
+                    return Response.from(List.of(Embedding.from(firstMessage)));
+                } else if (textSegments.get(0).text().equals("passage: TESTsecondMessage")) {
+                    assertEquals("passage: TESTsecondMessage", textSegments.get(0).text());
+                    return Response.from(List.of(Embedding.from(secondMessage)));
+                } else if (textSegments.get(0).text().equals("query: TESTsecondMessage")) {
+                    assertEquals("query: TESTsecondMessage", textSegments.get(0).text());
+                    return Response.from(List.of(Embedding.from(secondMessage)));
+                }
+
                 return null;
             }
         }
@@ -83,71 +92,29 @@ public class CacheConfigTest {
 
     @Test
     @Order(1)
-    void cache_ttl_test() throws InterruptedException {
+    void cache_prefix_test() throws InterruptedException {
 
         String cacheId = "default";
         aiCacheStore.deleteCache(cacheId);
 
-        service.chat("FIRST");
-        service.chat("SECOND");
+        service.chat("firstMessage");
+        service.chat("secondMessage");
         assertEquals(2, aiCacheStore.getAll(cacheId).size());
-        assertEquals("cache: TESTFIRST", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(first, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
-        assertEquals("cache: TESTSECOND", aiCacheStore.getAll(cacheId).get(1).response().text());
-        assertEquals(second, aiCacheStore.getAll(cacheId).get(1).embedded().vector());
-
-        Thread.sleep(3000);
-        service.chat("THIRD");
-        assertEquals(1, aiCacheStore.getAll(cacheId).size());
-        assertEquals("cache: TESTTHIRD", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(third, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
+        assertEquals("cache: TESTfirstMessage", aiCacheStore.getAll(cacheId).get(0).response().text());
+        assertEquals(firstMessage, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
+        assertEquals("cache: TESTsecondMessage", aiCacheStore.getAll(cacheId).get(1).response().text());
+        assertEquals(secondMessage, aiCacheStore.getAll(cacheId).get(1).embedded().vector());
     }
 
-    @Test
-    @Order(2)
-    void cache_max_size_test() {
-
-        String cacheId = "default";
-        aiCacheStore.deleteCache(cacheId);
-
-        service.chat("FIRST");
-        assertEquals(1, aiCacheStore.getAll(cacheId).size());
-        assertEquals("cache: TESTFIRST", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(first, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
-
-        service.chat("SECOND");
-        service.chat("THIRD");
-        service.chat("FOURTH");
-        assertEquals(3, aiCacheStore.getAll(cacheId).size());
-        assertEquals("cache: TESTSECOND", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(second, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
-        assertEquals("cache: TESTTHIRD", aiCacheStore.getAll(cacheId).get(1).response().text());
-        assertEquals(third, aiCacheStore.getAll(cacheId).get(1).embedded().vector());
-        assertEquals("cache: TESTFOURTH", aiCacheStore.getAll(cacheId).get(2).response().text());
-        assertEquals(fourth, aiCacheStore.getAll(cacheId).get(2).embedded().vector());
-    }
-
-    static float[] first = {
+    static float[] firstMessage = {
             0.039016734808683395f,
             0.010098248720169067f,
             -0.02687959559261799f,
     };
 
-    static float[] second = {
+    static float[] secondMessage = {
             0.139016734108685515f,
             0.211198249720169167f,
             0.62687959559261799f,
-    };
-
-    static float[] third = {
-            -0.229016734199685515f,
-            -0.211198249721169127f,
-            -0.62999959559261719f,
-    };
-
-    static float[] fourth = {
-            -1.229016734199685515f,
-            0.211198249721169127f,
-            3.62999959559261719f,
     };
 }

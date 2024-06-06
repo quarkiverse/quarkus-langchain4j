@@ -2,8 +2,9 @@ package io.quarkiverse.langchain4j.runtime.cache;
 
 import java.util.Optional;
 
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
 
 /**
  * Represents the cache of a AI. It can be used to reduces response time for similar queries.
@@ -20,18 +21,20 @@ public interface AiCache {
     /**
      * Cache a new message.
      *
-     * @param query Embedded value to add to the cache.
-     * @param response Response returned by the AI to add to the cache.
+     * @param systemMessage {@link SystemMessage} value to add to the cache.
+     * @param userMessage {@link UserMessage} value to add to the cache.
+     * @param aiResponse {@link AiMessage} value to add to the cache.
      */
-    void add(Embedding query, AiMessage response);
+    void add(SystemMessage systemMessage, UserMessage userMessage, AiMessage aiResponse);
 
     /**
-     * Check to see if there is a response in the cache that is semantically close to a cached query.
+     * Check if there is a response in the cache that is semantically close to the cached items.
      *
-     * @param query
+     * @param systemMessage {@link SystemMessage} value to find in the cache.
+     * @param userMessage {@link UserMessage} value to find in the cache.
      * @return
      */
-    Optional<AiMessage> search(Embedding query);
+    Optional<AiMessage> search(SystemMessage systemMessage, UserMessage userMessage);
 
     /**
      * Clears the cache.

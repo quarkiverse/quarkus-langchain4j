@@ -448,7 +448,6 @@ public class AiServicesProcessor {
 
             String chatModelName = bi.getChatModelName();
             String moderationModelName = bi.getModerationModelName();
-            String aiCacheEmbeddingModelName = aiCacheBuildItem.getEmbeddingModelName();
             boolean enableCache = aiCacheBuildItem.isEnable();
 
             // It is not possible to use the cache in combination with the tools.
@@ -468,7 +467,6 @@ public class AiServicesProcessor {
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
                                     moderationModelName,
-                                    aiCacheEmbeddingModelName,
                                     needsStreamingChatModel,
                                     needsModerationModel,
                                     enableCache)))
@@ -564,13 +562,6 @@ public class AiServicesProcessor {
                 } else {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
                 }
-
-                if (NamedConfigUtil.isDefault(aiCacheEmbeddingModelName)) {
-                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL));
-                } else {
-                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL),
-                            AnnotationInstance.builder(ModelName.class).add("value", aiCacheEmbeddingModelName).build());
-                }
                 needsAiCacheProvider = true;
             }
 
@@ -600,7 +591,6 @@ public class AiServicesProcessor {
         }
         if (needsAiCacheProvider) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AI_CACHE_PROVIDER));
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.EMBEDDING_MODEL));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));

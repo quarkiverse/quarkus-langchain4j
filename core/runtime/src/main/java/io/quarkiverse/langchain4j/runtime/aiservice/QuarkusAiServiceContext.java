@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -16,7 +15,6 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public AuditService auditService;
     public Map<Object, AiCache> aiCaches;
     public AiCacheProvider aiCacheProvider;
-    public EmbeddingModel embeddingModel;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

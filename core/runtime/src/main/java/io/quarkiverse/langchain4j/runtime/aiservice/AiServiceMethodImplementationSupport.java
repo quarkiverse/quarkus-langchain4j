@@ -27,7 +27,6 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -195,15 +194,14 @@ public class AiServiceMethodImplementationSupport {
         if (cache != null) {
             log.debug("Attempting to obtain AI response from cache");
 
-            Embedding query = context.embeddingModel.embed(userMessage.text()).content();
-            var cacheResponse = cache.search(query);
+            var cacheResponse = cache.search(systemMessage.orElse(null), userMessage);
 
             if (cacheResponse.isPresent()) {
                 log.debug("Return cached response");
                 response = Response.from(cacheResponse.get());
             } else {
                 response = executeLLMCall(context, messages, moderationFuture, toolSpecifications);
-                cache.add(query, response.content());
+                cache.add(systemMessage.orElse(null), userMessage, response.content());
             }
 
         } else {

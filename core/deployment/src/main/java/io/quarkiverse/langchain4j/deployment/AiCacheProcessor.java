@@ -8,6 +8,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.IndexView;
 
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.runtime.AiCacheRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
@@ -49,23 +51,31 @@ public class AiCacheProcessor {
             }
         }
 
-        String embeddingModel = NamedConfigUtil.DEFAULT_NAME;
-        if (cacheBuildConfig.embeddingModel() != null)
-            embeddingModel = cacheBuildConfig.embeddingModel().name().orElse(NamedConfigUtil.DEFAULT_NAME);
+        String embeddingModelName = NamedConfigUtil.DEFAULT_NAME;
+        if (cacheBuildConfig.embedding() != null)
+            embeddingModelName = cacheBuildConfig.embedding().name().orElse(NamedConfigUtil.DEFAULT_NAME);
 
-        aiCacheBuildItemProducer.produce(new AiCacheBuildItem(enableCache, embeddingModel));
+        aiCacheBuildItemProducer.produce(new AiCacheBuildItem(enableCache, embeddingModelName));
 
         if (enableCache) {
-            var configurator = SyntheticBeanBuildItem
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(AiCacheProvider.class)
                     .setRuntimeInit()
                     .addInjectionPoint(ClassType.create(AiCacheStore.class))
                     .scope(ApplicationScoped.class)
-                    .createWith(recorder.messageWindow(cacheConfig))
+                    .createWith(recorder.messageWindow(cacheConfig, embeddingModelName))
                     .defaultBean();
+
+            if (NamedConfigUtil.isDefault(embeddingModelName)) {
+                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL));
+            } else {
+                configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.EMBEDDING_MODEL),
+                        AnnotationInstance.builder(ModelName.class).add("value", embeddingModelName).build());
+            }
 
             syntheticBeanProducer.produce(configurator.done());
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(AiCacheStore.class));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(EmbeddingModel.class));
         }
     }
 }
