@@ -29,4 +29,9 @@ public interface AiCacheConfig {
      * Time to live for messages stored in the cache.
      */
     Optional<Duration> ttl();
+
+    /**
+     * Allow to customize the embedding operation.
+     */
+    AiCacheEmbeddingConfig embedding();
 }

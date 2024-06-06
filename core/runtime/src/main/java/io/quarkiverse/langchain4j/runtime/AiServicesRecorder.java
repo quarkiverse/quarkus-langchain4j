@@ -18,7 +18,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
@@ -251,13 +250,6 @@ public class AiServicesRecorder {
                                         .getConstructor().newInstance();
                                 aiServiceContext.aiCacheProvider = supplier.get();
                             }
-                        }
-
-                        if (NamedConfigUtil.isDefault(info.aiCacheEmbeddingModelName())) {
-                            aiServiceContext.embeddingModel = creationalContext.getInjectedReference(EmbeddingModel.class);
-                        } else {
-                            aiServiceContext.embeddingModel = creationalContext.getInjectedReference(EmbeddingModel.class,
-                                    ModelName.Literal.of(info.aiCacheEmbeddingModelName()));
                         }
 
                         aiServiceContext.aiCaches = new ConcurrentHashMap<>();
