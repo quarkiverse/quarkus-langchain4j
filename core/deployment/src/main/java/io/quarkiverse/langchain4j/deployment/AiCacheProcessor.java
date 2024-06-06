@@ -9,9 +9,10 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.IndexView;
 
 import io.quarkiverse.langchain4j.runtime.AiCacheRecorder;
-import io.quarkiverse.langchain4j.runtime.cache.AiCacheConfig;
+import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
+import io.quarkiverse.langchain4j.runtime.cache.config.AiCacheConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -24,7 +25,8 @@ public class AiCacheProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void setupBeans(ChatMemoryBuildConfig buildConfig, AiCacheConfig cacheConfig,
+    void setupBeans(AiCacheBuildConfig cacheBuildConfig,
+            AiCacheConfig cacheConfig,
             AiCacheRecorder recorder,
             CombinedIndexBuildItem indexBuildItem,
             BuildProducer<AiCacheBuildItem> aiCacheBuildItemProducer,
@@ -47,7 +49,11 @@ public class AiCacheProcessor {
             }
         }
 
-        aiCacheBuildItemProducer.produce(new AiCacheBuildItem(enableCache));
+        String embeddingModel = NamedConfigUtil.DEFAULT_NAME;
+        if (cacheBuildConfig.embeddingModel() != null)
+            embeddingModel = cacheBuildConfig.embeddingModel().name().orElse(NamedConfigUtil.DEFAULT_NAME);
+
+        aiCacheBuildItemProducer.produce(new AiCacheBuildItem(enableCache, embeddingModel));
 
         if (enableCache) {
             var configurator = SyntheticBeanBuildItem

@@ -172,9 +172,35 @@ public class BeansProcessor {
                 selectedEmbeddingProducer.produce(new SelectedEmbeddingModelCandidateBuildItem(provider, modelName));
             }
         }
+
+        if (aiCacheBuildItem.isEnable() && !requestEmbeddingModels.contains(aiCacheBuildItem.getEmbeddingModelName())) {
+
+            String modelName = aiCacheBuildItem.getEmbeddingModelName();
+            String configNamespace;
+            Optional<String> userSelectedProvider;
+
+            if (NamedConfigUtil.isDefault(modelName)) {
+                userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
+                configNamespace = "embedding-model";
+            } else {
+                if (buildConfig.namedConfig().containsKey(modelName)) {
+                    userSelectedProvider = buildConfig.namedConfig().get(modelName).embeddingModel().provider();
+                } else {
+                    userSelectedProvider = Optional.empty();
+                }
+                configNamespace = modelName + ".embedding-model";
+            }
+
+            String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                    userSelectedProvider, "EmbeddingModel", configNamespace);
+            selectedEmbeddingProducer
+                    .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, modelName));
+        }
+
         // If the Easy RAG extension requested to automatically generate an embedding model...
         if (requestEmbeddingModels.isEmpty()
-                && (aiCacheBuildItem.isEnable() || autoCreateEmbeddingModelBuildItem.isPresent())) {
+                && autoCreateEmbeddingModelBuildItem.isPresent()) {
             String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
                     Optional.empty(), "EmbeddingModel", "embedding-model");

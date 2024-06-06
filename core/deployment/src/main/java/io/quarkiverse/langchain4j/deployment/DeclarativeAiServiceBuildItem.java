@@ -26,7 +26,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName cdiScope;
     private final String chatModelName;
     private final String moderationModelName;
-    private final String embeddingModelName;
 
     public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
             List<DotName> toolDotNames,
@@ -39,8 +38,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName moderationModelSupplierDotName,
             DotName cdiScope,
             String chatModelName,
-            String moderationModelName,
-            String embeddingModelName) {
+            String moderationModelName) {
         this.serviceClassInfo = serviceClassInfo;
         this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
         this.toolDotNames = toolDotNames;
@@ -54,7 +52,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
-        this.embeddingModelName = embeddingModelName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -107,9 +104,5 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public String getModerationModelName() {
         return moderationModelName;
-    }
-
-    public String getEmbeddingModelName() {
-        return embeddingModelName;
     }
 }

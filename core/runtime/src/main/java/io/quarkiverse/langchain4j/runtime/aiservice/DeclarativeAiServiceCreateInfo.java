@@ -13,7 +13,7 @@ public record DeclarativeAiServiceCreateInfo(String serviceClassName,
         String moderationModelSupplierClassName,
         String chatModelName,
         String moderationModelName,
-        String embeddingModelName,
+        String aiCacheEmbeddingModelName,
         boolean needsStreamingChatModel,
         boolean needsModerationModel,
         boolean enableCache) {

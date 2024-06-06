@@ -253,7 +253,13 @@ public class AiServicesRecorder {
                             }
                         }
 
-                        aiServiceContext.embeddingModel = creationalContext.getInjectedReference(EmbeddingModel.class);
+                        if (NamedConfigUtil.isDefault(info.aiCacheEmbeddingModelName())) {
+                            aiServiceContext.embeddingModel = creationalContext.getInjectedReference(EmbeddingModel.class);
+                        } else {
+                            aiServiceContext.embeddingModel = creationalContext.getInjectedReference(EmbeddingModel.class,
+                                    ModelName.Literal.of(info.aiCacheEmbeddingModelName()));
+                        }
+
                         aiServiceContext.aiCaches = new ConcurrentHashMap<>();
                     }
 
