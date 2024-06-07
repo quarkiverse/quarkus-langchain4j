@@ -124,13 +124,9 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         AiCache cache = null;
 
-        // TODO: REMOVE THIS COMMENT BEFORE MERGING THE PR.
-        // - Understand how to implement the concept of cache for the stream responses.
-        // - What do we have to do when we have the tools?
-
         if (methodCreateInfo.isRequiresCache()) {
-            Object cacheId = cacheId(methodCreateInfo, methodArgs);
-            cache = context.aiCacheProvider.get(cacheId);
+            Object cacheId = cacheId(methodCreateInfo);
+            cache = context.cache(cacheId);
         }
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
@@ -416,7 +412,7 @@ public class AiServiceMethodImplementationSupport {
         return "default";
     }
 
-    private static Object cacheId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+    private static Object cacheId(AiServiceMethodCreateInfo createInfo) {
         for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
             Object memoryId = provider.getMemoryId();
             if (memoryId != null) {
@@ -424,9 +420,7 @@ public class AiServiceMethodImplementationSupport {
                 return memoryId + perServiceSuffix;
             }
         }
-
-        // fallback to the default since there is nothing else we can really use here
-        return "default";
+        return "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
     }
 
     // TODO: share these methods with LangChain4j

@@ -29,8 +29,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         return aiCaches != null;
     }
 
-    public AiCache cache(Object memoryId) {
-        return aiCaches.computeIfAbsent(memoryId, ignored -> aiCacheProvider.get(memoryId));
+    public AiCache cache(Object cacheId) {
+        return aiCaches.computeIfAbsent(cacheId, ignored -> aiCacheProvider.get(cacheId));
     }
 
     /**
@@ -58,7 +58,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         if (aiCaches != null) {
             aiCaches.forEach(new BiConsumer<>() {
                 @Override
-                public void accept(Object memoryId, AiCache aiCache) {
+                public void accept(Object cacheId, AiCache aiCache) {
                     aiCache.clear();
                 }
             });

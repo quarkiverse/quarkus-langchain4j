@@ -8,7 +8,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.runtime.cache.AiCache;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
-import io.quarkiverse.langchain4j.runtime.cache.MessageWindowAiCache;
+import io.quarkiverse.langchain4j.runtime.cache.FixedAiCache;
 import io.quarkiverse.langchain4j.runtime.cache.config.AiCacheConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -41,7 +41,7 @@ public class AiCacheRecorder {
                 return new AiCacheProvider() {
                     @Override
                     public AiCache get(Object memoryId) {
-                        return MessageWindowAiCache.Builder
+                        return FixedAiCache.Builder
                                 .create(memoryId)
                                 .ttl(ttl)
                                 .maxSize(maxSize)

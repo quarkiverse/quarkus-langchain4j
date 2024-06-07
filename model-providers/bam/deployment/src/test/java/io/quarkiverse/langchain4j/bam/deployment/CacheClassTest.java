@@ -76,16 +76,22 @@ public class CacheClassTest {
     @Test
     void cache_test() {
 
-        String cacheId = "default";
+        String chatCacheId = "#" + LLMService.class.getName() + ".chat";
+        String chat2CacheId = "#" + LLMService.class.getName() + ".chat2";
 
-        assertEquals(0, aiCacheStore.getAll(cacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chatCacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chat2CacheId).size());
+
         service.chat("chat");
-        assertEquals(1, aiCacheStore.getAll(cacheId).size());
+        assertEquals(1, aiCacheStore.getAll(chatCacheId).size());
+        assertEquals("result", aiCacheStore.getAll(chatCacheId).get(0).response().text());
+        assertEquals(es, aiCacheStore.getAll(chatCacheId).get(0).embedded().vector());
+        assertEquals(0, aiCacheStore.getAll(chat2CacheId).size());
 
         service.chat2("chat2");
-        assertEquals(1, aiCacheStore.getAll(cacheId).size());
-        assertEquals("result", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(es, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
+        assertEquals(1, aiCacheStore.getAll(chat2CacheId).size());
+        assertEquals("result", aiCacheStore.getAll(chat2CacheId).get(0).response().text());
+        assertEquals(es, aiCacheStore.getAll(chat2CacheId).get(0).embedded().vector());
     }
 
     @Test
