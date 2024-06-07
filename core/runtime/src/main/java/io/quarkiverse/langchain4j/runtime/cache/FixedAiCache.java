@@ -2,11 +2,11 @@ package io.quarkiverse.langchain4j.runtime.cache;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -16,9 +16,9 @@ import dev.langchain4j.store.embedding.CosineSimilarity;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore.CacheRecord;
 
 /**
- * This {@link AiCache} implementation operates as a sliding window of messages.
+ * This {@link AiCache} default implementation.
  */
-public class MessageWindowAiCache implements AiCache {
+public class FixedAiCache implements AiCache {
 
     private final Object id;
     private final Integer maxMessages;
@@ -30,7 +30,7 @@ public class MessageWindowAiCache implements AiCache {
     private final EmbeddingModel embeddingModel;
     private final ReentrantLock lock;
 
-    public MessageWindowAiCache(Builder builder) {
+    public FixedAiCache(Builder builder) {
         this.id = builder.id;
         this.maxMessages = builder.maxSize;
         this.store = builder.store;
@@ -64,25 +64,17 @@ public class MessageWindowAiCache implements AiCache {
 
             lock.lock();
 
-            List<CacheRecord> elements = store.getAll(id);
+            List<CacheRecord> elements = store.getAll(id)
+                    .stream()
+                    .filter(this::checkTTL)
+                    .collect(Collectors.toList());
+
             if (elements.size() == maxMessages) {
-                elements.remove(0);
+                return;
             }
 
-            List<CacheRecord> items = new LinkedList<>();
-            for (int i = 0; i < elements.size(); i++) {
-
-                var expiredTime = Date.from(elements.get(i).creation().plus(ttl));
-                var currentTime = new Date();
-
-                if (currentTime.after(expiredTime))
-                    continue;
-
-                items.add(elements.get(i));
-            }
-
-            items.add(CacheRecord.of(embeddingModel.embed(query).content(), aiResponse));
-            store.updateCache(id, items);
+            elements.add(CacheRecord.of(embeddingModel.embed(query).content(), aiResponse));
+            store.updateCache(id, elements);
 
         } finally {
             lock.unlock();
@@ -101,30 +93,49 @@ public class MessageWindowAiCache implements AiCache {
         else
             query = "%s%s%s".formatted(queryPrefix, systemMessage.text(), userMessage.text());
 
-        var elements = store.getAll(id);
-        double maxScore = 0;
-        AiMessage result = null;
+        try {
 
-        for (var cacheRecord : elements) {
+            lock.lock();
 
-            if (ttl != null) {
-                var expiredTime = Date.from(cacheRecord.creation().plus(ttl));
-                var currentTime = new Date();
+            double maxScore = 0;
+            AiMessage result = null;
+            List<CacheRecord> records = store.getAll(id)
+                    .stream()
+                    .filter(this::checkTTL)
+                    .collect(Collectors.toList());
 
-                if (currentTime.after(expiredTime))
-                    continue;
+            for (var record : records) {
+
+                var relevanceScore = CosineSimilarity.between(embeddingModel.embed(query).content(), record.embedded());
+                var score = (float) CosineSimilarity.fromRelevanceScore(relevanceScore);
+
+                if (score >= threshold.doubleValue() && score >= maxScore) {
+                    maxScore = score;
+                    result = record.response();
+                }
             }
 
-            var relevanceScore = CosineSimilarity.between(embeddingModel.embed(query).content(), cacheRecord.embedded());
-            var score = (float) CosineSimilarity.fromRelevanceScore(relevanceScore);
+            store.updateCache(id, records);
+            return Optional.ofNullable(result);
 
-            if (score >= threshold.doubleValue() && score >= maxScore) {
-                maxScore = score;
-                result = cacheRecord.response();
-            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private boolean checkTTL(CacheRecord record) {
+
+        if (ttl == null)
+            return true;
+
+        var expiredTime = Date.from(record.creation().plus(ttl));
+        var currentTime = new Date();
+
+        if (currentTime.after(expiredTime)) {
+            return false;
         }
 
-        return Optional.ofNullable(result);
+        return true;
     }
 
     @Override
@@ -187,7 +198,7 @@ public class MessageWindowAiCache implements AiCache {
         }
 
         public AiCache build() {
-            return new MessageWindowAiCache(this);
+            return new FixedAiCache(this);
         }
     }
 }

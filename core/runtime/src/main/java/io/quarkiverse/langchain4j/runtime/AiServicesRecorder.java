@@ -252,7 +252,8 @@ public class AiServicesRecorder {
                             }
                         }
 
-                        aiServiceContext.aiCaches = new ConcurrentHashMap<>();
+                        if (aiServiceContext.aiCaches == null)
+                            aiServiceContext.aiCaches = new ConcurrentHashMap<>();
                     }
 
                     return (T) aiServiceContext;

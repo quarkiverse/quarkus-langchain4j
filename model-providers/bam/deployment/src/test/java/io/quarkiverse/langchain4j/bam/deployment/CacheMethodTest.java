@@ -79,16 +79,20 @@ public class CacheMethodTest {
     @Test
     void cache_test() {
 
-        String cacheId = "default";
+        String chatCacheId = "#" + LLMService.class.getName() + ".chat";
+        String chatNoCacheCacheId = "#" + LLMService.class.getName() + ".chatNoCache";
 
-        assertEquals(0, aiCacheStore.getAll(cacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chatCacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chatNoCacheCacheId).size());
         service.chatNoCache("noCache");
-        assertEquals(0, aiCacheStore.getAll(cacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chatCacheId).size());
+        assertEquals(0, aiCacheStore.getAll(chatNoCacheCacheId).size());
 
         service.chat("cache");
-        assertEquals(1, aiCacheStore.getAll(cacheId).size());
-        assertEquals("result", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(es, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
+        assertEquals(1, aiCacheStore.getAll(chatCacheId).size());
+        assertEquals("result", aiCacheStore.getAll(chatCacheId).get(0).response().text());
+        assertEquals(es, aiCacheStore.getAll(chatCacheId).get(0).embedded().vector());
+        assertEquals(0, aiCacheStore.getAll(chatNoCacheCacheId).size());
     }
 
     @Test

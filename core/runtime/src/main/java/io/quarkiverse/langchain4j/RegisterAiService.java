@@ -23,8 +23,8 @@ import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.cache.AiCache;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
+import io.quarkiverse.langchain4j.runtime.cache.FixedAiCache;
 import io.quarkiverse.langchain4j.runtime.cache.InMemoryAiCacheStore;
-import io.quarkiverse.langchain4j.runtime.cache.MessageWindowAiCache;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by using the
@@ -101,7 +101,7 @@ public @interface RegisterAiService {
      * Configures the way to obtain the {@link AiCacheProvider}.
      * <p>
      * Be default, Quarkus configures a {@link AiCacheProvider} bean that uses a {@link InMemoryAiCacheStore} bean as the
-     * backing store. The default type for the actual {@link AiCache} is {@link MessageWindowAiCache} and it is configured with
+     * backing store. The default type for the actual {@link AiCache} is {@link FixedAiCache} and it is configured with
      * the value of the {@code quarkus.langchain4j.cache.max-size} configuration property (which default to
      * 1) as a way of limiting the number of messages in each cache.
      * <p>

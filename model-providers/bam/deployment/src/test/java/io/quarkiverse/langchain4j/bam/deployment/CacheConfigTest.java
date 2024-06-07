@@ -26,6 +26,9 @@ import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.CacheResult;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.runtime.cache.AiCacheStore;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+import io.quarkus.arc.ManagedContext;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class CacheConfigTest {
@@ -85,7 +88,7 @@ public class CacheConfigTest {
     @Order(1)
     void cache_ttl_test() throws InterruptedException {
 
-        String cacheId = "default";
+        String cacheId = "#" + LLMService.class.getName() + ".chat";
         aiCacheStore.deleteCache(cacheId);
 
         service.chat("FIRST");
@@ -107,7 +110,7 @@ public class CacheConfigTest {
     @Order(2)
     void cache_max_size_test() {
 
-        String cacheId = "default";
+        String cacheId = "#" + LLMService.class.getName() + ".chat";
         aiCacheStore.deleteCache(cacheId);
 
         service.chat("FIRST");
@@ -119,12 +122,18 @@ public class CacheConfigTest {
         service.chat("THIRD");
         service.chat("FOURTH");
         assertEquals(3, aiCacheStore.getAll(cacheId).size());
-        assertEquals("cache: TESTSECOND", aiCacheStore.getAll(cacheId).get(0).response().text());
-        assertEquals(second, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
-        assertEquals("cache: TESTTHIRD", aiCacheStore.getAll(cacheId).get(1).response().text());
-        assertEquals(third, aiCacheStore.getAll(cacheId).get(1).embedded().vector());
-        assertEquals("cache: TESTFOURTH", aiCacheStore.getAll(cacheId).get(2).response().text());
-        assertEquals(fourth, aiCacheStore.getAll(cacheId).get(2).embedded().vector());
+        assertEquals("cache: TESTFIRST", aiCacheStore.getAll(cacheId).get(0).response().text());
+        assertEquals(first, aiCacheStore.getAll(cacheId).get(0).embedded().vector());
+        assertEquals("cache: TESTSECOND", aiCacheStore.getAll(cacheId).get(1).response().text());
+        assertEquals(second, aiCacheStore.getAll(cacheId).get(1).embedded().vector());
+        assertEquals("cache: TESTTHIRD", aiCacheStore.getAll(cacheId).get(2).response().text());
+        assertEquals(third, aiCacheStore.getAll(cacheId).get(2).embedded().vector());
+    }
+
+    private String getContext(String methodName) {
+        ArcContainer container = Arc.container();
+        ManagedContext requestContext = container.requestContext();
+        return requestContext.getState() + "#" + LLMService.class.getName() + "." + methodName;
     }
 
     static float[] first = {

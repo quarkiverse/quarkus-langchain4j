@@ -94,7 +94,7 @@ public class CachePrefixTest {
     @Order(1)
     void cache_prefix_test() throws InterruptedException {
 
-        String cacheId = "default";
+        String cacheId = "#" + LLMService.class.getName() + ".chat";
         aiCacheStore.deleteCache(cacheId);
 
         service.chat("firstMessage");
