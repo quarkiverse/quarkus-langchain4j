@@ -52,7 +52,7 @@ public class ToolsTest {
                 You are a property manager assistant, answering to co-owners requests.
                 Format the date as YYYY-MM-DD and the time as HH:MM
                 Today is {{current_date}} use this date as date time reference
-                The co-owners is leaving in the folloaing conominium: {condominium}
+                The co-owners is leaving in the following condominium: {condominium}
                 """)
         @UserMessage("""
                 {{request}}
