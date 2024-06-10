@@ -72,7 +72,7 @@ public interface LangChain4jOllamaConfig {
         /**
          * Whether to enable the experimental tools
          */
-        @WithDefault("true")
+        @WithDefault("false")
         Optional<Boolean> experimentalTools();
 
         /**
