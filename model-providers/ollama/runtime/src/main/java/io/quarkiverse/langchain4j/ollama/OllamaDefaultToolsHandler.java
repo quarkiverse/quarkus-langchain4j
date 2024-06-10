@@ -25,14 +25,14 @@ public class OllamaDefaultToolsHandler implements ToolsHandler {
 
             You must always select one of the above tools and respond with a JSON object matching the following schema,
             and only this json object:
-            {{
+            {
               "tool": <name of the selected tool>,
               "tool_input": <parameters for the selected tool, matching the tool's JSON schema>
-            }}
-            Do not use new tools, just use the ones from the list. Do not forget the parameters in tool_input field.
+            }
+            Do not use other tools than the ones from the list above. Always provide the "tool_input" field.
             If several tools are necessary, answer them sequentially.
 
-            When the user provides sufficient information , answer with the __conversational_response tool.
+            When the user provides sufficient information, answer with the __conversational_response tool.
             """);
 
     static final ToolSpecification DEFAULT_RESPONSE_TOOL = ToolSpecification.builder()
@@ -93,8 +93,7 @@ public class OllamaDefaultToolsHandler implements ToolsHandler {
             // Extract tools
             toolResponse = Json.fromJson(response.message().content(), ToolResponse.class);
         } catch (Exception e) {
-            // No tools found
-            return AiMessage.from(response.message().content());
+            throw new RuntimeException("Ollama server did not respond with valid JSON. Please try again!");
         }
         // If the tool is the final result with default response tool
         if (toolResponse.tool.equals(DEFAULT_RESPONSE_TOOL.name())) {
@@ -104,7 +103,7 @@ public class OllamaDefaultToolsHandler implements ToolsHandler {
         List<String> availableTools = toolSpecifications.stream().map(ToolSpecification::name).toList();
         if (!availableTools.contains(toolResponse.tool)) {
             return AiMessage.from(String.format(
-                    "The LLM wants to call a tool %s that is not part of the available tools %s",
+                    "Ollama server wants to call a tool '%s' that is not part of the available tools %s",
                     toolResponse.tool, availableTools));
         }
         // Extract tools request from response

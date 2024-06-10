@@ -108,10 +108,10 @@ public class ToolsTest {
     @Test
     @ActivateRequestContext
     void test_multiple_tools() {
-        String msg = "What is the square root of the sum of the numbers of letters in the words " +
+        String msg = "What is the square root with maximal precision of the sum of the numbers of letters in the words " +
                 "\"hello\" and \"world\"";
         String response = mathAssistant.chat(msg);
-        assertThat(response).contains("approximately 3.16");
+        assertThat(response).contains("3.162278");
 
     }
 
