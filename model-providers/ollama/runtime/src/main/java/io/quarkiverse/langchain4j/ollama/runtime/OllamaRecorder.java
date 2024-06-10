@@ -53,6 +53,7 @@ public class OllamaRecorder {
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .experimentalTool(ollamaConfig.experimentalTools().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
                     .options(optionsBuilder.build());

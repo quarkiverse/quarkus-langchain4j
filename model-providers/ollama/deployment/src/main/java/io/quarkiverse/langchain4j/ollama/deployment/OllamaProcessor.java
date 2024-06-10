@@ -108,6 +108,7 @@ public class OllamaProcessor {
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
+                        .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.chatModel(config, fixedRuntimeConfig, configName));

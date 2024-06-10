@@ -70,6 +70,12 @@ public interface LangChain4jOllamaConfig {
         Boolean enableIntegration();
 
         /**
+         * Whether to enable the experimental tools
+         */
+        @WithDefault("true")
+        Optional<Boolean> experimentalTools();
+
+        /**
          * Chat model related settings
          */
         ChatModelConfig chatModel();

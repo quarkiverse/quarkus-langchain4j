@@ -64,9 +64,8 @@ final class MessageMapper {
     private static Role toOllamaRole(ChatMessageType chatMessageType) {
         return switch (chatMessageType) {
             case SYSTEM -> Role.SYSTEM;
-            case USER -> Role.USER;
+            case USER, TOOL_EXECUTION_RESULT -> Role.USER;
             case AI -> Role.ASSISTANT;
-            default -> throw new IllegalArgumentException("Unknown ChatMessageType: " + chatMessageType);
         };
     }
 }

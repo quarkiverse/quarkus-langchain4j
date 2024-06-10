@@ -6,8 +6,8 @@ import io.quarkiverse.langchain4j.ollama.runtime.jackson.RoleDeserializer;
 
 @JsonDeserialize(using = RoleDeserializer.class)
 public enum Role {
-
     SYSTEM,
     USER,
-    ASSISTANT
+    ASSISTANT,
+    TOOL_EXECUTION_RESULT
 }
