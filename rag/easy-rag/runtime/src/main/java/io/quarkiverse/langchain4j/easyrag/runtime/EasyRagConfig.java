@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.easyrag.runtime;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -56,4 +57,30 @@ public interface EasyRagConfig {
     @WithDefault("ON")
     IngestionStrategy ingestionStrategy();
 
+    /**
+     * Configuration related to the reusing of embeddings.
+     * <p>
+     * Currently only supported when using an in-memory embedding store.
+     * </p>
+     */
+    ReuseEmbeddingsConfig reuseEmbeddings();
+
+    @ConfigGroup
+    interface ReuseEmbeddingsConfig {
+        /**
+         * Whether or not to reuse embeddings. Defaults to {@code false}.
+         */
+        @WithDefault("false")
+        boolean enabled();
+
+        /**
+         * The file path to load/save embeddings, assuming
+         * {@code quarkus.langchain4j.easy-rag.reuse-embeddings.enabled == true}.
+         * <p>
+         * Defaults to {@code easy-rag-embeddings.json} in the current directory.
+         * </p>
+         */
+        @WithDefault("easy-rag-embeddings.json")
+        String file();
+    }
 }

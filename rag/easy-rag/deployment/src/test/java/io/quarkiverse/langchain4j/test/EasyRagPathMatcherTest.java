@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.logging.LogRecord;
 
 import jakarta.inject.Inject;
 
@@ -28,12 +30,23 @@ public class EasyRagPathMatcherTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments\n" +
                             "quarkus.langchain4j.easy-rag.path-matcher=glob:*.pdf\n"),
-                            "application.properties"));
+                            "application.properties"))
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(EasyRagPathMatcherTest::verifyLogRecords);
 
     @Inject
     InMemoryEmbeddingStore<TextSegment> embeddingStore;
 
     Embedding DUMMY_EMBEDDING = new Embedding(new float[384]);
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream().map(LogRecord::getMessage))
+                .contains(
+                        "Ingesting documents from path: src/test/resources/ragdocuments, path matcher = glob:*.pdf, recursive = true")
+                .contains("Ingested 1 files as 1 documents")
+                .doesNotContain("Writing embeddings to %s")
+                .doesNotContain("Reading embeddings from %s");
+    }
 
     @Test
     public void verifyPathMatchingOnlyPdf() {
