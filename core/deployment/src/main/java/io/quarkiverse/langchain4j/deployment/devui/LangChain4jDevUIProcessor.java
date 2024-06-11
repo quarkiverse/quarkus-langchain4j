@@ -33,7 +33,8 @@ public class LangChain4jDevUIProcessor {
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingModelBuildItems,
             List<EmbeddingStoreBuildItem> embeddingStoreBuildItem,
             List<SelectedChatModelProviderBuildItem> chatModelProviders,
-            Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem) {
+            Optional<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItem,
+            List<AdditionalDevUiCardBuildItem> additionalDevUiCardBuildItems) {
         CardPageBuildItem card = new CardPageBuildItem();
         addAiServicesPage(card, aiServices);
         if (toolsMetadataBuildItem != null) {
@@ -49,6 +50,15 @@ public class LangChain4jDevUIProcessor {
         }
         if (!chatModelProviders.isEmpty()) {
             addChatPage(card, aiServices);
+        }
+
+        for (AdditionalDevUiCardBuildItem additionalDevUiCardBuildItem : additionalDevUiCardBuildItems) {
+            card.addPage(Page.webComponentPageBuilder()
+                    .title(additionalDevUiCardBuildItem.getTitle())
+                    .icon(additionalDevUiCardBuildItem.getIcon())
+                    .componentLink(additionalDevUiCardBuildItem.getComponentLink()));
+
+            additionalDevUiCardBuildItem.getBuildTimeData().forEach((k, v) -> card.addBuildTimeData(k, v));
         }
         return card;
     }
