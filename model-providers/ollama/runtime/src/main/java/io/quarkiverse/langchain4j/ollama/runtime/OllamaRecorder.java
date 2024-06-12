@@ -42,6 +42,9 @@ public class OllamaRecorder {
             if (chatModelConfig.numPredict().isPresent()) {
                 optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
             }
+            if (chatModelConfig.numCtx().isPresent()) {
+                optionsBuilder.numCtx(chatModelConfig.numCtx().getAsInt());
+            }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());
             }
@@ -131,6 +134,9 @@ public class OllamaRecorder {
 
             if (chatModelConfig.numPredict().isPresent()) {
                 optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
+            }
+            if (chatModelConfig.numCtx().isPresent()) {
+                optionsBuilder.numCtx(chatModelConfig.numCtx().getAsInt());
             }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());

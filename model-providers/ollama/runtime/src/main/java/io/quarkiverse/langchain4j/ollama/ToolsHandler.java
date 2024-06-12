@@ -25,5 +25,5 @@ public interface ToolsHandler {
      * @param toolSpecifications the tools that could be used
      * @return the extended AiMessage
      */
-    AiMessage getAiMessageFromResponse(ChatResponse response, List<ToolSpecification> toolSpecifications);
+    AiMessage handleResponse(ChatResponse response, List<ToolSpecification> toolSpecifications);
 }

@@ -16,7 +16,7 @@ public class EmptyToolsHandler implements ToolsHandler {
     }
 
     @Override
-    public AiMessage getAiMessageFromResponse(ChatResponse response, List<ToolSpecification> toolSpecifications) {
+    public AiMessage handleResponse(ChatResponse response, List<ToolSpecification> toolSpecifications) {
         return AiMessage.from(response.message().content());
     }
 }

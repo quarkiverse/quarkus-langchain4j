@@ -65,7 +65,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         requestBuilder = toolsHandler.enhanceWithTools(requestBuilder, ollamaMessages,
                 toolSpecifications, toolThatMustBeExecuted);
         ChatResponse response = client.chat(requestBuilder.build());
-        AiMessage aiMessage = toolsHandler.getAiMessageFromResponse(response, toolSpecifications);
+        AiMessage aiMessage = toolsHandler.handleResponse(response, toolSpecifications);
         return Response.from(aiMessage, new TokenUsage(response.promptEvalCount(), response.evalCount()));
 
     }
