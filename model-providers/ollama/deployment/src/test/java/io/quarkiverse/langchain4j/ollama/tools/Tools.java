@@ -1,9 +1,10 @@
 package io.quarkiverse.langchain4j.ollama.tools;
 
-import dev.langchain4j.agent.tool.Tool;
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
+
+import dev.langchain4j.agent.tool.Tool;
+import io.quarkus.logging.Log;
 
 public class Tools {
 

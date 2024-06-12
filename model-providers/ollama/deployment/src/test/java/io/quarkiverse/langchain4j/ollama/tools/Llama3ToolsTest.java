@@ -1,16 +1,18 @@
 package io.quarkiverse.langchain4j.ollama.tools;
 
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.UserMessage;
-import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkus.test.junit.QuarkusTest;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkus.test.junit.QuarkusTest;
 
 @Disabled("Integration tests that need an ollama server running")
 @DisplayName("LLM Tools test - " + Llama3ToolsTest.MODEL_NAME)
@@ -49,6 +51,7 @@ public class Llama3ToolsTest {
                 """)
         String answer(String condominium, String request);
     }
+
     @Inject
     Assistant assistant;
 
@@ -71,8 +74,8 @@ public class Llama3ToolsTest {
     public interface PoemService {
         @SystemMessage("You are a professional poet")
         @UserMessage("""
-            Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
-            """)
+                Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
+                """)
         String writeAPoem(String topic, int lines);
     }
 

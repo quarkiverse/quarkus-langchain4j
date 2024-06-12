@@ -1,5 +1,12 @@
 package io.quarkiverse.langchain4j.ollama;
 
+import static io.quarkiverse.langchain4j.ollama.ChatRequest.Builder;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -7,13 +14,6 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static io.quarkiverse.langchain4j.ollama.ChatRequest.Builder;
 
 public abstract class AbstractToolsHandler implements ToolsHandler {
 
