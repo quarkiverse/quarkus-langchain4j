@@ -68,12 +68,12 @@ public abstract class AbstractToolsHandler implements ToolsHandler {
                 .content("--- " + otherMessages.get(0).content() + " ---").build();
 
         List<Message> lastMessages = convertAssistantMessages(otherMessages.subList(1, otherMessages.size()));
-//        String lastMessagesGrouped = lastMessages.stream()
-//                .map(Message::content)
-//                .collect(Collectors.joining("\n"));
-//        Message lastMessage = Message.builder()
-//                .role(Role.ASSISTANT)
-//                .content(lastMessagesGrouped).build();
+        //        String lastMessagesGrouped = lastMessages.stream()
+        //                .map(Message::content)
+        //                .collect(Collectors.joining("\n"));
+        //        Message lastMessage = Message.builder()
+        //                .role(Role.ASSISTANT)
+        //                .content(lastMessagesGrouped).build();
         // Add specific tools message
         List<Message> messagesWithTools = new ArrayList<>(messages.size() + 1);
         messagesWithTools.add(groupedSystemMessage);
@@ -88,11 +88,11 @@ public abstract class AbstractToolsHandler implements ToolsHandler {
     private List<Message> convertAssistantMessages(List<Message> lastMessages) {
         List<Message> messages = new ArrayList<>();
         Message assistantMsg = null;
-        for (Message msg: lastMessages) {
+        for (Message msg : lastMessages) {
             if (msg.role() == Role.ASSISTANT) {
                 assistantMsg = msg;
             } else if (msg.role() == Role.USER) {
-                if( assistantMsg == null) {
+                if (assistantMsg == null) {
                     messages.add(msg);
                     // throw new RuntimeException(" USER Message detected without corresponding ASSISTANT Message.");
                 } else {
@@ -146,8 +146,7 @@ public abstract class AbstractToolsHandler implements ToolsHandler {
 
         public ToolResponse fromAiMessageContent(String content) {
             Matcher matcher1 = PATTERN1.matcher(content);
-            if (matcher1.find())
-            {
+            if (matcher1.find()) {
                 Map<String, Object> tool_input = Json.fromJson(PATTERN2.matcher(content).group(1), Map.class);
                 return new ToolResponse(matcher1.group(1), tool_input);
             }
