@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.pgvector.runtime;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.Default;
@@ -19,10 +18,13 @@ public class PgVectorEmbeddingStoreRecorder {
     public Function<SyntheticCreationalContext<PgVectorEmbeddingStore>, PgVectorEmbeddingStore> embeddingStoreFunction(
             PgVectorEmbeddingStoreConfig config, String datasourceName) {
         return context -> {
-            AgroalDataSource dataSource = Optional.ofNullable(datasourceName)
-                    .map(DataSourceLiteral::new)
-                    .map(dl -> context.getInjectedReference(AgroalDataSource.class, dl))
-                    .orElse(context.getInjectedReference(AgroalDataSource.class, new Default.Literal()));
+            AgroalDataSource dataSource = null;
+            if (datasourceName != null) {
+                dataSource = context.getInjectedReference(AgroalDataSource.class,
+                        new DataSourceLiteral(datasourceName));
+            } else {
+                dataSource = context.getInjectedReference(AgroalDataSource.class, new Default.Literal());
+            }
 
             dataSource.flush(AgroalDataSource.FlushMode.GRACEFUL);
             dataSource.setPoolInterceptors(List.of(new PgVectorAgroalPoolInterceptor()));
