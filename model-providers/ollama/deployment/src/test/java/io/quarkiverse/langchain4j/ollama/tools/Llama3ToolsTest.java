@@ -22,19 +22,19 @@ public class Llama3ToolsTest {
     public static final String MODEL_NAME = "llama3";
 
     @RegisterAiService(tools = Tools.Calculator.class, modelName = MODEL_NAME)
-    public interface MathAssistantLlama3 {
+    public interface MathAssistant {
         String chat(String userMessage);
     }
 
     @Inject
-    MathAssistantLlama3 mathAssistantLlama3;
+    MathAssistant mathAssistant;
 
     @Test
     @ActivateRequestContext
     void square_of_sum_of_number_of_letters() {
         String msg = "What is the square root with maximal precision of the sum " +
                 "of the numbers of letters in the words hello and llama";
-        String response = mathAssistantLlama3.chat(msg);
+        String response = mathAssistant.chat(msg);
         assertThat(response).contains("3.1622776601683795");
     }
 
