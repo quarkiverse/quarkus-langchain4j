@@ -41,6 +41,26 @@ NOTE: If you add two or more artifacts that provide embedding models,
 Quarkus will ask you to choose one of them using the
 `quarkus.langchain4j.embedding-model.provider` property.
 
+== Reusing embeddings
+
+You might find that when doing local development that computing embeddings takes some time. This pain can often be felt in dev mode when it may take several minutes between restarts.
+
+That's where reusable ingestions come in! If you don't configure a persistent embedding store and set
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.easy-rag.reuse-embeddings.enabled=true
+----
+
+then the `easy-rag` extension will detect the local embeddings. If they exist then they are loaded into the embedding store. If they don't exist, they are computed as normal and then written out to the file `easy-rag-embeddings.json` in the current directory.
+
+NOTE: You can customize the embeddings file by setting the `quarkus.langchain4j.easy-rag.reuse-embeddings.file` property.
+
+See this diagram which describes the flow:
+
+.Reusable ingestion flow
+image::easy-rag-reuse-embeddings.png[align="center"]
+
 == Getting started with a ready-to-use example
 
 To see Easy RAG in action, use the project `samples/chatbot-easy-rag` in the
@@ -84,3 +104,9 @@ For finer-grained control of the Apache Tika parsers (for example, to turn
 off OCR capabilities), you can use a regular XML config file recognized by
 Tika (see https://tika.apache.org/2.9.2/configuring.html[Tika
 documentation]), and specify `-Dtika.config` to point at the file.
+
+== Configuration
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-easy-rag.adoc[leveloffset=+1,opts=optional]

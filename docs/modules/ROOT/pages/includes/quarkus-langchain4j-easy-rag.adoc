@@ -1,0 +1,168 @@
+
+:summaryTableId: quarkus-langchain4j-easy-rag
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-easy-rag_configuration]]link:#quarkus-langchain4j-easy-rag_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path[quarkus.langchain4j.easy-rag.path]`
+
+
+[.description]
+--
+Path to the directory containing the documents to be ingested.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher[quarkus.langchain4j.easy-rag.path-matcher]`
+
+
+[.description]
+--
+Matcher used for filtering which files from the directory should be ingested. This uses the `java.nio.file.FileSystem` path matcher syntax. Example: `glob:++**++.txt` to recursively match all files with the `.txt` extension. The default is `glob:++**++`, recursively matching all files.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH_MATCHER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH_MATCHER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`glob:**`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-recursive[quarkus.langchain4j.easy-rag.recursive]`
+
+
+[.description]
+--
+Whether to recursively ingest documents from subdirectories.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_RECURSIVE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_RECURSIVE+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-segment-size[quarkus.langchain4j.easy-rag.max-segment-size]`
+
+
+[.description]
+--
+Maximum segment size when splitting documents, in tokens.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_SEGMENT_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_SEGMENT_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`300`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-overlap-size[quarkus.langchain4j.easy-rag.max-overlap-size]`
+
+
+[.description]
+--
+Maximum overlap (in tokens) when splitting documents.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_OVERLAP_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_OVERLAP_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`30`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-max-results[quarkus.langchain4j.easy-rag.max-results]`
+
+
+[.description]
+--
+Maximum number of results to return when querying the retrieval augmentor.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_RESULTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_MAX_RESULTS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`5`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy[quarkus.langchain4j.easy-rag.ingestion-strategy]`
+
+
+[.description]
+--
+The strategy to decide whether document ingestion into the store should happen at startup or not. The default is ON. Changing to OFF generally only makes sense if running against a persistent embedding store that was already populated.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_INGESTION_STRATEGY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_INGESTION_STRATEGY+++`
+endif::add-copy-button-to-env-var[]
+-- a|
+`on`, `off` 
+|`on`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled[quarkus.langchain4j.easy-rag.reuse-embeddings.enabled]`
+
+
+[.description]
+--
+Whether or not to reuse embeddings. Defaults to `false`.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_REUSE_EMBEDDINGS_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_REUSE_EMBEDDINGS_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file]]`link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-file[quarkus.langchain4j.easy-rag.reuse-embeddings.file]`
+
+
+[.description]
+--
+The file path to load/save embeddings, assuming `quarkus.langchain4j.easy-rag.reuse-embeddings.enabled == true`.
+
+Defaults to `easy-rag-embeddings.json` in the current directory.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_REUSE_EMBEDDINGS_FILE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_REUSE_EMBEDDINGS_FILE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`easy-rag-embeddings.json`
+
+|===

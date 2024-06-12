@@ -55,6 +55,7 @@ public class EasyRagProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             List<EmbeddingStoreBuildItem> embeddingStores,
             EasyRagRecorder recorder,
+            EasyRagConfig config,
             BuildProducer<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItemBuildProducer) {
         if (embeddingStores.isEmpty()) {
             beanProducer.produce(SyntheticBeanBuildItem
@@ -68,7 +69,7 @@ public class EasyRagProcessor {
                     .defaultBean()
                     .unremovable()
                     .scope(ApplicationScoped.class)
-                    .supplier(recorder.inMemoryEmbeddingStoreSupplier())
+                    .supplier(recorder.inMemoryEmbeddingStoreSupplier(config))
                     .done());
             inMemoryEmbeddingStoreBuildItemBuildProducer.produce(new InMemoryEmbeddingStoreBuildItem());
         }
