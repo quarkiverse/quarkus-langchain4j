@@ -295,7 +295,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     void test_create_recipe_from_list_of_ingredients() throws IOException {
         setChatCompletionMessageContent(
                 // this is supposed to be a string inside a json string hence all the escaping...
-                "{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}");
+                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```");
         Chef chef = AiServices.create(Chef.class, createChatModel());
 
         Recipe result = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
