@@ -31,6 +31,9 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     private static class Codec implements Json.JsonCodec {
 
+        private static final String JSON_START_MARKER = "```json\n";
+        private static final String JSON_END_MARKER = "\n```";
+
         @Override
         public String toJson(Object o) {
             try {
@@ -43,7 +46,8 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
         @Override
         public <T> T fromJson(String json, Class<T> type) {
             try {
-                return ObjectMapperHolder.MAPPER.readValue(json, type);
+                String sanitizedJson = sanitize(json, type);
+                return ObjectMapperHolder.MAPPER.readValue(sanitizedJson, type);
             } catch (JsonProcessingException e) {
                 if ((e instanceof JsonParseException) && (type.isEnum())) {
                     // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
@@ -53,6 +57,16 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 }
                 throw new UncheckedIOException(e);
             }
+        }
+
+        private <T> String sanitize(String original, Class<T> type) {
+            if (String.class.equals(type)) {
+                return original;
+            }
+            if (original.startsWith(JSON_START_MARKER) && original.endsWith(JSON_END_MARKER)) {
+                return original.substring(JSON_START_MARKER.length(), original.length() - JSON_END_MARKER.length());
+            }
+            return original;
         }
 
         @Override
