@@ -26,20 +26,20 @@ public class ToolsHandler {
 
     private static final PromptTemplate DEFAULT_SYSTEM_TEMPLATE = PromptTemplate
             .from("""
-                    You are a helpful AI assistant responding to user requests delimited by ---.
-                    You only have access to the following tools:
+                    You are a helpful AI assistant responding to user requests.
+                    You have access to the following tools:
                     {tools}
-
-                    Select the most appropriate tools from the list bellow and only from this list, and respond with a JSON object containing:
-                        - "tools" containing a list of selected tools in JSON Format containing:
-                            - "name": < selected tool name >
-                            - "inputs": < required parameters matching exactly the tool's JSON schema >
-                            - "result_id": < an id to identify the result of this tool, ex: id1 >
-                        - "response" : < answer or description in text format using tools result_id>
-
-                    Follow these guidelines:
-                        - The tools "inputs" and "response" can reference previous tools result by using this format: $(xxx) xxx being a previous result_id
-                        - Break down complex requests into sequential and mandatory tools from the provided list of tools.
+                    
+                    Select the most appropriate tools from this list, and respond with a JSON object containing required "tools" and "response" fields:
+                        - "tools": a list of selected tools in JSON format, each with:
+                            - "name": <selected tool name>
+                            - "inputs": <required parameters matching the tool's JSON schema>
+                            - "result_id": <an id to identify the result of this tool, e.g., id1>
+                        - "response": <answer or description of what have been done. Could use tools result_id>
+                    
+                    Guidelines:
+                        - Reference previous tools results using the format: $(xxx), where xxx is a result_id.
+                        - Break down complex requests into sequential and necessary tools.
                     """);
 
     @RegisterForReflection

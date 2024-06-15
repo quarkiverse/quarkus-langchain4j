@@ -30,7 +30,7 @@ public class Tools {
     @Singleton
     @SuppressWarnings("unused")
     static class ExpenseService {
-        @Tool("useful for when you need to lookup condominium expenses for given dates.")
+        @Tool("get condominium expenses for given dates.")
         public String getExpenses(String condominium, String fromDate, String toDate) {
             String result = String.format("""
                     The Expenses for %s from %s to %s are:

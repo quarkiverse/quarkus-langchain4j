@@ -86,7 +86,7 @@ public class ToolsTest {
     @ActivateRequestContext
     void send_a_poem() {
         String response = poemService.writeAPoem("Condominium Rives de marne", 4);
-        assertThat(response).contains("Email sent successfully");
+        assertThat(response).contains("he poem has been sent by email.");
     }
 
     @RegisterAiService(modelName = MODEL_NAME)
