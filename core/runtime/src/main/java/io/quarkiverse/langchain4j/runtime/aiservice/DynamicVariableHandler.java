@@ -1,13 +1,14 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.data.message.AiMessage;
-import org.jboss.logging.Logger;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jboss.logging.Logger;
+
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.AiMessage;
 
 public class DynamicVariableHandler {
 
@@ -15,7 +16,7 @@ public class DynamicVariableHandler {
 
     static Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\((.*?)\\)");
 
-    Map<String,String> variables = new HashMap<>();
+    Map<String, String> variables = new HashMap<>();
 
     public void addVariable(String var, String value) {
         variables.put(var, value);
