@@ -15,9 +15,9 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.junit.QuarkusTest;
 
 @Disabled("Integration tests that need an ollama server running")
-@DisplayName("LLM Tools test - " + Llama3ToolsTest.MODEL_NAME)
+@DisplayName("LLM Tools test - " + ToolsTest.MODEL_NAME)
 @QuarkusTest
-public class Llama3ToolsTest {
+public class ToolsTest {
 
     public static final String MODEL_NAME = "llama3";
 
@@ -43,7 +43,7 @@ public class Llama3ToolsTest {
         @SystemMessage("""
                 You are a property manager assistant, answering to co-owners requests.
                 Format the date as YYYY-MM-DD and the time as HH:MM
-                Today is {{current_date}} use this date as date time reference
+                Today is {{current_time}} use this date as date time reference
                 The co-owners is living in the following condominium: {condominium}
                 """)
         @UserMessage("""
@@ -86,6 +86,25 @@ public class Llama3ToolsTest {
     @ActivateRequestContext
     void send_a_poem() {
         String response = poemService.writeAPoem("Condominium Rives de marne", 4);
-        assertThat(response).contains("Success");
+        assertThat(response).contains("Email sent successfully");
+    }
+
+    @RegisterAiService(modelName = MODEL_NAME)
+    public interface PoemService2 {
+        @SystemMessage("You are a professional poet")
+        @UserMessage("""
+                Write a poem about {topic}. The poem should be {lines} lines long.
+                """)
+        String writeAPoem(String topic, int lines);
+    }
+
+    @Inject
+    PoemService2 poemService2;
+
+    @Test
+    @ActivateRequestContext
+    void write_a_poem_without_tools() {
+        String response = poemService2.writeAPoem("Condominium Rives de marne", 4);
+        assertThat(response.split("\n").length).isEqualTo(4);
     }
 }

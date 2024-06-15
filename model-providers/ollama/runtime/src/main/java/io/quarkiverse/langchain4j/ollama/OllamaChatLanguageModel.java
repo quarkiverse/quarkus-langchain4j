@@ -27,7 +27,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         model = builder.model;
         format = builder.format;
         options = builder.options;
-        toolsHandler = builder.experimentalTool ? ToolsHandlerFactory.get(model) : new EmptyToolsHandler();
+        toolsHandler = builder.experimentalTool ? new ToolsHandler() : null;
     }
 
     public static Builder builder() {
@@ -61,13 +61,14 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                 .options(options)
                 .format(format)
                 .stream(false);
-
-        requestBuilder = toolsHandler.enhanceWithTools(requestBuilder, ollamaMessages,
-                toolSpecifications, toolThatMustBeExecuted);
-        ChatResponse response = client.chat(requestBuilder.build());
-        AiMessage aiMessage = toolsHandler.handleResponse(response, toolSpecifications);
-        return Response.from(aiMessage, new TokenUsage(response.promptEvalCount(), response.evalCount()));
-
+        boolean isToolNeeded = toolsHandler != null && toolSpecifications != null && !toolSpecifications.isEmpty();
+        if (isToolNeeded) {
+            return toolsHandler.chat(client, requestBuilder, ollamaMessages, toolSpecifications, toolThatMustBeExecuted);
+        } else {
+            ChatResponse response = client.chat(requestBuilder.build());
+            AiMessage aiMessage = AiMessage.from(response.message().content());
+            return Response.from(aiMessage, new TokenUsage(response.promptEvalCount(), response.evalCount()));
+        }
     }
 
     public static final class Builder {

@@ -16,26 +16,14 @@ public class Tools {
             return s.length();
         }
 
-        String stringLengthStr(String s) {
-            return String.format("The length of the word %s is %d", s, s.length());
-        }
-
         @Tool("Calculates the sum of two numbers")
         int add(int a, int b) {
             return a + b;
         }
 
-        String addStr(int a, int b) {
-            return String.format("The sum of %s and %s is %d", a, b, a + b);
-        }
-
         @Tool("Calculates the square root of a number")
         double sqrt(int x) {
             return Math.sqrt(x);
-        }
-
-        String sqrtStr(int x) {
-            return String.format("The square root of %s is %f", x, Math.sqrt(x));
         }
     }
 
@@ -52,6 +40,7 @@ public class Tools {
             Log.infof(result);
             return result;
         }
+
     }
 
     @ApplicationScoped
@@ -59,7 +48,16 @@ public class Tools {
         @Tool("send the given content by email")
         @SuppressWarnings("unused")
         public void sendAnEmail(String content) {
-            Log.info("Tool sendAnEmail has been executed successfully!");
+            Log.info("""
+                    ***
+                    ***   Tool sendAnEmail has been executed successfully!
+                    ***
+                    """);
         }
+    }
+
+    @Tool(name = "__conversational_response", value = "Respond conversationally if no other tools should be called for a given query.")
+    public String conversation(String response) {
+        return response;
     }
 }
