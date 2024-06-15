@@ -30,7 +30,7 @@ public class Tools {
     @Singleton
     @SuppressWarnings("unused")
     static class ExpenseService {
-        @Tool("get condominium expenses for given dates.")
+        @Tool("Get expenses for a given condominium, from date and to date.")
         public String getExpenses(String condominium, String fromDate, String toDate) {
             String result = String.format("""
                     The Expenses for %s from %s to %s are:
@@ -54,10 +54,5 @@ public class Tools {
                     ***
                     """);
         }
-    }
-
-    @Tool(name = "__conversational_response", value = "Respond conversationally if no other tools should be called for a given query.")
-    public String conversation(String response) {
-        return response;
     }
 }

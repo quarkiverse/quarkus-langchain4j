@@ -20,14 +20,14 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
     private final String model;
     private final String format;
     private final Options options;
-    private final ToolsHandler toolsHandler;
+    private final ExperimentalToolsChatLM experimentalToolsChatLM;
 
     private OllamaChatLanguageModel(Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
         model = builder.model;
         format = builder.format;
         options = builder.options;
-        toolsHandler = builder.experimentalTool ? new ToolsHandler() : null;
+        experimentalToolsChatLM = builder.experimentalTool ? new ExperimentalToolsChatLM() : null;
     }
 
     public static Builder builder() {
@@ -61,9 +61,10 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                 .options(options)
                 .format(format)
                 .stream(false);
-        boolean isToolNeeded = toolsHandler != null && toolSpecifications != null && !toolSpecifications.isEmpty();
+        boolean isToolNeeded = experimentalToolsChatLM != null && toolSpecifications != null && !toolSpecifications.isEmpty();
         if (isToolNeeded) {
-            return toolsHandler.chat(client, requestBuilder, ollamaMessages, toolSpecifications, toolThatMustBeExecuted);
+            return experimentalToolsChatLM.chat(client, requestBuilder, ollamaMessages, toolSpecifications,
+                    toolThatMustBeExecuted);
         } else {
             ChatResponse response = client.chat(requestBuilder.build());
             AiMessage aiMessage = AiMessage.from(response.message().content());

@@ -20,26 +20,33 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-public class ToolsHandler {
+public class ExperimentalToolsChatLM {
 
-    private static final Logger log = Logger.getLogger(ToolsHandler.class);
+    private static final Logger log = Logger.getLogger(ExperimentalToolsChatLM.class);
 
     private static final PromptTemplate DEFAULT_SYSTEM_TEMPLATE = PromptTemplate
             .from("""
-                    You are a helpful AI assistant responding to user requests.
+                    --- Context ---
+                    {context}
+                    ---------------
+
+                    You are a helpful AI assistant responding to user requests taking into account the previous context.
                     You have access to the following tools:
                     {tools}
-                    
-                    Select the most appropriate tools from this list, and respond with a JSON object containing required "tools" and "response" fields:
+
+                    Create a list of most appropriate tools to call in order to answer to the user request.
+                    If no tools are required respond with response field directly.
+                    Respond with a JSON object containing required "tools" and required not null "response" fields:
                         - "tools": a list of selected tools in JSON format, each with:
                             - "name": <selected tool name>
-                            - "inputs": <required parameters matching the tool's JSON schema>
+                            - "inputs": <required parameters using tools result_id matching the tool's JSON schema>
                             - "result_id": <an id to identify the result of this tool, e.g., id1>
-                        - "response": <answer or description of what have been done. Could use tools result_id>
-                    
+                        - "response": < Summary of tools used with your response using tools result_id>
+
                     Guidelines:
-                        - Reference previous tools results using the format: $(xxx), where xxx is a result_id.
+                        - Only reference previous tools results using the format: $(xxx), where xxx is a previous result_id.
                         - Break down complex requests into sequential and necessary tools.
+                        - Use previous results through result_id for inputs response, do not invent them.
                     """);
 
     @RegisterForReflection
@@ -53,26 +60,21 @@ public class ToolsHandler {
     public Response<AiMessage> chat(OllamaClient client, Builder builder, List<Message> messages,
             List<ToolSpecification> toolSpecifications,
             ToolSpecification toolThatMustBeExecuted) {
-        // Test if it's an AI Service request with tool results
+        // Test if it's an AI request with tools execution response.
         boolean hasResultMessages = messages.stream().anyMatch(m -> m.role() == Role.TOOL_EXECUTION_RESULT);
         if (hasResultMessages) {
             String result = messages.stream().filter(term -> term.role() == Role.ASSISTANT)
                     .map(Message::content).collect(Collectors.joining("\n"));
             return Response.from(AiMessage.from(result));
         }
-
+        // Creates Chat request
         builder.format("json");
-        Message groupedSystemMessage = createSystemMessageWithTools(messages, toolSpecifications);
+        Message systemMessage = createSystemMessageWithTools(messages, toolSpecifications);
 
         List<Message> otherMessages = messages.stream().filter(cm -> cm.role() != Role.SYSTEM).toList();
-        Message initialUserMessage = Message.builder()
-                .role(Role.USER)
-                .content("--- " + otherMessages.get(0).content() + " ---").build();
-
-        List<Message> messagesWithTools = new ArrayList<>(messages.size() + 1);
-        messagesWithTools.add(groupedSystemMessage);
-        messagesWithTools.addAll(otherMessages.subList(1, otherMessages.size()));
-        messagesWithTools.add(initialUserMessage);
+        List<Message> messagesWithTools = new ArrayList<>(otherMessages.size() + 1);
+        messagesWithTools.add(systemMessage);
+        messagesWithTools.addAll(otherMessages);
 
         builder.messages(messagesWithTools);
 
@@ -82,18 +84,16 @@ public class ToolsHandler {
     }
 
     private Message createSystemMessageWithTools(List<Message> messages, List<ToolSpecification> toolSpecifications) {
-        Prompt prompt = DEFAULT_SYSTEM_TEMPLATE.apply(
-                Map.of("tools", Json.toJson(toolSpecifications)));
-
         String initialSystemMessages = messages.stream().filter(sm -> sm.role() == Role.SYSTEM)
                 .map(Message::content)
                 .collect(Collectors.joining("\n"));
-
+        Prompt prompt = DEFAULT_SYSTEM_TEMPLATE.apply(
+                Map.of("tools", Json.toJson(toolSpecifications),
+                        "context", initialSystemMessages));
         return Message.builder()
                 .role(Role.SYSTEM)
-                .content(prompt.text() + "\n" + initialSystemMessages)
+                .content(prompt.text())
                 .build();
-
     }
 
     private AiMessage handleResponse(ChatResponse response, List<ToolSpecification> toolSpecifications) {
@@ -123,7 +123,7 @@ public class ToolsHandler {
             }
         }
 
-        if (toolResponses.response != null) {
+        if (toolResponses.response != null && !toolResponses.response().isEmpty()) {
             return new AiMessage(toolResponses.response, toolExecutionRequests);
         }
         return AiMessage.from(toolExecutionRequests);
