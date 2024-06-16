@@ -1,9 +1,11 @@
 package io.quarkiverse.langchain4j.test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.logging.LogRecord;
 
 import jakarta.inject.Inject;
 
@@ -29,12 +31,23 @@ public class EasyRagNotRecursiveTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments\n" +
                             "quarkus.langchain4j.easy-rag.recursive=false\n"),
-                            "application.properties"));
+                            "application.properties"))
+            .setLogRecordPredicate(record -> true)
+            .assertLogRecords(EasyRagNotRecursiveTest::verifyLogRecords);
 
     @Inject
     InMemoryEmbeddingStore<TextSegment> embeddingStore;
 
     Embedding DUMMY_EMBEDDING = new Embedding(new float[384]);
+
+    private static void verifyLogRecords(List<LogRecord> logRecords) {
+        assertThat(logRecords.stream().map(LogRecord::getMessage))
+                .contains(
+                        "Ingesting documents from path: src/test/resources/ragdocuments, path matcher = glob:**, recursive = false")
+                .contains("Ingested 1 files as 1 documents")
+                .doesNotContain("Writing embeddings to %s")
+                .doesNotContain("Reading embeddings from %s");
+    }
 
     @Test
     public void verifyOnlyTheRootDirectoryIsIngested() {

@@ -18,11 +18,15 @@ import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreWithFilteringIT;
+import dev.langchain4j.store.embedding.EmbeddingStoreIT;
 import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder;
 import io.quarkus.logging.Log;
 
-abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreWithFilteringIT {
+// FIXME: this should extend EmbeddingStoreWithFilteringIT, but that class
+// contains tests parametrized through @MethodSource, which is not supported
+// by the quarkus-junit5-internal testing framework
+abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreIT {
+
     private static final EmbeddingModel embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
     @Inject
     protected EmbeddingStore<TextSegment> pgvectorEmbeddingStore;
