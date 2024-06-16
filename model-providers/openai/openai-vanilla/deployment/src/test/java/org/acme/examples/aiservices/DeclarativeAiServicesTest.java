@@ -318,8 +318,8 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                 List.of(
                         new MessageContent("user",
                                 "What is the square root of 485906798473894056 in scientific notation?"),
-                        new MessageContent("assistant", null),
-                        new MessageContent("function", "6.97070153193991E8")));
+                        new MessageContent("function", "6.97070153193991E8"),
+                        new MessageContent("assistant", null)));
     }
 
     @RegisterAiService
