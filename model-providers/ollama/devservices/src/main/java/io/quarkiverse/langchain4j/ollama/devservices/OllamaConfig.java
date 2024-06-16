@@ -38,4 +38,10 @@ public interface OllamaConfig {
     @WithDefault(ORCA_MINI_MODEL)
     String model();
 
+    /**
+     * If the ollama container requests all available gpus.
+     */
+    @WithDefault("false")
+    boolean requestGpu();
+
 }

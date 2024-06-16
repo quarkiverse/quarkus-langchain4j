@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ollama.devservices;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,6 +14,8 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.LazyFuture;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.DeviceRequest;
+import com.github.dockerjava.api.model.HostConfig;
 
 import io.quarkus.devservices.common.ConfigureUtil;
 
@@ -60,9 +63,19 @@ public class OllamaContainer extends GenericContainer<OllamaContainer> {
         this.runtimeModelId = getModelId(config);
         super.withLabel(OllamaProcessor.DEV_SERVICE_LABEL, OllamaProcessor.FEATURE);
         super.withNetwork(Network.SHARED);
-
         super.addFixedExposedPort(PORT_OLLAMA, PORT_OLLAMA);
         super.withImagePullPolicy(dockerImageName -> !dockerImageName.getVersionPart().endsWith(this.runtimeModelId));
+        if (config.requestGpu()) {
+            withCreateContainerCmdModifier(cmd -> {
+                HostConfig hostConfig = cmd.getHostConfig();
+                if (hostConfig == null) {
+                    log.warn("Could not get host config, cannot use gpus");
+                } else {
+                    hostConfig.withDeviceRequests(
+                            List.of(new DeviceRequest().withCapabilities(List.of(List.of("gpu"))).withCount(-1)));
+                }
+            });
+        }
     }
 
     @Override
