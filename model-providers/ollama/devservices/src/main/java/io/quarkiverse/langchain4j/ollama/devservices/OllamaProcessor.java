@@ -129,10 +129,12 @@ public class OllamaProcessor {
             return null;
         }
 
-        String localOllamaImage = String.format("tc-%s-orca-mini", ollamaConfig.imageName());
-
+        String runtimeModel = OllamaContainer.getModelId(ollamaConfig);
+        String filteredModelName = filterModelTag(runtimeModel);
+        String localOllamaImage = String.format("tc-%s-%s", ollamaConfig.imageName(), filteredModelName);
         final OllamaImage ollamaImage = new OllamaImage(ollamaConfig.imageName(), localOllamaImage);
-        OllamaContainer ollama = new OllamaContainer(ollamaConfig, localOllamaImage, useSharedNetwork, ollamaImage);
+        OllamaContainer ollama = new OllamaContainer(ollamaConfig, localOllamaImage, useSharedNetwork, ollamaImage,
+                runtimeModel);
         ollama.start();
         createImage(ollama, localOllamaImage);
 
@@ -141,6 +143,10 @@ public class OllamaProcessor {
                 ollama::close,
                 ollama.getExposedConfig());
 
+    }
+
+    static String filterModelTag(String runtimeModel) {
+        return runtimeModel.replace(':', '_');
     }
 
     static void createImage(GenericContainer<?> container, String localImageName) {

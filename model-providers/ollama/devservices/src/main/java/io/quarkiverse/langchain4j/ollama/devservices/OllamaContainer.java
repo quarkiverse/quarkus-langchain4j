@@ -51,18 +51,19 @@ public class OllamaContainer extends GenericContainer<OllamaContainer> {
 
     private String runtimeModelId;
 
-    OllamaContainer(OllamaConfig config, String localOllamaImage, boolean useSharedNetwork, LazyFuture<DockerImageName> image) {
+    OllamaContainer(OllamaConfig config, String localOllamaImage, boolean useSharedNetwork, LazyFuture<DockerImageName> image,
+            String runtimeModelId) {
         super(image.get());
         this.config = config;
         this.dockerImageName = image.get();
         this.localOllamaImage = localOllamaImage;
         this.useSharedNetwork = useSharedNetwork;
-        this.runtimeModelId = getModelId(config);
+        this.runtimeModelId = runtimeModelId;
         super.withLabel(OllamaProcessor.DEV_SERVICE_LABEL, OllamaProcessor.FEATURE);
         super.withNetwork(Network.SHARED);
 
         super.addFixedExposedPort(PORT_OLLAMA, PORT_OLLAMA);
-        super.withImagePullPolicy(dockerImageName -> !dockerImageName.getVersionPart().endsWith(this.runtimeModelId));
+        super.withImagePullPolicy(dockerImageName -> !dockerImageName.asCanonicalNameString().equals(localOllamaImage));
     }
 
     @Override
