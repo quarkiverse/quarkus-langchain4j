@@ -5,6 +5,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 import java.time.Duration;
 import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -28,5 +29,19 @@ public interface ChromaConfig {
      * The timeout duration for the Chroma client. If not specified, 5 seconds will be used.
      */
     Optional<Duration> timeout();
+
+    /**
+     * Whether requests to Chroma should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.log-requests}")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether responses from Chroma should be logged
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("${quarkus.langchain4j.log-requests}")
+    Optional<Boolean> logResponses();
 
 }
