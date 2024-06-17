@@ -157,6 +157,40 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-requests]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-requests[quarkus.langchain4j.chroma.log-requests]`
+
+
+[.description]
+--
+Whether requests to Chroma should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-responses]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-responses[quarkus.langchain4j.chroma.log-responses]`
+
+
+[.description]
+--
+Whether responses from Chroma should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env]]`link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env[quarkus.langchain4j.chroma.devservices.container-env]`
 
 

@@ -5,7 +5,6 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
@@ -18,11 +17,12 @@ import io.quarkus.test.QuarkusUnitTest;
 /**
  * Tests injecting a ChromaEmbeddingStore using CDI, configured using properties.
  */
-@Disabled("temporarily disabled until we figure out what's going on")
 class ChromaEmbeddingStoreCDITest extends EmbeddingStoreIT {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            //            .overrideConfigKey("quarkus.langchain4j.log-requests", "true")
+            //            .overrideConfigKey("quarkus.langchain4j.log-responses", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
