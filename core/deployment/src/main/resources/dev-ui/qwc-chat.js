@@ -191,12 +191,12 @@ export class QwcChat extends LitElement {
         let message = e.detail.value;
         if (message && message.trim().length > 0) {
             this._cementSystemMessage();
-            this._addUserMessage(message);
+            var indexUserMessage = this._addUserMessage(message);
             this._showProgressBar();
 
             if (this._streamingChatEnabled) {
                 var msg = "";
-                var index = this._addBotMessage(msg);
+                var index = null;
                 try {
                     this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled})
                         .onNext(jsonRpcResponse => {
@@ -205,11 +205,25 @@ export class QwcChat extends LitElement {
                                 this._hideProgressBar();
                             } else if (jsonRpcResponse.result.augmentedMessage) {
                                 // replace the last user message with the augmented message
-                                this._updateMessage(index - 1, jsonRpcResponse.result.augmentedMessage);
+                                this._updateMessage(indexUserMessage, jsonRpcResponse.result.augmentedMessage);
+                            } else if (jsonRpcResponse.result.toolExecutionRequest) {
+                                var item = jsonRpcResponse.result.toolExecutionRequest;
+                                this._addToolMessage(`Request to execute the following tool:
+                                    Request ID = ${item.id},
+                                    tool name = ${item.name},
+                                    arguments = ${item.arguments}`);
+                            } else if (jsonRpcResponse.result.toolExecutionResult) {
+                                var item = jsonRpcResponse.result.toolExecutionResult;
+                                this._addToolMessage(`Tool execution result for request ID = ${item.id},
+                                    tool name = ${item.toolName},
+                                    status = ${item.text}`);
                             } else if (jsonRpcResponse.result.message) {
                                 this._updateMessage(index, jsonRpcResponse.result.message);
                                 this._hideProgressBar();
-                            } else {
+                            } else { // a new token from the stream
+                                if(index === null) {
+                                    index = this._addBotMessage(msg);
+                                }
                                 msg += jsonRpcResponse.result.token;
                                 this._updateMessage(index, msg);
                             }
@@ -321,7 +335,7 @@ status = ${item.toolExecutionResult.text}`);
     }
 
     _addUserMessage(message){
-        this._addMessage(message, "Me", 1);
+        return this._addMessage(message, "Me", 1);
     }
 
     _addStyledMessage(message, user, colorIndex, className){
