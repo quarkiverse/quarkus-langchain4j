@@ -42,6 +42,7 @@ import io.quarkus.arc.All;
 import io.quarkus.arc.Arc;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.vertx.core.json.JsonObject;
 
@@ -149,7 +150,7 @@ public class ChatJsonRPCService {
         // removing single messages
         List<ChatMessage> chatMemoryBackup = memory.messages();
 
-        return Multi.createFrom().emitter(em -> {
+        Multi<JsonObject> stream = Multi.createFrom().emitter(em -> {
             try {
                 // invoke RAG is applicable
                 if (retrievalAugmentor != null && ragEnabled) {
@@ -198,6 +199,8 @@ public class ChatJsonRPCService {
                 em.fail(t);
             }
         });
+        // run on a worker thread because the retrieval augmentor might be blocking
+        return stream.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public ChatResultPojo chat(String message, boolean ragEnabled) {
@@ -281,31 +284,31 @@ public class ChatJsonRPCService {
         streamingModel.get().generate(memory.messages(), toolSpecifications, new StreamingResponseHandler<AiMessage>() {
             @Override
             public void onComplete(Response<AiMessage> response) {
-                AiMessage aiMessage = response.content();
-                memory.add(aiMessage);
-                if (!aiMessage.hasToolExecutionRequests()) {
-                    em.emit(new JsonObject().put("message", aiMessage.text()));
-                    em.complete();
-                } else {
-                    for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
-                        ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                        ToolExecutionRequestPojo toolExecutionRequestPojo = new ToolExecutionRequestPojo(
-                                toolExecutionRequest.id(),
-                                toolExecutionRequest.name(),
-                                toolExecutionRequest.arguments());
-                        em.emit(new JsonObject().put("toolExecutionRequest", toolExecutionRequestPojo));
-                        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
-                        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                                toolExecutionRequest,
-                                toolExecutionResult);
-                        memory.add(toolExecutionResultMessage);
-                        ToolExecutionResultPojo toolExecutionResultPojo = new ToolExecutionResultPojo(
-                                toolExecutionResultMessage.id(),
-                                toolExecutionResultMessage.toolName(), toolExecutionResultMessage.text());
-                        em.emit(new JsonObject().put("toolExecutionResult", toolExecutionResultPojo));
+                // run on a worker thread because the tool might be blocking
+                Infrastructure.getDefaultExecutor().execute(() -> {
+                    AiMessage aiMessage = response.content();
+                    memory.add(aiMessage);
+                    if (!aiMessage.hasToolExecutionRequests()) {
+                        em.emit(new JsonObject().put("message", aiMessage.text()));
+                        em.complete();
+                    } else {
+                        for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                            ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
+                            ToolExecutionRequestPojo toolExecutionRequestPojo = new ToolExecutionRequestPojo(
+                                    toolExecutionRequest.id(), toolExecutionRequest.name(), toolExecutionRequest.arguments());
+                            em.emit(new JsonObject().put("toolExecutionRequest", toolExecutionRequestPojo));
+                            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
+                            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
+                                    .from(toolExecutionRequest, toolExecutionResult);
+                            memory.add(toolExecutionResultMessage);
+                            ToolExecutionResultPojo toolExecutionResultPojo = new ToolExecutionResultPojo(
+                                    toolExecutionResultMessage.id(), toolExecutionResultMessage.toolName(),
+                                    toolExecutionResultMessage.text());
+                            em.emit(new JsonObject().put("toolExecutionResult", toolExecutionResultPojo));
+                        }
+                        executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
                     }
-                    executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
-                }
+                });
             }
 
             @Override
