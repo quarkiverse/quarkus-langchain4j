@@ -27,6 +27,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.Metadata;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
@@ -149,9 +150,11 @@ public class ChatJsonRPCService {
                 if (retrievalAugmentor != null && ragEnabled) {
                     UserMessage userMessage = UserMessage.from(message);
                     Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
-                    memory.add(retrievalAugmentor.augment(userMessage, metadata));
+                    AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+                    ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                    memory.add(augmentedMessage);
+                    em.emit(new JsonObject().put("augmentedMessage", augmentedMessage.text()));
                 } else {
-
                     memory.add(new UserMessage(message));
                 }
 
@@ -201,7 +204,9 @@ public class ChatJsonRPCService {
             if (retrievalAugmentor != null && ragEnabled) {
                 UserMessage userMessage = UserMessage.from(message);
                 Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
-                memory.add(retrievalAugmentor.augment(userMessage, metadata));
+                AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+                ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                memory.add(augmentedMessage);
             } else {
                 memory.add(new UserMessage(message));
             }

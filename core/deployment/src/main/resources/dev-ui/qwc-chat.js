@@ -124,10 +124,10 @@ export class QwcChat extends LitElement {
                                       this._streamingChatEnabled = this._streamingChatEnabled && !this._ragEnabled;
                                       this.render();
                                   }}"/></div>
-            <div><vaadin-checkbox label="Enable Streaming Chat (if supported by model & rag disabled)"
+            <div><vaadin-checkbox label="Enable Streaming Chat"
                                   class="${this._streamingChatSupported ? 'show' : 'hide'}"
                                   ?checked="${this._streamingChatEnabled}"
-                                  ?disabled="${!this._streamingChatSupported || this._ragEnabled}"
+                                  ?disabled="${!this._streamingChatSupported}"
                                   @change="${(event) => {
                                       this._streamingChatEnabled = event.target.checked;
                                       this.render();
@@ -189,36 +189,39 @@ export class QwcChat extends LitElement {
 
     _handleSendChat(e) {
         let message = e.detail.value;
-        if(message && message.trim().length>0){
+        if (message && message.trim().length > 0) {
             this._cementSystemMessage();
             this._addUserMessage(message);
             this._showProgressBar();
-            
-           if (this._streamingChatEnabled) {
+
+            if (this._streamingChatEnabled) {
                 var msg = "";
                 var index = this._addBotMessage(msg);
-               try {
-               this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled})
-                .onNext(jsonRpcResponse => {
-                  if (jsonRpcResponse.result.error) {
-                    this._showError(jsonRpcResponse.result.error);
-                    this._hideProgressBar();
-                  } else if (jsonRpcResponse.result.message) {
-                    this._updateMessage(index, jsonRpcResponse.result.message);
-                    this._hideProgressBar();
-                  } else {
-                    msg += jsonRpcResponse.result.token;
-                    this._updateMessage(index, msg);
-                  }
-                })
-                .onError((error) => {
+                try {
+                    this._observer = this.jsonRpc.streamingChat({message: message, ragEnabled: this._ragEnabled})
+                        .onNext(jsonRpcResponse => {
+                            if (jsonRpcResponse.result.error) {
+                                this._showError(jsonRpcResponse.result.error);
+                                this._hideProgressBar();
+                            } else if (jsonRpcResponse.result.augmentedMessage) {
+                                // replace the last user message with the augmented message
+                                this._updateMessage(index - 1, jsonRpcResponse.result.augmentedMessage);
+                            } else if (jsonRpcResponse.result.message) {
+                                this._updateMessage(index, jsonRpcResponse.result.message);
+                                this._hideProgressBar();
+                            } else {
+                                msg += jsonRpcResponse.result.token;
+                                this._updateMessage(index, msg);
+                            }
+                        })
+                        .onError((error) => {
+                            this._showError(error);
+                            this._hideProgressBar();
+                        });
+                } catch (error) {
                     this._showError(error);
                     this._hideProgressBar();
-                });
-               } catch(error) {
-                   this._showError(error);
-                   this._hideProgressBar();
-               }
+                }
             } else {
                 this.jsonRpc.chat({message: message, ragEnabled: this._ragEnabled}).then(jsonRpcResponse => {
                     this._showResponse(jsonRpcResponse);
@@ -229,7 +232,7 @@ export class QwcChat extends LitElement {
             }
         }
 
-      }
+    }
 
     _showResponse(jsonRpcResponse) {
         if (jsonRpcResponse.result === false) {
