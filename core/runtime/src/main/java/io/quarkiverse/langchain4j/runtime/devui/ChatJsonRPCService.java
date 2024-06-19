@@ -27,11 +27,14 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.Metadata;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatMessagePojo;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatResultPojo;
+import io.quarkiverse.langchain4j.runtime.devui.json.ToolExecutionRequestPojo;
+import io.quarkiverse.langchain4j.runtime.devui.json.ToolExecutionResultPojo;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutorFactory;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
@@ -39,11 +42,14 @@ import io.quarkus.arc.All;
 import io.quarkus.arc.Arc;
 import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.vertx.core.json.JsonObject;
 
 @ActivateRequestContext
 public class ChatJsonRPCService {
 
+    public static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 20;
     private final ChatLanguageModel model;
     private final Optional<StreamingChatLanguageModel> streamingModel;
 
@@ -144,38 +150,47 @@ public class ChatJsonRPCService {
         // removing single messages
         List<ChatMessage> chatMemoryBackup = memory.messages();
 
-        return Multi.createFrom().emitter(em -> {
+        Multi<JsonObject> stream = Multi.createFrom().emitter(em -> {
             try {
+                // invoke RAG is applicable
                 if (retrievalAugmentor != null && ragEnabled) {
                     UserMessage userMessage = UserMessage.from(message);
                     Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
-                    memory.add(retrievalAugmentor.augment(userMessage, metadata));
+                    AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+                    ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                    memory.add(augmentedMessage);
+                    em.emit(new JsonObject().put("augmentedMessage", augmentedMessage.text()));
                 } else {
-
                     memory.add(new UserMessage(message));
                 }
 
                 StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
 
-                streamingModel.generate(memory.messages(), new StreamingResponseHandler<AiMessage>() {
-                    @Override
-                    public void onComplete(Response<AiMessage> response) {
-                        memory.add(response.content());
-                        String message = response.content().text();
-                        em.emit(new JsonObject().put("message", message));
-                        em.complete();
-                    }
+                // invoke tools if applicable
+                Response<AiMessage> modelResponse;
+                if (toolSpecifications.isEmpty()) {
+                    streamingModel.generate(memory.messages(), new StreamingResponseHandler<AiMessage>() {
+                        @Override
+                        public void onComplete(Response<AiMessage> response) {
+                            memory.add(response.content());
+                            String message = response.content().text();
+                            em.emit(new JsonObject().put("message", message));
+                            em.complete();
+                        }
 
-                    @Override
-                    public void onNext(String token) {
-                        em.emit(new JsonObject().put("token", token));
-                    }
+                        @Override
+                        public void onNext(String token) {
+                            em.emit(new JsonObject().put("token", token));
+                        }
 
-                    @Override
-                    public void onError(Throwable error) {
-                        em.fail(error);
-                    }
-                });
+                        @Override
+                        public void onError(Throwable error) {
+                            em.fail(error);
+                        }
+                    });
+                } else {
+                    executeWithToolsAndStreaming(memory, em, MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+                }
             } catch (Throwable t) {
                 // restore the memory from the backup
                 memory.clear();
@@ -184,6 +199,8 @@ public class ChatJsonRPCService {
                 em.fail(t);
             }
         });
+        // run on a worker thread because the retrieval augmentor might be blocking
+        return stream.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public ChatResultPojo chat(String message, boolean ragEnabled) {
@@ -201,7 +218,9 @@ public class ChatJsonRPCService {
             if (retrievalAugmentor != null && ragEnabled) {
                 UserMessage userMessage = UserMessage.from(message);
                 Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
-                memory.add(retrievalAugmentor.augment(userMessage, metadata));
+                AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+                ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
+                memory.add(augmentedMessage);
             } else {
                 memory.add(new UserMessage(message));
             }
@@ -226,7 +245,7 @@ public class ChatJsonRPCService {
 
     // FIXME: this was basically copied from `dev.langchain4j.service.DefaultAiServices`,
     // maybe it could be extracted into a reusable piece of code
-    public Response<AiMessage> executeWithTools(ChatMemory memory) {
+    private Response<AiMessage> executeWithTools(ChatMemory memory) {
         Response<AiMessage> response = model.generate(memory.messages(), toolSpecifications);
         int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 20;
         int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
@@ -251,6 +270,57 @@ public class ChatJsonRPCService {
             response = model.generate(memory.messages(), toolSpecifications);
         }
         return Response.from(response.content(), new TokenUsage(), response.finishReason());
+    }
+
+    private void executeWithToolsAndStreaming(ChatMemory memory,
+            MultiEmitter<? super JsonObject> em,
+            int toolExecutionsLeft) {
+        toolExecutionsLeft--;
+        if (toolExecutionsLeft == 0) {
+            throw new RuntimeException(
+                    "Something is wrong, exceeded " + MAX_SEQUENTIAL_TOOL_EXECUTIONS + " sequential tool executions");
+        }
+        int finalToolExecutionsLeft = toolExecutionsLeft;
+        streamingModel.get().generate(memory.messages(), toolSpecifications, new StreamingResponseHandler<AiMessage>() {
+            @Override
+            public void onComplete(Response<AiMessage> response) {
+                // run on a worker thread because the tool might be blocking
+                Infrastructure.getDefaultExecutor().execute(() -> {
+                    AiMessage aiMessage = response.content();
+                    memory.add(aiMessage);
+                    if (!aiMessage.hasToolExecutionRequests()) {
+                        em.emit(new JsonObject().put("message", aiMessage.text()));
+                        em.complete();
+                    } else {
+                        for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                            ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
+                            ToolExecutionRequestPojo toolExecutionRequestPojo = new ToolExecutionRequestPojo(
+                                    toolExecutionRequest.id(), toolExecutionRequest.name(), toolExecutionRequest.arguments());
+                            em.emit(new JsonObject().put("toolExecutionRequest", toolExecutionRequestPojo));
+                            String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, currentMemoryId.get());
+                            ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage
+                                    .from(toolExecutionRequest, toolExecutionResult);
+                            memory.add(toolExecutionResultMessage);
+                            ToolExecutionResultPojo toolExecutionResultPojo = new ToolExecutionResultPojo(
+                                    toolExecutionResultMessage.id(), toolExecutionResultMessage.toolName(),
+                                    toolExecutionResultMessage.text());
+                            em.emit(new JsonObject().put("toolExecutionResult", toolExecutionResultPojo));
+                        }
+                        executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
+                    }
+                });
+            }
+
+            @Override
+            public void onNext(String token) {
+                em.emit(new JsonObject().put("token", token));
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                throw new RuntimeException(error);
+            }
+        });
     }
 
 }
