@@ -16,6 +16,13 @@ public interface ImageModelConfig {
     Optional<String> resourceName();
 
     /**
+     * This property will override the {@code quarkus.langchain4j.azure-openai.domain-name}
+     * specifically for image models if it is set.
+     */
+    @WithDefault("openai.azure.com")
+    Optional<String> domainName();
+
+    /**
      * This property will override the {@code quarkus.langchain4j.azure-openai.deployment-name}
      * specifically for image models if it is set.
      */

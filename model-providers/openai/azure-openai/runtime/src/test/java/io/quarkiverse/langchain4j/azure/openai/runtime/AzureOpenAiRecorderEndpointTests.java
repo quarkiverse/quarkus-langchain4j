@@ -19,6 +19,7 @@ import io.smallrye.config.ConfigValidationException;
 import io.smallrye.config.ConfigValidationException.Problem;
 
 class AzureOpenAiRecorderEndpointTests {
+
     private static final String CONFIG_ERROR_MESSAGE_TEMPLATE = "SRCFG00014: The config property quarkus.langchain4j.azure-openai.%s is required but it could not be found in any config source";
 
     LangChain4jAzureOpenAiConfig.AzureAiConfig config = spy(CustomAzureAiConfig.class);
@@ -99,6 +100,10 @@ class AzureOpenAiRecorderEndpointTests {
                 .when(this.config)
                 .resourceName();
 
+        doReturn(Optional.of("domainName"))
+                .when(this.config)
+                .domainName();
+
         doReturn(Optional.of("deploymentName"))
                 .when(this.config)
                 .deploymentName();
@@ -106,7 +111,8 @@ class AzureOpenAiRecorderEndpointTests {
         assertThat(AzureOpenAiRecorder.getEndpoint(this.config, NamedConfigUtil.DEFAULT_NAME,
                 LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType.CHAT))
                 .isNotNull()
-                .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName", "deploymentName"));
+                .isEqualTo(String.format(AzureOpenAiRecorder.AZURE_ENDPOINT_URL_PATTERN, "resourceName",
+                        "domainName", "deploymentName"));
     }
 
     static class CustomLangchain4JAzureOpenAiConfig implements LangChain4jAzureOpenAiConfig {
@@ -129,9 +135,15 @@ class AzureOpenAiRecorderEndpointTests {
     }
 
     static class CustomAzureAiConfig implements LangChain4jAzureOpenAiConfig.AzureAiConfig {
+
         @Override
         public Optional<String> resourceName() {
             return Optional.empty();
+        }
+
+        @Override
+        public Optional<String> domainName() {
+            return Optional.of("domainName");
         }
 
         @Override
@@ -190,6 +202,11 @@ class AzureOpenAiRecorderEndpointTests {
                 @Override
                 public Optional<String> resourceName() {
                     return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> domainName() {
+                    return Optional.of("domainName");
                 }
 
                 @Override
@@ -254,6 +271,11 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
+                public Optional<String> domainName() {
+                    return Optional.of("domainName");
+                }
+
+                @Override
                 public Optional<String> deploymentName() {
                     return Optional.empty();
                 }
@@ -281,6 +303,11 @@ class AzureOpenAiRecorderEndpointTests {
                 @Override
                 public Optional<String> resourceName() {
                     return Optional.empty();
+                }
+
+                @Override
+                public Optional<String> domainName() {
+                    return Optional.of("domainName");
                 }
 
                 @Override
