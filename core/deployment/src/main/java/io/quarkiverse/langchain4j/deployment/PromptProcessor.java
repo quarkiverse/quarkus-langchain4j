@@ -37,6 +37,7 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.analysis.SimpleVerifier;
 
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
+import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.StructuredPromptsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -88,6 +89,13 @@ public class PromptProcessor {
             String delimiter = delimiterValue != null ? delimiterValue.asString() : "\n";
             String promptTemplateString = String.join(delimiter, parts);
             ClassInfo annotatedClass = target.asClass();
+
+            // The response schema placeholder is not enabled for the @StructuredPrompt.
+            if (promptTemplateString.contains(ResponseSchemaUtil.placeholder())) {
+                throw new RuntimeException("The %s placeholder is not enabled for the @StructuredPrompt. Found it: %s"
+                        .formatted(ResponseSchemaUtil.placeholder(), annotatedClass));
+            }
+
             boolean hasNestedParams = hasNestedParams(promptTemplateString);
             if (!hasNestedParams) {
                 ClassInfo current = annotatedClass;

@@ -36,6 +36,13 @@ public interface LangChain4jBuildConfig {
      */
     DevServicesConfig devservices();
 
+    /**
+     * Configuration property to enable or disable the use of the {response schema} placeholder in
+     * the @SystemMessage/@UserMessage.
+     */
+    @WithDefault("true")
+    boolean responseSchema();
+
     interface BaseConfig {
         /**
          * Chat model
@@ -61,8 +68,9 @@ public interface LangChain4jBuildConfig {
     @ConfigGroup
     interface DevServicesConfig {
         /**
-         * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
-         * by default, unless there is an existing configuration present.
+         * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is
+         * an
+         * existing configuration present.
          * <p>
          * When DevServices is enabled Quarkus will attempt to automatically serve a model if there are any matching ones.
          */

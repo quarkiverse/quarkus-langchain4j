@@ -54,12 +54,15 @@ import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.RequestScopeStateDefaultMemoryIdProvider;
+import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo.ResponseSchemaInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
@@ -574,7 +577,9 @@ public class AiServicesProcessor {
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
-    public void handleAiServices(AiServicesRecorder recorder,
+    public void handleAiServices(
+            LangChain4jBuildConfig config,
+            AiServicesRecorder recorder,
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
@@ -719,7 +724,7 @@ public class AiServicesProcessor {
 
                         String methodId = createMethodId(methodInfo);
                         AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, addMicrometerMetrics,
-                                addOpenTelemetrySpan);
+                                addOpenTelemetrySpan, config.responseSchema());
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
@@ -864,20 +869,41 @@ public class AiServicesProcessor {
     }
 
     private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, boolean addMicrometerMetrics,
-            boolean addOpenTelemetrySpans) {
+            boolean addOpenTelemetrySpans, boolean generateResponseSchema) {
         if (method.returnType().kind() == Type.Kind.VOID) {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
+        Class<?> returnType = JandexUtil.load(method.returnType(), Thread.currentThread().getContextClassLoader());
 
         List<MethodParameterInfo> params = method.parameters();
 
+        // TODO give user ability to provide custom OutputParser
+        String outputFormatInstructions = "";
+        if (generateResponseSchema && !returnType.equals(Multi.class))
+            outputFormatInstructions = outputFormatInstructions(returnType);
+
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
-        Class<?> returnType = JandexUtil.load(method.returnType(), Thread.currentThread().getContextClassLoader());
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
                 returnType);
+
+        AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
+                systemMessageInfo,
+                userMessageInfo.template(), outputFormatInstructions);
+
+        if (!generateResponseSchema && responseSchemaInfo.isInSystemMessage())
+            throw new RuntimeException(
+                    "The %s placeholder cannot be used if the property quarkus.langchain4j.response-schema is set to false. Found in: %s"
+                            .formatted(ResponseSchemaUtil.placeholder(), method.declaringClass()));
+
+        if (!generateResponseSchema && responseSchemaInfo.isInUserMessage().isPresent()
+                && responseSchemaInfo.isInUserMessage().get())
+            throw new RuntimeException(
+                    "The %s placeholder cannot be used if the property quarkus.langchain4j.response-schema is set to false. Found in: %s"
+                            .formatted(ResponseSchemaUtil.placeholder(), method.declaringClass()));
+
         Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamName(method);
         Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsTimedInfo = gatherMetricsTimedInfo(method,
                 addMicrometerMetrics);
@@ -888,7 +914,7 @@ public class AiServicesProcessor {
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo, methodToolClassNames);
+                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -969,10 +995,6 @@ public class AiServicesProcessor {
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams, Class<?> returnType) {
 
-        String outputFormatInstructions = "";
-        if (!returnType.equals(Multi.class))
-            outputFormatInstructions = outputFormatInstructions(returnType);
-
         Optional<Integer> userNameParamName = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
 
@@ -993,7 +1015,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamName, outputFormatInstructions);
+                    userNameParamName);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1006,19 +1028,18 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamName, outputFormatInstructions);
+                            userNameParamName);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamName, outputFormatInstructions);
+                            userNameParamName);
                 }
             } else {
                 if (method.parametersCount() == 0) {
                     throw illegalConfigurationForMethod("Method should have at least one argument", method);
                 }
                 if (method.parametersCount() == 1) {
-                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamName,
-                            outputFormatInstructions);
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamName);
                 }
 
                 throw illegalConfigurationForMethod(
