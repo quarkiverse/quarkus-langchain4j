@@ -35,14 +35,15 @@ jobs:
 
       - name: Build langchain4j
         run: |
-          mkdir langchain4j
-          cd langchain4j
           git clone https://github.com/langchain4j/langchain4j.git
           cd langchain4j
           ./mvnw -B clean install -DskipTests -DskipITs
 
       - name: Build with Maven
-        run: ./mvnw -B clean install -Dno-format
+        run: |
+          LANGCHAIN4J_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f langchain4j/pom.xml)
+          echo "LANGCHAIN4J_VERSION=$LANGCHAIN4J_VERSION"
+          ./mvnw -B clean install -Dno-format -Dlangchain4j.version=$LANGCHAIN4J_VERSION
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
