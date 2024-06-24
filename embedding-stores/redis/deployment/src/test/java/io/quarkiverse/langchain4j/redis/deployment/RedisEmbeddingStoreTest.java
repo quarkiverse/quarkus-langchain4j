@@ -21,15 +21,17 @@ import io.quarkus.test.QuarkusUnitTest;
 
 public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
 
+    // if a metadata field is a number, create a field of type NUMERIC in the Redis index
     static String numericMetadataFields = new RedisEmbeddingStoreTest().createMetadata().toMap().entrySet()
             .stream()
-            .filter(e -> !e.getValue().getClass().equals(String.class))
+            .filter(e -> e.getValue() instanceof Number)
             .map(Map.Entry::getKey)
             .collect(Collectors.joining(","));
 
+    // if a metadata field is not a number, treat it as a string and create a field of type TEXT for it
     static String textualMetadataFields = new RedisEmbeddingStoreTest().createMetadata().toMap().entrySet()
             .stream()
-            .filter(e -> e.getValue().getClass().equals(String.class))
+            .filter(e -> !(e.getValue() instanceof Number))
             .map(Map.Entry::getKey)
             .collect(Collectors.joining(","));
 

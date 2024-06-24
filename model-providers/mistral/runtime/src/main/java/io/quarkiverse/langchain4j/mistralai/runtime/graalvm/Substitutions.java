@@ -3,7 +3,7 @@ package io.quarkiverse.langchain4j.mistralai.runtime.graalvm;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 
-import dev.langchain4j.model.mistralai.MistralAiClient;
+import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import io.quarkiverse.langchain4j.mistralai.QuarkusMistralAiClient;
 
 public class Substitutions {
