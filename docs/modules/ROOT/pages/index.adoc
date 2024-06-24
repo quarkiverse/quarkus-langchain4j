@@ -20,6 +20,8 @@ image::llms-big-picture.png[width=600,align="center"]
 
 == Quick Overview
 
+NOTE: If you're interested in a guided tutorial, there is also a https://github.com/quarkusio/quarkus-langchain4j-workshop[workshop] available that walks you through the basics of using Quarkus with LangChain4j.
+
 To incorporate Quarkus LangChain4j into your Quarkus project, add the following Maven dependency:
 
 [source,xml,subs=attributes+]

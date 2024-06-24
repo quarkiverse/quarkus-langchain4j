@@ -14,7 +14,9 @@ public class ChromaRecorder {
             public ChromaEmbeddingStore get() {
                 return new ChromaEmbeddingStore(config.url(),
                         config.collectionName(),
-                        config.timeout().orElse(Duration.ofSeconds(5)));
+                        config.timeout().orElse(Duration.ofSeconds(5)),
+                        config.logRequests().orElse(false),
+                        config.logResponses().orElse(false));
             }
         };
     }

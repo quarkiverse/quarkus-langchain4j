@@ -16,7 +16,7 @@ public interface MyAiService {
      */
     @SystemMessage("You are a professional poet")
     @UserMessage("""
-            Write a poem about {topic}. The poem should be {lines} lines long.
+            Write a single poem about {topic}. The poem should be {lines} lines long and your response should only include them poem itself, nothing else.
             Then send this poem by email. Your response should include the poem.
             """)
     String writeAPoem(String topic, int lines);

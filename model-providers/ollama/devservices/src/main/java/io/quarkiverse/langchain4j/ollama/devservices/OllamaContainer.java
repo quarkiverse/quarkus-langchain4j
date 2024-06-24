@@ -106,7 +106,7 @@ public class OllamaContainer extends GenericContainer<OllamaContainer> {
         String modelId = ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.ollama.chat-model.model-id",
                 String.class).orElse("");
 
-        // if not found search through named mailers until we find one
+        // if not found search through named models until we find one
         if ("".equals(modelId)) {
             // check for all configs
             for (String key : ConfigProvider.getConfig().getPropertyNames()) {

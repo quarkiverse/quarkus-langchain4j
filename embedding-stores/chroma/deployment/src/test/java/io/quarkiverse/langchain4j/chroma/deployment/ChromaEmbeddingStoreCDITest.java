@@ -21,6 +21,8 @@ class ChromaEmbeddingStoreCDITest extends EmbeddingStoreIT {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            //            .overrideConfigKey("quarkus.langchain4j.log-requests", "true")
+            //            .overrideConfigKey("quarkus.langchain4j.log-responses", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject

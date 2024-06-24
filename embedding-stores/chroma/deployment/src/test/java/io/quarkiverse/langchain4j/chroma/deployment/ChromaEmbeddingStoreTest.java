@@ -45,6 +45,8 @@ class ChromaEmbeddingStoreTest extends EmbeddingStoreIT {
             embeddingStore = ChromaEmbeddingStore.builder()
                     .baseUrl(chromaUrl)
                     .collectionName(randomUUID())
+                    //                    .logRequests(true)
+                    //                    .logResponses(true)
                     .build();
         }
         return embeddingStore;
