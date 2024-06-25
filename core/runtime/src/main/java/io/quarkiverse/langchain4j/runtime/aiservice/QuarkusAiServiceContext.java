@@ -1,15 +1,20 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.runtime.cache.AiCache;
+import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 
 public class QuarkusAiServiceContext extends AiServiceContext {
 
     public AuditService auditService;
+    public Map<Object, AiCache> aiCaches;
+    public AiCacheProvider aiCacheProvider;
 
     // needed by Arc
     public QuarkusAiServiceContext() {
@@ -20,12 +25,21 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         super(aiServiceClass);
     }
 
+    public boolean hasCache() {
+        return aiCaches != null;
+    }
+
+    public AiCache cache(Object cacheId) {
+        return aiCaches.computeIfAbsent(cacheId, ignored -> aiCacheProvider.get(cacheId));
+    }
+
     /**
      * This is called by the {@code close} method of AiServices registered with {@link RegisterAiService}
      * when the bean's scope is closed
      */
     public void close() {
         clearChatMemory();
+        clearAiCache();
     }
 
     private void clearChatMemory() {
@@ -37,6 +51,18 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 }
             });
             chatMemories = null;
+        }
+    }
+
+    private void clearAiCache() {
+        if (aiCaches != null) {
+            aiCaches.forEach(new BiConsumer<>() {
+                @Override
+                public void accept(Object cacheId, AiCache aiCache) {
+                    aiCache.clear();
+                }
+            });
+            aiCaches = null;
         }
     }
 

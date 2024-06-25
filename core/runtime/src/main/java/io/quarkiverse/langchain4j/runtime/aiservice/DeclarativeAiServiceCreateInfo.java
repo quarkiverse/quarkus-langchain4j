@@ -6,6 +6,7 @@ public record DeclarativeAiServiceCreateInfo(String serviceClassName,
         String languageModelSupplierClassName,
         List<String> toolsClassNames,
         String chatMemoryProviderSupplierClassName,
+        String aiCacheProviderSupplierClassName,
         String retrieverClassName,
         String retrievalAugmentorSupplierClassName,
         String auditServiceClassSupplierName,
@@ -13,5 +14,6 @@ public record DeclarativeAiServiceCreateInfo(String serviceClassName,
         String chatModelName,
         String moderationModelName,
         boolean needsStreamingChatModel,
-        boolean needsModerationModel) {
+        boolean needsModerationModel,
+        boolean enableCache) {
 }

@@ -46,6 +46,7 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.runtime.cache.AiCache;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -57,9 +58,7 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
-
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
-
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     static {
@@ -121,7 +120,12 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
+        AiCache cache = null;
 
+        if (methodCreateInfo.isRequiresCache()) {
+            Object cacheId = cacheId(methodCreateInfo);
+            cache = context.cache(cacheId);
+        }
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
@@ -175,9 +179,6 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messages);
-
-        log.debug("Attempting to obtain AI response");
-
         List<ToolSpecification> toolSpecifications = context.toolSpecifications;
         Map<String, ToolExecutor> toolExecutors = context.toolExecutors;
         // override with method specific info
@@ -186,16 +187,30 @@ public class AiServiceMethodImplementationSupport {
             toolExecutors = methodCreateInfo.getToolExecutors();
         }
 
-        Response<AiMessage> response = toolSpecifications == null
-                ? context.chatModel.generate(messages)
-                : context.chatModel.generate(messages, toolSpecifications);
-        log.debug("AI response obtained");
+        Response<AiMessage> response;
+
+        if (cache != null) {
+            log.debug("Attempting to obtain AI response from cache");
+
+            var cacheResponse = cache.search(systemMessage.orElse(null), userMessage);
+
+            if (cacheResponse.isPresent()) {
+                log.debug("Return cached response");
+                response = Response.from(cacheResponse.get());
+            } else {
+                response = executeLLMCall(context, messages, moderationFuture, toolSpecifications);
+                cache.add(systemMessage.orElse(null), userMessage, response.content());
+            }
+
+        } else {
+            response = executeLLMCall(context, messages, moderationFuture, toolSpecifications);
+        }
+
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
         }
-        TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
-        verifyModerationIfNeeded(moderationFuture);
+        TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
         int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
         while (true) {
@@ -247,6 +262,17 @@ public class AiServiceMethodImplementationSupport {
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
         return parse(response, returnType);
+    }
+
+    private static Response<AiMessage> executeLLMCall(QuarkusAiServiceContext context, List<ChatMessage> messages,
+            Future<Moderation> moderationFuture, List<ToolSpecification> toolSpecifications) {
+        log.debug("Attempting to obtain AI response");
+        var response = context.toolSpecifications == null
+                ? context.chatModel.generate(messages)
+                : context.chatModel.generate(messages, toolSpecifications);
+        log.debug("AI response obtained");
+        verifyModerationIfNeeded(moderationFuture);
+        return response;
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
@@ -366,7 +392,18 @@ public class AiServiceMethodImplementationSupport {
         return "default";
     }
 
-    //TODO: share these methods with LangChain4j
+    private static Object cacheId(AiServiceMethodCreateInfo createInfo) {
+        for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
+            Object memoryId = provider.getMemoryId();
+            if (memoryId != null) {
+                String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
+                return memoryId + perServiceSuffix;
+            }
+        }
+        return "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
+    }
+
+    // TODO: share these methods with LangChain4j
 
     private static String toString(Object arg) {
         if (arg.getClass().isArray()) {
