@@ -14,8 +14,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 
@@ -43,7 +41,7 @@ import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
 import dev.ai4j.openai4j.spi.OpenAiClientBuilderFactory;
-import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -116,21 +114,11 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         });
                     }
 
-                    OpenAiRestApi.AuthProvider authorizer = null;
-                    Instance<OpenAiRestApi.AuthProvider> beanInstance = builder.configName == null
-                            ? CDI.current().select(OpenAiRestApi.AuthProvider.class)
-                            : CDI.current().select(OpenAiRestApi.AuthProvider.class, ModelName.Literal.of(builder.configName));
+                    ModelAuthProvider
+                            .resolve(builder.configName)
+                            .ifPresent(modelAuthProvider -> restApiBuilder
+                                    .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
 
-                    //get the first one without causing a bean resolution exception
-                    for (var handle : beanInstance.handles()) {
-                        authorizer = handle.get();
-                        break;
-                    }
-
-                    if (authorizer != null) {
-                        var filterProvider = new OpenAiRestApi.OpenAIRestAPIFilter(authorizer);
-                        restApiBuilder.register(filterProvider);
-                    }
                     return restApiBuilder.build(OpenAiRestApi.class);
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);

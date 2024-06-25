@@ -36,6 +36,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBui
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.processor.BeanStream;
@@ -353,6 +354,7 @@ public class BeansProcessor {
     @BuildStep
     public void unremoveableBeans(BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
         unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(ObjectMapper.class));
+        unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelAuthProvider.class));
     }
 
 }
