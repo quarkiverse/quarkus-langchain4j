@@ -8,7 +8,7 @@ metadata:
     - chroma
   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
   categories:
-    - "miscellaneous"
+    - "ai"
   status: "experimental"
   codestart:
     name: langchain4j-chroma
