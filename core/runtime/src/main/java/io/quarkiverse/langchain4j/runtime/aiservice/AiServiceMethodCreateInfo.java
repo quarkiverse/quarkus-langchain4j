@@ -8,6 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkus.runtime.annotations.RecordableConstructor;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -24,6 +25,7 @@ public final class AiServiceMethodCreateInfo {
     private final Optional<SpanInfo> spanInfo;
     // support @Toolbox
     private final List<String> toolClassNames;
+    private final ResponseSchemaInfo responseSchemaInfo;
 
     // these are populated when the AiService method is first called which can happen on any thread
     private transient final List<ToolSpecification> toolSpecifications = new CopyOnWriteArrayList<>();
@@ -39,6 +41,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<MetricsTimedInfo> metricsTimedInfo,
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
+            ResponseSchemaInfo responseSchemaInfo,
             List<String> toolClassNames) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
@@ -50,6 +53,7 @@ public final class AiServiceMethodCreateInfo {
         this.metricsTimedInfo = metricsTimedInfo;
         this.metricsCountedInfo = metricsCountedInfo;
         this.spanInfo = spanInfo;
+        this.responseSchemaInfo = responseSchemaInfo;
         this.toolClassNames = toolClassNames;
     }
 
@@ -93,6 +97,10 @@ public final class AiServiceMethodCreateInfo {
         return spanInfo;
     }
 
+    public ResponseSchemaInfo getResponseSchemaInfo() {
+        return responseSchemaInfo;
+    }
+
     public List<String> getToolClassNames() {
         return toolClassNames;
     }
@@ -107,25 +115,21 @@ public final class AiServiceMethodCreateInfo {
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
             Optional<Integer> paramPosition,
-            Optional<Integer> userNameParamPosition,
-            String outputFormatInstructions) {
+            Optional<Integer> userNameParamPosition) {
 
-        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition,
-                String outputFormatInstructions) {
+        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition) {
             return new UserMessageInfo(Optional.empty(), Optional.of(paramPosition),
-                    userNameParamPosition, outputFormatInstructions);
+                    userNameParamPosition);
         }
 
-        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition,
-                String outputFormatInstructions) {
-            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition,
-                    outputFormatInstructions);
+        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition) {
+            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition);
         }
     }
 
     /**
-     * @param methodParamPosition this is used to determine the position of the parameter that holds the template, and
-     *        it is never set if 'text' is set
+     * @param methodParamPosition this is used to determine the position of the parameter that holds the template, and it is
+     *        never set if 'text' is set
      */
     public record TemplateInfo(Optional<String> text, Map<String, Integer> nameToParamPosition,
             Optional<Integer> methodParamPosition) {
@@ -227,5 +231,25 @@ public final class AiServiceMethodCreateInfo {
     }
 
     public record SpanInfo(String name) {
+    }
+
+    public record ResponseSchemaInfo(boolean enabled, boolean isInSystemMessage, Optional<Boolean> isInUserMessage,
+            String outputFormatInstructions) {
+
+        public static ResponseSchemaInfo of(boolean enabled, Optional<TemplateInfo> systemMessageInfo,
+                Optional<TemplateInfo> userMessageInfo,
+                String outputFormatInstructions) {
+
+            boolean systemMessage = systemMessageInfo.flatMap(TemplateInfo::text)
+                    .map(text -> text.contains(ResponseSchemaUtil.placeholder()))
+                    .orElse(false);
+
+            Optional<Boolean> userMessage = Optional.empty();
+            if (userMessageInfo.isPresent() && userMessageInfo.get().text.isPresent()) {
+                userMessage = Optional.of(userMessageInfo.get().text.get().contains(ResponseSchemaUtil.placeholder()));
+            }
+
+            return new ResponseSchemaInfo(enabled, systemMessage, userMessage, outputFormatInstructions);
+        }
     }
 }

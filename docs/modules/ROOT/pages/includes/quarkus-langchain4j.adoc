@@ -63,6 +63,23 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j_quarkus-langchain4j-response-schema]]`link:#quarkus-langchain4j_quarkus-langchain4j-response-schema[quarkus.langchain4j.response-schema]`
+
+
+[.description]
+--
+Configuration property to enable or disable the use of the ++{++response schema++}++ placeholder in the @SystemMessage/@UserMessage.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_RESPONSE_SCHEMA+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_RESPONSE_SCHEMA+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
 a| [[quarkus-langchain4j_quarkus-langchain4j-log-requests]]`link:#quarkus-langchain4j_quarkus-langchain4j-log-requests[quarkus.langchain4j.log-requests]`
 
 

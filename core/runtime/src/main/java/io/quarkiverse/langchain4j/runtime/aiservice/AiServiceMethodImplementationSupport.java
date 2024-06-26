@@ -5,6 +5,7 @@ import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static dev.langchain4j.service.ServiceOutputParser.parse;
+import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -57,9 +59,7 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
-
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
-
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     static {
@@ -129,10 +129,6 @@ public class AiServiceMethodImplementationSupport {
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
             userMessage = context.retrievalAugmentor.augment(userMessage, metadata);
         }
-
-        // TODO give user ability to provide custom OutputParser
-        String outputFormatInstructions = methodCreateInfo.getUserMessageInfo().outputFormatInstructions();
-        userMessage = UserMessage.from(userMessage.text() + outputFormatInstructions);
 
         if (context.hasChatMemory()) {
             ChatMemory chatMemory = context.chatMemory(memoryId);
@@ -283,6 +279,8 @@ public class AiServiceMethodImplementationSupport {
         for (var entry : nameToParamPosition.entrySet()) {
             templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
         }
+
+        templateParams.put(ResponseSchemaUtil.templateParam(), createInfo.getResponseSchemaInfo().outputFormatInstructions());
         Prompt prompt = PromptTemplate.from(systemMessageInfo.text().get()).apply(templateParams);
         return Optional.of(prompt.toSystemMessage());
     }
@@ -311,10 +309,27 @@ public class AiServiceMethodImplementationSupport {
             } else {
                 templateText = (String) methodArgs[templateInfo.methodParamPosition().get()];
             }
-            // we do not need to apply the instructions as they have already been added to the template text at build time
-            Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
 
+            boolean hasResponseSchema = createInfo.getResponseSchemaInfo().isInUserMessage().orElse(false)
+                    || hasResponseSchema(templateText);
+
+            if (hasResponseSchema && !createInfo.getResponseSchemaInfo().enabled()) {
+                throw new RuntimeException(
+                        "The %s placeholder cannot be used if the property quarkus.langchain4j.response-schema is set to false. Found in: %s"
+                                .formatted(ResponseSchemaUtil.placeholder(), createInfo.getInterfaceName()));
+            }
+
+            // No response schema placeholder found in the @SystemMessage and @UserMessage, concat it to the UserMessage.
+            if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema) {
+                templateText = templateText.concat(ResponseSchemaUtil.placeholder());
+            }
+
+            // we do not need to apply the instructions as they have already been added to the template text at build time
+            templateParams.put(ResponseSchemaUtil.templateParam(),
+                    createInfo.getResponseSchemaInfo().outputFormatInstructions());
+            Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
             return createUserMessage(userName, prompt.text());
+
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
             Object argValue = methodArgs[paramIndex];
@@ -324,7 +339,10 @@ public class AiServiceMethodImplementationSupport {
                                 + "' because parameter with index "
                                 + paramIndex + " is null");
             }
-            return createUserMessage(userName, toString(argValue));
+
+            // TODO: Understand how to enable the {response_schema} for the @StructuredPrompt.
+            String text = toString(argValue);
+            return createUserMessage(userName, text.concat(createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
                     + "'. Please contact the maintainers");
@@ -366,7 +384,7 @@ public class AiServiceMethodImplementationSupport {
         return "default";
     }
 
-    //TODO: share these methods with LangChain4j
+    // TODO: share these methods with LangChain4j
 
     private static String toString(Object arg) {
         if (arg.getClass().isArray()) {
