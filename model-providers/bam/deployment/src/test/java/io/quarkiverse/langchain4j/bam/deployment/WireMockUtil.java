@@ -16,6 +16,7 @@ public class WireMockUtil {
 
     public static String URL = "http://localhost:8089";
     public static String URL_CHAT_API = "/v2/text/chat?version=%s";
+    public static String URL_TOKENIZATION_API = "/v2/text/tokenization?version=%s";
     public static String URL_EMBEDDING_API = "/v2/text/embeddings?version=%s";
     public static String URL_MODERATION_API = "/v2/text/moderations?version=%s";
     public static int PORT = 8089;

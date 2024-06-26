@@ -52,6 +52,7 @@ public class AzureOpenAiRecorder {
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .apiKey(apiKey)
                     .adToken(adToken)
+                    // .tokenizer(new OpenAiTokenizer("<modelName>")) TODO: Set the tokenizer, it is always null!!
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
@@ -67,10 +68,12 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
+            var chatModel = builder.build();
+
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return builder.build();
+                    return chatModel;
                 }
             };
         } else {
