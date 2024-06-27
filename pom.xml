@@ -42,6 +42,8 @@
     <module>model-providers/vertex-ai-gemini</module>
     <module>model-providers/watsonx</module>
 
+    <module>model-auth-providers/oidc-model-auth-provider</module>
+
     <module>quarkus-integrations/websockets-next</module>
 
     <module>rag/easy-rag</module>
@@ -199,6 +201,7 @@
         <module>samples/review-triage</module>
         <module>samples/fraud-detection</module>
         <module>samples/secure-fraud-detection</module>
+        <module>samples/secure-vertex-ai-gemini-poem</module>
         <module>samples/chatbot</module>
         <module>samples/chatbot-easy-rag</module>
         <module>samples/sql-chatbot</module>

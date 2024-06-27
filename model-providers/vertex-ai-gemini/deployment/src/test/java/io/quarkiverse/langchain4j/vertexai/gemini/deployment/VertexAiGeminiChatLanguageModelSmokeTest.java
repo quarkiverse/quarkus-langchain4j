@@ -17,9 +17,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiChatLanguageModel;
-import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertxAiGeminiRestApi;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -111,11 +111,13 @@ public class VertexAiGeminiChatLanguageModelSmokeTest extends WiremockAware {
     }
 
     @Singleton
-    public static class DummyAuthProvider implements VertxAiGeminiRestApi.AuthProvider {
+    public static class DummyAuthProvider implements ModelAuthProvider {
+
         @Override
-        public String getBearerToken() {
-            return API_KEY;
+        public String getAuthorization(Input input) {
+            return "Bearer " + API_KEY;
         }
+
     }
 
 }
