@@ -61,7 +61,7 @@ public interface LangChain4jVertexAiGeminiConfig {
         Optional<String> baseUrl();
 
         /**
-         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Vertex AI Gemini
          * provider.
          * Set to {@code false} to disable all requests.
          */

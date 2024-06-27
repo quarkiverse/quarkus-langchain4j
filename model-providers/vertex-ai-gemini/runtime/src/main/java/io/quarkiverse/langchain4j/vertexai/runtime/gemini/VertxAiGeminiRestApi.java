@@ -5,15 +5,19 @@ import static java.util.stream.StreamSupport.stream;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MultivaluedMap;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestPath;
@@ -25,7 +29,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 
-import io.quarkus.arc.DefaultBean;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider.Input;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.ChatModelConfig;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -102,17 +108,10 @@ public interface VertxAiGeminiRestApi {
         }
     }
 
-    interface AuthProvider {
-
-        String getBearerToken();
-    }
-
-    @ApplicationScoped
-    @DefaultBean
-    class ApplicationDefaultAuthProvider implements AuthProvider {
+    class ApplicationDefaultAuthProvider implements ModelAuthProvider {
 
         @Override
-        public String getBearerToken() {
+        public String getAuthorization(Input input) {
             try {
                 var credentials = GoogleCredentials.getApplicationDefault();
                 credentials.refreshIfExpired();
@@ -126,11 +125,17 @@ public interface VertxAiGeminiRestApi {
     class TokenFilter implements ResteasyReactiveClientRequestFilter {
 
         private final ExecutorService executorService;
-        private final AuthProvider authProvider;
+        private final ModelAuthProvider defaultAuthorizer;
+        private final ModelAuthProvider authorizer;
 
-        public TokenFilter(ExecutorService executorService, AuthProvider authProvider) {
+        @Inject
+        Instance<ChatModelConfig> model;
+
+        public TokenFilter(ManagedExecutor executorService) {
             this.executorService = executorService;
-            this.authProvider = authProvider;
+            this.defaultAuthorizer = new ApplicationDefaultAuthProvider();
+            this.authorizer = ModelAuthProvider.resolve(
+                    model != null && model.isResolvable() ? model.get().modelId() : null).orElse(null);
         }
 
         @Override
@@ -140,13 +145,24 @@ public interface VertxAiGeminiRestApi {
                 @Override
                 public void run() {
                     try {
-                        context.getHeaders().add("Authorization", "Bearer " + authProvider.getBearerToken());
+                        final Input authInput = new AuthInputImpl(context.getMethod(), context.getUri(), context.getHeaders());
+                        String authorization = authorizer != null ? authorizer.getAuthorization(authInput) : null;
+                        if (authorization == null) {
+                            authorization = defaultAuthorizer.getAuthorization(authInput);
+                        }
+                        context.getHeaders().add("Authorization", authorization);
                         context.resume();
                     } catch (Exception e) {
                         context.resume(e);
                     }
                 }
             });
+        }
+
+        private record AuthInputImpl(
+                String method,
+                URI uri,
+                MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
         }
     }
 
