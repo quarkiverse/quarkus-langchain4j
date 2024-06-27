@@ -6,6 +6,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MO
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODEL_NAME;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
 import java.util.HashSet;
 import java.util.List;
@@ -84,6 +85,7 @@ public class BeansProcessor {
         Set<String> requestEmbeddingModels = new HashSet<>();
         Set<String> requestedModerationModels = new HashSet<>();
         Set<String> requestedImageModels = new HashSet<>();
+        Set<String> tokenCountEstimators = new HashSet<>();
 
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
             DotName requiredName = ip.getRequiredType().name();
@@ -98,6 +100,8 @@ public class BeansProcessor {
                 requestedModerationModels.add(modelName);
             } else if (IMAGE_MODEL.equals(requiredName)) {
                 requestedImageModels.add(modelName);
+            } else if (TOKEN_COUNT_ESTIMATOR.equals(requiredName)) {
+                tokenCountEstimators.add(modelName);
             }
         }
         for (var bi : requestChatModelBeanItems) {
@@ -107,9 +111,10 @@ public class BeansProcessor {
             requestedModerationModels.add(bi.getConfigName());
         }
 
-        if (!requestedChatModels.isEmpty() || !requestedStreamingChatModels.isEmpty()) {
+        if (!requestedChatModels.isEmpty() || !requestedStreamingChatModels.isEmpty() || !tokenCountEstimators.isEmpty()) {
             Set<String> allChatModelNames = new HashSet<>(requestedChatModels);
             allChatModelNames.addAll(requestedStreamingChatModels);
+            allChatModelNames.addAll(tokenCountEstimators);
             for (String modelName : allChatModelNames) {
                 Optional<String> userSelectedProvider;
                 String configNamespace;

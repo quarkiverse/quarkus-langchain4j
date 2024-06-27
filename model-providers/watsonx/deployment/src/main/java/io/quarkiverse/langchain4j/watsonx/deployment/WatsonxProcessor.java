@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
 import java.util.List;
 
@@ -60,14 +61,24 @@ public class WatsonxProcessor {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
 
+                var chatModel = recorder.chatModel(config, configName);
                 var chatBuilder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .supplier(chatModel);
                 addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
+
+                var tokenizerBuilder = SyntheticBeanBuildItem
+                        .configure(TOKEN_COUNT_ESTIMATOR)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(chatModel);
+                addQualifierIfNecessary(tokenizerBuilder, configName);
+                beanProducer.produce(tokenizerBuilder.done());
 
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
