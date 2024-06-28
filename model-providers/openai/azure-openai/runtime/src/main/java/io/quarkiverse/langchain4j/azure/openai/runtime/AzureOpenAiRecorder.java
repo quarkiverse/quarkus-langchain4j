@@ -243,10 +243,10 @@ public class AzureOpenAiRecorder {
             String configName,
             EndpointType type) {
         var resourceName = azureAiConfig.resourceNameFor(type);
-        var domainName = azureAiConfig.domainName();
+        var domainName = azureAiConfig.domainNameFor(type);
         var deploymentName = azureAiConfig.deploymentNameFor(type);
 
-        if (resourceName.isEmpty() || deploymentName.isEmpty()) {
+        if (resourceName.isEmpty() || deploymentName.isEmpty() || domainName.isEmpty()) {
             List<Problem> configProblems = new ArrayList<>();
 
             if (resourceName.isEmpty()) {
@@ -255,6 +255,10 @@ public class AzureOpenAiRecorder {
 
             if (deploymentName.isEmpty()) {
                 configProblems.add(createConfigProblem("deployment-name", configName));
+            }
+
+            if (domainName.isEmpty()) {
+                configProblems.add(createConfigProblem("domain-name", configName));
             }
 
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
