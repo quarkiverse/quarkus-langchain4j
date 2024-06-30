@@ -34,7 +34,7 @@ import io.smallrye.config.ConfigValidationException.Problem;
 @Recorder
 public class AzureOpenAiRecorder {
 
-    static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.openai.azure.com/openai/deployments/%s";
+    static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/deployments/%s";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
@@ -52,6 +52,7 @@ public class AzureOpenAiRecorder {
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .apiKey(apiKey)
                     .adToken(adToken)
+                    // .tokenizer(new OpenAiTokenizer("<modelName>")) TODO: Set the tokenizer, it is always null!!
                     .apiVersion(azureAiConfig.apiVersion())
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
@@ -67,10 +68,12 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
+            var chatModel = builder.build();
+
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return builder.build();
+                    return chatModel;
                 }
             };
         } else {
@@ -240,6 +243,7 @@ public class AzureOpenAiRecorder {
             String configName,
             EndpointType type) {
         var resourceName = azureAiConfig.resourceNameFor(type);
+        var domainName = azureAiConfig.domainName();
         var deploymentName = azureAiConfig.deploymentNameFor(type);
 
         if (resourceName.isEmpty() || deploymentName.isEmpty()) {
@@ -256,7 +260,7 @@ public class AzureOpenAiRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
-        return String.format(AZURE_ENDPOINT_URL_PATTERN, resourceName.get(), deploymentName.get());
+        return String.format(AZURE_ENDPOINT_URL_PATTERN, resourceName.get(), domainName.get(), deploymentName.get());
     }
 
     private LangChain4jAzureOpenAiConfig.AzureAiConfig correspondingAzureOpenAiConfig(

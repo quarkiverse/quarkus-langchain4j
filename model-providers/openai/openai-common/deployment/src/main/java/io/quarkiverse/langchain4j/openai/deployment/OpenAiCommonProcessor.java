@@ -15,8 +15,6 @@ import java.util.zip.ZipEntry;
 
 import com.knuddels.jtokkit.Encodings;
 
-import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
-import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
@@ -27,11 +25,6 @@ public class OpenAiCommonProcessor {
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.ai4j", "openai4j"));
-    }
-
-    @BuildStep
-    UnremovableBeanBuildItem unremovableBeans() {
-        return UnremovableBeanBuildItem.beanTypes(OpenAiRestApi.AuthProvider.class);
     }
 
     @BuildStep

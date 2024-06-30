@@ -45,12 +45,12 @@ public class WatsonxRecorder {
 
         if (watsonConfig.enableIntegration()) {
 
-            var builder = generateChatBuilder(watsonConfig, configName);
+            var chatModel = generateChatBuilder(watsonConfig, configName).build(WatsonxChatModel.class);
 
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return builder.build(WatsonxChatModel.class);
+                    return chatModel;
                 }
             };
 

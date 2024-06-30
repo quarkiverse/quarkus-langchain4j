@@ -58,6 +58,7 @@ import dev.ai4j.openai4j.image.GenerateImagesResponse;
 import dev.ai4j.openai4j.moderation.ModerationRequest;
 import dev.ai4j.openai4j.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -182,35 +183,25 @@ public interface OpenAiRestApi {
         }
     }
 
-    interface AuthProvider {
-        String getAuthorization(Input input);
-
-        interface Input {
-            String method();
-
-            URI uri();
-
-            MultivaluedMap<String, Object> headers();
-        }
-    }
-
     class OpenAIRestAPIFilter implements ResteasyReactiveClientRequestFilter {
-        AuthProvider authorizer;
+        ModelAuthProvider authorizer;
 
-        public OpenAIRestAPIFilter(AuthProvider authorizer) {
+        public OpenAIRestAPIFilter(ModelAuthProvider authorizer) {
             this.authorizer = authorizer;
         }
 
         @Override
         public void filter(ResteasyReactiveClientRequestContext requestContext) {
-            requestContext.getHeaders().putSingle("Authorization", authorizer.getAuthorization(
-                    new AuthInputImpl(requestContext.getMethod(), requestContext.getUri(), requestContext.getHeaders())));
+            requestContext
+                    .getHeaders()
+                    .putSingle("Authorization", authorizer.getAuthorization(new AuthInputImpl(requestContext.getMethod(),
+                            requestContext.getUri(), requestContext.getHeaders())));
         }
 
         private record AuthInputImpl(
                 String method,
                 URI uri,
-                MultivaluedMap<String, Object> headers) implements AuthProvider.Input {
+                MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
         }
     }
 

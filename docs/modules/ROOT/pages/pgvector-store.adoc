@@ -6,7 +6,7 @@ When implementing Retrieval Augmented Generation (RAG), a capable document store
 
 == Leveraging the pgvector Document Store
 
-To utilize the Redis document store, you'll need to include the following dependency:
+To utilize the PostgreSQL pgVector document store, you'll need to include the following dependency:
 
 [source,xml,subs=attributes+]
 ----

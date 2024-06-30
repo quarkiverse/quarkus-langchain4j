@@ -113,6 +113,14 @@ TriagedReview triage(String review);
 
 In this instance, Quarkus automatically creates an instance of `TriagedReview` from the LLM's JSON response.
 
+To enhance the flexibility of prompt creation, the `\{response_schema\}` placeholder can be used within the prompt. This placeholder is dynamically replaced with the defined schema of the method's return object.
+
+[IMPORTANT]
+====
+By default, if the placeholder `\{response_schema\}` is not present in `@SystemMessage` or `@UserMessage`, it will be added to the end of the prompt.
+To avoid the generation of the schema, the property `quarkus.langchain4j.response-schema` can be set to `false`.
+====
+
 === Receiving User Message as a Parameter
 
 For situations requiring the user message to be passed as a parameter, you can use the `@UserMessage` annotation on a parameter. Exercise caution with this feature, especially when the AI has access to _tools_:

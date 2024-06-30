@@ -49,6 +49,17 @@ public interface LangChain4jAzureOpenAiConfig {
         Optional<String> resourceName();
 
         /**
+         * The domain name of your Azure OpenAI Resource. You're required to first deploy a model before you can make calls.
+         * <p>
+         * This and {@code quarkus.langchain4j.azure-openai.domain-name} are required if
+         * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * </p>
+         */
+        @WithDefault("openai.azure.com")
+        Optional<String> domainName();
+
+        /**
          * The name of your model deployment. You're required to first deploy a model before you can make calls.
          * <p>
          * This and {@code quarkus.langchain4j.azure-openai.resource-name} are required if
