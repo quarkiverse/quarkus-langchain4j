@@ -9,10 +9,10 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
-import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
@@ -34,7 +34,7 @@ public class OllamaRecorder {
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
-            Options.Builder optionsBuilder = Options.builder()
+            Options.OptionsBuilder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
                     .topP(chatModelConfig.topP());
@@ -56,7 +56,7 @@ public class OllamaRecorder {
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .experimentalTool(ollamaConfig.experimentalTools().orElse(false))
+                    .experimentalTool(ollamaConfig.experimentalTools().orElse("NONE"))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
                     .options(optionsBuilder.build());
@@ -85,7 +85,7 @@ public class OllamaRecorder {
 
         if (ollamaConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = ollamaConfig.embeddingModel();
-            Options.Builder optionsBuilder = Options.builder()
+            Options.OptionsBuilder optionsBuilder = Options.builder()
                     .temperature(embeddingModelConfig.temperature())
                     .topK(embeddingModelConfig.topK())
                     .topP(embeddingModelConfig.topP())
@@ -127,7 +127,7 @@ public class OllamaRecorder {
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
-            Options.Builder optionsBuilder = Options.builder()
+            Options.OptionsBuilder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
                     .topP(chatModelConfig.topP());

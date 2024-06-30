@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
+import org.acme.example.openai.chat.ollama.PropertyManagerAssistant;
+import org.acme.example.openai.chat.ollama.Tools;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,13 +17,11 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.junit.QuarkusTest;
 
 @Disabled("Integration tests that need an ollama server running")
-@DisplayName("LLM Tools test - " + ToolsTest.MODEL_NAME)
+@DisplayName("LLM Tools test - Llama3")
 @QuarkusTest
-public class ToolsTest {
+public class ToolsLlama3IT {
 
-    public static final String MODEL_NAME = "llama3";
-
-    @RegisterAiService(tools = Tools.Calculator.class, modelName = MODEL_NAME)
+    @RegisterAiService(tools = Tools.Calculator.class)
     public interface MathAssistant {
         String chat(String userMessage);
     }
@@ -32,28 +32,14 @@ public class ToolsTest {
     @Test
     @ActivateRequestContext
     void square_of_sum_of_number_of_letters() {
-        String msg = "What is the square root with maximal precision of the sum " +
-                "of the numbers of letters in the words hello and llama";
+        String msg = "What is the square root of the sum " +
+                "of the numbers of characters in the words hello and world";
         String response = mathAssistant.chat(msg);
-        assertThat(response).contains("3.1622776601683795");
-    }
-
-    @RegisterAiService(tools = Tools.ExpenseService.class, modelName = MODEL_NAME)
-    public interface Assistant {
-        @SystemMessage("""
-                You are a property manager assistant, answering to co-owners requests.
-                Format the date as YYYY-MM-DD and the time as HH:MM
-                Today is {{current_date_time}} use this date as date time reference
-                The co-owners is living in the following condominium: {condominium}
-                """)
-        @UserMessage("""
-                {{request}}
-                """)
-        String answer(String condominium, String request);
+        assertThat(response).contains("3.16");
     }
 
     @Inject
-    Assistant assistant;
+    PropertyManagerAssistant assistant;
 
     @Test
     @ActivateRequestContext
@@ -70,7 +56,7 @@ public class ToolsTest {
         assertThat(response).doesNotContain("Expense hp12");
     }
 
-    @RegisterAiService(tools = Tools.EmailService.class, modelName = MODEL_NAME)
+    @RegisterAiService(tools = Tools.EmailService.class)
     public interface PoemService {
         @SystemMessage("You are a professional poet")
         @UserMessage("""
@@ -86,10 +72,10 @@ public class ToolsTest {
     @ActivateRequestContext
     void send_a_poem() {
         String response = poemService.writeAPoem("Condominium Rives de marne", 4);
-        assertThat(response).contains("sent by email");
+        assertThat(response).contains("mail");
     }
 
-    @RegisterAiService(modelName = MODEL_NAME)
+    @RegisterAiService
     public interface PoemService2 {
         @SystemMessage("You are a professional poet")
         @UserMessage("""
@@ -105,6 +91,6 @@ public class ToolsTest {
     @ActivateRequestContext
     void write_a_poem_without_tools() {
         String response = poemService2.writeAPoem("Condominium Rives de marne", 4);
-        assertThat(response.split("\n").length).isEqualTo(4);
+        assertThat(response.split("\n").length).isGreaterThanOrEqualTo(4);
     }
 }

@@ -30,6 +30,7 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.langchain4j.model.ollama.*;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
@@ -48,7 +49,7 @@ import io.vertx.core.http.HttpClientResponse;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RegisterProvider(OllamaRestApi.OllamaRestApiReaderInterceptor.class)
-@RegisterProvider(OllamaRestApi.OpenAiRestApiWriterInterceptor.class)
+@RegisterProvider(OllamaRestApi.OllamaRestApiWriterInterceptor.class)
 public interface OllamaRestApi {
 
     @Path("/api/chat")
@@ -106,11 +107,11 @@ public interface OllamaRestApi {
                                                 ChatResponse.class);
                                     } else {
                                         ctx.putLocal("buffer", existingBuffer + chunk);
-                                        return ChatResponse.emptyNotDone();
+                                        return emptyNotDone();
                                     }
                                 } else {
                                     ctx.putLocal("buffer", chunk);
-                                    return ChatResponse.emptyNotDone();
+                                    return emptyNotDone();
                                 }
                             }
                         }
@@ -120,13 +121,17 @@ public interface OllamaRestApi {
             }
         }
 
+        public static ChatResponse emptyNotDone() {
+            return new ChatResponse(null, null, new Message(Role.ASSISTANT, "", null), true, null, null);
+        }
+
     }
 
     /**
      * The point of this is to properly set the {@code stream} value of the request
      * so users don't have to remember to set it manually
      */
-    class OpenAiRestApiWriterInterceptor implements WriterInterceptor {
+    class OllamaRestApiWriterInterceptor implements WriterInterceptor {
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             Object entity = context.getEntity();

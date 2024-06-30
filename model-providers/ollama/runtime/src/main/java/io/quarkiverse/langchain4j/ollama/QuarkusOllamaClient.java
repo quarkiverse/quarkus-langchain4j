@@ -7,17 +7,19 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.model.ollama.*;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 
-public class OllamaClient {
+public class QuarkusOllamaClient implements OllamaClient {
 
     private final OllamaRestApi restApi;
 
-    public OllamaClient(String baseUrl, Duration timeout, boolean logRequests, boolean logResponses) {
+    public QuarkusOllamaClient(String baseUrl, Duration timeout, boolean logRequests, boolean logResponses) {
         try {
             // TODO: cache?
             QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
+
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);
@@ -40,7 +42,7 @@ public class OllamaClient {
         return restApi.streamingChat(request);
     }
 
-    public EmbeddingResponse embedding(EmbeddingRequest request) {
+    public EmbeddingResponse embed(EmbeddingRequest request) {
         return restApi.embeddings(request);
     }
 }

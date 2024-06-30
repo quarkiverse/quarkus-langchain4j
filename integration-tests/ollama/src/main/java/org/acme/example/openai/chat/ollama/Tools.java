@@ -1,8 +1,9 @@
-package io.quarkiverse.langchain4j.ollama.tools;
+package org.acme.example.openai.chat.ollama;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
+import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import io.quarkus.logging.Log;
 
@@ -29,7 +30,7 @@ public class Tools {
 
     @Singleton
     @SuppressWarnings("unused")
-    static class ExpenseService {
+    public static class ExpenseService {
         @Tool("Get expenses for a given condominium, from date and to date.")
         public String getExpenses(String condominium, String fromDate, String toDate) {
             String result = String.format("""
@@ -40,19 +41,18 @@ public class Tools {
             Log.infof(result);
             return result;
         }
-
     }
 
     @ApplicationScoped
-    static class EmailService {
+    public static class EmailService {
         @Tool("send the given content by email")
         @SuppressWarnings("unused")
-        public void sendAnEmail(String content) {
-            Log.info("""
+        public void sendAnEmail(@P("Content to send") String content) {
+            System.out.printf("""
                     ***
                     ***   Tool sendAnEmail has been executed successfully!
-                    ***
-                    """);
+                    ***   Content: %s
+                    """, content);
         }
     }
 }

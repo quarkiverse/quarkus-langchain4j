@@ -7,15 +7,17 @@ import java.util.List;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.ollama.EmbeddingRequest;
+import dev.langchain4j.model.ollama.EmbeddingResponse;
 import dev.langchain4j.model.output.Response;
 
 public class OllamaEmbeddingModel implements EmbeddingModel {
 
-    private final OllamaClient client;
+    private final QuarkusOllamaClient client;
     private final String model;
 
     private OllamaEmbeddingModel(Builder builder) {
-        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
+        client = new QuarkusOllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
         model = builder.model;
     }
 
@@ -33,7 +35,7 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
                     .prompt(textSegment.text())
                     .build();
 
-            EmbeddingResponse response = client.embedding(request);
+            EmbeddingResponse response = client.embed(request);
 
             embeddings.add(Embedding.from(response.getEmbedding()));
         });

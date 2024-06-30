@@ -1,8 +1,6 @@
 package io.quarkiverse.langchain4j.ollama;
 
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
-import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
-import static java.util.Collections.singletonList;
 
 import java.time.Duration;
 import java.util.List;
@@ -11,23 +9,35 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.*;
+import dev.langchain4j.model.ollama.tool.ExperimentalParallelToolsDelegate;
+import dev.langchain4j.model.ollama.tool.ExperimentalSequentialToolsDelegate;
+import dev.langchain4j.model.ollama.tool.ExperimentalTools;
+import dev.langchain4j.model.ollama.tool.NoToolsDelegate;
 import dev.langchain4j.model.output.Response;
-import dev.langchain4j.model.output.TokenUsage;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
-    private final OllamaClient client;
+    private final QuarkusOllamaClient client;
     private final String model;
     private final String format;
     private final Options options;
-    private final ExperimentalToolsChatLM experimentalToolsChatLM;
+    private final ChatLanguageModel delegate;
 
     private OllamaChatLanguageModel(Builder builder) {
-        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
+        client = new QuarkusOllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
         model = builder.model;
         format = builder.format;
         options = builder.options;
-        experimentalToolsChatLM = builder.experimentalTool ? new ExperimentalToolsChatLM() : null;
+        delegate = getDelegate(ExperimentalTools.valueOf(builder.experimentalTool));
+    }
+
+    private ChatLanguageModel getDelegate(ExperimentalTools toolsEnum) {
+        return switch (toolsEnum) {
+            case NONE -> new NoToolsDelegate(this.client, this.model, this.options, this.format);
+            case SEQUENTIAL -> new ExperimentalSequentialToolsDelegate(this.client, this.model, this.options);
+            case PARALLEL -> new ExperimentalParallelToolsDelegate(this.client, this.model, this.options);
+        };
     }
 
     public static Builder builder() {
@@ -36,40 +46,18 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, null, null);
+        return delegate.generate(messages);
     }
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        return generate(messages, toolSpecifications, null);
+        ensureNotEmpty(messages, "messages");
+        return delegate.generate(messages, toolSpecifications);
     }
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages, singletonList(toolSpecification), toolSpecification);
-    }
-
-    private Response<AiMessage> generate(List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications,
-            ToolSpecification toolThatMustBeExecuted) {
-        ensureNotEmpty(messages, "messages");
-
-        List<Message> ollamaMessages = toOllamaMessages(messages);
-        ChatRequest.Builder requestBuilder = ChatRequest.builder()
-                .model(model)
-                .messages(ollamaMessages)
-                .options(options)
-                .format(format)
-                .stream(false);
-        boolean isToolNeeded = experimentalToolsChatLM != null && toolSpecifications != null && !toolSpecifications.isEmpty();
-        if (isToolNeeded) {
-            return experimentalToolsChatLM.chat(client, requestBuilder, ollamaMessages, toolSpecifications,
-                    toolThatMustBeExecuted);
-        } else {
-            ChatResponse response = client.chat(requestBuilder.build());
-            AiMessage aiMessage = AiMessage.from(response.message().content());
-            return Response.from(aiMessage, new TokenUsage(response.promptEvalCount(), response.evalCount()));
-        }
+        return delegate.generate(messages, toolSpecification);
     }
 
     public static final class Builder {
@@ -81,7 +69,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
         private boolean logRequests = false;
         private boolean logResponses = false;
-        private boolean experimentalTool = false;
+        private String experimentalTool;
 
         private Builder() {
         }
@@ -121,7 +109,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
             return this;
         }
 
-        public Builder experimentalTool(boolean experimentalTool) {
+        public Builder experimentalTool(String experimentalTool) {
             this.experimentalTool = experimentalTool;
             return this;
         }
