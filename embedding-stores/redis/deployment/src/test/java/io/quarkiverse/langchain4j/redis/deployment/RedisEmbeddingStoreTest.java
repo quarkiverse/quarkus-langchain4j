@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.redis.deployment;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -18,13 +21,24 @@ import io.quarkus.test.QuarkusUnitTest;
 
 public class RedisEmbeddingStoreTest extends EmbeddingStoreIT {
 
-    static String metadataFields = String.join(",", new RedisEmbeddingStoreTest().createMetadata().toMap().keySet());
+    static String numericMetadataFields = new RedisEmbeddingStoreTest().createMetadata().toMap().entrySet()
+            .stream()
+            .filter(e -> !e.getValue().getClass().equals(String.class))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.joining(","));
+
+    static String textualMetadataFields = new RedisEmbeddingStoreTest().createMetadata().toMap().entrySet()
+            .stream()
+            .filter(e -> e.getValue().getClass().equals(String.class))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.joining(","));
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset("quarkus.langchain4j.redis.dimension=384\n" +
-                            "quarkus.langchain4j.redis.metadata-fields=" + metadataFields),
+                            "quarkus.langchain4j.redis.numeric-metadata-fields=" + numericMetadataFields + "\n" +
+                            "quarkus.langchain4j.redis.textual-metadata-fields=" + textualMetadataFields + "\n"),
                             "application.properties"));
 
     @Inject

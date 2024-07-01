@@ -61,18 +61,35 @@ endif::add-copy-button-to-env-var[]
 |`embedding-index`
 
 
-a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-metadata-fields]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-metadata-fields[quarkus.langchain4j.redis.metadata-fields]`
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields[quarkus.langchain4j.redis.textual-metadata-fields]`
 
 
 [.description]
 --
-Names of extra fields that will be stored in Redis along with the embedding vectors. This corresponds to keys in the `dev.langchain4j.data.document.Metadata` map. Storing embeddings with metadata fields unlisted here is possible, but these fields will then not be present in the returned EmbeddingMatch objects.
+Names of fields that will store textual metadata associated with embeddings. NOTE: Filtering based on textual metadata fields is not supported at the moment.
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_METADATA_FIELDS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_TEXTUAL_METADATA_FIELDS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_METADATA_FIELDS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_TEXTUAL_METADATA_FIELDS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|
+
+
+a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-numeric-metadata-fields]]`link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-numeric-metadata-fields[quarkus.langchain4j.redis.numeric-metadata-fields]`
+
+
+[.description]
+--
+Names of fields that will store numeric metadata associated with embeddings.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_REDIS_NUMERIC_METADATA_FIELDS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_NUMERIC_METADATA_FIELDS+++`
 endif::add-copy-button-to-env-var[]
 --|list of string 
 |
