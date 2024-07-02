@@ -10,6 +10,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import dev.ai4j.openai4j.chat.AssistantMessage;
 import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.Delta;
+import io.netty.util.internal.StringUtil;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.smallrye.mutiny.Multi;
@@ -21,7 +22,7 @@ public class QuarkusOpenAiClientChatResource {
     private final QuarkusOpenAiClient quarkusOpenAiClient;
 
     public QuarkusOpenAiClientChatResource(LangChain4jOpenAiConfig runtimeConfig) {
-        String token = runtimeConfig.defaultConfig().apiKey();
+        String token = runtimeConfig.defaultConfig().apiKey().orElse(StringUtil.EMPTY_STRING);
         String baseUrl = runtimeConfig.defaultConfig().baseUrl();
         quarkusOpenAiClient = QuarkusOpenAiClient.builder().openAiApiKey(token).baseUrl(baseUrl).build();
     }
