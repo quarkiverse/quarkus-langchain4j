@@ -1,0 +1,14 @@
+name: LangChain4j OpenId Connect (OIDC) ModelAuthProvider
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides ModelAuthProvider which uses OIDC bearer or authorization code flow access tokens
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - oidc
+    - security
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+  categories:
+    - "security"
+  status: "experimental"
+ 
