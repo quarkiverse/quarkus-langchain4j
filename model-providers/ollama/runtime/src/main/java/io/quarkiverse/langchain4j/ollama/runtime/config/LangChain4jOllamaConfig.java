@@ -70,6 +70,16 @@ public interface LangChain4jOllamaConfig {
         Boolean enableIntegration();
 
         /**
+         * the experimental tools name. Currently, the only accepted values are {@code NONE, PARALLEL, SEQUENTIAL}
+         * NONE: for no tools, works as before without handling tools.
+         * PARALLEL: Tools we be used and simulated with one call to llm, that will answer with all tool request to execute
+         * and the response using the result of the tool request.
+         * SEQUENTIAL: Tools will be call sequentially and llm will call next tool following tool request result.
+         */
+        @WithDefault("NONE")
+        Optional<String> experimentalTools();
+
+        /**
          * Chat model related settings
          */
         ChatModelConfig chatModel();

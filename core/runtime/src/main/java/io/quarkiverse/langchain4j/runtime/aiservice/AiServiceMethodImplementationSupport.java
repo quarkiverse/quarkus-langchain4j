@@ -27,11 +27,8 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.agent.tool.ToolsResultMemory;
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
@@ -203,31 +200,39 @@ public class AiServiceMethodImplementationSupport {
 
             AiMessage aiMessage = response.content();
 
-            if (context.hasChatMemory()) {
-                context.chatMemory(memoryId).add(response.content());
-            }
-
             if (!aiMessage.hasToolExecutionRequests()) {
+                if (context.hasChatMemory()) {
+                    context.chatMemory(memoryId).add(aiMessage);
+                }
                 break;
             }
 
             ChatMemory chatMemory = context.chatMemory(memoryId);
-
+            List<ToolExecutionResultMessage> tmpToolExecutionResultMessages = new ArrayList<>();
+            ToolsResultMemory toolsResultMemory = new ToolsResultMemory();
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
                 if (toolExecutor == null) {
                     throw runtime("Tool executor %s not found", toolExecutionRequest.name());
                 }
+                toolExecutionRequest = toolsResultMemory.substituteArguments(toolExecutionRequest);
                 String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-                log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+                log.debugv("Saving result {0} into key {1}", toolExecutionResult, toolExecutionRequest.id());
+                toolsResultMemory.addVariable(toolExecutionRequest.id(), toolExecutionResult);
+                log.debugv("Result of {0} is {1}", toolExecutionRequest, toolExecutionResult);
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                         toolExecutionRequest,
                         toolExecutionResult);
                 if (audit != null) {
                     audit.addApplicationToLLMMessage(toolExecutionResultMessage);
                 }
-                chatMemory.add(toolExecutionResultMessage);
+                tmpToolExecutionResultMessages.add(toolExecutionResultMessage);
+            }
+            aiMessage = toolsResultMemory.substituteAssistantArguments(aiMessage);
+            if (context.hasChatMemory()) {
+                chatMemory.add(aiMessage);
+                tmpToolExecutionResultMessages.forEach(chatMemory::add);
             }
 
             log.debug("Attempting to obtain AI response");

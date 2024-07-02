@@ -24,6 +24,11 @@ public interface ChatModelConfig {
     OptionalInt numPredict();
 
     /**
+     * Maximum number of tokens to keep in the context
+     */
+    OptionalInt numCtx();
+
+    /**
      * Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return
      */
     Optional<List<String>> stop();
