@@ -15,6 +15,8 @@
     <module>core</module>
     
     <module>docs</module>
+
+    <module>embedding-parsers/llama-parse</module>
     
     <module>embedding-stores/chroma</module>
     <module>embedding-stores/infinispan</module>
