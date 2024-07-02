@@ -7,5 +7,5 @@ metadata:
     - langchain4j
   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
   categories:
-    - "miscellaneous"
+    - "ai"
   status: "experimental"
