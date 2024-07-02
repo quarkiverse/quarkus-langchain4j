@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.openai.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -76,4 +77,11 @@ public interface ChatModelConfig {
      * Some models are not compatible with some response formats, make sure to review OpenAI documentation.
      */
     Optional<String> responseFormat();
+
+    /**
+     * The list of stop words to use.
+     *
+     * @return
+     */
+    Optional<List<String>> stop();
 }
