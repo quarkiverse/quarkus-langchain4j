@@ -77,6 +77,19 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- this is to avoid
+                        java.lang.UnsatisfiedLinkError: Native Library
+                        /home/user/.djl.ai/tokenizers/0.15.0-0.26.0-linux-x86_64/libtokenizers.so already loaded in another classloader
+                     because we have two tests that are loaded with different class loaders
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
