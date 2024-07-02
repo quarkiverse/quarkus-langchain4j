@@ -17,6 +17,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final List<DotName> toolDotNames;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
+    private final DotName aiCacheProviderSupplierClassDotName;
     private final DotName retrieverClassDotName;
     private final DotName retrievalAugmentorSupplierClassDotName;
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
@@ -25,10 +26,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName cdiScope;
     private final String chatModelName;
     private final String moderationModelName;
+    private final String embeddingModelName;
 
     public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
             List<DotName> toolDotNames,
             DotName chatMemoryProviderSupplierClassDotName,
+            DotName aiCacheProviderSupplierClassDotName,
             DotName retrieverClassDotName,
             DotName retrievalAugmentorSupplierClassDotName,
             boolean customRetrievalAugmentorSupplierClassIsABean,
@@ -36,11 +39,13 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName moderationModelSupplierDotName,
             DotName cdiScope,
             String chatModelName,
-            String moderationModelName) {
+            String moderationModelName,
+            String embeddingModelName) {
         this.serviceClassInfo = serviceClassInfo;
         this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
         this.toolDotNames = toolDotNames;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
+        this.aiCacheProviderSupplierClassDotName = aiCacheProviderSupplierClassDotName;
         this.retrieverClassDotName = retrieverClassDotName;
         this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
@@ -49,6 +54,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
+        this.embeddingModelName = embeddingModelName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -65,6 +71,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getChatMemoryProviderSupplierClassDotName() {
         return chatMemoryProviderSupplierClassDotName;
+    }
+
+    public DotName getAiCacheProviderSupplierClassDotName() {
+        return aiCacheProviderSupplierClassDotName;
     }
 
     public DotName getRetrieverClassDotName() {
@@ -97,5 +107,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public String getModerationModelName() {
         return moderationModelName;
+    }
+
+    public String getEmbeddingModelName() {
+        return embeddingModelName;
     }
 }

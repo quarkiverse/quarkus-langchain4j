@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -27,6 +28,7 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -48,6 +50,7 @@ import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.cache.AiCache;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -61,6 +64,7 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
+    private static final Map<UserMessage, Embedding> CACHE = new ConcurrentHashMap<>();
 
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
@@ -121,7 +125,16 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
+        AiCache cache = null;
 
+        // TODO: REMOVE THIS COMMENT BEFORE MERGING THE PR.
+        // - Understand how to implement the concept of cache for the stream responses.
+        // - What do we have to do when we have the tools?
+
+        if (methodCreateInfo.isRequiresCache()) {
+            Object cacheId = cacheId(methodCreateInfo, methodArgs);
+            cache = context.aiCacheProvider.get(cacheId);
+        }
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
@@ -171,9 +184,6 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messages);
-
-        log.debug("Attempting to obtain AI response");
-
         List<ToolSpecification> toolSpecifications = context.toolSpecifications;
         Map<String, ToolExecutor> toolExecutors = context.toolExecutors;
         // override with method specific info
@@ -182,16 +192,31 @@ public class AiServiceMethodImplementationSupport {
             toolExecutors = methodCreateInfo.getToolExecutors();
         }
 
-        Response<AiMessage> response = toolSpecifications == null
-                ? context.chatModel.generate(messages)
-                : context.chatModel.generate(messages, toolSpecifications);
-        log.debug("AI response obtained");
+        Response<AiMessage> response;
+
+        if (cache != null) {
+            log.debug("Attempting to obtain AI response from cache");
+
+            Embedding query = context.embeddingModel.embed(userMessage.text()).content();
+            var cacheResponse = cache.search(query);
+
+            if (cacheResponse.isPresent()) {
+                log.debug("Return cached response");
+                response = Response.from(cacheResponse.get());
+            } else {
+                response = executeLLMCall(context, messages, moderationFuture, toolSpecifications);
+                cache.add(query, response.content());
+            }
+
+        } else {
+            response = executeLLMCall(context, messages, moderationFuture, toolSpecifications);
+        }
+
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
         }
-        TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
-        verifyModerationIfNeeded(moderationFuture);
+        TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
         int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
         while (true) {
@@ -243,6 +268,17 @@ public class AiServiceMethodImplementationSupport {
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
         return parse(response, returnType);
+    }
+
+    private static Response<AiMessage> executeLLMCall(QuarkusAiServiceContext context, List<ChatMessage> messages,
+            Future<Moderation> moderationFuture, List<ToolSpecification> toolSpecifications) {
+        log.debug("Attempting to obtain AI response");
+        var response = context.toolSpecifications == null
+                ? context.chatModel.generate(messages)
+                : context.chatModel.generate(messages, toolSpecifications);
+        log.debug("AI response obtained");
+        verifyModerationIfNeeded(moderationFuture);
+        return response;
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
@@ -377,6 +413,19 @@ public class AiServiceMethodImplementationSupport {
                     String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
                     return memoryId + perServiceSuffix;
                 }
+            }
+        }
+
+        // fallback to the default since there is nothing else we can really use here
+        return "default";
+    }
+
+    private static Object cacheId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+        for (DefaultMemoryIdProvider provider : DEFAULT_MEMORY_ID_PROVIDERS) {
+            Object memoryId = provider.getMemoryId();
+            if (memoryId != null) {
+                String perServiceSuffix = "#" + createInfo.getInterfaceName() + "." + createInfo.getMethodName();
+                return memoryId + perServiceSuffix;
             }
         }
 

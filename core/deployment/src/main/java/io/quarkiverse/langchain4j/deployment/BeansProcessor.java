@@ -66,7 +66,9 @@ public class BeansProcessor {
     }
 
     @BuildStep
-    public void handleProviders(BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
+    public void handleProviders(
+            AiCacheBuildItem aiCacheBuildItem,
+            BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
             List<ChatModelProviderCandidateBuildItem> chatCandidateItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
@@ -171,7 +173,8 @@ public class BeansProcessor {
             }
         }
         // If the Easy RAG extension requested to automatically generate an embedding model...
-        if (requestEmbeddingModels.isEmpty() && autoCreateEmbeddingModelBuildItem.isPresent()) {
+        if (requestEmbeddingModels.isEmpty()
+                && (aiCacheBuildItem.isEnable() || autoCreateEmbeddingModelBuildItem.isPresent())) {
             String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
                     Optional.empty(), "EmbeddingModel", "embedding-model");

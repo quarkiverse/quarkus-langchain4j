@@ -22,11 +22,13 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
+import io.quarkiverse.langchain4j.CacheResult;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
+import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.smallrye.mutiny.Multi;
 
 public class LangChain4jDotNames {
@@ -42,6 +44,7 @@ public class LangChain4jDotNames {
     static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
+    static final DotName CACHE_RESULT = DotName.createSimple(CacheResult.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     static final DotName STRUCTURED_PROMPT = DotName.createSimple(StructuredPrompt.class);
@@ -55,9 +58,13 @@ public class LangChain4jDotNames {
             RegisterAiService.BeanChatLanguageModelSupplier.class);
 
     static final DotName CHAT_MEMORY_PROVIDER = DotName.createSimple(ChatMemoryProvider.class);
+    static final DotName AI_CACHE_PROVIDER = DotName.createSimple(AiCacheProvider.class);
 
     static final DotName BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanChatMemoryProviderSupplier.class);
+
+    static final DotName BEAN_AI_CACHE_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanAiCacheProviderSupplier.class);
 
     static final DotName NO_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoChatMemoryProviderSupplier.class);
