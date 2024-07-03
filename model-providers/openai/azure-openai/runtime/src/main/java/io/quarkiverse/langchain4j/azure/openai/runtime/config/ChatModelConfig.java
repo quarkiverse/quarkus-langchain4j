@@ -12,25 +12,28 @@ public interface ChatModelConfig {
      * This property will override the {@code quarkus.langchain4j.azure-openai.resource-name}
      * specifically for chat models if it is set.
      */
+    @WithDefault(ConfigConstants.DUMMY_VALUE)
     Optional<String> resourceName();
 
     /**
      * This property will override the {@code quarkus.langchain4j.azure-openai.domain-name}
      * specifically for chat models if it is set.
      */
-    @WithDefault("openai.azure.com")
+    @WithDefault(ConfigConstants.DUMMY_VALUE)
     Optional<String> domainName();
 
     /**
      * This property will override the {@code quarkus.langchain4j.azure-openai.deployment-name}
      * specifically for chat models if it is set.
      */
+    @WithDefault(ConfigConstants.DUMMY_VALUE)
     Optional<String> deploymentName();
 
     /**
      * This property will override the {@code quarkus.langchain4j.azure-openai.endpoint}
      * specifically for chat models if it is set.
      */
+    @WithDefault(ConfigConstants.DUMMY_VALUE)
     Optional<String> endpoint();
 
     /**
