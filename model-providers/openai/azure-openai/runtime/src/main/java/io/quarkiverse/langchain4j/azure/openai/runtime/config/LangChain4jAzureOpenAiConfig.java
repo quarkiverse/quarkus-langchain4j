@@ -150,18 +150,36 @@ public interface LangChain4jAzureOpenAiConfig {
          */
         ImageModelConfig imageModel();
 
+        default Optional<String> domainNameFor(EndpointType type) {
+            var deepDomainName = switch (type) {
+                case CHAT -> chatModel().domainName();
+                case EMBEDDING -> embeddingModel().domainName();
+                case IMAGE -> imageModel().domainName();
+            };
+            return deepDomainName
+                    .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
+                    .or(new Supplier<Optional<String>>() {
+                        @Override
+                        public Optional<String> get() {
+                            return domainName();
+                        }
+                    });
+        }
+
         default Optional<String> endPointFor(EndpointType type) {
             var deepEndpoint = switch (type) {
                 case CHAT -> chatModel().endpoint();
                 case EMBEDDING -> embeddingModel().endpoint();
                 case IMAGE -> imageModel().endpoint();
             };
-            return deepEndpoint.or(new Supplier<Optional<String>>() {
-                @Override
-                public Optional<String> get() {
-                    return endpoint();
-                }
-            });
+            return deepEndpoint
+                    .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
+                    .or(new Supplier<Optional<String>>() {
+                        @Override
+                        public Optional<String> get() {
+                            return endpoint();
+                        }
+                    });
         }
 
         default Optional<String> resourceNameFor(EndpointType type) {
@@ -170,12 +188,14 @@ public interface LangChain4jAzureOpenAiConfig {
                 case EMBEDDING -> embeddingModel().resourceName();
                 case IMAGE -> imageModel().resourceName();
             };
-            return deepResourceName.or(new Supplier<Optional<String>>() {
-                @Override
-                public Optional<String> get() {
-                    return resourceName();
-                }
-            });
+            return deepResourceName
+                    .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
+                    .or(new Supplier<Optional<String>>() {
+                        @Override
+                        public Optional<String> get() {
+                            return resourceName();
+                        }
+                    });
         }
 
         default Optional<String> deploymentNameFor(EndpointType type) {
@@ -184,12 +204,14 @@ public interface LangChain4jAzureOpenAiConfig {
                 case EMBEDDING -> embeddingModel().deploymentName();
                 case IMAGE -> imageModel().deploymentName();
             };
-            return deepDeploymentName.or(new Supplier<Optional<String>>() {
-                @Override
-                public Optional<String> get() {
-                    return deploymentName();
-                }
-            });
+            return deepDeploymentName
+                    .filter(v -> !ConfigConstants.DUMMY_VALUE.equals(v))
+                    .or(new Supplier<Optional<String>>() {
+                        @Override
+                        public Optional<String> get() {
+                            return deploymentName();
+                        }
+                    });
         }
 
         enum EndpointType {
