@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -131,7 +131,6 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
-    public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
@@ -493,7 +492,7 @@ public class AiServicesProcessor {
                     .equals(retrievalAugmentorSupplierClassName)) {
                 // Use a CDI bean of type `RetrievalAugmentor` if one exists, otherwise
                 // don't use an augmentor.
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                         new Type[] { ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
                 needsRetrievalAugmentorBean = true;
             } else {
@@ -512,7 +511,7 @@ public class AiServicesProcessor {
             }
 
             if (LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                         new Type[] { ClassType.create(LangChain4jDotNames.AUDIT_SERVICE) }, null));
                 needsAuditServiceBean = true;
             }
@@ -944,6 +943,11 @@ public class AiServicesProcessor {
         if ((templateParams.size() == 1) && (params.size() == 1)) {
             // the special 'it' param is supported when the method only has one parameter
             templateParams.add(new TemplateParameterInfo(0, "it"));
+        }
+
+        if (!templateParams.isEmpty() && templateParams.stream().map(TemplateParameterInfo::name).allMatch(Objects::isNull)) {
+            log.warn(
+                    "The application has been compiled without the '-parameters' being set flag on javac. Make sure your build tool is configured to pass this flag to javac, otherwise Quarkus LangChain4j is unlikely to work properly without it.");
         }
 
         return templateParams;

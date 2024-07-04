@@ -33,13 +33,19 @@ public interface RedisEmbeddingStoreConfig {
     String indexName();
 
     /**
-     * Names of extra fields that will be stored in Redis along with the
-     * embedding vectors. This corresponds to keys in the
-     * `dev.langchain4j.data.document.Metadata` map. Storing embeddings with
-     * metadata fields unlisted here is possible, but these fields will then
-     * not be present in the returned EmbeddingMatch objects.
+     * Names of fields that will store textual metadata associated with
+     * embeddings.
+     *
+     * NOTE: Filtering based on textual metadata fields is not supported
+     * at the moment.
      */
-    Optional<List<String>> metadataFields();
+    Optional<List<String>> textualMetadataFields();
+
+    /**
+     * Names of fields that will store numeric metadata associated with
+     * embeddings.
+     */
+    Optional<List<String>> numericMetadataFields();
 
     /**
      * Metric used to compute the distance between two vectors.

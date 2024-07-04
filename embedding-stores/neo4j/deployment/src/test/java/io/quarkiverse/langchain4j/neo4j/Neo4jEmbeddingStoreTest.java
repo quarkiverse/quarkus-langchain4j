@@ -23,7 +23,13 @@ public class Neo4jEmbeddingStoreTest extends EmbeddingStoreIT {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("quarkus.langchain4j.neo4j.dimension=384"),
+                    .addAsResource(
+                            new StringAsset(
+                                    "quarkus.langchain4j.neo4j.dimension=384\n" +
+                                    // FIXME: this should be just neo4j:5, but version 5.21 has some
+                                    // weird bug that causes the driver to crash, so hardcode the
+                                    // test to use 5.20.0 for now
+                                            "quarkus.neo4j.devservices.image-name=neo4j:5.20.0"),
                             "application.properties"));
 
     @Inject

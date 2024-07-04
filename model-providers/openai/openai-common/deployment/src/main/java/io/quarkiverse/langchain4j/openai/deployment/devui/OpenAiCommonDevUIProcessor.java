@@ -7,7 +7,7 @@ import io.quarkus.deployment.IsDevelopment;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 
-public final class OpenAiDevUIProcessor {
+public final class OpenAiCommonDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     void registerOpenWebUiCard(BuildProducer<AdditionalDevUiCardBuildItem> producer) {

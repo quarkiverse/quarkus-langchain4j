@@ -40,3 +40,16 @@ include::includes/quarkus-langchain4j-redis.adoc[leveloffset=+1,opts=optional]
 == Under the Hood
 
 Each ingested document is saved as a JSON document in Redis, containing the _embedding_ stored as a vector. The document store also generates an index for each ingested document. To retrieve relevant documents, the extension employs the Redis _search_ command.
+
+== Metadata filtering
+
+The Redis embedding store currently supports metadata filtering, but with these limitations:
+
+- Filtering is possible only based on numeric fields at the moment.
+- Only the logical AND operation is supported. OR is not supported.
+- The fields which you intend to use in filters have to be declared in the `quarkus.langchain4j.redis.numeric-metadata-fields` property.
+
+NOTE: There is also the `quarkus.langchain4j.redis.textual-metadata-fields`
+property where you should declare your textual metadata fields. These
+declared fields will be returned in embedding search results, but they can
+not be used for filtering at the moment.

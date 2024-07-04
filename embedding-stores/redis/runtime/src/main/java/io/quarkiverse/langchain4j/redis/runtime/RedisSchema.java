@@ -15,7 +15,8 @@ public class RedisSchema {
     private String prefix;
     private String vectorFieldName;
     private String scalarFieldName;
-    private List<String> metadataFields;
+    private List<String> numericMetadataFields;
+    private List<String> textualMetadataFields;
     private VectorAlgorithm vectorAlgorithm;
     private Long dimension;
     private DistanceMetric distanceMetric;
@@ -25,7 +26,8 @@ public class RedisSchema {
             String prefix,
             String vectorFieldName,
             String scalarFieldName,
-            List<String> metadataFields,
+            List<String> numericMetadataFields,
+            List<String> textualMetadataFields,
             VectorAlgorithm vectorAlgorithm,
             Long dimension,
             DistanceMetric distanceMetric) {
@@ -33,7 +35,8 @@ public class RedisSchema {
         this.prefix = prefix;
         this.vectorFieldName = vectorFieldName;
         this.scalarFieldName = scalarFieldName;
-        this.metadataFields = metadataFields;
+        this.numericMetadataFields = numericMetadataFields;
+        this.textualMetadataFields = textualMetadataFields;
         this.vectorAlgorithm = vectorAlgorithm;
         this.dimension = dimension;
         this.distanceMetric = distanceMetric;
@@ -55,8 +58,12 @@ public class RedisSchema {
         return scalarFieldName;
     }
 
-    public List<String> getMetadataFields() {
-        return metadataFields;
+    public List<String> getNumericMetadataFields() {
+        return numericMetadataFields;
+    }
+
+    public List<String> getTextualMetadataFields() {
+        return textualMetadataFields;
     }
 
     public VectorAlgorithm getVectorAlgorithm() {
@@ -74,17 +81,24 @@ public class RedisSchema {
     public void defineFields(CreateArgs args) {
         defineTextField(args);
         defineVectorField(args);
-        defineMetadataFields(args);
+        defineTextualMetadataFields(args);
+        defineNumericMetadataFields(args);
     }
 
-    private void defineMetadataFields(CreateArgs args) {
-        for (String metadataField : metadataFields) {
-            args.indexedField(JSON_PATH_PREFIX + metadataField, metadataField, FieldType.TEXT, new FieldOptions().weight(1.0));
+    private void defineNumericMetadataFields(CreateArgs args) {
+        for (String metadataField : numericMetadataFields) {
+            args.indexedField(JSON_PATH_PREFIX + metadataField, metadataField, FieldType.NUMERIC);
+        }
+    }
+
+    private void defineTextualMetadataFields(CreateArgs args) {
+        for (String metadataField : textualMetadataFields) {
+            args.indexedField(JSON_PATH_PREFIX + metadataField, metadataField, FieldType.TEXT);
         }
     }
 
     private void defineTextField(CreateArgs args) {
-        args.indexedField(JSON_PATH_PREFIX + scalarFieldName, scalarFieldName, FieldType.TEXT, new FieldOptions().weight(1.0));
+        args.indexedField(JSON_PATH_PREFIX + scalarFieldName, scalarFieldName, FieldType.TEXT);
     }
 
     private void defineVectorField(CreateArgs args) {
@@ -102,7 +116,8 @@ public class RedisSchema {
         private String prefix;
         private String vectorFieldName;
         private String scalarFieldName;
-        private List<String> metadataFields;
+        private List<String> numericMetadataFields;
+        private List<String> textualMetadataFields;
         private VectorAlgorithm vectorAlgorithm;
         private Long dimension;
         private DistanceMetric metricType;
@@ -131,8 +146,13 @@ public class RedisSchema {
             return this;
         }
 
-        public Builder metadataFields(List<String> metadataFields) {
-            this.metadataFields = metadataFields;
+        public Builder numericMetadataFields(List<String> numericMetadataFields) {
+            this.numericMetadataFields = numericMetadataFields;
+            return this;
+        }
+
+        public Builder textualMetadataFields(List<String> textualMetadataFields) {
+            this.textualMetadataFields = textualMetadataFields;
             return this;
         }
 
@@ -156,7 +176,8 @@ public class RedisSchema {
                     prefix,
                     vectorFieldName,
                     scalarFieldName,
-                    metadataFields,
+                    numericMetadataFields,
+                    textualMetadataFields,
                     vectorAlgorithm,
                     dimension,
                     metricType);

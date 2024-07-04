@@ -10,6 +10,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -24,6 +26,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class MistralAiProcessor {
 
@@ -33,6 +36,12 @@ public class MistralAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void nativeSupport(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
     }
 
     @BuildStep

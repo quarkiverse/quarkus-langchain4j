@@ -75,7 +75,7 @@ export class QwcEmbeddingStore extends LitElement {
         this._relevantEmbeddingsOutput = html`<vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>`;
         this.jsonRpc.findRelevant({text: text, limit: limit}).then(jsonRpcResponse => {
             this._relevantEmbeddingsOutput = html`
-                <vaadin-grid  theme="wrap-cell-content" id="relevant-embeddings" .items=${jsonRpcResponse.result}>
+                <vaadin-grid all-rows-visible theme="wrap-cell-content" id="relevant-embeddings" .items=${jsonRpcResponse.result}>
                     <vaadin-grid-sort-column path="embeddingId" header="ID" resizable></vaadin-grid-sort-column>
                     <vaadin-grid-sort-column path="score" header="Score" resizable></vaadin-grid-sort-column>
                     <vaadin-grid-sort-column path="embedded" header="Text segment" resizable></vaadin-grid-sort-column>

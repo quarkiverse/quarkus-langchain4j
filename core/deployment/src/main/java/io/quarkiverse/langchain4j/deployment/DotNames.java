@@ -5,9 +5,13 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.enterprise.inject.Instance;
+
 import org.jboss.jandex.DotName;
 
-class DotNames {
+import dev.langchain4j.model.chat.listener.ChatModelListener;
+
+public class DotNames {
 
     public static final DotName BOOLEAN = DotName.createSimple(Boolean.class);
     public static final DotName PRIMITIVE_BOOLEAN = DotName.createSimple(boolean.class);
@@ -32,4 +36,7 @@ class DotNames {
     public static final DotName SET = DotName.createSimple(Set.class);
 
     public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
+    public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
+
+    public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
 }

@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.mistralai;
 
-import static dev.langchain4j.model.mistralai.DefaultMistralAiHelper.finishReasonFrom;
-import static dev.langchain4j.model.mistralai.DefaultMistralAiHelper.tokenUsageFrom;
+import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.finishReasonFrom;
+import static dev.langchain4j.model.mistralai.internal.mapper.MistralAiMapper.tokenUsageFrom;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
@@ -19,15 +19,15 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
-import dev.langchain4j.model.mistralai.MistralAiChatCompletionChoice;
-import dev.langchain4j.model.mistralai.MistralAiChatCompletionRequest;
-import dev.langchain4j.model.mistralai.MistralAiChatCompletionResponse;
-import dev.langchain4j.model.mistralai.MistralAiClient;
-import dev.langchain4j.model.mistralai.MistralAiClientBuilderFactory;
-import dev.langchain4j.model.mistralai.MistralAiEmbeddingRequest;
-import dev.langchain4j.model.mistralai.MistralAiEmbeddingResponse;
-import dev.langchain4j.model.mistralai.MistralAiModelResponse;
-import dev.langchain4j.model.mistralai.MistralAiUsage;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionChoice;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiUsage;
+import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
+import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
