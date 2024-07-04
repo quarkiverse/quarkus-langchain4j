@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -132,7 +131,6 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
-    public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
@@ -494,7 +492,7 @@ public class AiServicesProcessor {
                     .equals(retrievalAugmentorSupplierClassName)) {
                 // Use a CDI bean of type `RetrievalAugmentor` if one exists, otherwise
                 // don't use an augmentor.
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                         new Type[] { ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
                 needsRetrievalAugmentorBean = true;
             } else {
@@ -513,7 +511,7 @@ public class AiServicesProcessor {
             }
 
             if (LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(CDI_INSTANCE,
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                         new Type[] { ClassType.create(LangChain4jDotNames.AUDIT_SERVICE) }, null));
                 needsAuditServiceBean = true;
             }

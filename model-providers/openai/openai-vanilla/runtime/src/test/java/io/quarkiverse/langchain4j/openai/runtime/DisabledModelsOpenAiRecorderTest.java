@@ -31,7 +31,7 @@ class DisabledModelsOpenAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }
