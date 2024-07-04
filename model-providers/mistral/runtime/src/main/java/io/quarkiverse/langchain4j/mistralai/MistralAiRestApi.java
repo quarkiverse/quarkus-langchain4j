@@ -34,11 +34,11 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import dev.langchain4j.model.mistralai.MistralAiChatCompletionRequest;
-import dev.langchain4j.model.mistralai.MistralAiChatCompletionResponse;
-import dev.langchain4j.model.mistralai.MistralAiEmbeddingRequest;
-import dev.langchain4j.model.mistralai.MistralAiEmbeddingResponse;
-import dev.langchain4j.model.mistralai.MistralAiModelResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;

@@ -30,7 +30,7 @@ public interface MilvusBuildConfig {
         /**
          * Container image for Milvus.
          */
-        @WithDefault("docker.io/milvusdb/milvus:v2.3.4")
+        @WithDefault("docker.io/milvusdb/milvus:v2.3.16")
         String milvusImageName();
 
         /**
