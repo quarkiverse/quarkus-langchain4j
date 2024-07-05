@@ -74,6 +74,9 @@ public class OllamaClientAuthHeaderFilter implements ClientRequestFilter {
 
 This class is a CDI bean which gives the ability to utilize other CDI beans if necessary.
 
+NOTE: If you want to use it with native compilation you should add the `@RegisterForReflection` annotation. See https://quarkus.io/guides/writing-native-applications-tips#registering-for-reflection[Quarkus documentation] for more information.  
+This should be not necessary with future releases of Quarkus.
+
 == Document Retriever and Embedding
 
 Ollama also provides embedding models.
