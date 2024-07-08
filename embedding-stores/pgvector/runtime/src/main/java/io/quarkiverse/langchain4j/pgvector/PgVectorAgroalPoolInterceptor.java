@@ -12,6 +12,7 @@ import io.agroal.api.AgroalPoolInterceptor;
  * PgVectorAgroalPoolInterceptor intercept connection creation and add needed settings for pgvector
  */
 public class PgVectorAgroalPoolInterceptor implements AgroalPoolInterceptor {
+
     @Override
     public void onConnectionCreate(Connection connection) {
         try (Statement statement = connection.createStatement()) {
