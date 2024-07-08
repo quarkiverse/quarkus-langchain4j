@@ -24,6 +24,7 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
@@ -35,6 +36,8 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOp
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -295,6 +298,12 @@ public class AzureOpenAiRecorder {
 
     private void throwIfApiKeysNotConfigured(String apiKey, String adToken, String configName) {
         if ((apiKey != null) == (adToken != null)) {
+            ArcContainer container = Arc.container();
+            if (container != null && container.instance(ModelAuthProvider.class).isAvailable()) {
+                // Perhaps ModelAuthProvider can provide a method with a default implementation returning a value like `ALL`
+                // to indicate that it applies to all or a specific model only
+                return;
+            }
             throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
         }
     }

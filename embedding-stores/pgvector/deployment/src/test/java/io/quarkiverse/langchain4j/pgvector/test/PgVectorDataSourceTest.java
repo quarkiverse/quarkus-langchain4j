@@ -27,15 +27,14 @@ public class PgVectorDataSourceTest {
 
     @RegisterExtension
     static final QuarkusUnitTest test = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset(
-                            // DevServicesConfigBuilderCustomizer overrides the image-name only
-                            // for the default DS, so in this case we have to override it manually
-                            "quarkus.datasource.embeddings-ds.devservices.image-name=pgvector/pgvector:pg16\n" +
-                                    "quarkus.langchain4j.pgvector.datasource=embeddings-ds\n" +
-                                    "quarkus.langchain4j.pgvector.dimension=1536\n" +
-                                    "quarkus.datasource.embeddings-ds.db-kind=postgresql\n"),
-                            "application.properties"));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addAsResource(new StringAsset(
+                    // DevServicesConfigBuilderCustomizer overrides the image-name only
+                    // for the default DS, so in this case we have to override it manually
+                    "quarkus.datasource.embeddings-ds.devservices.image-name=pgvector/pgvector:pg16\n"
+                            + "quarkus.langchain4j.pgvector.datasource=embeddings-ds\n"
+                            + "quarkus.langchain4j.pgvector.dimension=1536\n"
+                            + "quarkus.datasource.embeddings-ds.db-kind=postgresql\n"),
+                    "application.properties"));
 
     @io.quarkus.agroal.DataSource("embeddings-ds")
     DataSource ds;

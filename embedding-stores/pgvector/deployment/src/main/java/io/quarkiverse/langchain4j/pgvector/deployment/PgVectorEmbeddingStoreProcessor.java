@@ -33,7 +33,8 @@ class PgVectorEmbeddingStoreProcessor {
 
     private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
     private static final DotName AGROAL_POOL_INTERCEPTOR = DotName.createSimple(AgroalPoolInterceptor.class);
-    private static final DotName PG_VECTOR_AGROAL_POOL_INTERCEPTOR = DotName.createSimple(PgVectorAgroalPoolInterceptor.class);
+    private static final DotName PG_VECTOR_AGROAL_POOL_INTERCEPTOR = DotName
+            .createSimple(PgVectorAgroalPoolInterceptor.class);
 
     private static final String FEATURE = "langchain4j-pgvector";
 
@@ -50,39 +51,27 @@ class PgVectorEmbeddingStoreProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    public void createBean(
-            BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            PgVectorEmbeddingStoreRecorder recorder,
-            PgVectorEmbeddingStoreConfig config,
-            PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig,
+    public void createBean(BuildProducer<SyntheticBeanBuildItem> beanProducer, PgVectorEmbeddingStoreRecorder recorder,
+            PgVectorEmbeddingStoreConfig config, PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
 
         AnnotationInstance datasourceQualifier = buildTimeConfig.datasource()
                 .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
                 .orElse(AnnotationInstance.builder(Default.class).build());
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PG_VECTOR_EMBEDDING_STORE)
+        beanProducer.produce(SyntheticBeanBuildItem.configure(PG_VECTOR_EMBEDDING_STORE)
                 .types(ClassType.create(dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore.class),
                         ClassType.create(EmbeddingStore.class),
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
-                .setRuntimeInit()
-                .defaultBean()
-                .unremovable()
-                .scope(ApplicationScoped.class)
+                .setRuntimeInit().defaultBean().unremovable().scope(ApplicationScoped.class)
                 .createWith(recorder.embeddingStoreFunction(config, buildTimeConfig.datasource().orElse(null)))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)
                 .done());
 
-        beanProducer.produce(SyntheticBeanBuildItem
-                .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
-                .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
-                .setRuntimeInit()
-                .unremovable()
-                .scope(ApplicationScoped.class)
-                .supplier(recorder.pgVectorAgroalPoolInterceptor())
-                .qualifiers(datasourceQualifier)
-                .done());
+        beanProducer.produce(SyntheticBeanBuildItem.configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
+                .types(ClassType.create(AGROAL_POOL_INTERCEPTOR)).setRuntimeInit().unremovable()
+                .scope(ApplicationScoped.class).supplier(recorder.pgVectorAgroalPoolInterceptor())
+                .qualifiers(datasourceQualifier).done());
 
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

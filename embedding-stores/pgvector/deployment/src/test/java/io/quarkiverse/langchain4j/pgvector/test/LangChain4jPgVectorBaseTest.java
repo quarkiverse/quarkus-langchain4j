@@ -47,9 +47,8 @@ abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreIT {
     }
 
     /**
-     * Just for information, not real benchmark.
-     * JSONTest: Ingesting time 50849 ms. Query average 10 ms
-     * JSONBTest: Ingesting time 56035 ms. Query average 6 ms.
+     * Just for information, not real benchmark. JSONTest: Ingesting time 50849 ms.
+     * Query average 10 ms JSONBTest: Ingesting time 56035 ms. Query average 6 ms.
      * JSONBMultiIndexTest: Ingesting time 47344 ms. Query average 6 ms.
      * ColumnsTest: Ingesting time 49752 ms. Query average 3 ms.
      */

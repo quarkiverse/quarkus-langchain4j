@@ -12,8 +12,8 @@ import io.smallrye.config.ConfigMapping;
 public interface PgVectorEmbeddingStoreBuildTimeConfig {
 
     /**
-     * The name of the configured Postgres datasource to use for this store. If not set,
-     * the default datasource from the Agroal extension will be used.
+     * The name of the configured Postgres datasource to use for this store. If not
+     * set, the default datasource from the Agroal extension will be used.
      */
     Optional<String> datasource();
 

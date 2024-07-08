@@ -12,9 +12,10 @@ import io.smallrye.config.SmallRyeConfigBuilderCustomizer;
 public class DevServicesConfigBuilderCustomizer implements SmallRyeConfigBuilderCustomizer {
     @Override
     public void configBuilder(final SmallRyeConfigBuilder builder) {
-        // use a priority of 50 to make sure that this is overridable by any of the standard methods
-        builder.withSources(
-                new PropertiesConfigSource(Map.of("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg17"),
-                        "quarkus-langchain4j-pgvector", 50));
+        // use a priority of 50 to make sure that this is overridable by any of the
+        // standard methods
+        builder.withSources(new PropertiesConfigSource(
+                Map.of("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg17"),
+                "quarkus-langchain4j-pgvector", 50));
     }
 }
