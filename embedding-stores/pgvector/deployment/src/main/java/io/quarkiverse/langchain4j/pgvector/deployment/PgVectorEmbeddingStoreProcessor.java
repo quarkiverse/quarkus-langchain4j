@@ -13,7 +13,9 @@ import com.pgvector.PGvector;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.agroal.api.AgroalDataSource;
+import io.agroal.api.AgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.pgvector.PgVectorAgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreRecorder;
@@ -30,6 +32,8 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 class PgVectorEmbeddingStoreProcessor {
 
     private static final DotName PG_VECTOR_EMBEDDING_STORE = DotName.createSimple(PgVectorEmbeddingStore.class);
+    private static final DotName AGROAL_POOL_INTERCEPTOR = DotName.createSimple(AgroalPoolInterceptor.class);
+    private static final DotName PG_VECTOR_AGROAL_POOL_INTERCEPTOR = DotName.createSimple(PgVectorAgroalPoolInterceptor.class);
 
     private static final String FEATURE = "langchain4j-pgvector";
 
@@ -66,6 +70,16 @@ class PgVectorEmbeddingStoreProcessor {
                 .scope(ApplicationScoped.class)
                 .createWith(recorder.embeddingStoreFunction(config, buildTimeConfig.datasource().orElse(null)))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)
+                .done());
+
+        beanProducer.produce(SyntheticBeanBuildItem
+                .configure(PG_VECTOR_AGROAL_POOL_INTERCEPTOR)
+                .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                .setRuntimeInit()
+                .unremovable()
+                .scope(ApplicationScoped.class)
+                .supplier(recorder.pgVectorAgroalPoolInterceptor())
+                .qualifiers(datasourceQualifier)
                 .done());
 
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
