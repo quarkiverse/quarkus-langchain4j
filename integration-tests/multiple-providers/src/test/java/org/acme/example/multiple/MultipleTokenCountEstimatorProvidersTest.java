@@ -1,7 +1,6 @@
 package org.acme.example.multiple;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.inject.Inject;
 
@@ -47,20 +46,17 @@ public class MultipleTokenCountEstimatorProvidersTest {
     void azureOpenAiTest() {
         assertThat(ClientProxy.unwrap(azureChat)).isInstanceOf(AzureOpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(azureTokenizer)).isInstanceOf(AzureOpenAiChatModel.class);
-        assertEquals(ClientProxy.unwrap(azureChat), ClientProxy.unwrap(azureTokenizer));
     }
 
     @Test
     void bamTest() {
         assertThat(ClientProxy.unwrap(bamChat)).isInstanceOf(BamChatModel.class);
         assertThat(ClientProxy.unwrap(bamTokenizer)).isInstanceOf(BamChatModel.class);
-        assertEquals(ClientProxy.unwrap(bamChat), ClientProxy.unwrap(bamTokenizer));
     }
 
     @Test
     void watsonxTest() {
         assertThat(ClientProxy.unwrap(watsonxChat)).isInstanceOf(WatsonxChatModel.class);
         assertThat(ClientProxy.unwrap(watsonxTokenizer)).isInstanceOf(WatsonxChatModel.class);
-        assertEquals(ClientProxy.unwrap(watsonxChat), ClientProxy.unwrap(watsonxTokenizer));
     }
 }

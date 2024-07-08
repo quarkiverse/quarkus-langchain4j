@@ -68,12 +68,10 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
-            var chatModel = builder.build();
-
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return chatModel;
+                    return builder.build();
                 }
             };
         } else {
