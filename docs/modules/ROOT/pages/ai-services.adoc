@@ -171,6 +171,174 @@ quarkus.langchain4j.openai.m1.api-key=sk-...
 quarkus.langchain4j.huggingface.m2.api-key=sk-...
 ----
 
+[#cache]
+== Configuring the Cache
+
+If necessary, a semantic cache can be enabled to maintain a fixed number of questions and answers previously asked to the LLM, thus reducing the number of API calls.
+
+The `@CacheResult` annotation enables semantic caching and can be used at the class or method level. When used at the class level, it indicates that all methods of the AiService will perform a cache lookup before making a call to the LLM. This approach provides a convenient way to enable the caching for all methods of a `@RegisterAiService`.
+
+[source,java]
+----
+@RegisterAiService
+@CacheResult
+@SystemMessage("...")
+public interface LLMService {
+    // Cache is enabled for all methods
+    ...
+}
+
+----
+
+On the other hand, using `@CacheResult` at the method level allows fine-grained control over where the cache is enabled.
+
+[source,java]
+----
+@RegisterAiService
+@SystemMessage("...")
+public interface LLMService {
+    
+	@CacheResult
+	@UserMessage("...")
+	public String method1(...); // Cache is enabled for this method
+	
+	@UserMessage("...")
+	public String method2(...); // Cache is not enabled for this method
+}
+
+----
+
+[IMPORTANT]
+====
+Each method annotated with `@CacheResult` will have its own cache shared by all users.
+====
+
+=== Cache properties 
+
+The following properties can be used to customize the cache configuration:
+
+- `quarkus.langchain4j.cache.threshold`: Specifies the threshold used during semantic search to determine whether a cached result should be returned. This threshold defines the similarity measure between new queries and cached entries. (`default 1`)
+- `quarkus.langchain4j.cache.max-size`: Sets the maximum number of messages to cache. This property helps control memory usage by limiting the size of each cache. (`default 10`)
+- `quarkus.langchain4j.cache.ttl`: Defines the time-to-live for messages stored in the cache. Messages that exceed the TTL are automatically removed. (`default 5m`)
+- `quarkus.langchain4j.cache.embedding.name`: Specifies the name of the embedding model to use.
+- `quarkus.langchain4j.cache.embedding.query-prefix`: Adds a prefix to each "query" value before performing the embedding operation.
+- `quarkus.langchain4j.cache.embedding.response-prefix`: Adds a prefix to each "response" value before performing the embedding operation.
+
+By default, the cache uses the default embedding model provided by the LLM. If there are multiple embedding providers, the `quarkus.langchain4j.cache.embedding.name` property can be used to choose which one to use.
+
+In the following example, there are two different embedding providers
+
+`pom.xml`:
+
+[source,xml,subs=attributes+]
+----
+...
+<dependencies>
+ <dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+ </dependency>
+ <dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-watsonx</artifactId>
+    <version>{project-version}</version>
+ </dependency>
+<dependencies>
+...
+----
+
+`application.properties`:
+
+[source,properties]
+----
+# OpenAI configuration
+quarkus.langchain4j.service1.chat-model.provider=openai
+quarkus.langchain4j.service1.embedding-model.provider=openai
+quarkus.langchain4j.openai.service1.api-key=sk-...
+
+# Watsonx configuration
+quarkus.langchain4j.service2.chat-model.provider=watsonx
+quarkus.langchain4j.service2.embedding-model.provider=watsonx
+quarkus.langchain4j.watsonx.service2.base-url=...
+quarkus.langchain4j.watsonx.service2.api-key=...
+quarkus.langchain4j.watsonx.service2.project-id=...
+quarkus.langchain4j.watsonx.service2.embedding-model.model-id=...
+
+# The cache will use the embedding model provided by watsonx
+quarkus.langchain4j.cache.embedding.name=service2
+----
+
+When an xref:in-process-embedding.adoc[in-process embedding model] must to be used:
+
+`pom.xml`:
+
+[source,xml,subs=attributes+]
+----
+...
+<dependencies>
+ <dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+ </dependency>
+ <dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-watsonx</artifactId>
+    <version>{project-version}</version>
+ </dependency>
+ <dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
+    <version>0.31.0</version>
+    <exclusions>
+        <exclusion>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-core</artifactId>
+        </exclusion>
+    </exclusions>
+ </dependency>
+<dependencies>
+...
+----
+
+`application.properties`:
+
+[source,properties]
+----
+# OpenAI configuration
+quarkus.langchain4j.service1.chat-model.provider=openai
+quarkus.langchain4j.service1.embedding-model.provider=openai
+quarkus.langchain4j.openai.service1.api-key=sk-...
+
+# Watsonx configuration
+quarkus.langchain4j.service2.chat-model.provider=watsonx
+quarkus.langchain4j.service2.embedding-model.provider=watsonx
+quarkus.langchain4j.watsonx.service2.base-url=...
+quarkus.langchain4j.watsonx.service2.api-key=...
+quarkus.langchain4j.watsonx.service2.project-id=...
+quarkus.langchain4j.watsonx.service2.embedding-model.model-id=...
+
+# The cache will use the in-process embedding model AllMiniLmL6V2EmbeddingModel
+quarkus.langchain4j.embedding-model.provider=dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel
+----
+
+=== Advanced usage
+The `cacheProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the `AiCacheProvider`. The default value of this annotation is `RegisterAiService.BeanAiCacheProviderSupplier.class` which means that the AiService will use whatever `AiCacheProvider` bean is configured by the application or the default one provided by the extension.
+
+The extension provides a default implementation of `AiCacheProvider` which does two things:
+
+* It uses whatever bean `AiCacheStore` bean is configured, as the cache store. The default implementation is `InMemoryAiCacheStore`.
+** If the application provides its own `AiCacheStore` bean, that will be used instead of the default `InMemoryAiCacheStore`.
+
+* It leverages the available configuration options under `quarkus.langchain4j.cache` to construct the `AiCacheProvider`.
+** The default configuration values result in the usage of `FixedAiCache` with a size of ten.
+
+[source,java]
+----
+@RegisterAiService(cacheProviderSupplier = CustomAiCacheProvider.class)
+----
+
 [#memory]
 == Configuring the Context (Memory)
 
@@ -288,10 +456,7 @@ This guidance aims to cover all crucial aspects of designing AI services with Qu
 By default, @RegisterAiService annotated interfaces don't moderate content. However, users can opt in to having the LLM moderate
 content by annotating the method with `@Moderate`.
 
-For moderation to work, the following criteria need to be met:
-
-* A CDI bean for `dev.langchain4j.model.moderation.ModerationModel` must be configured (the `quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` provide one out of the box)
-* The interface must be configured with `@RegisterAiService(moderationModelSupplier = RegisterAiService.BeanModerationModelSupplier.class)`
+For moderation to work, a CDI bean for `dev.langchain4j.model.moderation.ModerationModel` must be configured (the `quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` provide one out of the box).
 
 === Advanced usage
 An alternative to providing a CDI bean is to configure the interface with `@RegisterAiService(moderationModelSupplier = MyCustomSupplier.class)`

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -27,6 +28,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.cache.AiCacheProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -232,6 +234,26 @@ public class AiServicesRecorder {
                                     .getConstructor().newInstance();
                             quarkusAiServices.moderationModel(supplier.get());
                         }
+                    }
+
+                    if (info.enableCache()) {
+
+                        if (info.aiCacheProviderSupplierClassName() != null) {
+                            if (RegisterAiService.BeanAiCacheProviderSupplier.class.getName()
+                                    .equals(info.aiCacheProviderSupplierClassName())) {
+                                aiServiceContext.aiCacheProvider = creationalContext.getInjectedReference(
+                                        AiCacheProvider.class);
+                            } else {
+                                Supplier<? extends AiCacheProvider> supplier = (Supplier<? extends AiCacheProvider>) Thread
+                                        .currentThread().getContextClassLoader()
+                                        .loadClass(info.aiCacheProviderSupplierClassName())
+                                        .getConstructor().newInstance();
+                                aiServiceContext.aiCacheProvider = supplier.get();
+                            }
+                        }
+
+                        if (aiServiceContext.aiCaches == null)
+                            aiServiceContext.aiCaches = new ConcurrentHashMap<>();
                     }
 
                     return (T) aiServiceContext;

@@ -19,6 +19,7 @@ public final class AiServiceMethodCreateInfo {
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
     private final boolean requiresModeration;
+    private final boolean requiresCache;
     private final Class<?> returnType;
     private final Optional<MetricsTimedInfo> metricsTimedInfo;
     private final Optional<MetricsCountedInfo> metricsCountedInfo;
@@ -36,8 +37,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<TemplateInfo> systemMessageInfo,
             UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
-            boolean requiresModeration,
-            Class<?> returnType,
+            boolean requiresModeration, boolean requiresCache, Class<?> returnType,
             Optional<MetricsTimedInfo> metricsTimedInfo,
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
@@ -49,6 +49,7 @@ public final class AiServiceMethodCreateInfo {
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
         this.requiresModeration = requiresModeration;
+        this.requiresCache = requiresCache;
         this.returnType = returnType;
         this.metricsTimedInfo = metricsTimedInfo;
         this.metricsCountedInfo = metricsCountedInfo;
@@ -79,6 +80,10 @@ public final class AiServiceMethodCreateInfo {
 
     public boolean isRequiresModeration() {
         return requiresModeration;
+    }
+
+    public boolean isRequiresCache() {
+        return requiresCache;
     }
 
     public Class<?> getReturnType() {

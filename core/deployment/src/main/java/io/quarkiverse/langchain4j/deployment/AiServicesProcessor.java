@@ -51,7 +51,6 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
-import dev.langchain4j.service.Moderate;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
@@ -187,6 +186,7 @@ public class AiServicesProcessor {
 
         Set<String> chatModelNames = new HashSet<>();
         Set<String> moderationModelNames = new HashSet<>();
+
         for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
@@ -208,14 +208,11 @@ public class AiServicesProcessor {
             }
 
             String chatModelName = NamedConfigUtil.DEFAULT_NAME;
+            String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
+
             if (chatLanguageModelSupplierClassDotName == null) {
                 AnnotationValue modelNameValue = instance.value("modelName");
-                if (modelNameValue != null) {
-                    String modelNameValueStr = modelNameValue.asString();
-                    if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
-                        chatModelName = modelNameValueStr;
-                    }
-                }
+                chatModelName = getModelName(modelNameValue);
                 chatModelNames.add(chatModelName);
             }
 
@@ -237,6 +234,18 @@ public class AiServicesProcessor {
                 } else if (!chatMemoryProviderSupplierClassDotName
                         .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
                     validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
+                            reflectiveClassProducer);
+                }
+            }
+
+            // the default value depends on whether tools exists or not - if they do, then we require a AiCacheProvider bean
+            DotName aiCacheProviderSupplierClassDotName = LangChain4jDotNames.BEAN_AI_CACHE_PROVIDER_SUPPLIER;
+            AnnotationValue aiCacheProviderSupplierValue = instance.value("cacheProviderSupplier");
+            if (aiCacheProviderSupplierValue != null) {
+                aiCacheProviderSupplierClassDotName = aiCacheProviderSupplierValue.asClass().name();
+                if (!aiCacheProviderSupplierClassDotName
+                        .equals(LangChain4jDotNames.BEAN_AI_CACHE_PROVIDER_SUPPLIER)) {
+                    validateSupplierAndRegisterForReflection(aiCacheProviderSupplierClassDotName, index,
                             reflectiveClassProducer);
                 }
             }
@@ -294,17 +303,11 @@ public class AiServicesProcessor {
             }
 
             // determine whether the method is annotated with @Moderate
-            String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 if (method.hasAnnotation(LangChain4jDotNames.MODERATE)) {
                     if (moderationModelSupplierClassName.equals(LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER)) {
                         AnnotationValue modelNameValue = instance.value("modelName");
-                        if (modelNameValue != null) {
-                            String modelNameValueStr = modelNameValue.asString();
-                            if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
-                                moderationModelName = modelNameValueStr;
-                            }
-                        }
+                        moderationModelName = getModelName(modelNameValue);
                         moderationModelNames.add(moderationModelName);
                     }
                     break;
@@ -323,13 +326,15 @@ public class AiServicesProcessor {
                             chatLanguageModelSupplierClassDotName,
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
+                            aiCacheProviderSupplierClassDotName,
                             retrieverClassDotName,
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
                             cdiScope,
-                            chatModelName, moderationModelName));
+                            chatModelName,
+                            moderationModelName));
         }
 
         for (String chatModelName : chatModelNames) {
@@ -363,7 +368,8 @@ public class AiServicesProcessor {
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
+            BuildProducer<UnremovableBeanBuildItem> unremoveableProducer,
+            AiCacheBuildItem aiCacheBuildItem) {
 
         boolean needsChatModelBean = false;
         boolean needsStreamingChatModelBean = false;
@@ -372,6 +378,8 @@ public class AiServicesProcessor {
         boolean needsRetrievalAugmentorBean = false;
         boolean needsAuditServiceBean = false;
         boolean needsModerationModelBean = false;
+        boolean needsAiCacheProvider = false;
+
         Set<DotName> allToolNames = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
@@ -386,6 +394,10 @@ public class AiServicesProcessor {
 
             String chatMemoryProviderSupplierClassName = bi.getChatMemoryProviderSupplierClassDotName() != null
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
+                    : null;
+
+            String aiCacheProviderSupplierClassName = bi.getAiCacheProviderSupplierClassDotName() != null
+                    ? bi.getAiCacheProviderSupplierClassDotName().toString()
                     : null;
 
             String retrieverClassName = bi.getRetrieverClassDotName() != null
@@ -405,7 +417,7 @@ public class AiServicesProcessor {
                     : null);
 
             // determine whether the method returns Multi<String>
-            boolean injectStreamingChatModelBean = false;
+            boolean needsStreamingChatModel = false;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 if (!LangChain4jDotNames.MULTI.equals(method.returnType().name())) {
                     continue;
@@ -421,29 +433,41 @@ public class AiServicesProcessor {
                     throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
-                injectStreamingChatModelBean = true;
+                needsStreamingChatModel = true;
             }
 
-            boolean injectModerationModelBean = false;
+            boolean needsModerationModel = false;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                if (method.hasAnnotation(Moderate.class)) {
-                    injectModerationModelBean = true;
+                if (method.hasAnnotation(LangChain4jDotNames.MODERATE)) {
+                    needsModerationModel = true;
                     break;
                 }
             }
 
             String chatModelName = bi.getChatModelName();
             String moderationModelName = bi.getModerationModelName();
+            boolean enableCache = aiCacheBuildItem.isEnable();
+
+            // It is not possible to use the cache in combination with the tools.
+            if (!toolClassNames.isEmpty() && enableCache
+                    && declarativeAiServiceClassInfo.hasAnnotation(LangChain4jDotNames.CACHE_RESULT)) {
+                throw new RuntimeException("The cache cannot be used in combination with the tools. Affected class: %s"
+                        .formatted(serviceClassName));
+            }
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
                     .forceApplicationClass()
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
-                                    toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
+                                    toolClassNames, chatMemoryProviderSupplierClassName, aiCacheProviderSupplierClassName,
+                                    retrieverClassName,
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
                                     moderationModelName,
-                                    injectStreamingChatModelBean, injectModerationModelBean)))
+                                    needsStreamingChatModel,
+                                    needsModerationModel,
+                                    enableCache)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -453,7 +477,7 @@ public class AiServicesProcessor {
             if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
                 if (NamedConfigUtil.isDefault(chatModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL));
-                    if (injectStreamingChatModelBean) {
+                    if (needsStreamingChatModel) {
                         configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.STREAMING_CHAT_MODEL));
                         needsStreamingChatModelBean = true;
                     }
@@ -461,7 +485,7 @@ public class AiServicesProcessor {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL),
                             AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
 
-                    if (injectStreamingChatModelBean) {
+                    if (needsStreamingChatModel) {
                         configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.STREAMING_CHAT_MODEL),
                                 AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
                         needsStreamingChatModelBean = true;
@@ -517,7 +541,7 @@ public class AiServicesProcessor {
             }
 
             if (LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER.toString()
-                    .equals(moderationModelSupplierClassName) && injectModerationModelBean) {
+                    .equals(moderationModelSupplierClassName) && needsModerationModel) {
 
                 if (NamedConfigUtil.isDefault(moderationModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL));
@@ -527,6 +551,16 @@ public class AiServicesProcessor {
                             AnnotationInstance.builder(ModelName.class).add("value", moderationModelName).build());
                 }
                 needsModerationModelBean = true;
+            }
+
+            if (enableCache) {
+
+                if (LangChain4jDotNames.BEAN_AI_CACHE_PROVIDER_SUPPLIER.toString().equals(aiCacheProviderSupplierClassName)) {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.AI_CACHE_PROVIDER));
+                }
+                needsAiCacheProvider = true;
             }
 
             syntheticBeanProducer.produce(configurator.done());
@@ -552,6 +586,9 @@ public class AiServicesProcessor {
         }
         if (needsModerationModelBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));
+        }
+        if (needsAiCacheProvider) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AI_CACHE_PROVIDER));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
@@ -875,6 +912,8 @@ public class AiServicesProcessor {
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
         Class<?> returnType = JandexUtil.load(method.returnType(), Thread.currentThread().getContextClassLoader());
+        boolean requiresCache = method.declaringClass().hasDeclaredAnnotation(LangChain4jDotNames.CACHE_RESULT)
+                || method.hasDeclaredAnnotation(LangChain4jDotNames.CACHE_RESULT);
 
         List<MethodParameterInfo> params = method.parameters();
 
@@ -912,7 +951,7 @@ public class AiServicesProcessor {
         List<String> methodToolClassNames = gatherMethodToolClassNames(method);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, requiresModeration,
+                userMessageInfo, memoryIdParamPosition, requiresModeration, requiresCache,
                 returnType, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
     }
 
@@ -1245,6 +1284,16 @@ public class AiServicesProcessor {
             return list.stream()
                     .collect(Collectors.toMap(TemplateParameterInfo::name, TemplateParameterInfo::position));
         }
+    }
+
+    private String getModelName(AnnotationValue value) {
+        if (value != null) {
+            String modelNameValueStr = value.asString();
+            if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
+                return modelNameValueStr;
+            }
+        }
+        return NamedConfigUtil.DEFAULT_NAME;
     }
 
     public static final class AiServicesMethodBuildItem extends MultiBuildItem {
