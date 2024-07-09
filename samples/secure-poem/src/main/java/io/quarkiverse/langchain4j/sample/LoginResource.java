@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.sample;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import io.quarkus.oidc.IdToken;
+import io.quarkus.oidc.Tenant;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.security.Authenticated;
@@ -26,8 +27,18 @@ public class LoginResource {
     Template poem;
 
     @GET
+    @Path("google")
     @Produces("text/html")
-    public TemplateInstance poem() {
-        return poem.data("name", idToken.getName());
+    @Tenant("google")
+    public TemplateInstance poemGoogle() {
+        return poem.data("name", idToken.getName()).data("model", "gemini");
+    }
+    
+    @GET
+    @Path("entraid")
+    @Produces("text/html")
+    @Tenant("entraid")
+    public TemplateInstance poemEntraID() {
+        return poem.data("name", idToken.getName()).data("model", "azureopenai");
     }
 }
