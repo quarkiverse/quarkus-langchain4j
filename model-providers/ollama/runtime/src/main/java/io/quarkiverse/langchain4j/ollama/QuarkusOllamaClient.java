@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.model.ollama.*;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 
@@ -19,7 +18,6 @@ public class QuarkusOllamaClient implements OllamaClient {
         try {
             // TODO: cache?
             QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
-
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS);

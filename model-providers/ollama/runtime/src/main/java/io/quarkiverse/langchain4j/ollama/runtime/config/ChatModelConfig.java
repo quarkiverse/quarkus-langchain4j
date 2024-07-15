@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.ollama.runtime.config;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -21,12 +20,8 @@ public interface ChatModelConfig {
     /**
      * Maximum number of tokens to predict when generating text
      */
-    OptionalInt numPredict();
-
-    /**
-     * Maximum number of tokens to keep in the context
-     */
-    OptionalInt numCtx();
+    @WithDefault("128")
+    Integer numPredict();
 
     /**
      * Sets the stop sequences to use. When this pattern is encountered the LLM will stop generating text and return

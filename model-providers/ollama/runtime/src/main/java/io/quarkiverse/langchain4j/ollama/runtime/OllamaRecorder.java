@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.ollama.runtime;
 
-import java.time.Duration;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -9,14 +8,15 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
+import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalTools;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -34,17 +34,12 @@ public class OllamaRecorder {
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
-            Options.OptionsBuilder optionsBuilder = Options.builder()
+            Options.Builder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
-                    .topP(chatModelConfig.topP());
+                    .topP(chatModelConfig.topP())
+                    .numPredict(chatModelConfig.numPredict());
 
-            if (chatModelConfig.numPredict().isPresent()) {
-                optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
-            }
-            if (chatModelConfig.numCtx().isPresent()) {
-                optionsBuilder.numCtx(chatModelConfig.numCtx().getAsInt());
-            }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());
             }
@@ -53,12 +48,12 @@ public class OllamaRecorder {
             }
             var builder = OllamaChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .timeout(ollamaConfig.timeout())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
                     .logResponses(chatModelConfig.logResponses().orElse(false))
-                    .experimentalTool(ollamaConfig.experimentalTools().orElse("NONE"))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
+                    .experimentalTool(ollamaConfig.experimentalTools().orElse(ExperimentalTools.NONE.toString()))
                     .options(optionsBuilder.build());
 
             return new Supplier<>() {
@@ -85,7 +80,7 @@ public class OllamaRecorder {
 
         if (ollamaConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = ollamaConfig.embeddingModel();
-            Options.OptionsBuilder optionsBuilder = Options.builder()
+            Options.Builder optionsBuilder = Options.builder()
                     .temperature(embeddingModelConfig.temperature())
                     .topK(embeddingModelConfig.topK())
                     .topP(embeddingModelConfig.topP())
@@ -97,7 +92,7 @@ public class OllamaRecorder {
 
             var builder = OllamaEmbeddingModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .timeout(ollamaConfig.timeout())
                     .model(ollamaFixedConfig.embeddingModel().modelId())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
                     .logResponses(embeddingModelConfig.logResponses().orElse(false));
@@ -127,17 +122,12 @@ public class OllamaRecorder {
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
-            Options.OptionsBuilder optionsBuilder = Options.builder()
+            Options.Builder optionsBuilder = Options.builder()
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
-                    .topP(chatModelConfig.topP());
+                    .topP(chatModelConfig.topP())
+                    .numPredict(chatModelConfig.numPredict());
 
-            if (chatModelConfig.numPredict().isPresent()) {
-                optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
-            }
-            if (chatModelConfig.numCtx().isPresent()) {
-                optionsBuilder.numCtx(chatModelConfig.numCtx().getAsInt());
-            }
             if (chatModelConfig.stop().isPresent()) {
                 optionsBuilder.stop(chatModelConfig.stop().get());
             }
@@ -146,7 +136,7 @@ public class OllamaRecorder {
             }
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
+                    .timeout(ollamaConfig.timeout())
                     .logRequests(ollamaConfig.logRequests().orElse(false))
                     .logResponses(ollamaConfig.logResponses().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())

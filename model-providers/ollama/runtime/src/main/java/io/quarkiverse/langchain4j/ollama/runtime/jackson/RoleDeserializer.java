@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
-import dev.langchain4j.model.ollama.Role;
+import io.quarkiverse.langchain4j.ollama.Role;
 
 public class RoleDeserializer extends StdDeserializer<Role> {
     public RoleDeserializer() {

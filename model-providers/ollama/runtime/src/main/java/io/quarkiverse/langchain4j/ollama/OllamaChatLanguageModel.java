@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.ollama;
 
+import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
 
 import java.time.Duration;
@@ -9,27 +10,27 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.ollama.*;
-import dev.langchain4j.model.ollama.tool.ExperimentalParallelToolsDelegate;
-import dev.langchain4j.model.ollama.tool.ExperimentalSequentialToolsDelegate;
-import dev.langchain4j.model.ollama.tool.ExperimentalTools;
-import dev.langchain4j.model.ollama.tool.NoToolsDelegate;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalParallelToolsDelegate;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalSequentialToolsDelegate;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalTools;
+import io.quarkiverse.langchain4j.ollama.tool.NoToolsDelegate;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
-    private final QuarkusOllamaClient client;
-    private final String model;
-    private final String format;
-    private final Options options;
+    protected final QuarkusOllamaClient client;
+    protected final String model;
+    protected final String format;
+    protected final Options options;
+
     private final ChatLanguageModel delegate;
 
-    private OllamaChatLanguageModel(Builder builder) {
+    OllamaChatLanguageModel(Builder builder) {
         client = new QuarkusOllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
         model = builder.model;
         format = builder.format;
         options = builder.options;
-        delegate = getDelegate(ExperimentalTools.valueOf(builder.experimentalTool));
+        this.delegate = getDelegate(getOrDefault(ExperimentalTools.valueOf(builder.experimentalTool), ExperimentalTools.NONE));
     }
 
     private ChatLanguageModel getDelegate(ExperimentalTools toolsEnum) {

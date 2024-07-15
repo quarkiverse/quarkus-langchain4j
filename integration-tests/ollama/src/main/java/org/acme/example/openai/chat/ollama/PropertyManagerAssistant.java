@@ -10,7 +10,7 @@ public interface PropertyManagerAssistant {
             You are a property manager assistant, answering to co-owners requests.
             Format the date as YYYY-MM-DD and the time as HH:MM
             Today is {{current_date_time}} use this date as date time reference
-            The co-owners is living in the following condominium: {condominium}
+            The co-owners condominium is: {condominium}
             """)
     @UserMessage("""
             {{request}}

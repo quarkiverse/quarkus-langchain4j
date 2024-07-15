@@ -229,7 +229,7 @@ public class AiServiceMethodImplementationSupport {
                 }
                 tmpToolExecutionResultMessages.add(toolExecutionResultMessage);
             }
-            aiMessage = toolsResultMemory.substituteAssistantArguments(aiMessage);
+            aiMessage = toolsResultMemory.substituteAiMessage(aiMessage);
             if (context.hasChatMemory()) {
                 chatMemory.add(aiMessage);
                 tmpToolExecutionResultMessages.forEach(chatMemory::add);

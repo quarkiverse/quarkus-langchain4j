@@ -22,6 +22,7 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
+import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.IsNormal;
@@ -152,7 +153,8 @@ public class OllamaProcessor {
 
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
-    public void handleDelegates(BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
+    public void handleDelegates(AiServicesRecorder recorder,
+            BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
         // since we only need reflection to the constructor of the class, we can specify `false` for both the methods and the fields arguments.
         Stream.of("dev.langchain4j.model.ollama.tool.ExperimentalParallelToolsDelegate",
                 "dev.langchain4j.model.ollama.tool.ExperimentalSequentialToolsDelegate",
