@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ollama.tool;
+package io.quarkiverse.langchain4j.data;
 
 import java.util.List;
 
@@ -7,12 +7,14 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ValidationUtils;
 import dev.langchain4j.model.output.TokenUsage;
 
-class AiStatsMessage extends AiMessage {
+public class AiStatsMessage extends AiMessage {
+    private String updatableText;
 
     final TokenUsage tokenUsage;
 
-    AiStatsMessage(String text, TokenUsage tokenUsage) {
+    public AiStatsMessage(String text, TokenUsage tokenUsage) {
         super(text);
+        this.updatableText = text;
         this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokeUsage");
     }
 
@@ -23,14 +25,24 @@ class AiStatsMessage extends AiMessage {
 
     AiStatsMessage(String text, List<ToolExecutionRequest> toolExecutionRequests, TokenUsage tokenUsage) {
         super(text, toolExecutionRequests);
+        this.updatableText = text;
         this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokenUsage");
     }
 
-    TokenUsage getTokenUsage() {
+    public void updateText(String text) {
+        this.updatableText = text;
+    }
+
+    @Override
+    public String text() {
+        return updatableText;
+    }
+
+    public TokenUsage getTokenUsage() {
         return tokenUsage;
     }
 
-    static AiStatsMessage from(AiMessage aiMessage, TokenUsage tokenUsage) {
+    public static AiStatsMessage from(AiMessage aiMessage, TokenUsage tokenUsage) {
         if (aiMessage.text() == null) {
             return new AiStatsMessage(aiMessage.toolExecutionRequests(), tokenUsage);
         } else if (aiMessage.hasToolExecutionRequests()) {

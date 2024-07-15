@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.*;
+import io.quarkiverse.langchain4j.data.AiStatsMessage;
 import io.quarkiverse.langchain4j.ollama.ImageUtils;
 import io.quarkiverse.langchain4j.ollama.Message;
 import io.quarkiverse.langchain4j.ollama.Role;

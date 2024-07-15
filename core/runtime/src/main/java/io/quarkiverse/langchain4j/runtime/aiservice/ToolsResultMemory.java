@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import dev.langchain4j.Experimental;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import io.quarkiverse.langchain4j.data.AiStatsMessage;
 
 @Experimental
 public class ToolsResultMemory {
@@ -24,9 +25,10 @@ public class ToolsResultMemory {
         if (message.text() == null) {
             return message;
         }
-        // TODO: Discuss with langchain the best approach
-        // return new AiMessage(substituteArguments(message.text(), variables), message.toolExecutionRequests());
-        message.updateText(substituteVariables(message.text(), variables));
+        if (message instanceof AiStatsMessage updatableMessage) {
+            updatableMessage.updateText(substituteVariables(message.text(), variables));
+            return updatableMessage;
+        }
         return message;
     }
 
@@ -39,7 +41,7 @@ public class ToolsResultMemory {
 
     private static String substituteVariables(String msg, Map<String, String> resultMap) {
         Matcher matcher = VARIABLE_PATTERN.matcher(msg);
-        StringBuffer newArguments = new StringBuffer();
+        StringBuilder newArguments = new StringBuilder();
         if (!matcher.find()) {
             return msg;
         }

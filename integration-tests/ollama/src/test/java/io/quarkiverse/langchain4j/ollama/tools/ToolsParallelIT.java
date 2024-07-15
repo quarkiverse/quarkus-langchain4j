@@ -17,9 +17,9 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.junit.QuarkusTest;
 
 @Disabled("Integration tests that need an ollama server running")
-@DisplayName("LLM Tools test - Llama3")
+@DisplayName("LLM Parallel Tools test")
 @QuarkusTest
-public class ToolsLlama3IT {
+public class ToolsParallelIT {
 
     @RegisterAiService(tools = Tools.Calculator.class)
     public interface MathAssistant {

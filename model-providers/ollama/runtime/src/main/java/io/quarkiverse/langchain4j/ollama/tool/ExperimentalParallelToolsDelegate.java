@@ -20,6 +20,7 @@ import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.data.AiStatsMessage;
 import io.quarkiverse.langchain4j.ollama.*;
 
 /**
