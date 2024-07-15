@@ -27,7 +27,6 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.agent.tool.ToolsResultMemory;
 import dev.langchain4j.data.message.*;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
