@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -89,18 +93,24 @@ public interface OllamaRestApi {
                                     throw e;
                                 }
 
-                                // This piece of code deals with is the case where the last message from Ollama is not sent as entire line
-                                // but in pieces. There is nothing we can do in this case except for returning empty responses.
-                                // We have to keep track of when "done": true has been recorded in order to make sure that subsequent pieces
-                                // are dealt with instead of throwing an exception. We keep track of this by using Vert.x duplicated context
-
-                                if (chunk.contains("\"done\":true")) {
-                                    ctx.putLocal("done", true);
-                                    return ChatResponse.emptyDone();
-                                } else {
-                                    if (Boolean.TRUE.equals(ctx.getLocal("done"))) {
-                                        return ChatResponse.emptyDone();
+                                // This piece of code deals with is the case where a message from Ollama is not received as an entire line
+                                // but in pieces (my guess is that it is a Vertx bug).
+                                // There is nothing we can do in this case except for returning empty responses and in the meantime buffer the pieces
+                                // by storing them in the Vertx Duplicated Context
+                                String existingBuffer = ctx.getLocal("buffer");
+                                if ((existingBuffer != null) && !existingBuffer.isEmpty()) {
+                                    if (chunk.endsWith("}")) {
+                                        ctx.putLocal("buffer", "");
+                                        String entireLine = existingBuffer + chunk;
+                                        return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.readValue(entireLine,
+                                                ChatResponse.class);
+                                    } else {
+                                        ctx.putLocal("buffer", existingBuffer + chunk);
+                                        return ChatResponse.emptyNotDone();
                                     }
+                                } else {
+                                    ctx.putLocal("buffer", chunk);
+                                    return ChatResponse.emptyNotDone();
                                 }
                             }
                         }

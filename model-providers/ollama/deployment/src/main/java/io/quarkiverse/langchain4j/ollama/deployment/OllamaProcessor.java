@@ -5,7 +5,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -22,7 +21,6 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
-import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.IsNormal;
@@ -31,7 +29,6 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 public class OllamaProcessor {
@@ -149,17 +146,5 @@ public class OllamaProcessor {
         if (!NamedConfigUtil.isDefault(configName)) {
             builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
-    }
-
-    @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
-    public void handleDelegates(AiServicesRecorder recorder,
-            BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
-        // since we only need reflection to the constructor of the class, we can specify `false` for both the methods and the fields arguments.
-        Stream.of("dev.langchain4j.model.ollama.tool.ExperimentalParallelToolsDelegate",
-                "dev.langchain4j.model.ollama.tool.ExperimentalSequentialToolsDelegate",
-                "dev.langchain4j.model.ollama.tool.NoToolsDelegate")
-                .map(RuntimeInitializedClassBuildItem::new)
-                .forEach(runtimeInitializedClassProducer::produce);
     }
 }

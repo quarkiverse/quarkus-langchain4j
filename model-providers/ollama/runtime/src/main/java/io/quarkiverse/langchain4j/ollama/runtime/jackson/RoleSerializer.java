@@ -15,7 +15,8 @@ public class RoleSerializer extends StdSerializer<Role> {
     }
 
     @Override
-    public void serialize(Role role, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+    public void serialize(Role role, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+            throws IOException {
         jsonGenerator.writeString(role.toString().toLowerCase(Locale.ROOT));
     }
 }

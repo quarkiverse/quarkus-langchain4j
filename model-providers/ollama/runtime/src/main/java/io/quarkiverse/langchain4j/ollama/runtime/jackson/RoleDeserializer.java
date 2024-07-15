@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.ollama.runtime.jackson;
 import java.io.IOException;
 import java.util.Locale;
 
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -16,7 +17,7 @@ public class RoleDeserializer extends StdDeserializer<Role> {
 
     @Override
     public Role deserialize(JsonParser jp, DeserializationContext deserializationContext)
-            throws IOException {
+            throws IOException, JacksonException {
         return Role.valueOf(jp.getValueAsString().toUpperCase(Locale.ROOT));
     }
 
