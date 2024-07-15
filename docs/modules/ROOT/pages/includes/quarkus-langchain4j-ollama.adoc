@@ -164,6 +164,23 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-experimental-tools]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-experimental-tools[quarkus.langchain4j.ollama.experimental-tools]`
+
+
+[.description]
+--
+the experimental tools name. Currently, the only accepted values are `NONE, PARALLEL, SEQUENTIAL` NONE: for no tools, works as before without handling tools. PARALLEL: Tools we be used and simulated with one call to llm, that will answer with all tool request to execute and the response using the result of the tool request. SEQUENTIAL: Tools will be call sequentially and llm will call next tool following tool request result.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_EXPERIMENTAL_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EXPERIMENTAL_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`NONE`
+
+
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature[quarkus.langchain4j.ollama.chat-model.temperature]`
 
 
@@ -565,6 +582,23 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__ENABLE_INTEGRA
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`true`
+
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-experimental-tools]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-experimental-tools[quarkus.langchain4j.ollama."model-name".experimental-tools]`
+
+
+[.description]
+--
+the experimental tools name. Currently, the only accepted values are `NONE, PARALLEL, SEQUENTIAL` NONE: for no tools, works as before without handling tools. PARALLEL: Tools we be used and simulated with one call to llm, that will answer with all tool request to execute and the response using the result of the tool request. SEQUENTIAL: Tools will be call sequentially and llm will call next tool following tool request result.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EXPERIMENTAL_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EXPERIMENTAL_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`NONE`
 
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature[quarkus.langchain4j.ollama."model-name".chat-model.temperature]`

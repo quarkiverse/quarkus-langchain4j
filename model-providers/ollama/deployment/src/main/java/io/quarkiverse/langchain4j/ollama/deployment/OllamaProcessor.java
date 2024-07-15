@@ -5,6 +5,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -21,6 +22,9 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalParallelToolsDelegate;
+import io.quarkiverse.langchain4j.ollama.tool.ExperimentalSequentialToolsDelegate;
+import io.quarkiverse.langchain4j.ollama.tool.NoToolsDelegate;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.IsNormal;
@@ -29,6 +33,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 public class OllamaProcessor {
@@ -146,5 +151,14 @@ public class OllamaProcessor {
         if (!NamedConfigUtil.isDefault(configName)) {
             builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
+    }
+
+    @BuildStep
+    public void handleDelegates(BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
+        Stream.of(ExperimentalSequentialToolsDelegate.class.getName(),
+                ExperimentalParallelToolsDelegate.class.getName(),
+                NoToolsDelegate.class.getName())
+                .map(RuntimeInitializedClassBuildItem::new)
+                .forEach(runtimeInitializedClassProducer::produce);
     }
 }
