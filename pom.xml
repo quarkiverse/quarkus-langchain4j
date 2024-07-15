@@ -42,6 +42,8 @@
     <module>model-providers/vertex-ai-gemini</module>
     <module>model-providers/watsonx</module>
 
+    <module>model-auth-providers/oidc-model-auth-provider</module>
+
     <module>quarkus-integrations/websockets-next</module>
 
     <module>rag/easy-rag</module>
@@ -61,7 +63,7 @@
     <langchain4j-embeddings.version>0.32.0</langchain4j-embeddings.version>
     <quarkus-antora.version>0.0.4</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
-    <assertj.version>3.26.0</assertj.version>
+    <assertj.version>3.26.3</assertj.version>
     <wiremock.version>3.8.0</wiremock.version>
     <sundrio.version>0.200.0</sundrio.version>
     <quarkus-wiremock.version>1.3.3</quarkus-wiremock.version>
@@ -199,6 +201,7 @@
         <module>samples/review-triage</module>
         <module>samples/fraud-detection</module>
         <module>samples/secure-fraud-detection</module>
+        <module>samples/secure-vertex-ai-gemini-poem</module>
         <module>samples/chatbot</module>
         <module>samples/chatbot-easy-rag</module>
         <module>samples/sql-chatbot</module>

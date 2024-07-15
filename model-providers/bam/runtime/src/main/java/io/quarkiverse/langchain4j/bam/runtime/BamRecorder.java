@@ -67,12 +67,10 @@ public class BamRecorder {
                 builder.url(bamConfig.baseUrl().get());
             }
 
-            var result = builder.build(BamChatModel.class);
-
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
-                    return result;
+                    return builder.build(BamChatModel.class);
                 }
             };
 

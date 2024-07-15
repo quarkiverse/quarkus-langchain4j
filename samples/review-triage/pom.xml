@@ -18,7 +18,7 @@
     <quarkus.platform.version>3.8.5</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
-    <quarkus-langchain4j.version>0.15.1</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>0.16.2</quarkus-langchain4j.version>
   </properties>
 
     <dependencyManagement>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.mvnpm.at.mvnpm</groupId>
             <artifactId>vaadin-webcomponents</artifactId>
-            <version>24.4.0</version>
+            <version>24.4.2</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
@@ -77,7 +77,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -100,7 +100,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>3.3.0</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <goals>

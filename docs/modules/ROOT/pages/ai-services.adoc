@@ -291,7 +291,6 @@ content by annotating the method with `@Moderate`.
 For moderation to work, the following criteria need to be met:
 
 * A CDI bean for `dev.langchain4j.model.moderation.ModerationModel` must be configured (the `quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` provide one out of the box)
-* The interface must be configured with `@RegisterAiService(moderationModelSupplier = RegisterAiService.BeanModerationModelSupplier.class)`
 
 === Advanced usage
 An alternative to providing a CDI bean is to configure the interface with `@RegisterAiService(moderationModelSupplier = MyCustomSupplier.class)`
