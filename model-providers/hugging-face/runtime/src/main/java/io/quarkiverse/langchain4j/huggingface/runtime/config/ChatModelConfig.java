@@ -44,6 +44,7 @@ public interface ChatModelConfig {
     /**
      * If set to {@code false}, the return results will not contain the original query making it easier for prompting
      */
+    @WithDefault("false")
     Optional<Boolean> returnFullText();
 
     /**
