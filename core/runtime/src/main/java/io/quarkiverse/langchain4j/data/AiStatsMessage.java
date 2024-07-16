@@ -7,6 +7,13 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ValidationUtils;
 import dev.langchain4j.model.output.TokenUsage;
 
+/**
+ * This class is the equivalent of Langchain4j AiMessage.
+ * It contains the token usage from the response that produce this AiMessage.
+ * And add the possibility to update the text in case of text containing Tools Result variables.
+ * Needed for @{@link io.quarkiverse.langchain4j.runtime.aiservice.ToolsResultMemory}
+ * Example of usage in ExperimentalParallelToolsDelegate in Ollama model provider
+ */
 public class AiStatsMessage extends AiMessage {
     private String updatableText;
 
@@ -15,12 +22,12 @@ public class AiStatsMessage extends AiMessage {
     public AiStatsMessage(String text, TokenUsage tokenUsage) {
         super(text);
         this.updatableText = text;
-        this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokeUsage");
+        this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokenUsage");
     }
 
     AiStatsMessage(List<ToolExecutionRequest> toolExecutionRequests, TokenUsage tokenUsage) {
         super(toolExecutionRequests);
-        this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokeUsage");
+        this.tokenUsage = ValidationUtils.ensureNotNull(tokenUsage, "tokenUsage");
     }
 
     AiStatsMessage(String text, List<ToolExecutionRequest> toolExecutionRequests, TokenUsage tokenUsage) {

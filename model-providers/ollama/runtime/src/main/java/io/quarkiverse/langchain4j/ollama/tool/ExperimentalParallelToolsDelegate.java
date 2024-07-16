@@ -70,7 +70,16 @@ public class ExperimentalParallelToolsDelegate implements ChatLanguageModel {
     public ExperimentalParallelToolsDelegate(OllamaClient client, String modelName, Options options) {
         this.client = client;
         this.modelName = modelName;
-        this.options = options;
+        this.options = Options.builder()
+                .topP(options.topP())
+                .topK(options.topK())
+                .numCtx(options.numCtx())
+                .numPredict(options.numPredict())
+                .seed(options.seed())
+                .stop(options.stop())
+                .repeatPenalty(options.repeatPenalty())
+                .temperature(0.0)
+                .build();
     }
 
     @Override
@@ -102,7 +111,7 @@ public class ExperimentalParallelToolsDelegate implements ChatLanguageModel {
             if (aiStatsMessage.text() == null) {
                 throw new RuntimeException("Conclusion cannot be null or empty!");
             }
-            return Response.from(withoutRequests(aiStatsMessage), aiStatsMessage.getTokenUsage(), FinishReason.STOP);
+            return Response.from(withoutToolRequests(aiStatsMessage), aiStatsMessage.getTokenUsage(), FinishReason.STOP);
         }
 
         Message systemMessage = createSystemMessageWithTools(ollamaMessages, toolSpecifications);

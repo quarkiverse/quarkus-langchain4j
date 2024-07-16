@@ -10,6 +10,13 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import io.quarkiverse.langchain4j.data.AiStatsMessage;
 
+/**
+ * This class associate the ToolExecutionResul to the associated variable
+ * identified by @{@link ToolExecutionRequest#id()}.
+ * It will use them after when tools inputs @{@link ToolExecutionRequest#arguments()} are based
+ * on previous result variable and when AiMessage text contains variables too.
+ * See usage in @{@link AiServiceMethodImplementationSupport}
+ */
 @Experimental
 public class ToolsResultMemory {
 

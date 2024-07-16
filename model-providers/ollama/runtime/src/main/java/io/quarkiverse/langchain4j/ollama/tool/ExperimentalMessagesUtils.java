@@ -17,6 +17,10 @@ import io.quarkiverse.langchain4j.ollama.ImageUtils;
 import io.quarkiverse.langchain4j.ollama.Message;
 import io.quarkiverse.langchain4j.ollama.Role;
 
+/**
+ * Same as @{@link io.quarkiverse.langchain4j.ollama.OllamaMessagesUtils} but with AiStatsMessage Support
+ * And allow to group Messages for Experimental Tool llm request.
+ */
 class ExperimentalMessagesUtils {
 
     final static Predicate<ChatMessage> isUserMessage = chatMessage -> chatMessage instanceof UserMessage;
@@ -42,7 +46,7 @@ class ExperimentalMessagesUtils {
                 .findFirst().orElseThrow();
     }
 
-    static AiStatsMessage withoutRequests(AiStatsMessage aiStatsMessage) {
+    static AiStatsMessage withoutToolRequests(AiStatsMessage aiStatsMessage) {
         return new AiStatsMessage(aiStatsMessage.text(), aiStatsMessage.getTokenUsage());
     }
 

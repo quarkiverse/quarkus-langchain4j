@@ -12,7 +12,6 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.ollama.tool.ExperimentalParallelToolsDelegate;
-import io.quarkiverse.langchain4j.ollama.tool.ExperimentalSequentialToolsDelegate;
 import io.quarkiverse.langchain4j.ollama.tool.ExperimentalTools;
 import io.quarkiverse.langchain4j.ollama.tool.NoToolsDelegate;
 
@@ -36,7 +35,6 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
     private ChatLanguageModel getDelegate(ExperimentalTools toolsEnum) {
         return switch (toolsEnum) {
             case NONE -> new NoToolsDelegate(this.client, this.model, this.options, this.format);
-            case SEQUENTIAL -> new ExperimentalSequentialToolsDelegate(this.client, this.model, this.options);
             case PARALLEL -> new ExperimentalParallelToolsDelegate(this.client, this.model, this.options);
         };
     }

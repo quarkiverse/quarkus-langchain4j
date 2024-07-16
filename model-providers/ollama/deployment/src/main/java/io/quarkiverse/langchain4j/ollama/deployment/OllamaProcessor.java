@@ -23,7 +23,6 @@ import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.ollama.tool.ExperimentalParallelToolsDelegate;
-import io.quarkiverse.langchain4j.ollama.tool.ExperimentalSequentialToolsDelegate;
 import io.quarkiverse.langchain4j.ollama.tool.NoToolsDelegate;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -155,8 +154,7 @@ public class OllamaProcessor {
 
     @BuildStep
     public void handleDelegates(BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClassProducer) {
-        Stream.of(ExperimentalSequentialToolsDelegate.class.getName(),
-                ExperimentalParallelToolsDelegate.class.getName(),
+        Stream.of(ExperimentalParallelToolsDelegate.class.getName(),
                 NoToolsDelegate.class.getName())
                 .map(RuntimeInitializedClassBuildItem::new)
                 .forEach(runtimeInitializedClassProducer::produce);

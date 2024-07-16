@@ -27,7 +27,11 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.*;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
@@ -200,6 +204,7 @@ public class AiServiceMethodImplementationSupport {
             AiMessage aiMessage = response.content();
 
             if (!aiMessage.hasToolExecutionRequests()) {
+                // If there is no tool Execution request we add the Ai Message directly in the chatMEmory
                 if (context.hasChatMemory()) {
                     context.chatMemory(memoryId).add(aiMessage);
                 }
@@ -228,6 +233,8 @@ public class AiServiceMethodImplementationSupport {
                 }
                 tmpToolExecutionResultMessages.add(toolExecutionResultMessage);
             }
+            // In case of tool Execution request we need to update the AiMessage with tools results
+            // before adding it into chatMemory
             aiMessage = toolsResultMemory.substituteAiMessage(aiMessage);
             if (context.hasChatMemory()) {
                 chatMemory.add(aiMessage);
