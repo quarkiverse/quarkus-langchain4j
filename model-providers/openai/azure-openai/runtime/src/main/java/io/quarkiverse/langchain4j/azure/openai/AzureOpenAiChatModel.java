@@ -3,13 +3,22 @@ package io.quarkiverse.langchain4j.azure.openai;
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.*;
+import static dev.langchain4j.model.openai.InternalOpenAiHelper.aiMessageFrom;
+import static dev.langchain4j.model.openai.InternalOpenAiHelper.finishReasonFrom;
+import static dev.langchain4j.model.openai.InternalOpenAiHelper.toFunctions;
+import static dev.langchain4j.model.openai.InternalOpenAiHelper.toOpenAiMessages;
+import static dev.langchain4j.model.openai.InternalOpenAiHelper.tokenUsageFrom;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
 import java.net.Proxy;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.logging.Logger;
 
 import dev.ai4j.openai4j.OpenAiClient;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
@@ -20,6 +29,12 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.listener.ChatModelRequest;
+import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponse;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 
@@ -44,6 +59,8 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
  */
 public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstimator {
 
+    private static final Logger log = Logger.getLogger(AzureOpenAiChatModel.class);
+
     private final OpenAiClient client;
     private final Double temperature;
     private final Double topP;
@@ -53,6 +70,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
     private final Integer maxRetries;
     private final Tokenizer tokenizer;
     private final String responseFormat;
+    private final List<ChatModelListener> listeners;
 
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
@@ -70,7 +88,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             String responseFormat,
             Boolean logRequests,
             Boolean logResponses,
-            String configName) {
+            String configName, List<ChatModelListener> listeners) {
+        this.listeners = listeners;
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
@@ -139,17 +158,95 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         ChatCompletionRequest request = requestBuilder.build();
 
-        ChatCompletionResponse response = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
+        ChatModelRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
+        Map<Object, Object> attributes = new ConcurrentHashMap<>();
+        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
+        listeners.forEach(listener -> {
+            try {
+                listener.onRequest(requestContext);
+            } catch (Exception e) {
+                log.warn("Exception while calling model listener", e);
+            }
+        });
 
-        return Response.from(
-                aiMessageFrom(response),
-                tokenUsageFrom(response.usage()),
-                finishReasonFrom(response.choices().get(0).finishReason()));
+        try {
+            ChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(),
+                    maxRetries);
+
+            Response<AiMessage> response = Response.from(
+                    aiMessageFrom(chatCompletionResponse),
+                    tokenUsageFrom(chatCompletionResponse.usage()),
+                    finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason()));
+
+            ChatModelResponse modelListenerResponse = createModelListenerResponse(
+                    chatCompletionResponse.id(),
+                    chatCompletionResponse.model(),
+                    response);
+            ChatModelResponseContext responseContext = new ChatModelResponseContext(
+                    modelListenerResponse,
+                    modelListenerRequest,
+                    attributes);
+            listeners.forEach(listener -> {
+                try {
+                    listener.onResponse(responseContext);
+                } catch (Exception e) {
+                    log.warn("Exception while calling model listener", e);
+                }
+            });
+
+            return response;
+
+        } catch (Exception e) {
+            ChatModelErrorContext errorContext = new ChatModelErrorContext(
+                    e,
+                    modelListenerRequest,
+                    null,
+                    attributes);
+
+            listeners.forEach(listener -> {
+                try {
+                    listener.onError(errorContext);
+                } catch (Exception e2) {
+                    log.warn("Exception while calling model listener", e2);
+                }
+            });
+
+            throw e;
+        }
     }
 
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
         return tokenizer.estimateTokenCountInMessages(messages);
+    }
+
+    private ChatModelRequest createModelListenerRequest(ChatCompletionRequest request,
+            List<ChatMessage> messages,
+            List<ToolSpecification> toolSpecifications) {
+        return ChatModelRequest.builder()
+                .model(request.model())
+                .temperature(request.temperature())
+                .topP(request.topP())
+                .maxTokens(request.maxTokens())
+                .messages(messages)
+                .toolSpecifications(toolSpecifications)
+                .build();
+    }
+
+    private ChatModelResponse createModelListenerResponse(String responseId,
+            String responseModel,
+            Response<AiMessage> response) {
+        if (response == null) {
+            return null;
+        }
+
+        return ChatModelResponse.builder()
+                .id(responseId)
+                .model(responseModel)
+                .tokenUsage(response.tokenUsage())
+                .finishReason(response.finishReason())
+                .aiMessage(response.content())
+                .build();
     }
 
     public static Builder builder() {
@@ -175,6 +272,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         private Boolean logRequests;
         private Boolean logResponses;
         private String configName;
+        private List<ChatModelListener> listeners = Collections.emptyList();
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -280,6 +378,11 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             return this;
         }
 
+        public Builder listeners(List<ChatModelListener> listeners) {
+            this.listeners = listeners;
+            return this;
+        }
+
         public AzureOpenAiChatModel build() {
             return new AzureOpenAiChatModel(endpoint,
                     apiVersion,
@@ -297,7 +400,8 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                     responseFormat,
                     logRequests,
                     logResponses,
-                    configName);
+                    configName,
+                    listeners);
         }
     }
 }
