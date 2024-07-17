@@ -177,6 +177,7 @@ public class WatsonxRecorder {
         }
 
         return WatsonxChatModel.builder()
+                .promptJoiner(chatModelConfig.promptJoiner().orElse(""))
                 .tokenGenerator(tokenGenerator)
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))

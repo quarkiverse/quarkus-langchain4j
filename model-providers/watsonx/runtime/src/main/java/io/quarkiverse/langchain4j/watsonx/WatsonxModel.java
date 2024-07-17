@@ -4,6 +4,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +39,7 @@ public abstract class WatsonxModel {
     final Double repetitionPenalty;
     final Integer truncateInputTokens;
     final Boolean includeStopSequence;
+    final String promptJoiner;
     final WatsonxRestApi client;
 
     public WatsonxModel(Builder config) {
@@ -72,6 +74,7 @@ public abstract class WatsonxModel {
         this.truncateInputTokens = config.truncateInputTokens;
         this.includeStopSequence = config.includeStopSequence;
         this.tokenGenerator = config.tokenGenerator;
+        this.promptJoiner = config.promptJoiner;
     }
 
     public static Builder builder() {
@@ -83,23 +86,14 @@ public abstract class WatsonxModel {
     }
 
     protected String toInput(List<ChatMessage> messages) {
-        StringBuilder builder = new StringBuilder();
+        StringJoiner joiner = new StringJoiner(promptJoiner);
         for (ChatMessage message : messages) {
             switch (message.type()) {
-                case AI:
-                case USER:
-                    builder.append(message.text())
-                            .append("\n");
-                    break;
-                case SYSTEM:
-                    builder.append(message.text())
-                            .append("\n\n");
-                    break;
-                case TOOL_EXECUTION_RESULT:
-                    throw new IllegalArgumentException("Tool message is not supported");
+                case AI, USER, SYSTEM -> joiner.add(message.text());
+                case TOOL_EXECUTION_RESULT -> throw new IllegalArgumentException("Tool message is not supported");
             }
         }
-        return builder.toString();
+        return joiner.toString();
     }
 
     protected FinishReason toFinishReason(String stopReason) {
@@ -167,6 +161,7 @@ public abstract class WatsonxModel {
         public boolean logResponses;
         public boolean logRequests;
         private TokenGenerator tokenGenerator;
+        private String promptJoiner;
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;
@@ -260,6 +255,11 @@ public abstract class WatsonxModel {
 
         public Builder tokenGenerator(TokenGenerator tokenGenerator) {
             this.tokenGenerator = tokenGenerator;
+            return this;
+        }
+
+        public Builder promptJoiner(String promptJoiner) {
+            this.promptJoiner = promptJoiner;
             return this;
         }
 

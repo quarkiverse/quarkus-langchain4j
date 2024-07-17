@@ -126,7 +126,7 @@ public class TokenCountEstimatorTest {
     void token_count_estimator_list() throws Exception {
         mockServer();
         assertEquals(11, tokenization.estimateTokenCount(
-                List.of(SystemMessage.from("Write a tagline for an alumni"), UserMessage.from("association: Together we"))));
+                List.of(SystemMessage.from("Write a tagline for an alumni "), UserMessage.from("association: Together we"))));
     }
 
     private String mockServer() throws Exception {
