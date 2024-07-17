@@ -46,13 +46,11 @@ public class HuggingFaceRecorder {
                     .topK(chatModelConfig.topK())
                     .repetitionPenalty(chatModelConfig.repetitionPenalty())
                     .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false));
+                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .returnFullText(chatModelConfig.returnFullText());
 
             if (!DUMMY_KEY.equals(apiKey)) {
                 builder.accessToken(apiKey);
-            }
-            if (chatModelConfig.returnFullText().isPresent()) {
-                builder.returnFullText(chatModelConfig.returnFullText().get());
             }
 
             if (chatModelConfig.maxNewTokens().isPresent()) {
