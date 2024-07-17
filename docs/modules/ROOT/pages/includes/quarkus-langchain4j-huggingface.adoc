@@ -166,7 +166,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_RETURN_FULL_TEXT+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
-|
+|`false`
 
 
 a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-chat-model-wait-for-model[quarkus.langchain4j.huggingface.chat-model.wait-for-model]`
@@ -488,7 +488,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODEL_RETURN_FULL_TEXT+++`
 endif::add-copy-button-to-env-var[]
 --|boolean 
-|
+|`false`
 
 
 a| [[quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-wait-for-model]]`link:#quarkus-langchain4j-huggingface_quarkus-langchain4j-huggingface-model-name-chat-model-wait-for-model[quarkus.langchain4j.huggingface."model-name".chat-model.wait-for-model]`
