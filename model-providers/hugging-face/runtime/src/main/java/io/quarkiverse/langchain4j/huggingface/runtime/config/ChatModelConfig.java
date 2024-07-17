@@ -45,7 +45,7 @@ public interface ChatModelConfig {
      * If set to {@code false}, the return results will not contain the original query making it easier for prompting
      */
     @WithDefault("false")
-    Optional<Boolean> returnFullText();
+    Boolean returnFullText();
 
     /**
      * If the model is not ready, wait for it instead of receiving 503. It limits the number of requests required to get your
