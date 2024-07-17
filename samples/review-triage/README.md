@@ -25,3 +25,34 @@ their sentiment and thinks up an appropriate response to the client. Simply
 write something positive (`Your services are great.`) or negative (`You are
 thieves!`) into the form and click Submit.
 
+## Using other model providers
+
+### Compatible OpenAI serving infrastructure
+
+Add `quarkus.langchain4j.openai.base-url=http://yourerver` to `application.properties`.
+
+In this case, `quarkus.langchain4j.openai.api-key` is generally not needed.
+
+### Ollama
+
+
+Replace:
+
+```xml
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-openai</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+```
+
+with
+
+```xml
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-ollama</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+```
+
