@@ -12,10 +12,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -52,7 +54,8 @@ public class AzureOpenAiProcessor {
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
             LangChain4jAzureOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
-            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER, DotName.createSimple(
+                    AzureOpenAiChatModel.class)));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));

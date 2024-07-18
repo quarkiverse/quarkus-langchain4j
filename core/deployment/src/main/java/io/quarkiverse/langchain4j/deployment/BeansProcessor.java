@@ -81,6 +81,8 @@ public class BeansProcessor {
             BuildProducer<SelectedImageModelProviderBuildItem> selectedImageProducer,
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems) {
 
+        Set<DotName> allowedChatModelNames = determineAllowedChatModelNames(chatCandidateItems);
+
         Set<String> requestedChatModels = new HashSet<>();
         Set<String> requestedStreamingChatModels = new HashSet<>();
         Set<String> requestEmbeddingModels = new HashSet<>();
@@ -91,7 +93,7 @@ public class BeansProcessor {
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
             DotName requiredName = ip.getRequiredType().name();
             String modelName = determineModelName(ip);
-            if (CHAT_MODEL.equals(requiredName)) {
+            if (allowedChatModelNames.contains(requiredName)) {
                 requestedChatModels.add(modelName);
             } else if (STREAMING_CHAT_MODEL.equals(requiredName)) {
                 requestedStreamingChatModels.add(modelName);
@@ -231,6 +233,13 @@ public class BeansProcessor {
             }
         }
 
+    }
+
+    private Set<DotName> determineAllowedChatModelNames(List<ChatModelProviderCandidateBuildItem> chatCandidateItems) {
+        Set<DotName> result = chatCandidateItems.stream().map(ChatModelProviderCandidateBuildItem::getConcreteType)
+                .collect(Collectors.toSet());
+        result.add(CHAT_MODEL);
+        return result;
     }
 
     private String determineModelName(InjectionPointInfo ip) {

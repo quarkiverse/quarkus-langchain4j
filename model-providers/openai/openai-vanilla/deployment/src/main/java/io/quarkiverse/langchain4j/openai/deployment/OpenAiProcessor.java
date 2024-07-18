@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.openai.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
@@ -12,9 +11,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -53,7 +56,8 @@ public class OpenAiProcessor {
             BuildProducer<ImageModelProviderCandidateBuildItem> imageProducer,
             LangChain4jOpenAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
-            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+            chatProducer.produce(
+                    new ChatModelProviderCandidateBuildItem(PROVIDER, DotName.createSimple(OpenAiChatModel.class.getName())));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
@@ -81,7 +85,8 @@ public class OpenAiProcessor {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
-                        .configure(CHAT_MODEL)
+                        .configure(OpenAiChatModel.class)
+                        .types(ChatLanguageModel.class, TokenCountEstimator.class)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)

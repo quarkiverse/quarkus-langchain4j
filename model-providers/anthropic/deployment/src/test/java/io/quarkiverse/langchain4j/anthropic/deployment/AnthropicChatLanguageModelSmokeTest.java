@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -32,7 +31,7 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
 
     @Inject
-    ChatLanguageModel chatModel;
+    AnthropicChatModel chatModel;
 
     @Test
     void blocking() {

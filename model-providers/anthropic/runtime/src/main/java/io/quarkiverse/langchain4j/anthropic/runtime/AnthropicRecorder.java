@@ -1,16 +1,16 @@
 package io.quarkiverse.langchain4j.anthropic.runtime;
 
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -18,7 +18,8 @@ import io.smallrye.config.ConfigValidationException;
 public class AnthropicRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String configName) {
+    public Function<SyntheticCreationalContext<AnthropicChatModel>, AnthropicChatModel> chatModel(
+            LangChain4jAnthropicConfig runtimeConfig, String configName) {
         var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
 
         if (anthropicConfig.enableIntegration()) {
@@ -53,17 +54,21 @@ public class AnthropicRecorder {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
+
                 @Override
-                public ChatLanguageModel get() {
+                public AnthropicChatModel apply(SyntheticCreationalContext<AnthropicChatModel> context) {
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
+
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public AnthropicChatModel apply(SyntheticCreationalContext<AnthropicChatModel> context) {
+                    // TODO:
+
+                    throw new RuntimeException("test");
                 }
             };
         }

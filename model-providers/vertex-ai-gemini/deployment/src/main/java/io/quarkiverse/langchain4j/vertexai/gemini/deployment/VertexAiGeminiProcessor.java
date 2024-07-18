@@ -7,11 +7,13 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiChatLanguageModel;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiRecorder;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -35,7 +37,8 @@ public class VertexAiGeminiProcessor {
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             LangChain4jVertexAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty()) {
-            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER, DotName.createSimple(
+                    VertexAiGeminiChatLanguageModel.class)));
         }
     }
 

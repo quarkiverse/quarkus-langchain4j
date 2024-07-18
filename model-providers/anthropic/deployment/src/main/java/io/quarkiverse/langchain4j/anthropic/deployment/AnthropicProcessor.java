@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.anthropic.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
@@ -8,7 +7,10 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
+import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.anthropic.runtime.AnthropicRecorder;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
@@ -35,7 +37,8 @@ public class AnthropicProcessor {
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             LangChain4jAnthropicBuildConfig config) {
         if (config.chatModel().enabled().isEmpty()) {
-            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER, DotName.createSimple(
+                    AnthropicChatModel.class)));
         }
     }
 
@@ -48,11 +51,12 @@ public class AnthropicProcessor {
             if (PROVIDER.equals(selected.getProvider())) {
                 var configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem
-                        .configure(CHAT_MODEL)
+                        .configure(AnthropicChatModel.class)
+                        .types(ChatLanguageModel.class)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .createWith(recorder.chatModel(config, configName));
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());

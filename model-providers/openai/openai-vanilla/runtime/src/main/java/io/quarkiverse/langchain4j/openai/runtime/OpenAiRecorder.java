@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.openai.runtime;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,8 +12,10 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -26,6 +29,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
@@ -48,7 +52,7 @@ public class OpenAiRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String OPENAI_BASE_URL = "https://api.openai.com/v1/";
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+    public Function<SyntheticCreationalContext<OpenAiChatModel>, OpenAiChatModel> chatModel(
             LangChain4jOpenAiConfig runtimeConfig, String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
@@ -81,7 +85,7 @@ public class OpenAiRecorder {
 
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public OpenAiChatModel apply(SyntheticCreationalContext<OpenAiChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -90,8 +94,8 @@ public class OpenAiRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public OpenAiChatModel apply(SyntheticCreationalContext<OpenAiChatModel> context) {
+                    return new DisabledOpenAiChatModel();
                 }
             };
         }
@@ -311,5 +315,40 @@ public class OpenAiRecorder {
                 QuarkusOpenAiClient.clearCache();
             }
         });
+    }
+
+    private static class DisabledOpenAiChatModel extends OpenAiChatModel {
+
+        public DisabledOpenAiChatModel() {
+            super(null, null, null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null,
+                    null, null, null, null);
+        }
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public String generate(String userMessage) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(ChatMessage... messages) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
     }
 }

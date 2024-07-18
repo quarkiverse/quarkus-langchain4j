@@ -7,10 +7,12 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.OpenshiftAiRecorder;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -36,7 +38,8 @@ public class OpenshiftAiProcessor {
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             LangChain4jOpenshiftAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
-            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
+            chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER, DotName.createSimple(
+                    OpenshiftAiChatModel.class)));
         }
     }
 

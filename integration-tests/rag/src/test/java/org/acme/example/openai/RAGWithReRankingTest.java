@@ -14,7 +14,7 @@ import org.mockito.stubbing.Answer;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusMock;
@@ -31,7 +31,7 @@ public class RAGWithReRankingTest {
     @BeforeAll
     public static void initializeChatModelMock() {
         // initialize the mock for the chat model
-        ChatLanguageModel chatMock = Mockito.mock(ChatLanguageModel.class);
+        OpenAiChatModel chatMock = Mockito.mock(OpenAiChatModel.class);
         Answer<Object> chatAnswer = invocation -> {
             Log.info("Chat model received query: " + invocation.getArgument(0));
             lastQuery.set(invocation.getArgument(0));
@@ -39,7 +39,7 @@ public class RAGWithReRankingTest {
         };
         Mockito.when(chatMock.generate(Mockito.anyList())).thenAnswer(chatAnswer);
         Mockito.when(chatMock.generate(Mockito.anyList(), Mockito.anyList())).thenAnswer(chatAnswer);
-        QuarkusMock.installMockForType(chatMock, ChatLanguageModel.class);
+        QuarkusMock.installMockForType(chatMock, OpenAiChatModel.class);
     }
 
     /**

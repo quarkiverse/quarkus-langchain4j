@@ -11,12 +11,18 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.ModelDisabledException;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.TokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
@@ -40,7 +46,7 @@ public class WatsonxRecorder {
     private static final Map<String, TokenGenerator> tokenGeneratorCache = new HashMap<>();
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+    public Supplier<WatsonxChatModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonConfig(runtimeConfig, configName);
 
         if (watsonConfig.enableIntegration()) {
@@ -49,7 +55,7 @@ public class WatsonxRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public WatsonxChatModel get() {
                     return builder.build(WatsonxChatModel.class);
                 }
             };
@@ -57,8 +63,8 @@ public class WatsonxRecorder {
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public WatsonxChatModel get() {
+                    return new DisabledWatsonxChatModel();
                 }
             };
         }
@@ -246,5 +252,54 @@ public class WatsonxRecorder {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.watsonx%s%s is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static class DisabledWatsonxChatModel extends WatsonxChatModel {
+
+        public DisabledWatsonxChatModel() {
+            // don't call super as that tries to initialize a REST Client
+        }
+
+        @Override
+        public String generate(String userMessage) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(ChatMessage... messages) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages,
+                List<ToolSpecification> toolSpecifications) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages,
+                ToolSpecification toolSpecification) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public int estimateTokenCount(String text) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public int estimateTokenCount(UserMessage userMessage) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public int estimateTokenCount(Prompt prompt) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
+
+        @Override
+        public int estimateTokenCount(TextSegment textSegment) {
+            throw new ModelDisabledException("ChatLanguageModel is disabled");
+        }
     }
 }
