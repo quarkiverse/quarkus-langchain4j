@@ -18,10 +18,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
@@ -39,7 +39,7 @@ public class AiChatServiceTest {
     LangChain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
-    ChatLanguageModel model;
+    WatsonxChatModel model;
 
     static WireMockUtil mockServers;
 

@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.watsonx;
 
 import static java.util.stream.Collectors.joining;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +23,19 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 
 public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel, TokenCountEstimator {
+
+    // this is only needed by Arc to create proxies
+    protected WatsonxChatModel() {
+        super(WatsonxChatModel.builder().url(getUrl()).timeout(Duration.ZERO));
+    }
+
+    private static URL getUrl() {
+        try {
+            return new URL("https://test");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public WatsonxChatModel(WatsonxModel.Builder config) {
         super(config);
