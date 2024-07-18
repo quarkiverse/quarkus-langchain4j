@@ -81,6 +81,8 @@ public class DefaultPropertiesTest {
         assertEquals(false, config.chatModel().randomSeed().isPresent());
         assertEquals(false, config.chatModel().stopSequences().isPresent());
         assertEquals(1.0, config.chatModel().temperature());
+        assertEquals("", config.chatModel().promptJoiner().orElse(""));
+
         assertTrue(config.chatModel().topK().isEmpty());
         assertTrue(config.chatModel().topP().isEmpty());
         assertTrue(config.chatModel().repetitionPenalty().isEmpty());
@@ -92,7 +94,6 @@ public class DefaultPropertiesTest {
 
         String modelId = config.chatModel().modelId();
         String projectId = config.projectId();
-        String input = "TEST";
         Parameters parameters = Parameters.builder()
                 .decodingMethod(config.chatModel().decodingMethod())
                 .temperature(config.chatModel().temperature())
@@ -100,7 +101,7 @@ public class DefaultPropertiesTest {
                 .maxNewTokens(config.chatModel().maxNewTokens())
                 .build();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input + "\n", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessageUserMessage", parameters);
 
         mockServers.mockIAMBuilder(200)
                 .response("token", new Date())
@@ -126,6 +127,7 @@ public class DefaultPropertiesTest {
                         """)
                 .build();
 
-        assertEquals("Response!", model.generate(input));
+        assertEquals("Response!", model.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
     }
 }

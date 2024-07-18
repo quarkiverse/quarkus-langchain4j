@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import static java.util.stream.Collectors.joining;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,11 +132,7 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
 
-        var input = messages
-                .stream()
-                .map(ChatMessage::text)
-                .collect(joining(" "));
-
+        var input = toInput(messages);
         var request = new TokenizationRequest(modelId, input, projectId);
         return retryOn(new Callable<Integer>() {
             @Override

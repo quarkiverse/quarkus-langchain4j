@@ -83,6 +83,7 @@ public class AllPropertiesTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.repetition-penalty", "2.0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.include-stop-sequence", "false")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-joiner", "@")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @BeforeAll
@@ -102,6 +103,25 @@ public class AllPropertiesTest {
     static void afterAll() {
         watsonxServer.stop();
         iamServer.stop();
+    }
+
+    static Parameters parameters;
+
+    static {
+        parameters = Parameters.builder()
+                .minNewTokens(10)
+                .maxNewTokens(200)
+                .decodingMethod("greedy")
+                .lengthPenalty(new LengthPenalty(1.1, 0))
+                .randomSeed(2)
+                .stopSequences(List.of("\n", "\n\n"))
+                .temperature(1.5)
+                .topK(90)
+                .topP(0.5)
+                .repetitionPenalty(2.0)
+                .truncateInputTokens(0)
+                .includeStopSequence(false)
+                .build();
     }
 
     @Test
@@ -131,6 +151,7 @@ public class AllPropertiesTest {
         assertEquals(2.0, config.chatModel().repetitionPenalty().get());
         assertEquals(0, config.chatModel().truncateInputTokens().get());
         assertEquals(false, config.chatModel().includeStopSequence().get());
+        assertEquals("@", config.chatModel().promptJoiner().get());
     }
 
     @Test
@@ -138,7 +159,6 @@ public class AllPropertiesTest {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.chatModel().modelId();
         String projectId = config.projectId();
-        String input = "TEST";
         var parameters = Parameters.builder()
                 .minNewTokens(10)
                 .maxNewTokens(200)
@@ -154,7 +174,7 @@ public class AllPropertiesTest {
                 .includeStopSequence(false)
                 .build();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input + "\n", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);
 
         mockServers.mockIAMBuilder(200)
                 .grantType(config.iam().grantType())
@@ -180,7 +200,8 @@ public class AllPropertiesTest {
                         """)
                 .build();
 
-        assertEquals("Response!", chatModel.generate(input));
+        assertEquals("Response!", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
     }
 
     @Test
@@ -188,7 +209,6 @@ public class AllPropertiesTest {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.chatModel().modelId();
         String projectId = config.projectId();
-        String input = "TEST";
         var parameters = Parameters.builder()
                 .minNewTokens(10)
                 .maxNewTokens(200)
@@ -204,7 +224,7 @@ public class AllPropertiesTest {
                 .includeStopSequence(false)
                 .build();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input + "\n", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);
 
         mockServers.mockIAMBuilder(200)
                 .grantType(config.iam().grantType())
@@ -243,8 +263,12 @@ public class AllPropertiesTest {
                 .response(eventStreamResponse)
                 .build();
 
+        var messages = List.of(
+                dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                dev.langchain4j.data.message.UserMessage.from("UserMessage"));
+
         var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(input, new StreamingResponseHandler<>() {
+        streamingChatModel.generate(messages, new StreamingResponseHandler<>() {
             @Override
             public void onNext(String token) {
             }
@@ -256,7 +280,6 @@ public class AllPropertiesTest {
 
             @Override
             public void onComplete(Response<AiMessage> response) {
-                System.out.println(response);
                 streamingResponse.set(response.content());
             }
         });

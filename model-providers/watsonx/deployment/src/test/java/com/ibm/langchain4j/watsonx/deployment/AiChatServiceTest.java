@@ -74,7 +74,7 @@ public class AiChatServiceTest {
     @Singleton
     interface NewAIService {
 
-        @SystemMessage("This is a systemMessage")
+        @SystemMessage("This is a systemMessage\n")
         @UserMessage("This is a userMessage {text}")
         String chat(String text);
     }
@@ -91,9 +91,8 @@ public class AiChatServiceTest {
         String projectId = watsonConfig.projectId();
         String input = new StringBuilder()
                 .append("This is a systemMessage")
-                .append("\n\n")
-                .append("This is a userMessage Hello")
                 .append("\n")
+                .append("This is a userMessage Hello")
                 .toString();
         Parameters parameters = Parameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
