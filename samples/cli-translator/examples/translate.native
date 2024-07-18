@@ -1,1 +1,1 @@
-../target/quarkus-langchain4j-sample-cli-translator-999-SNAPSHOT-runner $*
+../target/quarkus-langchain4j-sample-cli-translator-1.0-SNAPSHOT-runner $*
