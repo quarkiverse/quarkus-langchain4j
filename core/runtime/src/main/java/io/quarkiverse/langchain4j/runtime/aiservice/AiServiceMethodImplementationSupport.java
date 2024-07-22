@@ -40,6 +40,8 @@ import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.Moderation;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
@@ -122,12 +124,15 @@ public class AiServiceMethodImplementationSupport {
 
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
 
+        AugmentationResult augmentationResult;
         if (context.retrievalAugmentor != null) { // TODO extract method/class
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
                     : null;
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
-            userMessage = context.retrievalAugmentor.augment(userMessage, metadata);
+            AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+            augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+            userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
         if (context.hasChatMemory()) {
