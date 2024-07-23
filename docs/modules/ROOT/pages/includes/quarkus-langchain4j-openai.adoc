@@ -229,7 +229,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MODEL_NAME+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`gpt-3.5-turbo`
+|`gpt-4o-mini`
 
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-temperature]]`link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-temperature[quarkus.langchain4j.openai.chat-model.temperature]`
@@ -865,7 +865,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`gpt-3.5-turbo`
+|`gpt-4o-mini`
 
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-temperature[quarkus.langchain4j.openai."model-name".chat-model.temperature]`

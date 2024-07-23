@@ -49,7 +49,7 @@ public class DevServicesOllamaProcessor {
             LaunchModeBuildItem launchMode,
             LangChain4jBuildConfig config,
             BuildProducer<DevServicesResultBuildItem> producer) {
-        if (devServicesChatModels.isEmpty()) {
+        if (devServicesChatModels.isEmpty() && devServicesEmbeddingModels.isEmpty()) {
             return;
         }
 
