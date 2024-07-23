@@ -12,6 +12,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -70,27 +71,11 @@ public class TokenCountEstimatorTest {
         iamServer.stop();
     }
 
-    private static final String RESPONSE = """
-              {
-              "model_id": "%s",
-              "result": {
-                "token_count": 11,
-                "tokens": [
-                  "Write",
-                  "a",
-                  "tag",
-                  "line",
-                  "for",
-                  "an",
-                  "alumni",
-                  "associ",
-                  "ation:",
-                  "Together",
-                  "we"
-                ]
-              }
-            }
-            """;
+    @BeforeEach
+    void beforeEach() {
+        watsonxServer.resetAll();
+        iamServer.resetAll();
+    }
 
     @Inject
     TokenCountEstimator tokenization;
@@ -143,7 +128,7 @@ public class TokenCountEstimatorTest {
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))
-                .response(RESPONSE.formatted(modelId))
+                .response(WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
 
         return input;

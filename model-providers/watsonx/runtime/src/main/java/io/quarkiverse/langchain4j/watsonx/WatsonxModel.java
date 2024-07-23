@@ -16,13 +16,12 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import io.smallrye.mutiny.Uni;
 
 public abstract class WatsonxModel {
 
-    private final TokenGenerator tokenGenerator;
     final String modelId;
     final String version;
     final String projectId;
@@ -46,6 +45,7 @@ public abstract class WatsonxModel {
 
         QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
                 .baseUrl(config.url)
+                .clientHeadersFactory(new BearerTokenHeaderFactory(config.tokenGenerator))
                 .connectTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS);
 
@@ -73,16 +73,11 @@ public abstract class WatsonxModel {
         this.repetitionPenalty = config.repetitionPenalty;
         this.truncateInputTokens = config.truncateInputTokens;
         this.includeStopSequence = config.includeStopSequence;
-        this.tokenGenerator = config.tokenGenerator;
         this.promptJoiner = config.promptJoiner;
     }
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    protected Uni<String> generateBearerToken() {
-        return tokenGenerator.generate();
     }
 
     protected String toInput(List<ChatMessage> messages) {
