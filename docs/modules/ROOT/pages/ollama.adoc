@@ -41,7 +41,7 @@ To integrate with models running on Ollama, add the following dependency into yo
 
 If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured Ollama model.
 
-By default, the extension uses `llama3`, the model we pulled in the previous section.
+By default, the extension uses `llama3.1`, the model we pulled in the previous section.
 You can change it by setting the `quarkus.langchain4j.ollama.chat-model.model-id` property in the `application.properties` file:
 
 [source,properties,subs=attributes+]
