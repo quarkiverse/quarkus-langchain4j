@@ -11,6 +11,6 @@ public interface ChatModelFixedRuntimeConfig {
      * docs</a>,
      * the default value is {@code llama3}
      */
-    @WithDefault("llama3")
+    @WithDefault("llama3.1")
     String modelId();
 }
