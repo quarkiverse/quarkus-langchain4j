@@ -1,7 +1,7 @@
 # Secure Fraud Detection Demo
 
 This demo showcases the implementation of a secure fraud detection system which is available only to users authenticated with Google.
-It uses the `gpt-3.5-turbo` LLM, use `quarkus.langchain4j.openai.chat-model.model-name` property to select a different model.
+It uses the `gpt-4o-mini` LLM, use `quarkus.langchain4j.openai.chat-model.model-name` property to select a different model.
 
 ## The Demo
 
