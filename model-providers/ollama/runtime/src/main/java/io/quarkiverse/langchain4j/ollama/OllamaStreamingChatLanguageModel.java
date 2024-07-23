@@ -59,7 +59,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                 try {
                                     if ((response == null) || (response.message() == null)
                                             || (response.message().content() == null)
-                                            || response.message().content().isBlank()) {
+                                            || response.message().content().isEmpty()) {
                                         return;
                                     }
                                     ((List<ChatResponse>) context.get("response")).add(response);
