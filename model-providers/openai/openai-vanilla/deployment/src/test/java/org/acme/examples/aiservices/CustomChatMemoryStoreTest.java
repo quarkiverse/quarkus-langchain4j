@@ -181,8 +181,7 @@ public class CustomChatMemoryStoreTest extends OpenAiBaseTest {
         assertThat(CustomChatMemoryStore.GET_MESSAGES_COUNT).hasPositiveValue();
         assertThat(CustomChatMemoryStore.UPDATE_MESSAGES_COUNT).hasPositiveValue();
 
-        // assert delete has not been called because the tool is singleton
-        assertThat(CustomChatMemoryStore.DELETE_MESSAGES_COUNT).hasValue(0);
+        int deleteCount = CustomChatMemoryStore.DELETE_MESSAGES_COUNT.get();
 
         // remove the first entry
         ChatMemoryRemover.remove(chatWithSeparateMemoryForEachUser, FIRST_MEMORY_ID);
@@ -195,6 +194,6 @@ public class CustomChatMemoryStoreTest extends OpenAiBaseTest {
         assertThat(chatMemoryStore.getMessages(SECOND_MEMORY_ID)).isEmpty();
 
         // now assert that our store was used for delete
-        assertThat(CustomChatMemoryStore.DELETE_MESSAGES_COUNT).hasValue(2);
+        assertThat(CustomChatMemoryStore.DELETE_MESSAGES_COUNT).hasValue(deleteCount + 2);
     }
 }

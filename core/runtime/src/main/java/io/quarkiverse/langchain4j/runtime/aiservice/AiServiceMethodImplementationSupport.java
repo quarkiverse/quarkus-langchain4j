@@ -32,7 +32,6 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -135,33 +134,40 @@ public class AiServiceMethodImplementationSupport {
             userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
+        CommittableChatMemory chatMemory;
+        List<ChatMessage> messagesToSend;
+
         if (context.hasChatMemory()) {
-            ChatMemory chatMemory = context.chatMemory(memoryId);
+            // we want to defer saving the new messages because the service could fail and be retried
+            chatMemory = new DefaultCommittableChatMemory(context.chatMemory(memoryId));
             if (systemMessage.isPresent()) {
                 chatMemory.add(systemMessage.get());
             }
             chatMemory.add(userMessage);
-        }
 
-        List<ChatMessage> messages;
-        if (context.hasChatMemory()) {
-            messages = context.chatMemory(memoryId).messages();
+            messagesToSend = chatMemory.messages();
         } else {
-            messages = new ArrayList<>();
-            systemMessage.ifPresent(messages::add);
-            messages.add(userMessage);
+            chatMemory = new NoopChatMemory();
+
+            messagesToSend = new ArrayList<>();
+            if (systemMessage.isPresent()) {
+                messagesToSend.add(systemMessage.get());
+            }
+            messagesToSend.add(userMessage);
         }
 
         Class<?> returnType = methodCreateInfo.getReturnType();
         if (returnType.equals(TokenStream.class)) {
-            return new AiServiceTokenStream(messages, context, memoryId);
+            chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
+            return new AiServiceTokenStream(messagesToSend, context, memoryId);
         }
 
         if (returnType.equals(Multi.class)) {
+            chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             return Multi.createFrom().emitter(new Consumer<MultiEmitter<? super String>>() {
                 @Override
                 public void accept(MultiEmitter<? super String> em) {
-                    new AiServiceTokenStream(messages, context, memoryId)
+                    new AiServiceTokenStream(messagesToSend, context, memoryId)
                             .onNext(em::emit)
                             .onComplete(new Consumer<>() {
                                 @Override
@@ -175,7 +181,7 @@ public class AiServiceMethodImplementationSupport {
             });
         }
 
-        Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messages);
+        Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
 
         log.debug("Attempting to obtain AI response");
 
@@ -188,8 +194,8 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Response<AiMessage> response = toolSpecifications == null
-                ? context.chatModel.generate(messages)
-                : context.chatModel.generate(messages, toolSpecifications);
+                ? context.chatModel.generate(messagesToSend)
+                : context.chatModel.generate(messagesToSend, toolSpecifications);
         log.debug("AI response obtained");
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
@@ -207,16 +213,11 @@ public class AiServiceMethodImplementationSupport {
             }
 
             AiMessage aiMessage = response.content();
-
-            if (context.hasChatMemory()) {
-                context.chatMemory(memoryId).add(response.content());
-            }
+            chatMemory.add(aiMessage);
 
             if (!aiMessage.hasToolExecutionRequests()) {
                 break;
             }
-
-            ChatMemory chatMemory = context.chatMemory(memoryId);
 
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
@@ -245,6 +246,9 @@ public class AiServiceMethodImplementationSupport {
 
             tokenUsageAccumulator = tokenUsageAccumulator.add(response.tokenUsage());
         }
+
+        // everything worked as expected so let's commit the messages
+        chatMemory.commit();
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
         return parse(response, returnType);
