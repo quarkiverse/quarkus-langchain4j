@@ -34,27 +34,22 @@ import io.quarkiverse.langchain4j.ollama.*;
 public class ExperimentalParallelToolsDelegate implements ChatLanguageModel {
     static final PromptTemplate DEFAULT_SYSTEM_TEMPLATE = PromptTemplate
             .from("""
-                    You are a helpful AI assistant responding to user requests.
                     {{context}}
-                    You have access to the following tools, and only those tools:
-                    {{tools}}
+                    
+                    You are a helpful assistant with tool calling capabilities.
 
-                    You should break the user request into sequential list of tools
-                    and always provide a precise conclusion following your tool's selections and results.
-
-                    Respond with a JSON object containing "actions" and required "conclusion" fields:
-                        - "actions": the list of needed tools, from the previous list, to answer the user request. The tool Object contains 3 fields:
+                    Given the following functions, please respond with a JSON containing "actions" and required "conclusion" fields:
+                        - "actions": the list of needed tools from the given functions, and only from this list, to answer the user request. The tool Object contains 3 fields:
                             - "name": selected tool name.
                             - "inputs": selected tool's properties values matching tool's properties JSON schema.
                             - "result_id": an id to identify the result of this tool, e.g. id1.
                         - "conclusion":
-                            - your final answer as a simple string that could reference previous results
-                             or previous tools description, e.g. "Email sent!".
+                            - your final answer as a simple string that references previous results or previous tools description, e.g. "Email sent!".
 
-                    Guidelines:
-                        - Inputs and conclusion fields can reference previous results using $(xxx), where xxx is a previous unique result_id, Ex: "inputs": { "arg0": $(id1) }.
-                        - If you have enough information, provide your conclusion directly.
-                        - Prefer using tools results in the final answer.
+                    {{tools}}
+
+                    Inputs and conclusion fields can reference previous results using $(xxx), where xxx is a previous unique result_id, Ex: "inputs": { "arg0": $(id1) }.
+                    For simple requests that does not need function calling, just answer with the conclusion field.
                     """);
 
     record ToolResponses(List<ToolResponse> actions, String conclusion) {
