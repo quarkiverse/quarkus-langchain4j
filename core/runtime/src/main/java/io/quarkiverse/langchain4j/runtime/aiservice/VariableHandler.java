@@ -18,7 +18,7 @@ import io.quarkiverse.langchain4j.data.AiStatsMessage;
  * See usage in @{@link AiServiceMethodImplementationSupport}
  */
 @Experimental
-public class ToolsResultMemory {
+public class VariableHandler {
 
     static Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\((.*?)\\)");
 
@@ -28,7 +28,7 @@ public class ToolsResultMemory {
         variables.put(var, value);
     }
 
-    public AiMessage substituteAiMessage(AiMessage message) {
+    public AiMessage substituteVariables(AiMessage message) {
         if (message.text() == null) {
             return message;
         }
@@ -39,7 +39,7 @@ public class ToolsResultMemory {
         return message;
     }
 
-    public ToolExecutionRequest substituteArguments(ToolExecutionRequest toolExecutionRequest) {
+    public ToolExecutionRequest substituteVariables(ToolExecutionRequest toolExecutionRequest) {
         return ToolExecutionRequest.builder()
                 .id(toolExecutionRequest.id())
                 .name(toolExecutionRequest.name())

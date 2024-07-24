@@ -222,9 +222,8 @@ public class AiServiceMethodImplementationSupport {
                 break;
             }
 
-            ChatMemory chatMemory = context.chatMemory(memoryId);
             List<ToolExecutionResultMessage> tmpToolExecutionResultMessages = new ArrayList<>();
-            ToolsResultMemory toolsResultMemory = new ToolsResultMemory();
+            VariableHandler variableHandler = new VariableHandler();
 
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
@@ -232,10 +231,10 @@ public class AiServiceMethodImplementationSupport {
                 if (toolExecutor == null) {
                     throw runtime("Tool executor %s not found", toolExecutionRequest.name());
                 }
-                toolExecutionRequest = toolsResultMemory.substituteArguments(toolExecutionRequest);
+                toolExecutionRequest = variableHandler.substituteVariables(toolExecutionRequest);
                 String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
                 log.debugv("Saving result {0} into key {1}", toolExecutionResult, toolExecutionRequest.id());
-                toolsResultMemory.addVariable(toolExecutionRequest.id(), toolExecutionResult);
+                variableHandler.addVariable(toolExecutionRequest.id(), toolExecutionResult);
                 log.debugv("Result of {0} is {1}", toolExecutionRequest, toolExecutionResult);
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                         toolExecutionRequest,
@@ -247,7 +246,7 @@ public class AiServiceMethodImplementationSupport {
             }
             // In case of tool Execution request we need to update the AiMessage with tools results
             // before adding it into chatMemory
-            aiMessage = toolsResultMemory.substituteAiMessage(aiMessage);
+            aiMessage = variableHandler.substituteVariables(aiMessage);
             if (context.hasChatMemory()) {
                 chatMemory.add(aiMessage);
                 tmpToolExecutionResultMessages.forEach(chatMemory::add);

@@ -143,7 +143,7 @@ public class ExperimentalParallelToolsDelegate implements ChatLanguageModel {
             for (ToolResponse toolResponse : toolResponses.actions) {
                 if (!availableTools.contains(toolResponse.name)) {
                     throw new RuntimeException(String.format(
-                            "Ollama server wants to call a name '%s' that is not part of the available tools %s",
+                            "Ollama server wants to call '%s' tool that is not part of the available tools %s",
                             toolResponse.name, availableTools));
                 } else {
                     getToolSpecification(toolResponse, toolSpecifications)

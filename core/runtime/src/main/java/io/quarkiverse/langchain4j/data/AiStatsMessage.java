@@ -11,7 +11,7 @@ import dev.langchain4j.model.output.TokenUsage;
  * This class is the equivalent of Langchain4j AiMessage.
  * It contains the token usage from the response that produce this AiMessage.
  * And add the possibility to update the text in case of text containing Tools Result variables.
- * Needed for @{@link io.quarkiverse.langchain4j.runtime.aiservice.ToolsResultMemory}
+ * Needed for @{@link io.quarkiverse.langchain4j.runtime.aiservice.VariableHandler}
  * Example of usage in ExperimentalParallelToolsDelegate in Ollama model provider
  */
 public class AiStatsMessage extends AiMessage {
