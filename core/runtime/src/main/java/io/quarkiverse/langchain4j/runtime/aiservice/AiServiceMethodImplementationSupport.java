@@ -216,9 +216,7 @@ public class AiServiceMethodImplementationSupport {
 
             if (!aiMessage.hasToolExecutionRequests()) {
                 // If there is no tool Execution request we add the Ai Message directly in the chatMEmory
-                if (context.hasChatMemory()) {
-                    context.chatMemory(memoryId).add(aiMessage);
-                }
+                chatMemory.add(aiMessage);
                 break;
             }
 
@@ -247,10 +245,9 @@ public class AiServiceMethodImplementationSupport {
             // In case of tool Execution request we need to update the AiMessage with tools results
             // before adding it into chatMemory
             aiMessage = variableHandler.substituteVariables(aiMessage);
-            if (context.hasChatMemory()) {
-                chatMemory.add(aiMessage);
-                tmpToolExecutionResultMessages.forEach(chatMemory::add);
-            }
+
+            chatMemory.add(aiMessage);
+            tmpToolExecutionResultMessages.forEach(chatMemory::add);
 
             log.debug("Attempting to obtain AI response");
             response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
