@@ -4,6 +4,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -15,13 +16,12 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import io.smallrye.mutiny.Uni;
 
 public abstract class WatsonxModel {
 
-    private final TokenGenerator tokenGenerator;
     final String modelId;
     final String version;
     final String projectId;
@@ -38,12 +38,14 @@ public abstract class WatsonxModel {
     final Double repetitionPenalty;
     final Integer truncateInputTokens;
     final Boolean includeStopSequence;
+    final String promptJoiner;
     final WatsonxRestApi client;
 
     public WatsonxModel(Builder config) {
 
         QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
                 .baseUrl(config.url)
+                .clientHeadersFactory(new BearerTokenHeaderFactory(config.tokenGenerator))
                 .connectTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS);
 
@@ -71,35 +73,22 @@ public abstract class WatsonxModel {
         this.repetitionPenalty = config.repetitionPenalty;
         this.truncateInputTokens = config.truncateInputTokens;
         this.includeStopSequence = config.includeStopSequence;
-        this.tokenGenerator = config.tokenGenerator;
+        this.promptJoiner = config.promptJoiner;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    protected Uni<String> generateBearerToken() {
-        return tokenGenerator.generate();
-    }
-
     protected String toInput(List<ChatMessage> messages) {
-        StringBuilder builder = new StringBuilder();
+        StringJoiner joiner = new StringJoiner(promptJoiner);
         for (ChatMessage message : messages) {
             switch (message.type()) {
-                case AI:
-                case USER:
-                    builder.append(message.text())
-                            .append("\n");
-                    break;
-                case SYSTEM:
-                    builder.append(message.text())
-                            .append("\n\n");
-                    break;
-                case TOOL_EXECUTION_RESULT:
-                    throw new IllegalArgumentException("Tool message is not supported");
+                case AI, USER, SYSTEM -> joiner.add(message.text());
+                case TOOL_EXECUTION_RESULT -> throw new IllegalArgumentException("Tool message is not supported");
             }
         }
-        return builder.toString();
+        return joiner.toString();
     }
 
     protected FinishReason toFinishReason(String stopReason) {
@@ -167,6 +156,7 @@ public abstract class WatsonxModel {
         public boolean logResponses;
         public boolean logRequests;
         private TokenGenerator tokenGenerator;
+        private String promptJoiner;
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;
@@ -260,6 +250,11 @@ public abstract class WatsonxModel {
 
         public Builder tokenGenerator(TokenGenerator tokenGenerator) {
             this.tokenGenerator = tokenGenerator;
+            return this;
+        }
+
+        public Builder promptJoiner(String promptJoiner) {
+            this.promptJoiner = promptJoiner;
             return this;
         }
 

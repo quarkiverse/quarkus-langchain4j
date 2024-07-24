@@ -18,7 +18,7 @@
     <quarkus.platform.version>3.8.5</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
-    <quarkus-langchain4j.version>0.16.2</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>0.16.4</quarkus-langchain4j.version>
   </properties>
 
     <dependencyManagement>
@@ -48,12 +48,12 @@
         <dependency>
             <groupId>io.mvnpm</groupId>
             <artifactId>importmap</artifactId>
-            <version>1.0.10</version>
+            <version>1.0.11</version>
         </dependency>
         <dependency>
             <groupId>org.mvnpm.at.mvnpm</groupId>
             <artifactId>vaadin-webcomponents</artifactId>
-            <version>24.4.2</version>
+            <version>24.4.4</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>

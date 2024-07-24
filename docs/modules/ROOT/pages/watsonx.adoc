@@ -62,13 +62,11 @@ quarkus.langchain4j.watsonx.api-key=hG-...
 
 NOTE: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and generate it.
 
-==== All configuration properties
+==== Writing prompts
 
-include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
+When creating prompts using watsonx.ai, it's important to follow the guidelines of the model you choose. Depending on the model, some special instructions may be required to ensure the desired output. For best results, always refer to the documentation provided for each model to maximize the effectiveness of your prompts.
 
-== Example
-
-An example usage is the following:
+For example, if you choose to use `ibm/granite-13b-chat-v2`, you can use the `<|system|>`, `<|user|>`, and `<|assistant|>` instructions:
 
 [source,properties,subs=attributes+]
 ----
@@ -79,21 +77,21 @@ quarkus.langchain4j.watsonx.chat-model.model-id=ibm/granite-13b-chat-v2
 
 [source,java]
 ----
-public record Result(Integer result) {}
-----
-
-[source,java]
-----
 @RegisterAiService
 public interface LLMService {
-    
-    @SystemMessage("You are a calculator")
+
+    public record Result(Integer result) {}
+
+    @SystemMessage("""
+        <|system|>
+        You are a calculator and you must perform the mathematical operation
+        {response_schema}
+        """)
     @UserMessage("""
-        You must perform the mathematical operation delimited by ---
-        ---
+        <|user|>
         {firstNumber} + {secondNumber}
-        ---
-    """)
+        <|assistant|>
+        """)
     public Result calculator(int firstNumber, int secondNumber);
 }
 ----
@@ -108,6 +106,7 @@ public class LLMResource {
 
     @GET
     @Path("/calculator")
+    @Produces(MediaType.APPLICATION_JSON)
     public Result calculator() {
         return llmService.calculator(2, 2);
     }
@@ -120,4 +119,10 @@ public class LLMResource {
 {"result":4}
 ----
 
+IMPORTANT: The `@SystemMessage` and `@UserMessage` are joined by default without spaces or new lines, if you want to change this behavior use the property `quarkus.langchain4j.watsonx.chat-model.prompt-joiner=<value>`. By adjusting this property, you can define your preferred way of joining messages and ensure that the prompt structure meets your specific needs.
+
 NOTE: Sometimes it may be useful to use the `quarkus.langchain4j.watsonx.chat-model.stop-sequences` property to prevent the LLM model from returning more results than desired.
+
+==== All configuration properties
+
+include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]

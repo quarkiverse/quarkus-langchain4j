@@ -6,12 +6,18 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
@@ -26,6 +32,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOp
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -37,7 +44,11 @@ public class AzureOpenAiRecorder {
     static final String AZURE_ENDPOINT_URL_PATTERN = "https://%s.%s/openai/deployments/%s";
     public static final Problem[] EMPTY_PROBLEMS = new Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+    private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
+    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+            LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
@@ -68,16 +79,18 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
             };

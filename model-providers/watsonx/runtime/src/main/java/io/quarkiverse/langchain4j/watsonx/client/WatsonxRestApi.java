@@ -14,7 +14,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
@@ -31,7 +30,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
-import io.quarkus.rest.client.reactive.NotBody;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
@@ -48,27 +46,26 @@ import io.vertx.core.http.HttpClientResponse;
 @Path("/ml/v1")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@ClientHeaderParam(name = "Authorization", value = "Bearer {token}")
 public interface WatsonxRestApi {
 
     @POST
     @Path("text/generation")
-    TextGenerationResponse chat(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version)
+    TextGenerationResponse chat(TextGenerationRequest request, @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST
     @Path("text/generation_stream")
-    @RestStreamElementType(MediaType.TEXT_PLAIN)
-    Multi<String> chatStreaming(TextGenerationRequest request, @NotBody String token, @QueryParam("version") String version);
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    Multi<TextGenerationResponse> chatStreaming(TextGenerationRequest request, @QueryParam("version") String version);
 
     @POST
     @Path("text/tokenization")
-    public TokenizationResponse tokenization(TokenizationRequest request, @NotBody String token,
+    TokenizationResponse tokenization(TokenizationRequest request,
             @QueryParam("version") String version);
 
     @POST
     @Path("/text/embeddings")
-    public EmbeddingResponse embeddings(EmbeddingRequest request, @NotBody String token,
+    EmbeddingResponse embeddings(EmbeddingRequest request,
             @QueryParam("version") String version);
 
     @ClientExceptionMapper

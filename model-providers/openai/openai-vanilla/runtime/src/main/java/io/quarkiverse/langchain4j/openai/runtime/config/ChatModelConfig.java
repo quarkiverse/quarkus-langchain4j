@@ -13,7 +13,7 @@ public interface ChatModelConfig {
     /**
      * Model name to use
      */
-    @WithDefault("gpt-3.5-turbo")
+    @WithDefault("gpt-4o-mini")
     String modelName();
 
     /**

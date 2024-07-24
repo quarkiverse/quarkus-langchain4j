@@ -44,13 +44,13 @@ public class OllamaChatLanguageModelSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo("/api/chat"))
-                        .withRequestBody(matchingJsonPath("$.model", equalTo("llama3")))
+                        .withRequestBody(matchingJsonPath("$.model", equalTo("llama3.1")))
                         .withHeader("Authorization", absent())
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
                                         {
-                                          "model": "llama3",
+                                          "model": "llama3.1",
                                           "created_at": "2024-05-03T10:27:56.84235715Z",
                                           "message": {
                                             "role": "assistant",

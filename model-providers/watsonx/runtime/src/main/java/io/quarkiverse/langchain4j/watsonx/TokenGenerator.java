@@ -7,8 +7,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.jboss.logging.Logger;
-
 import io.quarkiverse.langchain4j.watsonx.bean.IdentityTokenRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.IdentityTokenResponse;
 import io.quarkiverse.langchain4j.watsonx.client.IAMRestApi;
@@ -17,7 +15,6 @@ import io.smallrye.mutiny.Uni;
 
 public class TokenGenerator {
 
-    private final static Logger logger = Logger.getLogger(TokenGenerator.class);
     private final static Semaphore lock = new Semaphore(1);
     private final IAMRestApi client;
     private final String apiKey;
@@ -70,9 +67,7 @@ public class TokenGenerator {
 
         } catch (Exception e) {
             lock.release();
-            logger.error(e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
-
 }

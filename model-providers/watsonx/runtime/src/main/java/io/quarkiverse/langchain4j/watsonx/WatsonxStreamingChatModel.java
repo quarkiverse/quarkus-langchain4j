@@ -1,17 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import static java.util.stream.Collectors.joining;
-
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Flow.Publisher;
 import java.util.function.Consumer;
-import java.util.function.Function;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -21,7 +14,6 @@ import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
@@ -30,8 +22,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.smallrye.mutiny.Context;
 
 public class WatsonxStreamingChatModel extends WatsonxModel implements StreamingChatLanguageModel, TokenCountEstimator {
-
-    private final ObjectMapper mapper = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
 
     public WatsonxStreamingChatModel(WatsonxModel.Builder config) {
         super(config);
@@ -63,28 +53,20 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
         Context context = Context.of("response", new ArrayList<TextGenerationResponse>());
 
-        generateBearerToken().onItem()
-                .transformToMulti(new Function<String, Publisher<? extends String>>() {
-                    @Override
-                    public Publisher<? extends String> apply(String token) {
-                        return client.chatStreaming(request, token, version);
-                    }
-                })
+        client.chatStreaming(request, version)
                 .subscribe()
                 .with(context,
-                        new Consumer<String>() {
+                        new Consumer<TextGenerationResponse>() {
                             @Override
                             @SuppressWarnings("unchecked")
-                            public void accept(String response) {
+                            public void accept(TextGenerationResponse response) {
                                 try {
 
-                                    // Skip empty responses from LLM.
-                                    if (response == null || response.isBlank())
+                                    if (response == null || response.results() == null || response.results().isEmpty())
                                         return;
 
-                                    var obj = mapper.readValue(response, TextGenerationResponse.class);
-                                    ((List<TextGenerationResponse>) context.get("response")).add(obj);
-                                    handler.onNext(obj.results().get(0).generatedText());
+                                    ((List<TextGenerationResponse>) context.get("response")).add(response);
+                                    handler.onNext(response.results().get(0).generatedText());
 
                                 } catch (Exception e) {
                                     handler.onError(e);
@@ -134,17 +116,12 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
 
-        var input = messages
-                .stream()
-                .map(ChatMessage::text)
-                .collect(joining(" "));
-
+        var input = toInput(messages);
         var request = new TokenizationRequest(modelId, input, projectId);
         return retryOn(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.tokenization(request, token, version).result().tokenCount();
+                return client.tokenization(request, version).result().tokenCount();
             }
         });
     }

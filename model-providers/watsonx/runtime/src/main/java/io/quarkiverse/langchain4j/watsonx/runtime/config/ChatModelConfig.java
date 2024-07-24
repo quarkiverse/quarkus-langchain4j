@@ -156,6 +156,13 @@ public interface ChatModelConfig {
     @WithDefault("${quarkus.langchain4j.watsonx.log-responses}")
     Optional<Boolean> logResponses();
 
+    /**
+     * Delimiter used to concatenate the ChatMessage elements into a single string. By setting this property, you can define
+     * your
+     * preferred way of concatenating messages to ensure that the prompt is structured in the correct way.
+     */
+    Optional<String> promptJoiner();
+
     @ConfigGroup
     public interface LengthPenaltyConfig {
 

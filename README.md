@@ -15,6 +15,7 @@ Here is a non-exhaustive list of features that are currently supported:
 - Document store integration (Redis, Chroma, Infinispan...)
 - Native compilation support
 - Integration with Quarkus observability stack (metrics, tracing...)
+- Pluggable auth providers
 
 ## Documentation
 

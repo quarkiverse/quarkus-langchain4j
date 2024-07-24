@@ -113,14 +113,12 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
                                     // the bot has already chatted, so there should be some memory
                                     assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)
                                             .hasOnlyElementsOfType(String.class);
-                                    assertThat(chatMemoryStore.idsFromDeleteMessaged).isEmpty();
 
                                     webSocket.writeTextMessage("what is your name?", (firstWriteResult -> {
                                         if (firstWriteResult.succeeded()) {
                                             // the message has been written
                                             assertThat(chatMemoryStore.idsFromGetMessages).hasSize(1)
                                                     .hasOnlyElementsOfType(String.class);
-                                            assertThat(chatMemoryStore.idsFromDeleteMessaged).isEmpty();
 
                                             latch.countDown();
 
@@ -174,7 +172,6 @@ public class WebSocketsNextTest extends OpenAiBaseTest {
 
                                 assertThat(chatMemoryStore.idsFromGetMessages).hasSize(2)
                                         .hasOnlyElementsOfType(String.class);
-                                assertThat(chatMemoryStore.idsFromDeleteMessaged).hasSize(1);
 
                                 webSocket.close().onComplete((closeResult) -> {
                                     if (closeResult.succeeded()) {

@@ -70,6 +70,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         return OpenAiChatModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
                 .logRequests(true)
                 .logResponses(true)
+                .maxRetries(1)
                 .apiKey("whatever").build();
     }
 
@@ -625,6 +626,22 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage), tuple(USER, secondUserMessage),
                         tuple(AI, secondAiMessage));
+    }
+
+    @Test
+    void should_not_keep_memory_on_failed_call() {
+        MessageWindowChatMemory chatMemory = createChatMemory();
+        ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
+                .chatLanguageModel(createChatModel())
+                .chatMemory(chatMemory)
+                .build();
+
+        String firstUserMessage = "Hello, my name is Klaus";
+        setChatCompletionMessageContent("{\"test\""); // this will cause a JSON processing exception
+        assertThatThrownBy(() -> chatWithMemory.chatWithoutSystemMessage(firstUserMessage));
+
+        // assert chat memory
+        assertThat(chatMemory.messages()).isEmpty();
     }
 
     @Test

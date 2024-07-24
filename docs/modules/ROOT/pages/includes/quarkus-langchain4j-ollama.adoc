@@ -58,7 +58,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`llama3`
+|`llama3.1`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[quarkus.langchain4j.ollama.embedding-model.model-id]`
@@ -478,7 +478,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|`llama3`
+|`llama3.1`
 
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[quarkus.langchain4j.ollama."model-name".embedding-model.model-id]`
