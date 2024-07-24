@@ -13,6 +13,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -68,6 +69,12 @@ public class AiEmbeddingTest {
     static void afterAll() {
         watsonxServer.stop();
         iamServer.stop();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        watsonxServer.resetAll();
+        iamServer.resetAll();
     }
 
     @Inject
@@ -180,22 +187,7 @@ public class AiEmbeddingTest {
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
                 .body(mapper.writeValueAsString(request))
-                .response("""
-                        {
-                            "model_id": "%s",
-                            "results": [
-                              {
-                                "embedding": [
-                                  -0.006929283,
-                                  -0.005336422,
-                                  -0.024047505
-                                ]
-                              }
-                            ],
-                            "created_at": "2024-02-21T17:32:28Z",
-                            "input_token_count": 10
-                        }
-                        """.formatted(WireMockUtil.DEFAULT_EMBEDDING_MODEL))
+                .response(WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API)
                 .build();
 
         return List.of(-0.006929283f, -0.005336422f, -0.024047505f);

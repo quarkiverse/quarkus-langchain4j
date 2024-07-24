@@ -12,6 +12,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -39,7 +40,7 @@ public class AiChatServiceTest {
     LangChain4jWatsonxConfig langchain4jWatsonConfig;
 
     @Inject
-    ChatLanguageModel model;
+    ChatLanguageModel chatModel;
 
     static WireMockUtil mockServers;
 
@@ -68,6 +69,12 @@ public class AiChatServiceTest {
     static void afterAll() {
         watsonxServer.stop();
         iamServer.stop();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        watsonxServer.resetAll();
+        iamServer.resetAll();
     }
 
     @RegisterAiService
@@ -109,21 +116,7 @@ public class AiChatServiceTest {
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
-                .response("""
-                            {
-                                "model_id": "meta-llama/llama-2-70b-chat",
-                                "created_at": "2024-01-21T17:06:14.052Z",
-                                "results": [
-                                    {
-                                        "generated_text": "AI Response",
-                                        "generated_token_count": 5,
-                                        "input_token_count": 50,
-                                        "stop_reason": "eos_token",
-                                        "seed": 2123876088
-                                    }
-                                ]
-                            }
-                        """)
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
                 .build();
 
         assertEquals("AI Response", service.chat("Hello"));

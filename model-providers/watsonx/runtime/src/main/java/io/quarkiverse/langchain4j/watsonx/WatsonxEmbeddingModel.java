@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -34,11 +33,9 @@ public class WatsonxEmbeddingModel extends WatsonxModel implements EmbeddingMode
 
         EmbeddingRequest request = new EmbeddingRequest(modelId, projectId, inputs);
         EmbeddingResponse result = retryOn(new Callable<EmbeddingResponse>() {
-
             @Override
             public EmbeddingResponse call() throws Exception {
-                var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.embeddings(request, token, version);
+                return client.embeddings(request, version);
             }
         });
 
@@ -57,12 +54,10 @@ public class WatsonxEmbeddingModel extends WatsonxModel implements EmbeddingMode
             return 0;
 
         var request = new TokenizationRequest(modelId, text, projectId);
-
         return retryOn(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.tokenization(request, token, version).result().tokenCount();
+                return client.tokenization(request, version).result().tokenCount();
             }
         });
     }

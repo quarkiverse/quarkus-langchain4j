@@ -5,15 +5,20 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.ws.rs.core.MediaType;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
+
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.output.Response;
 
 public class WireMockUtil {
 
@@ -35,14 +40,7 @@ public class WireMockUtil {
     public static final String VERSION = "2024-03-14";
     public static final String DEFAULT_CHAT_MODEL = "ibm/granite-20b-multilingual";
     public static final String DEFAULT_EMBEDDING_MODEL = "ibm/slate-125m-english-rtrvr";
-
-    // ------- SCENARIO -------
-    final String ERROR_401_TOKEN_EXPIRED = "ERROR_401_TOKEN_EXPIRED";
-    final String GENERATE_TOKEN = "GENERATE_TOKEN";
-    final String ERROR = "ERROR";
-    // ------------------------
-
-    private static final String IAM_200_RESPONSE = """
+    public static final String IAM_200_RESPONSE = """
             {
                 "access_token": "%s",
                 "refresh_token": "not_supported",
@@ -52,6 +50,88 @@ public class WireMockUtil {
                 "scope": "ibm openid"
             }
             """;
+    public static String RESPONSE_WATSONX_CHAT_API = """
+            {
+                "model_id": "meta-llama/llama-2-70b-chat",
+                "created_at": "2024-01-21T17:06:14.052Z",
+                "results": [
+                    {
+                        "generated_text": "AI Response",
+                        "generated_token_count": 5,
+                        "input_token_count": 50,
+                        "stop_reason": "eos_token",
+                        "seed": 2123876088
+                    }
+                ]
+            }
+            """;
+
+    public static String RESPONSE_WATSONX_EMBEDDING_API = """
+            {
+                "model_id": "%s",
+                "results": [
+                  {
+                    "embedding": [
+                      -0.006929283,
+                      -0.005336422,
+                      -0.024047505
+                    ]
+                  }
+                ],
+                "created_at": "2024-02-21T17:32:28Z",
+                "input_token_count": 10
+            }
+            """;
+    public static String RESPONSE_WATSONX_STREAMING_API = """
+            id: 1
+            event: message
+            data: {}
+
+            id: 2
+            event: message
+            data: {"modelId":"ibm/granite-13b-chat-v2","model_version":"2.1.0","created_at":"2024-05-04T14:29:19.162Z","results":[{"generated_text":"","generated_token_count":0,"input_token_count":2,"stop_reason":"not_finished"}]}
+
+            id: 3
+            event: message
+            data: {"model_id":"ibm/granite-13b-chat-v2","model_version":"2.1.0","created_at":"2024-05-04T14:29:19.203Z","results":[{"generated_text":". ","generated_token_count":2,"input_token_count":0,"stop_reason":"not_finished"}]}
+
+            id: 4
+            event: message
+            data: {"model_id":"ibm/granite-13b-chat-v2","model_version":"2.1.0","created_at":"2024-05-04T14:29:19.223Z","results":[{"generated_text":"I'","generated_token_count":3,"input_token_count":0,"stop_reason":"not_finished"}]}
+
+            id: 5
+            event: message
+            data: {"model_id":"ibm/granite-13b-chat-v2","model_version":"2.1.0","created_at":"2024-05-04T14:29:19.243Z","results":[{"generated_text":"m ","generated_token_count":4,"input_token_count":0,"stop_reason":"not_finished"}]}
+
+            id: 6
+            event: message
+            data: {"model_id":"ibm/granite-13b-chat-v2","model_version":"2.1.0","created_at":"2024-05-04T14:29:19.262Z","results":[{"generated_text":"a beginner","generated_token_count":5,"input_token_count":0,"stop_reason":"max_tokens"}]}
+
+            id: 7
+            event: close
+            data: {}
+            """;
+    public static final String RESPONSE_WATSONX_TOKENIZER_API = """
+              {
+              "model_id": "%s",
+              "result": {
+                "token_count": 11,
+                "tokens": [
+                  "Write",
+                  "a",
+                  "tag",
+                  "line",
+                  "for",
+                  "an",
+                  "alumni",
+                  "associ",
+                  "ation:",
+                  "Together",
+                  "we"
+                ]
+              }
+            }
+            """;
 
     WireMockServer iamServer;
     WireMockServer watsonServer;
@@ -59,124 +139,6 @@ public class WireMockUtil {
     public WireMockUtil(WireMockServer watsonServer, WireMockServer iamServer) {
         this.watsonServer = watsonServer;
         this.iamServer = iamServer;
-    }
-
-    public void scenario_401_with_retry_token_expired(String finalReponse, String finalToken) {
-
-        //
-        // The first call to the IAMServer will return correctly a token, but it is
-        // expired.
-        //
-        new IAMBuilder(iamServer, 200)
-                .scenario(Scenario.STARTED, GENERATE_TOKEN)
-                .response("tokenExpired", new Date())
-                .build();
-
-        //
-        // The second call to the watsonServer will return an error message 401 -
-        // authentication_token_expired
-        //
-        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 401)
-                .scenario(Scenario.STARTED, ERROR_401_TOKEN_EXPIRED)
-                .token("tokenExpired")
-                .response("""
-                            {
-                                "errors": [
-                                    {
-                                        "code": "authentication_token_expired",
-                                        "message": "Failed to authenticate the request due to an expired token"
-                                    }
-                                ],
-                                "trace": "94d47ee87c07c8d7913b4566bd9336ea",
-                                "status_code": 401
-                            }
-                        """)
-                .build();
-
-        //
-        // The third call to the IAMServer will return correctly a token, which will
-        // expire in an hour.
-        //
-        new IAMBuilder(iamServer, 200)
-                .scenario(GENERATE_TOKEN, ERROR)
-                .response(finalToken, new Date())
-                .build();
-
-        //
-        // The last call to the watsonServer will return correctly a response.
-        //
-        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 200)
-                .scenario(ERROR_401_TOKEN_EXPIRED, ERROR)
-                .token(BEARER_TOKEN)
-                .response("""
-                            {
-                                "model_id": "meta-llama/llama-2-70b-chat",
-                                "created_at": "2024-01-19T20:30:14.326Z",
-                                "results": [
-                                    {
-                                            "generated_text": "I'm an AI",
-                                            "generated_token_count": 5,
-                                            "input_token_count": 50,
-                                            "stop_reason": "eos_token",
-                                            "seed": 3058414515
-                                    }
-                                ]
-                            }
-                        """)
-                .build();
-
-        // This shouldn't be happen.
-        new IAMBuilder(iamServer, 500)
-                .scenario(ERROR, Scenario.STARTED)
-                .build();
-
-        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 500)
-                .scenario(ERROR, Scenario.STARTED)
-                .build();
-    }
-
-    public void error_401_authorization_rejected() {
-
-        //
-        // The first call to the IAMServer will return correctly wrong token
-        //
-        new IAMBuilder(iamServer, 200)
-                .scenario(Scenario.STARTED, GENERATE_TOKEN)
-                .response("tokenNotCorrect", new Date())
-                .build();
-
-        //
-        // The second call to the watsonServer will return an error message 401 -
-        // authentication_token_expired
-        //
-        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 401)
-                .scenario(Scenario.STARTED, ERROR_401_TOKEN_EXPIRED)
-                .token("tokenNotCorrect")
-                .response(
-                        """
-                                    {
-                                        "trace": "87c3e3f0d4473ebdd2dcf5a755634e33",
-                                        "errors": [{
-                                          "code": "authorization_rejected",
-                                          "message": "Expected token [xxxxxx] to be composed of 2 or 3 parts separated by dots.",
-                                          "target": {
-                                            "type": "header",
-                                            "name": "Authorization"
-                                          }
-                                        }],
-                                        "status_code": "401"
-                                      }
-                                """)
-                .build();
-
-        // This shouldn't be happen.
-        new IAMBuilder(iamServer, 500)
-                .scenario(ERROR, Scenario.STARTED)
-                .build();
-
-        new WatsonxBuilder(watsonServer, URL_WATSONX_CHAT_API, 500)
-                .scenario(ERROR, Scenario.STARTED)
-                .build();
     }
 
     public IAMBuilder mockIAMBuilder(int status) {
@@ -189,6 +151,24 @@ public class WireMockUtil {
 
     public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status, String version) {
         return new WatsonxBuilder(watsonServer, apiURL, status, version);
+    }
+
+    public static StreamingResponseHandler<AiMessage> streamingResponseHandler(AtomicReference<AiMessage> streamingResponse) {
+        return new StreamingResponseHandler<>() {
+            @Override
+            public void onNext(String token) {
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fail("Streaming failed: %s".formatted(error.getMessage()), error);
+            }
+
+            @Override
+            public void onComplete(Response<AiMessage> response) {
+                streamingResponse.set(response.content());
+            }
+        };
     }
 
     public static class WatsonxBuilder {

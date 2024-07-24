@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -50,11 +49,9 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
 
         Result result = retryOn(new Callable<TextGenerationResponse>() {
-
             @Override
             public TextGenerationResponse call() throws Exception {
-                var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.chat(request, token, version);
+                return client.chat(request, version);
             }
         }).results().get(0);
 
@@ -76,8 +73,7 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
         return retryOn(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                var token = generateBearerToken().await().atMost(Duration.ofSeconds(10));
-                return client.tokenization(request, token, version).result().tokenCount();
+                return client.tokenization(request, version).result().tokenCount();
             }
         });
     }
