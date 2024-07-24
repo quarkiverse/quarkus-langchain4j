@@ -1,17 +1,18 @@
 package io.quarkiverse.langchain4j.test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.data.AiStatsMessage;
 import io.quarkiverse.langchain4j.runtime.aiservice.VariableHandler;
 import io.quarkus.test.QuarkusUnitTest;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class VariableHandlerTest {
 
