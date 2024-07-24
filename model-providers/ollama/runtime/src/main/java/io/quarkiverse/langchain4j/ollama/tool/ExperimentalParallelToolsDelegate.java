@@ -35,7 +35,7 @@ public class ExperimentalParallelToolsDelegate implements ChatLanguageModel {
     static final PromptTemplate DEFAULT_SYSTEM_TEMPLATE = PromptTemplate
             .from("""
                     {{context}}
-                    
+
                     You are a helpful assistant with tool calling capabilities.
 
                     Given the following functions, please respond with a JSON containing "actions" and required "conclusion" fields:
