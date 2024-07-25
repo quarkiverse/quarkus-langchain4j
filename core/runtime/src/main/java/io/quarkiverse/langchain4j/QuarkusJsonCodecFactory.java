@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -31,8 +33,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     private static class Codec implements Json.JsonCodec {
 
-        private static final String JSON_START_MARKER = "```json\n";
-        private static final String JSON_END_MARKER = "\n```";
+        private static final Pattern sanitizePattern = Pattern.compile("(\\\\n)*```(json)?(\\\\n)*");
 
         @Override
         public String toJson(Object o) {
@@ -63,8 +64,10 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             if (String.class.equals(type)) {
                 return original;
             }
-            if (original.startsWith(JSON_START_MARKER) && original.endsWith(JSON_END_MARKER)) {
-                return original.substring(JSON_START_MARKER.length(), original.length() - JSON_END_MARKER.length());
+
+            Matcher matcher = sanitizePattern.matcher(original);
+            if (matcher.find()) {
+                return matcher.replaceAll("");
             }
             return original;
         }
