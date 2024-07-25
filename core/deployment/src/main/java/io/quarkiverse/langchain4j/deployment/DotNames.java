@@ -36,6 +36,7 @@ public class DotNames {
     public static final DotName SET = DotName.createSimple(Set.class);
 
     public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
+    public static final DotName RECORD = DotName.createSimple(Record.class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);

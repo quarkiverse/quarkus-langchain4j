@@ -4,8 +4,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
-import dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel;
 
 @Path("/in-process-embedding")
 public class InProcessEmbeddingResource {

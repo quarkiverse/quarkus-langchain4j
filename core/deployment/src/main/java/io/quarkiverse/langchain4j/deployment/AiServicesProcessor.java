@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.deployment;
 
 import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
-import static dev.langchain4j.service.ServiceOutputParser.outputFormatInstructions;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
@@ -52,6 +51,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
+import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
@@ -133,6 +133,9 @@ public class AiServicesProcessor {
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
+
+    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new ServiceOutputParser(); // TODO: this might need to be improved
+    public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -722,7 +725,8 @@ public class AiServicesProcessor {
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
-                        AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, addMicrometerMetrics,
+                        AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, index,
+                                addMicrometerMetrics,
                                 addOpenTelemetrySpan, config.responseSchema());
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
@@ -867,26 +871,25 @@ public class AiServicesProcessor {
         }
     }
 
-    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, boolean addMicrometerMetrics,
+    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema) {
         if (method.returnType().kind() == Type.Kind.VOID) {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
-        Class<?> returnType = JandexUtil.load(method.returnType(), Thread.currentThread().getContextClassLoader());
+        java.lang.reflect.Type returnType = javaLangReturnType(method);
 
         List<MethodParameterInfo> params = method.parameters();
 
         // TODO give user ability to provide custom OutputParser
         String outputFormatInstructions = "";
         if (generateResponseSchema && !returnType.equals(Multi.class))
-            outputFormatInstructions = outputFormatInstructions(returnType);
+            outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
 
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
-        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
-                returnType);
+        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
@@ -913,7 +916,27 @@ public class AiServicesProcessor {
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnType, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
+                returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
+    }
+
+    private java.lang.reflect.Type javaLangReturnType(MethodInfo method) {
+        try {
+            Class<?> declaringClass = Class.forName(method.declaringClass().name().toString(), false,
+                    Thread.currentThread().getContextClassLoader());
+            List<Class<?>> methodParamTypes = new ArrayList<>(method.parametersCount());
+            for (Type methodParamType : method.parameterTypes()) {
+                methodParamTypes.add(JandexUtil.load(methodParamType, Thread.currentThread().getContextClassLoader()));
+            }
+            return declaringClass.getDeclaredMethod(method.name(), methodParamTypes.toArray(EMPTY_CLASS_ARRAY))
+                    .getGenericReturnType();
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private String returnTypeSignature(Type returnType, TypeArgMapper typeArgMapper) {
+        return AsmUtil.getSignature(returnType, typeArgMapper);
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
@@ -997,7 +1020,7 @@ public class AiServicesProcessor {
     }
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
-            List<TemplateParameterInfo> templateParams, Class<?> returnType) {
+            List<TemplateParameterInfo> templateParams) {
 
         Optional<Integer> userNameParamName = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();

@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.model.embedding.AbstractInProcessEmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.AbstractInProcessEmbeddingModel;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 

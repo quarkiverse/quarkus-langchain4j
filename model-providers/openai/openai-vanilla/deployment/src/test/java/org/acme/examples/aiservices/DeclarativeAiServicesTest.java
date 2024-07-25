@@ -148,7 +148,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(sentiment).isEqualTo(Sentiment.POSITIVE);
 
         assertSingleRequestMessage(getRequestAsMap(),
-                "Analyze sentiment of This LaptopPro X15 is wicked fast and that 4K screen is a dream.\nYou must answer strictly in the following format: one of [POSITIVE, NEUTRAL, NEGATIVE]");
+                "Analyze sentiment of This LaptopPro X15 is wicked fast and that 4K screen is a dream.\nYou must answer strictly with one of these enums:\nPOSITIVE\nNEUTRAL\nNEGATIVE");
     }
 
     @Singleton

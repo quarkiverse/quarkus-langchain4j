@@ -30,10 +30,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
     @BuildStep
     InProcessEmbeddingBuildItem all_minilm_l6_v2_q() {
-        if (QuarkusClassLoader
-                .isClassPresentAtRuntime("dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("all-minilm-l6-v2-q",
-                    "dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("all-minilm-l6-v2-q", className,
                     "all-minilm-l6-v2-q.onnx", "tokenizer.json");
         } else {
             return null;
@@ -43,9 +42,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
     @BuildStep
     InProcessEmbeddingBuildItem all_minilm_l6_v2() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("all-minilm-l6-v2",
-                    "dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("all-minilm-l6-v2", className,
                     "all-minilm-l6-v2.onnx", "tokenizer.json");
         } else {
             return null;
@@ -55,9 +54,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant
     @BuildStep
     InProcessEmbeddingBuildItem bge_small_en_q() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("bge-small-en-q",
-                    "dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("bge-small-en-q", className,
                     "bge-small-en-q.onnx", "tokenizer.json");
         } else {
             return null;
@@ -67,8 +66,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/BAAI/bge-small-en-v1.5
     @BuildStep
     InProcessEmbeddingBuildItem bge_small_en() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("bge-small-en", "dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.bgesmallen.BgeSmallEnEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("bge-small-en", className,
                     "bge-small-en.onnx", "tokenizer.json");
         } else {
             return null;
@@ -77,9 +77,9 @@ public class InProcessEmbeddingProcessor {
 
     @BuildStep
     InProcessEmbeddingBuildItem bge_small_zh_q() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("bge-small-zh-q",
-                    "dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.bgesmallzhq.BgeSmallZhQuantizedEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("bge-small-zh-q", className,
                     "bge-small-zh-q.onnx", "tokenizer.json");
         } else {
             return null;
@@ -89,8 +89,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/BAAI/bge-small-zh
     @BuildStep
     InProcessEmbeddingBuildItem bge_small_zh() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("bge-small-zh", "dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.bgesmallzh.BgeSmallZhEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("bge-small-zh", className,
                     "bge-small-zh.onnx", "tokenizer.json");
         } else {
             return null;
@@ -100,9 +101,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/intfloat/e5-small-v2
     @BuildStep
     InProcessEmbeddingBuildItem e5_small_v2_q() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("e5-small-v2-q",
-                    "dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.e5smallv2q.E5SmallV2QuantizedEmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("e5-small-v2-q", className,
                     "e5-small-v2-q.onnx", "tokenizer.json");
         } else {
             return null;
@@ -112,8 +113,9 @@ public class InProcessEmbeddingProcessor {
     // https://huggingface.co/intfloat/e5-small-v2
     @BuildStep
     InProcessEmbeddingBuildItem e5_small_v2() {
-        if (QuarkusClassLoader.isClassPresentAtRuntime("dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel")) {
-            return new InProcessEmbeddingBuildItem("e5-small-v2", "dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel",
+        String className = "dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel";
+        if (QuarkusClassLoader.isClassPresentAtRuntime(className)) {
+            return new InProcessEmbeddingBuildItem("e5-small-v2", className,
                     "e5-small-v2.onnx", "tokenizer.json");
         } else {
             return null;
