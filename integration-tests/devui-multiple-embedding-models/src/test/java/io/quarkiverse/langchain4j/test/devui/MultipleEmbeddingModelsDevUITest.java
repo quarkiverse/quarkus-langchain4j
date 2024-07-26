@@ -25,7 +25,8 @@ public class MultipleEmbeddingModelsDevUITest extends DevUIJsonRPCTest {
                     .addAsResource(new StringAsset(
                             "quarkus.langchain4j.model1.embedding-model.provider=openai\n" +
                                     "quarkus.langchain4j.embedding-model.provider=" +
-                                    "dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel\n" +
+                                    "dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel\n"
+                                    +
                                     "quarkus.langchain4j.openai.model1.api-key=WRONG\n" +
                                     "quarkus.langchain4j.openai.model1.base-url=http://blabla\n"),
                             "application.properties"));

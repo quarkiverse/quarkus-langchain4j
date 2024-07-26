@@ -4,8 +4,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
-import dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel;
 
 @Path("/in-process-embedding")
 public class InProcessEmbeddingResource {

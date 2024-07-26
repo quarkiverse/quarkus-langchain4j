@@ -11,8 +11,8 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.internal.Json;
+import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 

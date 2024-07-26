@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -30,6 +29,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.Metadata;
+import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatMessagePojo;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatResultPojo;

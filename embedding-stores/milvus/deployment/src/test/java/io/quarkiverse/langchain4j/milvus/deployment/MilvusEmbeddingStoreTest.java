@@ -9,8 +9,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreWithoutMetadataIT;
 import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;

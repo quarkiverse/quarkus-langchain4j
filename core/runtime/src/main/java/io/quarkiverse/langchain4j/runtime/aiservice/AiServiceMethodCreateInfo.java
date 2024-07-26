@@ -1,14 +1,18 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
-import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
+import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.runtime.annotations.RecordableConstructor;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
@@ -19,7 +23,8 @@ public final class AiServiceMethodCreateInfo {
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
     private final boolean requiresModeration;
-    private final Class<?> returnType;
+    private final String returnTypeSignature; // transient so bytecode recording ignores it
+    private final transient LazyValue<Type> returnTypeVal; // transient so bytecode recording ignores it
     private final Optional<MetricsTimedInfo> metricsTimedInfo;
     private final Optional<MetricsCountedInfo> metricsCountedInfo;
     private final Optional<SpanInfo> spanInfo;
@@ -37,7 +42,7 @@ public final class AiServiceMethodCreateInfo {
             UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
             boolean requiresModeration,
-            Class<?> returnType,
+            String returnTypeSignature,
             Optional<MetricsTimedInfo> metricsTimedInfo,
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
@@ -49,7 +54,13 @@ public final class AiServiceMethodCreateInfo {
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
         this.requiresModeration = requiresModeration;
-        this.returnType = returnType;
+        this.returnTypeSignature = returnTypeSignature;
+        this.returnTypeVal = new LazyValue<>(new Supplier<>() {
+            @Override
+            public Type get() {
+                return TypeSignatureParser.parse(returnTypeSignature);
+            }
+        });
         this.metricsTimedInfo = metricsTimedInfo;
         this.metricsCountedInfo = metricsCountedInfo;
         this.spanInfo = spanInfo;
@@ -81,8 +92,12 @@ public final class AiServiceMethodCreateInfo {
         return requiresModeration;
     }
 
-    public Class<?> getReturnType() {
-        return returnType;
+    public String getReturnTypeSignature() {
+        return returnTypeSignature;
+    }
+
+    public Type getReturnType() {
+        return returnTypeVal.get();
     }
 
     public Optional<MetricsTimedInfo> getMetricsTimedInfo() {

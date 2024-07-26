@@ -4,10 +4,10 @@ import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
-import static dev.langchain4j.service.ServiceOutputParser.parse;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +25,6 @@ import java.util.function.Function;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolExecutor;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -45,6 +44,8 @@ import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -62,6 +63,8 @@ public class AiServiceMethodImplementationSupport {
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
+
+    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new ServiceOutputParser(); // TODO: this might need to be improved
 
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
@@ -156,7 +159,7 @@ public class AiServiceMethodImplementationSupport {
             messagesToSend.add(userMessage);
         }
 
-        Class<?> returnType = methodCreateInfo.getReturnType();
+        Type returnType = methodCreateInfo.getReturnType();
         if (returnType.equals(TokenStream.class)) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             return new AiServiceTokenStream(messagesToSend, context, memoryId);
@@ -251,7 +254,7 @@ public class AiServiceMethodImplementationSupport {
         chatMemory.commit();
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
-        return parse(response, returnType);
+        return SERVICE_OUTPUT_PARSER.parse(response, returnType);
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
