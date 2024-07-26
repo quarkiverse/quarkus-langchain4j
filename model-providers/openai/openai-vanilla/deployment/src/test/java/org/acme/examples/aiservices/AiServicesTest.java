@@ -9,10 +9,10 @@ import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
-import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static java.time.Month.JULY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -294,22 +295,36 @@ public class AiServicesTest extends OpenAiBaseTest {
 
     @Test
     void test_create_recipe_from_list_of_ingredients() throws IOException {
-        setChatCompletionMessageContent(
-                // this is supposed to be a string inside a json string hence all the escaping...
-                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```");
-        Chef chef = AiServices.create(Chef.class, createChatModel());
+        // this is supposed to be strings inside a json string hence all the escaping...
+        Stream.of(
+                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```",
+                "```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n```",
+                "```json\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n",
+                "```\\n{\\n\\\"title\\\": \\\"Greek Salad\\\",\\n\\\"description\\\": \\\"A refreshing and tangy salad with Mediterranean flavors.\\\",\\n\\\"steps\\\": [\\n\\\"Chop, dice, and slice.\\\",\\n\\\"Mix veggies with feta.\\\",\\n\\\"Drizzle with olive oil.\\\",\\n\\\"Toss gently, then serve.\\\"\\n],\\n\\\"preparationTimeMinutes\\\": 15\\n}\\n")
+                .forEach(value -> {
 
-        Recipe result = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
+                    resetRequests();
+                    resetMappings();
 
-        assertThat(result.title).isNotBlank();
-        assertThat(result.description).isNotBlank();
-        assertThat(result.steps).isNotEmpty();
-        assertThat(result.preparationTimeMinutes).isPositive();
+                    setChatCompletionMessageContent(value);
+                    Chef chef = AiServices.create(Chef.class, createChatModel());
 
-        assertSingleRequestMessage(getRequestAsMap(),
-                "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
-                        +
-                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
+                    Recipe result = chef.createRecipeFrom("cucumber", "tomato", "feta", "onion", "olives");
+
+                    assertThat(result.title).isNotBlank();
+                    assertThat(result.description).isNotBlank();
+                    assertThat(result.steps).isNotEmpty();
+                    assertThat(result.preparationTimeMinutes).isPositive();
+
+                    try {
+                        assertSingleRequestMessage(getRequestAsMap(),
+                                "Create recipe using only [cucumber, tomato, feta, onion, olives]\nYou must answer strictly in the following JSON format: "
+                                        +
+                                        "{\n\"title\": (type: string),\n\"description\": (type: string),\n\"steps\": (each step should be described in 4 words, steps should rhyme; type: array of string),\n\"preparationTimeMinutes\": (type: integer)\n}");
+                    } catch (IOException e) {
+                        fail("Should never happen");
+                    }
+                });
     }
 
     @Test
