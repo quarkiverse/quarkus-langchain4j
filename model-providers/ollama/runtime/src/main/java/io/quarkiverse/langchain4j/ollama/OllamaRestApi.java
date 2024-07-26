@@ -28,6 +28,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
@@ -210,7 +211,12 @@ public interface OllamaRestApi {
             if (body == null) {
                 return "";
             }
-            return body.toString();
+            String rawBody = body.toString();
+            try {
+                return QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER.readTree(rawBody).toPrettyString();
+            } catch (JsonProcessingException ignored) {
+                return rawBody;
+            }
         }
 
         private String inOneLine(MultiMap headers) {
