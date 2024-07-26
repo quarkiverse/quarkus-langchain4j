@@ -1,16 +1,25 @@
 package io.quarkiverse.langchain4j.ollama;
 
+import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
 import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
+import static io.quarkiverse.langchain4j.ollama.MessageMapper.toTools;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
@@ -32,20 +41,56 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages) {
+        return generate(messages, Collections.emptyList());
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+        return generate(messages,
+                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         ensureNotEmpty(messages, "messages");
 
         ChatRequest request = ChatRequest.builder()
                 .model(model)
                 .messages(toOllamaMessages(messages))
+                .tools(toTools(toolSpecifications))
                 .options(options)
                 .format(format)
                 .stream(false)
                 .build();
 
         ChatResponse response = client.chat(request);
-        return Response.from(
-                AiMessage.from(response.message().content()),
-                new TokenUsage(response.promptEvalCount(), response.evalCount()));
+
+        List<ToolCall> toolCalls = response.message().toolCalls();
+        if ((toolCalls == null) || toolCalls.isEmpty()) {
+            return Response.from(
+                    AiMessage.from(response.message().content()),
+                    new TokenUsage(response.promptEvalCount(), response.evalCount()));
+        } else {
+            try {
+                List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>(toolCalls.size());
+                for (ToolCall toolCall : toolCalls) {
+                    ToolCall.FunctionCall functionCall = toolCall.function();
+
+                    // TODO: we need to update LangChain4j to make ToolExecutionRequest use a map instead of a String
+                    String argumentsStr = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                            .writeValueAsString(functionCall.arguments());
+                    toolExecutionRequests.add(ToolExecutionRequest.builder()
+                            .name(functionCall.name())
+                            .arguments(argumentsStr)
+                            .build());
+                }
+
+                return Response.from(aiMessage(toolExecutionRequests),
+                        new TokenUsage(response.promptEvalCount(), response.evalCount()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Unable to parse tool call response", e);
+            }
+        }
     }
 
     public static final class Builder {

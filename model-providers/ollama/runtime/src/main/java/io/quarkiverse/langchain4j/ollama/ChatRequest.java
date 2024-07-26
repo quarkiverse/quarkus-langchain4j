@@ -2,7 +2,8 @@ package io.quarkiverse.langchain4j.ollama;
 
 import java.util.List;
 
-public record ChatRequest(String model, List<Message> messages, Options options, String format, Boolean stream) {
+public record ChatRequest(String model, List<Message> messages, List<Tool> tools, Options options, String format,
+        Boolean stream) {
 
     public static Builder builder() {
         return new Builder();
@@ -11,6 +12,7 @@ public record ChatRequest(String model, List<Message> messages, Options options,
     public static class Builder {
         private String model;
         private List<Message> messages;
+        private List<Tool> tools;
         private Options options;
         private String format;
         private Boolean stream;
@@ -22,6 +24,11 @@ public record ChatRequest(String model, List<Message> messages, Options options,
 
         public Builder messages(List<Message> messages) {
             this.messages = messages;
+            return this;
+        }
+
+        public Builder tools(List<Tool> tools) {
+            this.tools = tools;
             return this;
         }
 
@@ -50,7 +57,7 @@ public record ChatRequest(String model, List<Message> messages, Options options,
         }
 
         public ChatRequest build() {
-            return new ChatRequest(model, messages, options, format, stream);
+            return new ChatRequest(model, messages, tools, options, format, stream);
         }
     }
 
