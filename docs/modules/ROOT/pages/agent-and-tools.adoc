@@ -85,9 +85,9 @@ When employing tools, configuring the memory provider is necessary. Since tools 
 
 [TIP]
 ====
-If a method of an AI Service needs to use tools other than the ones configured of the `tools` property of `@RegisterForReflection`, then that method can be annotated with `@Toolbox`.
+If a method of an AI Service needs to use tools other than the ones configured of the `tools` property of `@RegisterAiService`, then that method can be annotated with `@Toolbox`.
 
-In this case  `@Toolbox` completely overrides `@RegisterForReflection(tools=...)`
+In this case  `@Toolbox` completely overrides `@RegisterAiService(tools=...)`
 ====
 
 == How do tools work?
