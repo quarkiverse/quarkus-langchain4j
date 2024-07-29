@@ -58,6 +58,7 @@ import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.RequestScopeStateDefaultMemoryIdProvider;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
@@ -134,7 +135,7 @@ public class AiServicesProcessor {
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
-    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new ServiceOutputParser(); // TODO: this might need to be improved
+    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
     public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
 
     @BuildStep
@@ -873,9 +874,7 @@ public class AiServicesProcessor {
 
     private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema) {
-        if (method.returnType().kind() == Type.Kind.VOID) {
-            throw illegalConfiguration("Return type of method '%s' cannot be void", method);
-        }
+        validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
         java.lang.reflect.Type returnType = javaLangReturnType(method);
@@ -918,6 +917,18 @@ public class AiServicesProcessor {
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
+    }
+
+    private void validateReturnType(MethodInfo method) {
+        Type returnType = method.returnType();
+        Type.Kind returnTypeKind = returnType.kind();
+        if (returnTypeKind == Type.Kind.VOID) {
+            throw illegalConfiguration("Return type of method '%s' cannot be void", method);
+        }
+        if ((returnTypeKind != Type.Kind.CLASS) && (returnTypeKind != Type.Kind.PARAMETERIZED_TYPE)) {
+            throw illegalConfiguration("Unsupported type of method '%s", method);
+        }
+
     }
 
     private java.lang.reflect.Type javaLangReturnType(MethodInfo method) {
