@@ -67,6 +67,7 @@ class PgVectorEmbeddingStoreProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
                 .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .createWith(recorder.embeddingStoreFunction(config, buildTimeConfig.datasource().orElse(null)))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)

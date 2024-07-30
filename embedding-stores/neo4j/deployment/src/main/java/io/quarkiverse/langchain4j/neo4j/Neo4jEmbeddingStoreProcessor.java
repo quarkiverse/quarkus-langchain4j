@@ -48,7 +48,7 @@ public class Neo4jEmbeddingStoreProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .defaultBean()
                 .setRuntimeInit()
-                .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(Driver.class)))
                 .createWith(recorder.embeddingStoreFunction(config))

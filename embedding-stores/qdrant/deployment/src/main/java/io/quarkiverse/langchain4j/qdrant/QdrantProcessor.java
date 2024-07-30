@@ -44,7 +44,7 @@ public class QdrantProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .defaultBean()
                 .setRuntimeInit()
-                .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .supplier(recorder.qdrantStoreSupplier(config))
                 .done());

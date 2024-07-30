@@ -172,9 +172,12 @@ public class BeansProcessor {
         }
         // If the Easy RAG extension requested to automatically generate an embedding model...
         if (requestEmbeddingModels.isEmpty() && autoCreateEmbeddingModelBuildItem.isPresent()) {
+            // in case multiple embedding model providers are available,
+            // the user has to specify `quarkus.langchain4j.embedding-model.provider` to choose one
+            Optional<String> userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
             String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
-                    Optional.empty(), "EmbeddingModel", "embedding-model");
+                    userSelectedProvider, "EmbeddingModel", "embedding-model");
             selectedEmbeddingProducer
                     .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
         }

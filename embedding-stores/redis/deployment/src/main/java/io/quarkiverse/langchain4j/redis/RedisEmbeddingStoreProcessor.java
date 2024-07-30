@@ -63,6 +63,7 @@ public class RedisEmbeddingStoreProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
                 .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
                         redisClientQualifier)

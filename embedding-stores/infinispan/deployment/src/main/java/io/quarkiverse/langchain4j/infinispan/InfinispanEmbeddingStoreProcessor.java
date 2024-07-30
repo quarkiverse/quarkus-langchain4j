@@ -67,6 +67,7 @@ public class InfinispanEmbeddingStoreProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
                 .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(RemoteCacheManager.class)),
                         infinispanClientQualifier)
