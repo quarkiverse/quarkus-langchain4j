@@ -7,6 +7,7 @@ import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,10 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Flow;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -31,6 +35,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -49,6 +54,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
@@ -64,7 +70,7 @@ public class AiServiceMethodImplementationSupport {
     private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
-    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new ServiceOutputParser(); // TODO: this might need to be improved
+    private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
 
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
@@ -125,16 +131,59 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
-
+        Type returnType = methodCreateInfo.getReturnType();
         AugmentationResult augmentationResult;
-        if (context.retrievalAugmentor != null) { // TODO extract method/class
+
+        if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
                     : null;
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
-            augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
-            userMessage = (UserMessage) augmentationResult.chatMessage();
+
+            if (!isMulti(returnType)) {
+                augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+                userMessage = (UserMessage) augmentationResult.chatMessage();
+            } else {
+                // this a special case where we can't block, so we need to delegate the retrieval augmentation to a worker pool
+                CompletableFuture<AugmentationResult> augmentationResultCF = CompletableFuture.supplyAsync(new Supplier<>() {
+                    @Override
+                    public AugmentationResult get() {
+                        return context.retrievalAugmentor.augment(augmentationRequest);
+                    }
+                }, Infrastructure.getDefaultWorkerPool());
+
+                return Multi.createFrom().completionStage(augmentationResultCF).flatMap(
+                        new Function<>() {
+                            @Override
+                            public Flow.Publisher<?> apply(AugmentationResult ar) {
+                                ChatMessage augmentedUserMessage = ar.chatMessage();
+                                List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage);
+
+                                return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, context, memoryId));
+                            }
+
+                            private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage) {
+                                List<ChatMessage> messagesToSend;
+                                ChatMemory chatMemory;
+                                if (context.hasChatMemory()) {
+                                    chatMemory = context.chatMemory(memoryId);
+                                    if (systemMessage.isPresent()) {
+                                        chatMemory.add(systemMessage.get());
+                                    }
+                                    chatMemory.add(augmentedUserMessage);
+                                    messagesToSend = chatMemory.messages();
+                                } else {
+                                    messagesToSend = new ArrayList<>();
+                                    if (systemMessage.isPresent()) {
+                                        messagesToSend.add(systemMessage.get());
+                                    }
+                                    messagesToSend.add(augmentedUserMessage);
+                                }
+                                return messagesToSend;
+                            }
+                        });
+            }
         }
 
         CommittableChatMemory chatMemory;
@@ -159,29 +208,14 @@ public class AiServiceMethodImplementationSupport {
             messagesToSend.add(userMessage);
         }
 
-        Type returnType = methodCreateInfo.getReturnType();
-        if (returnType.equals(TokenStream.class)) {
+        if (isTokenStream(returnType)) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             return new AiServiceTokenStream(messagesToSend, context, memoryId);
         }
 
-        if (returnType.equals(Multi.class)) {
+        if (isMulti(returnType)) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            return Multi.createFrom().emitter(new Consumer<MultiEmitter<? super String>>() {
-                @Override
-                public void accept(MultiEmitter<? super String> em) {
-                    new AiServiceTokenStream(messagesToSend, context, memoryId)
-                            .onNext(em::emit)
-                            .onComplete(new Consumer<>() {
-                                @Override
-                                public void accept(Response<AiMessage> message) {
-                                    em.complete();
-                                }
-                            })
-                            .onError(em::fail)
-                            .start();
-                }
-            });
+            return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, context, memoryId));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
@@ -255,6 +289,24 @@ public class AiServiceMethodImplementationSupport {
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
         return SERVICE_OUTPUT_PARSER.parse(response, returnType);
+    }
+
+    private static boolean isTokenStream(Type returnType) {
+        return isTypeOf(returnType, TokenStream.class);
+    }
+
+    private static boolean isMulti(Type returnType) {
+        return isTypeOf(returnType, Multi.class);
+    }
+
+    private static boolean isTypeOf(Type type, Class<?> clazz) {
+        if (type instanceof Class<?>) {
+            return type.equals(clazz);
+        }
+        if (type instanceof ParameterizedType pt) {
+            return isTypeOf(pt.getRawType(), clazz);
+        }
+        throw new IllegalStateException("Unsupported return type " + type);
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
@@ -436,5 +488,32 @@ public class AiServiceMethodImplementationSupport {
     public interface Wrapper {
 
         Object wrap(Input input, Function<Input, Object> fun);
+    }
+
+    private static class MultiEmitterConsumer implements Consumer<MultiEmitter<? super String>> {
+        private final List<ChatMessage> messagesToSend;
+        private final QuarkusAiServiceContext context;
+        private final Object memoryId;
+
+        public MultiEmitterConsumer(List<ChatMessage> messagesToSend, QuarkusAiServiceContext context,
+                Object memoryId) {
+            this.messagesToSend = messagesToSend;
+            this.context = context;
+            this.memoryId = memoryId;
+        }
+
+        @Override
+        public void accept(MultiEmitter<? super String> em) {
+            new AiServiceTokenStream(messagesToSend, context, memoryId)
+                    .onNext(em::emit)
+                    .onComplete(new Consumer<>() {
+                        @Override
+                        public void accept(Response<AiMessage> message) {
+                            em.complete();
+                        }
+                    })
+                    .onError(em::fail)
+                    .start();
+        }
     }
 }
