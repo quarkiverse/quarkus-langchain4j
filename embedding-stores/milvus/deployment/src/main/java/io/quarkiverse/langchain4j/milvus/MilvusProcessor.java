@@ -42,7 +42,7 @@ public class MilvusProcessor {
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .defaultBean()
                 .setRuntimeInit()
-                .defaultBean()
+                .unremovable()
                 .scope(ApplicationScoped.class)
                 .supplier(recorder.milvusStoreSupplier(config))
                 .done());

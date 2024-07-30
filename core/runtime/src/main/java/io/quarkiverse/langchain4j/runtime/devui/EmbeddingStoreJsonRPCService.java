@@ -2,7 +2,9 @@ package io.quarkiverse.langchain4j.runtime.devui;
 
 import java.util.regex.Pattern;
 
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
@@ -14,11 +16,17 @@ import io.vertx.core.json.JsonObject;
 
 public class EmbeddingStoreJsonRPCService {
 
-    @Inject
     EmbeddingStore<TextSegment> embeddingStore;
 
-    @Inject
     EmbeddingModel embeddingModel;
+
+    public EmbeddingStoreJsonRPCService() {
+        // if there are more models/stores, try to choose the default
+        embeddingModel = CDI.current().select(EmbeddingModel.class, new Default.Literal()).get();
+        TypeLiteral<EmbeddingStore<TextSegment>> embeddingStoreType = new TypeLiteral<EmbeddingStore<TextSegment>>() {
+        };
+        embeddingStore = CDI.current().select(embeddingStoreType, new Default.Literal()).get();
+    }
 
     private static final Pattern COMMA_OR_NEWLINE = Pattern.compile(",|\\r?\\n");
 
