@@ -26,6 +26,37 @@ Open the application at http://localhost:8080 and click `Send me an email`.
 
 Quarkus will use a mock mailer which simply logs the email on the terminal.  
 
+## Using other model providers
+
+### Compatible OpenAI serving infrastructure
+
+Add `quarkus.langchain4j.openai.base-url=http://yourerver` to `application.properties`.
+
+In this case, `quarkus.langchain4j.openai.api-key` is generally not needed.
+
+### Ollama
+
+
+Replace:
+
+```xml
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-openai</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+```
+
+with
+
+```xml
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-ollama</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+        </dependency>
+```
+
 ## Viewing the sent email
 
 Go to the DevUI and click on the Mailpit UI      
