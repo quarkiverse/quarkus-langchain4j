@@ -3,7 +3,7 @@ package io.quarkiverse.langchain4j.oidc.runtime;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.security.credential.TokenCredential;
 
 public class OidcModelAuthProvider implements ModelAuthProvider {

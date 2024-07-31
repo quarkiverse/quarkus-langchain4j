@@ -8,9 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.client.ClientRequestContext;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.ext.Provider;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
@@ -19,12 +17,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class OllamaAuthenticationHeaderTest extends WiremockAware {
+public class OllamaModelAuthProviderTest extends WiremockAware {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -69,12 +68,12 @@ public class OllamaAuthenticationHeaderTest extends WiremockAware {
         assertThat(response).isEqualTo("Nice to meet you");
     }
 
-    @Provider
-    public static class OllamaClientAuthHeaderFilter implements ClientRequestFilter {
+    @Singleton
+    public static class OllamaClientAuthHeaderFilter implements ModelAuthProvider {
 
         @Override
-        public void filter(ClientRequestContext requestContext) {
-            requestContext.getHeaders().add("Authorization", "Bearer test");
+        public String getAuthorization(Input input) {
+            return "Bearer test";
         }
     }
 }

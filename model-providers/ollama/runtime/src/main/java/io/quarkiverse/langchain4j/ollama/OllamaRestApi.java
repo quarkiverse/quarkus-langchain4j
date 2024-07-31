@@ -6,6 +6,7 @@ import static java.util.stream.StreamSupport.stream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.List;
 
 import jakarta.ws.rs.Consumes;
@@ -13,6 +14,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -32,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
@@ -148,6 +152,28 @@ public interface OllamaRestApi {
                 }
             }
             context.proceed();
+        }
+    }
+
+    class OllamaRestAPIFilter implements ClientRequestFilter {
+        ModelAuthProvider authorizer;
+
+        public OllamaRestAPIFilter(ModelAuthProvider authorizer) {
+            this.authorizer = authorizer;
+        }
+
+        @Override
+        public void filter(ClientRequestContext context) {
+            context.getHeaders().putSingle(
+                    "Authorization",
+                    authorizer
+                            .getAuthorization(new AuthInputImpl(context.getMethod(), context.getUri(), context.getHeaders())));
+        }
+
+        private record AuthInputImpl(
+                String method,
+                URI uri,
+                MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
         }
     }
 

@@ -29,8 +29,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 
-import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider.Input;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider.Input;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.ChatModelConfig;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;

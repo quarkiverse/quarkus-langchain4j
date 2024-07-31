@@ -55,6 +55,7 @@ public class OllamaRecorder {
                     .logResponses(chatModelConfig.logResponses().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
+                    .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .options(optionsBuilder.build());
 
             return new Supplier<>() {
@@ -96,7 +97,8 @@ public class OllamaRecorder {
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .model(ollamaFixedConfig.embeddingModel().modelId())
                     .logRequests(embeddingModelConfig.logRequests().orElse(false))
-                    .logResponses(embeddingModelConfig.logResponses().orElse(false));
+                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
+                    .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
             return new Supplier<>() {
                 @Override
@@ -143,7 +145,8 @@ public class OllamaRecorder {
                     .logRequests(ollamaConfig.logRequests().orElse(false))
                     .logResponses(ollamaConfig.logResponses().orElse(false))
                     .model(ollamaFixedConfig.chatModel().modelId())
-                    .options(optionsBuilder.build());
+                    .options(optionsBuilder.build())
+                    .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
             return new Supplier<>() {
                 @Override

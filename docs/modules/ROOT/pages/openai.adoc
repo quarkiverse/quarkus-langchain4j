@@ -148,12 +148,12 @@ This parameter is only required when using Azure OpenAI.
 
 === Dynamic Authorization Headers
 
-There are cases where one may need to provide dynamic authorization headers, to be passed in OpenAI endpoints (in OpenAI or Azure OpenAI)
+There are cases where one may need to provide dynamic authorization headers, to be passed to OpenAI endpoints (in OpenAI or Azure OpenAI)
 
 There are two ways to achieve this:
 
 ==== Using a ContainerRequestFilter annotated with `@Provider`.
-Since OpenAI client relies in the Quarkus Rest Client, you can have apply a filter that will be called in all OpenAI requests and set the headers accordingly.
+As the underlying HTTP communication relies on the Quarkus Rest Client, it is possible to apply a filter that will be called in all OpenAI requests and set the headers accordingly.
 
 [source,java]
 ----
@@ -183,15 +183,14 @@ public class RequestFilter implements ResteasyReactiveClientRequestFilter {
 ----
 
 ==== Using `AuthProvider`
-One can implement the `ModelAuthProvider` interface and provide the implementation of the `getAuthorization` method.
+An even simpler approach consists of implementing the `ModelAuthProvider` interface and provide the implementation of the `getAuthorization` method.
 
-This is useful when you need to provide different authorization headers for different OpenAI models. The `@Named` annotation can be used to specify the model name in this scenario.
+This is useful when you need to provide different authorization headers for different OpenAI models. The `@ModelName` annotation can be used to specify the model name in this scenario.
 
 [source,java]
 ----
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
-import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -203,8 +202,8 @@ public class TestClass implements ModelAuthProvider {
     @Override
     public String getAuthorization(Input input) {
         /*
-        the `input` will contain some information about the request
-        about to be passed to the remote model endpoints
+         * The `input` will contain some information about the request
+         * about to be passed to the remote model endpoints
          */
         return "Bearer " + tokenProviderService.getToken();
     }

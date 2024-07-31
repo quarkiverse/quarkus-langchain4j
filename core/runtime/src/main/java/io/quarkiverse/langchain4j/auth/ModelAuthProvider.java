@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime.auth;
+package io.quarkiverse.langchain4j.auth;
 
 import java.net.URI;
 import java.util.List;

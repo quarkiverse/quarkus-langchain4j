@@ -15,7 +15,8 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
     private final String model;
 
     private OllamaEmbeddingModel(Builder builder) {
-        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
+        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
+                builder.configName);
         model = builder.model;
     }
 
@@ -48,6 +49,7 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
 
         private boolean logRequests = false;
         private boolean logResponses = false;
+        private String configName;
 
         private Builder() {
         }
@@ -74,6 +76,11 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
 
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 

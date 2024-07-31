@@ -29,7 +29,8 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
     private final Options options;
 
     private OllamaChatLanguageModel(Builder builder) {
-        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
+        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
+                builder.configName);
         model = builder.model;
         format = builder.format;
         options = builder.options;
@@ -102,6 +103,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
         private boolean logRequests = false;
         private boolean logResponses = false;
+        private String configName;
 
         private Builder() {
         }
@@ -138,6 +140,11 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 
