@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import io.quarkiverse.langchain4j.runtime.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiChatLanguageModel;
 import io.quarkus.arc.ClientProxy;
