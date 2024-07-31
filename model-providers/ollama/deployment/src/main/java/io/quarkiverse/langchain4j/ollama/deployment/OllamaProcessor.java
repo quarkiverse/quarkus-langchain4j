@@ -9,8 +9,12 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.devservice.Langchain4jDevServicesEnabled;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesChatModelRequiredBuildItem;
@@ -110,7 +114,9 @@ public class OllamaProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, fixedRuntimeConfig, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .createWith(recorder.chatModel(config, fixedRuntimeConfig, configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 

@@ -1,12 +1,18 @@
 package io.quarkiverse.langchain4j.ollama.runtime;
 
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
@@ -18,6 +24,7 @@ import io.quarkiverse.langchain4j.ollama.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
@@ -25,7 +32,11 @@ public class OllamaRecorder {
 
     private static final String DEFAULT_BASE_URL = "http://localhost:11434";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jOllamaConfig runtimeConfig,
+    private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
+    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+            LangChain4jOllamaConfig runtimeConfig,
             LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig, String configName) {
         LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
@@ -58,16 +69,18 @@ public class OllamaRecorder {
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .options(optionsBuilder.build());
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
             };
