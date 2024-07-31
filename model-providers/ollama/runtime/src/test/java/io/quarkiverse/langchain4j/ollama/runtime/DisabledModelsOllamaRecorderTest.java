@@ -30,7 +30,7 @@ class DisabledModelsOllamaRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, fixedConfig, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(config, fixedConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
     }

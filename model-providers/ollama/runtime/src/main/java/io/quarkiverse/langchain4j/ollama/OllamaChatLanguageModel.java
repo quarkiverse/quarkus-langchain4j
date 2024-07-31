@@ -9,6 +9,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -17,16 +22,25 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.listener.ChatModelRequest;
+import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponse;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
+    private static final Logger log = Logger.getLogger(OllamaChatLanguageModel.class);
+
     private final OllamaClient client;
     private final String model;
     private final String format;
     private final Options options;
+    private final List<ChatModelListener> listeners;
 
     private OllamaChatLanguageModel(Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
@@ -34,6 +48,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         model = builder.model;
         format = builder.format;
         options = builder.options;
+        this.listeners = builder.listeners;
     }
 
     public static Builder builder() {
@@ -64,11 +79,62 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                 .stream(false)
                 .build();
 
-        ChatResponse response = client.chat(request);
+        ChatModelRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
+        Map<Object, Object> attributes = new ConcurrentHashMap<>();
+        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
+        listeners.forEach(listener -> {
+            try {
+                listener.onRequest(requestContext);
+            } catch (Exception e) {
+                log.warn("Exception while calling model listener", e);
+            }
+        });
 
+        try {
+            ChatResponse chatResponse = client.chat(request);
+            Response<AiMessage> response = toResponse(chatResponse);
+
+            ChatModelResponse modelListenerResponse = createModelListenerResponse(
+                    null,
+                    chatResponse.model(),
+                    response);
+            ChatModelResponseContext responseContext = new ChatModelResponseContext(
+                    modelListenerResponse,
+                    modelListenerRequest,
+                    attributes);
+            listeners.forEach(listener -> {
+                try {
+                    listener.onResponse(responseContext);
+                } catch (Exception e) {
+                    log.warn("Exception while calling model listener", e);
+                }
+            });
+
+            return response;
+        } catch (RuntimeException e) {
+            ChatModelErrorContext errorContext = new ChatModelErrorContext(
+                    e,
+                    modelListenerRequest,
+                    null,
+                    attributes);
+
+            listeners.forEach(listener -> {
+                try {
+                    listener.onError(errorContext);
+                } catch (Exception e2) {
+                    log.warn("Exception while calling model listener", e2);
+                }
+            });
+
+            throw e;
+        }
+    }
+
+    private static @NotNull Response<AiMessage> toResponse(ChatResponse response) {
+        Response<AiMessage> result;
         List<ToolCall> toolCalls = response.message().toolCalls();
         if ((toolCalls == null) || toolCalls.isEmpty()) {
-            return Response.from(
+            result = Response.from(
                     AiMessage.from(response.message().content()),
                     new TokenUsage(response.promptEvalCount(), response.evalCount()));
         } else {
@@ -86,12 +152,45 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                             .build());
                 }
 
-                return Response.from(aiMessage(toolExecutionRequests),
+                result = Response.from(aiMessage(toolExecutionRequests),
                         new TokenUsage(response.promptEvalCount(), response.evalCount()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Unable to parse tool call response", e);
             }
         }
+        return result;
+    }
+
+    private ChatModelRequest createModelListenerRequest(ChatRequest request,
+            List<ChatMessage> messages,
+            List<ToolSpecification> toolSpecifications) {
+        Options options = request.options();
+        var builder = ChatModelRequest.builder()
+                .model(request.model())
+                .messages(messages)
+                .toolSpecifications(toolSpecifications);
+        if (options != null) {
+            builder.temperature(options.temperature())
+                    .topP(options.topP())
+                    .maxTokens(options.numPredict());
+        }
+        return builder.build();
+    }
+
+    private ChatModelResponse createModelListenerResponse(String responseId,
+            String responseModel,
+            Response<AiMessage> response) {
+        if (response == null) {
+            return null;
+        }
+
+        return ChatModelResponse.builder()
+                .id(responseId)
+                .model(responseModel)
+                .tokenUsage(response.tokenUsage())
+                .finishReason(response.finishReason())
+                .aiMessage(response.content())
+                .build();
     }
 
     public static final class Builder {
@@ -104,6 +203,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         private boolean logRequests = false;
         private boolean logResponses = false;
         private String configName;
+        private List<ChatModelListener> listeners = Collections.emptyList();
 
         private Builder() {
         }
@@ -145,6 +245,11 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
         public Builder configName(String configName) {
             this.configName = configName;
+            return this;
+        }
+
+        public Builder listeners(List<ChatModelListener> listeners) {
+            this.listeners = listeners;
             return this;
         }
 
