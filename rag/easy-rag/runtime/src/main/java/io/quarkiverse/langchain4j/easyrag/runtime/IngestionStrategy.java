@@ -6,6 +6,7 @@ public enum IngestionStrategy {
     // but these require some enhancements to the EmbeddingStore API
 
     ON,
-    OFF
+    OFF,
+    MANUAL
 
 }

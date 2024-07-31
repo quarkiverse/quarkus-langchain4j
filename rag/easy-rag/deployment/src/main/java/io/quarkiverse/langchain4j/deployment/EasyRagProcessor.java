@@ -17,9 +17,11 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.InMemoryEmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagConfig;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagRecorder;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRetrievalAugmentor;
+import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanContainerBuildItem;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -39,6 +41,13 @@ public class EasyRagProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    public void registerManualIngestionTrigger(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
+        additionalBeans.produce(AdditionalBeanBuildItem.builder()
+                .addBeanClass(EasyRagManualIngestion.class)
+                .build());
     }
 
     @BuildStep

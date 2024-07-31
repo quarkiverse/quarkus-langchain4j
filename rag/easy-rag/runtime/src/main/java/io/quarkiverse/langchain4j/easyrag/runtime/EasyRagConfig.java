@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.easyrag.runtime;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
+import io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -50,9 +51,13 @@ public interface EasyRagConfig {
     Integer maxResults();
 
     /**
-     * The strategy to decide whether document ingestion into the store should happen at startup or not.
-     * The default is ON. Changing to OFF generally only makes sense if running against a persistent embedding store
-     * that was already populated.
+     * The strategy to decide whether document ingestion into the store
+     * should happen at startup or not. The default is ON. Changing to OFF
+     * generally only makes sense if running against a persistent embedding
+     * store that was already populated. When set to MANUAL, it is expected
+     * that the application will inject and call the {@link
+     * io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion}
+     * bean to trigger the ingestion when desired.
      */
     @WithDefault("ON")
     IngestionStrategy ingestionStrategy();

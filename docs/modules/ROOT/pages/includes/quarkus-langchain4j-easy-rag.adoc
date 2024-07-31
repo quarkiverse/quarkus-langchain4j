@@ -117,7 +117,7 @@ a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strateg
 
 [.description]
 --
-The strategy to decide whether document ingestion into the store should happen at startup or not. The default is ON. Changing to OFF generally only makes sense if running against a persistent embedding store that was already populated.
+The strategy to decide whether document ingestion into the store should happen at startup or not. The default is ON. Changing to OFF generally only makes sense if running against a persistent embedding store that was already populated. When set to MANUAL, it is expected that the application will inject and call the `io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion` bean to trigger the ingestion when desired.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_INGESTION_STRATEGY+++[]
@@ -126,7 +126,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_INGESTION_STRATEGY+++`
 endif::add-copy-button-to-env-var[]
 -- a|
-`on`, `off` 
+`on`, `off`, `manual` 
 |`on`
 
 
