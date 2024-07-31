@@ -55,28 +55,6 @@ Several configuration properties are available:
 
 include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]
 
-[TIP]
-
-If the Ollama server is running behind an authentication proxy, then the authentication header can easily be added to each HTTP request by adding
-a https://quarkus.io/guides/rest-client#customizing-the-request[ClientRequestFilter] like so:
-
-[source, java]
-----
-@Provider
-public class OllamaClientAuthHeaderFilter implements ClientRequestFilter {
-
-    @Override
-    public void filter(ClientRequestContext requestContext) {
-        requestContext.getHeaders().add("Authentication", "Bearer someToken");
-    }
-}
-----
-
-This class is a CDI bean which gives the ability to utilize other CDI beans if necessary.
-
-NOTE: If you want to use it with native compilation you should add the `@RegisterForReflection` annotation. See https://quarkus.io/guides/writing-native-applications-tips#registering-for-reflection[Quarkus documentation] for more information.  
-This should be not necessary with future releases of Quarkus.
-
 == Document Retriever and Embedding
 
 Ollama also provides embedding models.
@@ -99,4 +77,69 @@ If no other LLM extension is installed, retrieve the embedding model as follows:
 ----
 @Inject EmbeddingModel model; // Injects the embedding model
 ----
+
+== Dynamic Authorization Headers
+
+There are cases where one may need to provide dynamic authorization headers, to be passed to Ollama endpoints
+
+There are two ways to achieve this:
+
+=== Using a ContainerRequestFilter annotated with `@Provider`.
+As the underlying HTTP communication relies on the Quarkus Rest Client, it is possible to apply a filter that will be called in all OpenAI requests and set the headers accordingly.
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.ext.Provider;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
+
+@Provider
+@ApplicationScoped
+public class RequestFilter implements ResteasyReactiveClientRequestFilter {
+
+    @Inject
+    MyAuthorizationService myAuthorizationService;
+
+    @Override
+    public void filter(ResteasyReactiveClientRequestContext requestContext) {
+        /*
+         * All requests will be filtered here, therefore make sure that you make
+         * the necessary checks to avoid putting the Authorization header in
+         * requests that do not need it.
+         */
+        requestContext.getHeaders().putSingle("Authorization", ...);
+    }
+}
+----
+
+=== Using `AuthProvider`
+An even simpler approach consists of implementing the `ModelAuthProvider` interface and provide the implementation of the `getAuthorization` method.
+
+This is useful when you need to provide different authorization headers for different OpenAI models. The `@ModelName` annotation can be used to specify the model name in this scenario.
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+@ModelName("my-model-name") //you can omit this if you have only one model or if you want to use the default model
+public class TestClass implements ModelAuthProvider {
+    @Inject MyTokenProviderService tokenProviderService;
+
+    @Override
+    public String getAuthorization(Input input) {
+        /*
+         * The `input` will contain some information about the request
+         * about to be passed to the remote model endpoints
+         */
+        return "Bearer " + tokenProviderService.getToken();
+    }
+}
+----
+
 

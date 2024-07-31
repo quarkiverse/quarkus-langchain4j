@@ -25,7 +25,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
     private final Options options;
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
-        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses);
+        client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
+                builder.configName);
         model = builder.model;
         format = builder.format;
         options = builder.options;
@@ -107,39 +108,45 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
         private boolean logRequests = false;
         private boolean logResponses = false;
+        private String configName;
 
-        public OllamaStreamingChatLanguageModel.Builder baseUrl(String val) {
+        public Builder baseUrl(String val) {
             baseUrl = val;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder timeout(Duration val) {
+        public Builder timeout(Duration val) {
             this.timeout = val;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder model(String val) {
+        public Builder model(String val) {
             model = val;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder format(String val) {
+        public Builder format(String val) {
             format = val;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder options(Options val) {
+        public Builder options(Options val) {
             options = val;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder logRequests(boolean logRequests) {
+        public Builder logRequests(boolean logRequests) {
             this.logRequests = logRequests;
             return this;
         }
 
-        public OllamaStreamingChatLanguageModel.Builder logResponses(boolean logResponses) {
+        public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 
