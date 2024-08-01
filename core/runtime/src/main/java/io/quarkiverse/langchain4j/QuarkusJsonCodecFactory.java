@@ -33,7 +33,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     private static class Codec implements Json.JsonCodec {
 
-        private static final Pattern sanitizePattern = Pattern.compile("(\\\\n)*```(json)?(\\\\n)*");
+        private static final Pattern sanitizePattern = Pattern.compile("(?s)\\{.*\\}|\\[.*\\]");
 
         @Override
         public String toJson(Object o) {
@@ -67,7 +67,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
             Matcher matcher = sanitizePattern.matcher(original);
             if (matcher.find()) {
-                return matcher.replaceAll("");
+                return matcher.group();
             }
             return original;
         }
