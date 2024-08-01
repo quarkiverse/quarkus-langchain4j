@@ -10,6 +10,7 @@ import io.quarkiverse.langchain4j.audit.AuditService;
 public class QuarkusAiServiceContext extends AiServiceContext {
 
     public AuditService auditService;
+    public ChatMemorySeeder chatMemorySeeder;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

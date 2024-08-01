@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.deployment;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -25,6 +26,7 @@ import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.SeedMemory;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 import io.smallrye.mutiny.Multi;
@@ -36,6 +38,7 @@ public class LangChain4jDotNames {
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName TOKEN_COUNT_ESTIMATOR = DotName.createSimple(TokenCountEstimator.class);
+    public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
     public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
@@ -83,6 +86,8 @@ public class LangChain4jDotNames {
 
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
+
+    static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
 
     static final DotName MULTI = DotName.createSimple(Multi.class);
     static final DotName STRING = DotName.createSimple(String.class);

@@ -6,6 +6,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,6 +68,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo.ResponseSchemaInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodImplementationSupport;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryRemovable;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
@@ -132,11 +135,17 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+    public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
+            .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
+
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
+    private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private static final ResultHandle[] EMPTY_RESULT_HANDLES_ARRAY = new ResultHandle[0];
+
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
-    public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
 
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
@@ -186,11 +195,13 @@ public class AiServicesProcessor {
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
         IndexView index = indexBuildItem.getIndex();
 
         Set<String> chatModelNames = new HashSet<>();
         Set<String> moderationModelNames = new HashSet<>();
+        ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
         for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
@@ -332,8 +343,10 @@ public class AiServicesProcessor {
                             customRetrievalAugmentorSupplierClassIsABean,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
+                            determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                             cdiScope,
-                            chatModelName, moderationModelName));
+                            chatModelName,
+                            moderationModelName));
         }
 
         for (String chatModelName : chatModelNames) {
@@ -408,6 +421,10 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
+            String chatMemorySeederClassName = (bi.getChatMemorySeederClassDotName() != null
+                    ? bi.getChatMemorySeederClassDotName().toString()
+                    : null);
+
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
@@ -445,9 +462,13 @@ public class AiServicesProcessor {
                             new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
                                     retrievalAugmentorSupplierClassName,
-                                    auditServiceClassSupplierName, moderationModelSupplierClassName, chatModelName,
+                                    auditServiceClassSupplierName,
+                                    moderationModelSupplierClassName,
+                                    chatMemorySeederClassName,
+                                    chatModelName,
                                     moderationModelName,
-                                    injectStreamingChatModelBean, injectModerationModelBean)))
+                                    injectStreamingChatModelBean,
+                                    injectModerationModelBean)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -728,7 +749,8 @@ public class AiServicesProcessor {
                         String methodId = createMethodId(methodInfo);
                         AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, index,
                                 addMicrometerMetrics,
-                                addOpenTelemetrySpan, config.responseSchema());
+                                addOpenTelemetrySpan,
+                                config.responseSchema());
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
@@ -1267,6 +1289,108 @@ public class AiServicesProcessor {
         }
 
         return Arrays.stream(toolClasses).map(t -> t.name().toString()).collect(Collectors.toList());
+    }
+
+    private DotName determineChatMemorySeeder(ClassInfo iface, ClassOutput classOutput) {
+        List<AnnotationInstance> annotations = iface.annotations(SEED_MEMORY);
+        if (annotations.isEmpty()) {
+            return null;
+        }
+        if (annotations.size() > 1) {
+            throw new IllegalConfigurationException(
+                    "Only a single @SeedMemory annotation is allowed per AiService. Offending class is '" + iface.name() + "'");
+        }
+        AnnotationInstance seedMemoryInstance = annotations.get(0);
+        AnnotationTarget seedMemoryTarget = seedMemoryInstance.target();
+        if (seedMemoryTarget.kind() != AnnotationTarget.Kind.METHOD) {
+            throw new IllegalConfigurationException(
+                    "The @SeedMemory annotation can only be placed on methods. Offending target is '" + seedMemoryTarget + "'");
+        }
+        return DotName.createSimple(generateAiServiceChatMemorySeeder(iface, seedMemoryTarget.asMethod(), classOutput));
+    }
+
+    /**
+     * Generates a class that looks like the following:
+     *
+     * <pre>
+     * {@code
+     * public class SomeAiService$$QuarkusChatMemorySeeder implements ChatMemorySeeder {
+     *
+     *     @Override
+     *     public List<ChatMessage> seed(Context context) {
+     *         return SomeAiService.someMethod(context.methodName());
+     *     }
+     * }
+     * }
+     * </pre>
+     */
+    private String generateAiServiceChatMemorySeeder(ClassInfo iface, MethodInfo seedMemoryTargetMethod,
+            ClassOutput classOutput) {
+        if (!Modifier.isStatic(seedMemoryTargetMethod.flags())) {
+            throw new IllegalConfigurationException(
+                    "The @SeedMemory annotation can only be placed on static methods. Offending method is '"
+                            + seedMemoryTargetMethod.declaringClass().name() + "#" + seedMemoryTargetMethod.name() + "'");
+        }
+
+        boolean hasListChatMessageReturnType = false;
+        if (seedMemoryTargetMethod.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterizedType = seedMemoryTargetMethod.returnType().asParameterizedType();
+            if (DotNames.LIST.equals(parameterizedType.name()) && (parameterizedType.arguments().size() == 1)) {
+                hasListChatMessageReturnType = LangChain4jDotNames.CHAT_MESSAGE
+                        .equals(parameterizedType.arguments().get(0).name());
+            }
+        }
+        if (!hasListChatMessageReturnType) {
+            throw new IllegalConfigurationException(
+                    "The @SeedMemory annotation can only be placed on methods that return List<ChatMessage>. Offending method is '"
+                            + seedMemoryTargetMethod.declaringClass().name() + "#" + seedMemoryTargetMethod.name() + "'");
+        }
+
+        String implClassName = iface.name() + "$$QuarkusChatMemorySeeder";
+
+        ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
+                .classOutput(classOutput)
+                .className(implClassName)
+                .interfaces(ChatMemorySeeder.class.getName());
+        try (ClassCreator classCreator = classCreatorBuilder.build()) {
+            MethodCreator methodCreator = classCreator.getMethodCreator("seed", List.class, ChatMemorySeeder.Context.class);
+
+            LinkedHashMap<String, ResultHandle> seedMemoryTargetMethodParams = new LinkedHashMap<>();
+            for (Type paramType : seedMemoryTargetMethod.parameterTypes()) {
+                ResultHandle targetMethodParamHandle;
+                if (paramType.name().equals(DotNames.STRING)) {
+                    targetMethodParamHandle = methodCreator.invokeVirtualMethod(CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME,
+                            methodCreator.getMethodParam(0));
+                } else {
+                    throw new IllegalConfigurationException(
+                            "The @SeedMemory annotation can only be placed on methods can only take parameters of type 'String' (or no parameters at all). Offending method is '"
+                                    + seedMemoryTargetMethod.declaringClass().name() + "#" + seedMemoryTargetMethod.name()
+                                    + "'");
+                }
+                seedMemoryTargetMethodParams.put(paramType.name().toString(), targetMethodParamHandle);
+            }
+
+            if (seedMemoryTargetMethodParams.isEmpty()) {
+                ResultHandle resultHandle = methodCreator.invokeStaticInterfaceMethod(
+                        MethodDescriptor.ofMethod(
+                                seedMemoryTargetMethod.declaringClass().name().toString(),
+                                seedMemoryTargetMethod.name(),
+                                seedMemoryTargetMethod.returnType().name().toString()));
+                methodCreator.returnValue(resultHandle);
+            } else {
+                ResultHandle resultHandle = methodCreator.invokeStaticInterfaceMethod(
+                        MethodDescriptor.ofMethod(
+                                seedMemoryTargetMethod.declaringClass().name().toString(),
+                                seedMemoryTargetMethod.name(),
+                                seedMemoryTargetMethod.returnType().name().toString(),
+                                seedMemoryTargetMethodParams.keySet().toArray(EMPTY_STRING_ARRAY)),
+                        seedMemoryTargetMethodParams.values().toArray(EMPTY_RESULT_HANDLES_ARRAY));
+                methodCreator.returnValue(resultHandle);
+            }
+
+        }
+
+        return implClassName;
     }
 
     private String defaultAiServiceSpanName(MethodInfo method) {

@@ -205,6 +205,11 @@ When using an AiService that is expected to use to chat memory, it is very impor
 If your use case requires that no memory should be used, then be sure to use `@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)`
 ====
 
+[TIP]
+====
+An `AiService` can have its memory seeded with memory entries by using `@SeedMemory`. See the Javadoc of the annotation for details as well as an example usage.
+====
+
 === Advanced usage
 
 Although the extension's default `ChatMemoryProvider` is very configurable making unnecessary in most cases to resort to a custom implementation, such a capability is possible. Here is a possible example:
