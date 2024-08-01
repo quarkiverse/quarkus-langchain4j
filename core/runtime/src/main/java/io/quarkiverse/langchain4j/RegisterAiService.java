@@ -34,6 +34,8 @@ import io.quarkiverse.langchain4j.audit.AuditService;
  * <p>
  * NOTE: When the application also contains the {@code quarkus-micrometer} extension, metrics are automatically generated
  * for the method invocations.
+ * <p>
+ * See also {@link ToolBox}, {@link SeedMemory}
  */
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)

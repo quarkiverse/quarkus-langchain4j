@@ -25,6 +25,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkus.arc.Arc;
@@ -232,6 +233,13 @@ public class AiServicesRecorder {
                                     .getConstructor().newInstance();
                             quarkusAiServices.moderationModel(supplier.get());
                         }
+                    }
+
+                    if (info.chatMemorySeederClassName() != null) {
+                        quarkusAiServices.chatMemorySeeder((ChatMemorySeeder) Thread
+                                .currentThread().getContextClassLoader()
+                                .loadClass(info.chatMemorySeederClassName())
+                                .getConstructor().newInstance());
                     }
 
                     return (T) aiServiceContext;

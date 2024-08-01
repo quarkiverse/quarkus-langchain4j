@@ -131,9 +131,10 @@ public class AiServiceMethodImplementationSupport {
         }
 
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
+        boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
+
         Type returnType = methodCreateInfo.getReturnType();
         AugmentationResult augmentationResult;
-
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
@@ -158,27 +159,22 @@ public class AiServiceMethodImplementationSupport {
                             @Override
                             public Flow.Publisher<?> apply(AugmentationResult ar) {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
-                                List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage);
+                                List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
 
                                 return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, context, memoryId));
                             }
 
-                            private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage) {
+                            private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
+                                    boolean needsMemorySeed) {
                                 List<ChatMessage> messagesToSend;
                                 ChatMemory chatMemory;
                                 if (context.hasChatMemory()) {
                                     chatMemory = context.chatMemory(memoryId);
-                                    if (systemMessage.isPresent()) {
-                                        chatMemory.add(systemMessage.get());
-                                    }
-                                    chatMemory.add(augmentedUserMessage);
-                                    messagesToSend = chatMemory.messages();
+                                    messagesToSend = createMessagesToSendForExistingMemory(systemMessage, augmentedUserMessage,
+                                            chatMemory, needsMemorySeed, context, methodCreateInfo);
                                 } else {
-                                    messagesToSend = new ArrayList<>();
-                                    if (systemMessage.isPresent()) {
-                                        messagesToSend.add(systemMessage.get());
-                                    }
-                                    messagesToSend.add(augmentedUserMessage);
+                                    messagesToSend = createMessagesToSendForNoMemory(systemMessage, augmentedUserMessage,
+                                            needsMemorySeed, context, methodCreateInfo);
                                 }
                                 return messagesToSend;
                             }
@@ -192,20 +188,12 @@ public class AiServiceMethodImplementationSupport {
         if (context.hasChatMemory()) {
             // we want to defer saving the new messages because the service could fail and be retried
             chatMemory = new DefaultCommittableChatMemory(context.chatMemory(memoryId));
-            if (systemMessage.isPresent()) {
-                chatMemory.add(systemMessage.get());
-            }
-            chatMemory.add(userMessage);
-
-            messagesToSend = chatMemory.messages();
+            messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, chatMemory, needsMemorySeed,
+                    context, methodCreateInfo);
         } else {
             chatMemory = new NoopChatMemory();
-
-            messagesToSend = new ArrayList<>();
-            if (systemMessage.isPresent()) {
-                messagesToSend.add(systemMessage.get());
-            }
-            messagesToSend.add(userMessage);
+            messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
+                    methodCreateInfo);
         }
 
         if (isTokenStream(returnType)) {
@@ -289,6 +277,62 @@ public class AiServiceMethodImplementationSupport {
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
         return SERVICE_OUTPUT_PARSER.parse(response, returnType);
+    }
+
+    private static boolean needsMemorySeed(QuarkusAiServiceContext context, Object memoryId) {
+        if (context.chatMemorySeeder == null) {
+            return false;
+        }
+
+        if (!context.hasChatMemory()) {
+            return false;
+        }
+
+        ChatMemory chatMemory = context.chatMemory(memoryId);
+        // if the chat memory is not empty, so we don't seed it
+        return chatMemory.messages().isEmpty();
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static List<ChatMessage> createMessagesToSendForExistingMemory(Optional<SystemMessage> systemMessage,
+            ChatMessage userMessage,
+            ChatMemory chatMemory,
+            boolean needsMemorySeed,
+            QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo) {
+        if (systemMessage.isPresent()) {
+            chatMemory.add(systemMessage.get());
+        }
+
+        if (needsMemorySeed) {
+            // the seed messages always need to come after the system message and before the user message
+            List<ChatMessage> seedChatMessages = context.chatMemorySeeder
+                    .seed(new ChatMemorySeeder.Context(methodCreateInfo.getMethodName()));
+            for (ChatMessage seedChatMessage : seedChatMessages) {
+                chatMemory.add(seedChatMessage);
+            }
+        }
+
+        chatMemory.add(userMessage);
+        return chatMemory.messages();
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static List<ChatMessage> createMessagesToSendForNoMemory(Optional<SystemMessage> systemMessage,
+            ChatMessage userMessage,
+            boolean needsMemorySeed,
+            QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo) {
+        List<ChatMessage> result = new ArrayList<>();
+        if (systemMessage.isPresent()) {
+            result.add(systemMessage.get());
+        }
+        if (needsMemorySeed) {
+            result.addAll(context.chatMemorySeeder
+                    .seed(new ChatMemorySeeder.Context(methodCreateInfo.getMethodName())));
+        }
+        result.add(userMessage);
+        return result;
     }
 
     private static boolean isTokenStream(Type returnType) {

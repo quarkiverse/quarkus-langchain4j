@@ -22,6 +22,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
+    private final DotName chatMemorySeederClassDotName;
     private final DotName cdiScope;
     private final String chatModelName;
     private final String moderationModelName;
@@ -34,6 +35,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             boolean customRetrievalAugmentorSupplierClassIsABean,
             DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
+            DotName chatMemorySeederClassDotName,
             DotName cdiScope,
             String chatModelName,
             String moderationModelName) {
@@ -46,6 +48,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
+        this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
@@ -85,6 +88,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getModerationModelSupplierDotName() {
         return moderationModelSupplierDotName;
+    }
+
+    public DotName getChatMemorySeederClassDotName() {
+        return chatMemorySeederClassDotName;
     }
 
     public DotName getCdiScope() {

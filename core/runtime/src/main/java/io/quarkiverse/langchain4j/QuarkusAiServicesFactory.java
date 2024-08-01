@@ -15,6 +15,7 @@ import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
@@ -48,7 +49,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         }
 
         public AiServices<T> auditService(AuditService auditService) {
-            ((QuarkusAiServiceContext) context).auditService = auditService;
+            quarkusAiServiceContext().auditService = auditService;
+            return this;
+        }
+
+        public AiServices<T> chatMemorySeeder(ChatMemorySeeder chatMemorySeeder) {
+            quarkusAiServiceContext().chatMemorySeeder = chatMemorySeeder;
             return this;
         }
 
@@ -78,10 +84,14 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             try {
                 return (T) Class.forName(classCreateInfo.implClassName(), true, Thread.currentThread()
                         .getContextClassLoader()).getConstructor(QuarkusAiServiceContext.class)
-                        .newInstance(((QuarkusAiServiceContext) context));
+                        .newInstance(quarkusAiServiceContext());
             } catch (Exception e) {
                 throw new IllegalStateException("Unable to create class '" + classCreateInfo.implClassName(), e);
             }
+        }
+
+        private QuarkusAiServiceContext quarkusAiServiceContext() {
+            return (QuarkusAiServiceContext) context;
         }
     }
 
