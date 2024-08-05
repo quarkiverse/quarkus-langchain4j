@@ -142,4 +142,9 @@ public class TestClass implements ModelAuthProvider {
 }
 ----
 
+== Tools
+
+xref:./agent-and-tools.adoc[Tools] are supported in Ollama since version https://ollama.com/blog/tool-support[0.3.0].
+However, not all models available in Ollama support them, consult https://ollama.com/search?c=tools[this] for an up-to-date list of the models that do.
+
 
