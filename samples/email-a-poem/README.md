@@ -63,9 +63,6 @@ Go to the DevUI and click on the Mailpit UI
 
 ## Viewing traces
 
-> **_NOTE:_**
->  For this to be applicable, the application has to have been started using `mvn quarkus:dev -Dobservability`
-
 The application has been configured to start the LGTM stack via [Dev Service](https://quarkus.io/guides/observability-devservices-lgtm).
 
 Find the host port on which Grafana is running by executing:

@@ -92,6 +92,7 @@
                 <property>
                     <name>observability</name>
                 </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
