@@ -19,7 +19,7 @@
     <script>
         document.getElementById('emailMe').addEventListener('click', function() {
           document.getElementById('status').textContent = 'Working...';
-          fetch('http://localhost:8080/email-me-a-poem')
+          fetch('/email-me-a-poem')
             .then(response => response.text())
             .then(data => {
               document.getElementById('status').textContent = '';
@@ -27,6 +27,7 @@
               document.getElementById('clear').disabled = false;
             })
             .catch(error => {
+              console.log(error);
               document.getElementById('status').textContent = 'Failed! Have you started the mock mail container? ';
             });
         });
