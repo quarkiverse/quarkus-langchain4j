@@ -36,6 +36,7 @@ import dev.ai4j.openai4j.chat.Delta;
 import dev.ai4j.openai4j.completion.CompletionChoice;
 import dev.ai4j.openai4j.completion.CompletionResponse;
 import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import io.netty.util.internal.StringUtil;
 import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -56,7 +57,7 @@ public class QuarkusRestApiResource {
         this.restApi = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(new URI(openAiConfig.baseUrl()))
                 .build(OpenAiRestApi.class);
-        this.token = openAiConfig.apiKey();
+        this.token = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
         this.organizationId = openAiConfig.organizationId().orElse(null);
     }
 

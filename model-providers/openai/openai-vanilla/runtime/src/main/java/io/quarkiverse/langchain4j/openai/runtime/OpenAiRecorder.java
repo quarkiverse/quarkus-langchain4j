@@ -26,6 +26,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import io.netty.util.internal.StringUtil;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
@@ -53,8 +54,8 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKey = openAiConfig.apiKey();
-            if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
+            String apiKey = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
+            if (StringUtil.isNullOrEmpty(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
@@ -101,7 +102,7 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKey = openAiConfig.apiKey();
+            String apiKey = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
@@ -146,7 +147,7 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKey = openAiConfig.apiKey();
+            String apiKey = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
@@ -186,7 +187,7 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKey = openAiConfig.apiKey();
+            String apiKey = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
@@ -222,7 +223,7 @@ public class OpenAiRecorder {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
-            String apiKey = openAiConfig.apiKey();
+            String apiKey = openAiConfig.apiKey().orElse(StringUtil.EMPTY_STRING);
             if (DUMMY_KEY.equals(apiKey) && OPENAI_BASE_URL.equals(openAiConfig.baseUrl())) {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }

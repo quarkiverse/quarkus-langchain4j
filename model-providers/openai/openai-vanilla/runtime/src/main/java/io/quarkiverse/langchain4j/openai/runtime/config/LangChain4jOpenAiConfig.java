@@ -47,8 +47,8 @@ public interface LangChain4jOpenAiConfig {
         /**
          * OpenAI API key
          */
-        @WithDefault("dummy") // TODO: this should be Optional but Smallrye Config doesn't like it...
-        String apiKey();
+
+        Optional<String> apiKey();
 
         /**
          * OpenAI Organization ID (https://platform.openai.com/docs/api-reference/organization-optional)
