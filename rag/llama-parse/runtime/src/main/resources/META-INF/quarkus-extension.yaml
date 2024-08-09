@@ -1,0 +1,13 @@
+name: Quarkus LangChain4j LlamaParse
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the module for integrating LangChain4j LlamaParse parser in Quarkus LangChain4j
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - llamaparse
+    - rag
+   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+   categories:
+     - "miscellaneous"
+   status: "experimental"
