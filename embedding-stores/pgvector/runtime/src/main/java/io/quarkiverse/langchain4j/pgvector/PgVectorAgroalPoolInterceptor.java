@@ -7,7 +7,7 @@ import java.sql.Statement;
 import com.pgvector.PGvector;
 
 import io.agroal.api.AgroalPoolInterceptor;
-import io.quarkus.runtime.configuration.ProfileManager;
+import io.quarkus.runtime.configuration.ConfigUtils;
 
 /**
  * PgVectorAgroalPoolInterceptor intercept connection creation and add needed settings for pgvector
@@ -16,8 +16,9 @@ public class PgVectorAgroalPoolInterceptor implements AgroalPoolInterceptor {
 
     @Override
     public void onConnectionCreate(Connection connection) {
+        ConfigUtils.isProfileActive("dev");
         try (Statement statement = connection.createStatement()) {
-            if (ProfileManager.getLaunchMode().isDevOrTest()) {
+            if (ConfigUtils.isProfileActive("dev") || ConfigUtils.isProfileActive("test")) {
                 statement.executeUpdate("CREATE EXTENSION IF NOT EXISTS vector");
             }
             PGvector.addVectorType(connection);
