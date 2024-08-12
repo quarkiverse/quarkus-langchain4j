@@ -16,7 +16,6 @@ public class PgVectorAgroalPoolInterceptor implements AgroalPoolInterceptor {
 
     @Override
     public void onConnectionCreate(Connection connection) {
-        ConfigUtils.isProfileActive("dev");
         try (Statement statement = connection.createStatement()) {
             if (ConfigUtils.isProfileActive("dev") || ConfigUtils.isProfileActive("test")) {
                 statement.executeUpdate("CREATE EXTENSION IF NOT EXISTS vector");
