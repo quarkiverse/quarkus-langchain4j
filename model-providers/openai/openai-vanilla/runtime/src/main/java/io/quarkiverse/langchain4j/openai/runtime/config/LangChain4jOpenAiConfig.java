@@ -94,6 +94,23 @@ public interface LangChain4jOpenAiConfig {
         Boolean enableIntegration();
 
         /**
+         * The Proxy type
+         */
+        @WithDefault("HTTP")
+        String proxyType();
+
+        /**
+         * The Proxy host
+         */
+        Optional<String> proxyHost();
+
+        /**
+         * The Proxy port
+         */
+        @WithDefault("3128")
+        Integer proxyPort();
+
+        /**
          * Chat model related settings
          */
         ChatModelConfig chatModel();

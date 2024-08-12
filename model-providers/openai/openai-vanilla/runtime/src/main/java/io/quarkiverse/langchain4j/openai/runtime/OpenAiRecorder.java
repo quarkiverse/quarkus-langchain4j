@@ -1,5 +1,8 @@
 package io.quarkiverse.langchain4j.openai.runtime;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -74,6 +77,10 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
+            openAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                        new InetSocketAddress(host, openAiConfig.proxyPort())));
+            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -121,6 +128,10 @@ public class OpenAiRecorder {
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
+            openAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                        new InetSocketAddress(host, openAiConfig.proxyPort())));
+            });
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -165,6 +176,10 @@ public class OpenAiRecorder {
             }
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
+            openAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                        new InetSocketAddress(host, openAiConfig.proxyPort())));
+            });
 
             return new Supplier<>() {
                 @Override
@@ -201,6 +216,10 @@ public class OpenAiRecorder {
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
+            openAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(Type.valueOf(openAiConfig.proxyType()),
+                        new InetSocketAddress(host, openAiConfig.proxyPort())));
+            });
 
             return new Supplier<>() {
                 @Override
