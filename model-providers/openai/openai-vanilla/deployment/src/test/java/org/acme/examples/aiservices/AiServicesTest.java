@@ -9,6 +9,7 @@ import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
+import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static java.time.Month.JULY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,11 +45,13 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
+import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.ModerationException;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -899,6 +902,38 @@ public class AiServicesTest extends OpenAiBaseTest {
                 .extracting(ChatMessage::type, ChatMessage::text)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
+    }
+
+    interface AssistantReturningResult {
+
+        Result<String> chat(String userMessage);
+    }
+
+    @Test
+    void should_return_result() throws IOException {
+        setChatCompletionMessageContent("Berlin is the capital of Germany");
+
+        // given
+        AssistantReturningResult assistant = AiServices.create(AssistantReturningResult.class, createChatModel());
+
+        String userMessage = "What is the capital of Germany?";
+
+        // when
+        Result<String> result = assistant.chat(userMessage);
+
+        // then
+        assertThat(result.content()).containsIgnoringCase("Berlin");
+
+        TokenUsage tokenUsage = result.tokenUsage();
+        assertThat(tokenUsage).isNotNull();
+        assertThat(tokenUsage.inputTokenCount()).isGreaterThan(0);
+        assertThat(tokenUsage.outputTokenCount()).isGreaterThan(0);
+        assertThat(tokenUsage.totalTokenCount())
+                .isEqualTo(tokenUsage.inputTokenCount() + tokenUsage.outputTokenCount());
+
+        assertThat(result.sources()).isNull();
+
+        assertSingleRequestMessage(getRequestAsMap(), "What is the capital of Germany?");
     }
 
     static class Calculator {

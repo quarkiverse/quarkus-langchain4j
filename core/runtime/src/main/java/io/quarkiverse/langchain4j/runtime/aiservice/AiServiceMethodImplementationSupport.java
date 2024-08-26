@@ -48,6 +48,7 @@ import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -134,7 +135,7 @@ public class AiServiceMethodImplementationSupport {
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
         Type returnType = methodCreateInfo.getReturnType();
-        AugmentationResult augmentationResult;
+        AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemory(memoryId).messages()
@@ -276,7 +277,17 @@ public class AiServiceMethodImplementationSupport {
         chatMemory.commit();
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
-        return SERVICE_OUTPUT_PARSER.parse(response, returnType);
+        if (isResult(returnType)) {
+            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response, resultTypeParam((ParameterizedType) returnType));
+            return Result.builder()
+                    .content(parsedResponse)
+                    .tokenUsage(tokenUsageAccumulator)
+                    .sources(augmentationResult == null ? null : augmentationResult.contents())
+                    .finishReason(response.finishReason())
+                    .build();
+        } else {
+            return SERVICE_OUTPUT_PARSER.parse(response, returnType);
+        }
     }
 
     private static boolean needsMemorySeed(QuarkusAiServiceContext context, Object memoryId) {
@@ -341,6 +352,17 @@ public class AiServiceMethodImplementationSupport {
 
     private static boolean isMulti(Type returnType) {
         return isTypeOf(returnType, Multi.class);
+    }
+
+    private static boolean isResult(Type returnType) {
+        return isTypeOf(returnType, Result.class);
+    }
+
+    private static Type resultTypeParam(ParameterizedType returnType) {
+        if (!isTypeOf(returnType, Result.class)) {
+            throw new IllegalStateException("Can only be called with Result<T> type");
+        }
+        return returnType.getActualTypeArguments()[0];
     }
 
     private static boolean isTypeOf(Type type, Class<?> clazz) {
