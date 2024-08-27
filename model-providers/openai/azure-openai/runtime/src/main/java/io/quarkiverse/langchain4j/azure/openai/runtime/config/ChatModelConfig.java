@@ -50,7 +50,7 @@ public interface ChatModelConfig {
      * An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens
      * with topP probability mass.
      * 0.1 means only the tokens comprising the top 10% probability mass are considered.
-     * It is recommended to alter this or topP, but not both.
+     * It is recommended to alter this or temperature, but not both.
      */
     @WithDefault("1.0")
     Double topP();
