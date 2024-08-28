@@ -38,7 +38,7 @@ public class WireMockUtil {
     public static final String PROJECT_ID = "123123321321";
     public static final String GRANT_TYPE = "urn:ibm:params:oauth:grant-type:apikey";
     public static final String VERSION = "2024-03-14";
-    public static final String DEFAULT_CHAT_MODEL = "ibm/granite-20b-multilingual";
+    public static final String DEFAULT_CHAT_MODEL = "ibm/granite-13b-chat-v2";
     public static final String DEFAULT_EMBEDDING_MODEL = "ibm/slate-125m-english-rtrvr";
     public static final String IAM_200_RESPONSE = """
             {
@@ -52,7 +52,7 @@ public class WireMockUtil {
             """;
     public static String RESPONSE_WATSONX_CHAT_API = """
             {
-                "model_id": "meta-llama/llama-2-70b-chat",
+                "model_id": "ibm/granite-13b-chat-v2",
                 "created_at": "2024-01-21T17:06:14.052Z",
                 "results": [
                     {

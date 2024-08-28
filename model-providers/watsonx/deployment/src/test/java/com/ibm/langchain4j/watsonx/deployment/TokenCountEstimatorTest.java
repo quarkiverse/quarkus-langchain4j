@@ -1,6 +1,5 @@
 package com.ibm.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Date;
@@ -10,14 +9,8 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -26,23 +19,10 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.input.Prompt;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class TokenCountEstimatorTest {
-
-    static WireMockServer watsonxServer;
-    static WireMockServer iamServer;
-    static ObjectMapper mapper;
-
-    @Inject
-    LangChain4jWatsonxConfig langchain4jWatsonConfig;
-
-    @Inject
-    ChatLanguageModel model;
-
-    static WireMockUtil mockServers;
+public class TokenCountEstimatorTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -52,30 +32,15 @@ public class TokenCountEstimatorTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
-    @BeforeAll
-    static void beforeAll() {
-        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
-
-        watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
-        watsonxServer.start();
-
-        iamServer = new WireMockServer(options().port(WireMockUtil.PORT_IAM_SERVER));
-        iamServer.start();
-
-        mockServers = new WireMockUtil(watsonxServer, iamServer);
+    @Override
+    void handlerBeforeEach() {
+        mockServers.mockIAMBuilder(200)
+                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .build();
     }
 
-    @AfterAll
-    static void afterAll() {
-        watsonxServer.stop();
-        iamServer.stop();
-    }
-
-    @BeforeEach
-    void beforeEach() {
-        watsonxServer.resetAll();
-        iamServer.resetAll();
-    }
+    @Inject
+    ChatLanguageModel model;
 
     @Inject
     TokenCountEstimator tokenization;
@@ -109,19 +74,24 @@ public class TokenCountEstimatorTest {
 
     @Test
     void token_count_estimator_list() throws Exception {
-        mockServer();
+
+        var modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        var input = "Write a tagline for an alumni\nassociation: Together we";
+        var projectId = langchain4jWatsonxConfig.defaultConfig().projectId();
+        var body = new TokenizationRequest(modelId, input, projectId);
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
+                .body(mapper.writeValueAsString(body))
+                .response(WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
+                .build();
+
         assertEquals(11, tokenization.estimateTokenCount(
-                List.of(SystemMessage.from("Write a tagline for an alumni "), UserMessage.from("association: Together we"))));
+                List.of(SystemMessage.from("Write a tagline for an alumni"), UserMessage.from("association: Together we"))));
     }
 
     private String mockServer() throws Exception {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
-                .build();
-
-        var config = langchain4jWatsonxConfig.defaultConfig();
-        var modelId = config.chatModel().modelId();
+        var modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         var input = "Write a tagline for an alumni association: Together we";
         var projectId = langchain4jWatsonxConfig.defaultConfig().projectId();
         var body = new TokenizationRequest(modelId, input, projectId);
