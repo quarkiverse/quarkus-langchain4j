@@ -31,6 +31,7 @@
 ** xref:easy-rag.adoc[Easy RAG]
 ** xref:dev-ui.adoc[Dev UI]
 ** xref:reranking.adoc[Reranking]
+** xref:web-search.adoc[Web search]
 
 * Advanced topics
 ** xref:fault-tolerance.adoc[Fault Tolerance]
