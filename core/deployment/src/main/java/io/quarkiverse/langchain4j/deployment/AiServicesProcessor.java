@@ -9,6 +9,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRI
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -1126,6 +1127,8 @@ public class AiServicesProcessor {
             try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fromResource)) {
                 if (is != null) {
                     return new String(is.readAllBytes());
+                } else {
+                    throw new FileNotFoundException("Resource not found: " + fromResource);
                 }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
