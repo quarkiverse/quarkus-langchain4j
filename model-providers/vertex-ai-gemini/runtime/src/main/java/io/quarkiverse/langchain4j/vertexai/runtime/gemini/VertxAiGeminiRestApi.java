@@ -115,7 +115,7 @@ public interface VertxAiGeminiRestApi {
             try {
                 var credentials = GoogleCredentials.getApplicationDefault();
                 credentials.refreshIfExpired();
-                return credentials.getAccessToken().getTokenValue();
+                return "Bearer " + credentials.getAccessToken().getTokenValue();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
