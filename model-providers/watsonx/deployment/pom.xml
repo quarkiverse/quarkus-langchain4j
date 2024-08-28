@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-watsonx-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.17.2</version>
     </parent>
     <artifactId>quarkus-langchain4j-watsonx-deployment</artifactId>
     <name>Quarkus LangChain4j - Watsonx - Deployment</name>
