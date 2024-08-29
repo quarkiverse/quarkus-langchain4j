@@ -89,10 +89,10 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             .baseUri(new URI(builder.baseUrl))
                             .connectTimeout(builder.connectTimeout.toSeconds(), TimeUnit.SECONDS)
                             .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
-                    if (builder.logRequests || builder.logResponses) {
+                    boolean logResponses = builder.logResponses || builder.logStreamingResponses;
+                    if (builder.logRequests || logResponses) {
                         restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                        restApiBuilder.clientLogger(new OpenAiRestApi.OpenAiClientLogger(builder.logRequests,
-                                builder.logResponses));
+                        restApiBuilder.clientLogger(new OpenAiRestApi.OpenAiClientLogger(builder.logRequests, logResponses));
                     }
                     if (builder.proxy != null) {
                         if (builder.proxy.type() != Proxy.Type.HTTP) {
