@@ -92,6 +92,7 @@ public class ToolProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     public void handleTools(CombinedIndexBuildItem indexBuildItem,
             ToolsRecorder recorder,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             RecorderContext recorderContext,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
@@ -176,6 +177,14 @@ public class ToolProcessor {
                     boolean ignoreToolMethod = ignoreToolMethod(toolMethod, index);
                     if (ignoreToolMethod) {
                         continue;
+                    } else {
+                        // The WebSearchTool class isn't a CDI bean, so if
+                        // we consider it as a tool, we have to also turn it into one
+                        if (LangChain4jDotNames.WEB_SEARCH_TOOL.equals(className)) {
+                            additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
+                                    .addBeanClass(className.toString())
+                                    .setUnremovable().build());
+                        }
                     }
 
                     AnnotationValue nameValue = instance.value("name");
