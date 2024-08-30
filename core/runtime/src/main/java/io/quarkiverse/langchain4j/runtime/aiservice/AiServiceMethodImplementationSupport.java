@@ -26,6 +26,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.spi.CDI;
+
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -55,6 +57,8 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.guardrails.GuardrailException;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -273,6 +277,48 @@ public class AiServiceMethodImplementationSupport {
             tokenUsageAccumulator = tokenUsageAccumulator.add(response.tokenUsage());
         }
 
+        // Guardrails chain here.
+        int attempt = 0;
+        int max = methodCreateInfo.getGuardRailsMaxRetry();
+        if (max <= 0) {
+            max = 1;
+        }
+        while (attempt < max) {
+            GuardRailsResult grr = invokeOutputGuardRails(methodCreateInfo, response, chatMemory, augmentationResult);
+            if (!grr.success) {
+                if (!grr.retry()) {
+                    throw new GuardrailException(
+                            "Output validation failed. The guardrail " + grr.bean().getName() + " thrown an exception",
+                            grr.failure());
+                } else if (grr.reprompt() != null) {
+                    // Retry with re-prompting
+                    chatMemory.add(userMessage(grr.reprompt()));
+                    if (toolSpecifications == null) {
+                        response = context.chatModel.generate(chatMemory.messages());
+                    } else {
+                        response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
+                    }
+                    chatMemory.add(response.content());
+                } else {
+                    // Retry without re-prompting
+                    if (toolSpecifications == null) {
+                        response = context.chatModel.generate(chatMemory.messages());
+                    } else {
+                        response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
+                    }
+                    chatMemory.add(response.content());
+                }
+                attempt++;
+            } else {
+                break;
+            }
+        }
+
+        if (attempt == max) {
+            throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries",
+                    null);
+        }
+
         // everything worked as expected so let's commit the messages
         chatMemory.commit();
 
@@ -288,6 +334,44 @@ public class AiServiceMethodImplementationSupport {
         } else {
             return SERVICE_OUTPUT_PARSER.parse(response, returnType);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static GuardRailsResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
+            Response<AiMessage> response, CommittableChatMemory chatMemory, AugmentationResult augmentationResult) {
+        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+            return GuardRailsResult.SUCCESS;
+        }
+        List<Class<? extends OutputGuardrail>> classes;
+        synchronized (AiServiceMethodImplementationSupport.class) {
+            classes = methodCreateInfo.getOutputGuardrailsClasses();
+            if (classes.isEmpty()) {
+                for (String className : methodCreateInfo.getOutputGuardrailsClassNames()) {
+                    try {
+                        classes.add((Class<? extends OutputGuardrail>) Class.forName(className, true,
+                                Thread.currentThread().getContextClassLoader()));
+                    } catch (Exception e) {
+                        throw new RuntimeException(
+                                "Could not find " + OutputGuardrail.class.getSimpleName() + " implementation class: "
+                                        + className,
+                                e);
+                    }
+                }
+            }
+        }
+
+        for (Class<? extends OutputGuardrail> bean : classes) {
+            try {
+                CDI.current().select(bean).get().validate(
+                        new OutputGuardrail.OutputGuardrailParams(response.content(), chatMemory, augmentationResult));
+            } catch (OutputGuardrail.ValidationException e) {
+                return new GuardRailsResult(false, bean, e, e.isRetry(), e.getReprompt());
+            } catch (Exception e) {
+                return new GuardRailsResult(false, bean, e, false, null);
+            }
+        }
+
+        return GuardRailsResult.SUCCESS;
     }
 
     private static boolean needsMemorySeed(QuarkusAiServiceContext context, Object memoryId) {
@@ -581,5 +665,12 @@ public class AiServiceMethodImplementationSupport {
                     .onError(em::fail)
                     .start();
         }
+    }
+
+    private record GuardRailsResult(boolean success, Class<? extends OutputGuardrail> bean, Exception failure,
+            boolean retry, String reprompt) {
+
+        static GuardRailsResult SUCCESS = new GuardRailsResult(true, null, null, false, null);
+
     }
 }

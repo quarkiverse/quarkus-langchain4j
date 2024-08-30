@@ -5,6 +5,7 @@
 ** xref:agent-and-tools.adoc[Agent and Tools]
 ** xref:retrievers.adoc[Embeddings and Document Retrievers]
 ** xref:prompt-engineering.adoc[Prompt Engineering 101]
+** xref:guardrails.adoc[Guardrails]
 
 * LLMs
 ** xref:llms.adoc[LLMs]
