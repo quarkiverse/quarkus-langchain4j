@@ -111,19 +111,22 @@ public class AiServicesRecorder {
                     // properly populates QuarkusAiServiceContext which is what we are trying to construct
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
 
-                    if (info.languageModelSupplierClassName() != null) {
-                        Supplier<? extends ChatLanguageModel> supplier = (Supplier<? extends ChatLanguageModel>) Thread
-                                .currentThread().getContextClassLoader().loadClass(info.languageModelSupplierClassName())
-                                .getConstructor().newInstance();
-
-                        quarkusAiServices.chatLanguageModel(supplier.get());
-
+                    if (info.languageModelSupplierClassName() != null
+                            || info.streamingChatLanguageModelSupplierClassName() != null) {
+                        if (info.languageModelSupplierClassName() != null) {
+                            Supplier<? extends ChatLanguageModel> supplier = createSupplier(
+                                    info.languageModelSupplierClassName());
+                            quarkusAiServices.chatLanguageModel(supplier.get());
+                        }
+                        if (info.streamingChatLanguageModelSupplierClassName() != null) {
+                            Supplier<? extends StreamingChatLanguageModel> supplier = createSupplier(
+                                    info.streamingChatLanguageModelSupplierClassName());
+                            quarkusAiServices.streamingChatLanguageModel(supplier.get());
+                        }
                     } else {
-
                         if (NamedConfigUtil.isDefault(info.chatModelName())) {
                             quarkusAiServices
                                     .chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
-
                             if (info.needsStreamingChatModel()) {
                                 quarkusAiServices
                                         .streamingChatLanguageModel(
@@ -251,5 +254,12 @@ public class AiServicesRecorder {
                 }
             }
         };
+    }
+
+    private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
+        return (Supplier<T>) Thread
+                .currentThread().getContextClassLoader().loadClass(className)
+                .getConstructor().newInstance();
     }
 }
