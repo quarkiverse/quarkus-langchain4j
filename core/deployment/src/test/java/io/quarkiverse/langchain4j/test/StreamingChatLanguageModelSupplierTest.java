@@ -31,7 +31,7 @@ public class StreamingChatLanguageModelSupplierTest {
         }
 
         @GET
-        public Multi<String> blocking() {
+        public Multi<String> streaming() {
             return service.chat("what is the Answer to the Ultimate Question of Life, the Universe, and Everything?");
         }
     }

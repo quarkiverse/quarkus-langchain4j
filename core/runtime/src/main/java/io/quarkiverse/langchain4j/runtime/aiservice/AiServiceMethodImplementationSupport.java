@@ -570,16 +570,18 @@ public class AiServiceMethodImplementationSupport {
 
         @Override
         public void accept(MultiEmitter<? super String> em) {
-            new AiServiceTokenStream(messagesToSend, context, memoryId)
-                    .onNext(em::emit)
-                    .onComplete(new Consumer<>() {
-                        @Override
-                        public void accept(Response<AiMessage> message) {
-                            em.complete();
-                        }
-                    })
-                    .onError(em::fail)
-                    .start();
+            CompletableFuture.runAsync(() -> {
+                new AiServiceTokenStream(messagesToSend, context, memoryId)
+                        .onNext(em::emit)
+                        .onComplete(new Consumer<>() {
+                            @Override
+                            public void accept(Response<AiMessage> message) {
+                                em.complete();
+                            }
+                        })
+                        .onError(em::fail)
+                        .start();
+            }, Infrastructure.getDefaultWorkerPool());
         }
     }
 }
