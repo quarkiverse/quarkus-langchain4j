@@ -1,0 +1,220 @@
+
+:summaryTableId: quarkus-langchain4j-tavily
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-langchain4j-tavily_configuration]]link:#quarkus-langchain4j-tavily_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-base-url]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-base-url[quarkus.langchain4j.tavily.base-url]`
+
+
+[.description]
+--
+Base URL of the Tavily API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`https://api.tavily.com`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-api-key]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-api-key[quarkus.langchain4j.tavily.api-key]`
+
+
+[.description]
+--
+API key for the Tavily API
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-max-results]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-max-results[quarkus.langchain4j.tavily.max-results]`
+
+
+[.description]
+--
+Maximum number of results to return
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_MAX_RESULTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_MAX_RESULTS+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`5`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-timeout]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-timeout[quarkus.langchain4j.tavily.timeout]`
+
+
+[.description]
+--
+The timeout duration for Tavily requests.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`60S`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests[quarkus.langchain4j.tavily.log-requests]`
+
+
+[.description]
+--
+Whether requests to Tavily should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-responses]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-responses[quarkus.langchain4j.tavily.log-responses]`
+
+
+[.description]
+--
+Whether responses from Tavily should be logged
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-search-depth]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-search-depth[quarkus.langchain4j.tavily.search-depth]`
+
+
+[.description]
+--
+The search depth to use. This can be "basic" or "advanced". Basic is the default.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_SEARCH_DEPTH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_SEARCH_DEPTH+++`
+endif::add-copy-button-to-env-var[]
+-- a|
+`basic`, `advanced` 
+|`basic`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-answer]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-answer[quarkus.langchain4j.tavily.include-answer]`
+
+
+[.description]
+--
+Include a short answer to original query. Default is false.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_ANSWER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_ANSWER+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-raw-content]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-raw-content[quarkus.langchain4j.tavily.include-raw-content]`
+
+
+[.description]
+--
+Include the cleaned and parsed HTML content of each search result. Default is false.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_RAW_CONTENT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_RAW_CONTENT+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-domains]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-domains[quarkus.langchain4j.tavily.include-domains]`
+
+
+[.description]
+--
+A list of domains to specifically include in the search results. Default is ++[]++, which includes all domains.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_DOMAINS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_DOMAINS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`[]`
+
+
+a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains]]`link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains[quarkus.langchain4j.tavily.exclude-domains]`
+
+
+[.description]
+--
+A list of domains to specifically exclude from the search results. Default is ++[]++, which doesn't exclude any domains.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TAVILY_EXCLUDE_DOMAINS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_EXCLUDE_DOMAINS+++`
+endif::add-copy-button-to-env-var[]
+--|list of string 
+|`[]`
+
+|===
+ifndef::no-duration-note[]
+[NOTE]
+[id='duration-note-anchor-{summaryTableId}']
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

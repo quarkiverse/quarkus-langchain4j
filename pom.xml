@@ -46,6 +46,8 @@
 
     <module>quarkus-integrations/websockets-next</module>
 
+    <module>web-search-engines/tavily</module>
+
     <module>rag/easy-rag</module>
     <module>rag/parsers-base</module>
 
@@ -205,6 +207,7 @@
         <module>samples/chatbot</module>
         <module>samples/chatbot-easy-rag</module>
         <module>samples/sql-chatbot</module>
+        <module>samples/chatbot-web-search</module>
       </modules>
     </profile>
   </profiles>
