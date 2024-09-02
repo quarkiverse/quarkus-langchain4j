@@ -1,6 +1,5 @@
 package com.ibm.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.ibm.langchain4j.watsonx.deployment.WireMockUtil.streamingResponseHandler;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -15,14 +14,9 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -30,16 +24,11 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class CacheTokenTest {
+public class CacheTokenTest extends WireMockAbstract {
 
     static int cacheTimeout = 2000;
-    static WireMockServer watsonxServer;
-    static WireMockServer iamServer;
-    static ObjectMapper mapper;
     static String RESPONSE_401 = """
             {
                 "errors": [
@@ -54,8 +43,13 @@ public class CacheTokenTest {
             }
             """;
 
-    @Inject
-    LangChain4jWatsonxConfig config;
+    @RegisterExtension
+    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
     ChatLanguageModel chatModel;
@@ -68,41 +62,6 @@ public class CacheTokenTest {
 
     @Inject
     TokenCountEstimator tokenCountEstimator;
-
-    static WireMockUtil mockServers;
-
-    @RegisterExtension
-    static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
-
-    @BeforeAll
-    static void beforeAll() {
-        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
-
-        watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
-        watsonxServer.start();
-
-        iamServer = new WireMockServer(options().port(WireMockUtil.PORT_IAM_SERVER));
-        iamServer.start();
-
-        mockServers = new WireMockUtil(watsonxServer, iamServer);
-    }
-
-    @AfterAll
-    static void afterAll() {
-        watsonxServer.stop();
-        iamServer.stop();
-    }
-
-    @BeforeEach
-    void beforeEach() {
-        watsonxServer.resetAll();
-        iamServer.resetAll();
-    }
 
     @Test
     void try_token_cache() throws InterruptedException {

@@ -10,11 +10,8 @@
     <artifactId>quarkus-langchain4j-watsonx-parent</artifactId>
     <name>Quarkus LangChain4j - Watsonx - Parent</name>
     <packaging>pom</packaging>
-
     <modules>
         <module>deployment</module>
         <module>runtime</module>
     </modules>
-
-    
 </project>

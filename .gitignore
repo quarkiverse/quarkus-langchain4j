@@ -65,3 +65,6 @@ release.properties
 
 # Quarkus CLI
 .quarkus
+
+#Dolphin
+.directory

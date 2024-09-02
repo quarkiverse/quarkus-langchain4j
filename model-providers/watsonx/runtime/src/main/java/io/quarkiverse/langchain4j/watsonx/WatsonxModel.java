@@ -4,7 +4,6 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -12,12 +11,14 @@ import jakarta.ws.rs.WebApplicationException;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.FinishReason;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
+import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public abstract class WatsonxModel {
@@ -38,42 +39,51 @@ public abstract class WatsonxModel {
     final Double repetitionPenalty;
     final Integer truncateInputTokens;
     final Boolean includeStopSequence;
-    final String promptJoiner;
     final WatsonxRestApi client;
+    final PromptFormatter promptFormatter;
 
-    public WatsonxModel(Builder config) {
+    public WatsonxModel(Builder builder) {
 
-        QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
-                .baseUrl(config.url)
-                .clientHeadersFactory(new BearerTokenHeaderFactory(config.tokenGenerator))
-                .connectTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS)
-                .readTimeout(config.timeout.toSeconds(), TimeUnit.SECONDS);
+        QuarkusRestClientBuilder restClientBuilder = QuarkusRestClientBuilder.newBuilder()
+                .baseUrl(builder.url)
+                .clientHeadersFactory(new BearerTokenHeaderFactory(builder.tokenGenerator))
+                .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
+                .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
-        if (config.logRequests || config.logResponses) {
-            builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-            builder.clientLogger(new WatsonxRestApi.WatsonClientLogger(
-                    config.logRequests,
-                    config.logResponses));
+        if (builder.logRequests || builder.logResponses) {
+            restClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
+            restClientBuilder.clientLogger(new WatsonxRestApi.WatsonClientLogger(
+                    builder.logRequests,
+                    builder.logResponses));
         }
 
-        this.client = builder.build(WatsonxRestApi.class);
-        this.modelId = config.modelId;
-        this.version = config.version;
-        this.projectId = config.projectId;
-        this.decodingMethod = config.decodingMethod;
-        this.decayFactor = config.decayFactor;
-        this.startIndex = config.startIndex;
-        this.maxNewTokens = config.maxNewTokens;
-        this.minNewTokens = config.minNewTokens;
-        this.randomSeed = config.randomSeed;
-        this.stopSequences = config.stopSequences;
-        this.temperature = config.temperature;
-        this.topP = config.topP;
-        this.topK = config.topK;
-        this.repetitionPenalty = config.repetitionPenalty;
-        this.truncateInputTokens = config.truncateInputTokens;
-        this.includeStopSequence = config.includeStopSequence;
-        this.promptJoiner = config.promptJoiner;
+        this.client = restClientBuilder.build(WatsonxRestApi.class);
+        this.modelId = builder.modelId;
+        this.version = builder.version;
+        this.projectId = builder.projectId;
+        this.decodingMethod = builder.decodingMethod;
+        this.decayFactor = builder.decayFactor;
+        this.startIndex = builder.startIndex;
+        this.maxNewTokens = builder.maxNewTokens;
+        this.minNewTokens = builder.minNewTokens;
+        this.randomSeed = builder.randomSeed;
+        this.stopSequences = builder.stopSequences;
+        this.temperature = builder.temperature;
+        this.topP = builder.topP;
+        this.topK = builder.topK;
+        this.repetitionPenalty = builder.repetitionPenalty;
+        this.truncateInputTokens = builder.truncateInputTokens;
+        this.includeStopSequence = builder.includeStopSequence;
+
+        if (builder.promptFormatter != null) {
+            this.promptFormatter = builder.promptFormatter;
+        } else {
+            this.promptFormatter = null;
+        }
+    }
+
+    public PromptFormatter getPromptFormatter() {
+        return promptFormatter;
     }
 
     public static Builder builder() {
@@ -81,14 +91,11 @@ public abstract class WatsonxModel {
     }
 
     protected String toInput(List<ChatMessage> messages) {
-        StringJoiner joiner = new StringJoiner(promptJoiner);
-        for (ChatMessage message : messages) {
-            switch (message.type()) {
-                case AI, USER, SYSTEM -> joiner.add(message.text());
-                case TOOL_EXECUTION_RESULT -> throw new IllegalArgumentException("Tool message is not supported");
-            }
-        }
-        return joiner.toString();
+        return promptFormatter.format(messages, List.of());
+    }
+
+    protected String toInput(List<ChatMessage> messages, List<ToolSpecification> tools) {
+        return promptFormatter.format(messages, tools);
     }
 
     protected FinishReason toFinishReason(String stopReason) {
@@ -156,7 +163,7 @@ public abstract class WatsonxModel {
         public boolean logResponses;
         public boolean logRequests;
         private TokenGenerator tokenGenerator;
-        private String promptJoiner;
+        private PromptFormatter promptFormatter;
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;
@@ -253,8 +260,8 @@ public abstract class WatsonxModel {
             return this;
         }
 
-        public Builder promptJoiner(String promptJoiner) {
-            this.promptJoiner = promptJoiner;
+        public Builder promptFormatter(PromptFormatter promptFormatter) {
+            this.promptFormatter = promptFormatter;
             return this;
         }
 

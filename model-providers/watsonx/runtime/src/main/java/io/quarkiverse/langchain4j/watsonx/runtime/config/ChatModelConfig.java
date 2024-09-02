@@ -11,16 +11,6 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * Model id to use.
-     * <p>
-     * To view the complete model list, <a href=
-     * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids">click
-     * here</a>.
-     */
-    @WithDefault("ibm/granite-20b-multilingual")
-    String modelId();
-
-    /**
      * Represents the strategy used for picking the tokens during generation of the output text. During text generation when
      * parameter
      * value is set to <code>greedy</code>, each successive token corresponds to the highest probability token given the text
@@ -42,7 +32,7 @@ public interface ChatModelConfig {
      * tokens
      * have been generated.
      */
-    Optional<LengthPenaltyConfig> lengthPenalty();
+    LengthPenaltyConfig lengthPenalty();
 
     /**
      * The maximum number of new tokens to be generated. The maximum supported value for this field depends on the model being
@@ -161,7 +151,8 @@ public interface ChatModelConfig {
      * your
      * preferred way of concatenating messages to ensure that the prompt is structured in the correct way.
      */
-    Optional<String> promptJoiner();
+    @WithDefault("\n")
+    String promptJoiner();
 
     @ConfigGroup
     public interface LengthPenaltyConfig {
