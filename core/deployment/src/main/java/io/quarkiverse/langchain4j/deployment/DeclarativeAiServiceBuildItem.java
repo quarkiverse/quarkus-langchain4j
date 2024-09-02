@@ -13,7 +13,8 @@ import io.quarkus.builder.item.MultiBuildItem;
 public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     private final ClassInfo serviceClassInfo;
-    private final DotName languageModelSupplierClassDotName;
+    private final DotName chatLanguageModelSupplierClassDotName;
+    private final DotName streamingChatLanguageModelSupplierClassDotName;
     private final List<DotName> toolDotNames;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
@@ -27,7 +28,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final String chatModelName;
     private final String moderationModelName;
 
-    public DeclarativeAiServiceBuildItem(ClassInfo serviceClassInfo, DotName languageModelSupplierClassDotName,
+    public DeclarativeAiServiceBuildItem(
+            ClassInfo serviceClassInfo,
+            DotName chatLanguageModelSupplierClassDotName,
+            DotName streamingChatLanguageModelSupplierClassDotName,
             List<DotName> toolDotNames,
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrieverClassDotName,
@@ -40,7 +44,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String chatModelName,
             String moderationModelName) {
         this.serviceClassInfo = serviceClassInfo;
-        this.languageModelSupplierClassDotName = languageModelSupplierClassDotName;
+        this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
+        this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
         this.toolDotNames = toolDotNames;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrieverClassDotName = retrieverClassDotName;
@@ -58,8 +63,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return serviceClassInfo;
     }
 
-    public DotName getLanguageModelSupplierClassDotName() {
-        return languageModelSupplierClassDotName;
+    public DotName getChatLanguageModelSupplierClassDotName() {
+        return chatLanguageModelSupplierClassDotName;
+    }
+
+    public DotName getStreamingChatLanguageModelSupplierClassDotName() {
+        return streamingChatLanguageModelSupplierClassDotName;
     }
 
     public List<DotName> getToolDotNames() {

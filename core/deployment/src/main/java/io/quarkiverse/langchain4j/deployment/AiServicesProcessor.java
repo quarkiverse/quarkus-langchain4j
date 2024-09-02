@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -208,22 +209,23 @@ public class AiServicesProcessor {
             }
             ClassInfo declarativeAiServiceClassInfo = instance.target().asClass();
 
-            DotName chatLanguageModelSupplierClassDotName = null;
-            AnnotationValue chatLanguageModelSupplierValue = instance.value("chatLanguageModelSupplier");
-            if (chatLanguageModelSupplierValue != null) {
-                chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierValue.asClass().name();
-                if (chatLanguageModelSupplierClassDotName.equals(LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER)) { // this is the case where the
-                                                                                                                  // default was set, so we just
-                                                                                                                  // ignore it
-                    chatLanguageModelSupplierClassDotName = null;
-                } else {
-                    validateSupplierAndRegisterForReflection(chatLanguageModelSupplierClassDotName, index,
-                            reflectiveClassProducer);
-                }
-            }
+            DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
+                    LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
+                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                            supplierDotName,
+                            index,
+                            reflectiveClassProducer));
+
+            DotName streamingChatLanguageModelSupplierClassDotName = getSupplierDotName(
+                    instance.value("streamingChatLanguageModelSupplier"),
+                    LangChain4jDotNames.BEAN_STREAMING_CHAT_MODEL_SUPPLIER,
+                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                            supplierDotName,
+                            index,
+                            reflectiveClassProducer));
 
             String chatModelName = NamedConfigUtil.DEFAULT_NAME;
-            if (chatLanguageModelSupplierClassDotName == null) {
+            if (chatLanguageModelSupplierClassDotName == null && streamingChatLanguageModelSupplierClassDotName == null) {
                 AnnotationValue modelNameValue = instance.value("modelName");
                 if (modelNameValue != null) {
                     String modelNameValueStr = modelNameValue.asString();
@@ -336,6 +338,7 @@ public class AiServicesProcessor {
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
+                            streamingChatLanguageModelSupplierClassDotName,
                             toolDotNames,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverClassDotName,
@@ -356,6 +359,23 @@ public class AiServicesProcessor {
         for (String moderationModelName : moderationModelNames) {
             requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem(moderationModelName));
         }
+    }
+
+    private DotName getSupplierDotName(
+            AnnotationValue instanceAnnotation,
+            DotName supplierDotName,
+            Consumer<DotName> validator) {
+        DotName dotName = null;
+        if (instanceAnnotation != null) {
+            dotName = instanceAnnotation.asClass().name();
+            if (dotName.equals(supplierDotName)) {
+                // this is the case where the default was set, so we just ignore it
+                dotName = null;
+            } else {
+                validator.accept(dotName);
+            }
+        }
+        return dotName;
     }
 
     private void validateSupplierAndRegisterForReflection(DotName supplierDotName, IndexView index,
@@ -395,8 +415,12 @@ public class AiServicesProcessor {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
             String serviceClassName = declarativeAiServiceClassInfo.name().toString();
 
-            String chatLanguageModelSupplierClassName = (bi.getLanguageModelSupplierClassDotName() != null
-                    ? bi.getLanguageModelSupplierClassDotName().toString()
+            String chatLanguageModelSupplierClassName = (bi.getChatLanguageModelSupplierClassDotName() != null
+                    ? bi.getChatLanguageModelSupplierClassDotName().toString()
+                    : null);
+
+            String streamingChatLanguageModelSupplierClassName = (bi.getStreamingChatLanguageModelSupplierClassDotName() != null
+                    ? bi.getStreamingChatLanguageModelSupplierClassDotName().toString()
                     : null);
 
             List<String> toolClassNames = bi.getToolDotNames().stream().map(DotName::toString).collect(Collectors.toList());
@@ -427,6 +451,8 @@ public class AiServicesProcessor {
 
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
+            // currently in one class either streaming or blocking model are supported, but not both
+            // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 if (!LangChain4jDotNames.MULTI.equals(method.returnType().name())) {
                     continue;
@@ -459,7 +485,10 @@ public class AiServicesProcessor {
                     .configure(QuarkusAiServiceContext.class)
                     .forceApplicationClass()
                     .createWith(recorder.createDeclarativeAiService(
-                            new DeclarativeAiServiceCreateInfo(serviceClassName, chatLanguageModelSupplierClassName,
+                            new DeclarativeAiServiceCreateInfo(
+                                    serviceClassName,
+                                    chatLanguageModelSupplierClassName,
+                                    streamingChatLanguageModelSupplierClassName,
                                     toolClassNames, chatMemoryProviderSupplierClassName, retrieverClassName,
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName,
@@ -475,7 +504,9 @@ public class AiServicesProcessor {
                     .done()
                     .scope(Dependent.class);
 
-            if ((chatLanguageModelSupplierClassName == null) && !selectedChatModelProvider.isEmpty()) {
+            boolean hasChatModelSupplier = chatLanguageModelSupplierClassName == null
+                    && streamingChatLanguageModelSupplierClassName == null;
+            if (hasChatModelSupplier && !selectedChatModelProvider.isEmpty()) {
                 if (NamedConfigUtil.isDefault(chatModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MODEL));
                     if (injectStreamingChatModelBean) {

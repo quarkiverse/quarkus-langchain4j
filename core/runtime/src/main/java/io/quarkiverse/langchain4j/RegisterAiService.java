@@ -13,6 +13,7 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
@@ -40,6 +41,15 @@ import io.quarkiverse.langchain4j.audit.AuditService;
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RegisterAiService {
+
+    /**
+     * Configures the way to obtain the {@link StreamingChatLanguageModel} to use.
+     * If not configured, the default CDI bean implementing the model is looked up.
+     * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
+     * {@code quarkus-langchain4j-azure-openai} or
+     * {@code quarkus-langchain4j-hugging-face}
+     */
+    Class<? extends Supplier<StreamingChatLanguageModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
 
     /**
      * Configures the way to obtain the {@link ChatLanguageModel} to use.
@@ -138,6 +148,19 @@ public @interface RegisterAiService {
 
         @Override
         public ChatLanguageModel get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link StreamingChatLanguageModel} that has been configured as a CDI bean
+     * by * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
+     * {@code quarkus-langchain4j-hugging-face}).
+     */
+    final class BeanStreamingChatLanguageModelSupplier implements Supplier<StreamingChatLanguageModel> {
+
+        @Override
+        public StreamingChatLanguageModel get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }
