@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.mvnpm.at.mvnpm</groupId>
             <artifactId>vaadin-webcomponents</artifactId>
-            <version>24.4.5</version>
+            <version>24.4.7</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
