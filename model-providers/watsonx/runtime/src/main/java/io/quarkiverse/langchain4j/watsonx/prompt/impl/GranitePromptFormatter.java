@@ -4,7 +4,6 @@ import java.util.List;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ChatMessageType;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 
 /**
@@ -28,7 +27,7 @@ public class GranitePromptFormatter implements PromptFormatter {
     }
 
     @Override
-    public String endOf(ChatMessageType messageType) {
+    public String endOf(ChatMessage chatMessage) {
         return "";
     }
 

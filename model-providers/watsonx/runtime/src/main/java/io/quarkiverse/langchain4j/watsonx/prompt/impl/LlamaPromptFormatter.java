@@ -4,11 +4,10 @@ import java.util.List;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ChatMessageType;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 
 /**
- * Llama 3.x prompt formatter.
+ * Llama 3 prompt formatter.
  */
 public class LlamaPromptFormatter implements PromptFormatter {
 
@@ -29,12 +28,17 @@ public class LlamaPromptFormatter implements PromptFormatter {
 
     @Override
     public String user() {
-        return "<|start_header_id|>user<|end_header_id|>\n";
+        return "<|start_header_id|>user<|end_header_id|>\n\n";
     }
 
     @Override
     public String assistant() {
-        return "<|start_header_id|>assistant<|end_header_id|>\n";
+        return "<|start_header_id|>assistant<|end_header_id|>\n\n";
+    }
+
+    @Override
+    public String endOf(ChatMessage chatMessage) {
+        return "<|eot_id|>";
     }
 
     @Override
@@ -44,10 +48,5 @@ public class LlamaPromptFormatter implements PromptFormatter {
                 %s\
                 %s\
                 """.formatted(start(), systemMessageFormatter(messages), messagesFormatter(messages));
-    }
-
-    @Override
-    public String endOf(ChatMessageType type) {
-        return "<|eot_id|>";
     }
 }

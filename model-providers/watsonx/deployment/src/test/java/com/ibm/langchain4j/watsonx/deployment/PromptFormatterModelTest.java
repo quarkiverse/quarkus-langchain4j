@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
+import org.apache.commons.lang3.stream.Streams;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.GraniteCodePromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.GranitePromptFormatter;
+import io.quarkiverse.langchain4j.watsonx.prompt.impl.Llama31PromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.LlamaPromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.MistralLargePromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.MistralPromptFormatter;
@@ -30,169 +32,138 @@ public class PromptFormatterModelTest {
     @Test
     void llama_prompt_formatter() {
 
-        var promptFormatter = new LlamaPromptFormatter();
-        var prompt1 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"));
+        Streams.of(new LlamaPromptFormatter(), new Llama31PromptFormatter())
+                .forEach(promptFormatter -> {
+                    var prompt1 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"));
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
-                Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                """, promptFormatter.format(prompt1));
+                            You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-        var prompt2 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                            Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+                            """, promptFormatter.format(prompt1));
 
-                You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
-                Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                I'm an assistant<|eot_id|>""", promptFormatter.format(prompt2));
+                    var prompt2 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("I'm an assistant"));
 
-        var prompt3 = List.<ChatMessage> of(UserMessage.from("Write a poem about dog of ten lines"));
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>user<|end_header_id|>
-                Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                """, promptFormatter.format(prompt3));
+                            You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-        var prompt4 = List.<ChatMessage> of(
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                            Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>user<|end_header_id|>
-                Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                I'm an assistant<|eot_id|>""", promptFormatter.format(prompt4));
+                            I'm an assistant<|eot_id|>""", promptFormatter.format(prompt2));
 
-        var prompt5 = List.<ChatMessage> of(
-                SystemMessage.from("You are a poet"),
-                AiMessage.from("I'm an assistant"));
+                    var prompt3 = List.<ChatMessage> of(UserMessage.from("Write a poem about dog of ten lines"));
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-                You are a poet<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                I'm an assistant<|eot_id|>""", promptFormatter.format(prompt5));
+                            Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        var prompt6 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("dog dog"),
-                UserMessage.from("Write a poem about cat of ten lines"),
-                AiMessage.from("cat cat"));
+                            """, promptFormatter.format(prompt3));
 
-        assertEquals("""
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+                    var prompt4 = List.<ChatMessage> of(
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("I'm an assistant"));
 
-                You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
-                Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                dog dog<|eot_id|><|start_header_id|>user<|end_header_id|>
-                Write a poem about cat of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-                cat cat<|eot_id|>""", promptFormatter.format(prompt6));
-    }
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-    @Test
-    void mistral_large_prompt_formatter() {
+                            Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        var promptFormatter = new MistralLargePromptFormatter();
-        var prompt1 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"));
+                            I'm an assistant<|eot_id|>""", promptFormatter.format(prompt4));
 
-        assertEquals("<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]",
-                promptFormatter.format(prompt1));
+                    var prompt5 = List.<ChatMessage> of(
+                            SystemMessage.from("You are a poet"),
+                            AiMessage.from("I'm an assistant"));
 
-        var prompt2 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-        assertEquals(
-                "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
-                promptFormatter.format(prompt2));
+                            You are a poet<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        var prompt3 = List.<ChatMessage> of(UserMessage.from("Write a poem about dog of ten lines"));
-        assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]", promptFormatter.format(prompt3));
+                            I'm an assistant<|eot_id|>""", promptFormatter.format(prompt5));
 
-        var prompt4 = List.<ChatMessage> of(
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                    var prompt6 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("dog dog"),
+                            UserMessage.from("Write a poem about cat of ten lines"),
+                            AiMessage.from("cat cat"));
 
-        assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
-                promptFormatter.format(prompt4));
+                    assertEquals("""
+                            <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-        var prompt5 = List.<ChatMessage> of(
-                SystemMessage.from("You are a poet"),
-                AiMessage.from("I'm an assistant"));
+                            You are a poet<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-        assertEquals("<s>[INST] You are a poet [/INST]</s>I'm an assistant</s>",
-                promptFormatter.format(prompt5));
+                            Write a poem about dog of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-        var prompt6 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("dog dog"),
-                UserMessage.from("Write a poem about cat of ten lines"),
-                AiMessage.from("cat cat"));
+                            dog dog<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-        assertEquals(
-                "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]dog dog</s>[INST] Write a poem about cat of ten lines [/INST]cat cat</s>",
-                promptFormatter.format(prompt6));
+                            Write a poem about cat of ten lines<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+                            cat cat<|eot_id|>""", promptFormatter.format(prompt6));
+                });
     }
 
     @Test
     void mistral_prompt_formatter() {
 
-        var promptFormatter = new MistralPromptFormatter();
-        var prompt1 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"));
+        Streams.of(new MistralPromptFormatter(), new MistralLargePromptFormatter())
+                .forEach(promptFormatter -> {
 
-        assertEquals("<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]",
-                promptFormatter.format(prompt1));
+                    var prompt1 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"));
 
-        var prompt2 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                    assertEquals("<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]",
+                            promptFormatter.format(prompt1));
 
-        assertEquals(
-                "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
-                promptFormatter.format(prompt2));
+                    var prompt2 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("I'm an assistant"));
 
-        var prompt3 = List.<ChatMessage> of(UserMessage.from("Write a poem about dog of ten lines"));
-        assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]", promptFormatter.format(prompt3));
+                    assertEquals(
+                            "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
+                            promptFormatter.format(prompt2));
 
-        var prompt4 = List.<ChatMessage> of(
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("I'm an assistant"));
+                    var prompt3 = List.<ChatMessage> of(UserMessage.from("Write a poem about dog of ten lines"));
+                    assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]", promptFormatter.format(prompt3));
 
-        assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
-                promptFormatter.format(prompt4));
+                    var prompt4 = List.<ChatMessage> of(
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("I'm an assistant"));
 
-        var prompt5 = List.<ChatMessage> of(
-                SystemMessage.from("You are a poet"),
-                AiMessage.from("I'm an assistant"));
+                    assertEquals("<s>[INST] Write a poem about dog of ten lines [/INST]I'm an assistant</s>",
+                            promptFormatter.format(prompt4));
 
-        assertEquals("<s>[INST] You are a poet [/INST]</s>I'm an assistant</s>",
-                promptFormatter.format(prompt5));
+                    var prompt5 = List.<ChatMessage> of(
+                            SystemMessage.from("You are a poet"),
+                            AiMessage.from("I'm an assistant"));
 
-        var prompt6 = List.of(
-                SystemMessage.from("You are a poet"),
-                UserMessage.from("Write a poem about dog of ten lines"),
-                AiMessage.from("dog dog"),
-                UserMessage.from("Write a poem about cat of ten lines"),
-                AiMessage.from("cat cat"));
+                    assertEquals("<s>[INST] You are a poet [/INST]</s>I'm an assistant</s>",
+                            promptFormatter.format(prompt5));
 
-        assertEquals(
-                "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]dog dog</s>[INST] Write a poem about cat of ten lines [/INST]cat cat</s>",
-                promptFormatter.format(prompt6));
+                    var prompt6 = List.of(
+                            SystemMessage.from("You are a poet"),
+                            UserMessage.from("Write a poem about dog of ten lines"),
+                            AiMessage.from("dog dog"),
+                            UserMessage.from("Write a poem about cat of ten lines"),
+                            AiMessage.from("cat cat"));
+
+                    assertEquals(
+                            "<s>[INST] You are a poet [/INST]</s>[INST] Write a poem about dog of ten lines [/INST]dog dog</s>[INST] Write a poem about cat of ten lines [/INST]cat cat</s>",
+                            promptFormatter.format(prompt6));
+                });
     }
 
     @Test

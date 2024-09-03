@@ -163,6 +163,8 @@ When the `prompt-formatter` is enabled and a supported model is selected, the pr
 Currently, the following model supports tool execution:
 
 * `mistralai/mistral-large`
+* `meta-llama/llama-3-405b-instruct`
+* `meta-llama/llama-3-1-70b-instruct`
 
 IMPORTANT: The `@SystemMessage` and `@UserMessage` annotations are joined by default with a new line. If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.chat-model.prompt-joiner=<value>`. By adjusting this property, you can define your preferred way of joining messages and ensure that the prompt structure meets your specific needs. This customization option is available only when the `prompt-formatter` property is set to `false`. When the `prompt-formatter` is enabled (set to `true`), the prompt formatting, including the addition of tags and message joining, is automatically handled. In this case, the `prompt-joiner` property will be ignored, and you will not have the ability to customize how messages are joined.
 

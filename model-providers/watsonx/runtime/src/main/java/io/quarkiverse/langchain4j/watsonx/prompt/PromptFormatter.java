@@ -2,8 +2,12 @@ package io.quarkiverse.langchain4j.watsonx.prompt;
 
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
+import static jakarta.json.JsonValue.ValueType.ARRAY;
+import static jakarta.json.JsonValue.ValueType.OBJECT;
 import static java.util.function.Predicate.not;
 
+import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -12,8 +16,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jakarta.json.Json;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -22,11 +29,22 @@ import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 
 /**
- * The PromptFormatter interface defines the structure for handling and converting different types of {@link ChatMessage}
- * objects
- * into a specific string format for prompt generation.
+ * The {@code PromptFormatter} interface defines the structure for handling and converting different types of
+ * {@link ChatMessage}
+ * objects into a specific string format.
  */
 public interface PromptFormatter {
+
+    /**
+     * Returns an instance of {@link PromptToolFormatter} that is responsible for formatting tool-related data.
+     * <p>
+     * This method is intended to be overridden by implementations that allow the use of tools.
+     *
+     * @return an instance of {@link PromptToolFormatter}.
+     */
+    public default PromptToolFormatter promptToolFormatter() {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 
     /**
      * Defines the string used to join multiple {@link ChatMessage} objects when constructing the prompt.
@@ -114,22 +132,12 @@ public interface PromptFormatter {
     }
 
     /**
-     * Defines how to close a tag based on the message type.
-     *
-     * @param type the {@link ChatMessageType} for which the closing tag is being requested.
-     * @return the closing tag for the specified message type.
-     */
-    String endOf(ChatMessageType type);
-
-    /**
      * Defines how to close a tag based on the message.
      *
      * @param message the {@link ChatMessage} for which the closing tag is being requested.
      * @return the closing tag for the specified message type.
      */
-    default String endOf(ChatMessage message) {
-        return endOf(message.type());
-    }
+    String endOf(ChatMessage message);
 
     /**
      * Returns the tag associated with a specific {@link ChatMessageType}.
@@ -186,7 +194,7 @@ public interface PromptFormatter {
                 .map(new Function<ChatMessage, String>() {
                     @Override
                     public String apply(ChatMessage message) {
-                        return system() + message.text() + endOf(SYSTEM) + joiner();
+                        return system() + message.text() + endOf(message) + joiner();
                     }
                 })
                 .orElse("");
@@ -213,12 +221,12 @@ public interface PromptFormatter {
 
             if (message instanceof ToolExecutionResultMessage toolExecutionResultMessage) {
 
-                text = tagOf(message) + PromptFormatterUtil.convert(toolExecutionResultMessage) + endOf(message);
+                text = tagOf(message) + promptToolFormatter().convert(toolExecutionResultMessage) + endOf(message);
 
             } else if (message instanceof AiMessage aiMessage) {
 
                 if (aiMessage.hasToolExecutionRequests()) {
-                    text = toolExecution() + PromptFormatterUtil.convert(aiMessage.toolExecutionRequests());
+                    text = toolExecution() + promptToolFormatter().convert(aiMessage.toolExecutionRequests()) + endOf(message);
                 } else {
                     text = tagOf(message) + message.text() + endOf(message);
                 }
@@ -283,5 +291,30 @@ public interface PromptFormatter {
         }
 
         return result.build().toString();
+    }
+
+    /**
+     * Parses a JSON string representing a {@List} of {@link ToolExecutionRequest} and converts it into a JSON representation.
+     *
+     * @param json the JSON string to parse
+     * @return a {@List} of {@link ToolExecutionRequest} objects
+     */
+    default List<ToolExecutionRequest> toolExecutionRequestFormatter(String json) {
+
+        List<ToolExecutionRequest> result = new ArrayList<>();
+        StringReader stringReader = new StringReader(json);
+
+        try (JsonReader jsonReader = Json.createReader(stringReader)) {
+            var jsonValue = jsonReader.readValue();
+
+            if (jsonValue.getValueType().equals(ARRAY)) {
+                for (JsonValue toolExecutionRequest : jsonValue.asJsonArray()) {
+                    result.add(promptToolFormatter().toolExecutionRequest(toolExecutionRequest));
+                }
+            } else if (jsonValue.getValueType().equals(OBJECT)) {
+                result.add(promptToolFormatter().toolExecutionRequest(jsonValue.asJsonObject()));
+            }
+        }
+        return result;
     }
 }
