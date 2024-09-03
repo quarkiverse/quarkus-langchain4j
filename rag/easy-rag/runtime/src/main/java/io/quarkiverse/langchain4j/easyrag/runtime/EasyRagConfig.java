@@ -13,7 +13,9 @@ import io.smallrye.config.WithDefault;
 public interface EasyRagConfig {
 
     /**
-     * Path to the directory containing the documents to be ingested.
+     * Path to the directory containing the documents to be ingested. This is either
+     * an absolute or relative path in the filesystem. A relative path is
+     * resolved against the current working directory at runtime.
      */
     String path();
 
