@@ -44,6 +44,45 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id[quarkus.langchain4j.watsonx.chat-model.model-id]`
+
+
+[.description]
+--
+Model id to use.
+
+To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`ibm/granite-13b-chat-v2`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-prompt-formatter]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-prompt-formatter[quarkus.langchain4j.watsonx.chat-model.prompt-formatter]`
+
+
+[.description]
+--
+Configuration property that enables or disables the functionality of the prompt formatter.
+
+ - `true`: When enabled, prompts are automatically enriched with the specific tags defined by the model.
+ - `false`: Prompts will not be enriched with the model's tags.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_PROMPT_FORMATTER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_PROMPT_FORMATTER+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url[quarkus.langchain4j.watsonx.base-url]`
 
 
@@ -238,25 +277,6 @@ endif::add-copy-button-to-env-var[]
 |`urn:ibm:params:oauth:grant-type:apikey`
 
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id[quarkus.langchain4j.watsonx.chat-model.model-id]`
-
-
-[.description]
---
-Model id to use.
-
-To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`ibm/granite-20b-multilingual`
-
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-decoding-method]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-decoding-method[quarkus.langchain4j.watsonx.chat-model.decoding-method]`
 
 
@@ -274,6 +294,44 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_DECODING_METHOD
 endif::add-copy-button-to-env-var[]
 --|string 
 |`greedy`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx.chat-model.length-penalty.decay-factor]`
+
+
+[.description]
+--
+Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
+
+*Possible values:* `> 1`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx.chat-model.length-penalty.start-index]`
+
+
+[.description]
+--
+A number of generated tokens after which this should take effect.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-new-tokens[quarkus.langchain4j.watsonx.chat-model.max-new-tokens]`
@@ -512,7 +570,8 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_PROMPT_JOINER+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|
+|`
+`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id[quarkus.langchain4j.watsonx.embedding-model.model-id]`
@@ -566,53 +625,49 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated[It can be used to exponentially increase the likelihood of the text generation terminating once a specified number of tokens have been generated]
-This configuration section is optional
-h|Type
-h|Default
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx.chat-model.length-penalty.decay-factor]`
-
-
-[.description]
---
-Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
-
-*Possible values:* `> 1`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
-endif::add-copy-button-to-env-var[]
---|double 
-|
-
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx.chat-model.length-penalty.start-index]`
-
-
-[.description]
---
-A number of generated tokens after which this should take effect.
-
-*Possible values:* `≥ 0`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
-endif::add-copy-button-to-env-var[]
---|int 
-|
-
-
 h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-named-config-named-model-config[Named model config]
 
 h|Type
 h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id[quarkus.langchain4j.watsonx."model-name".chat-model.model-id]`
+
+
+[.description]
+--
+Model id to use.
+
+To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`ibm/granite-13b-chat-v2`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-prompt-formatter]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-prompt-formatter[quarkus.langchain4j.watsonx."model-name".chat-model.prompt-formatter]`
+
+
+[.description]
+--
+Configuration property that enables or disables the functionality of the prompt formatter.
+
+ - `true`: When enabled, prompts are automatically enriched with the specific tags defined by the model.
+ - `false`: Prompts will not be enriched with the model's tags.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_PROMPT_FORMATTER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_PROMPT_FORMATTER+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url[quarkus.langchain4j.watsonx."model-name".base-url]`
 
@@ -808,25 +863,6 @@ endif::add-copy-button-to-env-var[]
 |`urn:ibm:params:oauth:grant-type:apikey`
 
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id[quarkus.langchain4j.watsonx."model-name".chat-model.model-id]`
-
-
-[.description]
---
-Model id to use.
-
-To view the complete model list, link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids[click here].
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
-endif::add-copy-button-to-env-var[]
---|string 
-|`ibm/granite-20b-multilingual`
-
-
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-decoding-method]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-decoding-method[quarkus.langchain4j.watsonx."model-name".chat-model.decoding-method]`
 
 
@@ -844,6 +880,44 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_DE
 endif::add-copy-button-to-env-var[]
 --|string 
 |`greedy`
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.decay-factor]`
+
+
+[.description]
+--
+Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
+
+*Possible values:* `> 1`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
+endif::add-copy-button-to-env-var[]
+--|double 
+|
+
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.start-index]`
+
+
+[.description]
+--
+A number of generated tokens after which this should take effect.
+
+*Possible values:* `≥ 0`
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-new-tokens[quarkus.langchain4j.watsonx."model-name".chat-model.max-new-tokens]`
@@ -1082,7 +1156,8 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_PROMPT_JOINER+++`
 endif::add-copy-button-to-env-var[]
 --|string 
-|
+|`
+`
 
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id[quarkus.langchain4j.watsonx."model-name".embedding-model.model-id]`
@@ -1134,49 +1209,6 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --|boolean 
 |`false`
-
-
-h|[[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated]]link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-it-can-be-used-to-exponentially-increase-the-likelihood-of-the-text-generation-terminating-once-a-specified-number-of-tokens-have-been-generated[It can be used to exponentially increase the likelihood of the text generation terminating once a specified number of tokens have been generated]
-This configuration section is optional
-h|Type
-h|Default
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-decay-factor[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.decay-factor]`
-
-
-[.description]
---
-Represents the factor of exponential decay. Larger values correspond to more aggressive decay.
-
-*Possible values:* `> 1`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_DECAY_FACTOR+++`
-endif::add-copy-button-to-env-var[]
---|double 
-|
-
-
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index]]`link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-length-penalty-start-index[quarkus.langchain4j.watsonx."model-name".chat-model.length-penalty.start-index]`
-
-
-[.description]
---
-A number of generated tokens after which this should take effect.
-
-*Possible values:* `≥ 0`
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_LENGTH_PENALTY_START_INDEX+++`
-endif::add-copy-button-to-env-var[]
---|int 
-|
 
 |===
 ifndef::no-duration-note[]

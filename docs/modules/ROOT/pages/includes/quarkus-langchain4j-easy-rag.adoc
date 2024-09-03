@@ -15,7 +15,7 @@ a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path]]`link:#quar
 
 [.description]
 --
-Path to the directory containing the documents to be ingested.
+Path to the directory containing the documents to be ingested. This is either an absolute or relative path in the filesystem. A relative path is resolved against the current working directory at runtime.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH+++[]
