@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -49,6 +50,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 public class BeansProcessor {
@@ -365,4 +367,11 @@ public class BeansProcessor {
         unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelAuthProvider.class));
     }
 
+    @BuildStep
+    void logCleanupFilters(BuildProducer<LogCleanupFilterBuildItem> logCleanupFilters) {
+        logCleanupFilters
+                .produce(new LogCleanupFilterBuildItem("ai.djl.util.Platform", Level.INFO, "Found matching platform from"));
+        logCleanupFilters
+                .produce(new LogCleanupFilterBuildItem("ai.djl.huggingface.tokenizers.jni.LibUtils", Level.INFO, "Extracting"));
+    }
 }
