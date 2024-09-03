@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -130,7 +129,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         }
     }
 
-    private static @NotNull Response<AiMessage> toResponse(ChatResponse response) {
+    private static Response<AiMessage> toResponse(ChatResponse response) {
         Response<AiMessage> result;
         List<ToolCall> toolCalls = response.message().toolCalls();
         if ((toolCalls == null) || toolCalls.isEmpty()) {
