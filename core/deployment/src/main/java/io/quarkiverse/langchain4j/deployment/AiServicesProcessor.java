@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.inject.Inject;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -59,6 +60,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -83,8 +85,10 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
+import io.quarkus.arc.deployment.SynthesisFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
 import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -585,6 +589,11 @@ public class AiServicesProcessor {
                 needsModerationModelBean = true;
             }
 
+            configurator
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(OutputGuardrail.class) }, null))
+                    .done();
+
             syntheticBeanProducer.produce(configurator.done());
         }
 
@@ -611,6 +620,33 @@ public class AiServicesProcessor {
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
+        }
+    }
+
+    @BuildStep
+    public void markUsedOutputGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        for (AiServicesMethodBuildItem method : methods) {
+            List<String> list = method.getGuardrails();
+            for (String cn : list) {
+                unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
+            }
+        }
+    }
+
+    @BuildStep
+    public void detectMissingGuardRails(SynthesisFinishedBuildItem synthesisFinished,
+            List<AiServicesMethodBuildItem> methods,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> errors) {
+
+        for (AiServicesMethodBuildItem method : methods) {
+            List<String> list = method.getGuardrails();
+            for (String cn : list) {
+                if (synthesisFinished.beanStream().withBeanType(DotName.createSimple(cn)).isEmpty()) {
+                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new DeploymentException("Missing guardrail bean: " + cn)));
+                }
+            }
         }
     }
 
@@ -842,7 +878,8 @@ public class AiServicesProcessor {
                             ResultHandle resultHandle = mc.invokeVirtualMethod(SUPPORT_IMPLEMENT, supportHandle, inputHandle);
                             mc.returnValue(resultHandle);
 
-                            aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo));
+                            aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
+                                    methodCreateInfo.getOutputGuardrailsClassNames()));
                         }
                     }
 
@@ -925,7 +962,8 @@ public class AiServicesProcessor {
         }
     }
 
-    private AiServiceMethodCreateInfo gatherMethodMetadata(MethodInfo method, IndexView index, boolean addMicrometerMetrics,
+    private AiServiceMethodCreateInfo gatherMethodMetadata(
+            MethodInfo method, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema) {
         validateReturnType(method);
 
@@ -966,10 +1004,12 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
         List<String> methodToolClassNames = gatherMethodToolClassNames(method);
 
+        List<String> guardrails = AiServicesMethodBuildItem.gatherGuardrails(method);
+
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames);
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, guardrails);
     }
 
     private void validateReturnType(MethodInfo method) {
@@ -1406,9 +1446,34 @@ public class AiServicesProcessor {
     public static final class AiServicesMethodBuildItem extends MultiBuildItem {
 
         private final MethodInfo methodInfo;
+        private final List<String> guardrails;
 
-        public AiServicesMethodBuildItem(MethodInfo methodInfo) {
+        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> guardrails) {
             this.methodInfo = methodInfo;
+            this.guardrails = guardrails;
+        }
+
+        public List<String> getGuardrails() {
+            return guardrails;
+        }
+
+        public static List<String> gatherGuardrails(MethodInfo methodInfo) {
+            List<String> guardrails = new ArrayList<>();
+            AnnotationInstance instance = methodInfo.annotation(LangChain4jDotNames.OUTPUT_GUARDRAILS);
+            if (instance == null) {
+                // Check on class
+                instance = methodInfo.declaringClass().declaredAnnotation(LangChain4jDotNames.OUTPUT_GUARDRAILS);
+            }
+            if (instance != null) {
+                Type[] array = instance.value().asClassArray();
+                for (Type type : array) {
+                    // Make sure each guardrail is used only once
+                    if (!guardrails.contains(type.name().toString())) {
+                        guardrails.add(type.name().toString());
+                    }
+                }
+            }
+            return guardrails;
         }
 
         public MethodInfo getMethodInfo() {

@@ -30,4 +30,9 @@ public interface LangChain4jConfig {
      */
     @ConfigDocDefault("10s")
     Optional<Duration> timeout();
+
+    /**
+     * Guardrails configuration
+     */
+    GuardrailsConfig guardrails();
 }

@@ -10,7 +10,7 @@ import dev.langchain4j.memory.ChatMemory;
  * An implementation of {@link ChatMemory} that does nothing.
  * This is useful for simplifying the AiService code.
  */
-class NoopChatMemory implements CommittableChatMemory {
+public class NoopChatMemory implements CommittableChatMemory {
     @Override
     public Object id() {
         return "default";

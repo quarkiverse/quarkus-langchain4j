@@ -8,9 +8,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.runtime.annotations.RecordableConstructor;
@@ -32,9 +36,17 @@ public final class AiServiceMethodCreateInfo {
     private final List<String> toolClassNames;
     private final ResponseSchemaInfo responseSchemaInfo;
 
+    // support for output guardrails
+    private final List<String> outputGuardrailsClassNames;
+
     // these are populated when the AiService method is first called which can happen on any thread
     private transient final List<ToolSpecification> toolSpecifications = new CopyOnWriteArrayList<>();
     private transient final Map<String, ToolExecutor> toolExecutors = new ConcurrentHashMap<>();
+
+    // Don't cache the instances, because of scope issues (some will need to be re-queried)
+    private transient final List<Class<? extends OutputGuardrail>> outputGuardrails = new CopyOnWriteArrayList<>();
+
+    private final LazyValue<Integer> guardRailsMaxRetry;
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName, String methodName,
@@ -47,7 +59,8 @@ public final class AiServiceMethodCreateInfo {
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
             ResponseSchemaInfo responseSchemaInfo,
-            List<String> toolClassNames) {
+            List<String> toolClassNames,
+            List<String> outputGuardrailsClassNames) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
@@ -66,6 +79,15 @@ public final class AiServiceMethodCreateInfo {
         this.spanInfo = spanInfo;
         this.responseSchemaInfo = responseSchemaInfo;
         this.toolClassNames = toolClassNames;
+        this.outputGuardrailsClassNames = outputGuardrailsClassNames;
+        // Use a lazy value to get the value at runtime.
+        this.guardRailsMaxRetry = new LazyValue<Integer>(new Supplier<Integer>() {
+            @Override
+            public Integer get() {
+                return ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.guardrails.max-retries", Integer.class)
+                        .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
+            }
+        });
     }
 
     public String getInterfaceName() {
@@ -126,6 +148,18 @@ public final class AiServiceMethodCreateInfo {
 
     public Map<String, ToolExecutor> getToolExecutors() {
         return toolExecutors;
+    }
+
+    public List<String> getOutputGuardrailsClassNames() {
+        return outputGuardrailsClassNames;
+    }
+
+    public List<Class<? extends OutputGuardrail>> getOutputGuardrailsClasses() {
+        return outputGuardrails;
+    }
+
+    public int getGuardRailsMaxRetry() {
+        return guardRailsMaxRetry.get();
     }
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
