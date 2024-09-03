@@ -100,7 +100,7 @@ a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table]]`li
 
 [.description]
 --
-Create table or not
+Whether the table should be created if not already existing.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_CREATE_TABLE+++[]
@@ -117,7 +117,7 @@ a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first]
 
 [.description]
 --
-Drop table or not
+Whether the table should be dropped prior to being created.
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_DROP_TABLE_FIRST+++[]
@@ -179,7 +179,9 @@ a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes]
 
 [.description]
 --
-Metadata Indexes, list of fields to use as index example:
+Metadata Indexes, list of fields to use as index.
+
+For instance:
 
  - JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to JSONB metadata.
  - JSONB: (metadata->'key'), (metadata->'name'), (metadata->'age')
@@ -204,7 +206,7 @@ Index Type:
 
  - BTREE (default)
  - GIN
- - ... postgres indexes
+ - Other link:https://www.postgresql.org/docs/current/indexes-types.html[PostgreSQL index types]
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_INDEX_TYPE+++[]
