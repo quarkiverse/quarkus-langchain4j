@@ -63,7 +63,8 @@ class PgVectorEmbeddingStoreProcessor {
 
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(PG_VECTOR_EMBEDDING_STORE)
-                .types(ClassType.create(EmbeddingStore.class),
+                .types(ClassType.create(dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore.class),
+                        ClassType.create(EmbeddingStore.class),
                         ParameterizedType.create(EmbeddingStore.class, ClassType.create(TextSegment.class)))
                 .setRuntimeInit()
                 .defaultBean()
