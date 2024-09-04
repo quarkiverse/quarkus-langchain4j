@@ -572,8 +572,11 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static Object transformTemplateParamValue(Object value) {
+        if (value == null) {
+            return "";
+        }
         if (value.getClass().isArray()) {
-            // Qute does not transform these values but LangChain4j expects to be converted to a [item1, item2, item3] like systax
+            // Qute does not transform these values but LangChain4j expects to be converted to a [item1, item2, item3] like syntax
             return Arrays.toString((Object[]) value);
         }
         return value;
