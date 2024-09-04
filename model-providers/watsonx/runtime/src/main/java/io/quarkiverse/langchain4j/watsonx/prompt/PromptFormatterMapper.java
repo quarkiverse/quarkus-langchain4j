@@ -5,6 +5,7 @@ import java.util.Map;
 
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.GraniteCodePromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.GranitePromptFormatter;
+import io.quarkiverse.langchain4j.watsonx.prompt.impl.Llama31PromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.LlamaPromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.MistralLargePromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.MistralPromptFormatter;
@@ -25,12 +26,14 @@ public class PromptFormatterMapper {
         promptFormatters.put("mistralai/mixtral-8x7b-instruct-v01", mistralPromptFormatter);
         promptFormatters.put("sdaia/allam-1-13b-instruct", mistralPromptFormatter);
 
+        Llama31PromptFormatter llama31PromptFormatter = new Llama31PromptFormatter();
+        promptFormatters.put("meta-llama/llama-3-405b-instruct", llama31PromptFormatter);
+        promptFormatters.put("meta-llama/llama-3-1-70b-instruct", llama31PromptFormatter);
+
         LlamaPromptFormatter llamaPromptFormatter = new LlamaPromptFormatter();
-        promptFormatters.put("meta-llama/llama-3-405b-instruct", llamaPromptFormatter);
-        promptFormatters.put("meta-llama/llama-3-1-70b-instruct", llamaPromptFormatter);
-        promptFormatters.put("meta-llama/llama-3-1-8b-instruct", llamaPromptFormatter);
         promptFormatters.put("meta-llama/llama-3-70b-instruct", llamaPromptFormatter);
         promptFormatters.put("meta-llama/llama-3-8b-instruct", llamaPromptFormatter);
+        promptFormatters.put("meta-llama/llama-3-1-8b-instruct", llamaPromptFormatter);
 
         GranitePromptFormatter granitePromptFormatter = new GranitePromptFormatter();
         promptFormatters.put("ibm/granite-13b-chat-v2", granitePromptFormatter);
@@ -57,6 +60,7 @@ public class PromptFormatterMapper {
     public static boolean toolIsSupported(String model) {
         return switch (model) {
             case "mistralai/mistral-large" -> true;
+            case "meta-llama/llama-3-405b-instruct", "meta-llama/llama-3-1-70b-instruct" -> true;
             default -> false;
         };
     }

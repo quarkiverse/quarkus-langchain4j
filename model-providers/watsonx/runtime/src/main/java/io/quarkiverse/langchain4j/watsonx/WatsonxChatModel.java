@@ -17,7 +17,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatterUtil;
 
 public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel, TokenCountEstimator {
 
@@ -69,7 +68,7 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
 
         if (result.generatedText().startsWith(promptFormatter.toolExecution())) {
             var tools = result.generatedText().replace(promptFormatter.toolExecution(), "");
-            content = AiMessage.from(PromptFormatterUtil.toolExecutionRequest(tools));
+            content = AiMessage.from(promptFormatter.toolExecutionRequestFormatter(tools));
         } else {
             content = AiMessage.from(result.generatedText());
         }

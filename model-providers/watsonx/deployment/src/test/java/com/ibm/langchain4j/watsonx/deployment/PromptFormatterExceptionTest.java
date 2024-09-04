@@ -67,8 +67,7 @@ public class PromptFormatterExceptionTest {
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(AIService.class, Calculator.class))
                 .assertException(t -> {
                     assertThat(t).isInstanceOf(RuntimeException.class)
-                            .hasMessage("The tool functionality is not supported for the model \"%s\""
-                                    .formatted(WireMockUtil.DEFAULT_CHAT_MODEL));
+                            .hasMessage("The prompt-formatter must be enabled to use the tool functionality");
                 });
 
         @Test

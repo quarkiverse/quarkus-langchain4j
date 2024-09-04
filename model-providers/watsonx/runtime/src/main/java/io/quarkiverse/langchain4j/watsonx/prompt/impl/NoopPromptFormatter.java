@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ChatMessageType;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 
 /*
@@ -41,12 +40,12 @@ public class NoopPromptFormatter implements PromptFormatter {
     }
 
     @Override
-    public String format(List<ChatMessage> messages, List<ToolSpecification> tools) {
-        return messages.stream().map(ChatMessage::text).collect(Collectors.joining(joiner()));
+    public String endOf(ChatMessage chatMessage) {
+        return "";
     }
 
     @Override
-    public String endOf(ChatMessageType messageType) {
-        return "";
+    public String format(List<ChatMessage> messages, List<ToolSpecification> tools) {
+        return messages.stream().map(ChatMessage::text).collect(Collectors.joining(joiner()));
     }
 }

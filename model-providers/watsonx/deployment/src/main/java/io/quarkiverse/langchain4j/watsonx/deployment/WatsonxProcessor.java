@@ -111,9 +111,13 @@ public class WatsonxProcessor {
                 var classInfo = registerAiService.get().target().asClass();
                 var tools = classInfo.annotation(LangChain4jDotNames.REGISTER_AI_SERVICES).value("tools");
 
-                if (tools != null && !PromptFormatterMapper.toolIsSupported(modelId)) {
-                    throw new RuntimeException(
-                            "The tool functionality is not supported for the model \"%s\"".formatted(modelId));
+                if (tools != null) {
+                    if (!promptFormatterIsEnabled)
+                        throw new RuntimeException("The prompt-formatter must be enabled to use the tool functionality");
+
+                    if (!PromptFormatterMapper.toolIsSupported(modelId))
+                        throw new RuntimeException(
+                                "The tool functionality is not supported for the model \"%s\"".formatted(modelId));
                 }
 
                 if (promptFormatter != null) {

@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.ws.rs.WebApplicationException;
 
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -22,6 +23,8 @@ import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public abstract class WatsonxModel {
+
+    private static final Logger log = Logger.getLogger(WatsonxModel.class);
 
     final String modelId;
     final String version;
@@ -91,11 +94,23 @@ public abstract class WatsonxModel {
     }
 
     protected String toInput(List<ChatMessage> messages) {
-        return promptFormatter.format(messages, List.of());
+        var prompt = promptFormatter.format(messages, List.of());
+        log.debugf("""
+                Formatted prompt:
+                -----------------
+                %s
+                -----------------""", prompt);
+        return prompt;
     }
 
     protected String toInput(List<ChatMessage> messages, List<ToolSpecification> tools) {
-        return promptFormatter.format(messages, tools);
+        var prompt = promptFormatter.format(messages, tools);
+        log.debugf("""
+                Formatted prompt:
+                -----------------
+                %s
+                -----------------""", prompt);
+        return prompt;
     }
 
     protected FinishReason toFinishReason(String stopReason) {
