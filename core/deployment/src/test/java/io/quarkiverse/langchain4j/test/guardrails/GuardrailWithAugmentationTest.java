@@ -1,0 +1,217 @@
+package io.quarkiverse.langchain4j.test.guardrails;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.output.Response;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.rag.query.Metadata;
+import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.Multi;
+
+/**
+ * Verify that the input and output guardrails can access the augmentation results.
+ */
+public class GuardrailWithAugmentationTest {
+
+    @RegisterExtension
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addClasses(MyAiService.class,
+                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+
+    @Inject
+    MyInputGuardrail inputGuardrail;
+    @Inject
+    MyOutputGuardrail outputGuardrail;
+
+    @Inject
+    MyAiService service;
+
+    @Test
+    @ActivateRequestContext
+    void testInputOnly() {
+        String s = service.inputOnly("1", "foo");
+
+        assertThat(s).isEqualTo("Hi!");
+        assertThat(inputGuardrail.getSpy()).isEqualTo(1);
+        assertThat(outputGuardrail.getSpy()).isEqualTo(0);
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testInputOnlyMulti() {
+        List<String> list = service.inputOnlyMulti("2", "foo").collect().asList().await().indefinitely();
+
+        assertThat(inputGuardrail.getSpy()).isEqualTo(1);
+        assertThat(outputGuardrail.getSpy()).isEqualTo(0);
+        assertThat(String.join(" ", list)).isEqualTo("Streaming hi !");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testOutputOnly() {
+        String s = service.outputOnly("3", "foo");
+
+        assertThat(s).isEqualTo("Hi!");
+        assertThat(inputGuardrail.getSpy()).isEqualTo(0);
+        assertThat(outputGuardrail.getSpy()).isEqualTo(1);
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testInputAndOutput() {
+        String s = service.inputAndOutput("4", "foo");
+
+        assertThat(s).isEqualTo("Hi!");
+        assertThat(inputGuardrail.getSpy()).isEqualTo(1);
+        assertThat(outputGuardrail.getSpy()).isEqualTo(1);
+    }
+
+    @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, streamingChatLanguageModelSupplier = MyStreamingChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class, retrievalAugmentor = MyRetrievalAugmentor.class)
+    public interface MyAiService {
+
+        @InputGuardrails(MyInputGuardrail.class)
+        String inputOnly(@MemoryId String id, @UserMessage String message);
+
+        @InputGuardrails(MyInputGuardrail.class)
+        Multi<String> inputOnlyMulti(@MemoryId String id, @UserMessage String message);
+
+        @OutputGuardrails(MyOutputGuardrail.class)
+        String outputOnly(@MemoryId String id, @UserMessage String message);
+
+        @InputGuardrails(MyInputGuardrail.class)
+        @OutputGuardrails(MyOutputGuardrail.class)
+        String inputAndOutput(@MemoryId String id, @UserMessage String message);
+    }
+
+    @RequestScoped
+    public static class MyInputGuardrail implements InputGuardrail {
+
+        AtomicInteger spy = new AtomicInteger();
+
+        @Override
+        public void validate(InputGuardrailParams params) throws ValidationException {
+            spy.incrementAndGet();
+            assertThat(params.augmentationResult().contents()).hasSize(2);
+        }
+
+        public int getSpy() {
+            return spy.get();
+        }
+    }
+
+    @RequestScoped
+    public static class MyOutputGuardrail implements OutputGuardrail {
+
+        AtomicInteger spy = new AtomicInteger();
+
+        @Override
+        public void validate(OutputGuardrailParams params) throws ValidationException {
+            spy.incrementAndGet();
+            assertThat(params.augmentationResult().contents()).hasSize(2);
+        }
+
+        public int getSpy() {
+            return spy.get();
+        }
+    }
+
+    public static class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
+
+        @Override
+        public ChatLanguageModel get() {
+            return new MyChatModel();
+        }
+    }
+
+    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+
+        @Override
+        public StreamingChatLanguageModel get() {
+            return new MyStreamingChatModel();
+        }
+    }
+
+    public static class MyChatModel implements ChatLanguageModel {
+
+        @Override
+        public Response<AiMessage> generate(List<ChatMessage> messages) {
+            assertThat(messages.get(messages.size() - 1).text()).isEqualTo("augmented");
+            return new Response<>(new AiMessage("Hi!"));
+        }
+    }
+
+    public static class MyStreamingChatModel implements StreamingChatLanguageModel {
+
+        @Override
+        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+            assertThat(messages.get(messages.size() - 1).text()).isEqualTo("augmented");
+            handler.onNext("Streaming hi");
+            handler.onNext("!");
+            handler.onComplete(Response.from(AiMessage.from("")));
+        }
+    }
+
+    public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {
+        @Override
+        public ChatMemoryProvider get() {
+            return new ChatMemoryProvider() {
+                @Override
+                public ChatMemory get(Object memoryId) {
+                    return new MessageWindowChatMemory.Builder().maxMessages(5).build();
+                }
+            };
+        }
+    }
+
+    public static class MyRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
+        @Override
+        public RetrievalAugmentor get() {
+            return new RetrievalAugmentor() {
+                @Override
+                public dev.langchain4j.data.message.UserMessage augment(dev.langchain4j.data.message.UserMessage userMessage,
+                        Metadata metadata) {
+                    AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+                    return (dev.langchain4j.data.message.UserMessage) augment(augmentationRequest).chatMessage();
+                }
+
+                @Override
+                public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+                    List<Content> content = List.of(new Content("content1"), new Content("content2"));
+                    return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
+                }
+            };
+        }
+    }
+}

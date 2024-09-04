@@ -34,7 +34,7 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class GuardrailRepromptingTest {
+public class OutputGuardrailRepromptingTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()

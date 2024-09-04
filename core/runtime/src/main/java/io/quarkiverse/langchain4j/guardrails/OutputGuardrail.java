@@ -3,9 +3,10 @@ package io.quarkiverse.langchain4j.guardrails;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.rag.AugmentationResult;
+import io.smallrye.common.annotation.Experimental;
 
 /**
- * A guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
+ * An output guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
  * expectations.
  * <p>
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link OutputGuardrails#value()} annotation.
@@ -16,6 +17,7 @@ import dev.langchain4j.rag.AugmentationResult;
  * <p>
  * The maximum number of retries is configurable using {@code quarkus.langchain4j.guardrails.max-retries}, defaulting to 3.
  */
+@Experimental("This feature is experimental and the API is subject to change")
 public interface OutputGuardrail {
 
     /**

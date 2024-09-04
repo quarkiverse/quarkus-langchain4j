@@ -1,14 +1,13 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.spi.DeploymentException;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -29,52 +28,41 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class GuardrailOnClassTest {
+public class OutputGuardrailNotFoundTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyAiService.class, OKGuardrail.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
-
-    @Inject
-    MyAiService aiService;
-
-    @Inject
-    OKGuardrail okGuardrail;
+                    .addClasses(MyAiService.class,
+                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class))
+            .assertException(t -> {
+                assertThat(t).isInstanceOf(DeploymentException.class);
+                assertThat(t).hasMessageContaining(
+                        "io.quarkiverse.langchain4j.test.guardrails.OutputGuardrailNotFoundTest$MissingGuardRail");
+            });
 
     @Test
     @ActivateRequestContext
-    void testThatGuardrailsFromTheClassAreInvoked() {
-        assertThat(okGuardrail.spy()).isEqualTo(0);
-        aiService.hi("1");
-        assertThat(okGuardrail.spy()).isEqualTo(1);
-        aiService.hi("2");
-        assertThat(okGuardrail.spy()).isEqualTo(2);
+    void testThatNotFoundGuardrailsAreReported() {
+        fail("Should not be called");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
-    @OutputGuardrails(OKGuardrail.class)
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
+        @OutputGuardrails(MissingGuardRail.class)
         String hi(@MemoryId String mem);
 
     }
 
-    @ApplicationScoped
-    public static class OKGuardrail implements OutputGuardrail {
-
-        AtomicInteger spy = new AtomicInteger(0);
+    public static class MissingGuardRail implements OutputGuardrail {
 
         @Override
         public void validate(AiMessage responseFromLLM) {
-            spy.incrementAndGet();
+            throw new RuntimeException("Should not be invoked");
         }
 
-        public int spy() {
-            return spy.get();
-        }
     }
 
     public static class MyChatModelSupplier implements Supplier<ChatLanguageModel> {

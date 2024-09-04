@@ -3,9 +3,11 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.INPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 
@@ -627,7 +629,8 @@ public class AiServicesProcessor {
     public void markUsedOutputGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = method.getGuardrails();
+            List<String> list = new ArrayList<>(method.getOutputGuardrails());
+            list.addAll(method.getInputGuardrails());
             for (String cn : list) {
                 unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
             }
@@ -640,7 +643,8 @@ public class AiServicesProcessor {
             BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> errors) {
 
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = method.getGuardrails();
+            List<String> list = new ArrayList<>(method.getOutputGuardrails());
+            list.addAll(method.getInputGuardrails());
             for (String cn : list) {
                 if (synthesisFinished.beanStream().withBeanType(DotName.createSimple(cn)).isEmpty()) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
@@ -879,6 +883,7 @@ public class AiServicesProcessor {
                             mc.returnValue(resultHandle);
 
                             aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
+                                    methodCreateInfo.getInputGuardrailsClassNames(),
                                     methodCreateInfo.getOutputGuardrailsClassNames()));
                         }
                     }
@@ -1004,12 +1009,14 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
         List<String> methodToolClassNames = gatherMethodToolClassNames(method);
 
-        List<String> guardrails = AiServicesMethodBuildItem.gatherGuardrails(method);
+        List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
+        List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, guardrails);
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, inputGuardrails,
+                outputGuardrails);
     }
 
     private void validateReturnType(MethodInfo method) {
@@ -1446,23 +1453,33 @@ public class AiServicesProcessor {
     public static final class AiServicesMethodBuildItem extends MultiBuildItem {
 
         private final MethodInfo methodInfo;
-        private final List<String> guardrails;
+        private final List<String> outputGuardrails;
+        private final List<String> inputGuardrails;
 
-        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> guardrails) {
+        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> inputGuardrails, List<String> outputGuardrails) {
             this.methodInfo = methodInfo;
-            this.guardrails = guardrails;
+            this.inputGuardrails = inputGuardrails;
+            this.outputGuardrails = outputGuardrails;
         }
 
-        public List<String> getGuardrails() {
-            return guardrails;
+        public List<String> getOutputGuardrails() {
+            return outputGuardrails;
         }
 
-        public static List<String> gatherGuardrails(MethodInfo methodInfo) {
+        public List<String> getInputGuardrails() {
+            return inputGuardrails;
+        }
+
+        public MethodInfo getMethodInfo() {
+            return methodInfo;
+        }
+
+        public static List<String> gatherGuardrails(MethodInfo methodInfo, DotName annotation) {
             List<String> guardrails = new ArrayList<>();
-            AnnotationInstance instance = methodInfo.annotation(LangChain4jDotNames.OUTPUT_GUARDRAILS);
+            AnnotationInstance instance = methodInfo.annotation(annotation);
             if (instance == null) {
                 // Check on class
-                instance = methodInfo.declaringClass().declaredAnnotation(LangChain4jDotNames.OUTPUT_GUARDRAILS);
+                instance = methodInfo.declaringClass().declaredAnnotation(annotation);
             }
             if (instance != null) {
                 Type[] array = instance.value().asClassArray();
@@ -1474,10 +1491,6 @@ public class AiServicesProcessor {
                 }
             }
             return guardrails;
-        }
-
-        public MethodInfo getMethodInfo() {
-            return methodInfo;
         }
     }
 }
