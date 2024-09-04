@@ -42,13 +42,13 @@ public interface PgVectorEmbeddingStoreConfig {
     Integer indexListSize();
 
     /**
-     * Create table or not
+     * Whether the table should be created if not already existing.
      */
     @WithDefault("true")
     Boolean createTable();
 
     /**
-     * Drop table or not
+     * Whether the table should be dropped prior to being created.
      */
     @WithDefault("false")
     Boolean dropTableFirst();
@@ -91,8 +91,9 @@ public interface PgVectorEmbeddingStoreConfig {
         List<String> columnDefinitions();
 
         /**
-         * Metadata Indexes, list of fields to use as index
-         * example:
+         * Metadata Indexes, list of fields to use as index.
+         * <p>
+         * For instance:
          * <ul>
          * <li>JSON: with JSON metadata, indexes are not allowed, so this property must be empty. To use indexes, switch to
          * JSONB metadata.
@@ -107,7 +108,7 @@ public interface PgVectorEmbeddingStoreConfig {
          * <ul>
          * <li>BTREE (default)
          * <li>GIN
-         * <li>... postgres indexes
+         * <li>Other <a href="https://www.postgresql.org/docs/current/indexes-types.html">PostgreSQL index types</a>
          * </ul>
          */
         @WithDefault("BTREE")
