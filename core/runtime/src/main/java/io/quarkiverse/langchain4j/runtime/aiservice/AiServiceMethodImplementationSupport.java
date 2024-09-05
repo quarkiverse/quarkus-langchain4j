@@ -114,7 +114,6 @@ public class AiServiceMethodImplementationSupport {
             }
             return result;
         } catch (Exception e) {
-            log.errorv(e, "Execution of {0}#{1} failed", createInfo.getInterfaceName(), createInfo.getMethodName());
             if (audit != null) {
                 audit.onFailure(e);
                 auditService.complete(audit);
