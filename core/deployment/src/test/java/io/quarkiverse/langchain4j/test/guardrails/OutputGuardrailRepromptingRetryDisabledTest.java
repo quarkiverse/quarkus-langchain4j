@@ -33,7 +33,7 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class GuardrailRepromptingRetryDisabledTest {
+public class OutputGuardrailRepromptingRetryDisabledTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()

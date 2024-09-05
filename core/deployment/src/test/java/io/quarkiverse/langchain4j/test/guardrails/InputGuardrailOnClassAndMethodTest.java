@@ -1,14 +1,12 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -26,13 +24,12 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
-import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class GuardrailTest {
+public class InputGuardrailOnClassAndMethodTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -45,61 +42,39 @@ public class GuardrailTest {
 
     @Inject
     OKGuardrail okGuardrail;
+
     @Inject
     KOGuardrail koGuardrail;
 
     @Test
-    void testThatGuardrailAreInvoked() {
-        assertThat(Arc.container().requestContext().isActive()).isFalse();
-        Arc.container().requestContext().activate();
-        assertThat(okGuardrail.spy()).isEqualTo(0);
-        aiService.hi("1");
-        assertThat(okGuardrail.spy()).isEqualTo(1);
-        aiService.hi("2");
-        assertThat(okGuardrail.spy()).isEqualTo(2);
-        Arc.container().requestContext().deactivate();
-
-        Arc.container().requestContext().activate();
-        // New request scope - the value should be back to 0
-        assertThat(okGuardrail.spy()).isEqualTo(0);
-        aiService.hi("1");
-        assertThat(okGuardrail.spy()).isEqualTo(1);
-        aiService.hi("2");
-        assertThat(okGuardrail.spy()).isEqualTo(2);
-    }
-
-    @Test
     @ActivateRequestContext
-    void testThatGuardrailCanThrowValidationException() {
+    void testThatGuardrailsFromTheClassAreInvoked() {
+        assertThat(okGuardrail.spy()).isEqualTo(0);
+        aiService.hi("1");
+        assertThat(okGuardrail.spy()).isEqualTo(1);
+        aiService.hi("2");
+        assertThat(okGuardrail.spy()).isEqualTo(2);
+
         assertThat(koGuardrail.spy()).isEqualTo(0);
-        assertThatThrownBy(() -> aiService.ko("1"))
-                .hasCauseExactlyInstanceOf(OutputGuardrail.ValidationException.class);
-        assertThat(koGuardrail.spy()).isEqualTo(1);
-        assertThatThrownBy(() -> aiService.ko("1"))
-                .hasCauseExactlyInstanceOf(OutputGuardrail.ValidationException.class);
-        assertThat(koGuardrail.spy()).isEqualTo(2);
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
+    @InputGuardrails(KOGuardrail.class)
     public interface MyAiService {
 
         @UserMessage("Say Hi!")
-        @OutputGuardrails(OKGuardrail.class)
+        @InputGuardrails(OKGuardrail.class)
         String hi(@MemoryId String mem);
-
-        @UserMessage("Say Hi!")
-        @OutputGuardrails(KOGuardrail.class)
-        String ko(@MemoryId String mem);
 
     }
 
-    @RequestScoped
-    public static class OKGuardrail implements OutputGuardrail {
+    @ApplicationScoped
+    public static class OKGuardrail implements InputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public void validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
         }
 
@@ -109,14 +84,14 @@ public class GuardrailTest {
     }
 
     @ApplicationScoped
-    public static class KOGuardrail implements OutputGuardrail {
+    public static class KOGuardrail implements InputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public void validate(dev.langchain4j.data.message.UserMessage um) throws ValidationException {
             spy.incrementAndGet();
-            throw new ValidationException("KO", false, null);
+            throw new ValidationException("KO");
         }
 
         public int spy() {

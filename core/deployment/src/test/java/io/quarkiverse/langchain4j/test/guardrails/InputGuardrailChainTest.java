@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,12 +26,13 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.GuardrailException;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class GuardrailChainTest {
+public class InputGuardrailChainTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -69,36 +71,38 @@ public class GuardrailChainTest {
 
     @Test
     @ActivateRequestContext
-    void testThatRetryRestartTheChain() {
-        aiService.failingFirstTwo("1", "foo");
-        assertThat(firstGuardrail.spy()).isEqualTo(2);
-        assertThat(secondGuardrail.spy()).isEqualTo(1);
-        assertThat(failingGuardrail.spy()).isEqualTo(2);
-        assertThat(firstGuardrail.lastAccess()).isLessThan(secondGuardrail.lastAccess());
+    void testFailureTheChain() {
+        assertThatThrownBy(() -> aiService.failingFirstTwo("1", "foo"))
+                .isInstanceOf(GuardrailException.class)
+                .hasCauseInstanceOf(InputGuardrail.ValidationException.class)
+                .hasRootCauseMessage("boom");
+        assertThat(firstGuardrail.spy()).isEqualTo(1);
+        assertThat(secondGuardrail.spy()).isEqualTo(0);
+        assertThat(failingGuardrail.spy()).isEqualTo(1);
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
-        @OutputGuardrails({ FirstGuardrail.class, SecondGuardrail.class })
+        @InputGuardrails({ FirstGuardrail.class, SecondGuardrail.class })
         String firstOneTwo(@MemoryId String mem, @UserMessage String message);
 
-        @OutputGuardrails({ SecondGuardrail.class, FirstGuardrail.class })
+        @InputGuardrails({ SecondGuardrail.class, FirstGuardrail.class })
         String twoAndFirst(@MemoryId String mem, @UserMessage String message);
 
-        @OutputGuardrails({ FirstGuardrail.class, FailingGuardrail.class, SecondGuardrail.class })
+        @InputGuardrails({ FirstGuardrail.class, FailingGuardrail.class, SecondGuardrail.class })
         String failingFirstTwo(@MemoryId String mem, @UserMessage String message);
 
     }
 
     @RequestScoped
-    public static class FirstGuardrail implements OutputGuardrail {
+    public static class FirstGuardrail implements InputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
         AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public void validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -118,13 +122,13 @@ public class GuardrailChainTest {
     }
 
     @RequestScoped
-    public static class SecondGuardrail implements OutputGuardrail {
+    public static class SecondGuardrail implements InputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
         volatile AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public void validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -144,14 +148,14 @@ public class GuardrailChainTest {
     }
 
     @RequestScoped
-    public static class FailingGuardrail implements OutputGuardrail {
+    public static class FailingGuardrail implements InputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public void validate(dev.langchain4j.data.message.UserMessage um) throws ValidationException {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("Retry", true, "Retry");
+                throw new ValidationException("boom");
             }
         }
 

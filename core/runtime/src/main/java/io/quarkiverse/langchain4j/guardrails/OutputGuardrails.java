@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * An annotation to apply guardrails to the output of the model.
  * <p>
- * Guardrails can only be used with AI Services.
+ * Guardrails can only be used with AI Services and only on method that do not stream the response.
  * <p>
  * A guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
  * expectations.
