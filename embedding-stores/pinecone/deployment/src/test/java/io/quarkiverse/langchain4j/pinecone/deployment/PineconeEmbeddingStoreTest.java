@@ -89,11 +89,6 @@ public class PineconeEmbeddingStoreTest extends EmbeddingStoreIT {
     }
 
     @Override
-    protected void awaitUntilPersisted() {
-        delay();
-    }
-
-    @Override
     protected void clearStore() {
         Log.info("About to delete all embeddings");
         PineconeVectorOperationsApi client = embeddingStore.getUnderlyingClient();

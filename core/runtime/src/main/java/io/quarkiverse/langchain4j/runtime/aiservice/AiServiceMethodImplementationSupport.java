@@ -134,6 +134,13 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
+        boolean hasMethodSpecificTools = methodCreateInfo.getToolClassNames() != null
+                && !methodCreateInfo.getToolClassNames().isEmpty();
+        List<ToolSpecification> toolSpecifications = hasMethodSpecificTools ? methodCreateInfo.getToolSpecifications()
+                : context.toolSpecifications;
+        Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
+                : context.toolExecutors;
+
         Type returnType = methodCreateInfo.getReturnType();
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
@@ -163,7 +170,12 @@ public class AiServiceMethodImplementationSupport {
                                 GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, (UserMessage) augmentedUserMessage,
                                         context.chatMemory(memoryId), ar);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
-                                return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, context, memoryId));
+                                return Multi.createFrom()
+                                        .emitter(new MultiEmitterConsumer(messagesToSend, toolSpecifications,
+                                                toolExecutors,
+                                                ar.contents(),
+                                                context,
+                                                memoryId));
                             }
 
                             private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
@@ -205,26 +217,20 @@ public class AiServiceMethodImplementationSupport {
         if (isTokenStream(returnType)) {
             // TODO Indicate the output guardrails cannot be used when streaming
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            return new AiServiceTokenStream(messagesToSend, context, memoryId);
+            return new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors,
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
         }
 
         if (isMulti(returnType)) {
             // TODO Indicate the output guardrails cannot be used when streaming
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, context, memoryId));
+            return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, toolSpecifications,
+                    toolExecutors, augmentationResult != null ? augmentationResult.contents() : null, context, memoryId));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
 
         log.debug("Attempting to obtain AI response");
-
-        List<ToolSpecification> toolSpecifications = context.toolSpecifications;
-        Map<String, ToolExecutor> toolExecutors = context.toolExecutors;
-        // override with method specific info
-        if (methodCreateInfo.getToolClassNames() != null && !methodCreateInfo.getToolClassNames().isEmpty()) {
-            toolSpecifications = methodCreateInfo.getToolSpecifications();
-            toolExecutors = methodCreateInfo.getToolExecutors();
-        }
 
         Response<AiMessage> response = toolSpecifications == null
                 ? context.chatModel.generate(messagesToSend)
@@ -572,19 +578,29 @@ public class AiServiceMethodImplementationSupport {
 
     private static class MultiEmitterConsumer implements Consumer<MultiEmitter<? super String>> {
         private final List<ChatMessage> messagesToSend;
+        private final List<ToolSpecification> toolSpecifications;
+        private final Map<String, ToolExecutor> toolExecutors;
+        private final List<dev.langchain4j.rag.content.Content> contents;
         private final QuarkusAiServiceContext context;
         private final Object memoryId;
 
-        public MultiEmitterConsumer(List<ChatMessage> messagesToSend, QuarkusAiServiceContext context,
+        public MultiEmitterConsumer(List<ChatMessage> messagesToSend,
+                List<ToolSpecification> toolSpecifications,
+                Map<String, ToolExecutor> toolExecutors,
+                List<dev.langchain4j.rag.content.Content> contents,
+                QuarkusAiServiceContext context,
                 Object memoryId) {
             this.messagesToSend = messagesToSend;
+            this.toolSpecifications = toolSpecifications;
+            this.toolExecutors = toolExecutors;
+            this.contents = contents;
             this.context = context;
             this.memoryId = memoryId;
         }
 
         @Override
         public void accept(MultiEmitter<? super String> em) {
-            new AiServiceTokenStream(messagesToSend, context, memoryId)
+            new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors, contents, context, memoryId)
                     .onNext(em::emit)
                     .onComplete(new Consumer<>() {
                         @Override

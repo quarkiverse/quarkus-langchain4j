@@ -65,7 +65,6 @@ abstract class LangChain4jPgVectorBaseTest extends EmbeddingStoreIT {
             Embedding matchingEmbedding = this.embeddingModel().embed(textSegment).content();
             this.embeddingStore().add(matchingEmbedding, textSegment);
         });
-        this.awaitUntilPersisted();
         long totalIngestTime = System.currentTimeMillis() - startTime;
         Log.debugf("End Ingesting %s embeddings in %d ms.", nbRows, totalIngestTime);
         Embedding queryEmbedding = this.embeddingModel().embed("matching").content();
