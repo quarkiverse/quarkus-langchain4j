@@ -100,7 +100,7 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
-        run: ./mvnw -B clean test -Dno-format -ntp
+        run: ./mvnw -B clean install -Dno-format -ntp
 
       - name: Avoid caching our own artifacts
         run: |

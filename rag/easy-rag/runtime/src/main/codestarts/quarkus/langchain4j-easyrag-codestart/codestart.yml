@@ -1,0 +1,8 @@
+name: langchain4j-easyrag-codestart
+ref: langchain4j-easyrag
+type: code
+tags: extension-codestart
+metadata:
+  title: LangChain4j Easy RAG
+  description: This codestart provide a sample Chat Bot AI service ready to be injected.
+  related-guide-section: https://docs.quarkiverse.io/quarkus-langchain4j/dev/easy-rag.html

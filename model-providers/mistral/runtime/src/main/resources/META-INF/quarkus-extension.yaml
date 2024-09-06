@@ -10,8 +10,3 @@ metadata:
   categories:
     - "ai"
   status: "experimental"
-  codestart:
-    name: langchain4j-mistral
-    languages:
-      - "java"
-    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-mistral-ai:codestarts:jar:${project.version}"
