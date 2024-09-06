@@ -9,3 +9,8 @@ metadata:
   categories:
     - "ai"
   status: "experimental"
+  codestart:
+    name: langchain4j-easyrag
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-easy-rag:codestarts:jar:${project.version}"

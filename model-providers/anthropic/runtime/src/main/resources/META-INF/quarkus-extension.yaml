@@ -11,8 +11,3 @@ metadata:
   categories:
     - "ai"
   status: "experimental"
-  codestart:
-    name: langchain4j-anthropic
-    languages:
-      - "java"
-    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-anthropic:codestarts:jar:${project.version}"

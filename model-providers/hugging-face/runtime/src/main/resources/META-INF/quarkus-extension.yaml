@@ -10,8 +10,3 @@ metadata:
   categories:
     - "ai"
   status: "experimental"
-  codestart:
-    name: langchain4j-chroma
-    languages:
-      - "java"
-    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-hugging-face:codestarts:jar:${project.version}"

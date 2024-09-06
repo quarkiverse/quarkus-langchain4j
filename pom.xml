@@ -15,7 +15,7 @@
     <module>core</module>
     
     <module>docs</module>
-    
+
     <module>embedding-stores/chroma</module>
     <module>embedding-stores/infinispan</module>
     <module>embedding-stores/milvus</module>

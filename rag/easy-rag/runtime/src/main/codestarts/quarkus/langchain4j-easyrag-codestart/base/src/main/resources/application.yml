@@ -1,0 +1,7 @@
+quarkus:
+  langchain4j:
+    timeout: 60s
+    easy-rag:
+      path: easy-rag-catalog
+      reuse-embeddings:
+        enabled: true

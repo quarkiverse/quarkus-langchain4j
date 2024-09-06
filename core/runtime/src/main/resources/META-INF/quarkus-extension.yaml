@@ -9,8 +9,3 @@ metadata:
   categories:
     - "ai"
   status: "experimental"
-  codestart:
-    name: langchain4j
-    languages:
-      - "java"
-    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-core:codestarts:jar:${project.version}"
