@@ -86,11 +86,6 @@
             <artifactId>quarkus-langchain4j-easy-rag</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.antora</groupId>
-            <artifactId>quarkus-antora</artifactId>
-            <version>${quarkus-antora.version}</version>
-        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -397,4 +392,21 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>antora</id>
+            <activation>
+                    <property>
+                        <name>antora</name>
+                    </property>
+                </activation>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.quarkiverse.antora</groupId>
+                        <artifactId>quarkus-antora</artifactId>
+                        <version>${quarkus-antora.version}</version>
+                    </dependency>
+                </dependencies>
+        </profile>
+    </profiles>
 </project>
