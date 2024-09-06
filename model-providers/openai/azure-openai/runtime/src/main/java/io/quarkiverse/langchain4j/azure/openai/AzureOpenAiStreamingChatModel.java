@@ -12,12 +12,15 @@ import static java.util.Collections.singletonList;
 import java.net.Proxy;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 
 import dev.ai4j.openai4j.OpenAiClient;
 import dev.ai4j.openai4j.chat.ChatCompletionChoice;
 import dev.ai4j.openai4j.chat.ChatCompletionRequest;
 import dev.ai4j.openai4j.chat.ChatCompletionResponse;
 import dev.ai4j.openai4j.chat.Delta;
+import dev.ai4j.openai4j.chat.ResponseFormat;
+import dev.ai4j.openai4j.chat.ResponseFormatType;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -58,7 +61,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final Tokenizer tokenizer;
-    private final String responseFormat;
+    private final ResponseFormat responseFormat;
 
     public AzureOpenAiStreamingChatModel(String endpoint,
             String apiVersion,
@@ -100,7 +103,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         this.presencePenalty = presencePenalty;
         this.frequencyPenalty = frequencyPenalty;
         this.tokenizer = tokenizer;
-        this.responseFormat = responseFormat;
+        this.responseFormat = responseFormat == null ? null
+                : ResponseFormat.builder()
+                        .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
+                        .build();
+        ;
     }
 
     @Override

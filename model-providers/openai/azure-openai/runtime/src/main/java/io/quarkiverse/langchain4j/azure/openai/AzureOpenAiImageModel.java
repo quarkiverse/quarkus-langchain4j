@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import dev.ai4j.openai4j.SyncOrAsync;
 import dev.ai4j.openai4j.image.GenerateImagesRequest;
 import dev.ai4j.openai4j.image.GenerateImagesResponse;
+import dev.ai4j.openai4j.image.ImageData;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
@@ -106,7 +107,7 @@ public class AzureOpenAiImageModel implements ImageModel {
             throw new UncheckedIOException(e);
         }
 
-        for (GenerateImagesResponse.ImageData data : response.data()) {
+        for (ImageData data : response.data()) {
             try {
                 data.url(
                         data.url() != null
@@ -118,7 +119,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         }
     }
 
-    private static Image fromImageData(GenerateImagesResponse.ImageData data) {
+    private static Image fromImageData(ImageData data) {
         return Image.builder().url(data.url()).base64Data(data.b64Json()).revisedPrompt(data.revisedPrompt()).build();
     }
 
