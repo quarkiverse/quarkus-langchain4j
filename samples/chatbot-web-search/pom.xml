@@ -21,7 +21,7 @@
         <!-- FIXME: Tavily is not yet in any released version.
         For now, snapshot has to be used to make the sample work.
         Update this to a released version when available. -->
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>0.18.0.CR1</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>
