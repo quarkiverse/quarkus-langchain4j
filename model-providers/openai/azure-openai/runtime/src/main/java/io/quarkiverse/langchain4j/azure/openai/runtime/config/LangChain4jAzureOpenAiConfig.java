@@ -43,7 +43,7 @@ public interface LangChain4jAzureOpenAiConfig {
          * <p>
          * This and {@code quarkus.langchain4j.azure-openai.deployment-name} are required if
          * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
-         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is set then this is never read.
          * </p>
          */
         Optional<String> resourceName();
@@ -53,7 +53,7 @@ public interface LangChain4jAzureOpenAiConfig {
          * <p>
          * This and {@code quarkus.langchain4j.azure-openai.domain-name} are required if
          * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
-         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is set then this is never read.
          * </p>
          */
         @WithDefault("openai.azure.com")
@@ -64,7 +64,7 @@ public interface LangChain4jAzureOpenAiConfig {
          * <p>
          * This and {@code quarkus.langchain4j.azure-openai.resource-name} are required if
          * {@code quarkus.langchain4j.azure-openai.endpoint} is not set.
-         * If {@code quarkus.langchain4j.azure-openai.endpoint} is not set then this is never read.
+         * If {@code quarkus.langchain4j.azure-openai.endpoint} is set then this is never read.
          * </p>
          */
         Optional<String> deploymentName();
@@ -72,10 +72,11 @@ public interface LangChain4jAzureOpenAiConfig {
         /**
          * The endpoint for the Azure OpenAI resource.
          * <p>
-         * If not specified, then {@code quarkus.langchain4j.azure-openai.resource-name} and
-         * {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
+         * If not specified, then {@code quarkus.langchain4j.azure-openai.resource-name},
+         * {@code quarkus.langchain4j.azure-openai.domain-name} (defaults to "openai.azure.com")
+         * and {@code quarkus.langchain4j.azure-openai.deployment-name} are required.
          * In this case the endpoint will be set to
-         * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.openai.azure.com/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
+         * {@code https://${quarkus.langchain4j.azure-openai.resource-name}.${quarkus.langchain4j.azure-openai.domain-name}/openai/deployments/${quarkus.langchain4j.azure-openai.deployment-name}}
          * </p>
          */
         Optional<String> endpoint();
