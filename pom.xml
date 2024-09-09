@@ -14,9 +14,8 @@
   <modules>
     <module>core</module>
     
-    <module>docs</module>
-
     <module>embedding-stores/chroma</module>
+
     <module>embedding-stores/infinispan</module>
     <module>embedding-stores/milvus</module>
     <module>embedding-stores/neo4j</module>
@@ -24,10 +23,10 @@
     <module>embedding-stores/pinecone</module>
     <module>embedding-stores/qdrant</module>
     <module>embedding-stores/redis</module>
-
     <module>memory-stores/memory-store-redis</module>
 
     <module>model-providers/anthropic</module>
+
     <module>model-providers/bam</module>
     <module>model-providers/cohere</module>
     <module>model-providers/hugging-face</module>
@@ -41,7 +40,6 @@
     <module>model-providers/vertex-ai</module>
     <module>model-providers/vertex-ai-gemini</module>
     <module>model-providers/watsonx</module>
-
     <module>model-auth-providers/oidc-model-auth-provider</module>
 
     <module>quarkus-integrations/websockets-next</module>
@@ -49,8 +47,8 @@
     <module>web-search-engines/tavily</module>
 
     <module>rag/easy-rag</module>
-    <module>rag/parsers-base</module>
 
+    <module>rag/parsers-base</module>
     <module>testing-internal</module>
   </modules>
   <scm>
@@ -177,6 +175,19 @@
   </build>
   <profiles>
     <profile>
+      <id>docs</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <modules>
+        <module>docs</module>
+      </modules>
+    </profile>
+
+    <profile>
       <id>it</id>
       <activation>
         <property>
@@ -188,7 +199,6 @@
         <module>integration-tests</module>
       </modules>
     </profile>
-
     <profile>
       <id>samples</id>
       <activation>
