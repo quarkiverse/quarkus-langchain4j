@@ -33,4 +33,16 @@
     <module>rag-pgvector-flyway</module>
     <module>easy-rag</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>jdk21-plus</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <modules>
+        <module>jlama</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>

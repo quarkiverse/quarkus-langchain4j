@@ -40,6 +40,7 @@
     <module>model-providers/vertex-ai</module>
     <module>model-providers/vertex-ai-gemini</module>
     <module>model-providers/watsonx</module>
+
     <module>model-auth-providers/oidc-model-auth-provider</module>
 
     <module>quarkus-integrations/websockets-next</module>
@@ -218,6 +219,15 @@
         <module>samples/chatbot-easy-rag</module>
         <module>samples/sql-chatbot</module>
         <module>samples/chatbot-web-search</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>jdk21-plus</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <modules>
+        <module>model-providers/jlama</module>
       </modules>
     </profile>
   </profiles>

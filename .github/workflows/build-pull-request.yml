@@ -65,7 +65,7 @@ jobs:
         run: |
           cd integration-tests
           # skip RAG module as it doesn't have any native-compatible tests now
-          # skip 'embed' modules (with in-process embeddings)
+          # skip 'embed' modules (with in-process embeddings) and others that don't work in native
           # FIXME: reenable embedding modules, see https://github.com/quarkiverse/quarkus-langchain4j/issues/394
           MATRIX='{"testModule":'$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
@@ -73,6 +73,7 @@ jobs:
                 | sort -u \
                 | grep -v rag \
                 | grep -v embed \
+                | grep -v jlama \
                 | jq -R -s -c 'split("\n")[:-1]' \
           )'}'
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
