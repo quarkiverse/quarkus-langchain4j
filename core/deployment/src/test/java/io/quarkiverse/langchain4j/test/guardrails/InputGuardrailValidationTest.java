@@ -29,9 +29,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.GuardrailException;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -42,7 +43,7 @@ public class InputGuardrailValidationTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
                             MyChatModel.class, MyStreamingChatModel.class, MyChatModelSupplier.class,
-                            MyMemoryProviderSupplier.class));
+                            MyMemoryProviderSupplier.class, ValidationException.class));
 
     @Inject
     MyAiService aiService;
@@ -130,8 +131,9 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
+            return success();
         }
 
         public int spy() {
@@ -145,9 +147,9 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) throws ValidationException {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
-            throw new ValidationException("KO");
+            return failure("KO");
         }
 
         public int spy() {
@@ -161,7 +163,7 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) throws ValidationException {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
             throw new IllegalArgumentException("Fatal");
         }
@@ -177,7 +179,7 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(InputGuardrail.InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrail.InputGuardrailParams params) {
             spy.incrementAndGet();
             if (params.memory().messages().isEmpty()) {
                 assertThat(params.userMessage().singleText()).isEqualTo("foo");
@@ -187,6 +189,7 @@ public class InputGuardrailValidationTest {
                 assertThat(params.memory().messages().get(1).text()).isEqualTo("Hi!");
                 assertThat(params.userMessage().singleText()).isEqualTo("bar");
             }
+            return success();
         }
 
         public int spy() {

@@ -26,6 +26,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
@@ -98,7 +99,7 @@ public class OutputGuardrailChainTest {
         AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -106,6 +107,7 @@ public class OutputGuardrailChainTest {
             } catch (InterruptedException e) {
                 // Ignore me
             }
+            return success();
         }
 
         public int spy() {
@@ -124,7 +126,7 @@ public class OutputGuardrailChainTest {
         volatile AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -132,6 +134,7 @@ public class OutputGuardrailChainTest {
             } catch (InterruptedException e) {
                 // Ignore me
             }
+            return success();
         }
 
         public int spy() {
@@ -149,10 +152,11 @@ public class OutputGuardrailChainTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("Retry", true, "Retry");
+                return reprompt("Retry", "Retry");
             }
+            return success();
         }
 
         public int spy() {

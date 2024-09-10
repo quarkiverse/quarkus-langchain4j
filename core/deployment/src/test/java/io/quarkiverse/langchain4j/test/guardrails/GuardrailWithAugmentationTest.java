@@ -33,8 +33,10 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -121,9 +123,10 @@ public class GuardrailWithAugmentationTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(InputGuardrailParams params) throws ValidationException {
+        public InputGuardrailResult validate(InputGuardrailParams params) {
             spy.incrementAndGet();
             assertThat(params.augmentationResult().contents()).hasSize(2);
+            return InputGuardrailResult.success();
         }
 
         public int getSpy() {
@@ -137,9 +140,10 @@ public class GuardrailWithAugmentationTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             spy.incrementAndGet();
             assertThat(params.augmentationResult().contents()).hasSize(2);
+            return OutputGuardrailResult.success();
         }
 
         public int getSpy() {

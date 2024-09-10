@@ -13,9 +13,8 @@ import java.lang.annotation.Target;
  * <p>
  * A guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
  * expectations.
- * When a validation fails, the guardrail throws a
- * {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrail.ValidationException}.
- * The exception can indicate whether the request should be retried and provide a {@code reprompt} message.
+ * When a validation fails, the result can indicate whether the request should be retried and provide a {@code reprompt}
+ * message.
  * <p>
  * In the case of reprompting, the reprompt message is added to the LLM context and the request is retried.
  *

@@ -2,7 +2,9 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import jakarta.enterprise.inject.spi.CDI;
 
@@ -13,20 +15,27 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.rag.AugmentationResult;
-import io.quarkiverse.langchain4j.guardrails.GuardrailException;
+import io.quarkiverse.langchain4j.guardrails.Guardrail;
+import io.quarkiverse.langchain4j.guardrails.GuardrailParams;
+import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 
 public class GuardrailsSupport {
 
     public static void invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
             ChatMemory chatMemory, AugmentationResult augmentationResult) {
-        InputGuardRailsResult result = invokeInputGuardRails(methodCreateInfo,
-                new InputGuardrail.InputGuardrailParams(userMessage, chatMemory, augmentationResult));
-        if (!result.success()) {
-            throw new GuardrailException(
-                    "Input validation failed. The guardrail " + result.bean().getName() + " thrown an exception",
-                    result.failure());
+        InputGuardrailResult result;
+        try {
+            result = invokeInputGuardRails(methodCreateInfo,
+                    new InputGuardrail.InputGuardrailParams(userMessage, chatMemory, augmentationResult));
+        } catch (Exception e) {
+            throw new GuardrailException(e.getMessage(), e);
+        }
+        if (!result.isSuccess()) {
+            throw new GuardrailException(result.toString(), result.getFirstFailureException());
         }
     }
 
@@ -42,15 +51,19 @@ public class GuardrailsSupport {
             max = 1;
         }
         while (attempt < max) {
-            OutputGuardRailsResult grr = invokeOutputGuardRails(methodCreateInfo, output);
-            if (!grr.success) {
-                if (!grr.retry()) {
-                    throw new GuardrailException(
-                            "Output validation failed. The guardrail " + grr.bean().getName() + " thrown an exception",
-                            grr.failure());
-                } else if (grr.reprompt() != null) {
+            OutputGuardrailResult result;
+            try {
+                result = invokeOutputGuardRails(methodCreateInfo, output);
+            } catch (Exception e) {
+                throw new GuardrailException(e.getMessage(), e);
+            }
+
+            if (!result.isSuccess()) {
+                if (!result.isRetry()) {
+                    throw new GuardrailException(result.toString(), result.getFirstFailureException());
+                } else if (result.getReprompt() != null) {
                     // Retry with re-prompting
-                    chatMemory.add(userMessage(grr.reprompt()));
+                    chatMemory.add(userMessage(result.getReprompt()));
                     if (toolSpecifications == null) {
                         response = chatModel.generate(chatMemory.messages());
                     } else {
@@ -73,17 +86,16 @@ public class GuardrailsSupport {
         }
 
         if (attempt == max) {
-            throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries",
-                    null);
+            throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries");
         }
         return response;
     }
 
     @SuppressWarnings("unchecked")
-    private static OutputGuardRailsResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
+    private static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             OutputGuardrail.OutputGuardrailParams params) {
         if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
-            return OutputGuardRailsResult.SUCCESS;
+            return OutputGuardrailResult.success();
         }
         List<Class<? extends OutputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
@@ -103,24 +115,14 @@ public class GuardrailsSupport {
             }
         }
 
-        for (Class<? extends OutputGuardrail> bean : classes) {
-            try {
-                CDI.current().select(bean).get().validate(params);
-            } catch (OutputGuardrail.ValidationException e) {
-                return new OutputGuardRailsResult(false, bean, e, e.isRetry(), e.getReprompt());
-            } catch (Exception e) {
-                return new OutputGuardRailsResult(false, bean, e, false, null);
-            }
-        }
-
-        return OutputGuardRailsResult.SUCCESS;
+        return guardrailResult(params, (List) classes, OutputGuardrailResult.success(), OutputGuardrailResult::failure);
     }
 
     @SuppressWarnings("unchecked")
-    private static InputGuardRailsResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
+    private static InputGuardrailResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             InputGuardrail.InputGuardrailParams params) {
         if (methodCreateInfo.getInputGuardrailsClassNames().isEmpty()) {
-            return InputGuardRailsResult.SUCCESS;
+            return InputGuardrailResult.success();
         }
         List<Class<? extends InputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
@@ -140,27 +142,34 @@ public class GuardrailsSupport {
             }
         }
 
-        for (Class<? extends InputGuardrail> bean : classes) {
-            try {
-                CDI.current().select(bean).get().validate(params);
-            } catch (Exception e) {
-                return new InputGuardRailsResult(false, bean, e);
+        return guardrailResult(params, (List) classes, InputGuardrailResult.success(), InputGuardrailResult::failure);
+    }
+
+    private static <GR extends GuardrailResult> GR guardrailResult(GuardrailParams params,
+            List<Class<? extends Guardrail>> classes, GR accumulatedResults,
+            Function<List<? extends GuardrailResult.Failure>, GR> producer) {
+        for (Class<? extends Guardrail> bean : classes) {
+            GR result = (GR) CDI.current().select(bean).get().validate(params).validatedBy(bean);
+            if (result.isFatal()) {
+                return result;
             }
+            accumulatedResults = compose(accumulatedResults, result, producer);
         }
 
-        return InputGuardRailsResult.SUCCESS;
+        return accumulatedResults;
     }
 
-    private record OutputGuardRailsResult(boolean success, Class<? extends OutputGuardrail> bean, Exception failure,
-            boolean retry, String reprompt) {
-
-        static OutputGuardRailsResult SUCCESS = new OutputGuardRailsResult(true, null, null, false, null);
-
-    }
-
-    private record InputGuardRailsResult(boolean success, Class<? extends InputGuardrail> bean, Exception failure) {
-
-        static InputGuardRailsResult SUCCESS = new InputGuardRailsResult(true, null, null);
-
+    private static <GR extends GuardrailResult> GR compose(GR first, GR second,
+            Function<List<? extends GuardrailResult.Failure>, GR> producer) {
+        if (first.isSuccess()) {
+            return second;
+        }
+        if (second.isSuccess()) {
+            return first;
+        }
+        List<? extends GuardrailResult.Failure> failures = new ArrayList<>();
+        failures.addAll(first.failures());
+        failures.addAll(second.failures());
+        return producer.apply(failures);
     }
 }

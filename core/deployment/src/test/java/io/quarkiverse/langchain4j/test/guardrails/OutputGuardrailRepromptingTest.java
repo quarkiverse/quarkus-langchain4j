@@ -29,9 +29,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.GuardrailException;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class OutputGuardrailRepromptingTest {
@@ -103,11 +104,11 @@ public class OutputGuardrailRepromptingTest {
         private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("Retry", true, "Retry");
+                return reprompt("Retry", "Retry");
             }
-            // OK
+            return success();
         }
 
         public int getSpy() {
@@ -121,14 +122,14 @@ public class OutputGuardrailRepromptingTest {
         private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             int v = spy.incrementAndGet();
             List<ChatMessage> messages = params.memory().messages();
             if (v == 1) {
                 ChatMessage last = messages.get(messages.size() - 1);
                 assertThat(last).isInstanceOf(AiMessage.class);
                 assertThat(((AiMessage) last).text()).isEqualTo("Nope");
-                throw new ValidationException("Retry", true, "Retry");
+                return reprompt("Retry", "Retry");
             }
             if (v == 2) {
                 // Check that it's in memory
@@ -140,12 +141,12 @@ public class OutputGuardrailRepromptingTest {
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
                 assertThat(beforeLast.text()).isEqualTo("Retry");
 
-                throw new ValidationException("Retry", true, "Retry");
+                return reprompt("Retry", "Retry");
             }
             if (v != 3) {
                 throw new IllegalArgumentException("Unexpected call");
             }
-            // OK
+            return success();
         }
 
         public int getSpy() {
@@ -159,14 +160,14 @@ public class OutputGuardrailRepromptingTest {
         private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             int v = spy.incrementAndGet();
             List<ChatMessage> messages = params.memory().messages();
             if (v == 1) {
                 ChatMessage last = messages.get(messages.size() - 1);
                 assertThat(last).isInstanceOf(AiMessage.class);
                 assertThat(((AiMessage) last).text()).isEqualTo("Nope");
-                throw new ValidationException("Retry", true, "Retry Once");
+                return reprompt("Retry", "Retry Once");
             }
             if (v == 2) {
                 // Check that it's in memory
@@ -177,9 +178,9 @@ public class OutputGuardrailRepromptingTest {
                 assertThat(((AiMessage) last).text()).isEqualTo("Hello");
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
                 assertThat(beforeLast.text()).isEqualTo("Retry Once");
-                throw new ValidationException("Retry", true, "Retry Twice");
+                return reprompt("Retry", "Retry Twice");
             }
-            throw new ValidationException("Retry", true, "Retry Again");
+            return reprompt("Retry", "Retry Again");
         }
 
         public int getSpy() {
