@@ -203,7 +203,14 @@ public class ToolProcessor {
                             memoryIdParameter = parameter;
                             continue;
                         }
-                        builder.addParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+
+                        AnnotationInstance pInstance = parameter.annotation(P);
+                        if (pInstance != null && pInstance.value("required") != null
+                                && !pInstance.value("required").asBoolean()) {
+                            builder.addOptionalParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+                        } else {
+                            builder.addParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+                        }
                     }
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
