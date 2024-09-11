@@ -1,36 +1,78 @@
 package io.quarkiverse.langchain4j.runtime.devui;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import jakarta.enterprise.inject.Default;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.enterprise.util.TypeLiteral;
+
+import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import io.quarkus.arc.All;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class EmbeddingStoreJsonRPCService {
 
-    EmbeddingStore<TextSegment> embeddingStore;
+    final EmbeddingStore<TextSegment> embeddingStore;
 
-    EmbeddingModel embeddingModel;
+    final EmbeddingModel embeddingModel;
 
-    public EmbeddingStoreJsonRPCService() {
-        // if there are more models/stores, try to choose the default
-        embeddingModel = CDI.current().select(EmbeddingModel.class, new Default.Literal()).get();
-        TypeLiteral<EmbeddingStore<TextSegment>> embeddingStoreType = new TypeLiteral<EmbeddingStore<TextSegment>>() {
-        };
-        embeddingStore = CDI.current().select(embeddingStoreType, new Default.Literal()).get();
+    private static Logger log = Logger.getLogger(EmbeddingStoreJsonRPCService.class);
+
+    public EmbeddingStoreJsonRPCService(
+            @All List<EmbeddingStore<TextSegment>> embeddingStores) {
+        List<InstanceHandle<EmbeddingModel>> embeddingModels = Arc.container().listAll(EmbeddingModel.class);
+        if (embeddingModels.isEmpty()) {
+            embeddingModel = null;
+            log.warn("EmbeddingStoreJsonRPCService is unable to find any embedding model in CDI, " +
+                    "the embedding store Dev UI page will not work");
+        } else {
+            if (embeddingModels.size() > 1) {
+                // if there's more than one, try to find the one with @Default
+                Default.Literal DEFAULT = new Default.Literal();
+                EmbeddingModel chosenModel = null;
+                for (InstanceHandle<EmbeddingModel> candidate : embeddingModels) {
+                    if (candidate.getBean().getQualifiers().contains(DEFAULT)) {
+                        chosenModel = candidate.get();
+                        break;
+                    }
+                }
+                if (chosenModel == null) {
+                    // didn't find a @Default one
+                    embeddingModel = embeddingModels.get(0).get();
+                } else {
+                    embeddingModel = chosenModel;
+                }
+                log.warn("EmbeddingStoreJsonRPCService found multiple embedding models in CDI, " +
+                        "using the first one: " + embeddingModel.getClass().getName());
+            } else {
+                embeddingModel = embeddingModels.get(0).get();
+            }
+        }
+        if (embeddingStores.isEmpty()) {
+            embeddingStore = null;
+            log.warn("EmbeddingStoreJsonRPCService is unable to find any embedding store in CDI, " +
+                    "the embedding store Dev UI page will not work");
+        } else {
+            embeddingStore = embeddingStores.get(0);
+            if (embeddingStores.size() > 1) {
+                log.warn("EmbeddingStoreJsonRPCService found multiple embedding stores in CDI, " +
+                        "using the first one: " + embeddingStore.getClass().getName());
+            }
+        }
     }
 
     private static final Pattern COMMA_OR_NEWLINE = Pattern.compile(",|\\r?\\n");
 
     public String add(String id, String text, String metadata) {
+        verifyEmbedingModelAndStore();
         if (id == null || id.isEmpty()) {
             return embeddingStore.add(embeddingModel.embed(text).content(), TextSegment.from(text, parseMetadata(metadata)));
         } else {
@@ -54,6 +96,7 @@ public class EmbeddingStoreJsonRPCService {
     // FIXME: the limit argument can be changed to int after https://github.com/quarkusio/quarkus/issues/37481 is fixed
     // LangChain4jDevUIJsonRpcTest will need to be adjusted accordingly
     public JsonArray findRelevant(String text, String limit) {
+        verifyEmbedingModelAndStore();
         int limitInt = Integer.parseInt(limit);
         JsonArray result = new JsonArray();
         for (EmbeddingMatch<TextSegment> match : embeddingStore.findRelevant(embeddingModel.embed(text).content(), limitInt)) {
@@ -74,5 +117,14 @@ public class EmbeddingStoreJsonRPCService {
             result.add(matchJson);
         }
         return result;
+    }
+
+    private void verifyEmbedingModelAndStore() {
+        if (embeddingModel == null) {
+            throw new RuntimeException("No embedding model found in CDI. Please add an embedding model to your application.");
+        }
+        if (embeddingStore == null) {
+            throw new RuntimeException("No embedding store found in CDI. Please add an embedding store to your application.");
+        }
     }
 }
