@@ -10,6 +10,9 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRI
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
+import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
+import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
+import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +64,7 @@ import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
+import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -671,12 +675,18 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
+    public MethodParameterAllowedAnnotationsBuildItem markMemoryIdAsAllowedAnnotation() {
+        return new MethodParameterAllowedAnnotationsBuildItem(anno -> MEMORY_ID.equals(anno.name()));
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleAiServices(
             LangChain4jBuildConfig config,
             AiServicesRecorder recorder,
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
+            List<MethodParameterAllowedAnnotationsBuildItem> methodParameterAllowedAnnotationsItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
@@ -818,10 +828,15 @@ public class AiServicesProcessor {
                         // MethodImplementationSupport#implement
 
                         String methodId = createMethodId(methodInfo);
+                        Collection<Predicate<AnnotationInstance>> allowedPredicates = methodParameterAllowedAnnotationsItems
+                                .stream()
+                                .map(item -> item.getPredicate())
+                                .collect(Collectors.toList());
                         AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, index,
                                 addMicrometerMetrics,
                                 addOpenTelemetrySpan,
-                                config.responseSchema());
+                                config.responseSchema(),
+                                allowedPredicates);
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
@@ -969,7 +984,8 @@ public class AiServicesProcessor {
 
     private AiServiceMethodCreateInfo gatherMethodMetadata(
             MethodInfo method, IndexView index, boolean addMicrometerMetrics,
-            boolean addOpenTelemetrySpans, boolean generateResponseSchema) {
+            boolean addOpenTelemetrySpans, boolean generateResponseSchema,
+            Collection<Predicate<AnnotationInstance>> allowedPredicates) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -982,7 +998,7 @@ public class AiServicesProcessor {
         if (generateResponseSchema && !returnType.equals(Multi.class))
             outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
 
-        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params);
+        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams);
 
@@ -1051,18 +1067,16 @@ public class AiServicesProcessor {
         return AsmUtil.getSignature(returnType, typeArgMapper);
     }
 
-    private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params) {
+    private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params,
+            Collection<Predicate<AnnotationInstance>> allowedPredicates) {
         if (params.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : params) {
-            List<AnnotationInstance> effectiveParamAnnotations = effectiveParamAnnotations(param);
-            if (effectiveParamAnnotations.isEmpty() // if a parameter has no annotations it is considered a template variable
-                    || effectiveParamAnnotations.stream().map(AnnotationInstance::name).anyMatch(MEMORY_ID::equals) // we allow @MemoryId parameters to be
-                                                                                                                    // part of the template
-            ) {
+
+            if (isParameterAllowedAsTemplateVariable(param, allowedPredicates)) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
             } else {
                 AnnotationInstance vInstance = param.annotation(V);
@@ -1088,20 +1102,33 @@ public class AiServicesProcessor {
         return templateParams;
     }
 
-    private List<AnnotationInstance> effectiveParamAnnotations(MethodParameterInfo param) {
-        return param.annotations().stream().filter(ai -> {
-            String name = ai.name().toString();
-            if (name.startsWith("kotlin") || name.startsWith("jakarta.validation.constraints")) {
-                return false;
+    private boolean isParameterAllowedAsTemplateVariable(
+            MethodParameterInfo param, Collection<Predicate<AnnotationInstance>> allowedPredicates) {
+
+        Collection<MethodParameterAsTemplateVariableAllowance> allowances = param.annotations().stream().map(anno -> {
+            String name = anno.name().toString();
+
+            if (allowedPredicates.stream().anyMatch(predicate -> predicate.test(anno))) {
+                // Any annotation matching one of the allowed predicates forcedly enable param as template variable
+                return FORCE_ALLOW;
+            } else {
+                // Any annotations matching predicates below are ignored
+                if (name.startsWith("kotlin") || name.startsWith("jakarta.validation.constraints")) {
+                    return IGNORE;
+                }
+                if (name.endsWith("NotNull")) {
+                    return IGNORE;
+                }
+                if (name.startsWith("io.opentelemetry")) {
+                    return IGNORE;
+                }
             }
-            if (name.endsWith("NotNull")) {
-                return false;
-            }
-            if (name.startsWith("io.opentelemetry")) {
-                return false;
-            }
-            return true;
-        }).collect(Collectors.toList());
+
+            // Remaining annotations are denied, unless co-located to an allowed annotation
+            return OPTIONAL_DENY;
+        }).collect(Collectors.toSet());
+
+        return allowances.contains(FORCE_ALLOW) || !allowances.contains(OPTIONAL_DENY);
     }
 
     private Optional<AiServiceMethodCreateInfo.TemplateInfo> gatherSystemMessageInfo(MethodInfo method,
