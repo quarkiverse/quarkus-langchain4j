@@ -28,27 +28,23 @@ package io.quarkiverse.langchain4j.guardrails;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.rag.AugmentationResult;
-import io.smallrye.common.annotation.Experimental;
 
 /**
  * An input guardrail is a rule that is applied to the input of the model to ensure that the input (the user message) is
  * safe and meets the expectations of the model.
  * <p>
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link InputGuardrails#value()} annotation.
- * <p>
- * Implementation should throw a {@link ValidationException} when the validation fails.
  */
-public interface InputGuardrail {
+public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailParams, InputGuardrailResult> {
 
     /**
      * Validates the {@code user message} that will be sent to the LLM.
      * <p>
      *
      * @param userMessage the response from the LLM
-     * @throws ValidationException the exception throws if the validation fails.
      */
-    default void validate(UserMessage userMessage) throws ValidationException {
-        throw new ValidationException("Validation not implemented");
+    default InputGuardrailResult validate(UserMessage userMessage) {
+        return failure("Validation not implemented");
     }
 
     /**
@@ -61,11 +57,10 @@ public interface InputGuardrail {
      *
      * @param params the parameters, including the user message, the memory (maybe null),
      *        and the augmentation result (maybe null). Cannot be {@code null}
-     * @throws ValidationException the exception throws if the validation fails.
      */
-    default void validate(InputGuardrailParams params)
-            throws ValidationException {
-        validate(params.userMessage());
+    @Override
+    default InputGuardrailResult validate(InputGuardrailParams params) {
+        return validate(params.userMessage());
     }
 
     /**
@@ -75,7 +70,8 @@ public interface InputGuardrail {
      * @param memory the memory, can be {@code null} or empty
      * @param augmentationResult the augmentation result, can be {@code null}
      */
-    record InputGuardrailParams(UserMessage userMessage, ChatMemory memory, AugmentationResult augmentationResult) {
+    record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
+            AugmentationResult augmentationResult) implements GuardrailParams {
     }
 
 }
@@ -84,8 +80,8 @@ public interface InputGuardrail {
 
 The `validate` method of the `InputGuardrail` interface can have two signatures:
 
-- `void validate(UserMessage responseFromLLM) throws ValidationException`
-- `void validate(InputGuardrailParams params) throws ValidationException`
+- `InputGuardrailParams validate(UserMessage responseFromLLM)`
+- `InputGuardrailParams validate(InputGuardrailParams params)`
 
 The first one is used when the guardrail only needs the user message.
 Simple guardrails can use this method.
@@ -94,13 +90,11 @@ For example, they can check that there are enough documents in the augmentation 
 
 ==== Input Guardrails Outcome
 
-Input guardrails can have two outcomes:
+Input guardrails can have three outcomes:
 
 - _pass_ - The input is valid, the next guardrail is executed, and if the last guardrail passes, the LLM is called.
-- _fail_ - The input is invalid, the next guardrail is **not** executed, and the error is rethrown. The LLM is not called.
-
-A `validate` method completing successfully is considered a pass.
-A `validate` method throwing an `Exception` is considered a fail.
+- _fail_ - The input is invalid, but the next guardrail is executed the same, in order to accumulate all the possible validation problems. The LLM is not called.
+- _fatal_ - The input is invalid, the next guardrail is **not** executed, and the error is rethrown. The LLM is not called.
 
 ==== Input Guardrails Scopes
 
@@ -166,10 +160,35 @@ public interface Simulator {
 }
 ----
 
-In this example, the `VerifyHeroFormat` is executed first to check that the passed hero is valid
+In this example, the `VerifyHeroFormat` is executed first to check that the passed hero is valid.
 Then, the `VerifyVillainFormat` is executed to check that the villain is valid.
 
-If the `VerifyHeroFormat` fails, the `VerifyVillainFormat` is not executed.
+If the `VerifyHeroFormat` fails, the `VerifyVillainFormat` may or may not be executed depending on whether the failure is fatal or not. For instance the `VerifyHeroFormat` could be implemented as it follows.
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class VerifyHeroFormat implements InputGuardrail {
+
+    @Override
+    public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
+        String text = um.singleText();
+        if (text.length() > 1000) {
+            // a fatal failure, the next InputGuardrail won't be evaluated
+            return fatal("Input too long, size = " + text.length());
+        }
+        if (!text.contains("hero")) {
+            // a normal failure, still allowing to evaluate also the next InputGuardrail and accumulate multiple failures
+            return failure("The input should contain the word 'hero'");
+        }
+        return success();
+    }
+}
+----
 
 == Output Guardrails
 
@@ -188,29 +207,24 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.rag.AugmentationResult;
 
 /**
- * A guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
+ * An output guardrail is a rule that is applied to the output of the model to ensure that the output is safe and meets the
  * expectations.
  * <p>
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link OutputGuardrails#value()} annotation.
  * <p>
- * Implementation should throw a {@link ValidationException} when the validation fails. The exception can indicate whether the
- * request should be retried and provide a {@code reprompt} message.
  * In the case of reprompting, the reprompt message is added to the LLM context and the request is retried.
  * <p>
  * The maximum number of retries is configurable using {@code quarkus.langchain4j.guardrails.max-retries}, defaulting to 3.
  */
-public interface OutputGuardrail {
+public interface OutputGuardrail extends Guardrail<OutputGuardrail.OutputGuardrailParams, OutputGuardrailResult> {
 
     /**
      * Validates the response from the LLM.
-     * <p>
-     * If the validation fails with an exception that is not a {@link ValidationException}, no retry will be attempted.
      *
      * @param responseFromLLM the response from the LLM
-     * @throws ValidationException the exception throws if the validation fails.
      */
-    default void validate(AiMessage responseFromLLM) throws ValidationException {
-        throw new ValidationException("Validation not implemented", false, null);
+    default OutputGuardrailResult validate(AiMessage responseFromLLM) {
+        return failure("Validation not implemented");
     }
 
     /**
@@ -219,17 +233,14 @@ public interface OutputGuardrail {
      * Unlike {@link #validate(AiMessage)}, this method allows to access the memory and the augmentation result (in the
      * case of a RAG).
      * <p>
-     * If the validation fails with an exception that is not a {@link ValidationException}, no retry will be attempted.
-     * <p>
      * Implementation must not attempt to write to the memory or the augmentation result.
      *
      * @param params the parameters, including the response from the LLM, the memory (maybe null),
      *        and the augmentation result (maybe null). Cannot be {@code null}
-     * @throws ValidationException the exception throws if the validation fails.
      */
-    default void validate(OutputGuardrailParams params)
-            throws ValidationException {
-        validate(params.responseFromLLM());
+    @Override
+    default OutputGuardrailResult validate(OutputGuardrailParams params) {
+        return validate(params.responseFromLLM());
     }
 
     /**
@@ -239,17 +250,17 @@ public interface OutputGuardrail {
      * @param memory the memory, can be {@code null} or empty
      * @param augmentationResult the augmentation result, can be {@code null}
      */
-    record OutputGuardrailParams(AiMessage responseFromLLM, ChatMemory memory, AugmentationResult augmentationResult) {
+    record OutputGuardrailParams(AiMessage responseFromLLM, ChatMemory memory,
+            AugmentationResult augmentationResult) implements GuardrailParams {
     }
-
 }
 
 ----
 
 The `validate` method of the `OutputGuardrail` interface can have two signatures:
 
-- `void validate(AiMessage responseFromLLM) throws ValidationException`
-- `void validate(OutputGuardrailParams params) throws ValidationException`
+- `OutputGuardrailParams validate(AiMessage responseFromLLM)`
+- `OutputGuardrailParams validate(OutputGuardrailParams params)`
 
 The first one is used when the guardrail only needs the output of the LLM.
 Simple guardrails can use this method.
@@ -270,12 +281,13 @@ public class JsonGuardrail implements OutputGuardrail {
     ObjectMapper mapper;
 
     @Override
-    public void validate(AiMessage responseFromLLM) throws ValidationException {
+    public OutputGuardrailResult validate(AiMessage responseFromLLM) {
         try {
             mapper.readTree(responseFromLLM.text());
         } catch (Exception e) {
-            throw new ValidationException("Invalid JSON", true, "Make sure you return a valid JSON object");
+            return reprompt("Invalid JSON", e, "Make sure you return a valid JSON object");
         }
+        return success();
     }
 
 }
@@ -287,30 +299,27 @@ The <<_detecting_hallucinations_in_the_rag_context>> section gives an example of
 
 ==== Output Guardrails Outcome
 
-Output guardrails can have four outcomes:
+Output guardrails can have five outcomes:
 
 - _pass_ - The output is valid, the next guardrail is executed, and if the last guardrail passes, the output is returned to the caller.
-- _fail_ - The output is invalid, the next guardrail is **not** executed, and the error is rethrown.
-- _fail with retry_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with the **same** prompt.
-- _fail with reprompt_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with a **new** prompt.
+- _fail_ - The output is invalid, but the next guardrail is executed the same, in order to accumulate all the possible validation problems.
+- _fatal_ - The output is invalid, the next guardrail is **not** executed, and the error is rethrown.
+- _fatal with retry_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with the **same** prompt.
+- _fatal with reprompt_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with a **new** prompt.
 
-A `validate` method completing successfully is considered a pass.
-A `validate` method throwing an `Exception` is considered a fail.
-If that exception is a `io.quarkiverse.langchain4j.guardrails.OutputGuardrail.ValidationException` exception, then the guardrail can specify whether the LLM should be retried or reprompted.
+In fact if the validation fails, then the guardrail can specify whether the LLM should be retried or reprompted.
 
 [source,java]
 ----
 // Retry - The LLM is called again with the same prompt and context
 // The guardrails will be called again with the new output
-throw new ValidationException("Invalid JSON", true, null);
+return retry("Invalid JSON");
 
 // Retry with reprompt - The LLM is called again with a new prompt and context
 // A new user message is added to the LLM context (memory), and the LLM is called again with this new context.
 // The guardrails will be called again with the new output
-throw new ValidationException("Invalid JSON", true, "Make sure you return a valid JSON object");
+return reprompt("Invalid JSON", "Make sure you return a valid JSON object");
 ----
-
-IMPORTANT: _Reprompting_ requires the `retry` parameter to be set to `true` in the `ValidationException` constructor.
 
 By default, Quarkus Langchain4J will limit the number of retries to 3.
 This is configurable using the `quarkus.langchain4j.guardrails.max-retries` configuration property:
@@ -411,6 +420,8 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.rag.content.Content;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -426,11 +437,11 @@ public class HallucinationGuard implements OutputGuardrail {
     double threshold;
 
     @Override
-    public void validate(OutputGuardrailParams params) throws ValidationException {
+    public OutputGuardrailResult validate(OutputGuardrailParams params) {
         Response<Embedding> embeddingOfTheResponse = embedding.embed(params.responseFromLLM().text());
         if (params.augmentationResult() == null || params.augmentationResult().contents().isEmpty()) {
             Log.info("No content to validate against");
-            return;
+            return success();
         }
         float[] vectorOfTheResponse = embeddingOfTheResponse.content().vector();
         for (Content content : params.augmentationResult().contents()) {
@@ -439,11 +450,11 @@ public class HallucinationGuard implements OutputGuardrail {
             double distance = cosineDistance(vectorOfTheResponse, vectorOfTheContent);
             if (distance < threshold) {
                 Log.info("Passed hallucination guardrail: " + distance);
-                return;
+                return success();
             }
         }
 
-        throw new ValidationException("Hallucination detected", true, "Make sure you use the given documents to produce the response");
+        return reprompt("Hallucination detected", "Make sure you use the given documents to produce the response");
     }
 
     public static double cosineDistance(float[] vector1, float[] vector2) {

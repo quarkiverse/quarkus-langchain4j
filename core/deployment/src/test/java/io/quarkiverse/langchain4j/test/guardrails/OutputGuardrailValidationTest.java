@@ -26,9 +26,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.GuardrailException;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -91,14 +92,6 @@ public class OutputGuardrailValidationTest {
         assertThat(fatal.spy()).isEqualTo(1);
     }
 
-    @Test
-    @ActivateRequestContext
-    void testRepromptingWithoutRetry() {
-        assertThatThrownBy(() -> aiService.repromptingWithoutRetry("6"))
-                .isInstanceOf(GuardrailException.class)
-                .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-    }
-
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
@@ -121,10 +114,6 @@ public class OutputGuardrailValidationTest {
         @UserMessage("Say Hi!")
         @OutputGuardrails(KOFatalGuardrail.class)
         String fatal(@MemoryId String mem);
-
-        @UserMessage("Say Hi!")
-        @OutputGuardrails(RepromptingWithoutRetryGuardrail.class)
-        String repromptingWithoutRetry(@MemoryId String mem);
     }
 
     @RequestScoped
@@ -133,8 +122,9 @@ public class OutputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
+            return success();
         }
 
         public int spy() {
@@ -148,9 +138,9 @@ public class OutputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
-            throw new ValidationException("KO", false, null);
+            return failure("KO");
         }
 
         public int spy() {
@@ -164,12 +154,12 @@ public class OutputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             int v = spy.incrementAndGet();
             if (v == 2) {
-                return;
+                return OutputGuardrailResult.success();
             }
-            throw new ValidationException("KO", true, null);
+            return retry("KO");
         }
 
         public int spy() {
@@ -183,9 +173,9 @@ public class OutputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             int v = spy.incrementAndGet();
-            throw new ValidationException("KO", true, null);
+            return retry("KO");
         }
 
         public int spy() {
@@ -194,22 +184,12 @@ public class OutputGuardrailValidationTest {
     }
 
     @ApplicationScoped
-    public static class RepromptingWithoutRetryGuardrail implements OutputGuardrail {
-
-        @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
-            throw new ValidationException("KO", false, "Reprompt");
-        }
-
-    }
-
-    @ApplicationScoped
     public static class KOFatalGuardrail implements OutputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
             throw new IllegalArgumentException("Fatal");
         }

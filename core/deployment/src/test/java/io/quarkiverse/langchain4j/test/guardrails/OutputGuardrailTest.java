@@ -27,6 +27,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.arc.Arc;
@@ -37,8 +38,8 @@ public class OutputGuardrailTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                    .addClasses(MyAiService.class, OKGuardrail.class, KOGuardrail.class, MyChatModel.class,
+                            MyChatModelSupplier.class, MyMemoryProviderSupplier.class, ValidationException.class));
 
     @Inject
     MyAiService aiService;
@@ -73,10 +74,10 @@ public class OutputGuardrailTest {
     void testThatGuardrailCanThrowValidationException() {
         assertThat(koGuardrail.spy()).isEqualTo(0);
         assertThatThrownBy(() -> aiService.ko("1"))
-                .hasCauseExactlyInstanceOf(OutputGuardrail.ValidationException.class);
+                .hasCauseExactlyInstanceOf(ValidationException.class);
         assertThat(koGuardrail.spy()).isEqualTo(1);
         assertThatThrownBy(() -> aiService.ko("1"))
-                .hasCauseExactlyInstanceOf(OutputGuardrail.ValidationException.class);
+                .hasCauseExactlyInstanceOf(ValidationException.class);
         assertThat(koGuardrail.spy()).isEqualTo(2);
     }
 
@@ -99,8 +100,9 @@ public class OutputGuardrailTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
+            return success();
         }
 
         public int spy() {
@@ -114,9 +116,9 @@ public class OutputGuardrailTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(AiMessage responseFromLLM) throws ValidationException {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             spy.incrementAndGet();
-            throw new ValidationException("KO", false, null);
+            return failure("KO", new ValidationException("KO"));
         }
 
         public int spy() {

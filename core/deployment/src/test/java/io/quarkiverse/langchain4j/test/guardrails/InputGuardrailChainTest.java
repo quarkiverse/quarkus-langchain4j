@@ -26,9 +26,10 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.GuardrailException;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -38,7 +39,8 @@ public class InputGuardrailChainTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class,
+                            ValidationException.class));
 
     @Inject
     MyAiService aiService;
@@ -74,7 +76,7 @@ public class InputGuardrailChainTest {
     void testFailureTheChain() {
         assertThatThrownBy(() -> aiService.failingFirstTwo("1", "foo"))
                 .isInstanceOf(GuardrailException.class)
-                .hasCauseInstanceOf(InputGuardrail.ValidationException.class)
+                .hasCauseInstanceOf(ValidationException.class)
                 .hasRootCauseMessage("boom");
         assertThat(firstGuardrail.spy()).isEqualTo(1);
         assertThat(secondGuardrail.spy()).isEqualTo(0);
@@ -102,7 +104,7 @@ public class InputGuardrailChainTest {
         AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -110,6 +112,7 @@ public class InputGuardrailChainTest {
             } catch (InterruptedException e) {
                 // Ignore me
             }
+            return success();
         }
 
         public int spy() {
@@ -128,7 +131,7 @@ public class InputGuardrailChainTest {
         volatile AtomicLong lastAccess = new AtomicLong();
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             spy.incrementAndGet();
             lastAccess.set(System.nanoTime());
             try {
@@ -136,6 +139,7 @@ public class InputGuardrailChainTest {
             } catch (InterruptedException e) {
                 // Ignore me
             }
+            return success();
         }
 
         public int spy() {
@@ -153,10 +157,11 @@ public class InputGuardrailChainTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public void validate(dev.langchain4j.data.message.UserMessage um) throws ValidationException {
+        public InputGuardrailResult validate(dev.langchain4j.data.message.UserMessage um) {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("boom");
+                return fatal("boom", new ValidationException("boom"));
             }
+            return success();
         }
 
         public int spy() {

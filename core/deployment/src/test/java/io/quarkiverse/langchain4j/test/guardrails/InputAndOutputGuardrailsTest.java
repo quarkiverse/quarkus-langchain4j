@@ -27,8 +27,10 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -38,7 +40,8 @@ public class InputAndOutputGuardrailsTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(MyAiService.class,
-                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class));
+                            MyChatModel.class, MyChatModelSupplier.class, MyMemoryProviderSupplier.class,
+                            ValidationException.class));
 
     @Inject
     MyOkInputGuardrail okIn;
@@ -144,8 +147,9 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(InputGuardrailParams params) throws ValidationException {
+        public InputGuardrailResult validate(InputGuardrailParams params) {
             spy.incrementAndGet();
+            return success();
         }
 
         public int getSpy() {
@@ -159,9 +163,9 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(InputGuardrailParams params) throws ValidationException {
+        public InputGuardrailResult validate(InputGuardrailParams params) {
             spy.incrementAndGet();
-            throw new ValidationException("boom");
+            return failure("boom", new ValidationException("boom"));
         }
 
         public int getSpy() {
@@ -175,8 +179,9 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             spy.incrementAndGet();
+            return OutputGuardrailResult.success();
         }
 
         public int getSpy() {
@@ -190,9 +195,9 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             spy.incrementAndGet();
-            throw new ValidationException("boom", false, null);
+            return failure("boom", new ValidationException("boom"));
         }
 
         public int getSpy() {
@@ -206,10 +211,11 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("KO", true, null);
+                return retry("KO");
             }
+            return success();
         }
 
         public int getSpy() {
@@ -223,10 +229,11 @@ public class InputAndOutputGuardrailsTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public void validate(OutputGuardrailParams params) throws ValidationException {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             if (spy.incrementAndGet() == 1) {
-                throw new ValidationException("KO", true, "retry");
+                return reprompt("KO", "retry");
             }
+            return success();
         }
 
         public int getSpy() {

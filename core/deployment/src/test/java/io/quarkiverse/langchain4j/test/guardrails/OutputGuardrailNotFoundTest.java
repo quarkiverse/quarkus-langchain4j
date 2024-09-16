@@ -24,6 +24,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
@@ -59,7 +60,7 @@ public class OutputGuardrailNotFoundTest {
     public static class MissingGuardRail implements OutputGuardrail {
 
         @Override
-        public void validate(AiMessage responseFromLLM) {
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             throw new RuntimeException("Should not be invoked");
         }
 
