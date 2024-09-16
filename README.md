@@ -42,7 +42,7 @@ or, to use hugging face:
 ```xml
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-huggingface</artifactId>
+    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
     <version>{latest-version}</version>
 </dependency>
 ```
