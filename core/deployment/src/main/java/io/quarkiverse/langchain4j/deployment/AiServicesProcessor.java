@@ -1025,7 +1025,8 @@ public class AiServicesProcessor {
         if (returnTypeKind == Type.Kind.VOID) {
             throw illegalConfiguration("Return type of method '%s' cannot be void", method);
         }
-        if ((returnTypeKind != Type.Kind.CLASS) && (returnTypeKind != Type.Kind.PARAMETERIZED_TYPE)) {
+        if ((returnTypeKind != Type.Kind.CLASS) && (returnTypeKind != Type.Kind.PRIMITIVE)
+                && (returnTypeKind != Type.Kind.PARAMETERIZED_TYPE)) {
             throw illegalConfiguration("Unsupported type of method '%s", method);
         }
 

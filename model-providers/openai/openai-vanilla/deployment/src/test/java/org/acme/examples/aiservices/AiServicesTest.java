@@ -936,6 +936,30 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertSingleRequestMessage(getRequestAsMap(), "What is the capital of Germany?");
     }
 
+    interface AssistantReturningPrimitive {
+
+        boolean chat(String userMessage);
+    }
+
+    @Test
+    void should_return_primitive() throws IOException {
+        setChatCompletionMessageContent("true");
+
+        // given
+        AssistantReturningPrimitive assistant = AiServices.create(AssistantReturningPrimitive.class, createChatModel());
+
+        String userMessage = "Is Berlin the is the capital of Germany?";
+
+        // when
+        boolean result = assistant.chat(userMessage);
+
+        // then
+        assertThat(result).isTrue();
+
+        assertSingleRequestMessage(getRequestAsMap(),
+                "Is Berlin the is the capital of Germany?\nYou must answer strictly in the following format: one of [true, false]");
+    }
+
     static class Calculator {
 
         private final Runnable after;
