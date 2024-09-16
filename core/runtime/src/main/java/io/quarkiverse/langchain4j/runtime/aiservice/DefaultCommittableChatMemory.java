@@ -34,8 +34,10 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
                     newMessages.remove(systemMessage.get()); // need to replace existing system message
                 }
             }
+            newMessages.add(0, message); // the system message must be in the first position
+        } else {
+            newMessages.add(message);
         }
-        newMessages.add(message);
     }
 
     private static Optional<SystemMessage> findSystemMessage(List<ChatMessage> messages) {

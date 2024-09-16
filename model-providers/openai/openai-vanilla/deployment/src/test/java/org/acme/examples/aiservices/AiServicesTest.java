@@ -9,7 +9,6 @@ import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.SYSTEM;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
-import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static java.time.Month.JULY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -768,16 +767,16 @@ public class AiServicesTest extends OpenAiBaseTest {
         // assert request
         assertMultipleRequestMessage(getRequestAsMap(),
                 List.of(
+                        new MessageContent("system", secondSystemMessage),
                         new MessageContent("user", firstUserMessage),
                         new MessageContent("assistant", firstAiMessage),
-                        new MessageContent("system", secondSystemMessage),
                         new MessageContent("user", secondUserMessage)));
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(5)
                 .extracting(ChatMessage::type, ChatMessage::text)
-                .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage),
-                        tuple(SYSTEM, secondSystemMessage), tuple(USER, secondUserMessage), tuple(AI, secondAiMessage));
+                .containsExactly(tuple(SYSTEM, secondSystemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage),
+                        tuple(USER, secondUserMessage), tuple(AI, secondAiMessage));
     }
 
     interface ChatWithSeparateMemoryForEachUser {
