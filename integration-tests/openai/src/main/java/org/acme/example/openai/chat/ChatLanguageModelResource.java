@@ -195,4 +195,5 @@ public class ChatLanguageModelResource {
             this.ingredients = ingredients;
         }
     }
+
 }
