@@ -14,6 +14,7 @@ import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.builder.Version;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -57,6 +58,11 @@ public class RedisEmbeddingStoreProcessor {
                     .add("value", clientName)
                     .build();
         }
+
+        // FIXME: after updating to Quarkus 3.15, this workaround can be removed
+        int minorVersion = Integer.parseInt(Version.getVersion().split("\\.")[1]);
+        boolean workaround_specifyDialectAsParameter = minorVersion < 13;
+
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(REDIS_EMBEDDING_STORE)
                 .types(ClassType.create(EmbeddingStore.class),
@@ -67,7 +73,7 @@ public class RedisEmbeddingStoreProcessor {
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
                         redisClientQualifier)
-                .createWith(recorder.embeddingStoreFunction(config, clientName))
+                .createWith(recorder.embeddingStoreFunction(config, clientName, workaround_specifyDialectAsParameter))
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
