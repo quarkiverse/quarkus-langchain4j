@@ -48,16 +48,20 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     private final boolean indexCreated;
     private boolean warnedAboutWrongDimension = false;
 
+    // FIXME: this can be removed after upgrading to Quarkus 3.15
+    private final boolean workaround_specifyDialectAsParameter;
+
     private static final String SCORE_FIELD_NAME = "vector_score";
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public RedisEmbeddingStore(ReactiveRedisDataSource ds, RedisSchema schema) {
+    public RedisEmbeddingStore(ReactiveRedisDataSource ds, RedisSchema schema, boolean workaround_specifyDialectAsParameter) {
         this.ds = ds;
         this.schema = schema;
         this.indexCreated = createIndexIfDoesNotExist();
+        this.workaround_specifyDialectAsParameter = workaround_specifyDialectAsParameter;
     }
 
     private boolean createIndexIfDoesNotExist() {
@@ -174,8 +178,14 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
                 schema.getVectorFieldName(), SCORE_FIELD_NAME);
         QueryArgs args = new QueryArgs()
                 .sortByAscending(SCORE_FIELD_NAME)
-                .param("DIALECT", "2")
                 .param("BLOB", request.queryEmbedding().vector());
+
+        if (workaround_specifyDialectAsParameter) {
+            args = args.param("DIALECT", "2");
+        } else {
+            // FIXME: always do just this after upgrading to Quarkus 3.15
+            args = args.dialect(2);
+        }
 
         Uni<SearchQueryResponse> search = ds.search()
                 .ftSearch(schema.getIndexName(), query, args);
@@ -239,6 +249,7 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         private ReactiveRedisDataSource redisClient;
 
         private RedisSchema schema;
+        private boolean workaround_specifyDialectAsParameter;
 
         public Builder dataSource(ReactiveRedisDataSource client) {
             this.redisClient = client;
@@ -250,8 +261,13 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
             return this;
         }
 
+        public Builder workaround_specifyDialectAsParameter(boolean workaround_specifyDialectAsParameter) {
+            this.workaround_specifyDialectAsParameter = workaround_specifyDialectAsParameter;
+            return this;
+        }
+
         public RedisEmbeddingStore build() {
-            return new RedisEmbeddingStore(redisClient, schema);
+            return new RedisEmbeddingStore(redisClient, schema, workaround_specifyDialectAsParameter);
         }
 
     }
