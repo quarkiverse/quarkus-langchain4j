@@ -36,34 +36,34 @@ The following table lists the supported models, and the corresponding dependency
 | https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en-q]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-en-q:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.BgeSmallEnQuantizedEmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel`
 
 | https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-en:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.BgeSmallEnEmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.bgesmallen.BgeSmallEnEmbeddingModel`
 
 | https://huggingface.co/BAAI/bge-small-zh[bge-small-zh-q]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-zh-q:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.BgeSmallZhQuantizedEmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.bgesmallzhq.BgeSmallZhQuantizedEmbeddingModel`
 
 
 | https://huggingface.co/BAAI/bge-small-zh[bge-small-zh]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-zh:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.BgeSmallZhEmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.bgesmallzh.BgeSmallZhEmbeddingModel`
 
 
 | https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
 |`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.E5SmallV2QuantizedEmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.e5smallv2q.E5SmallV2QuantizedEmbeddingModel`
 
 | https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
 |`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
 | 384
-| `dev.langchain4j.model.embedding.E5SmallV2EmbeddingModel`
+| `dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel`
 
 Furthermore, when using these models, the following dependency should be added:
 
