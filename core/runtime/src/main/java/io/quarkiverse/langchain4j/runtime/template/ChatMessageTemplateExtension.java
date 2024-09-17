@@ -8,7 +8,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import io.quarkus.qute.TemplateExtension;
 
 @TemplateExtension
-public class ChatMessageTemplate {
+public class ChatMessageTemplateExtension {
 
     /**
      * Extracts and formats a dialogue between the user and the assistant from a list of chat messages. The user and assistant
