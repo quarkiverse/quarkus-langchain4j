@@ -60,8 +60,19 @@ public class RedisEmbeddingStoreProcessor {
         }
 
         // FIXME: after updating to Quarkus 3.15, this workaround can be removed
-        int minorVersion = Integer.parseInt(Version.getVersion().split("\\.")[1]);
-        boolean workaround_specifyDialectAsParameter = minorVersion < 13;
+        String quarkusVersion = Version.getVersion();
+        boolean workaround_specifyDialectAsParameter;
+        if (quarkusVersion.split("\\.").length < 2) {
+            // some custom version where we can't determine the minor version number
+            workaround_specifyDialectAsParameter = false;
+        } else {
+            try {
+                int minorVersion = Integer.parseInt(quarkusVersion.split("\\.")[1]);
+                workaround_specifyDialectAsParameter = minorVersion < 13;
+            } catch (NumberFormatException e) {
+                workaround_specifyDialectAsParameter = false;
+            }
+        }
 
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(REDIS_EMBEDDING_STORE)
