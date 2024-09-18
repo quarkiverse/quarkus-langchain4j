@@ -100,6 +100,12 @@ AI methods can take parameters referenced in system and user messages using the 
 String writeAPoem(String topic, int lines);
 ----
 
+[NOTE]
+====
+The value of `@SystemMessage` is also a template, which in addition to be able to reference the various parameters of the method,
+also has access to the `chat_history` parameter which can be used to iterate over the chat history.
+====
+
 [#_ai_method_return_type]
 === AI Method Return Type
 

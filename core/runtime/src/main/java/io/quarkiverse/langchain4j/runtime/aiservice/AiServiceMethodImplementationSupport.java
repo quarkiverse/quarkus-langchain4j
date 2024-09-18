@@ -124,14 +124,15 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             QuarkusAiServiceContext context, Audit audit) {
-        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs);
+        Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
+        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
+                context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
 
         if (audit != null) {
             audit.initialMessages(systemMessage, userMessage);
         }
 
-        Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
         boolean hasMethodSpecificTools = methodCreateInfo.getToolClassNames() != null
@@ -416,7 +417,8 @@ public class AiServiceMethodImplementationSupport {
         return moderationFuture;
     }
 
-    private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+    private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+            List<ChatMessage> previousChatMessages) {
         if (createInfo.getSystemMessageInfo().isEmpty()) {
             return Optional.empty();
         }
@@ -428,6 +430,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         templateParams.put(ResponseSchemaUtil.templateParam(), createInfo.getResponseSchemaInfo().outputFormatInstructions());
+        templateParams.put("chat_memory", previousChatMessages);
         Prompt prompt = PromptTemplate.from(systemMessageInfo.text().get()).apply(templateParams);
         return Optional.of(prompt.toSystemMessage());
     }
