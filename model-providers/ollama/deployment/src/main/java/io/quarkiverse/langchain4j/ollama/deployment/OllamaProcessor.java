@@ -8,6 +8,7 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.ParameterizedType;
@@ -34,8 +35,9 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
-import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.config.ConfigSourceInterceptor;
+import io.smallrye.config.ConfigValue;
+import io.smallrye.config.SmallRyeConfig;
 
 public class OllamaProcessor {
 
@@ -78,7 +80,7 @@ public class OllamaProcessor {
                         NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "base-url");
 
                 // same as with other dev services, we only need it if the base URL has not been set by the user
-                if (!ConfigUtils.isPropertyPresent(baseUrlProperty)) {
+                if (canUseDevServices(baseUrlProperty)) {
                     String modelId = NamedConfigUtil.isDefault(configName)
                             ? fixedRuntimeConfig.defaultConfig().chatModel().modelId()
                             : fixedRuntimeConfig.namedConfig().get(configName).chatModel().modelId();
@@ -94,7 +96,7 @@ public class OllamaProcessor {
                         NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "base-url");
 
                 // same as with other dev services, we only need it if the base URL has not been set by the user
-                if (!ConfigUtils.isPropertyPresent(baseUrlProperty)) {
+                if (canUseDevServices(baseUrlProperty)) {
                     String modelId = NamedConfigUtil.isDefault(configName)
                             ? fixedRuntimeConfig.defaultConfig().embeddingModel().modelId()
                             : fixedRuntimeConfig.namedConfig().get(configName).embeddingModel().modelId();
@@ -103,6 +105,18 @@ public class OllamaProcessor {
                 }
             }
         }
+    }
+
+    /**
+     * DevServices can be used either when the user has not configured the base-url, or that URL points to a local instance
+     */
+    private boolean canUseDevServices(String baseUrlProperty) {
+        SmallRyeConfig smallRyeConfig = ConfigProvider.getConfig().unwrap(SmallRyeConfig.class);
+        ConfigValue configValue = smallRyeConfig.getConfigValue(baseUrlProperty);
+        if (configValue.getValue() == null) {
+            return true;
+        }
+        return configValue.getValue().startsWith("http://localhost");
     }
 
     @BuildStep

@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,10 +27,9 @@ public class OllamaChatLanguageModelSmokeTest extends WiremockAware {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset(
-                            String.format("quarkus.langchain4j.ollama.base-url=%s", WiremockAware.wiremockUrlForConfig())),
-                            "application.properties"))
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
+            .overrideConfigKey("quarkus.langchain4j.ollama.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideConfigKey("quarkus.langchain4j.devservices.enabled", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-responses", "true");
 
