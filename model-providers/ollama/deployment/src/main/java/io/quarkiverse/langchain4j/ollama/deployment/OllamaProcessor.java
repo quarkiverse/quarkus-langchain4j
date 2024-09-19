@@ -33,7 +33,9 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.runtime.configuration.ConfigUtils;
+import io.smallrye.config.ConfigSourceInterceptor;
 
 public class OllamaProcessor {
 
@@ -43,6 +45,12 @@ public class OllamaProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+        serviceProviderProducer
+                .produce(ServiceProviderBuildItem.allProvidersFromClassPath(ConfigSourceInterceptor.class.getName()));
     }
 
     @BuildStep
