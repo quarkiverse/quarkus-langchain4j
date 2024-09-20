@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,7 +14,6 @@ import io.restassured.http.ContentType;
 public class AntoraTest {
 
     @Test
-    @Disabled("Antora is not enabled by default as its broken on podman machine")
     public void antoraSite() throws TimeoutException, IOException, InterruptedException {
         RestAssured
                 .given()
