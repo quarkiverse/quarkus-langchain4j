@@ -66,7 +66,8 @@ public interface PgVectorEmbeddingStoreConfig {
          * Metadata type:
          * <ul>
          * <li>COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case,
-         * you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
+         * you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right
+         * columns.
          * <li>COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
          * <li>COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case,
          * you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the
