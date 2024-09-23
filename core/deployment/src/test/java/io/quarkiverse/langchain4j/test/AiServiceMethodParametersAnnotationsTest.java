@@ -24,6 +24,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkus.builder.BuildChainBuilder;
 import io.quarkus.builder.BuildContext;
 import io.quarkus.builder.BuildStep;
@@ -36,8 +37,12 @@ import io.quarkus.test.QuarkusUnitTest;
 public class AiServiceMethodParametersAnnotationsTest {
 
     private static final DotName ANNOTATION_INCLUDED_BY_BUILD_ITEM = DotName.createSimple(AnnotationIncludedByBuildItem.class);
+    private static final DotName ANNOTATION_IGNORED_BY_BUILD_ITEM = DotName.createSimple(AnnotationIgnoredByBuildItem.class);
 
     public @interface AnnotationIncludedByBuildItem {
+    }
+
+    public @interface AnnotationIgnoredByBuildItem {
     }
 
     @RegisterExtension
@@ -58,9 +63,15 @@ public class AiServiceMethodParametersAnnotationsTest {
                                     // Any parameter annotated with @AnnotationIncludedByBuildItem could be used as template variable
                                     return ANNOTATION_INCLUDED_BY_BUILD_ITEM.equals(anno.name());
                                 }));
+                        context.produce(new MethodParameterIgnoredAnnotationsBuildItem(
+                                anno -> {
+                                    // Any @AnnotationIgnoredByBuildItem should not influence the parameter allowance as template variable
+                                    return ANNOTATION_IGNORED_BY_BUILD_ITEM.equals(anno.name());
+                                }));
                     }
                 })
                         .produces(MethodParameterAllowedAnnotationsBuildItem.class)
+                        .produces(MethodParameterIgnoredAnnotationsBuildItem.class)
                         .build();
             }
         };
@@ -101,9 +112,15 @@ public class AiServiceMethodParametersAnnotationsTest {
         }
 
         @GET
-        @Path("annotationFromBuildItemIsIncluded")
-        public String annotationFromBuildItemIsIncluded() {
-            return service.annotationFromBuildItemIsIncluded("arg1");
+        @Path("annotationIncludedFromBuildItemIsIncluded")
+        public String annotationIncludedFromBuildItemIsIncluded() {
+            return service.annotationIncludedFromBuildItemIsIncluded("arg1");
+        }
+
+        @GET
+        @Path("annotationIgnoredFromBuildItemIsIncluded")
+        public String annotationIgnoredFromBuildItemIsIncluded() {
+            return service.annotationIgnoredFromBuildItemIsIncluded("arg1");
         }
     }
 
@@ -121,8 +138,11 @@ public class AiServiceMethodParametersAnnotationsTest {
         @UserMessage("@Deprecated@Email={deprecatedEmail}")
         String deprecatedEmailIsNotIncluded(@Deprecated @Email String deprecatedEmail);
 
-        @UserMessage("@AnnotationIncludedByBuildItem={anno}")
-        String annotationFromBuildItemIsIncluded(@AnnotationIncludedByBuildItem String anno);
+        @UserMessage("@AnnotationIncludedByBuildItem={included}")
+        String annotationIncludedFromBuildItemIsIncluded(@AnnotationIncludedByBuildItem String included);
+
+        @UserMessage("@AnnotationIgnoredByBuildItem={ignored}")
+        String annotationIgnoredFromBuildItemIsIncluded(@AnnotationIgnoredByBuildItem String ignored);
     }
 
     @Test
@@ -151,10 +171,18 @@ public class AiServiceMethodParametersAnnotationsTest {
     }
 
     @Test
-    void annotationFromBuildItemShouldBeIncluded() {
-        get("test/annotationFromBuildItemIsIncluded")
+    void annotationIncludedFromBuildItemShouldBeIncluded() {
+        get("test/annotationIncludedFromBuildItemIsIncluded")
                 .then()
                 .statusCode(200)
                 .body(equalTo("@AnnotationIncludedByBuildItem=arg1"));
+    }
+
+    @Test
+    void annotationIgnoredFromBuildItemShouldBeIncluded() {
+        get("test/annotationIgnoredFromBuildItemIsIncluded")
+                .then()
+                .statusCode(200)
+                .body(equalTo("@AnnotationIgnoredByBuildItem=arg1"));
     }
 }

@@ -65,6 +65,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -722,6 +723,22 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
+    public void markIgnoredAnnotations(BuildProducer<MethodParameterIgnoredAnnotationsBuildItem> producer) {
+        producer.produce(new MethodParameterIgnoredAnnotationsBuildItem(dotname -> {
+            return dotname.name().toString().startsWith("kotlin");
+        }));
+        producer.produce(new MethodParameterIgnoredAnnotationsBuildItem(dotname -> {
+            return dotname.name().toString().startsWith("jakarta.validation.constraints");
+        }));
+        producer.produce(new MethodParameterIgnoredAnnotationsBuildItem(dotname -> {
+            return dotname.name().toString().endsWith("NotNull");
+        }));
+        producer.produce(new MethodParameterIgnoredAnnotationsBuildItem(dotname -> {
+            return dotname.name().toString().startsWith("io.opentelemetry");
+        }));
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleAiServices(
             LangChain4jBuildConfig config,
@@ -729,6 +746,7 @@ public class AiServicesProcessor {
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<MethodParameterAllowedAnnotationsBuildItem> methodParameterAllowedAnnotationsItems,
+            List<MethodParameterIgnoredAnnotationsBuildItem> methodParameterIgnoredAnnotationsItems,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
@@ -874,11 +892,16 @@ public class AiServicesProcessor {
                                 .stream()
                                 .map(item -> item.getPredicate())
                                 .collect(Collectors.toList());
+                        Collection<Predicate<AnnotationInstance>> ignoredPredicates = methodParameterIgnoredAnnotationsItems
+                                .stream()
+                                .map(item -> item.getPredicate())
+                                .collect(Collectors.toList());
                         AiServiceMethodCreateInfo methodCreateInfo = gatherMethodMetadata(methodInfo, index,
                                 addMicrometerMetrics,
                                 addOpenTelemetrySpan,
                                 config.responseSchema(),
-                                allowedPredicates);
+                                allowedPredicates,
+                                ignoredPredicates);
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
@@ -1027,7 +1050,8 @@ public class AiServicesProcessor {
     private AiServiceMethodCreateInfo gatherMethodMetadata(
             MethodInfo method, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema,
-            Collection<Predicate<AnnotationInstance>> allowedPredicates) {
+            Collection<Predicate<AnnotationInstance>> allowedPredicates,
+            Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -1040,7 +1064,7 @@ public class AiServicesProcessor {
         if (generateResponseSchema && !returnType.equals(Multi.class))
             outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
 
-        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates);
+        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates, ignoredPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams);
 
@@ -1110,7 +1134,8 @@ public class AiServicesProcessor {
     }
 
     private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params,
-            Collection<Predicate<AnnotationInstance>> allowedPredicates) {
+            Collection<Predicate<AnnotationInstance>> allowedPredicates,
+            Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
         if (params.isEmpty()) {
             return Collections.emptyList();
         }
@@ -1118,7 +1143,7 @@ public class AiServicesProcessor {
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
         for (MethodParameterInfo param : params) {
 
-            if (isParameterAllowedAsTemplateVariable(param, allowedPredicates)) {
+            if (isParameterAllowedAsTemplateVariable(param, allowedPredicates, ignoredPredicates)) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
             } else {
                 AnnotationInstance vInstance = param.annotation(V);
@@ -1145,28 +1170,30 @@ public class AiServicesProcessor {
     }
 
     private boolean isParameterAllowedAsTemplateVariable(
-            MethodParameterInfo param, Collection<Predicate<AnnotationInstance>> allowedPredicates) {
+            MethodParameterInfo param, Collection<Predicate<AnnotationInstance>> allowedPredicates,
+            Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
 
         Collection<MethodParameterAsTemplateVariableAllowance> allowances = param.annotations().stream().map(anno -> {
-            String name = anno.name().toString();
+
+            String annotationName = anno.name().toString();
 
             if (allowedPredicates.stream().anyMatch(predicate -> predicate.test(anno))) {
                 // Any annotation matching one of the allowed predicates forcedly enable param as template variable
+                log.debugf("Annotation %s matches an allowed predicate, parameter could be used as template variable.",
+                        annotationName);
                 return FORCE_ALLOW;
-            } else {
-                // Any annotations matching predicates below are ignored
-                if (name.startsWith("kotlin") || name.startsWith("jakarta.validation.constraints")) {
-                    return IGNORE;
-                }
-                if (name.endsWith("NotNull")) {
-                    return IGNORE;
-                }
-                if (name.startsWith("io.opentelemetry")) {
-                    return IGNORE;
-                }
+            } else if (ignoredPredicates.stream().anyMatch(predicate -> predicate.test(anno))) {
+                // Any annotation matching one of the ignored predicates is ignored
+                log.debugf(
+                        "Annotation %s matches an ignored predicate, remaining annotations decide parameter allowance as template variable.",
+                        annotationName);
+                return IGNORE;
             }
 
             // Remaining annotations are denied, unless co-located to an allowed annotation
+            log.debugf(
+                    "Annotation %s doesn't match any predicate, parameter could not be used as template variable unless force allowed by another annotation.",
+                    annotationName);
             return OPTIONAL_DENY;
         }).collect(Collectors.toSet());
 
