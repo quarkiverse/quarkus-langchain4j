@@ -10,6 +10,7 @@ import jakarta.enterprise.inject.Instance;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import io.smallrye.mutiny.Multi;
 
 public class DotNames {
 
@@ -32,8 +33,11 @@ public class DotNames {
     public static final DotName BIG_INTEGER = DotName.createSimple(BigInteger.class);
     public static final DotName BIG_DECIMAL = DotName.createSimple(BigDecimal.class);
     public static final DotName STRING = DotName.createSimple(String.class);
+    public static final DotName URI = DotName.createSimple(java.net.URI.class);
+    public static final DotName URL = DotName.createSimple(java.net.URL.class);
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
+    public static final DotName MULTI = DotName.createSimple(Multi.class);
 
     public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
     public static final DotName RECORD = DotName.createSimple(Record.class);

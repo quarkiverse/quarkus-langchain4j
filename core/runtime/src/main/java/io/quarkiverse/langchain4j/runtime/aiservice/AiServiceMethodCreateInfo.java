@@ -177,15 +177,19 @@ public final class AiServiceMethodCreateInfo {
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
             Optional<Integer> paramPosition,
-            Optional<Integer> userNameParamPosition) {
+            Optional<Integer> userNameParamPosition,
+            Optional<Integer> imageUrlParamPosition) {
 
-        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition) {
+        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition,
+                Optional<Integer> imageUrlParamPosition) {
             return new UserMessageInfo(Optional.empty(), Optional.of(paramPosition),
-                    userNameParamPosition);
+                    userNameParamPosition, imageUrlParamPosition);
         }
 
-        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition) {
-            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition);
+        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition,
+                Optional<Integer> imageUrlParamPosition) {
+            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition,
+                    imageUrlParamPosition);
         }
     }
 
