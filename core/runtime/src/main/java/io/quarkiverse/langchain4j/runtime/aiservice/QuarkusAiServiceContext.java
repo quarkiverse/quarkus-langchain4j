@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 import java.util.function.BiConsumer;
 
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -11,6 +12,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
 
     public AuditService auditService;
     public ChatMemorySeeder chatMemorySeeder;
+    public ImageModel imageModel;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

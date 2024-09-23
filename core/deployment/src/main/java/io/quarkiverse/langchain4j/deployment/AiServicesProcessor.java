@@ -320,6 +320,13 @@ public class AiServicesProcessor {
                 validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
             }
 
+            DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
+            AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
+            if (imageModelSupplierValue != null) {
+                imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
+                validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
+            }
+
             // determine whether the method is annotated with @Moderate
             String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
@@ -344,6 +351,8 @@ public class AiServicesProcessor {
                 cdiScope = scopeAnnotation.get().name();
             }
 
+            String imageModelName = chatModelName; // TODO: should we have a separate setting for this?
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -356,10 +365,12 @@ public class AiServicesProcessor {
                             customRetrievalAugmentorSupplierClassIsABean,
                             auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
+                            imageModelSupplierClassName,
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                             cdiScope,
                             chatModelName,
-                            moderationModelName));
+                            moderationModelName,
+                            imageModelName));
         }
 
         for (String chatModelName : chatModelNames) {
@@ -455,6 +466,10 @@ public class AiServicesProcessor {
                     ? bi.getModerationModelSupplierDotName().toString()
                     : null);
 
+            String imageModelSupplierClassName = (bi.getImageModelSupplierDotName() != null
+                    ? bi.getImageModelSupplierDotName().toString()
+                    : null);
+
             String chatMemorySeederClassName = (bi.getChatMemorySeederClassDotName() != null
                     ? bi.getChatMemorySeederClassDotName().toString()
                     : null);
@@ -489,6 +504,17 @@ public class AiServicesProcessor {
                 }
             }
 
+            // determine whether the method ImageModel
+            boolean injectImageModel = false;
+            // currently in one class either streaming or blocking model are supported, but not both
+            // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (!LangChain4jDotNames.IMAGE.equals(method.returnType().name())) {
+                    break;
+                }
+                injectImageModel = true;
+            }
+
             String chatModelName = bi.getChatModelName();
             String moderationModelName = bi.getModerationModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
@@ -503,11 +529,14 @@ public class AiServicesProcessor {
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName,
                                     moderationModelSupplierClassName,
+                                    imageModelSupplierClassName,
                                     chatMemorySeederClassName,
                                     chatModelName,
                                     moderationModelName,
+                                    bi.getImageModelName(),
                                     injectStreamingChatModelBean,
-                                    injectModerationModelBean)))
+                                    injectModerationModelBean,
+                                    injectImageModel)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -590,6 +619,19 @@ public class AiServicesProcessor {
 
                 } else {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.MODERATION_MODEL),
+                            AnnotationInstance.builder(ModelName.class).add("value", moderationModelName).build());
+                }
+                needsModerationModelBean = true;
+            }
+
+            if (LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER.toString()
+                    .equals(imageModelSupplierClassName) && injectImageModel) {
+
+                if (NamedConfigUtil.isDefault(moderationModelName)) {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.IMAGE_MODEL));
+
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.IMAGE_MODEL),
                             AnnotationInstance.builder(ModelName.class).add("value", moderationModelName).build());
                 }
                 needsModerationModelBean = true;

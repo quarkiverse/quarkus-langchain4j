@@ -23,10 +23,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
+    private final DotName imageModelSupplierDotName;
     private final DotName chatMemorySeederClassDotName;
     private final DotName cdiScope;
     private final String chatModelName;
     private final String moderationModelName;
+    private final String imageModelName;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -39,10 +41,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             boolean customRetrievalAugmentorSupplierClassIsABean,
             DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
+            DotName imageModelSupplierDotName,
             DotName chatMemorySeederClassDotName,
             DotName cdiScope,
             String chatModelName,
-            String moderationModelName) {
+            String moderationModelName,
+            String imageModelName) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -53,10 +57,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
+        this.imageModelSupplierDotName = imageModelSupplierDotName;
         this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
         this.cdiScope = cdiScope;
         this.chatModelName = chatModelName;
         this.moderationModelName = moderationModelName;
+        this.imageModelName = imageModelName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -99,6 +105,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return moderationModelSupplierDotName;
     }
 
+    public DotName getImageModelSupplierDotName() {
+        return imageModelSupplierDotName;
+    }
+
     public DotName getChatMemorySeederClassDotName() {
         return chatMemorySeederClassDotName;
     }
@@ -113,5 +123,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public String getModerationModelName() {
         return moderationModelName;
+    }
+
+    public String getImageModelName() {
+        return imageModelName;
     }
 }

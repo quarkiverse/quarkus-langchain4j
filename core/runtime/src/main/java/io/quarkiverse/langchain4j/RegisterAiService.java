@@ -14,6 +14,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
@@ -246,6 +247,18 @@ public @interface RegisterAiService {
 
         @Override
         public ModerationModel get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ImageModel} that the user has configured as a CDI bean.
+     * If no such bean exists, then no audit service will be used.
+     */
+    final class BeanIfExistsImageModelSupplier implements Supplier<ImageModel> {
+
+        @Override
+        public ImageModel get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

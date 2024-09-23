@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -129,6 +130,11 @@ public class AiServiceMethodImplementationSupport {
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
 
+        Type returnType = methodCreateInfo.getReturnType();
+        if (isImage(returnType) || isResultImage(returnType)) {
+            return doImplementGenerateImage(methodCreateInfo, context, audit, systemMessage, userMessage, memoryId, returnType);
+        }
+
         if (audit != null) {
             audit.initialMessages(systemMessage, userMessage);
         }
@@ -142,7 +148,6 @@ public class AiServiceMethodImplementationSupport {
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
                 : context.toolExecutors;
 
-        Type returnType = methodCreateInfo.getReturnType();
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
@@ -308,6 +313,47 @@ public class AiServiceMethodImplementationSupport {
         }
     }
 
+    private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
+            Audit audit, Optional<SystemMessage> systemMessage, UserMessage userMessage,
+            Object memoryId, Type returnType) {
+        String imagePrompt;
+        if (systemMessage.isPresent()) {
+            imagePrompt = systemMessage.get().text() + "\n" + userMessage.singleText();
+        } else {
+            imagePrompt = userMessage.singleText();
+        }
+        if (audit != null) {
+            // TODO: we can't support addLLMToApplicationMessage for now as it is tied to AiMessage
+            audit.initialMessages(systemMessage, userMessage);
+        }
+
+        //TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
+        AugmentationResult augmentationResult = null;
+
+        // TODO: we can only support input guardrails for now as it is tied to AiMessage
+        GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
+                context.hasChatMemory() ? context.chatMemory(memoryId) : null,
+                augmentationResult);
+
+        Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
+        if (audit != null) {
+            audit.onCompletion(imageResponse.content());
+        }
+
+        if (isImage(returnType)) {
+            return imageResponse.content();
+        } else if (isResultImage(returnType)) {
+            return Result.builder()
+                    .content(imageResponse)
+                    .tokenUsage(imageResponse.tokenUsage())
+                    .sources(augmentationResult == null ? null : augmentationResult.contents())
+                    .finishReason(imageResponse.finishReason())
+                    .build();
+        } else {
+            throw new IllegalStateException("Unsupported return type: " + returnType);
+        }
+    }
+
     private static boolean needsMemorySeed(QuarkusAiServiceContext context, Object memoryId) {
         if (context.chatMemorySeeder == null) {
             return false;
@@ -381,6 +427,17 @@ public class AiServiceMethodImplementationSupport {
             throw new IllegalStateException("Can only be called with Result<T> type");
         }
         return returnType.getActualTypeArguments()[0];
+    }
+
+    private static boolean isImage(Type returnType) {
+        return isTypeOf(returnType, Image.class);
+    }
+
+    private static boolean isResultImage(Type returnType) {
+        if (!isImage(returnType)) {
+            return false;
+        }
+        return isImage(resultTypeParam((ParameterizedType) returnType));
     }
 
     private static boolean isTypeOf(Type type, Class<?> clazz) {

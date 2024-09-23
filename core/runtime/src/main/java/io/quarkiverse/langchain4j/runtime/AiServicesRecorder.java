@@ -17,6 +17,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
@@ -235,6 +236,27 @@ public class AiServicesRecorder {
                                     .loadClass(info.moderationModelSupplierClassName())
                                     .getConstructor().newInstance();
                             quarkusAiServices.moderationModel(supplier.get());
+                        }
+                    }
+
+                    if (info.imageModelSupplierClassName() != null && info.needsImageModel()) {
+                        if (RegisterAiService.BeanIfExistsImageModelSupplier.class.getName()
+                                .equals(info.imageModelSupplierClassName())) {
+                            if (NamedConfigUtil.isDefault(info.chatModelName())) {
+                                quarkusAiServices
+                                        .imageModel(creationalContext.getInjectedReference(ImageModel.class));
+
+                            } else {
+                                quarkusAiServices.imageModel(creationalContext.getInjectedReference(ImageModel.class,
+                                        ModelName.Literal.of(info.imageModelSupplierClassName())));
+                            }
+
+                        } else {
+                            Supplier<? extends ImageModel> supplier = (Supplier<? extends ImageModel>) Thread
+                                    .currentThread().getContextClassLoader()
+                                    .loadClass(info.imageModelSupplierClassName())
+                                    .getConstructor().newInstance();
+                            quarkusAiServices.imageModel(supplier.get());
                         }
                     }
 

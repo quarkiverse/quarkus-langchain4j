@@ -12,9 +12,12 @@ public record DeclarativeAiServiceCreateInfo(
         String retrievalAugmentorSupplierClassName,
         String auditServiceClassSupplierName,
         String moderationModelSupplierClassName,
+        String imageModelSupplierClassName,
         String chatMemorySeederClassName,
         String chatModelName,
         String moderationModelName,
+        String imageModelName,
         boolean needsStreamingChatModel,
-        boolean needsModerationModel) {
+        boolean needsModerationModel,
+        boolean needsImageModel) {
 }
