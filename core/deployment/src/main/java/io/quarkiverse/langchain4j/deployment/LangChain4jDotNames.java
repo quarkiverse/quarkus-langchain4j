@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.deployment;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -91,6 +92,9 @@ public class LangChain4jDotNames {
     static final DotName BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsModerationModelSupplier.class);
 
+    static final DotName BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsImageModelSupplier.class);
+
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
 
@@ -101,4 +105,5 @@ public class LangChain4jDotNames {
 
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
+    static final DotName IMAGE = DotName.createSimple(Image.class);
 }

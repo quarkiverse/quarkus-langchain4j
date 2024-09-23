@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.spi.services.AiServicesFactory;
@@ -55,6 +56,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
         public AiServices<T> chatMemorySeeder(ChatMemorySeeder chatMemorySeeder) {
             quarkusAiServiceContext().chatMemorySeeder = chatMemorySeeder;
+            return this;
+        }
+
+        public AiServices<T> imageModel(ImageModel imageModel) {
+            quarkusAiServiceContext().imageModel = imageModel;
             return this;
         }
 
