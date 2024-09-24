@@ -435,3 +435,40 @@ The child spans of this span correspond (from to right) to calling the OpenAI AP
 The extension allows users to audit the process of implementing an AiService by introducing `io.quarkiverse.langchain4j.audit.AuditService` and `io.quarkiverse.langchain4j.audit.Audit`.
 By default, if a bean of type `AuditService` is present in the application, it will be used in order to create an `Audit`, which received various callbacks pertaining to the implementation
 of the AiService method. More information can be found on the javadoc of these two classes.
+
+=== Working with images
+
+An _AI Service_ can also be used when working with images, both to describe an image and to generate one.
+The following code presents examples of both cases:
+
+[source,java]
+----
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @ApplicationScoped
+    public interface ImageDescriber {
+
+        @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
+                + " with only the Java code. If it is not, respond with 'NOT AN IMAGE'")
+        String describe(@ImageUrl String url); // <1>
+    }
+
+    @RegisterAiService
+    @ApplicationScoped
+    public interface ImageGenerator {
+
+        Image generate(String prompt);  // <2>
+    }
+----
+<1> The use of `@ImageUrl` is what configures the _AI Service_ with the necessary image.
+<2> By returning `dev.langchain4j.data.image.Image`, _AI Service_ knows that it has been configured to generate images.
+For this to work, the application must be using a Quarkus LangChain4j extension that provides an `dev.langchain4j.model.image.ImageModel` (such as `quarkus-langchain4j-openai`)
+
+[CAUTION]
+====
+Generating images with an _AI Service_ comes with restrictions compared to text generating _AI Services_.
+
+* Memory is **not** used
+* Retrieval Augmentors are **not** used
+* Although auditing does work, it is however limited
+* Guardrails only work on the input
+====

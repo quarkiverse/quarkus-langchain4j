@@ -2,6 +2,7 @@ package org.acme.examples.aiservices;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJson;
@@ -15,7 +16,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -39,6 +42,7 @@ import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
+import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -456,5 +460,82 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         // assert request only contains the second request, so no memory is used
         assertSingleRequestMessage(getRequestAsMap(), secondUserMessage);
+    }
+
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @ApplicationScoped
+    interface ImageDescriber {
+
+        @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
+                + " with only the {language} code. If it is not, respond with '{notImageResponse}'")
+        String describe(String language, @ImageUrl String url, String notImageResponse);
+    }
+
+    @Inject
+    ImageDescriber imageDescriber;
+
+    @Test
+    public void test_image_describer() throws IOException {
+        wiremock().register(post(urlEqualTo("/v1/chat/completions"))
+                .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "id": "chatcmpl-123",
+                                  "object": "chat.completion",
+                                  "created": 1677652288,
+                                  "model": "gpt-4o-mini",
+                                  "system_fingerprint": "fp_44709d6fcb",
+                                  "choices": [{
+                                    "index": 0,
+                                    "message": {
+                                      "role": "assistant",
+                                      "content": "https://image.io"
+                                    },
+                                    "logprobs": null,
+                                    "finish_reason": "stop"
+                                  }],
+                                  "usage": {
+                                    "prompt_tokens": 9,
+                                    "completion_tokens": 12,
+                                    "total_tokens": 21,
+                                    "completion_tokens_details": {
+                                      "reasoning_tokens": 0
+                                    }
+                                  }
+                                }
+                                """)));
+
+        String imageUrl = "https://foo.bar";
+        String response = imageDescriber.describe("Java", imageUrl, "NOT_AN_IMAGE");
+
+        // assert response
+        assertThat(response).isEqualTo("https://image.io");
+
+        // assert request
+        Map<String, Object> requestAsMap = getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0)));
+        assertMessages(requestAsMap, new Consumer<>() {
+            @Override
+            public void accept(List<? extends Map> maps) {
+                assertThat(maps).singleElement().satisfies((Consumer<Map>) map -> {
+                    assertThat(map).containsEntry("role", "user").containsKey("content");
+                    assertThat(map.get("content")).isInstanceOfSatisfying(List.class, contents -> {
+                        assertThat(contents).hasSize(2);
+                        assertThat(contents.get(0)).isInstanceOfSatisfying(Map.class, content -> {
+                            assertThat(content).containsEntry("type", "text").containsEntry("text",
+                                    "This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond with only the Java code. If it is not, respond with 'NOT_AN_IMAGE'");
+                        });
+                        assertThat(contents.get(1)).isInstanceOfSatisfying(Map.class, content -> {
+                            assertThat(content).containsEntry("type", "image_url");
+                            assertThat(content.get("image_url")).isInstanceOfSatisfying(Map.class,
+                                    imageUrlMap -> {
+                                        assertThat(imageUrlMap).containsEntry("url", "https://foo.bar");
+                                    });
+                        });
+                    });
+                });
+            }
+        });
     }
 }

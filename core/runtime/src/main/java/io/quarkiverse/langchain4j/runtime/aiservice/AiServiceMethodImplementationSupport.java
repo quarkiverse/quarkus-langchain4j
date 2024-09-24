@@ -9,6 +9,9 @@ import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseS
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +36,10 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
@@ -497,9 +503,30 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = createInfo.getUserMessageInfo();
 
         String userName = null;
+        ImageContent imageContent = null;
         if (userMessageInfo.userNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a build time error
+        }
+        if (userMessageInfo.imageUrlParamPosition().isPresent()) {
+            Object imageUrlParamValue = methodArgs[userMessageInfo.imageUrlParamPosition().get()];
+            if (imageUrlParamValue instanceof String s) {
+                imageContent = ImageContent.from(s);
+            } else if (imageUrlParamValue instanceof URI u) {
+                imageContent = ImageContent.from(u);
+            } else if (imageUrlParamValue instanceof URL u) {
+                try {
+                    imageContent = ImageContent.from(u.toURI());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (imageUrlParamValue instanceof Image i) {
+                imageContent = ImageContent.from(i);
+            } else {
+                throw new IllegalStateException("Unsupported parameter type '" + imageUrlParamValue.getClass()
+                        + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                        + createInfo.getMethodName());
+            }
         }
 
         if (userMessageInfo.template().isPresent()) {
@@ -535,7 +562,7 @@ public class AiServiceMethodImplementationSupport {
             templateParams.put(ResponseSchemaUtil.templateParam(),
                     createInfo.getResponseSchemaInfo().outputFormatInstructions());
             Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
-            return createUserMessage(userName, prompt.text());
+            return createUserMessage(userName, imageContent, prompt.text());
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
@@ -549,18 +576,27 @@ public class AiServiceMethodImplementationSupport {
 
             // TODO: Understand how to enable the {response_schema} for the @StructuredPrompt.
             String text = toString(argValue);
-            return createUserMessage(userName, text.concat(createInfo.getResponseSchemaInfo().outputFormatInstructions()));
+            return createUserMessage(userName, imageContent,
+                    text.concat(createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
                     + "'. Please contact the maintainers");
         }
     }
 
-    private static UserMessage createUserMessage(String name, String text) {
+    private static UserMessage createUserMessage(String name, ImageContent imageContent, String text) {
         if (name == null) {
-            return userMessage(text);
+            if (imageContent == null) {
+                return userMessage(text);
+            } else {
+                return UserMessage.userMessage(List.of(TextContent.from(text), imageContent));
+            }
         } else {
-            return userMessage(name, text);
+            if (imageContent == null) {
+                return userMessage(name, text);
+            } else {
+                return userMessage(name, List.of(TextContent.from(text), imageContent));
+            }
         }
     }
 

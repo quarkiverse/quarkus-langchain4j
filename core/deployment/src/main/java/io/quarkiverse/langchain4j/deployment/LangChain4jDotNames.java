@@ -25,6 +25,7 @@ import dev.langchain4j.service.UserName;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.CreatedAware;
+import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
@@ -32,7 +33,6 @@ import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
-import io.smallrye.mutiny.Multi;
 
 public class LangChain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
@@ -49,6 +49,7 @@ public class LangChain4jDotNames {
     public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
     public static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
+    static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
@@ -99,9 +100,6 @@ public class LangChain4jDotNames {
             QuarkusAiServiceContextQualifier.class);
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
-
-    static final DotName MULTI = DotName.createSimple(Multi.class);
-    static final DotName STRING = DotName.createSimple(String.class);
 
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);

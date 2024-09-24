@@ -480,13 +480,13 @@ public class AiServicesProcessor {
             // currently in one class either streaming or blocking model are supported, but not both
             // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                if (!LangChain4jDotNames.MULTI.equals(method.returnType().name())) {
+                if (!DotNames.MULTI.equals(method.returnType().name())) {
                     continue;
                 }
                 boolean isMultiString = false;
                 if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     Type multiType = method.returnType().asParameterizedType().arguments().get(0);
-                    if (LangChain4jDotNames.STRING.equals(multiType.name())) {
+                    if (DotNames.STRING.equals(multiType.name())) {
                         isMultiString = true;
                     }
                 }
@@ -1230,8 +1230,14 @@ public class AiServicesProcessor {
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams) {
 
-        Optional<Integer> userNameParamName = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
+        Optional<Integer> userNameParamPosition = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        Optional<Integer> imageUrlParamPosition = method.annotations(LangChain4jDotNames.IMAGE_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (imageUrlParamPosition.isPresent()) {
+            MethodParameterInfo imageUrlParam = method.parameters().get(imageUrlParamPosition.get());
+            validateImageUrlParam(imageUrlParam);
+        }
 
         AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
@@ -1250,7 +1256,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamName);
+                    userNameParamPosition, imageUrlParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1263,18 +1269,19 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamName);
+                            userNameParamPosition, imageUrlParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamName);
+                            userNameParamPosition, imageUrlParamPosition);
                 }
             } else {
                 if (method.parametersCount() == 0) {
                     throw illegalConfigurationForMethod("Method should have at least one argument", method);
                 }
                 if (method.parametersCount() == 1) {
-                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamName);
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
+                            imageUrlParamPosition);
                 }
 
                 throw illegalConfigurationForMethod(
@@ -1282,6 +1289,19 @@ public class AiServicesProcessor {
                         method);
             }
         }
+    }
+
+    private void validateImageUrlParam(MethodParameterInfo param) {
+        if (param == null) {
+            throw new IllegalArgumentException("Unhandled @ImageUrl annotation");
+        }
+        Type type = param.type();
+        DotName typeName = type.name();
+        if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
+                || typeName.equals(LangChain4jDotNames.IMAGE)) {
+            return;
+        }
+        throw new IllegalArgumentException("Unhandled @ImageUrl type '" + type.name() + "'");
     }
 
     private Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> gatherMetricsTimedInfo(MethodInfo method,
