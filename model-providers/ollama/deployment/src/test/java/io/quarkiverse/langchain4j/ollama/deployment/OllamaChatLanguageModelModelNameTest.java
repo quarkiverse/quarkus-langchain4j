@@ -68,7 +68,7 @@ public class OllamaChatLanguageModelModelNameTest extends WiremockAware {
         assertThat(response).isEqualTo("Nice to meet you");
 
         LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Resteasy Reactive Client");
+        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello");
     }

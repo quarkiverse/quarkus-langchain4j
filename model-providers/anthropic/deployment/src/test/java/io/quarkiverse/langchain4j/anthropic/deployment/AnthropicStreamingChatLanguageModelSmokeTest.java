@@ -224,7 +224,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
         var loggedRequest = serveEvent.getRequest();
 
         assertThat(loggedRequest.getHeader("User-Agent"))
-                .isEqualTo("Resteasy Reactive Client");
+                .isEqualTo("Quarkus REST Client");
 
         var requestBody = """
                 {
