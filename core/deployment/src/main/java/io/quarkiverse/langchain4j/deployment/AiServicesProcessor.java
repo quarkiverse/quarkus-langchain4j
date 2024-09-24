@@ -1232,10 +1232,9 @@ public class AiServicesProcessor {
 
         Optional<Integer> userNameParamPosition = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
-        Optional<Integer> imageUrlParamPosition = method.annotations(LangChain4jDotNames.IMAGE_URL).stream().filter(
-                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
-        if (imageUrlParamPosition.isPresent()) {
-            MethodParameterInfo imageUrlParam = method.parameters().get(imageUrlParamPosition.get());
+        Optional<Integer> imageParamPosition = determineImageParamPosition(method);
+        if (imageParamPosition.isPresent()) {
+            MethodParameterInfo imageUrlParam = method.parameters().get(imageParamPosition.get());
             validateImageUrlParam(imageUrlParam);
         }
 
@@ -1256,7 +1255,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamPosition, imageUrlParamPosition);
+                    userNameParamPosition, imageParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1269,11 +1268,11 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamPosition, imageUrlParamPosition);
+                            userNameParamPosition, imageParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamPosition, imageUrlParamPosition);
+                            userNameParamPosition, imageParamPosition);
                 }
             } else {
                 if (method.parametersCount() == 0) {
@@ -1281,7 +1280,7 @@ public class AiServicesProcessor {
                 }
                 if (method.parametersCount() == 1) {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
-                            imageUrlParamPosition);
+                            imageParamPosition);
                 }
 
                 throw illegalConfigurationForMethod(
@@ -1289,6 +1288,17 @@ public class AiServicesProcessor {
                         method);
             }
         }
+    }
+
+    private static Optional<Integer> determineImageParamPosition(MethodInfo method) {
+        Optional<Integer> result = method.annotations(LangChain4jDotNames.IMAGE_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (result.isPresent()) {
+            return result;
+        }
+        // we don't need @ImageUrl if the parameter is of type Image
+        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.IMAGE))
+                .map(pi -> (int) pi.position()).findFirst();
     }
 
     private void validateImageUrlParam(MethodParameterInfo param) {

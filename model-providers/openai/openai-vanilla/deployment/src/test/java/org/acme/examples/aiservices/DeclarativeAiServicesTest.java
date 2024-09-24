@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -34,6 +35,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -469,6 +471,10 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
                 + " with only the {language} code. If it is not, respond with '{notImageResponse}'")
         String describe(String language, @ImageUrl String url, String notImageResponse);
+
+        @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
+                + " with only the {language} code. If it is not, respond with '{notImageResponse}'")
+        String describe2(String language, Image image, String notImageResponse);
     }
 
     @Inject
@@ -476,6 +482,12 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
     @Test
     public void test_image_describer() throws IOException {
+        var imageUrl = "https://foo.bar";
+        doTestImageDescriber(() -> imageDescriber.describe("Java", imageUrl, "NOT_AN_IMAGE"));
+        doTestImageDescriber(() -> imageDescriber.describe2("Java", Image.builder().url(imageUrl).build(), "NOT_AN_IMAGE"));
+    }
+
+    private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {
         wiremock().register(post(urlEqualTo("/v1/chat/completions"))
                 .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
                 .willReturn(aResponse()
@@ -507,8 +519,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                                 }
                                 """)));
 
-        String imageUrl = "https://foo.bar";
-        String response = imageDescriber.describe("Java", imageUrl, "NOT_AN_IMAGE");
+        String response = describerSupplier.get();
 
         // assert response
         assertThat(response).isEqualTo("https://image.io");
