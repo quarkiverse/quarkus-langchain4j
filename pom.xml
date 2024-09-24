@@ -58,7 +58,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <quarkus.version>3.8.2</quarkus.version>
+    <quarkus.version>3.15.0</quarkus.version>
     <langchain4j.version>0.34.0</langchain4j.version>
     <langchain4j-embeddings.version>0.34.0</langchain4j-embeddings.version>
     <quarkus-antora.version>0.0.4</quarkus-antora.version>

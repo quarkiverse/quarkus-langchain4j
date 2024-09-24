@@ -76,7 +76,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-reactive</artifactId>
+            <artifactId>quarkus-rest</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -104,6 +104,16 @@
                             <version>${quarkus.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- needed in order to avoid a CL issue in the tests -->
+                        <mutiny.disableCallBackDecorators>true</mutiny.disableCallBackDecorators>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
