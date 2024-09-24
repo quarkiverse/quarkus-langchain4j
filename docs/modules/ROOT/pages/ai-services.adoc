@@ -459,7 +459,7 @@ The following code presents examples of both cases:
         Image generate(String prompt);  // <2>
     }
 ----
-<1> The use of `@ImageUrl` is what configures the _AI Service_ with the necessary image.
+<1> The use of `@ImageUrl` is what configures the _AI Service_ with the necessary image. The parameter in this case is a publicly available URL, but if a local image needs to be used, one can use `dev.langchain4j.data.image.Image`. In this case no `@ImageUrl` is needed and the `Image` can create it like so: `Image.builder().base64Data(encodeFileToBase64(someImage)).mimeType("image/png").build()`.
 <2> By returning `dev.langchain4j.data.image.Image`, _AI Service_ knows that it has been configured to generate images.
 For this to work, the application must be using a Quarkus LangChain4j extension that provides an `dev.langchain4j.model.image.ImageModel` (such as `quarkus-langchain4j-openai`)
 

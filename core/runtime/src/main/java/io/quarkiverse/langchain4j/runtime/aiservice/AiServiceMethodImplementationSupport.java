@@ -36,7 +36,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
@@ -508,22 +507,22 @@ public class AiServiceMethodImplementationSupport {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a build time error
         }
-        if (userMessageInfo.imageUrlParamPosition().isPresent()) {
-            Object imageUrlParamValue = methodArgs[userMessageInfo.imageUrlParamPosition().get()];
-            if (imageUrlParamValue instanceof String s) {
+        if (userMessageInfo.imageParamPosition().isPresent()) {
+            Object imageParamValue = methodArgs[userMessageInfo.imageParamPosition().get()];
+            if (imageParamValue instanceof String s) {
                 imageContent = ImageContent.from(s);
-            } else if (imageUrlParamValue instanceof URI u) {
+            } else if (imageParamValue instanceof URI u) {
                 imageContent = ImageContent.from(u);
-            } else if (imageUrlParamValue instanceof URL u) {
+            } else if (imageParamValue instanceof URL u) {
                 try {
                     imageContent = ImageContent.from(u.toURI());
                 } catch (URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
-            } else if (imageUrlParamValue instanceof Image i) {
+            } else if (imageParamValue instanceof Image i) {
                 imageContent = ImageContent.from(i);
             } else {
-                throw new IllegalStateException("Unsupported parameter type '" + imageUrlParamValue.getClass()
+                throw new IllegalStateException("Unsupported parameter type '" + imageParamValue.getClass()
                         + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
                         + createInfo.getMethodName());
             }
