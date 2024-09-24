@@ -15,7 +15,7 @@ import io.quarkus.runtime.annotations.Recorder;
 public class RedisEmbeddingStoreRecorder {
 
     public Function<SyntheticCreationalContext<RedisEmbeddingStore>, RedisEmbeddingStore> embeddingStoreFunction(
-            RedisEmbeddingStoreConfig config, String clientName, boolean workaround_specifyDialectAsParameter) {
+            RedisEmbeddingStoreConfig config, String clientName) {
         return new Function<>() {
             @Override
             public RedisEmbeddingStore apply(SyntheticCreationalContext<RedisEmbeddingStore> context) {
@@ -41,7 +41,6 @@ public class RedisEmbeddingStoreRecorder {
                         .metricType(config.distanceMetric())
                         .build();
                 builder.schema(schema);
-                builder.workaround_specifyDialectAsParameter(workaround_specifyDialectAsParameter);
 
                 return builder.build();
             }

@@ -14,7 +14,6 @@ import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
-import io.quarkus.builder.Version;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -58,22 +57,6 @@ public class RedisEmbeddingStoreProcessor {
                     .add("value", clientName)
                     .build();
         }
-
-        // FIXME: after updating to Quarkus 3.15, this workaround can be removed
-        String quarkusVersion = Version.getVersion();
-        boolean workaround_specifyDialectAsParameter;
-        if (quarkusVersion.split("\\.").length < 2) {
-            // some custom version where we can't determine the minor version number
-            workaround_specifyDialectAsParameter = false;
-        } else {
-            try {
-                int minorVersion = Integer.parseInt(quarkusVersion.split("\\.")[1]);
-                workaround_specifyDialectAsParameter = minorVersion < 13;
-            } catch (NumberFormatException e) {
-                workaround_specifyDialectAsParameter = false;
-            }
-        }
-
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(REDIS_EMBEDDING_STORE)
                 .types(ClassType.create(EmbeddingStore.class),
@@ -84,7 +67,7 @@ public class RedisEmbeddingStoreProcessor {
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
                         redisClientQualifier)
-                .createWith(recorder.embeddingStoreFunction(config, clientName, workaround_specifyDialectAsParameter))
+                .createWith(recorder.embeddingStoreFunction(config, clientName))
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
