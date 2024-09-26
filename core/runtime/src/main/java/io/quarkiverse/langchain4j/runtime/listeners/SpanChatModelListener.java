@@ -16,6 +16,8 @@ import dev.langchain4j.model.output.TokenUsage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.quarkiverse.langchain4j.cost.Cost;
+import io.quarkiverse.langchain4j.cost.CostEstimatorService;
 
 /**
  * Creates a span that follows the
@@ -30,10 +32,12 @@ public class SpanChatModelListener implements ChatModelListener {
     private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
 
     private final Tracer tracer;
+    private final CostEstimatorService costEstimatorService;
 
     @Inject
-    public SpanChatModelListener(Tracer tracer) {
+    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService) {
         this.tracer = tracer;
+        this.costEstimatorService = costEstimatorService;
     }
 
     @Override
@@ -65,6 +69,11 @@ public class SpanChatModelListener implements ChatModelListener {
             if (tokenUsage != null) {
                 span.setAttribute("gen_ai.usage.completion_tokens", tokenUsage.outputTokenCount())
                         .setAttribute("gen_ai.usage.prompt_tokens", tokenUsage.inputTokenCount());
+
+                Cost costEstimate = costEstimatorService.estimate(responseContext);
+                if (costEstimate != null) {
+                    span.setAttribute("gen_ai.client.estimated_cost", costEstimate.toString());
+                }
             }
             span.end();
         } else {

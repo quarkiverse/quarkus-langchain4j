@@ -19,6 +19,8 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import io.quarkiverse.langchain4j.cost.Cost;
+import io.quarkiverse.langchain4j.cost.CostEstimatorService;
 
 /**
  * Creates metrics that follow the
@@ -30,24 +32,35 @@ public class MetricsChatModelListener implements ChatModelListener {
     private static final Logger log = Logger.getLogger(MetricsChatModelListener.class);
 
     public static final String START_TIME_KEY_NAME = "startTime";
+
+    private final CostEstimatorService costEstimatorService;
+
     private final Meter.MeterProvider<Counter> inputTokenUsage;
     private final Meter.MeterProvider<Counter> outputTokenUsage;
     private final Meter.MeterProvider<Timer> duration;
+    private final Meter.MeterProvider<Counter> estimatedCost;
 
-    public MetricsChatModelListener() {
-        inputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+    public MetricsChatModelListener(CostEstimatorService costEstimatorService) {
+        this.costEstimatorService = costEstimatorService;
+
+        this.inputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of input tokens used")
                 .tag("gen_ai.operation.name", "completion")
                 .tag("gen_ai.token.type", "input")
                 .withRegistry(Metrics.globalRegistry);
-        outputTokenUsage = Counter.builder("gen_ai.client.token.usage")
+        this.outputTokenUsage = Counter.builder("gen_ai.client.token.usage")
                 .description("Measures number of output tokens used")
                 .tag("gen_ai.operation.name", "completion")
                 .tag("gen_ai.token.type", "output")
                 .withRegistry(Metrics.globalRegistry);
-        duration = Timer.builder("gen_ai.client.operation.duration")
+        this.duration = Timer.builder("gen_ai.client.operation.duration")
                 .description("GenAI operation duration")
                 .tag("gen_ai.operation.name", "completion")
+                .withRegistry(Metrics.globalRegistry);
+        this.estimatedCost = Counter.builder("gen_ai.client.estimated_cost")
+                .description("Estimated cost of the request")
+                .tag("gen_ai.operation.name", "completion")
+                .tag("gen_ai.token.type", "output")
                 .withRegistry(Metrics.globalRegistry);
     }
 
@@ -111,6 +124,13 @@ public class MetricsChatModelListener implements ChatModelListener {
             outputTokenUsage
                     .withTags(tags)
                     .increment(outputTokenCount);
+        }
+        if (inputTokenCount != null && outputTokenCount != null) {
+            Cost costEstimate = costEstimatorService.estimate(responseContext);
+            if (costEstimate != null) {
+                estimatedCost.withTags(tags.and("currency", costEstimate.currencyCode()))
+                        .increment(costEstimate.number().doubleValue());
+            }
         }
     }
 
