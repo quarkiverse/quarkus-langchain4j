@@ -44,8 +44,8 @@ public class BamRecorder {
             var builder = BamChatModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), bamConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), bamConfig.logResponses()))
                     .modelId(chatModelConfig.modelId())
                     .version(bamConfig.version())
                     .decodingMethod(chatModelConfig.decodingMethod())
@@ -97,8 +97,8 @@ public class BamRecorder {
             var builder = BamStreamingChatModel.builder()
                     .accessToken(bamConfig.apiKey())
                     .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), bamConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), bamConfig.logResponses()))
                     .modelId(chatModelConfig.modelId())
                     .version(bamConfig.version())
                     .decodingMethod(chatModelConfig.decodingMethod())
@@ -152,8 +152,8 @@ public class BamRecorder {
                     .timeout(bamConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .version(bamConfig.version())
                     .modelId(embeddingModelConfig.modelId())
-                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
-                    .logResponses(embeddingModelConfig.logResponses().orElse(false));
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), bamConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), bamConfig.logResponses()));
 
             if (bamConfig.baseUrl().isPresent()) {
                 builder.url(bamConfig.baseUrl().get());
@@ -195,8 +195,8 @@ public class BamRecorder {
                     .messagesToModerate(moderationModelConfig.messagesToModerate())
                     .hap(hap)
                     .socialBias(socialBias)
-                    .logRequests(moderationModelConfig.logRequests().orElse(false))
-                    .logResponses(moderationModelConfig.logResponses().orElse(false));
+                    .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), bamConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), bamConfig.logResponses()));
 
             if (bamConfig.baseUrl().isPresent()) {
                 builder.url(bamConfig.baseUrl().get());

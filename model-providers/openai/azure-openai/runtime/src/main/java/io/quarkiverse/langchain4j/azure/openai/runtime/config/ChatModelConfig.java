@@ -82,14 +82,12 @@ public interface ChatModelConfig {
      * Whether chat model requests should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.azure-openai.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether chat model responses should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.azure-openai.log-responses}")
     Optional<Boolean> logResponses();
 
     /**

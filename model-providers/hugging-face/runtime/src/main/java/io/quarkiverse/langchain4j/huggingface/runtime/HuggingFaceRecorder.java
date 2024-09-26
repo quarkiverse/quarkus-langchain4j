@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.huggingface.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.net.URL;
 import java.time.Duration;
 import java.util.function.Supplier;
@@ -45,8 +47,8 @@ public class HuggingFaceRecorder {
                     .topP(chatModelConfig.topP())
                     .topK(chatModelConfig.topK())
                     .repetitionPenalty(chatModelConfig.repetitionPenalty())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), huggingFaceConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), huggingFaceConfig.logResponses()))
                     .returnFullText(chatModelConfig.returnFullText());
 
             if (!DUMMY_KEY.equals(apiKey)) {

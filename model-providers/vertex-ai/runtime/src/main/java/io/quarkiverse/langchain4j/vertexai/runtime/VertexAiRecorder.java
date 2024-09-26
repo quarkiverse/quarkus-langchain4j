@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.vertexai.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -39,8 +41,8 @@ public class VertexAiRecorder {
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
                     .topP(chatModelConfig.topP())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false));
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
 
             // TODO: add the rest of the properties
 

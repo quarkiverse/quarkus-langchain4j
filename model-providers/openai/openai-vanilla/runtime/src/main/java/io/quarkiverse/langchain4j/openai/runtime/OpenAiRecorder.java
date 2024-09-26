@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.openai.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
@@ -66,8 +68,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
                     .modelName(chatModelConfig.modelName())
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
@@ -96,15 +98,18 @@ public class OpenAiRecorder {
             };
         } else {
             return new Function<>() {
+
                 @Override
                 public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
+
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOpenAiConfig runtimeConfig, String configName) {
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOpenAiConfig runtimeConfig,
+            String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
         if (openAiConfig.enableIntegration()) {
@@ -117,8 +122,8 @@ public class OpenAiRecorder {
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), openAiConfig.logResponses()))
                     .modelName(chatModelConfig.modelName())
                     .temperature(chatModelConfig.temperature())
                     .topP(chatModelConfig.topP())
@@ -145,10 +150,12 @@ public class OpenAiRecorder {
             };
         } else {
             return new Supplier<>() {
+
                 @Override
                 public StreamingChatLanguageModel get() {
                     return new DisabledStreamingChatLanguageModel();
                 }
+
             };
         }
     }
@@ -167,8 +174,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
-                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), openAiConfig.logResponses()))
                     .modelName(embeddingModelConfig.modelName());
 
             if (embeddingModelConfig.user().isPresent()) {
@@ -189,10 +196,12 @@ public class OpenAiRecorder {
             };
         } else {
             return new Supplier<>() {
+
                 @Override
                 public EmbeddingModel get() {
                     return new DisabledEmbeddingModel();
                 }
+
             };
         }
     }
@@ -211,8 +220,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(moderationModelConfig.logRequests().orElse(false))
-                    .logResponses(moderationModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), openAiConfig.logResponses()))
                     .modelName(moderationModelConfig.modelName());
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
@@ -229,10 +238,12 @@ public class OpenAiRecorder {
             };
         } else {
             return new Supplier<>() {
+
                 @Override
                 public ModerationModel get() {
                     return new DisabledModerationModel();
                 }
+
             };
         }
     }
@@ -251,8 +262,8 @@ public class OpenAiRecorder {
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(openAiConfig.maxRetries())
-                    .logRequests(imageModelConfig.logRequests().orElse(false))
-                    .logResponses(imageModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())
@@ -283,6 +294,7 @@ public class OpenAiRecorder {
             builder.persistDirectory(persistDirectory);
 
             return new Supplier<>() {
+
                 @Override
                 public ImageModel get() {
                     return builder.build();
@@ -296,6 +308,7 @@ public class OpenAiRecorder {
                 }
             };
         }
+
     }
 
     private LangChain4jOpenAiConfig.OpenAiConfig correspondingOpenAiConfig(LangChain4jOpenAiConfig runtimeConfig,

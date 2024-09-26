@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.ollama.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -62,8 +64,8 @@ public class OllamaRecorder {
             var builder = OllamaChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
@@ -109,8 +111,8 @@ public class OllamaRecorder {
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .model(ollamaFixedConfig.embeddingModel().modelId())
-                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
-                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), ollamaConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
             return new Supplier<>() {
@@ -155,8 +157,8 @@ public class OllamaRecorder {
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(ollamaConfig.logRequests().orElse(false))
-                    .logResponses(ollamaConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .options(optionsBuilder.build())
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);

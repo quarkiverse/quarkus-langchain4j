@@ -19,13 +19,11 @@ public interface ModerationModelConfig {
      * Whether moderation model requests should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.openai.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether moderation model responses should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.openai.log-responses}")
     Optional<Boolean> logResponses();
 }
