@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.anthropic.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.time.Duration;
 import java.util.function.Supplier;
 
@@ -34,8 +36,8 @@ public class AnthropicRecorder {
                     .apiKey(apiKey)
                     .version(anthropicConfig.version())
                     .modelName(chatModelConfig.modelName())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), anthropicConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), anthropicConfig.logResponses()))
                     .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .topK(chatModelConfig.topK())
                     .maxTokens(chatModelConfig.maxTokens())
@@ -86,8 +88,8 @@ public class AnthropicRecorder {
                     .apiKey(apiKey)
                     .version(anthropicConfig.version())
                     .modelName(chatModelConfig.modelName())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), anthropicConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), anthropicConfig.logResponses()))
                     .timeout(anthropicConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .topK(chatModelConfig.topK())
                     .maxTokens(chatModelConfig.maxTokens());

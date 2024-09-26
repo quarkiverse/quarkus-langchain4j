@@ -19,13 +19,11 @@ public interface EmbeddingModelConfig {
      * Whether the BAM embedding model should log requests
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.bam.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether the BAM embedding model should log requests
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.log-responses}")
     Optional<Boolean> logResponses();
 }

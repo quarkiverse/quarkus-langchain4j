@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.mistralai.runtime;
 
+import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
+
 import java.time.Duration;
 import java.util.function.Supplier;
 
@@ -39,8 +41,8 @@ public class MistralAiRecorder {
                     .baseUrl(mistralAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .modelName(chatModelConfig.modelName())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), mistralAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             if (chatModelConfig.temperature().isPresent()) {
@@ -92,8 +94,8 @@ public class MistralAiRecorder {
                     .baseUrl(mistralAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .modelName(chatModelConfig.modelName())
-                    .logRequests(chatModelConfig.logRequests().orElse(false))
-                    .logResponses(chatModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), mistralAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             if (chatModelConfig.temperature().isPresent()) {
@@ -144,8 +146,8 @@ public class MistralAiRecorder {
                     .baseUrl(mistralAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .modelName(embeddingModelConfig.modelName())
-                    .logRequests(embeddingModelConfig.logRequests().orElse(false))
-                    .logResponses(embeddingModelConfig.logResponses().orElse(false))
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), mistralAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
             return new Supplier<>() {

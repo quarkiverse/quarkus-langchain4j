@@ -83,14 +83,12 @@ public interface ChatModelConfig {
      * Whether chat model requests should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.vertexai.gemini.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether chat model responses should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.vertexai.gemini.log-responses}")
     Optional<Boolean> logResponses();
 
     /**
