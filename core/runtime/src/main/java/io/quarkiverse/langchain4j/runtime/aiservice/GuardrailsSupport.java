@@ -80,6 +80,8 @@ public class GuardrailsSupport {
                     chatMemory.add(response.content());
                 }
                 attempt++;
+                output = new OutputGuardrail.OutputGuardrailParams(response.content(), output.memory(),
+                        output.augmentationResult());
             } else {
                 break;
             }
