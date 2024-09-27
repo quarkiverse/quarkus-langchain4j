@@ -1,10 +1,10 @@
-package io.quarkiverse.langchain4j.openai.runtime.graalvm;
+package io.quarkiverse.langchain4j.openai.common.runtime.graalvm;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 
 import dev.ai4j.openai4j.OpenAiClient;
-import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 public class Substitutions {
 

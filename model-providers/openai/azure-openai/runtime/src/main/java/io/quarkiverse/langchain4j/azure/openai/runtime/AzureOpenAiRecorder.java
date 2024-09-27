@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
-import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.ShutdownContext;

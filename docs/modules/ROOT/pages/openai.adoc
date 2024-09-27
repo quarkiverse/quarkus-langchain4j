@@ -89,13 +89,8 @@ import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.ai4j.openai4j.chat.ChatCompletionChoice;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.chat.Message;
 import dev.ai4j.openai4j.completion.CompletionChoice;
-import dev.ai4j.openai4j.completion.CompletionResponse;
-import io.quarkiverse.langchain4j.openai.OpenAiRestApi;
+import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 

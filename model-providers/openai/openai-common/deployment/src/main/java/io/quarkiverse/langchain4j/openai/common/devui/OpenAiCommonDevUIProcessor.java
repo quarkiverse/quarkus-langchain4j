@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.openai.deployment.devui;
+package io.quarkiverse.langchain4j.openai.common.devui;
 
 import java.util.Map;
 

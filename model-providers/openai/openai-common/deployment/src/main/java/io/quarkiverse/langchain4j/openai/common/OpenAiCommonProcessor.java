@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.openai.deployment;
+package io.quarkiverse.langchain4j.openai.common;
 
 import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.determineJarLocation;
 import static io.quarkiverse.langchain4j.deployment.JarResourceUtil.matchingJarEntries;

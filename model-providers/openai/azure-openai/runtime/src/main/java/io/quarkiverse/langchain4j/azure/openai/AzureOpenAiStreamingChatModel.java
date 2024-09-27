@@ -30,7 +30,7 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.openai.OpenAiStreamingResponseBuilder;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 /**
  * Represents an OpenAI language model, hosted on Azure, that has a chat completion interface, such as gpt-3.5-turbo.

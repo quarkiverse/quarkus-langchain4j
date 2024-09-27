@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.openai;
+package io.quarkiverse.langchain4j.openai.common;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;

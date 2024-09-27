@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.openai;
+package io.quarkiverse.langchain4j.openai.common;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;

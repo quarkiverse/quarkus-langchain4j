@@ -29,7 +29,7 @@ import dev.ai4j.openai4j.image.ImageData;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AzureOpenAiImageModel implements ImageModel {

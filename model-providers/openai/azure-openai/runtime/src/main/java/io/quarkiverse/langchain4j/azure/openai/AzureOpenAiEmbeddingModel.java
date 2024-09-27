@@ -22,7 +22,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.openai.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 /**
  * Represents an OpenAI embedding model, hosted on Azure, such as text-embedding-ada-002.
