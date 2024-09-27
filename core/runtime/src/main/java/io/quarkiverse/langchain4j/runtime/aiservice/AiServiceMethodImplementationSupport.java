@@ -62,6 +62,7 @@ import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -100,6 +101,11 @@ public class AiServiceMethodImplementationSupport {
      * This method is called by the implementations of each ai service method.
      */
     public Object implement(Input input) {
+        if (ContextLocals.duplicatedContextActive()) {
+            ContextLocals.put(AiServiceConstants.AI_SERVICE_CLASS_NAME, input.context.aiServiceClass.getName());
+            ContextLocals.put(AiServiceConstants.AI_SERVICE_METHODNAME, input.createInfo.getMethodName());
+        }
+
         QuarkusAiServiceContext context = input.context;
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
