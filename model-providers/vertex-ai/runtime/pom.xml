@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-vertex-ai-parent</artifactId>
-        <version>0.19.0.CR2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-vertex-ai</artifactId>
     <name>Quarkus LangChain4j - Vertex AI - Runtime</name>
