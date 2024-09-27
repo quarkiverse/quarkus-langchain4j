@@ -129,6 +129,7 @@ public class OutputGuardrailRepromptingTest {
                 ChatMessage last = messages.get(messages.size() - 1);
                 assertThat(last).isInstanceOf(AiMessage.class);
                 assertThat(((AiMessage) last).text()).isEqualTo("Nope");
+                assertThat(params.responseFromLLM().text()).isEqualTo("Nope");
                 return reprompt("Retry", "Retry");
             }
             if (v == 2) {
@@ -138,6 +139,7 @@ public class OutputGuardrailRepromptingTest {
 
                 assertThat(last).isInstanceOf(AiMessage.class);
                 assertThat(((AiMessage) last).text()).isEqualTo("Hello");
+                assertThat(params.responseFromLLM().text()).isEqualTo("Hello");
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
                 assertThat(beforeLast.text()).isEqualTo("Retry");
 
