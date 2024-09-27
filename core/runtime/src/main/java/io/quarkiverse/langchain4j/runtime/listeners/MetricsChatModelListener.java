@@ -21,6 +21,8 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
+import io.quarkiverse.langchain4j.runtime.ContextLocals;
+import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceConstants;
 
 /**
  * Creates metrics that follow the
@@ -79,6 +81,16 @@ public class MetricsChatModelListener implements ChatModelListener {
         Tags tags = Tags.of(
                 Tag.of("gen_ai.request.model", request.model()),
                 Tag.of("gen_ai.response.model", response.model()));
+        if (ContextLocals.duplicatedContextActive()) {
+            String aiServiceClassName = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
+            if (aiServiceClassName != null) {
+                tags = tags.and("ai_service.class_name", aiServiceClassName);
+            }
+            String aiServiceMethodName = ContextLocals.get(AiServiceConstants.AI_SERVICE_METHODNAME);
+            if (aiServiceMethodName != null) {
+                tags = tags.and("ai_service.method_name", aiServiceMethodName);
+            }
+        }
 
         recordTokenUsage(responseContext, tags);
         recordDuration(responseContext, endTime, tags);
