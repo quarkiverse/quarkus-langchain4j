@@ -216,8 +216,8 @@ class OpenWebUI extends LitElement {
             <h2>Open WebUI container</h2>
             <p><label>ID:</label> ${this.container.id}</p>
             <p><label>Name:</label> ${this.container.name}</p>
-            <p><label>Image:</label> ${this.container.config.image}</p>
-            <p><label>Command:</label> ${this.container.config.cmd.join(" ")}</p>
+            <p><label>Image:</label> ${this.container.image}</p>
+            <p><label>Command:</label> ${this.container.cmd}</p>
             <p><label>Link:</label><a href="${this.url}" target="_blank">${this.url}</a></p>
           </div>
         `;
@@ -228,7 +228,13 @@ class OpenWebUI extends LitElement {
 
   _startOpenWebUI() {
     this._showProgressBar();
-    this.jsonRpc.startOpenWebUI({image: this.image, requestGpu: this.requestGpu, portBindings: this.portBindings, envVars: this.envVars, volumes: this.volumes}).then(() => {  
+    this.jsonRpc.startOpenWebUI({
+        image: this.image, 
+        requestGpu: this.requestGpu.toString(), 
+        portBindings: JSON.stringify(this.portBindings), 
+        envVars: JSON.stringify(this.envVars), 
+        volumes: JSON.stringify(this.volumes)
+    }).then(() => {  
       this._hideProgressBar();
       this._refresh();
       if (this.autoSignup) {

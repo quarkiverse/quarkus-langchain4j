@@ -68,3 +68,4 @@ release.properties
 
 #Dolphin
 .directory
+/samples/chatbot/dev.sh
