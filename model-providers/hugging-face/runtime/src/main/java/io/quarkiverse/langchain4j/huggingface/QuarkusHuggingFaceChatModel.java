@@ -101,7 +101,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
 
         TextGenerationResponse textGenerationResponse = client.chat(request);
 
-        return Response.from(AiMessage.from(textGenerationResponse.generatedText()));
+        return Response.from(AiMessage.from(textGenerationResponse.getGeneratedText()));
     }
 
     @Override
