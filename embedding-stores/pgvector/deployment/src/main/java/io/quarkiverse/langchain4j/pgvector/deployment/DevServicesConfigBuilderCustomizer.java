@@ -14,7 +14,7 @@ public class DevServicesConfigBuilderCustomizer implements SmallRyeConfigBuilder
     public void configBuilder(final SmallRyeConfigBuilder builder) {
         // use a priority of 50 to make sure that this is overridable by any of the standard methods
         builder.withSources(
-                new PropertiesConfigSource(Map.of("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg16"),
+                new PropertiesConfigSource(Map.of("quarkus.datasource.devservices.image-name", "pgvector/pgvector:pg17"),
                         "quarkus-langchain4j-pgvector", 50));
     }
 }
