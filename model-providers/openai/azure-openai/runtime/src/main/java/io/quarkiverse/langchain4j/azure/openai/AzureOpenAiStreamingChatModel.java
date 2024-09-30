@@ -158,7 +158,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
 
         ChatCompletionRequest request = requestBuilder.build();
 
-        OpenAiStreamingResponseBuilder responseBuilder = new OpenAiStreamingResponseBuilder(inputTokenCount);
+        OpenAiStreamingResponseBuilder responseBuilder = new OpenAiStreamingResponseBuilder();
 
         client.chatCompletion(request)
                 .onPartialResponse(partialResponse -> {
@@ -166,7 +166,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                     handle(partialResponse, handler);
                 })
                 .onComplete(() -> {
-                    Response<AiMessage> response = responseBuilder.build(tokenizer, toolThatMustBeExecuted != null);
+                    Response<AiMessage> response = responseBuilder.build();
                     handler.onComplete(response);
                 })
                 .onError(handler::onError)

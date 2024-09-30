@@ -64,7 +64,7 @@ public class QuarkusHuggingFaceClientTest extends WiremockAware {
                 .build();
         TextGenerationResponse response = createClientForChat().chat(request);
         assertThat(response).isNotNull().satisfies(r -> {
-            assertThat(r.generatedText()).contains("hanging with");
+            assertThat(r.getGeneratedText()).contains("hanging with");
         });
     }
 
