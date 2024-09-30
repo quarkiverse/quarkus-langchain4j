@@ -206,6 +206,7 @@ public class AiServicesProcessor {
             CustomScopeAnnotationsBuildItem customScopes,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
+            BuildProducer<RequestImageModelBeanBuildItem> requestImageModelBeanProducer,
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
@@ -213,6 +214,7 @@ public class AiServicesProcessor {
 
         Set<String> chatModelNames = new HashSet<>();
         Set<String> moderationModelNames = new HashSet<>();
+        Set<String> imageModelNames = new HashSet<>();
         ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
         for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
@@ -328,6 +330,14 @@ public class AiServicesProcessor {
                 validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
             }
 
+            // determine if the AiService returns an image
+            for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                Type returnType = method.returnType();
+                if (isImageOrImageResultResult(returnType)) {
+                    imageModelNames.add(chatModelName);
+                }
+            }
+
             // determine whether the method is annotated with @Moderate
             String moderationModelName = NamedConfigUtil.DEFAULT_NAME;
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
@@ -381,6 +391,10 @@ public class AiServicesProcessor {
         for (String moderationModelName : moderationModelNames) {
             requestModerationModelBeanProducer.produce(new RequestModerationModelBeanBuildItem(moderationModelName));
         }
+
+        for (String imageModelName : imageModelNames) {
+            requestImageModelBeanProducer.produce(new RequestImageModelBeanBuildItem(imageModelName));
+        }
     }
 
     private DotName getSupplierDotName(
@@ -416,6 +430,21 @@ public class AiServicesProcessor {
         producer.produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
     }
 
+    private boolean isImageOrImageResultResult(Type returnType) {
+        if (returnType.name().equals(LangChain4jDotNames.IMAGE)) {
+            return true;
+        } else if (returnType.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterizedType = returnType.asParameterizedType();
+            if (LangChain4jDotNames.RESULT.equals(parameterizedType.name())
+                    && (parameterizedType.arguments().size() == 1)) {
+                if (parameterizedType.arguments().get(0).name().equals(LangChain4jDotNames.IMAGE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleDeclarativeServices(AiServicesRecorder recorder,
@@ -431,6 +460,7 @@ public class AiServicesProcessor {
         boolean needsRetrievalAugmentorBean = false;
         boolean needsAuditServiceBean = false;
         boolean needsModerationModelBean = false;
+        boolean needsImageModelBean = false;
         Set<DotName> allToolNames = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
@@ -510,7 +540,7 @@ public class AiServicesProcessor {
             // currently in one class either streaming or blocking model are supported, but not both
             // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
-                if (!LangChain4jDotNames.IMAGE.equals(method.returnType().name())) {
+                if (!isImageOrImageResultResult(method.returnType())) {
                     break;
                 }
                 injectImageModel = true;
@@ -628,14 +658,14 @@ public class AiServicesProcessor {
             if (LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER.toString()
                     .equals(imageModelSupplierClassName) && injectImageModel) {
 
-                if (NamedConfigUtil.isDefault(moderationModelName)) {
+                if (NamedConfigUtil.isDefault(chatModelName)) {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.IMAGE_MODEL));
 
                 } else {
                     configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.IMAGE_MODEL),
-                            AnnotationInstance.builder(ModelName.class).add("value", moderationModelName).build());
+                            AnnotationInstance.builder(ModelName.class).add("value", chatModelName).build());
                 }
-                needsModerationModelBean = true;
+                needsImageModelBean = true;
             }
 
             configurator
@@ -666,6 +696,9 @@ public class AiServicesProcessor {
         }
         if (needsModerationModelBean) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));
+        }
+        if (needsImageModelBean) {
+            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.IMAGE_MODEL));
         }
         if (!allToolNames.isEmpty()) {
             unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));

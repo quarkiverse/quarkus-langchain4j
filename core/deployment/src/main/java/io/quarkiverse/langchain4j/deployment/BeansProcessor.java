@@ -75,6 +75,7 @@ public class BeansProcessor {
             List<ImageModelProviderCandidateBuildItem> imageCandidateItems,
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
+            List<RequestImageModelBeanBuildItem> requestImageModelBeanBuildItems,
             LangChain4jBuildConfig buildConfig,
             Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
@@ -112,6 +113,9 @@ public class BeansProcessor {
         }
         for (var bi : requestModerationModelBeanBuildItems) {
             requestedModerationModels.add(bi.getConfigName());
+        }
+        for (var bi : requestImageModelBeanBuildItems) {
+            requestedImageModels.add(bi.getConfigName());
         }
 
         if (!requestedChatModels.isEmpty() || !requestedStreamingChatModels.isEmpty() || !tokenCountEstimators.isEmpty()) {

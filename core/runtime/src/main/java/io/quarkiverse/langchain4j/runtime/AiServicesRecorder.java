@@ -248,7 +248,7 @@ public class AiServicesRecorder {
 
                             } else {
                                 quarkusAiServices.imageModel(creationalContext.getInjectedReference(ImageModel.class,
-                                        ModelName.Literal.of(info.imageModelSupplierClassName())));
+                                        ModelName.Literal.of(info.chatModelName())));
                             }
 
                         } else {

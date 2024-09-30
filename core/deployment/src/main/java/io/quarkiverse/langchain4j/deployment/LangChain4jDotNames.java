@@ -19,6 +19,7 @@ import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Moderate;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
@@ -104,4 +105,5 @@ public class LangChain4jDotNames {
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
+    static final DotName RESULT = DotName.createSimple(Result.class);
 }
