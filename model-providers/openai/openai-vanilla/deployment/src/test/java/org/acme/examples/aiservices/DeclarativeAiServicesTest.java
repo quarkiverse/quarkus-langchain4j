@@ -468,6 +468,8 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
     @ApplicationScoped
     interface ImageDescriber {
 
+        Image generate(String input);
+
         @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
                 + " with only the {language} code. If it is not, respond with '{notImageResponse}'")
         String describe(String language, @ImageUrl String url, String notImageResponse);

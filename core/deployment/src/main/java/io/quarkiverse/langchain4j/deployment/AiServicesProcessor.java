@@ -541,7 +541,7 @@ public class AiServicesProcessor {
             // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 if (!isImageOrImageResultResult(method.returnType())) {
-                    break;
+                    continue;
                 }
                 injectImageModel = true;
             }
