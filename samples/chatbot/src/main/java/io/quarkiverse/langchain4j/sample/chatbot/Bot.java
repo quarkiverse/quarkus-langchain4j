@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.sample.chatbot;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.smallrye.mutiny.Multi;
 import jakarta.enterprise.context.SessionScoped;
 
 @RegisterAiService(retrievalAugmentor = AugmentorExample.class)
@@ -15,5 +16,6 @@ public interface Bot {
 
             When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
             """)
-    String chat(@UserMessage String question);
+    // Using Multi enable streaming.
+    Multi<String> chat(@UserMessage String question);
 }
