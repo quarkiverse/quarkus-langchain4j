@@ -47,8 +47,10 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class DeclarativeAiServicesTest extends OpenAiBaseTest {
@@ -483,10 +485,14 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
     ImageDescriber imageDescriber;
 
     @Test
-    public void test_image_describer() throws IOException {
+    public void test_image_describer() throws Exception {
         var imageUrl = "https://foo.bar";
         doTestImageDescriber(() -> imageDescriber.describe("Java", imageUrl, "NOT_AN_IMAGE"));
         doTestImageDescriber(() -> imageDescriber.describe2("Java", Image.builder().url(imageUrl).build(), "NOT_AN_IMAGE"));
+
+        // make sure the class is properly generated - see https://github.com/quarkiverse/quarkus-langchain4j/issues/954
+        ImageDescriber unwrapped = ClientProxy.unwrap(imageDescriber);
+        unwrapped.getClass().getConstructor(QuarkusAiServiceContext.class).getAnnotation(Inject.class);
     }
 
     private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {

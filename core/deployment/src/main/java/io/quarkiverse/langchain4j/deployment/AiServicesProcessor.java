@@ -916,6 +916,28 @@ public class AiServicesProcessor {
                             .setModifiers(Modifier.PRIVATE | Modifier.FINAL)
                             .getFieldDescriptor();
 
+                    {
+                        MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
+                                QuarkusAiServiceContext.class);
+                        ctor.setModifiers(Modifier.PUBLIC);
+                        ctor.addAnnotation(Inject.class);
+                        ctor.getParameterAnnotations(0)
+                                .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
+                                .add("value", ifaceName);
+                        ctor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, ctor.getThis());
+                        ctor.writeInstanceField(contextField, ctor.getThis(),
+                                ctor.getMethodParam(0));
+                        ctor.returnValue(null);
+                    }
+
+                    {
+                        MethodCreator noArgsCtor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V");
+                        noArgsCtor.setModifiers(Modifier.PUBLIC);
+                        noArgsCtor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, noArgsCtor.getThis());
+                        noArgsCtor.writeInstanceField(contextField, noArgsCtor.getThis(), noArgsCtor.loadNull());
+                        noArgsCtor.returnValue(null);
+                    }
+
                     for (MethodInfo methodInfo : methodsToImplement) {
                         // The implementation essentially gets the context and delegates to
                         // MethodImplementationSupport#implement
@@ -940,27 +962,6 @@ public class AiServicesProcessor {
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
                         }
                         perMethodMetadata.put(methodId, methodCreateInfo);
-                        {
-                            MethodCreator ctor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V",
-                                    QuarkusAiServiceContext.class);
-                            ctor.setModifiers(Modifier.PUBLIC);
-                            ctor.addAnnotation(Inject.class);
-                            ctor.getParameterAnnotations(0)
-                                    .addAnnotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER.toString())
-                                    .add("value", ifaceName);
-                            ctor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, ctor.getThis());
-                            ctor.writeInstanceField(contextField, ctor.getThis(),
-                                    ctor.getMethodParam(0));
-                            ctor.returnValue(null);
-                        }
-
-                        {
-                            MethodCreator noArgsCtor = classCreator.getMethodCreator(MethodDescriptor.INIT, "V");
-                            noArgsCtor.setModifiers(Modifier.PUBLIC);
-                            noArgsCtor.invokeSpecialMethod(OBJECT_CONSTRUCTOR, noArgsCtor.getThis());
-                            noArgsCtor.writeInstanceField(contextField, noArgsCtor.getThis(), noArgsCtor.loadNull());
-                            noArgsCtor.returnValue(null);
-                        }
 
                         { // actual method we need to implement
                             MethodCreator mc = classCreator.getMethodCreator(MethodDescriptor.of(methodInfo));
