@@ -10,7 +10,6 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
-import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
@@ -27,14 +26,6 @@ public class MultipleTokenCountEstimatorProvidersTest {
     TokenCountEstimator azureTokenizer;
 
     @Inject
-    @ModelName("c4")
-    ChatLanguageModel bamChat;
-
-    @Inject
-    @ModelName("c4")
-    TokenCountEstimator bamTokenizer;
-
-    @Inject
     @ModelName("c7")
     ChatLanguageModel watsonxChat;
 
@@ -46,12 +37,6 @@ public class MultipleTokenCountEstimatorProvidersTest {
     void azureOpenAiTest() {
         assertThat(ClientProxy.unwrap(azureChat)).isInstanceOf(AzureOpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(azureTokenizer)).isInstanceOf(AzureOpenAiChatModel.class);
-    }
-
-    @Test
-    void bamTest() {
-        assertThat(ClientProxy.unwrap(bamChat)).isInstanceOf(BamChatModel.class);
-        assertThat(ClientProxy.unwrap(bamTokenizer)).isInstanceOf(BamChatModel.class);
     }
 
     @Test

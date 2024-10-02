@@ -10,7 +10,6 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
-import io.quarkiverse.langchain4j.bam.BamChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
@@ -35,10 +34,6 @@ public class MultipleChatProvidersTest {
     @Inject
     @ModelName("c3")
     ChatLanguageModel thirdNamedModel;
-
-    @Inject
-    @ModelName("c4")
-    ChatLanguageModel fourthNamedModel;
 
     @Inject
     @ModelName("c5")
@@ -70,11 +65,6 @@ public class MultipleChatProvidersTest {
     @Test
     void thirdNamedModel() {
         assertThat(ClientProxy.unwrap(thirdNamedModel)).isInstanceOf(QuarkusHuggingFaceChatModel.class);
-    }
-
-    @Test
-    void fourthNamedModel() {
-        assertThat(ClientProxy.unwrap(fourthNamedModel)).isInstanceOf(BamChatModel.class);
     }
 
     @Test

@@ -122,7 +122,6 @@ public abstract class WatsonxModel {
     }
 
     protected static <T> T retryOn(Callable<T> action) {
-
         int maxAttempts = 1;
         for (int i = 0; i <= maxAttempts; i++) {
 

@@ -16,7 +16,6 @@
 ** xref:podman.adoc[Podman AI Lab]
 ** xref:anthropic.adoc[Anthropic (Claude)]
 ** xref:mistral.adoc[Mistral AI]
-** xref:bam.adoc[IBM BAM]
 ** xref:watsonx.adoc[IBM watsonx.ai]
 
 * Document Stores

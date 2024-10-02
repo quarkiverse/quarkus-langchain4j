@@ -48,9 +48,8 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        Parameters parameters = createParameters();
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications),
-                parameters);
+        var parameters = createParameters();
+        var request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications), parameters);
 
         Result result = retryOn(new Callable<TextGenerationResponse>() {
             @Override

@@ -16,6 +16,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jakarta.json.Json;
+import jakarta.json.JsonArray;
 import jakarta.json.JsonReader;
 import jakarta.json.JsonValue;
 
@@ -211,31 +212,34 @@ public interface PromptFormatter {
         StringJoiner joiner = new StringJoiner(joiner(), "", "");
         var lastMessage = messages.get(messages.size() - 1);
 
-        for (int i = 0; i < messages.size(); i++) {
-
-            String text;
-            ChatMessage message = messages.get(i);
+        for (ChatMessage message : messages) {
 
             if (message.type().equals(SYSTEM))
                 continue;
 
             if (message instanceof ToolExecutionResultMessage toolExecutionResultMessage) {
 
-                text = tagOf(message) + promptToolFormatter().convert(toolExecutionResultMessage) + endOf(message);
+                joiner.add(
+                        tagOf(message) + promptToolFormatter().convert(toolExecutionResultMessage) + endOf(message));
 
             } else if (message instanceof AiMessage aiMessage) {
 
+                String text;
+
                 if (aiMessage.hasToolExecutionRequests()) {
-                    text = toolExecution() + promptToolFormatter().convert(aiMessage.toolExecutionRequests()) + endOf(message);
+                    text = "%s%s%s".formatted(
+                            toolExecution(),
+                            promptToolFormatter().convert(aiMessage.toolExecutionRequests()),
+                            endOf(message));
                 } else {
                     text = tagOf(message) + message.text() + endOf(message);
                 }
 
-            } else {
-                text = tagOf(message) + message.text() + endOf(message);
-            }
+                joiner.add(text);
 
-            joiner.add(text);
+            } else {
+                joiner.add(tagOf(message) + message.text() + endOf(message));
+            }
         }
 
         if (lastMessage.type() != AI && !tagOf(AI).isBlank()) {
@@ -246,15 +250,15 @@ public interface PromptFormatter {
     }
 
     /**
-     * Formats a list of {@link ToolSpecification} objects into a JSON string.
+     * Formats a list of {@link ToolSpecification} objects into a {@link JsonArray}.
      *
      * @param tools the list of tool specifications to be formatted.
-     * @return a string representing the formatted tools in JSON format.
+     * @return a {@link JsonArray} with tools in JSON format.
      */
-    default String toolsFormatter(List<ToolSpecification> tools) {
+    default JsonArray toolsFormatter(List<ToolSpecification> tools) {
 
         if (tools == null || tools.isEmpty())
-            return "";
+            return Json.createArrayBuilder().build();
 
         var result = Json.createArrayBuilder();
         for (ToolSpecification tool : tools) {
@@ -290,7 +294,7 @@ public interface PromptFormatter {
             result.add(json);
         }
 
-        return result.build().toString();
+        return result.build();
     }
 
     /**
