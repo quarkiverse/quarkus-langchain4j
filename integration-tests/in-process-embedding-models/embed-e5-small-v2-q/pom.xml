@@ -4,30 +4,24 @@
 
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
+        <artifactId>quarkus-langchain4j-integration-tests-in-process-embedding-models</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quarkus-langchain4j-integration-test-embed-e5-small-v2</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - embeddings-e5-small-v2</name>
+    <artifactId>quarkus-langchain4j-integration-test-embed-e5-small-v2-q</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - embeddings-e5-small-v2-q</name>
 
     <dependencies>
         <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-parsers-base</artifactId>
-            <version>${project.version}</version>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-e5-small-v2-q</artifactId>
+            <version>${langchain4j-embeddings.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-e5-small-v2</artifactId>
-            <version>${langchain4j-embeddings.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>dev.langchain4j</groupId>
-                    <artifactId>langchain4j-core</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

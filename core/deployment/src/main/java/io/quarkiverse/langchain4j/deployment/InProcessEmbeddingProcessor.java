@@ -23,6 +23,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 
 /**
  * Generate a local embedding build item for each local embedding model available in the classpath.
@@ -82,6 +83,16 @@ public class InProcessEmbeddingProcessor {
         }
     }
 
+    @BuildStep
+    void requireOnnxRuntime(List<InProcessEmbeddingBuildItem> embedding, BuildProducer<RequireOnnxRuntimeBuildItem> producer) {
+        for (InProcessEmbeddingBuildItem item : embedding) {
+            if (item.requireOnnxRuntime()) {
+                producer.produce(new RequireOnnxRuntimeBuildItem());
+                break;
+            }
+        }
+    }
+
     // Expose a bean for each in process embedding model
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
@@ -108,25 +119,23 @@ public class InProcessEmbeddingProcessor {
         }
     }
 
-    @BuildStep
-    void includeInProcessEmbeddingModelsInNativeExecutable(
-            List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
-            BuildProducer<NativeImageResourceBuildItem> resources,
-            BuildProducer<ReflectiveClassBuildItem> reflection) {
-        for (InProcessEmbeddingBuildItem inProcessEmbeddingBuildItem : inProcessEmbeddingBuildItems) {
-            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.onnxModelPath()));
-            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.vocabularyPath()));
-            reflection.produce(ReflectiveClassBuildItem.builder(inProcessEmbeddingBuildItem.className())
-                    .constructors(true)
-                    .fields(true)
-                    .methods(true)
-                    .build());
-        }
-    }
-
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
         if (!NamedConfigUtil.isDefault(configName)) {
             builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
+        }
+    }
+
+    @BuildStep
+    void configureNativeExecutableForInProcessEmbedding(List<InProcessEmbeddingBuildItem> embeddings,
+            BuildProducer<RuntimeInitializedClassBuildItem> classes,
+            BuildProducer<NativeImageResourceBuildItem> resources,
+            BuildProducer<ReflectiveClassBuildItem> reflection) {
+        for (InProcessEmbeddingBuildItem inProcessEmbeddingBuildItem : embeddings) {
+            classes.produce(new RuntimeInitializedClassBuildItem(inProcessEmbeddingBuildItem.className()));
+            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.onnxModelPath()));
+            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.vocabularyPath()));
+            reflection.produce(ReflectiveClassBuildItem.builder(inProcessEmbeddingBuildItem.className())
+                    .constructors().fields().methods().build());
         }
     }
 }

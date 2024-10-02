@@ -20,29 +20,21 @@ defaults:
     shell: bash
 
 jobs:
+  # Build the project, no native tests.
   build-and-test-jvm:
-    name: Build on ${{ matrix.os }} - ${{ matrix.java }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        java: [17]
-    runs-on: ${{ matrix.os }}
+    name: Main Build
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
-      - name: Prepare git
-        run: git config --global core.autocrlf false
-        if: startsWith(matrix.os, 'windows')
+      - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: 17
           cache: 'maven'
 
       - name: Build with Maven
@@ -65,33 +57,27 @@ jobs:
         run: |
           cd integration-tests
           # skip RAG module as it doesn't have any native-compatible tests now
-          # skip 'embed' modules (with in-process embeddings) and others that don't work in native
-          # FIXME: reenable embedding modules, see https://github.com/quarkiverse/quarkus-langchain4j/issues/394
           MATRIX='{"testModule":'$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | grep -v rag \
-                | grep -v embed \
                 | grep -v jlama \
                 | jq -R -s -c 'split("\n")[:-1]' \
           )'}'
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
+  # Test the project with different JDKs.
   test-jvm-alt:
-    name: Test on ${{ matrix.os }} - ${{ matrix.java }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        java: [21]
+        java: [21, 22, 23]
+    name: Test on ${{ matrix.os }} - ${{ matrix.java }}
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Prepare git
-        run: git config --global core.autocrlf false
-        if: startsWith(matrix.os, 'windows')
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
@@ -116,7 +102,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
