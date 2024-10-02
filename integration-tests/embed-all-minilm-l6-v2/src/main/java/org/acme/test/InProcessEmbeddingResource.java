@@ -18,6 +18,7 @@ public class InProcessEmbeddingResource {
 
     @POST
     public String computeEmbedding(String sentence) {
+
         var r1 = allMiniLmL6V2QuantizedEmbeddingModel.embed(sentence);
         var r2 = embeddingModel.embed(sentence);
 

@@ -12,8 +12,6 @@ import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LogCategoryBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.NativeImageResourcePatternsBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuildItem;
 
@@ -24,40 +22,11 @@ import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuil
 public class DocumentSupportProcessor {
 
     @BuildStep
-    void nativeResources(
-            List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
-            BuildProducer<NativeImageResourcePatternsBuildItem> nativePatternProducer,
-            BuildProducer<ReflectiveClassBuildItem> reflectionProducer) {
-        if (!inProcessEmbeddingBuildItems.isEmpty()) {
-            // TODO: we can do better here and only include the target architecture's libs
-            nativePatternProducer
-                    .produce(NativeImageResourcePatternsBuildItem.builder()
-                            .includeGlobs("ai/onnxruntime/native/**", "native/lib/**").build());
-
-            reflectionProducer
-                    .produce(ReflectiveClassBuildItem.builder("opennlp.tools.sentdetect.SentenceDetectorFactory").build());
-            reflectionProducer.produce(ReflectiveClassBuildItem.builder("ai.onnxruntime.OnnxTensor").methods(true).build());
-        }
-    }
-
-    @BuildStep
     void runtimeClasses(
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
             BuildProducer<RuntimeInitializedClassBuildItem> classProducer,
             BuildProducer<RuntimeInitializedPackageBuildItem> packageProducer) {
         Stream.of(
-                "dev.langchain4j.model.embedding.OnnxBertBiEncoder",
-                "dev.langchain4j.model.embedding.HuggingFaceTokenizer",
-                "ai.djl.huggingface.tokenizers.HuggingFaceTokenizer",
-                "ai.djl.huggingface.tokenizers.jni.TokenizersLibrary",
-                "ai.djl.huggingface.tokenizers.jni.LibUtils",
-                "ai.djl.util.Platform",
-                "ai.onnxruntime.OrtEnvironment",
-                "ai.onnxruntime.OnnxRuntime",
-                "ai.onnxruntime.OnnxTensorLike",
-                "ai.onnxruntime.OrtAllocator",
-                "ai.onnxruntime.OrtSession$SessionOptions",
-                "ai.onnxruntime.OrtSession",
                 "org.apache.fontbox.ttf.RAFDataStream",
                 "org.apache.fontbox.ttf.TTFParser",
                 "org.apache.pdfbox.pdmodel.encrypetion.PublicKeySecurityHandler",
@@ -75,9 +44,6 @@ public class DocumentSupportProcessor {
                 .filter(QuarkusClassLoader::isClassPresentAtRuntime)
                 .map(RuntimeInitializedClassBuildItem::new).forEach(classProducer::produce);
 
-        for (InProcessEmbeddingBuildItem inProcessEmbeddingBuildItem : inProcessEmbeddingBuildItems) {
-            classProducer.produce(new RuntimeInitializedClassBuildItem(inProcessEmbeddingBuildItem.className()));
-        }
         classProducer.produce(new RuntimeInitializedClassBuildItem(CompressingQueryTransformer.class.getName()));
         classProducer.produce(new RuntimeInitializedClassBuildItem(CompressorStreamFactory.class.getName()));
         classProducer.produce(new RuntimeInitializedClassBuildItem(

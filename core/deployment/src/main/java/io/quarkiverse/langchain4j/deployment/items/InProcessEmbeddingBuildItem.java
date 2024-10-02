@@ -9,12 +9,22 @@ public final class InProcessEmbeddingBuildItem extends MultiBuildItem implements
     private final String vocabularyPath;
 
     private final String className;
+    private boolean requireOnnxRuntime;
 
     public InProcessEmbeddingBuildItem(String modelName, String className, String onnxModelPath, String vocabularyPath) {
         this.modelName = modelName;
         this.className = className;
         this.onnxModelPath = onnxModelPath;
         this.vocabularyPath = vocabularyPath;
+        this.requireOnnxRuntime = true;
+    }
+
+    public boolean requireOnnxRuntime() {
+        return requireOnnxRuntime;
+    }
+
+    public void setRequireOnnxRuntime(boolean requireOnnxRuntime) {
+        this.requireOnnxRuntime = requireOnnxRuntime;
     }
 
     public String modelName() {
