@@ -169,7 +169,8 @@ public class QuarkusTavilyWebSearchEngine implements WebSearchEngine {
             if (body == null) {
                 return "";
             }
-            return body.toString();
+
+            return ShadowSensitiveData.process(body, "api_key");
         }
 
         private String inOneLine(io.vertx.core.MultiMap headers) {
