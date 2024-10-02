@@ -25,10 +25,10 @@ class DisabledModelsWatsonRecorderTest {
     @BeforeEach
     void setupMocks() {
         when(defaultConfig.enableIntegration())
-            .thenReturn(false);
+                .thenReturn(false);
 
         when(runtimeConfig.defaultConfig())
-            .thenReturn(defaultConfig);
+                .thenReturn(defaultConfig);
     }
 
     @Test
