@@ -12,7 +12,10 @@ import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.LogCategoryBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.*;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourcePatternsBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuildItem;
 
 /**
  * TODO: we might want to make this more granular so all these document related dependencies don't always end up in the
@@ -81,22 +84,6 @@ public class DocumentSupportProcessor {
                 "org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream"));
 
         packageProducer.produce(new RuntimeInitializedPackageBuildItem("com.microsoft.schemas.office"));
-    }
-
-    @BuildStep
-    void includeInProcessEmbeddingModels(
-            List<InProcessEmbeddingBuildItem> inProcessEmbeddingBuildItems,
-            BuildProducer<NativeImageResourceBuildItem> resources,
-            BuildProducer<ReflectiveClassBuildItem> reflection) {
-        for (InProcessEmbeddingBuildItem inProcessEmbeddingBuildItem : inProcessEmbeddingBuildItems) {
-            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.onnxModelPath()));
-            resources.produce(new NativeImageResourceBuildItem(inProcessEmbeddingBuildItem.vocabularyPath()));
-            reflection.produce(ReflectiveClassBuildItem.builder(inProcessEmbeddingBuildItem.className())
-                    .constructors(true)
-                    .fields(true)
-                    .methods(true)
-                    .build());
-        }
     }
 
     @BuildStep

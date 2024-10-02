@@ -23,7 +23,7 @@ The following table lists the supported models, and the corresponding dependency
 |===
 | Model Name | Dependency | Vector Dimension | Injected type
 
-| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2-q]
+| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2 (quantized)]
 |`dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel`
@@ -33,21 +33,20 @@ The following table lists the supported models, and the corresponding dependency
 | 384
 | `dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel`
 
-| https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en-q]
+| https://huggingface.co/BAAI/bge-small-en[bge-small-en (quantized)]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-en-q:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel`
 
-| https://huggingface.co/neuralmagic/bge-small-en-v1.5-quant[bge-small-en]
+| https://huggingface.co/BAAI/bge-small-en[bge-small-en]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-en:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.bgesmallen.BgeSmallEnEmbeddingModel`
 
-| https://huggingface.co/BAAI/bge-small-zh[bge-small-zh-q]
+| https://huggingface.co/BAAI/bge-small-zh[bge-small-zh (quantized)]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-zh-q:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.bgesmallzhq.BgeSmallZhQuantizedEmbeddingModel`
-
 
 | https://huggingface.co/BAAI/bge-small-zh[bge-small-zh]
 |`dev.langchain4j:langchain4j-embeddings-bge-small-zh:{langchain4j-version}`
@@ -55,15 +54,17 @@ The following table lists the supported models, and the corresponding dependency
 | `dev.langchain4j.model.embedding.onnx.bgesmallzh.BgeSmallZhEmbeddingModel`
 
 
-| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
+| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2 (quantized)]
 |`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.e5smallv2q.E5SmallV2QuantizedEmbeddingModel`
 
-| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2-q]
-|`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
+| https://huggingface.co/intfloat/e5-small-v2[e5-small-v2]
+|`dev.langchain4j:langchain4j-embeddings-e5-small-v2:{langchain4j-version}`
 | 384
 | `dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel`
+
+|===
 
 Furthermore, when using these models, the following dependency should be added:
 
@@ -74,8 +75,6 @@ Furthermore, when using these models, the following dependency should be added:
     <artifactId>quarkus-langchain4j-parsers-base</artifactId>
 </dependency>
 ----
-
-|===
 
 == Injecting an embedding model
 
