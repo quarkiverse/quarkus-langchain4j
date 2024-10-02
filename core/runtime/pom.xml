@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-core-parent</artifactId>
-        <version>0.20.3</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-core</artifactId>
     <name>Quarkus LangChain4j - Core - Runtime</name>
