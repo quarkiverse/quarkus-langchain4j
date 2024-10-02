@@ -23,10 +23,10 @@ class DisabledModelsBamRecorderTest {
     @BeforeEach
     void setupMocks() {
         when(defaultConfig.enableIntegration())
-            .thenReturn(false);
+                .thenReturn(false);
 
         when(config.defaultConfig())
-            .thenReturn(defaultConfig);
+                .thenReturn(defaultConfig);
     }
 
     @Test
