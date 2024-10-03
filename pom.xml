@@ -27,7 +27,6 @@
 
     <module>model-providers/anthropic</module>
 
-    <module>model-providers/bam</module>
     <module>model-providers/cohere</module>
     <module>model-providers/hugging-face</module>
     <module>model-providers/mistral</module>

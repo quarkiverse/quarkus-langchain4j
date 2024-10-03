@@ -2,8 +2,8 @@ package io.quarkiverse.langchain4j.watsonx.prompt.impl;
 
 import java.io.StringReader;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.json.Json;
 import jakarta.json.JsonReader;
@@ -22,17 +22,12 @@ public class LlamaToolFormatter implements PromptToolFormatter {
 
     @Override
     public JsonValue convert(ToolExecutionResultMessage toolExecutionResultMessage) {
-        JsonValue content = null;
-        if (toolExecutionResultMessage.text() != null) {
-            StringReader stringReader = new StringReader(toolExecutionResultMessage.text());
-            try (JsonReader jsonReader = Json.createReader(stringReader)) {
-                content = jsonReader.readValue();
-            }
+        StringReader stringReader = new StringReader(toolExecutionResultMessage.text());
+        try (JsonReader jsonReader = Json.createReader(stringReader)) {
+            return Json.createObjectBuilder()
+                    .add("output", jsonReader.readValue())
+                    .build();
         }
-
-        return Json.createObjectBuilder()
-                .add("output", content)
-                .build();
     }
 
     @Override
@@ -47,17 +42,16 @@ public class LlamaToolFormatter implements PromptToolFormatter {
 
         return Json.createObjectBuilder()
                 .add("name", toolExecutionRequest.name())
-                .add("parameters", toolExecutionRequest.arguments() != null ? arguments : Json.createObjectBuilder().build())
+                .add("parameters", arguments != null ? arguments : Json.createObjectBuilder().build())
                 .build();
     }
 
     @Override
     public String convert(List<ToolExecutionRequest> toolExecutionRequests) {
-        StringJoiner joiner = new StringJoiner(";");
-        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-            joiner.add(convert(toolExecutionRequest).toString());
-        }
-        return joiner.toString();
+        return toolExecutionRequests.stream()
+                .map(this::convert)
+                .map(JsonValue::toString)
+                .collect(Collectors.joining(";"));
     }
 
     @Override

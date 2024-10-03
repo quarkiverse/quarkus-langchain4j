@@ -34,9 +34,7 @@ public interface PromptToolFormatter {
      */
     public default String convert(List<ToolExecutionRequest> toolExecutionRequests) {
         var result = Json.createArrayBuilder();
-        for (ToolExecutionRequest toolExecutionRequest : toolExecutionRequests) {
-            result.add(convert(toolExecutionRequest));
-        }
+        toolExecutionRequests.stream().map(this::convert).forEach(result::add);
         return result.build().toString();
     }
 

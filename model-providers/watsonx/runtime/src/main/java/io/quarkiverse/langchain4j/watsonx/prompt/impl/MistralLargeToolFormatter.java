@@ -20,18 +20,13 @@ public class MistralLargeToolFormatter implements PromptToolFormatter {
 
     @Override
     public JsonValue convert(ToolExecutionResultMessage toolExecutionResultMessage) {
-        JsonValue content = null;
-        if (toolExecutionResultMessage.text() != null) {
-            StringReader stringReader = new StringReader(toolExecutionResultMessage.text());
-            try (JsonReader jsonReader = Json.createReader(stringReader)) {
-                content = jsonReader.readValue();
-            }
+        StringReader stringReader = new StringReader(toolExecutionResultMessage.text());
+        try (JsonReader jsonReader = Json.createReader(stringReader)) {
+            return Json.createObjectBuilder()
+                    .add("content", jsonReader.readValue())
+                    .add("id", toolExecutionResultMessage.id())
+                    .build();
         }
-
-        return Json.createObjectBuilder()
-                .add("content", content)
-                .add("id", toolExecutionResultMessage.id())
-                .build();
     }
 
     @Override
@@ -47,7 +42,7 @@ public class MistralLargeToolFormatter implements PromptToolFormatter {
         return Json.createObjectBuilder()
                 .add("id", toolExecutionRequest.id())
                 .add("name", toolExecutionRequest.name())
-                .add("arguments", toolExecutionRequest.arguments() != null ? arguments : Json.createObjectBuilder().build())
+                .add("arguments", arguments != null ? arguments : Json.createObjectBuilder().build())
                 .build();
     }
 
