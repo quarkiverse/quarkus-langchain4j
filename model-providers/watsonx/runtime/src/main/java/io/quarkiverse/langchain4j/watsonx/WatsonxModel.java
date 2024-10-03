@@ -94,17 +94,11 @@ public abstract class WatsonxModel {
     }
 
     protected String toInput(List<ChatMessage> messages) {
-        var prompt = promptFormatter.format(messages, List.of());
-        log.debugf("""
-                Formatted prompt:
-                -----------------
-                %s
-                -----------------""", prompt);
-        return prompt;
+        return toInput(messages, null);
     }
 
     protected String toInput(List<ChatMessage> messages, List<ToolSpecification> tools) {
-        var prompt = promptFormatter.format(messages, tools);
+        var prompt = promptFormatter.format(messages, tools == null ? List.of() : tools);
         log.debugf("""
                 Formatted prompt:
                 -----------------
@@ -117,6 +111,7 @@ public abstract class WatsonxModel {
         return switch (stopReason) {
             case "max_tokens" -> FinishReason.LENGTH;
             case "eos_token", "stop_sequence" -> FinishReason.STOP;
+            case "not_finished" -> FinishReason.OTHER;
             default -> throw new IllegalArgumentException("%s not supported".formatted(stopReason));
         };
     }
