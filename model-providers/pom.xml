@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>quarkus-langchain4j-parent</artifactId>
+        <version>999-SNAPSHOT</version>
+    </parent>
+    <artifactId>quarkus-langchain4j-model-providers-parent</artifactId>
+    <name>Quarkus LangChain4j - Model Providers - Parent</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>anthropic</module>
+        <module>cohere</module>
+        <module>hugging-face</module>
+        <module>mistral</module>
+        <module>ollama</module>
+        <!-- Add another pom -->
+        <module>openai/azure-openai</module>
+        <module>openai/openai-common</module>
+        <module>openai/openai-vanilla</module>
+        <module>openai/testing-internal</module>
+
+        <module>openshift-ai</module>
+        <module>vertex-ai</module>
+        <module>vertex-ai-gemini</module>
+        <module>watsonx</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>jdk21-plus</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <modules>
+                <module>jlama</module>
+            </modules>
+        </profile>
+    </profiles>
+
+
+</project>

@@ -13,42 +13,13 @@
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
     <module>core</module>
-
-    <module>embedding-stores/chroma</module>
-
-    <module>embedding-stores/infinispan</module>
-    <module>embedding-stores/milvus</module>
-    <module>embedding-stores/neo4j</module>
-    <module>embedding-stores/pgvector</module>
-    <module>embedding-stores/pinecone</module>
-    <module>embedding-stores/qdrant</module>
-    <module>embedding-stores/redis</module>
-    <module>memory-stores/memory-store-redis</module>
-
-    <module>model-providers/anthropic</module>
-
-    <module>model-providers/cohere</module>
-    <module>model-providers/hugging-face</module>
-    <module>model-providers/mistral</module>
-    <module>model-providers/ollama</module>
-    <module>model-providers/openai/testing-internal</module>
-    <module>model-providers/openai/azure-openai</module>
-    <module>model-providers/openai/openai-common</module>
-    <module>model-providers/openai/openai-vanilla</module>
-    <module>model-providers/openshift-ai</module>
-    <module>model-providers/vertex-ai</module>
-    <module>model-providers/vertex-ai-gemini</module>
-    <module>model-providers/watsonx</module>
-
-    <module>model-auth-providers/oidc-model-auth-provider</module>
-
-    <module>quarkus-integrations/websockets-next</module>
-
-    <module>web-search-engines/tavily</module>
-
-    <module>rag/easy-rag</module>
-
-    <module>rag/parsers-base</module>
+    <module>embedding-stores</module>
+    <module>memory-stores</module>
+    <module>model-auth-providers</module>
+    <module>model-providers</module>
+    <module>quarkus-integrations</module>
+    <module>rag</module>
+    <module>tools</module>
     <module>testing-internal</module>
   </modules>
   <scm>
@@ -208,26 +179,9 @@
         </property>
       </activation>
       <modules>
-        <module>samples/email-a-poem</module>
-        <module>samples/cli-translator</module>
-        <module>samples/review-triage</module>
-        <module>samples/fraud-detection</module>
-        <module>samples/secure-fraud-detection</module>
-        <module>samples/secure-vertex-ai-gemini-poem</module>
-        <module>samples/chatbot</module>
-        <module>samples/chatbot-easy-rag</module>
-        <module>samples/sql-chatbot</module>
-        <module>samples/chatbot-web-search</module>
+        <module>samples</module>
       </modules>
     </profile>
-    <profile>
-      <id>jdk21-plus</id>
-      <activation>
-        <jdk>[21,)</jdk>
-      </activation>
-      <modules>
-        <module>model-providers/jlama</module>
-      </modules>
-    </profile>
+
   </profiles>
 </project>
