@@ -52,7 +52,7 @@ public class AllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.grant-type", "grantME")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "my_super_model")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "false")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-joiner", "@")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.decoding-method", "greedy")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.length-penalty.decay-factor", "1.1")
@@ -143,7 +143,7 @@ public class AllPropertiesTest extends WireMockAbstract {
         assertEquals(0, runtimeConfig.chatModel().truncateInputTokens().get());
         assertEquals(false, runtimeConfig.chatModel().includeStopSequence().get());
         assertEquals("@", runtimeConfig.chatModel().promptJoiner());
-        assertEquals(true, fixedRuntimeConfig.chatModel().promptFormatter());
+        assertEquals(false, fixedRuntimeConfig.chatModel().promptFormatter());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
     }
 

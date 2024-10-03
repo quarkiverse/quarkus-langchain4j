@@ -8,7 +8,7 @@ IMPORTANT: Supported only for IBM watsonx as a service on link:https://www.ibm.c
 
 == Using watsonx.ai
 
-To employ watsonx.ai LLMs, integrate the following dependency into your project:
+To employ *watsonx.ai* LLMs, integrate the following dependency into your project:
 
 [source,xml,subs=attributes+]
 ----
@@ -64,20 +64,18 @@ NOTE: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and gene
 
 ==== Writing prompts
 
-When creating prompts using watsonx.ai, it's important to follow the guidelines of the model you choose. Depending on the model, some special instructions may be required to ensure the desired output. For best results, always refer to the documentation provided for each model to maximize the effectiveness of your prompts.
+When creating prompts using *watsonx.ai*, it's important to follow the guidelines of the model you choose. Depending on the model, some special instructions may be required to ensure the desired output. For best results, always refer to the documentation provided for each model to maximize the effectiveness of your prompts.
 
-To simplify the process of prompt creation, you can use the `prompt-formatter` property to automatically handle the addition of tags to your prompts. This property allows you to avoid manually adding tags by letting the system handle the formatting based on the model's requirements. This functionality is particularly useful for models such as `ibm/granite-13b-chat-v2`, `meta-llama/llama-3-405b-instruct`, and other supported models, ensuring consistent and accurate prompt structures without additional effort.
+By default, the *watsonx.ai* module uses the `prompt-formatter` property to simplify the prompt creation process. This property automatically handles the addition of tags to your prompts based on the requirements of the model, ensuring consistent and accurate prompt structures without additional effort. This functionality is particularly useful for models such as `ibm/granite-13b-chat-v2`, `meta-llama/llama-3-70b-instruct`, `mistralai/mistral-large` and other supported models.
 
-To enable this functionality, configure the `prompt-formatter` property in your `application.properties` file as follows:
+This helps maintain prompt clarity and improves interaction with the LLM by ensuring that prompts follow the required structure. If, for any reason, you need to disable this functionality and manually manage tags, you can configure the `prompt-formatter` property in your `application.properties` file as follows:
 
 [source,properties,subs=attributes+]
 ----
-quarkus.langchain4j.watsonx.chat-model.prompt-formatter=true
+quarkus.langchain4j.watsonx.chat-model.prompt-formatter=false
 ----
 
-When this property is set to `true`, the system will automatically format prompts with the appropriate tags. This helps to maintain prompt clarity and improves interaction with the LLM by ensuring that prompts follow the required structure. If set to `false`, you'll need to manage the tags manually.
-
-For example, if you choose to use `ibm/granite-13b-chat-v2` without using the `prompt-formatter`, you will need to manually add the `<|system|>`, `<|user|>` and `<|assistant|>` instructions:
+For example, if you choose to disable the `prompt-formatter` and use `ibm/granite-13b-chat-v2`, you will need to manually add the `<|system|>`, `<|user|>`, and `<|assistant|>` instructions:
 
 [source,properties,subs=attributes+]
 ----
@@ -108,14 +106,13 @@ public interface LLMService {
 }
 ----
 
-Enabling the `prompt-formatter` will result in:
+When `prompt-formatter` is enabled, the system will format prompts automatically, without requiring tags:
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.api-key=hG-...
 quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
 quarkus.langchain4j.watsonx.chat-model.model-id=ibm/granite-13b-chat-v2
-quarkus.langchain4j.watsonx.chat-model.prompt-formatter=true
 ----
 
 [source,java]
@@ -154,19 +151,21 @@ The `prompt-formatter` supports the following models:
 * `ibm/granite-3b-code-instruct`
 * `ibm/granite-8b-code-instruct`
 
+If a model that does not support the `prompt-formatter` is selected, a warning will be displayed during the application startup. In such cases, the prompt formatting will not be applied, and no tags will be automatically added to the prompts.
+
 ==== Tool Execution with Prompt Formatter
 
 In addition to simplifying prompt creation, the `prompt-formatter` property also enables the execution of tools for specific models. Tools allow for dynamic interactions within the model, enabling the AI to perform specific actions or fetch data as part of its response.
 
 When the `prompt-formatter` is enabled and a supported model is selected, the prompt will be automatically formatted to use the tools. More information about tools is available in the xref:./agent-and-tools.adoc[Agent and Tools] page.
 
-Currently, the following model supports tool execution:
+Currently, the following models support tool execution:
 
 * `mistralai/mistral-large`
 * `meta-llama/llama-3-405b-instruct`
 * `meta-llama/llama-3-1-70b-instruct`
 
-IMPORTANT: The `@SystemMessage` and `@UserMessage` annotations are joined by default with a new line. If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.chat-model.prompt-joiner=<value>`. By adjusting this property, you can define your preferred way of joining messages and ensure that the prompt structure meets your specific needs. This customization option is available only when the `prompt-formatter` property is set to `false`. When the `prompt-formatter` is enabled (set to `true`), the prompt formatting, including the addition of tags and message joining, is automatically handled. In this case, the `prompt-joiner` property will be ignored, and you will not have the ability to customize how messages are joined.
+IMPORTANT: The `@SystemMessage` and `@UserMessage` annotations are joined by default with a new line. If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.chat-model.prompt-joiner=<value>`. By adjusting this property, you can define your preferred way of joining messages and ensure that the prompt structure meets your specific needs. This customization option is available only when the `prompt-formatter` property is set to `false`. When the `prompt-formatter` is enabled, the prompt formatting, including the addition of tags and message joining, is automatically handled. In this case, the `prompt-joiner` property will be ignored, and you will not have the ability to customize how messages are joined.
 
 NOTE: Sometimes it may be useful to use the `quarkus.langchain4j.watsonx.chat-model.stop-sequences` property to prevent the LLM model from returning more results than desired.
 

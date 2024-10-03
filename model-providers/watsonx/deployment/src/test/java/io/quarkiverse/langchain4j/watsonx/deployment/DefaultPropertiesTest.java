@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
+import io.quarkiverse.langchain4j.watsonx.prompt.impl.GranitePromptFormatter;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -75,7 +75,7 @@ public class DefaultPropertiesTest extends WireMockAbstract {
     @Test
     void prompt_formatter() {
         var unwrapChatModel = (WatsonxChatModel) ClientProxy.unwrap(chatModel);
-        assertTrue(unwrapChatModel.getPromptFormatter() instanceof NoopPromptFormatter);
+        assertTrue(unwrapChatModel.getPromptFormatter() instanceof GranitePromptFormatter);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         assertEquals(null, runtimeConfig.chatModel().stopSequences().orElse(null));
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
         assertEquals("\n", runtimeConfig.chatModel().promptJoiner());
-        assertEquals(false, fixedRuntimeConfig.chatModel().promptFormatter());
+        assertEquals(true, fixedRuntimeConfig.chatModel().promptFormatter());
         assertTrue(runtimeConfig.chatModel().topK().isEmpty());
         assertTrue(runtimeConfig.chatModel().topP().isEmpty());
         assertTrue(runtimeConfig.chatModel().repetitionPenalty().isEmpty());
@@ -113,7 +113,8 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = config.projectId();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId,
+                "<|system|>\nSystemMessage\n<|user|>\nUserMessage\n<|assistant|>\n", parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -149,7 +150,7 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = config.projectId();
 
-        var body = new TokenizationRequest(modelId, "test", projectId);
+        var body = new TokenizationRequest(modelId, "<|user|>\ntest\n<|assistant|>\n", projectId);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -165,7 +166,8 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = config.projectId();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId,
+                "<|system|>\nSystemMessage\n<|user|>\nUserMessage\n<|assistant|>\n", parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(body))

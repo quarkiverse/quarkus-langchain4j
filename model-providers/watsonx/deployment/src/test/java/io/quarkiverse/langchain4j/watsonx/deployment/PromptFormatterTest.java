@@ -32,7 +32,6 @@ public class PromptFormatterTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "mistralai/mistral-large")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("messages/system.txt")
                     .addAsResource("messages/user.txt")

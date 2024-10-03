@@ -25,6 +25,6 @@ public interface ChatModelFixedRuntimeConfig {
      * <li><code>false</code>: Prompts will not be enriched with the model's tags.</li>
      * </ul>
      */
-    @WithDefault("false")
+    @WithDefault("true")
     boolean promptFormatter();
 }

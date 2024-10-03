@@ -25,6 +25,7 @@ public class ResponseSchemaOffTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.response-schema", "false")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "false")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @RegisterAiService

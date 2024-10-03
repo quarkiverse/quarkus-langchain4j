@@ -41,7 +41,6 @@ public class PromptFormatterExceptionTest {
                 .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
                 .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id",
                         WireMockUtil.DEFAULT_CHAT_MODEL)
-                .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
                 .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(AIService.class, Calculator.class))
                 .assertException(t -> {
                     assertThat(t).isInstanceOf(RuntimeException.class)
