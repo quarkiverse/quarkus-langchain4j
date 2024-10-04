@@ -20,12 +20,15 @@ defaults:
     shell: bash
 
 jobs:
-  # Build the project, no native tests.
-  build-and-test-jvm:
-    name: Main Build
+  # Quick build (no test, Java 17)
+  # Artifacts will be reused in the other jobs
+  quick-build:
+    name: Quick Build
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      all_modules: ${{ steps.matrices.outputs.all_modules }}
+      it_modules: ${{ steps.matrices.outputs.it_modules }}
+      in_process_embedding_modules: ${{ steps.matrices.outputs.in_process_embedding_modules }}
 
     steps:
       - uses: actions/checkout@v4
@@ -38,13 +41,14 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
-        run: ./mvnw -B clean install -Dno-format -ntp
+        run: ./mvnw -B clean install -DskipTests -Dno-format -ntp
 
       - name: Zip the Maven repo
         run: |
           tar -czf ${{ runner.temp }}/maven-repo.tgz -C ~ .m2/repository
           # Avoid caching our own artifacts
           rm -Rf ~/.m2/repository/io/quarkiverse/langchain4j
+
       - name: Persist the Maven repo
         uses: actions/upload-artifact@v4
         with:
@@ -52,30 +56,47 @@ jobs:
           path: ${{ runner.temp }}/maven-repo.tgz
           retention-days: 5
 
-      - name: Output the matrix
-        id: set-matrix
+      - name: Compute matrices
+        id: matrices
         run: |
+          # Compute the JVM tests 
+          ALL_MODULES=$(find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
+                | sed 's|^\./||' \
+                | sort -u \
+                | jq -R -s -c 'split("\n")[:-1]')
+          
+          # Integration tests (without the in-process embedding models)
+          # Remove JLama from the list
           cd integration-tests
-          # skip RAG module as it doesn't have any native-compatible tests now
-          MATRIX='{"testModule":'$( \
+          IT_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
-                | grep -v rag \
                 | grep -v jlama \
-                | jq -R -s -c 'split("\n")[:-1]' \
-          )'}'
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+                | grep -v in-process-embedding-models \
+                | jq -R -s -c 'split("\n")[:-1]')
+          
+          # We extract in process embedding models as there are many modules and we want parallelism 
+          cd in-process-embedding-models
+          IN_PROCESS_EMBEDDING_MODULES=$( \
+              find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
+                | sed 's|^\./||' \
+                | sort -u \
+                | jq -R -s -c 'split("\n")[:-1]')
+                    
+          echo "all_modules=${ALL_MODULES}" >> $GITHUB_OUTPUT
+          echo "it_modules=${IT_MODULES}" >> $GITHUB_OUTPUT
+          echo "in_process_embedding_modules=${IN_PROCESS_EMBEDDING_MODULES}" >> $GITHUB_OUTPUT
 
-  # Test the project with different JDKs.
-  test-jvm-alt:
+  test-jvm:
+    needs: quick-build
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        java: [21, 22, 23]
-    name: Test on ${{ matrix.os }} - ${{ matrix.java }}
-    runs-on: ${{ matrix.os }}
+        java: [ 17, 21, 23 ]
+        module: ${{fromJson(needs.quick-build.outputs.all_modules)}}
+    name: Build and Test ${{ matrix.module }} on Java ${{ matrix.java }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -84,23 +105,37 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-          cache: 'maven'
 
-      - name: Build with Maven
-        run: ./mvnw -B clean install -Dno-format -ntp
-
-      - name: Avoid caching our own artifacts
+      - name: Download the Maven repo
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-repo
+          path: ..
+      - name: Unzip the Maven Repo
+        shell: bash
         run: |
-          rm -Rf ~/.m2/repository/io/quarkiverse/langchain4j
+          tar -xzf ../maven-repo.tgz -C ~
+
+      # Build Jlama if JDK >= 21
+      # It's not build by default as it requires Java 21+
+      - name: Build JLama extension
+        if: ${{ matrix.java >= 21 }}
+        run: |
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/jlama/pom.xml
+
+      - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
+        run: |
+          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp    
+
 
   native-tests:
-    needs: build-and-test-jvm
-    name: ${{matrix.testModule}} native tests
+    needs: quick-build
+    name: Native tests ${{matrix.module}}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.build-and-test-jvm.outputs.matrix) }}
+      matrix:
+        module: ${{fromJson(needs.quick-build.outputs.it_modules)}}
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -120,6 +155,38 @@ jobs:
         run: |
           tar -xzf ../maven-repo.tgz -C ~
 
-      - name: Run integration test ${{matrix.testModule}}
+      - name: Run integration tests ${{matrix.module}}
         run: |
-          cd integration-tests/${{matrix.testModule}} && ../../mvnw -B verify -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip -Dno-format -ntp
+          cd integration-tests/${{matrix.module}} && ../../mvnw -B verify -Dnative -Dci=true -Dquarkus.native.container-build -Dnative.surefire.skip -Dno-format -ntp
+
+  in-process-embedding-model-tests:
+    needs: quick-build
+    name: Native tests ${{matrix.module}}
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{fromJson(needs.quick-build.outputs.in_process_embedding_modules)}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Download the Maven repo
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-repo
+          path: ..
+      - name: Unzip the Maven Repo
+        shell: bash
+        run: |
+          tar -xzf ../maven-repo.tgz -C ~
+
+      - name: Run integration tests ${{matrix.module}}
+        run: |
+          cd integration-tests/in-process-embedding-models/${{matrix.module}}
+          ../../../mvnw -B verify -Dnative -Dquarkus.native.container-build -Dci=true -Dnative.surefire.skip -Dno-format -ntp
