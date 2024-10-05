@@ -32,7 +32,7 @@ public class PromptFormatterToolsTest {
 
             ToolSpecification.builder()
                     .name("sum")
-                    .description("Perform a subtraction between two numbers")
+                    .description("Perform a sum between two numbers")
                     .parameters(
                             ToolParameters.builder()
                                     .properties(Map.of("firstNumber", Map.of("type", "integer"), "secondNumber",
@@ -72,7 +72,7 @@ public class PromptFormatterToolsTest {
 
         String expected = """
                 <s>%s[AVAILABLE_TOOLS] \
-                [{"type":"function","function":{"name":"sum","description":"Perform a subtraction between two numbers","parameters":{"type":"object","properties":{%s},"required":["firstNumber","secondNumber"]}}}] \
+                [{"type":"function","function":{"name":"sum","description":"Perform a sum between two numbers","parameters":{"type":"object","properties":{%s},"required":["firstNumber","secondNumber"]}}}] \
                 [/AVAILABLE_TOOLS][INST] 2 + 2 [/INST]\
                 [TOOL_CALLS] [{"id":"1","name":"sum","arguments":{"firstNumber":2,"secondNumber":2}}]</s>\
                 [TOOL_RESULTS] {"content":4,"id":"1"} [/TOOL_RESULTS] The result is 4</s>""";
@@ -123,7 +123,7 @@ public class PromptFormatterToolsTest {
 
                 You have access to the following functions. To call a function, respond with JSON for a function call. When you access a function respond always in the format {"name": function name, "parameters": dictionary of argument name and its value}. Do not use variables.
 
-                {"type":"function","function":{"name":"sum","description":"Perform a subtraction between two numbers","parameters":{"type":"object","properties":{%s},"required":["firstNumber","secondNumber"]}}}
+                {"type":"function","function":{"name":"sum","description":"Perform a sum between two numbers","parameters":{"type":"object","properties":{%s},"required":["firstNumber","secondNumber"]}}}
 
                 %s<|eot_id|><|start_header_id|>user<|end_header_id|>
 
