@@ -21,6 +21,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class WatsonxStreamingChatModel extends WatsonxModel implements StreamingChatLanguageModel, TokenCountEstimator {
 
@@ -105,6 +106,7 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
         Context context = Context.of("response", new ArrayList<TextGenerationResponse>(), "toolExecution", false);
 
         client.chatStreaming(request, version)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
                 .subscribe()
                 .with(context,
                         new Consumer<TextGenerationResponse>() {
