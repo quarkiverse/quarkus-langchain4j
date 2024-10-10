@@ -37,6 +37,7 @@ public abstract class WatsonxModel {
     final Integer randomSeed;
     final List<String> stopSequences;
     final Double temperature;
+    final Long timeLimit;
     final Double topP;
     final Integer topK;
     final Double repetitionPenalty;
@@ -72,6 +73,7 @@ public abstract class WatsonxModel {
         this.randomSeed = builder.randomSeed;
         this.stopSequences = builder.stopSequences;
         this.temperature = builder.temperature;
+        this.timeLimit = builder.timeout.toMillis();
         this.topP = builder.topP;
         this.topK = builder.topK;
         this.repetitionPenalty = builder.repetitionPenalty;

@@ -14,6 +14,7 @@ public class Parameters {
     private final Integer randomSeed;
     private final List<String> stopSequences;
     private final Double temperature;
+    private final Long timeLimit;
     private final Integer topK;
     private final Double topP;
     private final Double repetitionPenalty;
@@ -28,6 +29,7 @@ public class Parameters {
         this.randomSeed = builder.randomSeed;
         this.stopSequences = builder.stopSequences;
         this.temperature = builder.temperature;
+        this.timeLimit = builder.timeLimit;
         this.topK = builder.topK;
         this.topP = builder.topP;
         this.repetitionPenalty = builder.repetitionPenalty;
@@ -57,6 +59,10 @@ public class Parameters {
 
     public Double getTemperature() {
         return temperature;
+    }
+
+    public Long getTimeLimit() {
+        return timeLimit;
     }
 
     public Integer getRandomSeed() {
@@ -96,6 +102,7 @@ public class Parameters {
         private Integer randomSeed;
         private List<String> stopSequences;
         private Double temperature;
+        private Long timeLimit;
         private Integer topK;
         private Double topP;
         private Double repetitionPenalty;
@@ -124,6 +131,11 @@ public class Parameters {
 
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
+            return this;
+        }
+
+        public Builder timeLimit(Long timeLimit) {
+            this.timeLimit = timeLimit;
             return this;
         }
 

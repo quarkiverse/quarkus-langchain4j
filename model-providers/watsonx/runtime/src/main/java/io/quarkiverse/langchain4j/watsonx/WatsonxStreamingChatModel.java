@@ -43,6 +43,7 @@ public class WatsonxStreamingChatModel extends WatsonxModel implements Streaming
                 .randomSeed(randomSeed)
                 .stopSequences(stopSequences)
                 .temperature(temperature)
+                .timeLimit(timeLimit)
                 .topP(topP)
                 .topK(topK)
                 .repetitionPenalty(repetitionPenalty)

@@ -108,6 +108,7 @@ public class WatsonxChatModel extends WatsonxModel implements ChatLanguageModel,
                 .randomSeed(randomSeed)
                 .stopSequences(stopSequences)
                 .temperature(temperature)
+                .timeLimit(timeLimit)
                 .topP(topP)
                 .topK(topK)
                 .repetitionPenalty(repetitionPenalty)

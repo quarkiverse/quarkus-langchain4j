@@ -58,6 +58,7 @@ public class DefaultPropertiesTest extends WireMockAbstract {
             .maxNewTokens(200)
             .decodingMethod("greedy")
             .temperature(1.0)
+            .timeLimit(10000L)
             .build();
 
     @Inject

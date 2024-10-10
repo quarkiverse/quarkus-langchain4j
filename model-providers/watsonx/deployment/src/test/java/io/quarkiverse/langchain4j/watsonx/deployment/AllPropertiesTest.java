@@ -98,6 +98,7 @@ public class AllPropertiesTest extends WireMockAbstract {
             .randomSeed(2)
             .stopSequences(List.of("\n", "\n\n"))
             .temperature(1.5)
+            .timeLimit(60000L)
             .topK(90)
             .topP(0.5)
             .repetitionPenalty(2.0)
