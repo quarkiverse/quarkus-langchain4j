@@ -27,13 +27,10 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
-import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class DefaultPropertiesTest extends WireMockAbstract {
@@ -72,12 +69,6 @@ public class DefaultPropertiesTest extends WireMockAbstract {
 
     @Inject
     TokenCountEstimator tokenCountEstimator;
-
-    @Test
-    void prompt_formatter() {
-        var unwrapChatModel = (WatsonxChatModel) ClientProxy.unwrap(chatModel);
-        assertTrue(unwrapChatModel.getPromptFormatter() instanceof NoopPromptFormatter);
-    }
 
     @Test
     void check_config() throws Exception {

@@ -154,13 +154,17 @@ public class WatsonxProcessor {
             String configName = selected.getConfigName();
             PromptFormatter promptFormatter = selected.getPromptFormatter();
 
-            var chatModel = recorder.chatModel(runtimeConfig, fixedRuntimeConfig, configName, promptFormatter);
+            var chatLanguageModel = recorder.generationModel(runtimeConfig, fixedRuntimeConfig, configName, promptFormatter);
+            var streamingChatLanguageModel = recorder.generationStreamingModel(runtimeConfig, fixedRuntimeConfig, configName,
+                    promptFormatter);
+
             var chatBuilder = SyntheticBeanBuildItem
                     .configure(CHAT_MODEL)
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(chatModel);
+                    .supplier(chatLanguageModel);
+
             addQualifierIfNecessary(chatBuilder, configName);
             beanProducer.produce(chatBuilder.done());
 
@@ -169,7 +173,8 @@ public class WatsonxProcessor {
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(chatModel);
+                    .supplier(chatLanguageModel);
+
             addQualifierIfNecessary(tokenizerBuilder, configName);
             beanProducer.produce(tokenizerBuilder.done());
 
@@ -178,8 +183,8 @@ public class WatsonxProcessor {
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(recorder.streamingChatModel(runtimeConfig, fixedRuntimeConfig, configName,
-                            promptFormatter));
+                    .supplier(streamingChatLanguageModel);
+
             addQualifierIfNecessary(streamingBuilder, configName);
             beanProducer.produce(streamingBuilder.done());
         }

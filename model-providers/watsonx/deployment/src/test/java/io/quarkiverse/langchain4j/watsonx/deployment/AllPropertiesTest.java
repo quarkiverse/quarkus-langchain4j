@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.Date;
@@ -26,15 +25,11 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxStreamingChatModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
 import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
-import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AllPropertiesTest extends WireMockAbstract {
@@ -105,15 +100,6 @@ public class AllPropertiesTest extends WireMockAbstract {
             .truncateInputTokens(0)
             .includeStopSequence(false)
             .build();
-
-    @Test
-    void prompt_formatter() {
-        var unwrapChatModel = (WatsonxChatModel) ClientProxy.unwrap(chatModel);
-        assertTrue(unwrapChatModel.getPromptFormatter() instanceof NoopPromptFormatter);
-
-        var unwrapStreamingChatModel = (WatsonxStreamingChatModel) ClientProxy.unwrap(streamingChatModel);
-        assertTrue(unwrapStreamingChatModel.getPromptFormatter() instanceof NoopPromptFormatter);
-    }
 
     @Test
     void check_config() throws Exception {

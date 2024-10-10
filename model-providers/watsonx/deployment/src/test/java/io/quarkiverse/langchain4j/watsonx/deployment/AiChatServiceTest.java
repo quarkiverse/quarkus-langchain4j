@@ -60,6 +60,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .temperature(chatModelConfig.temperature())
                 .minNewTokens(chatModelConfig.minNewTokens())
                 .maxNewTokens(chatModelConfig.maxNewTokens())
+                .timeLimit(10000L)
                 .build();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, input, parameters);

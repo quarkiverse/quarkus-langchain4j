@@ -10,7 +10,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -41,7 +41,7 @@ public class MultipleTokenCountEstimatorProvidersTest {
 
     @Test
     void watsonxTest() {
-        assertThat(ClientProxy.unwrap(watsonxChat)).isInstanceOf(WatsonxChatModel.class);
-        assertThat(ClientProxy.unwrap(watsonxTokenizer)).isInstanceOf(WatsonxChatModel.class);
+        assertThat(ClientProxy.unwrap(watsonxChat)).isInstanceOf(WatsonxGenerationModel.class);
+        assertThat(ClientProxy.unwrap(watsonxTokenizer)).isInstanceOf(WatsonxGenerationModel.class);
     }
 }

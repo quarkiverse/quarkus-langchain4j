@@ -97,26 +97,16 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
     @Test
     void extract_dialogue_test() throws Exception {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String chatMemoryId = "userId";
-        String projectId = watsonConfig.projectId();
-        Parameters parameters = Parameters.builder()
-                .decodingMethod(chatModelConfig.decodingMethod())
-                .temperature(chatModelConfig.temperature())
-                .minNewTokens(chatModelConfig.minNewTokens())
-                .maxNewTokens(chatModelConfig.maxNewTokens())
-                .build();
 
         var input = """
                 You are a helpful assistant
                 Context:
 
                 Hello""";
-        var body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -140,9 +130,9 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hello
                 Hi!
                 What is your name?""";
-        body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -162,26 +152,16 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
     @Test
     void extract_dialogue_with_delimiter_test() throws Exception {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String chatMemoryId = "userId_with_delimiter";
-        String projectId = watsonConfig.projectId();
-        Parameters parameters = Parameters.builder()
-                .decodingMethod(chatModelConfig.decodingMethod())
-                .temperature(chatModelConfig.temperature())
-                .minNewTokens(chatModelConfig.minNewTokens())
-                .maxNewTokens(chatModelConfig.maxNewTokens())
-                .build();
 
         var input = """
                 You are a helpful assistant
                 Context:
 
                 Hello""";
-        var body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -204,9 +184,9 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hello
                 Hi!
                 What is your name?""";
-        body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -226,26 +206,16 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
     @Test
     void extract_dialogue_with_all_params_test() throws Exception {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String chatMemoryId = "userId_with_all_params";
-        String projectId = watsonConfig.projectId();
-        Parameters parameters = Parameters.builder()
-                .decodingMethod(chatModelConfig.decodingMethod())
-                .temperature(chatModelConfig.temperature())
-                .minNewTokens(chatModelConfig.minNewTokens())
-                .maxNewTokens(chatModelConfig.maxNewTokens())
-                .build();
 
         var input = """
                 You are a helpful assistant
                 Context:
 
                 Hello""";
-        var body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -268,9 +238,9 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hello
                 Hi!
                 What is your name?""";
-        body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -290,17 +260,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
     @Test
     void extract_dialogue_no_memory_test() throws Exception {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String chatMemoryId = "userId_with_all_params";
-        String projectId = watsonConfig.projectId();
-        Parameters parameters = Parameters.builder()
-                .decodingMethod(chatModelConfig.decodingMethod())
-                .temperature(chatModelConfig.temperature())
-                .minNewTokens(chatModelConfig.minNewTokens())
-                .maxNewTokens(chatModelConfig.maxNewTokens())
-                .build();
 
         var input = """
                 Context:
@@ -309,9 +269,9 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 User: What is your name?
                 Assistant: My name is AiBot
                 Hello""";
-        var body = new TextGenerationRequest(modelId, projectId, input, parameters);
+
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .body(mapper.writeValueAsString(body))
+                .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
                             "results": [
@@ -326,5 +286,21 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 .build();
 
         noMemoryAiService.rephrase(chatMemoryStore.getMessages(chatMemoryId), "Hello");
+    }
+
+    private TextGenerationRequest createRequest(String input) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
+        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
+        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String projectId = watsonConfig.projectId();
+        Parameters parameters = Parameters.builder()
+                .decodingMethod(chatModelConfig.decodingMethod())
+                .temperature(chatModelConfig.temperature())
+                .minNewTokens(chatModelConfig.minNewTokens())
+                .maxNewTokens(chatModelConfig.maxNewTokens())
+                .timeLimit(10000L)
+                .build();
+
+        return new TextGenerationRequest(modelId, projectId, input, parameters);
     }
 }

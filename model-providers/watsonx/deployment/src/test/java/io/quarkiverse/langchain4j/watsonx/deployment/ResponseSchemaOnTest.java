@@ -266,6 +266,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 .temperature(config.chatModel().temperature())
                 .minNewTokens(config.chatModel().minNewTokens())
                 .maxNewTokens(config.chatModel().maxNewTokens())
+                .timeLimit(10000L)
                 .build();
 
         var input = messages.stream()
