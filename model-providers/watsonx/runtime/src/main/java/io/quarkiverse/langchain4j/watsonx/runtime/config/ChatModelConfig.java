@@ -23,6 +23,8 @@ public interface ChatModelConfig {
      * parameters.
      * <p>
      * <strong>Allowable values:</strong> <code>[sample,greedy]</code>
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     @WithDefault("greedy")
     String decodingMethod();
@@ -31,6 +33,8 @@ public interface ChatModelConfig {
      * It can be used to exponentially increase the likelihood of the text generation terminating once a specified number of
      * tokens
      * have been generated.
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     LengthPenaltyConfig lengthPenalty();
 
@@ -42,7 +46,9 @@ public interface ChatModelConfig {
      * are a mix of full words and sub-words. Depending on the users plan, and on the model being used, there may be an enforced
      * maximum number of new tokens.
      * <p>
-     * <strong>Possible values:</strong> <code>≥ 0</code>
+     * <strong>Possible values:</strong> <code>≥ 0</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[chat,generation]</code>
      */
     @WithDefault("200")
     Integer maxNewTokens();
@@ -50,7 +56,9 @@ public interface ChatModelConfig {
     /**
      * If stop sequences are given, they are ignored until minimum tokens are generated.
      * <p>
-     * <strong>Possible values:</strong> <code>≥ 0</code>
+     * <strong>Possible values:</strong> <code>≥ 0</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     @WithDefault("0")
     Integer minNewTokens();
@@ -58,7 +66,9 @@ public interface ChatModelConfig {
     /**
      * Random number generator seed to use in sampling mode for experimental repeatability.
      * <p>
-     * <strong>Possible values:</strong> <code>≥ 1</code>
+     * <strong>Possible values:</strong> <code>≥ 1</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<Integer> randomSeed();
 
@@ -67,7 +77,9 @@ public interface ChatModelConfig {
      * the
      * output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored.
      * <p>
-     * <strong>Possible values:</strong> <code>0 ≤ number of items ≤ 6, contains only unique items</code>
+     * <strong>Possible values:</strong> <code>0 ≤ number of items ≤ 6, contains only unique items</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<List<String>> stopSequences();
 
@@ -78,7 +90,9 @@ public interface ChatModelConfig {
      * probability
      * distribution, resulting in "more random" output. A value of <code>1.0</code> has no effect.
      * <p>
-     * <strong>Possible values:</strong> <code>0 ≤ value ≤ 2</code>
+     * <strong>Possible values:</strong> <code>0 ≤ value ≤ 2</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[chat,generation]</code>
      */
     @WithDefault("1.0")
     Double temperature();
@@ -89,7 +103,9 @@ public interface ChatModelConfig {
      * When decoding_strategy is set to <code>sample</code>, only the <code>top_k</code> most likely tokens are considered as
      * candidates for the next generated token.
      * <p>
-     * <strong>Possible values:</strong> <code>1 ≤ value ≤ 100</code>
+     * <strong>Possible values:</strong> <code>1 ≤ value ≤ 100</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<Integer> topK();
 
@@ -99,7 +115,9 @@ public interface ChatModelConfig {
      * that add up to at least <code>top_p</code>. Also known as nucleus sampling. A value of <code>1.0</code> is equivalent to
      * disabled.
      * <p>
-     * <strong>Possible values:</strong> <code>0 < value ≤ 1</code>
+     * <strong>Possible values:</strong> <code>0 < value ≤ 1</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[chat,generation]</code>
      */
     Optional<Double> topP();
 
@@ -107,7 +125,9 @@ public interface ChatModelConfig {
      * Represents the penalty for penalizing tokens that have already been generated or belong to the context. The value
      * <code>1.0</code> means that there is no penalty.
      * <p>
-     * <strong>Possible values:</strong> <code>1 ≤ value ≤ 2</code>
+     * <strong>Possible values:</strong> <code>1 ≤ value ≤ 2</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<Double> repetitionPenalty();
 
@@ -122,25 +142,29 @@ public interface ChatModelConfig {
      * don't
      * truncate.
      * <p>
-     * <strong>Possible values:</strong> <code>≥ 0</code>
+     * <strong>Possible values:</strong> <code>≥ 0</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<Integer> truncateInputTokens();
 
     /**
      * Pass <code>false</code> to omit matched stop sequences from the end of the output text. The default is <code>true</code>,
-     * meaning that the output will end with the stop sequence text when matched.
+     * meaning that the output will end with the stop sequence text when matched. *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     Optional<Boolean> includeStopSequence();
 
     /**
-     * Whether chat model requests should be logged.
+     * Whether chat model requests should be logged. *
      */
     @ConfigDocDefault("false")
     @WithDefault("${quarkus.langchain4j.watsonx.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
-     * Whether chat model responses should be logged.
+     * Whether chat model responses should be logged. *
      */
     @ConfigDocDefault("false")
     @WithDefault("${quarkus.langchain4j.watsonx.log-responses}")
@@ -149,10 +173,21 @@ public interface ChatModelConfig {
     /**
      * Delimiter used to concatenate the ChatMessage elements into a single string. By setting this property, you can define
      * your
-     * preferred way of concatenating messages to ensure that the prompt is structured in the correct way.
+     * preferred way of concatenating messages to ensure that the prompt is structured in the correct way. *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[generation]</code>
      */
     @WithDefault("\n")
     String promptJoiner();
+
+    /**
+     * Specifies the desired format for the model's output.
+     * <p>
+     * <strong>Allowable values:</strong> <code>[json_object]</code> *
+     * <p>
+     * <strong>Applicable in modes:</strong> <code>[chat]</code>
+     */
+    Optional<String> responseFormat();
 
     @ConfigGroup
     public interface LengthPenaltyConfig {

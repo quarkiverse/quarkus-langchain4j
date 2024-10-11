@@ -17,7 +17,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
@@ -31,6 +31,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -105,7 +106,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
 
                 Hello""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -131,7 +132,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hi!
                 What is your name?""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -160,7 +161,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
 
                 Hello""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -185,7 +186,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hi!
                 What is your name?""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -214,7 +215,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
 
                 Hello""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -239,7 +240,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Hi!
                 What is your name?""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -270,7 +271,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 Assistant: My name is AiBot
                 Hello""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(createRequest(input)))
                 .response("""
                         {
@@ -293,12 +294,12 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = watsonConfig.projectId();
-        Parameters parameters = Parameters.builder()
+        TextGenerationParameters parameters = TextGenerationParameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
                 .temperature(chatModelConfig.temperature())
                 .minNewTokens(chatModelConfig.minNewTokens())
                 .maxNewTokens(chatModelConfig.maxNewTokens())
-                .timeLimit(10000L)
+                .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
         return new TextGenerationRequest(modelId, projectId, input, parameters);

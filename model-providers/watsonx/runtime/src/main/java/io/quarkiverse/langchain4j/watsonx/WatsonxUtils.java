@@ -25,8 +25,10 @@ public class WatsonxUtils {
 
                 Optional<WatsonxError.Code> optional = Optional.empty();
                 for (WatsonxError.Error error : e.details().errors()) {
-                    if (WatsonxError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(error.code())) {
-                        optional = Optional.of(error.code());
+
+                    var c = error.codeToEnum();
+                    if (c.isPresent() && WatsonxError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(c.get())) {
+                        optional = Optional.of(c.get());
                         break;
                     }
                 }

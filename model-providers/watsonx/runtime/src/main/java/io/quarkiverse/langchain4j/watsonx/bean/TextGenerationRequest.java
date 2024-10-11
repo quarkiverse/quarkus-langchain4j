@@ -4,5 +4,5 @@ public record TextGenerationRequest(
         String modelId,
         String projectId,
         String input,
-        Parameters parameters) {
+        TextGenerationParameters parameters) {
 }

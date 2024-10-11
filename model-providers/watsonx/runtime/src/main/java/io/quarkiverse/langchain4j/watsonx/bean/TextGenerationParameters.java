@@ -2,7 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.bean;
 
 import java.util.List;
 
-public class Parameters {
+public class TextGenerationParameters {
 
     public record LengthPenalty(Double decayFactor, Integer startIndex) {
     };
@@ -21,7 +21,7 @@ public class Parameters {
     private final Integer truncateInputTokens;
     private final Boolean includeStopSequence;
 
-    private Parameters(Builder builder) {
+    private TextGenerationParameters(Builder builder) {
         this.decodingMethod = builder.decodingMethod;
         this.lengthPenalty = builder.lengthPenalty;
         this.minNewTokens = builder.minNewTokens;
@@ -174,8 +174,8 @@ public class Parameters {
             return this;
         }
 
-        public Parameters build() {
-            return new Parameters(this);
+        public TextGenerationParameters build() {
+            return new TextGenerationParameters(this);
         }
     }
 }

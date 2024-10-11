@@ -26,13 +26,13 @@ import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AllPropertiesTest extends WireMockAbstract {
+public class GenerationAllPropertiesTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -46,6 +46,7 @@ public class AllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.grant-type", "grantME")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "my_super_model")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-joiner", "@")
@@ -85,7 +86,7 @@ public class AllPropertiesTest extends WireMockAbstract {
     @Inject
     TokenCountEstimator tokenCountEstimator;
 
-    static Parameters parameters = Parameters.builder()
+    static TextGenerationParameters parameters = TextGenerationParameters.builder()
             .minNewTokens(10)
             .maxNewTokens(200)
             .decodingMethod("greedy")
@@ -141,9 +142,9 @@ public class AllPropertiesTest extends WireMockAbstract {
         String projectId = config.projectId();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_API)
                 .build();
 
         assertEquals("AI Response", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -193,10 +194,10 @@ public class AllPropertiesTest extends WireMockAbstract {
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(WireMockUtil.RESPONSE_WATSONX_STREAMING_API)
+                .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API)
                 .build();
 
         var messages = List.of(

@@ -13,6 +13,7 @@ import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
 import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
@@ -47,6 +48,10 @@ public class MultipleChatProvidersTest {
     @ModelName("c7")
     ChatLanguageModel seventhNamedModel;
 
+    @Inject
+    @ModelName("c8")
+    ChatLanguageModel eighthNamedModel;
+
     @Test
     void defaultModel() {
         assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
@@ -79,6 +84,11 @@ public class MultipleChatProvidersTest {
 
     @Test
     void seventhNamedModel() {
-        assertThat(ClientProxy.unwrap(seventhNamedModel)).isInstanceOf(WatsonxGenerationModel.class);
+        assertThat(ClientProxy.unwrap(seventhNamedModel)).isInstanceOf(WatsonxChatModel.class);
+    }
+
+    @Test
+    void eighthNamedModel() {
+        assertThat(ClientProxy.unwrap(eighthNamedModel)).isInstanceOf(WatsonxGenerationModel.class);
     }
 }

@@ -3,13 +3,10 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.inject.Inject;
@@ -20,43 +17,47 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
-import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class DefaultPropertiesTest extends WireMockAbstract {
+public class ChatAllPropertiesTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.timeout", "60s")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.log-requests", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.log-responses", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.version", "aaaa-mm-dd")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.timeout", "60s")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "chat")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "my_super_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.max-new-tokens", "200")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.temperature", "1.5")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-p", "0.5")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "new_format")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id", "my_super_embedding_model")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
     void handlerBeforeEach() {
         mockServers.mockIAMBuilder(200)
-                .response("my_super_token", new Date())
+                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
+                .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
     }
-
-    static Parameters parameters = Parameters.builder()
-            .minNewTokens(0)
-            .maxNewTokens(200)
-            .decodingMethod("greedy")
-            .temperature(1.0)
-            .timeLimit(10000L)
-            .build();
 
     @Inject
     ChatLanguageModel chatModel;
@@ -65,38 +66,33 @@ public class DefaultPropertiesTest extends WireMockAbstract {
     StreamingChatLanguageModel streamingChatModel;
 
     @Inject
-    EmbeddingModel embeddingModel;
-
-    @Inject
     TokenCountEstimator tokenCountEstimator;
+
+    static TextChatParameters parameters = TextChatParameters.builder()
+            .maxTokens(200)
+            .temperature(1.5)
+            .timeLimit(60000L)
+            .topP(0.5)
+            .responseFormat("new_format")
+            .build();
 
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
         var fixedRuntimeConfig = langchain4jWatsonFixedRuntimeConfig.defaultConfig();
-        assertEquals(Optional.empty(), runtimeConfig.timeout());
-        assertEquals(Optional.empty(), runtimeConfig.iam().timeout());
-        assertEquals(false, runtimeConfig.logRequests().orElse(false));
-        assertEquals(false, runtimeConfig.logResponses().orElse(false));
-        assertEquals(WireMockUtil.VERSION, runtimeConfig.version());
-        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, fixedRuntimeConfig.chatModel().modelId());
-        assertEquals("greedy", runtimeConfig.chatModel().decodingMethod());
-        assertEquals(null, runtimeConfig.chatModel().lengthPenalty().decayFactor().orElse(null));
-        assertEquals(null, runtimeConfig.chatModel().lengthPenalty().startIndex().orElse(null));
+        assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().toString());
+        assertEquals(WireMockUtil.URL_IAM_SERVER, runtimeConfig.iam().baseUrl().toString());
+        assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey());
+        assertEquals(WireMockUtil.PROJECT_ID, runtimeConfig.projectId());
+        assertEquals(Duration.ofSeconds(60), runtimeConfig.timeout().get());
+        assertEquals(Duration.ofSeconds(60), runtimeConfig.iam().timeout().get());
+        assertEquals(true, runtimeConfig.logRequests().orElse(false));
+        assertEquals(true, runtimeConfig.logResponses().orElse(false));
+        assertEquals("aaaa-mm-dd", runtimeConfig.version());
+        assertEquals("my_super_model", fixedRuntimeConfig.chatModel().modelId());
         assertEquals(200, runtimeConfig.chatModel().maxNewTokens());
-        assertEquals(0, runtimeConfig.chatModel().minNewTokens());
-        assertEquals(null, runtimeConfig.chatModel().randomSeed().orElse(null));
-        assertEquals(null, runtimeConfig.chatModel().stopSequences().orElse(null));
-        assertEquals(1.0, runtimeConfig.chatModel().temperature());
-        assertEquals("\n", runtimeConfig.chatModel().promptJoiner());
-        assertEquals(false, fixedRuntimeConfig.chatModel().promptFormatter());
-        assertTrue(runtimeConfig.chatModel().topK().isEmpty());
-        assertTrue(runtimeConfig.chatModel().topP().isEmpty());
-        assertTrue(runtimeConfig.chatModel().repetitionPenalty().isEmpty());
-        assertTrue(runtimeConfig.chatModel().truncateInputTokens().isEmpty());
-        assertTrue(runtimeConfig.chatModel().includeStopSequence().isEmpty());
-        assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
-        assertEquals(WireMockUtil.DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelId());
+        assertEquals(0.5, runtimeConfig.chatModel().topP().get());
+        assertEquals("new_format", runtimeConfig.chatModel().responseFormat().orElse(null));
     }
 
     @Test
@@ -105,34 +101,18 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = config.projectId();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        var messages = List.<TextChatMessage> of(
+                TextChatMessageSystem.of("SystemMessage"),
+                TextChatMessageUser.of("UserMessage"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        TextChatRequest body = new TextChatRequest(modelId, projectId, messages, null, parameters);
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
                 .build();
 
         assertEquals("AI Response", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
-    }
-
-    @Test
-    void check_embedding_model() throws Exception {
-        var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.embeddingModel().modelId();
-        String projectId = config.projectId();
-
-        EmbeddingRequest request = new EmbeddingRequest(modelId, projectId,
-                List.of("Embedding THIS!"));
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
-                .body(mapper.writeValueAsString(request))
-                .response(WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API.formatted(modelId))
-                .build();
-
-        Response<Embedding> response = embeddingModel.embed("Embedding THIS!");
-        assertNotNull(response);
-        assertNotNull(response.content());
     }
 
     @Test
@@ -143,7 +123,7 @@ public class DefaultPropertiesTest extends WireMockAbstract {
 
         var body = new TokenizationRequest(modelId, "test", projectId);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response(WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
@@ -157,12 +137,16 @@ public class DefaultPropertiesTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = config.projectId();
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        var messagesToSend = List.<TextChatMessage> of(
+                TextChatMessageSystem.of("SystemMessage"),
+                TextChatMessageUser.of("UserMessage"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
+        TextChatRequest body = new TextChatRequest(modelId, projectId, messagesToSend, null, parameters);
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(WireMockUtil.RESPONSE_WATSONX_STREAMING_API)
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
                 .build();
 
         var messages = List.of(
@@ -178,6 +162,6 @@ public class DefaultPropertiesTest extends WireMockAbstract {
 
         assertThat(streamingResponse.get().text())
                 .isNotNull()
-                .isEqualTo(". I'm a beginner");
+                .isEqualTo(" Hello");
     }
 }

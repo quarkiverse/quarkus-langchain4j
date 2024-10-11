@@ -24,8 +24,8 @@ import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters.LengthPenalty;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
@@ -35,6 +35,7 @@ import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Context;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
@@ -42,7 +43,7 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
 
     private final String modelId, projectId, version;
     private final WatsonxRestApi client;
-    private final Parameters parameters;
+    private final TextGenerationParameters parameters;
     private final PromptFormatter promptFormatter;
 
     public WatsonxGenerationModel(Builder builder) {
@@ -76,7 +77,7 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
             lengthPenalty = new LengthPenalty(builder.decayFactor, builder.startIndex);
         }
 
-        this.parameters = Parameters.builder()
+        this.parameters = TextGenerationParameters.builder()
                 .decodingMethod(builder.decodingMethod)
                 .lengthPenalty(lengthPenalty)
                 .minNewTokens(builder.minNewTokens)
@@ -94,34 +95,15 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
-
-        Result result = retryOn(new Callable<TextGenerationResponse>() {
-            @Override
-            public TextGenerationResponse call() throws Exception {
-                return client.chat(request, version);
-            }
-        }).results().get(0);
-
-        var finishReason = toFinishReason(result.stopReason());
-        var content = AiMessage.from(result.generatedText());
-        var tokenUsage = new TokenUsage(
-                result.inputTokenCount(),
-                result.generatedTokenCount());
-
-        return Response.from(content, tokenUsage, finishReason);
-    }
-
-    @Override
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications),
                 parameters);
+        boolean toolsEnabled = (toolSpecifications != null && toolSpecifications.size() > 0) ? true : false;
 
         Result result = retryOn(new Callable<TextGenerationResponse>() {
             @Override
             public TextGenerationResponse call() throws Exception {
-                return client.chat(request, version);
+                return client.generation(request, version);
             }
         }).results().get(0);
 
@@ -132,7 +114,7 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
 
         AiMessage content;
 
-        if (result.generatedText().startsWith(promptFormatter.toolExecution())) {
+        if (toolsEnabled && result.generatedText().startsWith(promptFormatter.toolExecution())) {
             var tools = result.generatedText().replace(promptFormatter.toolExecution(), "");
             content = AiMessage.from(promptFormatter.toolExecutionRequestFormatter(tools));
         } else {
@@ -143,29 +125,57 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages, List.of(toolSpecification));
-    }
+    public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
+            StreamingResponseHandler<AiMessage> handler) {
+        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications),
+                parameters);
 
-    @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
-        Context context = Context.of("response", new ArrayList<TextGenerationResponse>());
+        Context context = Context.empty();
+        context.put("response", new ArrayList<TextGenerationResponse>());
+        context.put("toolExecution", false);
+        final boolean toolsEnabled = (toolSpecifications != null && toolSpecifications.size() > 0) ? true : false;
 
-        client.chatStreaming(request, version)
-                .subscribe()
+        var mutiny = client.generationStreaming(request, version);
+        if (toolsEnabled) {
+            // Today Langchain4j doesn't allow to use the async operation with tools.
+            // One idea might be to give to the developer the possibility to use the VirtualThread.
+            mutiny.emitOn(Infrastructure.getDefaultWorkerPool());
+        }
+
+        mutiny.subscribe()
                 .with(context,
                         new Consumer<TextGenerationResponse>() {
                             @Override
-                            @SuppressWarnings("unchecked")
                             public void accept(TextGenerationResponse response) {
                                 try {
 
                                     if (response == null || response.results() == null || response.results().isEmpty())
                                         return;
 
-                                    ((List<TextGenerationResponse>) context.get("response")).add(response);
-                                    handler.onNext(response.results().get(0).generatedText());
+                                    String chunk = response.results().get(0).generatedText();
+
+                                    if (chunk.isEmpty())
+                                        return;
+
+                                    boolean isToolExecutionState = context.get("toolExecution");
+                                    List<TextGenerationResponse> responses = context.get("response");
+                                    responses.add(response);
+
+                                    if (isToolExecutionState) {
+                                        // If we are in the tool execution state, the chunk is associated with the tool execution,
+                                        // which means that it must not be sent to the client.
+                                    } else {
+
+                                        // Check if the chunk contains the "ToolExecution" tag.
+                                        if (toolsEnabled && chunk.startsWith(promptFormatter.toolExecution().trim())) {
+                                            // If true, enter in the ToolExecutionState.
+                                            context.put("toolExecution", true);
+                                            return;
+                                        }
+
+                                        // Send the chunk to the client.
+                                        handler.onNext(chunk);
+                                    }
 
                                 } catch (Exception e) {
                                     handler.onError(e);
@@ -180,9 +190,9 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
                         },
                         new Runnable() {
                             @Override
-                            @SuppressWarnings("unchecked")
                             public void run() {
-                                var list = ((List<TextGenerationResponse>) context.get("response"));
+                                List<TextGenerationResponse> list = context.get("response");
+                                boolean isToolExecutionState = context.get("toolExecution");
 
                                 int inputTokenCount = 0;
                                 int outputTokenCount = 0;
@@ -204,18 +214,28 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
                                     builder.append(response.generatedText());
                                 }
 
-                                AiMessage message = new AiMessage(builder.toString());
+                                AiMessage content;
                                 TokenUsage tokenUsage = new TokenUsage(inputTokenCount, outputTokenCount);
                                 FinishReason finishReason = toFinishReason(stopReason);
-                                handler.onComplete(Response.from(message, tokenUsage, finishReason));
+
+                                String message = builder.toString();
+
+                                if (isToolExecutionState) {
+                                    context.put("toolExecution", false);
+                                    var tools = message.replace(promptFormatter.toolExecution(), "");
+                                    content = AiMessage.from(promptFormatter.toolExecutionRequestFormatter(tools));
+                                } else {
+                                    content = AiMessage.from(message);
+                                }
+
+                                handler.onComplete(Response.from(content, tokenUsage, finishReason));
                             }
                         });
     }
 
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
-
-        var input = toInput(messages);
+        var input = toInput(messages, null);
         var request = new TokenizationRequest(modelId, input, projectId);
 
         return retryOn(new Callable<Integer>() {
@@ -226,18 +246,29 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
         });
     }
 
-    public static Builder builder() {
-        return new Builder();
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages) {
+        return generate(messages, List.of());
     }
 
-    private String toInput(List<ChatMessage> messages) {
-        var prompt = promptFormatter.format(messages, List.of());
-        log.debugf("""
-                Formatted prompt:
-                -----------------
-                %s
-                -----------------""", prompt);
-        return prompt;
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+        return generate(messages, List.of(toolSpecification));
+    }
+
+    @Override
+    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+        generate(messages, List.of(), handler);
+    }
+
+    @Override
+    public void generate(List<ChatMessage> messages, ToolSpecification toolSpecification,
+            StreamingResponseHandler<AiMessage> handler) {
+        generate(messages, List.of(toolSpecification), handler);
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private String toInput(List<ChatMessage> messages, List<ToolSpecification> tools) {
@@ -250,12 +281,12 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
         return prompt;
     }
 
-    private FinishReason toFinishReason(String stopReason) {
-        return switch (stopReason) {
+    private FinishReason toFinishReason(String reason) {
+        return switch (reason) {
             case "max_tokens", "token_limit" -> FinishReason.LENGTH;
             case "eos_token", "stop_sequence" -> FinishReason.STOP;
             case "not_finished", "cancelled", "time_limit", "error" -> FinishReason.OTHER;
-            default -> throw new IllegalArgumentException("%s not supported".formatted(stopReason));
+            default -> throw new IllegalArgumentException("%s not supported".formatted(reason));
         };
     }
 
