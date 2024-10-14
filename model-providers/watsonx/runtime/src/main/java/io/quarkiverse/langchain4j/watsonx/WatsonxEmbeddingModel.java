@@ -17,6 +17,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse.Result;
@@ -28,6 +29,7 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 public class WatsonxEmbeddingModel implements EmbeddingModel, TokenCountEstimator {
 
     private final String modelId, projectId, version;
+    private final EmbeddingParameters parameters;
     private final WatsonxRestApi client;
 
     public WatsonxEmbeddingModel(Builder builder) {
@@ -49,6 +51,11 @@ public class WatsonxEmbeddingModel implements EmbeddingModel, TokenCountEstimato
         this.modelId = builder.modelId;
         this.projectId = builder.projectId;
         this.version = builder.version;
+
+        if (builder.truncateInputTokens != null)
+            this.parameters = new EmbeddingParameters(builder.truncateInputTokens);
+        else
+            this.parameters = null;
     }
 
     @Override
@@ -61,7 +68,7 @@ public class WatsonxEmbeddingModel implements EmbeddingModel, TokenCountEstimato
                 .map(TextSegment::text)
                 .collect(Collectors.toList());
 
-        EmbeddingRequest request = new EmbeddingRequest(modelId, projectId, inputs);
+        EmbeddingRequest request = new EmbeddingRequest(modelId, projectId, inputs, parameters);
         EmbeddingResponse result = retryOn(new Callable<EmbeddingResponse>() {
             @Override
             public EmbeddingResponse call() throws Exception {
@@ -102,6 +109,7 @@ public class WatsonxEmbeddingModel implements EmbeddingModel, TokenCountEstimato
         private String version;
         private String projectId;
         private Duration timeout;
+        private Integer truncateInputTokens;
         private boolean logResponses;
         private boolean logRequests;
         private URL url;
@@ -124,6 +132,11 @@ public class WatsonxEmbeddingModel implements EmbeddingModel, TokenCountEstimato
 
         public Builder timeout(Duration timeout) {
             this.timeout = timeout;
+            return this;
+        }
+
+        public Builder truncateInputTokens(Integer truncateInputTokens) {
+            this.truncateInputTokens = truncateInputTokens;
             return this;
         }
 

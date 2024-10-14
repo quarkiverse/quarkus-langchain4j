@@ -12,12 +12,24 @@ public interface EmbeddingModelConfig {
     /**
      * Model id to use.
      *
-     * To view the complete model list, <a href=
+     * To view the complete model list,
+     * <a href=
      * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp">click
      * here</a>.
      */
     @WithDefault("ibm/slate-125m-english-rtrvr")
     String modelId();
+
+    /**
+     * Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being
+     * longer
+     * than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of
+     * the
+     * input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this
+     * value
+     * for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+     */
+    Optional<Integer> truncateInputTokens();
 
     /**
      * Whether embedding model requests should be logged.

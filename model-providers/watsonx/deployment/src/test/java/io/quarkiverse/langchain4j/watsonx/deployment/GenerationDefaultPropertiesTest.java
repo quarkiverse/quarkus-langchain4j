@@ -98,6 +98,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         assertTrue(runtimeConfig.chatModel().includeStopSequence().isEmpty());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
         assertEquals(WireMockUtil.DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelId());
+        assertTrue(runtimeConfig.embeddingModel().truncateInputTokens().isEmpty());
     }
 
     @Test
@@ -124,7 +125,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         String projectId = config.projectId();
 
         EmbeddingRequest request = new EmbeddingRequest(modelId, projectId,
-                List.of("Embedding THIS!"));
+                List.of("Embedding THIS!"), null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
                 .body(mapper.writeValueAsString(request))

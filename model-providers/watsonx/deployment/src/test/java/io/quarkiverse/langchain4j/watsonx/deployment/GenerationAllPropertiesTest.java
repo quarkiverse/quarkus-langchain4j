@@ -25,6 +25,7 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPenalty;
@@ -64,6 +65,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.include-stop-sequence", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id", "my_super_embedding_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens", "10")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -102,6 +104,8 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .includeStopSequence(false)
             .build();
 
+    static EmbeddingParameters embeddingParameters = new EmbeddingParameters(10);
+
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
@@ -133,6 +137,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals("@", runtimeConfig.chatModel().promptJoiner());
         assertEquals(true, fixedRuntimeConfig.chatModel().promptFormatter());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
+        assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
     }
 
     @Test
@@ -158,7 +163,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         String projectId = config.projectId();
 
         EmbeddingRequest request = new EmbeddingRequest(modelId, projectId,
-                List.of("Embedding THIS!"));
+                List.of("Embedding THIS!"), embeddingParameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(request))

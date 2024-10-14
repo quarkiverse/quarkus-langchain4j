@@ -197,7 +197,8 @@ public class WatsonxRecorder {
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), watsonConfig.logResponses()))
                     .version(watsonConfig.version())
                     .projectId(watsonConfig.projectId())
-                    .modelId(embeddingModelConfig.modelId());
+                    .modelId(embeddingModelConfig.modelId())
+                    .truncateInputTokens(embeddingModelConfig.truncateInputTokens().orElse(null));
 
             return new Supplier<>() {
                 @Override
