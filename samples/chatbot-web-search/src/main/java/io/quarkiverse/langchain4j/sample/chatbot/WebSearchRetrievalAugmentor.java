@@ -12,6 +12,15 @@ import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.function.Supplier;
 
+/**
+ * IMPORTANT: Note that this retrieval augmentor isn't used by the sample out of the box.
+ * It shows an alternative approach to using a web search engine - by default,
+ * the bot uses the tools from dev.langchain4j.web.search.WebSearchTool.
+ * If you want to switch it to this retrieval augmentor, modify the Bot interface and
+ * add a "retrievalAugmentor = WebSearchRetrievalAugmentor.class" parameter to
+ * the @RegisterAiService annotation. However, this will prevent the bot from using
+ * the AdditionalTools.getTodaysDate() method before calling Tavily.
+ */
 @ApplicationScoped
 public class WebSearchRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
 
