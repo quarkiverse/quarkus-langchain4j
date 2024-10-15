@@ -34,7 +34,7 @@ public class VertexAiGeminiProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             LangChain4jVertexAiBuildConfig config) {
-        if (config.chatModel().enabled().isEmpty()) {
+        if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
     }
