@@ -2,7 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.bean;
 
 import java.util.List;
 
-public class Parameters {
+public class TextGenerationParameters {
 
     public record LengthPenalty(Double decayFactor, Integer startIndex) {
     };
@@ -14,13 +14,14 @@ public class Parameters {
     private final Integer randomSeed;
     private final List<String> stopSequences;
     private final Double temperature;
+    private final Long timeLimit;
     private final Integer topK;
     private final Double topP;
     private final Double repetitionPenalty;
     private final Integer truncateInputTokens;
     private final Boolean includeStopSequence;
 
-    private Parameters(Builder builder) {
+    private TextGenerationParameters(Builder builder) {
         this.decodingMethod = builder.decodingMethod;
         this.lengthPenalty = builder.lengthPenalty;
         this.minNewTokens = builder.minNewTokens;
@@ -28,6 +29,7 @@ public class Parameters {
         this.randomSeed = builder.randomSeed;
         this.stopSequences = builder.stopSequences;
         this.temperature = builder.temperature;
+        this.timeLimit = builder.timeLimit;
         this.topK = builder.topK;
         this.topP = builder.topP;
         this.repetitionPenalty = builder.repetitionPenalty;
@@ -57,6 +59,10 @@ public class Parameters {
 
     public Double getTemperature() {
         return temperature;
+    }
+
+    public Long getTimeLimit() {
+        return timeLimit;
     }
 
     public Integer getRandomSeed() {
@@ -96,6 +102,7 @@ public class Parameters {
         private Integer randomSeed;
         private List<String> stopSequences;
         private Double temperature;
+        private Long timeLimit;
         private Integer topK;
         private Double topP;
         private Double repetitionPenalty;
@@ -124,6 +131,11 @@ public class Parameters {
 
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
+            return this;
+        }
+
+        public Builder timeLimit(Long timeLimit) {
+            this.timeLimit = timeLimit;
             return this;
         }
 
@@ -162,8 +174,8 @@ public class Parameters {
             return this;
         }
 
-        public Parameters build() {
-            return new Parameters(this);
+        public TextGenerationParameters build() {
+            return new TextGenerationParameters(this);
         }
     }
 }

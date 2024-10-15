@@ -49,6 +49,7 @@ public class CacheTokenTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
@@ -81,14 +82,15 @@ public class CacheTokenTest extends WireMockAbstract {
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
+                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
                 Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, WireMockUtil.RESPONSE_WATSONX_STREAMING_API),
+                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
+                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
                 Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
                 .forEach(entry -> {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 200)
                             .token("3secondstoken")
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
@@ -127,9 +129,10 @@ public class CacheTokenTest extends WireMockAbstract {
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
+                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
                 Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, WireMockUtil.RESPONSE_WATSONX_STREAMING_API),
+                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
+                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
                 Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
                 .forEach(entry -> {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 401)
@@ -141,7 +144,7 @@ public class CacheTokenTest extends WireMockAbstract {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 200)
                             .token("my_super_token")
                             .scenario("retry", Scenario.STARTED)
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())

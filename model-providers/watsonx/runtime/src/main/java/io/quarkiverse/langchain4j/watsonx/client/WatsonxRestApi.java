@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
@@ -50,13 +53,24 @@ public interface WatsonxRestApi {
 
     @POST
     @Path("text/generation")
-    TextGenerationResponse chat(TextGenerationRequest request, @QueryParam("version") String version)
+    TextGenerationResponse generation(TextGenerationRequest request, @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST
     @Path("text/generation_stream")
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<TextGenerationResponse> chatStreaming(TextGenerationRequest request, @QueryParam("version") String version);
+    Multi<TextGenerationResponse> generationStreaming(TextGenerationRequest request, @QueryParam("version") String version);
+
+    @POST
+    @Path("text/chat")
+    TextChatResponse chat(TextChatRequest request, @QueryParam("version") String version)
+            throws WatsonxException;
+
+    @POST
+    @Path("text/chat_stream")
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    Multi<TextStreamingChatResponse> streamingChat(TextChatRequest request, @QueryParam("version") String version)
+            throws WatsonxException;
 
     @POST
     @Path("text/tokenization")

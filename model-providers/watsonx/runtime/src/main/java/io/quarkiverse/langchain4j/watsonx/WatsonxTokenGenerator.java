@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.watsonx.client.IAMRestApi;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Uni;
 
-public class TokenGenerator {
+public class WatsonxTokenGenerator {
 
     private final static Semaphore lock = new Semaphore(1);
     private final IAMRestApi client;
@@ -21,7 +21,7 @@ public class TokenGenerator {
     private final String grantType;
     private IdentityTokenResponse token;
 
-    public TokenGenerator(URL url, Duration timeout, String grantType, String apiKey) {
+    public WatsonxTokenGenerator(URL url, Duration timeout, String grantType, String apiKey) {
 
         this.client = QuarkusRestClientBuilder.newBuilder()
                 .baseUrl(url)

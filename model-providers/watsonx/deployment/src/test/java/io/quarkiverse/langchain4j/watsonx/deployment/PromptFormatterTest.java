@@ -17,7 +17,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.watsonx.bean.Parameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
@@ -33,6 +33,7 @@ public class PromptFormatterTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "mistralai/mistral-large")
             .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("messages/system.txt")
                     .addAsResource("messages/user.txt")
@@ -122,19 +123,20 @@ public class PromptFormatterTest extends WireMockAbstract {
         String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         String projectId = watsonConfig.projectId();
 
-        Parameters parameters = Parameters.builder()
+        TextGenerationParameters parameters = TextGenerationParameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
                 .temperature(chatModelConfig.temperature())
                 .minNewTokens(chatModelConfig.minNewTokens())
                 .maxNewTokens(chatModelConfig.maxNewTokens())
+                .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId,
                 "<s>[INST] You are a poet [/INST]</s>[INST] Generate a poem about dog [/INST]", parameters);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_API)
                 .build();
 
         assertEquals("AI Response", aiService.poem("dog"));
