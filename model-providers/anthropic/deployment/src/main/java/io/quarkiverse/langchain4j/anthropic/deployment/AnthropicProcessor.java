@@ -34,7 +34,7 @@ public class AnthropicProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             LangChain4jAnthropicBuildConfig config) {
-        if (config.chatModel().enabled().isEmpty()) {
+        if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
     }
