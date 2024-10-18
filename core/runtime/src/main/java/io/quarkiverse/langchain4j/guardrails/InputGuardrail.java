@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.guardrails;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
@@ -50,7 +51,9 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
      * @param augmentationResult the augmentation result, can be {@code null}
      */
     record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
-            AugmentationResult augmentationResult) implements GuardrailParams {
+                                AugmentationResult augmentationResult,
+                                String promptTemplate,
+                                Map<String, Object> variables) implements GuardrailParams {
     }
 
     /**
