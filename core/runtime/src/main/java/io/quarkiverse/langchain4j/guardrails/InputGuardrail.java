@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.guardrails;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
@@ -48,9 +49,13 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
      * @param userMessage the user message, cannot be {@code null}
      * @param memory the memory, can be {@code null} or empty
      * @param augmentationResult the augmentation result, can be {@code null}
+     * @param userMessageTemplate the user message template, can be {@code null} when @UserMessage is not used.
+     * @param variables the variables, cannot be {@code null}, it will be empty when @UserMessage is not used.
      */
     record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
-            AugmentationResult augmentationResult) implements GuardrailParams {
+            AugmentationResult augmentationResult,
+            String userMessageTemplate,
+            Map<String, Object> variables) implements GuardrailParams {
     }
 
     /**
