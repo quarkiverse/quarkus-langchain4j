@@ -49,10 +49,12 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
      * @param userMessage the user message, cannot be {@code null}
      * @param memory the memory, can be {@code null} or empty
      * @param augmentationResult the augmentation result, can be {@code null}
+     * @param userMessageTemplate the user message template, can be {@code null} when @UserMessage is not used.
+     * @param variables the variables, cannot be {@code null}, it will be empty when @UserMessage is not used.
      */
     record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
             AugmentationResult augmentationResult,
-            String promptTemplate,
+            String userMessageTemplate,
             Map<String, Object> variables) implements GuardrailParams {
     }
 
