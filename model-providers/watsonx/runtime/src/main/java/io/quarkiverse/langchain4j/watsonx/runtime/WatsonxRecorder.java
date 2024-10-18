@@ -19,10 +19,12 @@ import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxRerankModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxTokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
@@ -31,6 +33,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.ScoringModelConfig;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -217,6 +220,46 @@ public class WatsonxRecorder {
 
             };
         }
+    }
+
+    public Supplier<ScoringModel> scoringModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+
+        var configProblems = checkConfigurations(watsonConfig, configName);
+
+        if (!configProblems.isEmpty()) {
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+        }
+
+        String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
+        WatsonxTokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
+                createTokenGenerator(watsonConfig.iam(), watsonConfig.apiKey()));
+
+        URL url;
+        try {
+            url = new URL(watsonConfig.baseUrl());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        ScoringModelConfig rerankModelConfig = watsonConfig.scoringModel();
+        var builder = WatsonxRerankModel.builder()
+                .tokenGenerator(tokenGenerator)
+                .url(url)
+                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
+                .logRequests(firstOrDefault(false, rerankModelConfig.logRequests(), watsonConfig.logRequests()))
+                .logResponses(firstOrDefault(false, rerankModelConfig.logResponses(), watsonConfig.logResponses()))
+                .version(watsonConfig.version())
+                .projectId(watsonConfig.projectId())
+                .modelId(rerankModelConfig.modelId())
+                .truncateInputTokens(rerankModelConfig.truncateInputTokens().orElse(null));
+
+        return new Supplier<>() {
+            @Override
+            public WatsonxRerankModel get() {
+                return builder.build();
+            }
+        };
     }
 
     private Function<? super String, ? extends WatsonxTokenGenerator> createTokenGenerator(IAMConfig iamConfig, String apiKey) {
