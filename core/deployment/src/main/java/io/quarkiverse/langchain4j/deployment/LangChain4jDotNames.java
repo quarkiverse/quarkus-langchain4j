@@ -97,6 +97,9 @@ public class LangChain4jDotNames {
     static final DotName BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsImageModelSupplier.class);
 
+    static final DotName BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsToolProviderSupplier.class);
+
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
 
@@ -106,4 +109,5 @@ public class LangChain4jDotNames {
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
+    static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProcessor.class);
 }

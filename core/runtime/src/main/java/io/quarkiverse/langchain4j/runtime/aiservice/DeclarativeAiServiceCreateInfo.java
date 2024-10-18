@@ -7,6 +7,7 @@ public record DeclarativeAiServiceCreateInfo(
         String languageModelSupplierClassName,
         String streamingChatLanguageModelSupplierClassName,
         List<String> toolsClassNames,
+        String toolProviderSupplier,
         String chatMemoryProviderSupplierClassName,
         String retrieverClassName,
         String retrievalAugmentorSupplierClassName,

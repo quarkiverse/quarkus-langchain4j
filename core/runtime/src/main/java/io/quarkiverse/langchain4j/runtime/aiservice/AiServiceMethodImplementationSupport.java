@@ -58,6 +58,8 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProviderRequest;
+import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -159,6 +161,19 @@ public class AiServiceMethodImplementationSupport {
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
                 : context.toolExecutors;
 
+        if (context.toolProvider != null) {
+            toolSpecifications = new ArrayList<>();
+            toolExecutors = new HashMap<>();
+            ToolProviderRequest request = new ToolProviderRequest(memoryId, userMessage);
+            ToolProviderResult result = context.toolProvider.provideTools(request);
+            for (ToolSpecification specification : result.tools().keySet()) {
+                toolSpecifications.add(specification);
+                toolExecutors.put(specification.name(), result.tools().get(specification));
+            }
+        }
+        List<ToolSpecification> effectiveToolSpecifications = toolSpecifications;
+        Map<String, ToolExecutor> finalToolExecutors = toolExecutors;
+
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
@@ -188,8 +203,8 @@ public class AiServiceMethodImplementationSupport {
                                         context.chatMemory(memoryId), ar);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
                                 return Multi.createFrom()
-                                        .emitter(new MultiEmitterConsumer(messagesToSend, toolSpecifications,
-                                                toolExecutors,
+                                        .emitter(new MultiEmitterConsumer(messagesToSend, effectiveToolSpecifications,
+                                                finalToolExecutors,
                                                 ar.contents(),
                                                 context,
                                                 memoryId));
