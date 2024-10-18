@@ -5,6 +5,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODEL_NAME;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
@@ -24,6 +25,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
@@ -33,10 +35,12 @@ import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBu
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ProviderHolder;
+import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.LangChain4jRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
@@ -70,6 +74,7 @@ public class BeansProcessor {
     @BuildStep
     public void handleProviders(BeanDiscoveryFinishedBuildItem beanDiscoveryFinished,
             List<ChatModelProviderCandidateBuildItem> chatCandidateItems,
+            List<ScoringModelProviderCandidateBuildItem> scoringCandidateItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingCandidateItems,
             List<ModerationModelProviderCandidateBuildItem> moderationCandidateItems,
             List<ImageModelProviderCandidateBuildItem> imageCandidateItems,
@@ -79,6 +84,7 @@ public class BeansProcessor {
             LangChain4jBuildConfig buildConfig,
             Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
+            BuildProducer<SelectedScoringModelProviderBuildItem> selectedScoringProducer,
             BuildProducer<SelectedEmbeddingModelCandidateBuildItem> selectedEmbeddingProducer,
             BuildProducer<SelectedModerationModelProviderBuildItem> selectedModerationProducer,
             BuildProducer<SelectedImageModelProviderBuildItem> selectedImageProducer,
@@ -86,6 +92,7 @@ public class BeansProcessor {
 
         Set<String> requestedChatModels = new HashSet<>();
         Set<String> requestedStreamingChatModels = new HashSet<>();
+        Set<String> requestScoringModels = new HashSet<>();
         Set<String> requestEmbeddingModels = new HashSet<>();
         Set<String> requestedModerationModels = new HashSet<>();
         Set<String> requestedImageModels = new HashSet<>();
@@ -98,6 +105,8 @@ public class BeansProcessor {
                 requestedChatModels.add(modelName);
             } else if (STREAMING_CHAT_MODEL.equals(requiredName)) {
                 requestedStreamingChatModels.add(modelName);
+            } else if (SCORING_MODEL.equals(requiredName)) {
+                requestScoringModels.add(modelName);
             } else if (EMBEDDING_MODEL.equals(requiredName)) {
                 requestEmbeddingModels.add(modelName);
             } else if (MODERATION_MODEL.equals(requiredName)) {
@@ -108,7 +117,9 @@ public class BeansProcessor {
                 tokenCountEstimators.add(modelName);
             }
         }
-        for (var bi : requestChatModelBeanItems) {
+        for (
+
+        var bi : requestChatModelBeanItems) {
             requestedChatModels.add(bi.getConfigName());
         }
         for (var bi : requestModerationModelBeanBuildItems) {
@@ -148,6 +159,32 @@ public class BeansProcessor {
                 }
             }
 
+        }
+
+        for (String modelName : requestScoringModels) {
+            Optional<String> userSelectedProvider;
+            String configNamespace;
+            if (NamedConfigUtil.isDefault(modelName)) {
+                userSelectedProvider = buildConfig.defaultConfig().scoringModel().provider();
+                configNamespace = "scoring-model";
+            } else {
+                if (buildConfig.namedConfig().containsKey(modelName)) {
+                    userSelectedProvider = buildConfig.namedConfig().get(modelName).scoringModel().provider();
+                } else {
+                    userSelectedProvider = Optional.empty();
+                }
+                configNamespace = modelName + ".scoring-model";
+            }
+
+            String provider = selectProvider(
+                    scoringCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ScoringModel.class),
+                    userSelectedProvider,
+                    "ScoringModel",
+                    configNamespace);
+            if (provider != null) {
+                selectedScoringProducer.produce(new SelectedScoringModelProviderBuildItem(provider, modelName));
+            }
         }
 
         for (String modelName : requestEmbeddingModels) {
