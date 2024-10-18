@@ -18,4 +18,9 @@ public interface LangChain4jWatsonBuildConfig {
      * Embedding model related settings.
      */
     EmbeddingModelBuildConfig embeddingModel();
+
+    /**
+     * Scoring model related settings.
+     */
+    ScoringModelBuildConfig scoringModel();
 }

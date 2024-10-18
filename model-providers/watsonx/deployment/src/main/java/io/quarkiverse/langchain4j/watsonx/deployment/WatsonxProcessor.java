@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 import static io.quarkiverse.langchain4j.deployment.TemplateUtil.getTemplateFromAnnotationInstance;
@@ -20,8 +21,10 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.deployment.items.WatsonxChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
@@ -51,6 +54,7 @@ public class WatsonxProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ScoringModelProviderCandidateBuildItem> scoringProducer,
             LangChain4jWatsonBuildConfig config) {
 
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
@@ -59,6 +63,10 @@ public class WatsonxProcessor {
 
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+
+        if (config.scoringModel().enabled().isEmpty() || config.scoringModel().enabled().get()) {
+            scoringProducer.produce(new ScoringModelProviderCandidateBuildItem(PROVIDER));
         }
     }
 
@@ -167,6 +175,7 @@ public class WatsonxProcessor {
             LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
             List<WatsonxChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedScoringModelProviderBuildItem> selectedScoring,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -232,6 +241,20 @@ public class WatsonxProcessor {
             }
         }
 
+        for (var selected : selectedScoring) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(SCORING_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .unremovable()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.scoringModel(runtimeConfig, configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
     }
 
     private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {

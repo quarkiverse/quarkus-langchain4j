@@ -27,6 +27,8 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.TextRerankRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextRerankResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
@@ -70,6 +72,11 @@ public interface WatsonxRestApi {
     @Path("text/chat_stream")
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     Multi<TextStreamingChatResponse> streamingChat(TextChatRequest request, @QueryParam("version") String version)
+            throws WatsonxException;
+
+    @POST
+    @Path("text/rerank")
+    TextRerankResponse rerank(TextRerankRequest request, @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST

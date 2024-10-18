@@ -30,6 +30,7 @@ public class WireMockUtil {
     public static final String URL_WATSONX_CHAT_STREAMING_API = "/ml/v1/text/chat_stream?version=%s";
     public static final String URL_WATSONX_GENERATION_API = "/ml/v1/text/generation?version=%s";
     public static final String URL_WATSONX_GENERATION_STREAMING_API = "/ml/v1/text/generation_stream?version=%s";
+    public static final String URL_WATSONX_SCORING_API = "/ml/v1/text/rerank?version=%s";
     public static final String URL_WATSONX_EMBEDDING_API = "/ml/v1/text/embeddings?version=%s";
     public static final String URL_WATSONX_TOKENIZER_API = "/ml/v1/text/tokenization?version=%s";
 
@@ -44,6 +45,7 @@ public class WireMockUtil {
     public static final String VERSION = "2024-03-14";
     public static final String DEFAULT_CHAT_MODEL = "mistralai/mistral-large";
     public static final String DEFAULT_EMBEDDING_MODEL = "ibm/slate-125m-english-rtrvr";
+    public static final String DEFAULT_SCORING_MODEL = "cross-encoder/ms-marco-minilm-l-12-v2";
     public static final String IAM_200_RESPONSE = """
             {
                 "access_token": "%s",
@@ -89,7 +91,38 @@ public class WireMockUtil {
                     "total_tokens": 106
                 }
             }""";
-
+    public static String RESPONSE_WATSONX_SCORING_API = """
+            {
+            "model_id": "cross-encoder/ms-marco-minilm-l-12-v2",
+            "created_at": "2024-10-18T06:57:42.032Z",
+            "results": [
+                {
+                    "index": 5,
+                    "score": 9.720501899719238
+                },
+                {
+                    "index": 1,
+                    "score": 8.770895957946777
+                },
+                {
+                    "index": 0,
+                    "score": -2.5847978591918945
+                },
+                {
+                    "index": 3,
+                    "score": -3.349348306655884
+                },
+                {
+                    "index": 4,
+                    "score": -3.920926570892334
+                },
+                {
+                    "index": 2,
+                    "score": -4.939967155456543
+                }
+            ],
+            "input_token_count": 318
+            }""";
     public static String RESPONSE_WATSONX_EMBEDDING_API = """
             {
                 "model_id": "%s",
