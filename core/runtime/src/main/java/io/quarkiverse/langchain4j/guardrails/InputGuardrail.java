@@ -51,9 +51,9 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
      * @param augmentationResult the augmentation result, can be {@code null}
      */
     record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
-                                AugmentationResult augmentationResult,
-                                String promptTemplate,
-                                Map<String, Object> variables) implements GuardrailParams {
+            AugmentationResult augmentationResult,
+            String promptTemplate,
+            Map<String, Object> variables) implements GuardrailParams {
     }
 
     /**

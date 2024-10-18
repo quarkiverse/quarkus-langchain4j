@@ -28,14 +28,15 @@ public class GuardrailsSupport {
             ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateParams) {
         InputGuardrailResult result;
         try {
-            
+
             Optional<String> promptTemplateOpt = methodCreateInfo.getUserMessageInfo().template()
                     .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
-            
+
             String promptTemplate = promptTemplateOpt.orElse(null);
-            
+
             result = invokeInputGuardRails(methodCreateInfo,
-                    new InputGuardrail.InputGuardrailParams(userMessage, chatMemory, augmentationResult, promptTemplate, templateParams));
+                    new InputGuardrail.InputGuardrailParams(userMessage, chatMemory, augmentationResult, promptTemplate,
+                            templateParams));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }

@@ -141,7 +141,7 @@ public class AiServiceMethodImplementationSupport {
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
         Map<String, Object> templateParams = getTemplateParams(methodArgs, methodCreateInfo.getUserMessageInfo());
-        
+
         Type returnType = methodCreateInfo.getReturnType();
         if (isImage(returnType) || isResultImage(returnType)) {
             return doImplementGenerateImage(methodCreateInfo, context, audit, systemMessage, userMessage, memoryId, returnType,
@@ -343,7 +343,7 @@ public class AiServiceMethodImplementationSupport {
 
         //TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
         AugmentationResult augmentationResult = null;
-        
+
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
         GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemory(memoryId) : null,
@@ -586,14 +586,15 @@ public class AiServiceMethodImplementationSupport {
                     + "'. Please contact the maintainers");
         }
     }
-    
-    private static Map<String, Object> getTemplateParams(Object[] methodArgs, AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo) {
+
+    private static Map<String, Object> getTemplateParams(Object[] methodArgs,
+            AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo) {
         Map<String, Object> templateParams = new HashMap<>();
-        
-        if(userMessageInfo.template().isPresent()) {
+
+        if (userMessageInfo.template().isPresent()) {
             AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.template().get();
             Map<String, Integer> nameToParamPosition = templateInfo.nameToParamPosition();
-            
+
             for (var entry : nameToParamPosition.entrySet()) {
                 Object value = transformTemplateParamValue(methodArgs[entry.getValue()]);
                 templateParams.put(entry.getKey(), value);
@@ -602,7 +603,7 @@ public class AiServiceMethodImplementationSupport {
 
         return templateParams;
     }
-    
+
     private static UserMessage createUserMessage(String name, ImageContent imageContent, String text) {
         if (name == null) {
             if (imageContent == null) {
