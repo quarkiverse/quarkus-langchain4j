@@ -7,12 +7,11 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -28,7 +27,6 @@ import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
-import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class InputGuardrailPromptTemplateTest {
@@ -44,27 +42,19 @@ public class InputGuardrailPromptTemplateTest {
     @Inject
     GuardrailValidation guardrailValidation;
 
-    @BeforeEach
-    void setup() {
-        Arc.container().requestContext().activate();
-    }
-
-    @AfterEach
-    void tearDown() {
-        Arc.container().requestContext().deactivate();
-    }
-
     @Test
+    @ActivateRequestContext
     void shouldWorkNoParameters() {
         aiService.getJoke();
-        assertThat(guardrailValidation.spyPromptTemplate()).isEqualTo("Tell me a joke");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me a joke");
         assertThat(guardrailValidation.spyVariables()).isEmpty();
     }
 
     @Test
+    @ActivateRequestContext
     void shouldWorkWithMemoryId() {
         aiService.getAnotherJoke("memory-id-001");
-        assertThat(guardrailValidation.spyPromptTemplate()).isEqualTo("Tell me another joke");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me another joke");
         assertThat(guardrailValidation.spyVariables()).containsExactlyInAnyOrderEntriesOf(Map.of(
                 "memoryId", "memory-id-001",
                 "it", "memory-id-001" // is this correct?
@@ -72,9 +62,10 @@ public class InputGuardrailPromptTemplateTest {
     }
 
     @Test
+    @ActivateRequestContext
     void shouldWorkWithNoMemoryIdAndOneParameter() {
         aiService.sayHiToMyFriendNoMemory("Rambo");
-        assertThat(guardrailValidation.spyPromptTemplate()).isEqualTo("Say hi to my friend {friend}!");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Say hi to my friend {friend}!");
         assertThat(guardrailValidation.spyVariables())
                 .containsExactlyInAnyOrderEntriesOf(Map.of(
                         "friend", "Rambo",
@@ -82,9 +73,10 @@ public class InputGuardrailPromptTemplateTest {
     }
 
     @Test
+    @ActivateRequestContext
     void shouldWorkWithMemoryIdAndOneParameter() {
         aiService.sayHiToMyFriend("1", "Chuck Norris");
-        assertThat(guardrailValidation.spyPromptTemplate()).isEqualTo("Say hi to my friend {friend}!");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Say hi to my friend {friend}!");
         assertThat(guardrailValidation.spyVariables())
                 .containsExactlyInAnyOrderEntriesOf(Map.of(
                         "friend", "Chuck Norris",
@@ -92,25 +84,66 @@ public class InputGuardrailPromptTemplateTest {
     }
 
     @Test
+    @ActivateRequestContext
     void shouldWorkWithNoMemoryIdAndThreeParameters() {
         aiService.sayHiToMyFriends("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone");
-        assertThat(guardrailValidation.spyPromptTemplate()).isEqualTo("Tell me something about {topic1}, {topic2}, {topic3}!");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me something about {topic1}, {topic2}, {topic3}!");
         assertThat(guardrailValidation.spyVariables())
                 .containsExactlyInAnyOrderEntriesOf(Map.of(
                         "topic1", "Chuck Norris",
                         "topic2", "Jean-Claude Van Damme",
                         "topic3", "Silvester Stallone"));
     }
-
+    
     @Test
+    @ActivateRequestContext
+    void shouldWorkWithNoMemoryIdAndList() {
+        aiService.sayHiToMyFriends(List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
+        assertThat(guardrailValidation.spyUserMessageText()).isEqualTo("Tell me something about [Chuck Norris, Jean-Claude Van Damme, Silvester Stallone]!");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me something about {topics}!");
+        assertThat(guardrailValidation.spyVariables())
+                .containsExactlyInAnyOrderEntriesOf(Map.of(
+                        "topics", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"),
+                        "it", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone")
+                        ));
+    }
+    
+    @Test
+    @ActivateRequestContext
+    void shouldWorkWithMemoryIdAndList() {
+        aiService.sayHiToMyFriends("memory-id-007", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
+        assertThat(guardrailValidation.spyUserMessageText()).isEqualTo("Tell me something about [Chuck Norris, Jean-Claude Van Damme, Silvester Stallone]! This is my memory id: memory-id-007");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me something about {topics}! This is my memory id: {memoryId}");
+        assertThat(guardrailValidation.spyVariables())
+                .containsExactlyInAnyOrderEntriesOf(Map.of(
+                        "topics", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"),
+                        "memoryId", "memory-id-007"
+                ));
+    }
+    
+    @Test
+    @ActivateRequestContext
+    void shouldWorkWithMemoryIdAndOneItemFromList() {
+        aiService.sayHiToMyFriend("memory-id-007", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
+        assertThat(guardrailValidation.spyUserMessageText()).isEqualTo("Tell me something about Chuck Norris! This is my memory id: memory-id-007");
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me something about {topics[0]}! This is my memory id: {memoryId}");
+        assertThat(guardrailValidation.spyVariables())
+                .containsExactlyInAnyOrderEntriesOf(Map.of(
+                        "topics", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"),
+                        "memoryId", "memory-id-007"
+                ));
+    }
+    
+    @Test
+    @ActivateRequestContext
     void shouldWorkWithNoUserMessage() {
         // This is a special case where the UserMessage annotation is not present
         // The prompt template doesn't exist in this case
         // But the current implementation use the parameter name as prompt template
         // Not sure if this is the correct behavior, should we always have @UserMessage?
-        // I need some thoughts on this
+        // I need some thoughts on this case
         aiService.saySomething("Is this a parameter or a prompt?");
-        assertThat(guardrailValidation.spyPromptTemplate()).isNull();
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isNull();
         assertThat(guardrailValidation.spyVariables()).isEmpty();
     }
 
@@ -136,7 +169,19 @@ public class InputGuardrailPromptTemplateTest {
         @UserMessage("Tell me something about {topic1}, {topic2}, {topic3}!")
         @InputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriends(String topic1, String topic2, String topic3);
-
+        
+        @UserMessage("Tell me something about {topics}!")
+        @InputGuardrails(GuardrailValidation.class)
+        String sayHiToMyFriends(List<String> topics);
+        
+        @UserMessage("Tell me something about {topics}! This is my memory id: {memoryId}")
+        @InputGuardrails(GuardrailValidation.class)
+        String sayHiToMyFriends(@MemoryId String memoryId, List<String> topics);
+        
+        @UserMessage("Tell me something about {topics[0]}! This is my memory id: {memoryId}")
+        @InputGuardrails(GuardrailValidation.class)
+        String sayHiToMyFriend(@MemoryId String memoryId, List<String> topics);
+        
         @InputGuardrails(GuardrailValidation.class)
         String saySomething(String isThisAPromptOrAParameter);
 
@@ -152,10 +197,13 @@ public class InputGuardrailPromptTemplateTest {
             return success();
         }
 
-        public String spyPromptTemplate() {
-            return params.promptTemplate();
+        public String spyUserMessageTemplate() {
+            return params.userMessageTemplate();
         }
-
+        
+        public String spyUserMessageText() {
+            return params.userMessage().singleText();
+        }
         public Map<String, Object> spyVariables() {
             return params.variables();
         }
