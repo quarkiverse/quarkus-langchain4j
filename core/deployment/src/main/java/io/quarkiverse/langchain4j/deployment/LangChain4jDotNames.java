@@ -14,6 +14,7 @@ import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.output.structured.Description;
+import dev.langchain4j.model.scoring.ScoringModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
@@ -38,6 +39,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQuali
 public class LangChain4jDotNames {
     public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
     public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
+    public static final DotName SCORING_MODEL = DotName.createSimple(ScoringModel.class);
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);

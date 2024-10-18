@@ -50,6 +50,11 @@ public interface LangChain4jBuildConfig {
         ChatModelConfig chatModel();
 
         /**
+         * Rerank model
+         */
+        ScoringModelConfig scoringModel();
+
+        /**
          * Embedding model
          */
         EmbeddingModelConfig embeddingModel();

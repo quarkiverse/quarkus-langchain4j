@@ -20,16 +20,20 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextRerankParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextRerankRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -66,6 +70,8 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.include-stop-sequence", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id", "my_super_embedding_model")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens", "10")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.model-id", "my_super_scoring_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.truncate-input-tokens", "10")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -84,6 +90,9 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
 
     @Inject
     EmbeddingModel embeddingModel;
+
+    @Inject
+    ScoringModel scoringModel;
 
     @Inject
     TokenCountEstimator tokenCountEstimator;
@@ -105,6 +114,8 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .build();
 
     static EmbeddingParameters embeddingParameters = new EmbeddingParameters(10);
+
+    static TextRerankParameters scoringParameters = new TextRerankParameters(10);
 
     @Test
     void check_config() throws Exception {
@@ -138,6 +149,8 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals(true, fixedRuntimeConfig.chatModel().promptFormatter());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
         assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
+        assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelId());
+        assertEquals(10, runtimeConfig.scoringModel().truncateInputTokens().orElse(null));
     }
 
     @Test
@@ -173,6 +186,48 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         Response<Embedding> response = embeddingModel.embed("Embedding THIS!");
         assertNotNull(response);
         assertNotNull(response.content());
+    }
+
+    @Test
+    void check_scoring_model() throws Exception {
+        var config = langchain4jWatsonConfig.defaultConfig();
+        String modelId = config.scoringModel().modelId();
+        String projectId = config.projectId();
+
+        var segments = List.of(
+                TextSegment.from(
+                        "The novel 'Moby-Dick' was written by Herman Melville and first published in 1851. It is considered a masterpiece of American literature and deals with complex themes of obsession, revenge, and the conflict between good and evil.\""),
+                TextSegment.from(
+                        "Harper Lee, an American novelist widely known for her novel 'To Kill a Mockingbird', was born in 1926 in Monroeville, Alabama. She received the Pulitzer Prize for Fiction in 1961."),
+                TextSegment.from(
+                        "Jane Austen was an English novelist known primarily for her six major novels, which interpret, critique and comment upon the British landed gentry at the end of the 18th century."),
+                TextSegment.from(
+                        "The 'Harry Potter' series, which consists of seven fantasy novels written by British author J.K. Rowling, is among the most popular and critically acclaimed books of the modern era."),
+                TextSegment.from(
+                        "'The Great Gatsby', a novel written by American author F. Scott Fitzgerald, was published in 1925. The story is set in the Jazz Age and follows the life of millionaire Jay Gatsby and his pursuit of Daisy Buchanan."),
+                TextSegment.from(
+                        "'The Great Gatsby', a novel written by American author F. Scott Fitzgerald, was published in 1925. The story is set in the Jazz Age and follows the life of millionaire Jay Gatsby and his pursuit of Daisy Buchanan."),
+                TextSegment.from(
+                        "To Kill a Mockingbird' is a novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize, and has become a classic of modern American literature."));
+
+        TextRerankRequest request = TextRerankRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
+                segments, scoringParameters);
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_SCORING_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(request))
+                .response(WireMockUtil.RESPONSE_WATSONX_SCORING_API.formatted(modelId))
+                .build();
+
+        Response<List<Double>> response = scoringModel.scoreAll(segments, "Who wrote 'To Kill a Mockingbird'?");
+        assertNotNull(response);
+        assertEquals(6, response.content().size());
+        assertEquals(318, response.tokenUsage().inputTokenCount());
+        assertEquals(-2.5847978591918945, response.content().get(0));
+        assertEquals(8.770895957946777, response.content().get(1));
+        assertEquals(-4.939967155456543, response.content().get(2));
+        assertEquals(-3.349348306655884, response.content().get(3));
+        assertEquals(-3.920926570892334, response.content().get(4));
+        assertEquals(9.720501899719238, response.content().get(5));
     }
 
     @Test

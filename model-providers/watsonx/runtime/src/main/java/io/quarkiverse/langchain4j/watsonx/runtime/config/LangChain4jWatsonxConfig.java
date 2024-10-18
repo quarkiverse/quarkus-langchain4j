@@ -108,5 +108,10 @@ public interface LangChain4jWatsonxConfig {
          * Embedding model related settings.
          */
         EmbeddingModelConfig embeddingModel();
+
+        /**
+         * Scoring model related settings.
+         */
+        ScoringModelConfig scoringModel();
     }
 }
