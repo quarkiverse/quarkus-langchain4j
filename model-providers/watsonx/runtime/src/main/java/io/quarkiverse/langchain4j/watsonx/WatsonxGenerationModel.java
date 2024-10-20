@@ -2,17 +2,13 @@ package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 
-import java.net.URL;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -30,41 +26,20 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
-import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
-import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
-public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
+public class WatsonxGenerationModel extends Watsonx
+        implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
     private static final Logger log = Logger.getLogger(WatsonxGenerationModel.class);
 
-    private final String modelId, projectId, version;
-    private final WatsonxRestApi client;
     private final TextGenerationParameters parameters;
     private final PromptFormatter promptFormatter;
 
     public WatsonxGenerationModel(Builder builder) {
-
-        QuarkusRestClientBuilder restClientBuilder = QuarkusRestClientBuilder.newBuilder()
-                .baseUrl(builder.url)
-                .clientHeadersFactory(new BearerTokenHeaderFactory(builder.tokenGenerator))
-                .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
-                .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
-
-        if (builder.logRequests || builder.logResponses) {
-            restClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-            restClientBuilder.clientLogger(new WatsonxRestApi.WatsonClientLogger(
-                    builder.logRequests,
-                    builder.logResponses));
-        }
-
-        this.client = restClientBuilder.build(WatsonxRestApi.class);
-        this.modelId = builder.modelId;
-        this.projectId = builder.projectId;
-        this.version = builder.version;
+        super(builder);
 
         if (builder.promptFormatter != null) {
             this.promptFormatter = builder.promptFormatter;
@@ -290,12 +265,8 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
         };
     }
 
-    public static final class Builder {
+    public static final class Builder extends Watsonx.Builder<Builder> {
 
-        private String modelId;
-        private String version;
-        private String projectId;
-        private Duration timeout;
         private String decodingMethod;
         private Double decayFactor;
         private Integer startIndex;
@@ -309,36 +280,7 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
         private Double repetitionPenalty;
         private Integer truncateInputTokens;
         private Boolean includeStopSequence;
-        private URL url;
-        public boolean logResponses;
-        public boolean logRequests;
-        private WatsonxTokenGenerator tokenGenerator;
         private PromptFormatter promptFormatter;
-
-        public Builder modelId(String modelId) {
-            this.modelId = modelId;
-            return this;
-        }
-
-        public Builder version(String version) {
-            this.version = version;
-            return this;
-        }
-
-        public Builder projectId(String projectId) {
-            this.projectId = projectId;
-            return this;
-        }
-
-        public Builder url(URL url) {
-            this.url = url;
-            return this;
-        }
-
-        public Builder timeout(Duration timeout) {
-            this.timeout = timeout;
-            return this;
-        }
 
         public Builder decodingMethod(String decodingMethod) {
             this.decodingMethod = decodingMethod;
@@ -405,23 +347,8 @@ public class WatsonxGenerationModel implements ChatLanguageModel, StreamingChatL
             return this;
         }
 
-        public Builder tokenGenerator(WatsonxTokenGenerator tokenGenerator) {
-            this.tokenGenerator = tokenGenerator;
-            return this;
-        }
-
         public Builder promptFormatter(PromptFormatter promptFormatter) {
             this.promptFormatter = promptFormatter;
-            return this;
-        }
-
-        public Builder logRequests(boolean logRequests) {
-            this.logRequests = logRequests;
-            return this;
-        }
-
-        public Builder logResponses(boolean logResponses) {
-            this.logResponses = logResponses;
             return this;
         }
 

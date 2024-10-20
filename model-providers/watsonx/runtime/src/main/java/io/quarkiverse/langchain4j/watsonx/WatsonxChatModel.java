@@ -2,16 +2,11 @@ package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 
-import java.net.URL;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -36,13 +31,10 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultMe
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
-import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
-import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Context;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 
-public class WatsonxChatModel implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
+public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
     private static final String USAGE_CONTEXT = "USAGE";
     private static final String FINISH_REASON_CONTEXT = "FINISH_REASON";
@@ -50,29 +42,10 @@ public class WatsonxChatModel implements ChatLanguageModel, StreamingChatLanguag
     private static final String TOOLS_CONTEXT = "TOOLS";
     private static final String COMPLETE_MESSAGE_CONTEXT = "COMPLETE_MESSAGE";
 
-    private final String modelId, projectId, version;
-    private final WatsonxRestApi client;
     private final TextChatParameters parameters;
 
     public WatsonxChatModel(Builder builder) {
-
-        QuarkusRestClientBuilder restClientBuilder = QuarkusRestClientBuilder.newBuilder()
-                .baseUrl(builder.url)
-                .clientHeadersFactory(new BearerTokenHeaderFactory(builder.tokenGenerator))
-                .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
-                .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
-
-        if (builder.logRequests || builder.logResponses) {
-            restClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-            restClientBuilder.clientLogger(new WatsonxRestApi.WatsonClientLogger(
-                    builder.logRequests,
-                    builder.logResponses));
-        }
-
-        this.client = restClientBuilder.build(WatsonxRestApi.class);
-        this.modelId = builder.modelId;
-        this.projectId = builder.projectId;
-        this.version = builder.version;
+        super(builder);
 
         this.parameters = TextChatParameters.builder()
                 .maxTokens(builder.maxTokens)
@@ -298,45 +271,12 @@ public class WatsonxChatModel implements ChatLanguageModel, StreamingChatLanguag
         };
     }
 
-    public static final class Builder {
+    public static final class Builder extends Watsonx.Builder<Builder> {
 
-        private String modelId;
-        private String version;
-        private String projectId;
-        private Duration timeout;
         private Integer maxTokens;
         private Double temperature;
         private Double topP;
         private String responseFormat;
-        private URL url;
-        public boolean logResponses;
-        public boolean logRequests;
-        private WatsonxTokenGenerator tokenGenerator;
-
-        public Builder modelId(String modelId) {
-            this.modelId = modelId;
-            return this;
-        }
-
-        public Builder version(String version) {
-            this.version = version;
-            return this;
-        }
-
-        public Builder projectId(String projectId) {
-            this.projectId = projectId;
-            return this;
-        }
-
-        public Builder url(URL url) {
-            this.url = url;
-            return this;
-        }
-
-        public Builder timeout(Duration timeout) {
-            this.timeout = timeout;
-            return this;
-        }
 
         public Builder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
@@ -355,21 +295,6 @@ public class WatsonxChatModel implements ChatLanguageModel, StreamingChatLanguag
 
         public Builder responseFormat(String responseFormat) {
             this.responseFormat = responseFormat;
-            return this;
-        }
-
-        public Builder tokenGenerator(WatsonxTokenGenerator tokenGenerator) {
-            this.tokenGenerator = tokenGenerator;
-            return this;
-        }
-
-        public Builder logRequests(boolean logRequests) {
-            this.logRequests = logRequests;
-            return this;
-        }
-
-        public Builder logResponses(boolean logResponses) {
-            this.logResponses = logResponses;
             return this;
         }
 
