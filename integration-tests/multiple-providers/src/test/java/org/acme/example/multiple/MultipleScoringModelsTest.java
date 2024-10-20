@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.cohere.runtime.QuarkusCohereScoringModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxRerankModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxScoringModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -26,7 +26,7 @@ public class MultipleScoringModelsTest {
 
     @Test
     void firstNamedModel() {
-        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(WatsonxRerankModel.class);
+        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(WatsonxScoringModel.class);
     }
 
     @Test

@@ -30,9 +30,9 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.ScoringRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextRerankRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -148,7 +148,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
                 TextSegment.from(
                         "To Kill a Mockingbird' is a novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize, and has become a classic of modern American literature."));
 
-        TextRerankRequest request = TextRerankRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
+        ScoringRequest request = ScoringRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
                 segments, null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_SCORING_API, 200)

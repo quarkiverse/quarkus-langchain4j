@@ -23,12 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.ScoringRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.ScoringResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
-import io.quarkiverse.langchain4j.watsonx.bean.TextRerankRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextRerankResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationResponse;
@@ -76,7 +76,7 @@ public interface WatsonxRestApi {
 
     @POST
     @Path("text/rerank")
-    TextRerankResponse rerank(TextRerankRequest request, @QueryParam("version") String version)
+    ScoringResponse rerank(ScoringRequest request, @QueryParam("version") String version)
             throws WatsonxException;
 
     @POST

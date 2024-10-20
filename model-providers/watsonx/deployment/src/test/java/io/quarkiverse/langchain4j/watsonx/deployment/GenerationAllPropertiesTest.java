@@ -29,11 +29,11 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.ScoringParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.ScoringRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPenalty;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextRerankParameters;
-import io.quarkiverse.langchain4j.watsonx.bean.TextRerankRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -115,7 +115,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
 
     static EmbeddingParameters embeddingParameters = new EmbeddingParameters(10);
 
-    static TextRerankParameters scoringParameters = new TextRerankParameters(10);
+    static ScoringParameters scoringParameters = new ScoringParameters(10);
 
     @Test
     void check_config() throws Exception {
@@ -210,7 +210,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                 TextSegment.from(
                         "To Kill a Mockingbird' is a novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize, and has become a classic of modern American literature."));
 
-        TextRerankRequest request = TextRerankRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
+        ScoringRequest request = ScoringRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
                 segments, scoringParameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_SCORING_API, 200, "aaaa-mm-dd")

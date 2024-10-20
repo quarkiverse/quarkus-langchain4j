@@ -24,7 +24,7 @@ import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxRerankModel;
+import io.quarkiverse.langchain4j.watsonx.WatsonxScoringModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxTokenGenerator;
 import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
@@ -243,7 +243,7 @@ public class WatsonxRecorder {
         }
 
         ScoringModelConfig rerankModelConfig = watsonConfig.scoringModel();
-        var builder = WatsonxRerankModel.builder()
+        var builder = WatsonxScoringModel.builder()
                 .tokenGenerator(tokenGenerator)
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -256,7 +256,7 @@ public class WatsonxRecorder {
 
         return new Supplier<>() {
             @Override
-            public WatsonxRerankModel get() {
+            public WatsonxScoringModel get() {
                 return builder.build();
             }
         };
