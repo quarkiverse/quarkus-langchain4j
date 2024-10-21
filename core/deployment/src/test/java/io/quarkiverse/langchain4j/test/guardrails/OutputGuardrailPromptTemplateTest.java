@@ -23,14 +23,14 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class InputGuardrailPromptTemplateTest {
+public class OutputGuardrailPromptTemplateTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -100,8 +100,7 @@ public class InputGuardrailPromptTemplateTest {
     @ActivateRequestContext
     void shouldWorkWithNoMemoryIdAndList() {
         aiService.sayHiToMyFriends(List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
-        assertThat(guardrailValidation.spyUserMessageText())
-                .isEqualTo("Tell me something about [Chuck Norris, Jean-Claude Van Damme, Silvester Stallone]!");
+
         assertThat(guardrailValidation.spyUserMessageTemplate()).isEqualTo("Tell me something about {topics}!");
         assertThat(guardrailValidation.spyVariables())
                 .containsExactlyInAnyOrderEntriesOf(Map.of(
@@ -113,8 +112,7 @@ public class InputGuardrailPromptTemplateTest {
     @ActivateRequestContext
     void shouldWorkWithMemoryIdAndList() {
         aiService.sayHiToMyFriends("memory-id-007", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
-        assertThat(guardrailValidation.spyUserMessageText()).isEqualTo(
-                "Tell me something about [Chuck Norris, Jean-Claude Van Damme, Silvester Stallone]! This is my memory id: memory-id-007");
+
         assertThat(guardrailValidation.spyUserMessageTemplate())
                 .isEqualTo("Tell me something about {topics}! This is my memory id: {memoryId}");
         assertThat(guardrailValidation.spyVariables())
@@ -127,8 +125,7 @@ public class InputGuardrailPromptTemplateTest {
     @ActivateRequestContext
     void shouldWorkWithMemoryIdAndOneItemFromList() {
         aiService.sayHiToMyFriend("memory-id-007", List.of("Chuck Norris", "Jean-Claude Van Damme", "Silvester Stallone"));
-        assertThat(guardrailValidation.spyUserMessageText())
-                .isEqualTo("Tell me something about Chuck Norris! This is my memory id: memory-id-007");
+
         assertThat(guardrailValidation.spyUserMessageTemplate())
                 .isEqualTo("Tell me something about {topics[0]}! This is my memory id: {memoryId}");
         assertThat(guardrailValidation.spyVariables())
@@ -149,59 +146,55 @@ public class InputGuardrailPromptTemplateTest {
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         @UserMessage("Tell me a joke")
         String getJoke();
 
         @UserMessage("Tell me another joke")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String getAnotherJoke(@MemoryId String memoryId);
 
         @UserMessage("Say hi to my friend {friend}!")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriendNoMemory(String friend);
 
         @UserMessage("Say hi to my friend {friend}!")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriend(@MemoryId String mem, String friend);
 
         @UserMessage("Tell me something about {topic1}, {topic2}, {topic3}!")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriends(String topic1, String topic2, String topic3);
 
         @UserMessage("Tell me something about {topics}!")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriends(List<String> topics);
 
         @UserMessage("Tell me something about {topics}! This is my memory id: {memoryId}")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriends(@MemoryId String memoryId, List<String> topics);
 
         @UserMessage("Tell me something about {topics[0]}! This is my memory id: {memoryId}")
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String sayHiToMyFriend(@MemoryId String memoryId, List<String> topics);
 
-        @InputGuardrails(GuardrailValidation.class)
+        @OutputGuardrails(GuardrailValidation.class)
         String saySomething(String isThisAPromptOrAParameter);
 
     }
 
     @RequestScoped
-    public static class GuardrailValidation implements InputGuardrail {
+    public static class GuardrailValidation implements OutputGuardrail {
 
-        InputGuardrailParams params;
+        OutputGuardrailParams params;
 
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailParams params) {
             this.params = params;
             return success();
         }
 
         public String spyUserMessageTemplate() {
             return params.userMessageTemplate();
-        }
-
-        public String spyUserMessageText() {
-            return params.userMessage().singleText();
         }
 
         public Map<String, Object> spyVariables() {

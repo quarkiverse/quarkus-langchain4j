@@ -193,6 +193,13 @@ public final class AiServiceMethodCreateInfo {
         return accumulator;
     }
 
+    public String getUserMessageTemplate() {
+        Optional<String> userMessageTemplateOpt = this.getUserMessageInfo().template()
+                .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
+
+        return userMessageTemplateOpt.orElse(null);
+    }
+
     public record UserMessageInfo(Optional<TemplateInfo> template,
             Optional<Integer> paramPosition,
             Optional<Integer> userNameParamPosition,

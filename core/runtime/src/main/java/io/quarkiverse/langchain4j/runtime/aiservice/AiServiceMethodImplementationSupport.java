@@ -146,12 +146,12 @@ public class AiServiceMethodImplementationSupport {
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
-        Map<String, Object> templateParams = getTemplateParams(methodArgs, methodCreateInfo.getUserMessageInfo());
+        Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
         if (isImage(returnType) || isResultImage(returnType)) {
             return doImplementGenerateImage(methodCreateInfo, context, audit, systemMessage, userMessage, memoryId, returnType,
-                    templateParams);
+                    templateVariables);
         }
 
         if (audit != null) {
@@ -207,7 +207,7 @@ public class AiServiceMethodImplementationSupport {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
 
                                 GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, (UserMessage) augmentedUserMessage,
-                                        context.chatMemory(memoryId), ar, templateParams);
+                                        context.chatMemory(memoryId), ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
                                 return new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId);
@@ -233,7 +233,7 @@ public class AiServiceMethodImplementationSupport {
 
         GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemory(memoryId) : null,
-                augmentationResult, templateParams);
+                augmentationResult, templateVariables);
 
         CommittableChatMemory chatMemory;
         List<ChatMessage> messagesToSend;
@@ -272,7 +272,8 @@ public class AiServiceMethodImplementationSupport {
                         OutputGuardrailResult result;
                         try {
                             result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
-                                    new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult));
+                                    new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult,
+                                            methodCreateInfo.getUserMessageTemplate(), templateVariables));
                         } catch (Exception e) {
                             throw new GuardrailException(e.getMessage(), e);
                         }
@@ -359,9 +360,12 @@ public class AiServiceMethodImplementationSupport {
             tokenUsageAccumulator = tokenUsageAccumulator.add(response.tokenUsage());
         }
 
+        String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
+
         response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory, context.chatModel, response,
                 toolSpecifications,
-                new OutputGuardrailParams(response.content(), chatMemory, augmentationResult));
+                new OutputGuardrailParams(response.content(), chatMemory, augmentationResult, userMessageTemplate,
+                        templateVariables));
 
         // everything worked as expected so let's commit the messages
         chatMemory.commit();
@@ -382,7 +386,7 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
             Audit audit, Optional<SystemMessage> systemMessage, UserMessage userMessage,
-            Object memoryId, Type returnType, Map<String, Object> templateParams) {
+            Object memoryId, Type returnType, Map<String, Object> templateVariables) {
         String imagePrompt;
         if (systemMessage.isPresent()) {
             imagePrompt = systemMessage.get().text() + "\n" + userMessage.singleText();
@@ -400,7 +404,7 @@ public class AiServiceMethodImplementationSupport {
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
         GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemory(memoryId) : null,
-                augmentationResult, templateParams);
+                augmentationResult, templateVariables);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
         if (audit != null) {
@@ -592,7 +596,7 @@ public class AiServiceMethodImplementationSupport {
 
         if (userMessageInfo.template().isPresent()) {
             AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.template().get();
-            Map<String, Object> templateParams = getTemplateParams(methodArgs, userMessageInfo);
+            Map<String, Object> templateVariables = getTemplateVariables(methodArgs, userMessageInfo);
             String templateText;
             if (templateInfo.text().isPresent()) {
                 templateText = templateInfo.text().get();
@@ -615,9 +619,9 @@ public class AiServiceMethodImplementationSupport {
             }
 
             // we do not need to apply the instructions as they have already been added to the template text at build time
-            templateParams.put(ResponseSchemaUtil.templateParam(),
+            templateVariables.put(ResponseSchemaUtil.templateParam(),
                     createInfo.getResponseSchemaInfo().outputFormatInstructions());
-            Prompt prompt = PromptTemplate.from(templateText).apply(templateParams);
+            Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
             return createUserMessage(userName, imageContent, prompt.text());
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
@@ -640,9 +644,9 @@ public class AiServiceMethodImplementationSupport {
         }
     }
 
-    private static Map<String, Object> getTemplateParams(Object[] methodArgs,
+    private static Map<String, Object> getTemplateVariables(Object[] methodArgs,
             AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo) {
-        Map<String, Object> templateParams = new HashMap<>();
+        Map<String, Object> variables = new HashMap<>();
 
         if (userMessageInfo.template().isPresent()) {
             AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.template().get();
@@ -650,11 +654,11 @@ public class AiServiceMethodImplementationSupport {
 
             for (var entry : nameToParamPosition.entrySet()) {
                 Object value = transformTemplateParamValue(methodArgs[entry.getValue()]);
-                templateParams.put(entry.getKey(), value);
+                variables.put(entry.getKey(), value);
             }
         }
 
-        return templateParams;
+        return variables;
     }
 
     private static UserMessage createUserMessage(String name, ImageContent imageContent, String text) {

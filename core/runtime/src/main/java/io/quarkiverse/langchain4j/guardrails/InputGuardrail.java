@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.guardrails;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import dev.langchain4j.data.message.UserMessage;
 import io.smallrye.common.annotation.Experimental;
