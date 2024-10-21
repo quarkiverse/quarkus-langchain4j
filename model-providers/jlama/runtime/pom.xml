@@ -20,8 +20,9 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-jlama</artifactId>            
+            <groupId>com.github.tjake</groupId>
+            <artifactId>jlama-core</artifactId>
+            <version>${jlama.version}</version>
         </dependency>
 
         <dependency>
