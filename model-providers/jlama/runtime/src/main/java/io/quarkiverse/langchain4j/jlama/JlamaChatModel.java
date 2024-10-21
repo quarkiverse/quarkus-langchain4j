@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jboss.logging.Logger;
+
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.functions.Generator;
 import com.github.tjake.jlama.safetensors.DType;
 import com.github.tjake.jlama.safetensors.prompt.PromptContext;
 import com.github.tjake.jlama.safetensors.prompt.PromptSupport;
-import com.github.tjake.jlama.safetensors.prompt.Tool;
 import com.github.tjake.jlama.safetensors.prompt.ToolCall;
 import com.github.tjake.jlama.safetensors.prompt.ToolResult;
 import com.github.tjake.jlama.util.JsonSupport;
@@ -35,9 +36,14 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
 public class JlamaChatModel implements ChatLanguageModel {
+
+    private static final Logger log = Logger.getLogger(JlamaChatModel.class);
+
     private final AbstractModel model;
     private final Float temperature;
     private final Integer maxTokens;
+    private final Boolean logRequests;
+    private final Boolean logResponses;
 
     public JlamaChatModel(JlamaChatModelBuilder builder) {
 
@@ -46,21 +52,27 @@ public class JlamaChatModel implements ChatLanguageModel {
                 .withRetry(() -> registry.downloadModel(builder.modelName, Optional.ofNullable(builder.authToken)), 3);
 
         JlamaModel.Loader loader = jlamaModel.loader();
-        if (builder.quantizeModelAtRuntime != null && builder.quantizeModelAtRuntime)
+        if (builder.quantizeModelAtRuntime != null && builder.quantizeModelAtRuntime) {
             loader = loader.quantized();
+        }
 
-        if (builder.workingQuantizedType != null)
+        if (builder.workingQuantizedType != null) {
             loader = loader.workingQuantizationType(builder.workingQuantizedType);
+        }
 
-        if (builder.threadCount != null)
+        if (builder.threadCount != null) {
             loader = loader.threadCount(builder.threadCount);
+        }
 
-        if (builder.workingDirectory != null)
+        if (builder.workingDirectory != null) {
             loader = loader.workingDirectory(builder.workingDirectory);
+        }
 
         this.model = loader.load();
         this.temperature = builder.temperature == null ? 0.3f : builder.temperature;
         this.maxTokens = builder.maxTokens == null ? model.getConfig().contextLength : builder.maxTokens;
+        this.logRequests = builder.logRequests != null && builder.logRequests;
+        this.logResponses = builder.logResponses != null && builder.logResponses;
     }
 
     public static JlamaChatModelBuilder builder() {
@@ -74,9 +86,29 @@ public class JlamaChatModel implements ChatLanguageModel {
 
     @Override
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        if (model.promptSupport().isEmpty())
+        if (model.promptSupport().isEmpty()) {
             throw new UnsupportedOperationException("This model does not support chat generation");
+        }
 
+        if (logRequests) {
+            log.info("Request: " + messages);
+        }
+
+        PromptSupport.Builder promptBuilder = promptBuilder(messages);
+        Generator.Response r = model.generate(UUID.randomUUID(), promptContext(promptBuilder, toolSpecifications), temperature,
+                maxTokens, (token, time) -> {
+                });
+        Response<AiMessage> aiResponse = Response.from(aiMessageForResponse(r),
+                new TokenUsage(r.promptTokens, r.generatedTokens), toFinishReason(r.finishReason));
+
+        if (logResponses) {
+            log.info("Response: " + aiResponse);
+        }
+
+        return aiResponse;
+    }
+
+    private PromptSupport.Builder promptBuilder(List<ChatMessage> messages) {
         PromptSupport.Builder promptBuilder = model.promptSupport().get().builder();
 
         for (ChatMessage message : messages) {
@@ -86,17 +118,18 @@ public class JlamaChatModel implements ChatLanguageModel {
                     StringBuilder finalMessage = new StringBuilder();
                     UserMessage userMessage = (UserMessage) message;
                     for (Content content : userMessage.contents()) {
-                        if (content.type() != ContentType.TEXT)
+                        if (content.type() != ContentType.TEXT) {
                             throw new UnsupportedOperationException("Unsupported content type: " + content.type());
-
+                        }
                         finalMessage.append(((TextContent) content).text());
                     }
                     promptBuilder.addUserMessage(finalMessage.toString());
                 }
                 case AI -> {
                     AiMessage aiMessage = (AiMessage) message;
-                    if (aiMessage.text() != null)
+                    if (aiMessage.text() != null) {
                         promptBuilder.addAssistantMessage(aiMessage.text());
+                    }
 
                     if (aiMessage.hasToolExecutionRequests())
                         for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
@@ -113,13 +146,15 @@ public class JlamaChatModel implements ChatLanguageModel {
                 default -> throw new IllegalArgumentException("Unsupported message type: " + message.type());
             }
         }
+        return promptBuilder;
+    }
 
-        List<Tool> tools = toolSpecifications.stream().map(JlamaModel::toTool).toList();
+    private PromptContext promptContext(PromptSupport.Builder promptBuilder, List<ToolSpecification> toolSpecifications) {
+        return toolSpecifications.isEmpty() ? promptBuilder.build()
+                : promptBuilder.build(toolSpecifications.stream().map(JlamaModel::toTool).toList());
+    }
 
-        PromptContext promptContext = tools.isEmpty() ? promptBuilder.build() : promptBuilder.build(tools);
-        Generator.Response r = model.generate(UUID.randomUUID(), promptContext, temperature, maxTokens, (token, time) -> {
-        });
-
+    private AiMessage aiMessageForResponse(Generator.Response r) {
         if (r.finishReason == Generator.FinishReason.TOOL_CALL) {
             List<ToolExecutionRequest> toolCalls = r.toolCalls.stream().map(f -> ToolExecutionRequest.builder()
                     .name(f.getName())
@@ -127,12 +162,10 @@ public class JlamaChatModel implements ChatLanguageModel {
                     .arguments(JsonSupport.toJson(f.getParameters()))
                     .build()).toList();
 
-            return Response.from(AiMessage.from(toolCalls), new TokenUsage(r.promptTokens, r.generatedTokens),
-                    toFinishReason(r.finishReason));
+            return AiMessage.from(toolCalls);
         }
 
-        return Response.from(AiMessage.from(r.responseText), new TokenUsage(r.promptTokens, r.generatedTokens),
-                toFinishReason(r.finishReason));
+        return AiMessage.from(r.responseText);
     }
 
     @Override
@@ -152,6 +185,8 @@ public class JlamaChatModel implements ChatLanguageModel {
         private DType workingQuantizedType;
         private Float temperature;
         private Integer maxTokens;
+        private Boolean logRequests;
+        private Boolean logResponses;
 
         public JlamaChatModelBuilder modelCachePath(Optional<Path> modelCachePath) {
             this.modelCachePath = modelCachePath;
@@ -195,6 +230,16 @@ public class JlamaChatModel implements ChatLanguageModel {
 
         public JlamaChatModelBuilder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
+            return this;
+        }
+
+        public JlamaChatModelBuilder logRequests(Boolean logRequests) {
+            this.logRequests = logRequests;
+            return this;
+        }
+
+        public JlamaChatModelBuilder logResponses(Boolean logResponses) {
+            this.logResponses = logResponses;
             return this;
         }
 

@@ -3,7 +3,9 @@ package io.quarkiverse.langchain4j.jlama.runtime.config;
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -46,5 +48,19 @@ public interface LangChain4jJlamaConfig {
          */
         @WithDefault("true")
         Boolean enableIntegration();
+
+        /**
+         * Whether Jlama should log requests
+         */
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests}")
+        Optional<Boolean> logRequests();
+
+        /**
+         * Whether Jlama client should log responses
+         */
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
+        Optional<Boolean> logResponses();
     }
 }
