@@ -30,7 +30,10 @@ public class JlamaAiRecorder {
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
 
-            var builder = JlamaChatModel.builder().modelName(jlamaFixedRuntimeConfig.chatModel().modelName());
+            String modelName = jlamaFixedRuntimeConfig.chatModel().modelName();
+            var builder = JlamaChatModel.builder()
+                    .modelName(modelName)
+                    .modelCachePath(fixedRuntimeConfig.modelsPath());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -65,7 +68,9 @@ public class JlamaAiRecorder {
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
 
-            var builder = JlamaStreamingChatModel.builder().modelName(jlamaFixedRuntimeConfig.chatModel().modelName());
+            var builder = JlamaStreamingChatModel.builder()
+                    .modelName(jlamaFixedRuntimeConfig.chatModel().modelName())
+                    .modelCachePath(fixedRuntimeConfig.modelsPath());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -94,7 +99,9 @@ public class JlamaAiRecorder {
                 fixedRuntimeConfig, configName);
 
         if (jlamaConfig.enableIntegration()) {
-            var builder = JlamaEmbeddingModel.builder().modelName(jlamaFixedRuntimeConfig.embeddingModel().modelName());
+            var builder = JlamaEmbeddingModel.builder()
+                    .modelName(jlamaFixedRuntimeConfig.embeddingModel().modelName())
+                    .modelCachePath(fixedRuntimeConfig.modelsPath());
 
             return new Supplier<>() {
                 @Override

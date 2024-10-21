@@ -80,9 +80,10 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
         }
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static class JlamaStreamingChatModelBuilder {
 
-        private Path modelCachePath;
+        private Optional<Path> modelCachePath;
         private String modelName;
         private String authToken;
         private Integer threadCount;
@@ -92,7 +93,7 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
         private Float temperature;
         private Integer maxTokens;
 
-        public JlamaStreamingChatModelBuilder modelCachePath(Path modelCachePath) {
+        public JlamaStreamingChatModelBuilder modelCachePath(Optional<Path> modelCachePath) {
             this.modelCachePath = modelCachePath;
             return this;
         }

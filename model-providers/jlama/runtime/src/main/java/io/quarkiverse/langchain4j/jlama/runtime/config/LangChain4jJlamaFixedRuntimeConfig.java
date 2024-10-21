@@ -2,8 +2,11 @@ package io.quarkiverse.langchain4j.jlama.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXED;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -30,6 +33,13 @@ public interface LangChain4jJlamaFixedRuntimeConfig {
     @WithParentName
     @WithDefaults
     Map<String, JlamaConfig> namedConfig();
+
+    /**
+     * Location on the file-system which serves as a cache for the models
+     *
+     */
+    @ConfigDocDefault("${user.name}/.jlama/models")
+    Optional<Path> modelsPath();
 
     @ConfigGroup
     interface JlamaConfig {
