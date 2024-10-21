@@ -1,5 +1,17 @@
 package io.quarkiverse.langchain4j.runtime.devui;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
+import jakarta.enterprise.context.control.ActivateRequestContext;
+
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -36,17 +48,6 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 @ActivateRequestContext
 public class ChatJsonRPCService {
@@ -67,12 +68,12 @@ public class ChatJsonRPCService {
     private final ToolProvider toolProvider;
 
     public ChatJsonRPCService(@All List<ChatLanguageModel> models, // don't use ChatLanguageModel model because it results in the default model not being configured
-                              @All List<StreamingChatLanguageModel> streamingModels,
-                              @All List<Supplier<RetrievalAugmentor>> retrievalAugmentorSuppliers,
-                              @All List<RetrievalAugmentor> retrievalAugmentors,
-                              ChatMemoryProvider memoryProvider,
-                              QuarkusToolExecutorFactory toolExecutorFactory,
-                              @All List<Supplier<ToolProvider>> toolProviders) {
+            @All List<StreamingChatLanguageModel> streamingModels,
+            @All List<Supplier<RetrievalAugmentor>> retrievalAugmentorSuppliers,
+            @All List<RetrievalAugmentor> retrievalAugmentors,
+            ChatMemoryProvider memoryProvider,
+            QuarkusToolExecutorFactory toolExecutorFactory,
+            @All List<Supplier<ToolProvider>> toolProviders) {
         this.model = models.get(0);
         this.toolProvider = getToolProvider(toolProviders);
         this.streamingModel = streamingModels.isEmpty() ? Optional.empty() : Optional.of(streamingModels.get(0));
@@ -175,7 +176,7 @@ public class ChatJsonRPCService {
                 }
 
                 StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
-                boolean hasToolProvider = setToolsViaProviderIfAvaible(memory, userMessage);
+                boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
 
                 // invoke tools if applicable
                 Response<AiMessage> modelResponse;
@@ -236,7 +237,7 @@ public class ChatJsonRPCService {
                 memory.add(new UserMessage(message));
             }
 
-            boolean hasToolProvider = setToolsViaProviderIfAvaible(memory, userMessage);
+            boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
 
             Response<AiMessage> modelResponse;
             if (toolSpecifications.isEmpty()) {
@@ -291,8 +292,8 @@ public class ChatJsonRPCService {
     }
 
     private void executeWithToolsAndStreaming(ChatMemory memory,
-                                              MultiEmitter<? super JsonObject> em,
-                                              int toolExecutionsLeft) {
+            MultiEmitter<? super JsonObject> em,
+            int toolExecutionsLeft) {
         toolExecutionsLeft--;
         if (toolExecutionsLeft == 0) {
             throw new RuntimeException(
@@ -355,7 +356,7 @@ public class ChatJsonRPCService {
         return null;
     }
 
-    private boolean setToolsViaProviderIfAvaible(ChatMemory memory, UserMessage userMessage) {
+    private boolean setToolsViaProviderIfAvailable(ChatMemory memory, UserMessage userMessage) {
         boolean hasToolProvider = toolProvider != null;
         if (hasToolProvider) {
             ToolProviderRequest toolRequest = new ToolProviderRequest(memory, userMessage);
