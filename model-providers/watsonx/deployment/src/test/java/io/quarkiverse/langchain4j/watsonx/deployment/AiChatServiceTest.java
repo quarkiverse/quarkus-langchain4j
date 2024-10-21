@@ -20,7 +20,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.ImageContent.DetailLevel;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
@@ -73,6 +77,12 @@ public class AiChatServiceTest extends WireMockAbstract {
     }
 
     @Singleton
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    interface ImageDescriptor {
+        String chat(Image image, @UserMessage String text);
+    }
+
+    @Singleton
     @RegisterAiService(tools = Calculator.class)
     @SystemMessage("This is a systemMessage")
     interface AIServiceWithTool {
@@ -85,6 +95,9 @@ public class AiChatServiceTest extends WireMockAbstract {
     AIService aiService;
 
     @Inject
+    ImageDescriptor imageDescriptor;
+
+    @Inject
     AIServiceWithTool aiServiceWithTool;
 
     @Inject
@@ -92,7 +105,6 @@ public class AiChatServiceTest extends WireMockAbstract {
 
     @Singleton
     static class Calculator {
-
         @Tool("Execute the sum of two numbers")
         public int sum(int first, int second) {
             return first + second;
@@ -123,6 +135,53 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .build();
 
         assertEquals("AI Response", aiService.chat("Hello"));
+    }
+
+    @Test
+    void chat_with_image() throws Exception {
+
+        var messages = List.<TextChatMessage> of(
+                TextChatMessageUser.of(
+                        dev.langchain4j.data.message.UserMessage.from(
+                                TextContent.from("Tell me more about this image"),
+                                ImageContent.from("test", "jpeg", DetailLevel.LOW))));
+
+        var RESPONSE = """
+                {
+                    "id": "chat-0102753c2c33412fa639a6b0eb5401da",
+                    "model_id": "meta-llama/llama-3-2-90b-vision-instruct",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": "The image depicts a white cat with yellow eyes."
+                            },
+                            "finish_reason": "stop"
+                        }
+                    ],
+                    "created": 1729517211,
+                    "model_version": "3.2.0",
+                    "created_at": "2024-10-21T13:26:57.471Z",
+                    "usage": {
+                        "completion_tokens": 123,
+                        "prompt_tokens": 6422,
+                        "total_tokens": 6545
+                    }
+                }""";
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+                .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
+                .response(RESPONSE)
+                .build();
+
+        Image image = Image.builder()
+                .base64Data("test")
+                .mimeType("jpeg")
+                .build();
+
+        assertEquals("The image depicts a white cat with yellow eyes.",
+                imageDescriptor.chat(image, "Tell me more about this image"));
     }
 
     @Test

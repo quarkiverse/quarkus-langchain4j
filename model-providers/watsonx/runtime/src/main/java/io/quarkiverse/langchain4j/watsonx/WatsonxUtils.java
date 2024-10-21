@@ -1,10 +1,14 @@
 package io.quarkiverse.langchain4j.watsonx;
 
+import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import jakarta.ws.rs.WebApplicationException;
 
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.internal.Utils;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 
@@ -43,5 +47,21 @@ public class WatsonxUtils {
             }
         }
         throw new RuntimeException("Failed after " + maxAttempts + " attempts");
+    }
+
+    public static String base64Image(Image image) {
+
+        if (Objects.nonNull(image.base64Data()))
+            return image.base64Data();
+
+        try {
+            byte[] bytes = switch (image.url().getScheme()) {
+                case "http", "https", "file" -> Utils.readBytes(image.url().toString());
+                default -> throw new RuntimeException("The only supported image schemes are: [http, https, file]");
+            };
+            return Base64.getEncoder().encodeToString(bytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting the image to base64, see the log for more details", e);
+        }
     }
 }

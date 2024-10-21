@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
+import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.base64Image;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
@@ -125,7 +128,18 @@ public sealed interface TextChatMessage
                                 "type", "text",
                                 "text", textContent.text()));
                     }
-                    case AUDIO, IMAGE, PDF, TEXT_FILE, VIDEO ->
+                    case IMAGE -> {
+                        var imageContent = ImageContent.class.cast(content);
+                        var base64 = "data:image/%s;base64,%s".formatted(
+                                imageContent.image().mimeType(),
+                                base64Image(imageContent.image()));
+                        values.add(Map.of(
+                                "type", "image_url",
+                                "image_url", Map.of(
+                                        "url", base64,
+                                        "detail", imageContent.detailLevel().name().toLowerCase())));
+                    }
+                    case AUDIO, PDF, TEXT_FILE, VIDEO ->
                         throw new UnsupportedOperationException("Unimplemented case: " + content.type());
                 }
             }
