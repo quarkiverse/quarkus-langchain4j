@@ -39,6 +39,22 @@ public abstract class Watsonx {
         return client;
     }
 
+    public String getModelId() {
+        return modelId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getSpaceId() {
+        return spaceId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
     @SuppressWarnings("unchecked")
     public static abstract class Builder<T extends Builder<T>> {
 

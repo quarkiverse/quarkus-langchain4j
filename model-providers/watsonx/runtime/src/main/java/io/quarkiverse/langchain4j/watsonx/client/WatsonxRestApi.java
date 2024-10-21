@@ -8,8 +8,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -27,6 +29,8 @@ import io.quarkiverse.langchain4j.watsonx.bean.ScoringRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.ScoringResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
@@ -55,29 +59,30 @@ public interface WatsonxRestApi {
 
     @POST
     @Path("text/generation")
-    TextGenerationResponse generation(TextGenerationRequest request, @QueryParam("version") String version)
-            throws WatsonxException;
+    TextGenerationResponse generation(TextGenerationRequest request,
+            @QueryParam("version") String version);
 
     @POST
     @Path("text/generation_stream")
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<TextGenerationResponse> generationStreaming(TextGenerationRequest request, @QueryParam("version") String version);
+    Multi<TextGenerationResponse> generationStreaming(TextGenerationRequest request,
+            @QueryParam("version") String version);
 
     @POST
     @Path("text/chat")
-    TextChatResponse chat(TextChatRequest request, @QueryParam("version") String version)
-            throws WatsonxException;
+    TextChatResponse chat(TextChatRequest request,
+            @QueryParam("version") String version);
 
     @POST
     @Path("text/chat_stream")
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    Multi<TextStreamingChatResponse> streamingChat(TextChatRequest request, @QueryParam("version") String version)
-            throws WatsonxException;
+    Multi<TextStreamingChatResponse> streamingChat(TextChatRequest request,
+            @QueryParam("version") String version);
 
     @POST
     @Path("text/rerank")
-    ScoringResponse rerank(ScoringRequest request, @QueryParam("version") String version)
-            throws WatsonxException;
+    ScoringResponse rerank(ScoringRequest request,
+            @QueryParam("version") String version);
 
     @POST
     @Path("text/tokenization")
@@ -87,6 +92,18 @@ public interface WatsonxRestApi {
     @POST
     @Path("/text/embeddings")
     EmbeddingResponse embeddings(EmbeddingRequest request,
+            @QueryParam("version") String version);
+
+    @POST
+    @Path("/text/extractions")
+    TextExtractionResponse startTextExtractionJob(TextExtractionRequest request,
+            @QueryParam("version") String version);
+
+    @GET
+    @Path("text/extractions/{id}")
+    TextExtractionResponse getTextExtractionDetails(@PathParam("id") String id,
+            @QueryParam("space_id") String spaceId,
+            @QueryParam("project_id") String projectId,
             @QueryParam("version") String version);
 
     @ClientExceptionMapper
