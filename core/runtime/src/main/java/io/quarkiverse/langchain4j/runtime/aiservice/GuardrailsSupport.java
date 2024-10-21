@@ -27,17 +27,15 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 public class GuardrailsSupport {
 
     public static void invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
-            ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateParams) {
+            ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
         InputGuardrailResult result;
         try {
 
-            Optional<String> userMessageTemplateOpt = methodCreateInfo.getUserMessageInfo().template()
-                    .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
-
-            String userMessageTemplate = userMessageTemplateOpt.orElse(null);
+            String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
 
             result = invokeInputGuardRails(methodCreateInfo,
-                    new InputGuardrailParams(userMessage, chatMemory, augmentationResult, promptTemplate, templateParams));
+                    new InputGuardrailParams(userMessage, chatMemory, augmentationResult, userMessageTemplate,
+                            templateVariables));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }
@@ -88,7 +86,7 @@ public class GuardrailsSupport {
                 }
                 attempt++;
                 output = new OutputGuardrailParams(response.content(), output.memory(),
-                        output.augmentationResult());
+                        output.augmentationResult(), output.userMessageTemplate(), output.variables());
             } else {
                 break;
             }
