@@ -12,21 +12,25 @@ import io.quarkiverse.langchain4j.jlama.JlamaChatModel;
 import io.quarkiverse.langchain4j.jlama.JlamaEmbeddingModel;
 import io.quarkiverse.langchain4j.jlama.JlamaStreamingChatModel;
 import io.quarkiverse.langchain4j.jlama.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.jlama.runtime.config.EmbeddingModelConfig;
-import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaAiConfig;
+import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaConfig;
+import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class JlamaAiRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jJlamaAiConfig runtimeConfig, String configName) {
-        LangChain4jJlamaAiConfig.JlamaAiConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jJlamaConfig runtimeConfig,
+            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
+            String configName) {
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+        LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
+                fixedRuntimeConfig, configName);
 
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
 
-            var builder = JlamaChatModel.builder().modelName(chatModelConfig.modelName());
+            var builder = JlamaChatModel.builder().modelName(jlamaFixedRuntimeConfig.chatModel().modelName());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -51,14 +55,17 @@ public class JlamaAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jJlamaAiConfig runtimeConfig,
+    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jJlamaConfig runtimeConfig,
+            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
             String configName) {
-        LangChain4jJlamaAiConfig.JlamaAiConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+        LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
+                fixedRuntimeConfig, configName);
 
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
 
-            var builder = JlamaStreamingChatModel.builder().modelName(chatModelConfig.modelName());
+            var builder = JlamaStreamingChatModel.builder().modelName(jlamaFixedRuntimeConfig.chatModel().modelName());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -79,12 +86,15 @@ public class JlamaAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jJlamaAiConfig runtimeConfig, String configName) {
-        LangChain4jJlamaAiConfig.JlamaAiConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jJlamaConfig runtimeConfig,
+            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
+            String configName) {
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+        LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
+                fixedRuntimeConfig, configName);
 
         if (jlamaConfig.enableIntegration()) {
-            EmbeddingModelConfig embeddingModelConfig = jlamaConfig.embeddingModel();
-            var builder = JlamaEmbeddingModel.builder().modelName(embeddingModelConfig.modelName());
+            var builder = JlamaEmbeddingModel.builder().modelName(jlamaFixedRuntimeConfig.embeddingModel().modelName());
 
             return new Supplier<>() {
                 @Override
@@ -102,15 +112,27 @@ public class JlamaAiRecorder {
         }
     }
 
-    private LangChain4jJlamaAiConfig.JlamaAiConfig correspondingJlamaConfig(LangChain4jJlamaAiConfig runtimeConfig,
+    private LangChain4jJlamaConfig.JlamaConfig correspondingJlamaConfig(LangChain4jJlamaConfig runtimeConfig,
             String configName) {
-        LangChain4jJlamaAiConfig.JlamaAiConfig huggingFaceConfig;
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig;
         if (NamedConfigUtil.isDefault(configName)) {
-            huggingFaceConfig = runtimeConfig.defaultConfig();
+            jlamaConfig = runtimeConfig.defaultConfig();
         } else {
-            huggingFaceConfig = runtimeConfig.namedConfig().get(configName);
+            jlamaConfig = runtimeConfig.namedConfig().get(configName);
         }
-        return huggingFaceConfig;
+        return jlamaConfig;
+    }
+
+    private LangChain4jJlamaFixedRuntimeConfig.JlamaConfig correspondingJlamaFixedRuntimeConfig(
+            LangChain4jJlamaFixedRuntimeConfig runtimeConfig,
+            String configName) {
+        LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaConfig;
+        if (NamedConfigUtil.isDefault(configName)) {
+            jlamaConfig = runtimeConfig.defaultConfig();
+        } else {
+            jlamaConfig = runtimeConfig.namedConfig().get(configName);
+        }
+        return jlamaConfig;
     }
 
 }

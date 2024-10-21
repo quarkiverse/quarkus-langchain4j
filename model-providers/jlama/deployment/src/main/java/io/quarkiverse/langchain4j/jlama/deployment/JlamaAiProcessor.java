@@ -18,7 +18,8 @@ import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.jlama.runtime.JlamaAiRecorder;
-import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaAiConfig;
+import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaConfig;
+import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -60,20 +61,23 @@ public class JlamaAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(JlamaAiRecorder recorder, List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding, LangChain4jJlamaAiConfig config,
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            LangChain4jJlamaConfig runtimeConfig,
+            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(CHAT_MODEL).setRuntimeInit().defaultBean()
-                        .scope(ApplicationScoped.class).supplier(recorder.chatModel(config, configName));
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.chatModel(runtimeConfig, fixedRuntimeConfig, configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
                 var streamingBuilder = SyntheticBeanBuildItem.configure(STREAMING_CHAT_MODEL).setRuntimeInit()
                         .defaultBean().scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, configName));
+                        .supplier(recorder.streamingChatModel(runtimeConfig, fixedRuntimeConfig, configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -84,7 +88,7 @@ public class JlamaAiProcessor {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(EMBEDDING_MODEL).setRuntimeInit().defaultBean()
                         .unremovable().scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .supplier(recorder.embeddingModel(runtimeConfig, fixedRuntimeConfig, configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
