@@ -30,6 +30,9 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.ToolProviderRequest;
+import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatMessagePojo;
 import io.quarkiverse.langchain4j.runtime.devui.json.ChatResultPojo;
@@ -62,14 +65,17 @@ public class ChatJsonRPCService {
 
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
+    private final ToolProvider toolProvider;
 
     public ChatJsonRPCService(@All List<ChatLanguageModel> models, // don't use ChatLanguageModel model because it results in the default model not being configured
             @All List<StreamingChatLanguageModel> streamingModels,
             @All List<Supplier<RetrievalAugmentor>> retrievalAugmentorSuppliers,
             @All List<RetrievalAugmentor> retrievalAugmentors,
             ChatMemoryProvider memoryProvider,
-            QuarkusToolExecutorFactory toolExecutorFactory) {
+            QuarkusToolExecutorFactory toolExecutorFactory,
+            @All List<Supplier<ToolProvider>> toolProviders) {
         this.model = models.get(0);
+        this.toolProvider = getToolProvider(toolProviders);
         this.streamingModel = streamingModels.isEmpty() ? Optional.empty() : Optional.of(streamingModels.get(0));
         this.retrievalAugmentor = null;
         for (Supplier<RetrievalAugmentor> supplier : retrievalAugmentorSuppliers) {
@@ -89,7 +95,7 @@ public class ChatJsonRPCService {
         this.memoryProvider = memoryProvider;
         // retrieve available tools
         Map<String, List<ToolMethodCreateInfo>> toolsMetadata = ToolsRecorder.getMetadata();
-        if (toolsMetadata != null) {
+        if (toolsMetadata != null && this.toolProvider == null) {
             toolExecutors = new HashMap<>();
             toolSpecifications = new ArrayList<>();
             for (Map.Entry<String, List<ToolMethodCreateInfo>> entry : toolsMetadata.entrySet()) {
@@ -109,6 +115,11 @@ public class ChatJsonRPCService {
                     toolSpecifications.add(methodCreateInfo.toolSpecification());
                 }
             }
+
+        } else if (this.toolProvider != null) {
+            // mutable list / map
+            toolExecutors = new HashMap<>();
+            toolSpecifications = new ArrayList<>();
         } else {
             toolSpecifications = List.of();
             toolExecutors = Map.of();
@@ -153,8 +164,8 @@ public class ChatJsonRPCService {
         Multi<JsonObject> stream = Multi.createFrom().emitter(em -> {
             try {
                 // invoke RAG is applicable
+                UserMessage userMessage = UserMessage.from(message);
                 if (retrievalAugmentor != null && ragEnabled) {
-                    UserMessage userMessage = UserMessage.from(message);
                     Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
                     AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                     ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
@@ -165,6 +176,7 @@ public class ChatJsonRPCService {
                 }
 
                 StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
+                boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
 
                 // invoke tools if applicable
                 Response<AiMessage> modelResponse;
@@ -215,8 +227,8 @@ public class ChatJsonRPCService {
         // removing single messages
         List<ChatMessage> chatMemoryBackup = memory.messages();
         try {
+            UserMessage userMessage = UserMessage.from(message);
             if (retrievalAugmentor != null && ragEnabled) {
-                UserMessage userMessage = UserMessage.from(message);
                 Metadata metadata = Metadata.from(userMessage, currentMemoryId.get(), memory.messages());
                 AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                 ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
@@ -225,12 +237,19 @@ public class ChatJsonRPCService {
                 memory.add(new UserMessage(message));
             }
 
+            boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
+
             Response<AiMessage> modelResponse;
             if (toolSpecifications.isEmpty()) {
                 modelResponse = model.generate(memory.messages());
                 memory.add(modelResponse.content());
             } else {
-                modelResponse = executeWithTools(memory);
+                executeWithTools(memory);
+            }
+            // Remove toolProviderSupplier tools again
+            if (hasToolProvider) {
+                toolSpecifications.clear();
+                toolExecutors.clear();
             }
             List<ChatMessagePojo> response = ChatMessagePojo.listFromMemory(memory);
             return new ChatResultPojo(response, null);
@@ -308,6 +327,11 @@ public class ChatJsonRPCService {
                         }
                         executeWithToolsAndStreaming(memory, em, finalToolExecutionsLeft);
                     }
+                    // Remove toolProviderSupplier tools again
+                    if (toolProvider != null) {
+                        toolSpecifications.clear();
+                        toolExecutors.clear();
+                    }
                 });
             }
 
@@ -323,4 +347,25 @@ public class ChatJsonRPCService {
         });
     }
 
+    private ToolProvider getToolProvider(List<Supplier<ToolProvider>> toolProviders) {
+        for (Supplier<ToolProvider> provider : toolProviders) {
+            if (provider.get() != null) {
+                return provider.get();
+            }
+        }
+        return null;
+    }
+
+    private boolean setToolsViaProviderIfAvailable(ChatMemory memory, UserMessage userMessage) {
+        boolean hasToolProvider = toolProvider != null;
+        if (hasToolProvider) {
+            ToolProviderRequest toolRequest = new ToolProviderRequest(memory, userMessage);
+            ToolProviderResult toolsResult = toolProvider.provideTools(toolRequest);
+            for (ToolSpecification specification : toolsResult.tools().keySet()) {
+                toolSpecifications.add(specification);
+                toolExecutors.put(specification.name(), toolsResult.tools().get(specification));
+            }
+        }
+        return hasToolProvider;
+    }
 }

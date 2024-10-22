@@ -90,6 +90,90 @@ If a method of an AI Service needs to use tools other than the ones configured o
 In this case  `@Toolbox` completely overrides `@RegisterAiService(tools=...)`
 ====
 
+== Dynamically Use Tools at Runtime
+
+By default, tools in Quarkus are static, defined during the build phase.
+However, if you want to dynamically change the tools available at runtime, you can use a `ToolProvider`.
+This allows you to decide which tools to provide on the fly.
+
+You can configure an AI service with a dynamic `ToolProvider` like this:
+
+[source,java]
+----
+@RegisterAiService(toolProviderSupplier = MyToolProviderSupplier.class)
+public interface MyAiService {
+    // Service methods
+}
+----
+
+=== Implementing a ToolProvider
+
+To support dynamic tool selection, you'll need to create a `ToolProviderSupplier`, which must be marked as `@ApplicationScoped`.
+Here's an example:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyToolProviderSupplier implements Supplier<ToolProvider> {
+    @Inject
+    MyCustomToolProvider myCustomToolProvider;
+
+    @Override
+    public ToolProvider get() {
+        return myCustomToolProvider;
+    }
+}
+----
+
+=== Example: Conditional Tool Provision
+
+In this example, a specific tool (e.g., a booking tool) is only provided if the user's message contains the keyword "booking".
+
+[source,java]
+----
+@ApplicationScoped
+public class MyCustomToolProvider implements ToolProvider {
+    @Inject
+    BookingTool bookingTool;
+
+    @Override
+    public ToolProviderResult provideTools(ToolProviderRequest request) {
+        boolean containsBooking = request.userMessage().singleText().contains("booking");
+        if (!containsBooking) {
+            return ToolProviderResult.builder().build();  // No tools
+        }
+        return buildToolProviderResult(List.of(bookingTool));  // Provide booking tool
+    }
+
+    private ToolProviderResult buildToolProviderResult(List<Object> toolObjects) {
+        List<ToolSpecification> specifications = new ArrayList<>();
+        Map<String, ToolExecutor> executors = new HashMap<>();
+        Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+
+        // Populate tool metadata
+        ToolsRecorder.populateToolMetadata(toolObjects, specifications, executors);
+
+        // Map specifications to executors
+        for (ToolSpecification specification : specifications) {
+            tools.put(specification, executors.get(specification.name()));
+        }
+
+        // Return the result
+        return ToolProviderResult.builder()
+                .addAll(tools)
+                .build();
+    }
+}
+----
+
+=== Alternative: Using `ToolSpecification` and `ToolExecutor`
+
+If you prefer more control, you can work directly with `ToolSpecification` and `ToolExecutor` to provide tools.
+
+=== Important Rule
+
+You can configure either static tools (via `tools`) or a dynamic `ToolProvider` (via `toolProviderSupplier`), but *not both* in the same AI service.
+
 == How do tools work?
 
 The question of how tools work naturally arises given the fact that no code needs to be written that wires up their usage.

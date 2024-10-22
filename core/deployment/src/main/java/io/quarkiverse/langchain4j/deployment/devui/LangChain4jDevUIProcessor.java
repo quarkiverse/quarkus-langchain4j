@@ -8,6 +8,7 @@ import java.util.Optional;
 import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
+import io.quarkiverse.langchain4j.deployment.ToolProviderMetaBuildItem;
 import io.quarkiverse.langchain4j.deployment.ToolsMetadataBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -28,6 +29,7 @@ public class LangChain4jDevUIProcessor {
 
     @BuildStep(onlyIf = IsDevelopment.class)
     CardPageBuildItem cardPage(List<DeclarativeAiServiceBuildItem> aiServices,
+            ToolProviderMetaBuildItem toolProviderMetaBuildItem,
             ToolsMetadataBuildItem toolsMetadataBuildItem,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingModelCandidateBuildItems,
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingModelBuildItems,
@@ -60,6 +62,10 @@ public class LangChain4jDevUIProcessor {
 
             additionalDevUiCardBuildItem.getBuildTimeData().forEach((k, v) -> card.addBuildTimeData(k, v));
         }
+
+        List<ToolProviderInfo> toolProviderInfos = toolProviderMetaBuildItem.getMetadata();
+        card.addBuildTimeData("toolProviders", toolProviderInfos);
+
         return card;
     }
 

@@ -19,6 +19,7 @@ import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.audit.AuditService;
@@ -68,7 +69,7 @@ public @interface RegisterAiService {
      * If not set, the default model (i.e. the one configured without setting the model name) is used.
      * An example of the default model configuration is the following:
      * {@code quarkus.langchain4j.openai.chat-model.model-name=gpt-4-turbo-preview}
-     *
+     * <p>
      * If set, it uses the model configured by name. For example if this is set to {@code somename}
      * an example configuration value for that named model could be:
      * {@code quarkus.langchain4j.somename.openai.chat-model.model-name=gpt-4-turbo-preview}
@@ -116,7 +117,7 @@ public @interface RegisterAiService {
      * typically it will, so consider adding a bean-defining annotation to
      * it). If it is not a CDI bean, Quarkus will create an instance
      * by calling its no-arg constructor.
-     *
+     * <p>
      * If unspecified, Quarkus will attempt to locate a CDI bean that
      * implements {@link RetrievalAugmentor} and use it if one exists.
      */
@@ -139,6 +140,11 @@ public @interface RegisterAiService {
      * needs to be provided.
      */
     Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default BeanIfExistsModerationModelSupplier.class;
+
+    /**
+     * Configures a toolProviderSupplier. Either a toolProviderSupplier or "normal" tools can be used, but not both
+     */
+    Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
 
     /**
      * Marker that is used to tell Quarkus to use the {@link ChatLanguageModel} that has been configured as a CDI bean by
@@ -259,6 +265,18 @@ public @interface RegisterAiService {
 
         @Override
         public ImageModel get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link ToolProvider} that the user has configured as a CDI bean.
+     * If no such bean exists, then no tool provider will be used.
+     */
+    final class BeanIfExistsToolProviderSupplier implements Supplier<ToolProvider> {
+
+        @Override
+        public ToolProvider get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }
