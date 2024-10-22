@@ -172,7 +172,7 @@ If you prefer more control, you can work directly with `ToolSpecification` and `
 
 === Important Rule
 
-You can configure either static tools (via `tools`) or a dynamic `ToolProvider` (via `toolProviderSupplier`), but *not both* in the same service.
+You can configure either static tools (via `tools`) or a dynamic `ToolProvider` (via `toolProviderSupplier`), but *not both* in the same AI service.
 
 == How do tools work?
 
