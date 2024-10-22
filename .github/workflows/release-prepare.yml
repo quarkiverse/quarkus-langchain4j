@@ -15,4 +15,6 @@ jobs:
     name: Prepare Release
     if: ${{ github.event.pull_request.merged == true}}
     uses: quarkiverse/.github/.github/workflows/prepare-release.yml@main
+    with:
+      java_version: 23 # use 23 so we can support running the Llama3 module on anything 21+
     secrets: inherit
