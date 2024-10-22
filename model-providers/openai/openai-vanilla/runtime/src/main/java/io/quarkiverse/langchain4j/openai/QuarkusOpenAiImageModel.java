@@ -40,32 +40,30 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
     private final QuarkusOpenAiClient client;
 
-    public QuarkusOpenAiImageModel(String baseUrl, String apiKey, String organizationId, String modelName, String size,
-            String quality, String style, Optional<String> user, String responseFormat, Duration timeout,
-            Integer maxRetries, Boolean logRequests, Boolean logResponses,
-            Optional<Path> persistDirectory) {
-        this.modelName = modelName;
-        this.size = size;
-        this.quality = quality;
-        this.style = style;
-        this.user = user;
-        this.responseFormat = responseFormat;
-        this.maxRetries = maxRetries;
+    public QuarkusOpenAiImageModel(Builder builder) {
+        this.modelName = builder.modelName;
+        this.size = builder.size;
+        this.quality = builder.quality;
+        this.style = builder.style;
+        this.user = builder.user;
+        this.responseFormat = builder.responseFormat;
+        this.maxRetries = builder.maxRetries;
         if (this.maxRetries < 1) {
             throw new IllegalArgumentException("max-retries must be at least 1");
         }
-        this.persistDirectory = persistDirectory;
+        this.persistDirectory = builder.persistDirectory;
 
         this.client = QuarkusOpenAiClient.builder()
-                .baseUrl(baseUrl)
-                .openAiApiKey(apiKey)
-                .organizationId(organizationId)
-                .callTimeout(timeout)
-                .connectTimeout(timeout)
-                .readTimeout(timeout)
-                .writeTimeout(timeout)
-                .logRequests(logRequests)
-                .logResponses(logResponses)
+                .baseUrl(builder.baseUrl)
+                .tlsConfigurationName(builder.tlsConfigurationName)
+                .openAiApiKey(builder.apiKey)
+                .organizationId(builder.organizationId)
+                .callTimeout(builder.timeout)
+                .connectTimeout(builder.timeout)
+                .readTimeout(builder.timeout)
+                .writeTimeout(builder.timeout)
+                .logRequests(builder.logRequests)
+                .logResponses(builder.logResponses)
                 .build();
     }
 
@@ -141,6 +139,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
     public static class Builder {
         private String baseUrl;
+        private String tlsConfigurationName;
         private String apiKey;
         private String organizationId;
         private String modelName;
@@ -157,6 +156,11 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder tlsConfigurationName(String tlsConfigurationName) {
+            this.tlsConfigurationName = tlsConfigurationName;
             return this;
         }
 
@@ -226,9 +230,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         }
 
         public QuarkusOpenAiImageModel build() {
-            return new QuarkusOpenAiImageModel(baseUrl, apiKey, organizationId, modelName, size, quality, style, user,
-                    responseFormat, timeout, maxRetries, logRequests, logResponses,
-                    persistDirectory);
+            return new QuarkusOpenAiImageModel(this);
         }
     }
 

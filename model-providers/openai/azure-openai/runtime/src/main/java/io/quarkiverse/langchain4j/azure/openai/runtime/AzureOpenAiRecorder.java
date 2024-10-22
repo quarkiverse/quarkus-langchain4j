@@ -33,6 +33,7 @@ import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConf
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.ShutdownContext;
@@ -317,6 +318,7 @@ public class AzureOpenAiRecorder {
     }
 
     public void cleanUp(ShutdownContext shutdown) {
+        AdditionalPropertiesHack.reset();
         shutdown.addShutdownTask(new Runnable() {
             @Override
             public void run() {

@@ -63,6 +63,7 @@ public class OllamaRecorder {
             }
             var builder = OllamaChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
+                    .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
@@ -109,6 +110,7 @@ public class OllamaRecorder {
 
             var builder = OllamaEmbeddingModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
+                    .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .model(ollamaFixedConfig.embeddingModel().modelId())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), ollamaConfig.logRequests()))
@@ -156,6 +158,7 @@ public class OllamaRecorder {
             }
             var builder = OllamaStreamingChatLanguageModel.builder()
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
+                    .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))

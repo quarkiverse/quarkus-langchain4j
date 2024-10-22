@@ -15,6 +15,10 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
+import dev.langchain4j.model.openai.spi.OpenAiEmbeddingModelBuilderFactory;
+import dev.langchain4j.model.openai.spi.OpenAiModerationModelBuilderFactory;
+import dev.langchain4j.model.openai.spi.OpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -25,6 +29,10 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedImageModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -35,6 +43,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 
 public class OpenAiProcessor {
 
@@ -156,5 +165,21 @@ public class OpenAiProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     public void cleanUp(OpenAiRecorder recorder, ShutdownContextBuildItem shutdown) {
         recorder.cleanUp(shutdown);
+    }
+
+    @BuildStep
+    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+        serviceProviderProducer
+                .produce(new ServiceProviderBuildItem(OpenAiChatModelBuilderFactory.class.getName(),
+                        QuarkusOpenAiChatModelBuilderFactory.class.getName()));
+        serviceProviderProducer
+                .produce(new ServiceProviderBuildItem(OpenAiEmbeddingModelBuilderFactory.class.getName(),
+                        QuarkusOpenAiEmbeddingModelBuilderFactory.class.getName()));
+        serviceProviderProducer
+                .produce(new ServiceProviderBuildItem(OpenAiModerationModelBuilderFactory.class.getName(),
+                        QuarkusOpenAiModerationModelBuilderFactory.class.getName()));
+        serviceProviderProducer
+                .produce(new ServiceProviderBuildItem(OpenAiStreamingChatModelBuilderFactory.class.getName(),
+                        QuarkusOpenAiStreamingChatModelBuilderFactory.class.getName()));
     }
 }

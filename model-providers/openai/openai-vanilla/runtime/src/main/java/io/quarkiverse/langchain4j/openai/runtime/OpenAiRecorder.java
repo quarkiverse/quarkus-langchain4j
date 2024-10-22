@@ -31,8 +31,13 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiChatModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiImageModel;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
+import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
+import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.openai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ImageModelConfig;
@@ -63,7 +68,10 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
-            var builder = OpenAiChatModel.builder()
+            var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
+
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -118,7 +126,9 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
-            var builder = OpenAiStreamingChatModel.builder()
+            var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -169,7 +179,9 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             EmbeddingModelConfig embeddingModelConfig = openAiConfig.embeddingModel();
-            var builder = OpenAiEmbeddingModel.builder()
+            var builder = (QuarkusOpenAiEmbeddingModelBuilderFactory.Builder) OpenAiEmbeddingModel.builder();
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -215,7 +227,9 @@ public class OpenAiRecorder {
                 throw new ConfigValidationException(createApiKeyConfigProblems(configName));
             }
             ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
-            var builder = OpenAiModerationModel.builder()
+            var builder = (QuarkusOpenAiModerationModelBuilderFactory.Builder) OpenAiModerationModel.builder();
+            builder
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -258,6 +272,7 @@ public class OpenAiRecorder {
             }
             ImageModelConfig imageModelConfig = openAiConfig.imageModel();
             var builder = QuarkusOpenAiImageModel.builder()
+                    .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -337,6 +352,7 @@ public class OpenAiRecorder {
     }
 
     public void cleanUp(ShutdownContext shutdown) {
+        AdditionalPropertiesHack.reset();
         shutdown.addShutdownTask(new Runnable() {
             @Override
             public void run() {

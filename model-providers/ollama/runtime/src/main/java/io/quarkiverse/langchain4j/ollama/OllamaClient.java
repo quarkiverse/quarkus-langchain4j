@@ -6,17 +6,23 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
+
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Multi;
 
 public class OllamaClient {
 
     private final OllamaRestApi restApi;
 
-    public OllamaClient(String baseUrl, Duration timeout, boolean logRequests, boolean logResponses, String configName) {
+    public OllamaClient(String baseUrl, Duration timeout, boolean logRequests, boolean logResponses, String configName,
+            String tlsConfigurationName) {
         try {
             // TODO: cache?
             QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
@@ -31,6 +37,11 @@ public class OllamaClient {
             Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider.resolve(configName);
             if (maybeModelAuthProvider.isPresent()) {
                 builder.register(new OllamaRestApi.OllamaRestAPIFilter(maybeModelAuthProvider.get()));
+            }
+            Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current().select(TlsConfigurationRegistry.class);
+            if (tlsConfigurationRegistry.isResolvable()) {
+                TlsConfiguration.from(tlsConfigurationRegistry.get(), Optional.ofNullable(tlsConfigurationName))
+                        .ifPresent(builder::tlsConfiguration);
             }
 
             restApi = builder.build(OllamaRestApi.class);
