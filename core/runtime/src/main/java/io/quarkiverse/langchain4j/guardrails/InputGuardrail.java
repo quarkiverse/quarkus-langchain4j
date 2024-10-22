@@ -3,8 +3,6 @@ package io.quarkiverse.langchain4j.guardrails;
 import java.util.Arrays;
 
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.rag.AugmentationResult;
 import io.smallrye.common.annotation.Experimental;
 
 /**
@@ -14,7 +12,7 @@ import io.smallrye.common.annotation.Experimental;
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link InputGuardrails#value()} annotation.
  */
 @Experimental("This feature is experimental and the API is subject to change")
-public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailParams, InputGuardrailResult> {
+public interface InputGuardrail extends Guardrail<InputGuardrailParams, InputGuardrailResult> {
 
     /**
      * Validates the {@code user message} that will be sent to the LLM.
@@ -40,17 +38,6 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
     @Override
     default InputGuardrailResult validate(InputGuardrailParams params) {
         return validate(params.userMessage());
-    }
-
-    /**
-     * Represents the parameter passed to {@link #validate(InputGuardrailParams)}.
-     *
-     * @param userMessage the user message, cannot be {@code null}
-     * @param memory the memory, can be {@code null} or empty
-     * @param augmentationResult the augmentation result, can be {@code null}
-     */
-    record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
-            AugmentationResult augmentationResult) implements GuardrailParams {
     }
 
     /**

@@ -35,7 +35,7 @@ import dev.langchain4j.rag.AugmentationResult;
  * <p>
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link InputGuardrails#value()} annotation.
  */
-public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailParams, InputGuardrailResult> {
+public interface InputGuardrail extends Guardrail<InputGuardrailParams, InputGuardrailResult> {
 
     /**
      * Validates the {@code user message} that will be sent to the LLM.
@@ -64,7 +64,7 @@ public interface InputGuardrail extends Guardrail<InputGuardrail.InputGuardrailP
     }
 
     /**
-     * Represents the parameter passed to {@link #validate(InputGuardrailParams)}.
+     * Represents the parameter passed to {@link InputGuardrail#validate(InputGuardrailParams)}.
      *
      * @param userMessage the user message, cannot be {@code null}
      * @param memory the memory, can be {@code null} or empty
@@ -216,7 +216,7 @@ import dev.langchain4j.rag.AugmentationResult;
  * <p>
  * The maximum number of retries is configurable using {@code quarkus.langchain4j.guardrails.max-retries}, defaulting to 3.
  */
-public interface OutputGuardrail extends Guardrail<OutputGuardrail.OutputGuardrailParams, OutputGuardrailResult> {
+public interface OutputGuardrail extends Guardrail<OutputGuardrailParams, OutputGuardrailResult> {
 
     /**
      * Validates the response from the LLM.
@@ -244,7 +244,7 @@ public interface OutputGuardrail extends Guardrail<OutputGuardrail.OutputGuardra
     }
 
     /**
-     * Represents the parameter passed to {@link #validate(OutputGuardrailParams)}.
+     * Represents the parameter passed to {@link OutputGuardrail#validate(OutputGuardrailParams)}.
      *
      * @param responseFromLLM the response from the LLM
      * @param memory the memory, can be {@code null} or empty

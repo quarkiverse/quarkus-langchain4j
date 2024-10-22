@@ -3,8 +3,6 @@ package io.quarkiverse.langchain4j.guardrails;
 import java.util.Arrays;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.rag.AugmentationResult;
 import io.smallrye.common.annotation.Experimental;
 
 /**
@@ -18,7 +16,7 @@ import io.smallrye.common.annotation.Experimental;
  * The maximum number of retries is configurable using {@code quarkus.langchain4j.guardrails.max-retries}, defaulting to 3.
  */
 @Experimental("This feature is experimental and the API is subject to change")
-public interface OutputGuardrail extends Guardrail<OutputGuardrail.OutputGuardrailParams, OutputGuardrailResult> {
+public interface OutputGuardrail extends Guardrail<OutputGuardrailParams, OutputGuardrailResult> {
 
     /**
      * Validates the response from the LLM.
@@ -43,17 +41,6 @@ public interface OutputGuardrail extends Guardrail<OutputGuardrail.OutputGuardra
     @Override
     default OutputGuardrailResult validate(OutputGuardrailParams params) {
         return validate(params.responseFromLLM());
-    }
-
-    /**
-     * Represents the parameter passed to {@link #validate(OutputGuardrailParams)}.
-     *
-     * @param responseFromLLM the response from the LLM
-     * @param memory the memory, can be {@code null} or empty
-     * @param augmentationResult the augmentation result, can be {@code null}
-     */
-    record OutputGuardrailParams(AiMessage responseFromLLM, ChatMemory memory,
-            AugmentationResult augmentationResult) implements GuardrailParams {
     }
 
     /**
