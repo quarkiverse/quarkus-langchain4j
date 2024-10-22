@@ -5,16 +5,9 @@ import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
-import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface ChatModelConfig {
-
-    /**
-     * Model name to use
-     */
-    @WithDefault("tjake/TinyLlama-1.1B-Chat-v1.0-Jlama-Q4")
-    String modelName();
 
     /**
      * What sampling temperature to use, between 0.0 and 1.0. Higher values like 0.8

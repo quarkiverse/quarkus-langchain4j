@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.jlama;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +19,7 @@ import dev.langchain4j.model.output.FinishReason;
 /**
  * A Jlama model. Very basic information. Allows the model to be loaded with different options.
  */
-class JlamaModel {
+public class JlamaModel {
     private final JlamaModelRegistry registry;
 
     private final ModelSupport.ModelType modelType;
@@ -61,17 +60,6 @@ class JlamaModel {
 
     Loader loader() {
         return new Loader(registry, modelName);
-    }
-
-    void download(Optional<String> authToken) throws IOException {
-        SafeTensorSupport.maybeDownloadModel(
-                registry.getModelCachePath().toString(),
-                owner,
-                modelName,
-                true,
-                Optional.empty(),
-                authToken,
-                Optional.empty());
     }
 
     static class Loader {

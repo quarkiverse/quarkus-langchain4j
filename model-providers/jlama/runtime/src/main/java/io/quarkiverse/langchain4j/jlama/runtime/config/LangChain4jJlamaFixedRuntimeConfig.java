@@ -1,27 +1,29 @@
 package io.quarkiverse.langchain4j.jlama.runtime.config;
 
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
+import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXED;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
-import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
 
-@ConfigRoot(phase = RUN_TIME)
+@ConfigRoot(phase = BUILD_AND_RUN_TIME_FIXED)
 @ConfigMapping(prefix = "quarkus.langchain4j.jlama")
-public interface LangChain4jJlamaAiConfig {
+public interface LangChain4jJlamaFixedRuntimeConfig {
 
     /**
      * Default model config.
      */
     @WithParentName
-    JlamaAiConfig defaultConfig();
+    JlamaConfig defaultConfig();
 
     /**
      * Named model config.
@@ -30,26 +32,26 @@ public interface LangChain4jJlamaAiConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, JlamaAiConfig> namedConfig();
+    Map<String, JlamaConfig> namedConfig();
+
+    /**
+     * Location on the file-system which serves as a cache for the models
+     *
+     */
+    @ConfigDocDefault("${user.name}/.jlama/models")
+    Optional<Path> modelsPath();
 
     @ConfigGroup
-    interface JlamaAiConfig {
+    interface JlamaConfig {
 
         /**
          * Chat model related settings
          */
-        ChatModelConfig chatModel();
+        ChatModelFixedRuntimeConfig chatModel();
 
         /**
          * Embedding model related settings
          */
-        EmbeddingModelConfig embeddingModel();
-
-        /**
-         * Whether to enable the integration. Set to {@code false} to disable
-         * all requests.
-         */
-        @WithDefault("true")
-        Boolean enableIntegration();
+        EmbeddingModelFixedRuntimeConfig embeddingModel();
     }
 }

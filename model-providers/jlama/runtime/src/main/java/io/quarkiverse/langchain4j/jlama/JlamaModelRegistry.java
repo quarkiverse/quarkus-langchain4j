@@ -5,23 +5,17 @@ import java.io.IOError;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.tjake.jlama.model.ModelSupport;
 import com.github.tjake.jlama.safetensors.SafeTensorSupport;
+import com.github.tjake.jlama.util.ProgressReporter;
 
 /**
  * A registry for managing Jlama models on local disk.
  */
-class JlamaModelRegistry {
-    private static final Logger logger = LoggerFactory.getLogger(JlamaModelRegistry.class);
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+public class JlamaModelRegistry {
 
     private static final String DEFAULT_MODEL_CACHE_PATH = System.getProperty("user.home", "") + File.separator + ".jlama"
             + File.separator + "models";
@@ -38,69 +32,54 @@ class JlamaModelRegistry {
         }
     }
 
-    public static List<ModelSupport.ModelType> availableModelTypes() {
-        return Arrays.stream(ModelSupport.ModelType.values()).toList();
-    }
-
-    public static JlamaModelRegistry getOrCreate(Path modelCachePath) {
-        return new JlamaModelRegistry(modelCachePath == null ? Path.of(DEFAULT_MODEL_CACHE_PATH) : modelCachePath);
+    public static JlamaModelRegistry getOrCreate(Optional<Path> modelCachePath) {
+        return new JlamaModelRegistry(modelCachePath.orElse(Path.of(DEFAULT_MODEL_CACHE_PATH)));
     }
 
     public Path getModelCachePath() {
         return modelCachePath;
     }
 
-    /**
-     * List all the models available in the local cache.
-     *
-     * @return A list of JlamaModel objects.
-     */
-    public List<JlamaModel> listLocalModels() {
-        List<JlamaModel> localModels = new ArrayList<>();
-
-        for (File file : Objects.requireNonNull(modelCachePath.toFile().listFiles())) {
-            if (file.isDirectory()) {
-                File config = new File(file, "config.json");
-                if (config.exists()) {
-                    try {
-                        ModelSupport.ModelType type = SafeTensorSupport.detectModel(config);
-                        localModels.add(new JlamaModel(this, type, file.getName(), Optional.empty(), file.getName(), false));
-                    } catch (IOException e) {
-                        logger.warn("Error reading model config: " + config.getAbsolutePath(), e);
-                    }
-                }
-            }
-        }
-
-        return localModels;
-    }
-
-    public JlamaModel downloadModel(String modelName) throws IOException {
-        return downloadModel(modelName, Optional.empty());
-    }
-
     public JlamaModel downloadModel(String modelName, Optional<String> authToken) throws IOException {
-        String[] parts = modelName.split("/");
-        if (parts.length == 0 || parts.length > 2) {
-            throw new IllegalArgumentException("Model must be in the form owner/name");
-        }
+        return downloadModel(modelName, authToken, Optional.empty());
+    }
 
-        String owner;
-        String name;
-
-        if (parts.length == 1) {
-            owner = null;
-            name = modelName;
-        } else {
-            owner = parts[0];
-            name = parts[1];
-        }
-
-        File modelDir = SafeTensorSupport.maybeDownloadModel(modelCachePath.toString(), Optional.ofNullable(owner), name, true,
-                Optional.empty(), authToken, Optional.empty());
+    public JlamaModel downloadModel(String modelName, Optional<String> authToken, Optional<ProgressReporter> progressReporter)
+            throws IOException {
+        ModelInfo modelInfo = ModelInfo.from(modelName);
+        File modelDir = SafeTensorSupport.maybeDownloadModel(modelCachePath.toString(), Optional.ofNullable(modelInfo.owner),
+                modelInfo.name, true,
+                Optional.empty(), authToken, progressReporter);
 
         File config = new File(modelDir, "config.json");
         ModelSupport.ModelType type = SafeTensorSupport.detectModel(config);
         return new JlamaModel(this, type, modelDir.getName(), Optional.empty(), modelName, true);
+    }
+
+    public record ModelInfo(String owner, String name) {
+
+        public static ModelInfo from(String modelName) {
+            String[] parts = modelName.split("/");
+            if (parts.length == 0 || parts.length > 2) {
+                throw new IllegalArgumentException("Model must be in the form owner/name");
+            }
+
+            String owner;
+            String name;
+
+            if (parts.length == 1) {
+                owner = null;
+                name = modelName;
+            } else {
+                owner = parts[0];
+                name = parts[1];
+            }
+
+            return new ModelInfo(owner, name);
+        }
+
+        public String toFileName() {
+            return owner + "_" + name;
+        }
     }
 }

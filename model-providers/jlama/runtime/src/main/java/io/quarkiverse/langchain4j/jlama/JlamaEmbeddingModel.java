@@ -63,9 +63,10 @@ public class JlamaEmbeddingModel extends DimensionAwareEmbeddingModel {
         return Response.from(embeddings);
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static class JlamaEmbeddingModelBuilder {
 
-        private Path modelCachePath;
+        private Optional<Path> modelCachePath;
         private String modelName;
         private String authToken;
         private Integer threadCount;
@@ -73,7 +74,7 @@ public class JlamaEmbeddingModel extends DimensionAwareEmbeddingModel {
         private Boolean quantizeModelAtRuntime;
         private Generator.PoolingType poolingType;
 
-        public JlamaEmbeddingModelBuilder modelCachePath(Path modelCachePath) {
+        public JlamaEmbeddingModelBuilder modelCachePath(Optional<Path> modelCachePath) {
             this.modelCachePath = modelCachePath;
             return this;
         }

@@ -40,6 +40,7 @@ public class JlamaChatModel implements ChatLanguageModel {
     private final Integer maxTokens;
 
     public JlamaChatModel(JlamaChatModelBuilder builder) {
+
         JlamaModelRegistry registry = JlamaModelRegistry.getOrCreate(builder.modelCachePath);
         JlamaModel jlamaModel = RetryUtils
                 .withRetry(() -> registry.downloadModel(builder.modelName, Optional.ofNullable(builder.authToken)), 3);
@@ -139,9 +140,10 @@ public class JlamaChatModel implements ChatLanguageModel {
         return generate(messages, List.of(toolSpecification));
     }
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static class JlamaChatModelBuilder {
 
-        private Path modelCachePath;
+        private Optional<Path> modelCachePath = Optional.empty();
         private String modelName;
         private String authToken;
         private Integer threadCount;
@@ -151,7 +153,7 @@ public class JlamaChatModel implements ChatLanguageModel {
         private Float temperature;
         private Integer maxTokens;
 
-        public JlamaChatModelBuilder modelCachePath(Path modelCachePath) {
+        public JlamaChatModelBuilder modelCachePath(Optional<Path> modelCachePath) {
             this.modelCachePath = modelCachePath;
             return this;
         }
