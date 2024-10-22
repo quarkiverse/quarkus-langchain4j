@@ -22,6 +22,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.web.search.WebSearchEngine;
@@ -45,6 +46,7 @@ public class LangChain4jDotNames {
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName TOKEN_COUNT_ESTIMATOR = DotName.createSimple(TokenCountEstimator.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
+    public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
     public static final DotName INPUT_GUARDRAILS = DotName.createSimple(InputGuardrails.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
