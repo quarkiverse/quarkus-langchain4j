@@ -62,6 +62,7 @@ import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
@@ -305,7 +306,7 @@ public class AiServiceMethodImplementationSupport {
 
         response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory, context.chatModel, response,
                 toolSpecifications,
-                new OutputGuardrail.OutputGuardrailParams(response.content(), chatMemory, augmentationResult));
+                new OutputGuardrailParams(response.content(), chatMemory, augmentationResult));
 
         // everything worked as expected so let's commit the messages
         chatMemory.commit();

@@ -19,8 +19,10 @@ import io.quarkiverse.langchain4j.guardrails.Guardrail;
 import io.quarkiverse.langchain4j.guardrails.GuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 
 public class GuardrailsSupport {
@@ -30,7 +32,7 @@ public class GuardrailsSupport {
         InputGuardrailResult result;
         try {
             result = invokeInputGuardRails(methodCreateInfo,
-                    new InputGuardrail.InputGuardrailParams(userMessage, chatMemory, augmentationResult));
+                    new InputGuardrailParams(userMessage, chatMemory, augmentationResult));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }
@@ -44,7 +46,7 @@ public class GuardrailsSupport {
             ChatLanguageModel chatModel,
             Response<AiMessage> response,
             List<ToolSpecification> toolSpecifications,
-            OutputGuardrail.OutputGuardrailParams output) {
+            OutputGuardrailParams output) {
         int attempt = 0;
         int max = methodCreateInfo.getGuardrailsMaxRetry();
         if (max <= 0) {
@@ -80,7 +82,7 @@ public class GuardrailsSupport {
                     chatMemory.add(response.content());
                 }
                 attempt++;
-                output = new OutputGuardrail.OutputGuardrailParams(response.content(), output.memory(),
+                output = new OutputGuardrailParams(response.content(), output.memory(),
                         output.augmentationResult());
             } else {
                 break;
@@ -95,7 +97,7 @@ public class GuardrailsSupport {
 
     @SuppressWarnings("unchecked")
     private static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
-            OutputGuardrail.OutputGuardrailParams params) {
+            OutputGuardrailParams params) {
         if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
             return OutputGuardrailResult.success();
         }
@@ -122,7 +124,7 @@ public class GuardrailsSupport {
 
     @SuppressWarnings("unchecked")
     private static InputGuardrailResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
-            InputGuardrail.InputGuardrailParams params) {
+            InputGuardrailParams params) {
         if (methodCreateInfo.getInputGuardrailsClassNames().isEmpty()) {
             return InputGuardrailResult.success();
         }

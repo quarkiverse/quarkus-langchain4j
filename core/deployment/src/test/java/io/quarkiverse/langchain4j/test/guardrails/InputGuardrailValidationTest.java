@@ -30,6 +30,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
@@ -179,7 +180,7 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public InputGuardrailResult validate(InputGuardrail.InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailParams params) {
             spy.incrementAndGet();
             if (params.memory().messages().isEmpty()) {
                 assertThat(params.userMessage().singleText()).isEqualTo("foo");
