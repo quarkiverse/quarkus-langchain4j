@@ -35,12 +35,11 @@ public class JlamaAiRecorder {
                     .modelName(modelName)
                     .modelCachePath(fixedRuntimeConfig.modelsPath());
 
-            if (chatModelConfig.temperature().isPresent()) {
-                builder.temperature((float) chatModelConfig.temperature().getAsDouble());
-            }
-            if (chatModelConfig.maxTokens().isPresent()) {
-                builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
-            }
+            jlamaConfig.logRequests().ifPresent(builder::logRequests);
+            jlamaConfig.logResponses().ifPresent(builder::logResponses);
+
+            chatModelConfig.temperature().ifPresent(temp -> builder.temperature((float) temp));
+            chatModelConfig.maxTokens().ifPresent(builder::maxTokens);
 
             return new Supplier<>() {
                 @Override
@@ -72,9 +71,8 @@ public class JlamaAiRecorder {
                     .modelName(jlamaFixedRuntimeConfig.chatModel().modelName())
                     .modelCachePath(fixedRuntimeConfig.modelsPath());
 
-            if (chatModelConfig.temperature().isPresent()) {
-                builder.temperature((float) chatModelConfig.temperature().getAsDouble());
-            }
+            chatModelConfig.temperature().ifPresent(temp -> builder.temperature((float) temp));
+
             return new Supplier<>() {
                 @Override
                 public StreamingChatLanguageModel get() {
@@ -121,25 +119,15 @@ public class JlamaAiRecorder {
 
     private LangChain4jJlamaConfig.JlamaConfig correspondingJlamaConfig(LangChain4jJlamaConfig runtimeConfig,
             String configName) {
-        LangChain4jJlamaConfig.JlamaConfig jlamaConfig;
-        if (NamedConfigUtil.isDefault(configName)) {
-            jlamaConfig = runtimeConfig.defaultConfig();
-        } else {
-            jlamaConfig = runtimeConfig.namedConfig().get(configName);
-        }
-        return jlamaConfig;
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
+                : runtimeConfig.namedConfig().get(configName);
     }
 
     private LangChain4jJlamaFixedRuntimeConfig.JlamaConfig correspondingJlamaFixedRuntimeConfig(
             LangChain4jJlamaFixedRuntimeConfig runtimeConfig,
             String configName) {
-        LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaConfig;
-        if (NamedConfigUtil.isDefault(configName)) {
-            jlamaConfig = runtimeConfig.defaultConfig();
-        } else {
-            jlamaConfig = runtimeConfig.namedConfig().get(configName);
-        }
-        return jlamaConfig;
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
+                : runtimeConfig.namedConfig().get(configName);
     }
 
 }
