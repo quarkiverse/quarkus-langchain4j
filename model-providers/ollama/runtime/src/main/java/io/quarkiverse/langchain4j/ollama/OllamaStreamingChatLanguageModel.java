@@ -26,7 +26,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
-                builder.configName);
+                builder.configName, builder.tlsConfigurationName);
         model = builder.model;
         format = builder.format;
         options = builder.options;
@@ -101,6 +101,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
         }
 
         private String baseUrl = "http://localhost:11434";
+        private String tlsConfigurationName;
         private Duration timeout = Duration.ofSeconds(10);
         private String model;
         private String format;
@@ -112,6 +113,11 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
         public Builder baseUrl(String val) {
             baseUrl = val;
+            return this;
+        }
+
+        public Builder tlsConfigurationName(String tlsConfigurationName) {
+            this.tlsConfigurationName = tlsConfigurationName;
             return this;
         }
 

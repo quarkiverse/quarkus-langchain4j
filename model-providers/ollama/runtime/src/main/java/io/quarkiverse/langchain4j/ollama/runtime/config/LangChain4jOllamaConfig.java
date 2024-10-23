@@ -41,6 +41,11 @@ public interface LangChain4jOllamaConfig {
         Optional<String> baseUrl();
 
         /**
+         * If set, the named TLS configuration with the configured name will be applied to the REST Client
+         */
+        Optional<String> tlsConfigurationName();
+
+        /**
          * Timeout for Ollama calls
          */
         @ConfigDocDefault("10s")

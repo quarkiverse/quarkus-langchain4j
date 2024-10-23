@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -14,6 +15,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 
@@ -42,7 +45,10 @@ import dev.ai4j.openai4j.moderation.ModerationResponse;
 import dev.ai4j.openai4j.moderation.ModerationResult;
 import dev.ai4j.openai4j.spi.OpenAiClientBuilderFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.subscription.Cancellable;
@@ -118,6 +124,13 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             .resolve(builder.configName)
                             .ifPresent(modelAuthProvider -> restApiBuilder
                                     .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
+
+                    Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
+                            .select(TlsConfigurationRegistry.class);
+                    if (tlsConfigurationRegistry.isResolvable()) {
+                        TlsConfiguration.from(tlsConfigurationRegistry.get(), Optional.ofNullable(builder.tlsConfigurationName))
+                                .ifPresent(restApiBuilder::tlsConfiguration);
+                    }
 
                     return restApiBuilder.build(OpenAiRestApi.class);
                 } catch (URISyntaxException e) {
@@ -513,7 +526,9 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         @Override
         public Builder get() {
-            return new Builder();
+            var result = new Builder();
+            result.tlsConfigurationName(AdditionalPropertiesHack.getAndClearTlsConfigurationName());
+            return result;
         }
     }
 
@@ -522,6 +537,12 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         private String userAgent;
         private String azureAdToken;
         private String configName;
+        private String tlsConfigurationName;
+
+        public Builder tlsConfigurationName(String tlsConfigurationName) {
+            this.tlsConfigurationName = tlsConfigurationName;
+            return this;
+        }
 
         public Builder userAgent(String userAgent) {
             this.userAgent = userAgent;

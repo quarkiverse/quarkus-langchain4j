@@ -45,6 +45,11 @@ public interface LangChain4jOpenAiConfig {
         String baseUrl();
 
         /**
+         * If set, the named TLS configuration with the configured name will be applied to the REST Client
+         */
+        Optional<String> tlsConfigurationName();
+
+        /**
          * OpenAI API key
          */
         @WithDefault("dummy") // TODO: this should be Optional but Smallrye Config doesn't like it...
