@@ -530,6 +530,11 @@ public class AiServicesProcessor {
             // currently in one class either streaming or blocking model are supported, but not both
             // if we want to support it, the injectStreamingChatModelBean needs to be recorded per injection point
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
+                if (LangChain4jDotNames.TOKEN_STREAM.equals(method.returnType().name())) {
+                    injectStreamingChatModelBean = true;
+                    continue;
+                }
+
                 if (!DotNames.MULTI.equals(method.returnType().name())) {
                     continue;
                 }
