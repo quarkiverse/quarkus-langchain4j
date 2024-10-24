@@ -89,20 +89,13 @@ public class ToolProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
     public void handleTools(CombinedIndexBuildItem indexBuildItem,
-            ToolsRecorder recorder,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
-            RecorderContext recorderContext,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation,
-            BuildProducer<ToolsMetadataBuildItem> toolsMetadataProducer) {
-        recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
-                ToolSpecificationObjectSubstitution.class);
-        recorderContext.registerSubstitution(ToolParameters.class, ToolParametersObjectSubstitution.Serialized.class,
-                ToolParametersObjectSubstitution.class);
+            BuildProducer<ToolsMetadataBeforeRemovalBuildItem> toolsMetadataProducer) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -250,8 +243,38 @@ public class ToolProcessor {
                     .build());
         }
 
-        toolsMetadataProducer.produce(new ToolsMetadataBuildItem(metadata));
-        recorder.setMetadata(metadata);
+        toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    /**
+     * Transforms ToolsMetadataBeforeRemovalBuildItem into ToolsMetadataBuildItem by filtering
+     * out tools belonging to beans that have been removed by ArC.
+     */
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    public ToolsMetadataBuildItem filterOutRemovedTools(ToolsMetadataBeforeRemovalBuildItem beforeRemoval,
+            ValidationPhaseBuildItem validationPhase,
+            RecorderContext recorderContext,
+            ToolsRecorder recorder) {
+        if (beforeRemoval != null) {
+            recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
+                    ToolSpecificationObjectSubstitution.class);
+            recorderContext.registerSubstitution(ToolParameters.class, ToolParametersObjectSubstitution.Serialized.class,
+                    ToolParametersObjectSubstitution.class);
+            Map<String, List<ToolMethodCreateInfo>> metadataWithoutRemovedBeans = beforeRemoval.getMetadata().entrySet()
+                    .stream()
+                    .filter(entry -> validationPhase.getContext().removedBeans().stream()
+                            .noneMatch(
+                                    retainedBean -> DotName.createSimple(entry.getKey()).equals(retainedBean.getBeanClass())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            ToolsMetadataBuildItem toolsMetadata = new ToolsMetadataBuildItem(metadataWithoutRemovedBeans);
+            recorder.setMetadata(toolsMetadata.getMetadata());
+            log.debug("Tool classes before filtering out removed beans: " + beforeRemoval.getMetadata().keySet());
+            log.debug("Tool classes after filtering out removed beans: " + toolsMetadata.getMetadata().keySet());
+            return toolsMetadata;
+        } else {
+            return null;
+        }
     }
 
     private boolean ignoreToolMethod(MethodInfo toolMethod, IndexView indexView) {
