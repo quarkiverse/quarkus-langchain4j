@@ -70,6 +70,7 @@ import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotat
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -746,11 +747,16 @@ public class AiServicesProcessor {
             for (String cn : list) {
                 unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
             }
+            DotName dotName = DotName.createSimple(OutputGuardrailAccumulator.class);
+            if (method.methodInfo.hasAnnotation(dotName)) {
+                unremovableProducer.produce(
+                        UnremovableBeanBuildItem.beanTypes(method.methodInfo.annotation(dotName).value().asClass().name()));
+            }
         }
     }
 
     @BuildStep
-    public void detectMissingGuardRails(SynthesisFinishedBuildItem synthesisFinished,
+    public void validateGuardrails(SynthesisFinishedBuildItem synthesisFinished,
             List<AiServicesMethodBuildItem> methods,
             BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> errors) {
 
@@ -761,6 +767,33 @@ public class AiServicesProcessor {
                 if (synthesisFinished.beanStream().withBeanType(DotName.createSimple(cn)).isEmpty()) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("Missing guardrail bean: " + cn)));
+                }
+            }
+
+            DotName dotName = DotName.createSimple(OutputGuardrailAccumulator.class);
+            if (method.methodInfo.hasAnnotation(dotName)) {
+                // We have an accumulator
+                // Check that the accumulator exists
+                var bean = method.methodInfo.annotation(dotName).value().asClass().name();
+                if (synthesisFinished.beanStream().withBeanType(bean).isEmpty()) {
+                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new DeploymentException("Missing accumulator bean: " + bean.toString())));
+                }
+
+                // Check that the accumulator is used on a method retuning a Multi
+                DotName returnedType = method.methodInfo.returnType().name();
+                if (!DotName.createSimple(Multi.class).equals(returnedType)) {
+                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new DeploymentException("OutputGuardrailAccumulator can only be used on method returning a " +
+                                    "`Multi<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
+                                            method.methodInfo.declaringClass().toString(), method.methodInfo.name()))));
+                }
+
+                // Check that the method have output guardrails
+                if (method.outputGuardrails.isEmpty()) {
+                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new DeploymentException("OutputGuardrailAccumulator used without OutputGuardrails in method `%s.%s`"
+                                    .formatted(method.methodInfo.declaringClass().toString(), method.methodInfo.name()))));
                 }
             }
         }
@@ -1160,11 +1193,13 @@ public class AiServicesProcessor {
         List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
         List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
 
+        String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
+
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, inputGuardrails,
-                outputGuardrails);
+                outputGuardrails, accumulatorClassName);
     }
 
     private void validateReturnType(MethodInfo method) {
@@ -1684,6 +1719,19 @@ public class AiServicesProcessor {
                 }
             }
             return guardrails;
+        }
+
+        public static String gatherAccumulator(MethodInfo methodInfo) {
+            DotName annotation = DotName.createSimple(OutputGuardrailAccumulator.class);
+            AnnotationInstance instance = methodInfo.annotation(annotation);
+            if (instance == null) {
+                // Check on class
+                instance = methodInfo.declaringClass().declaredAnnotation(annotation);
+            }
+            if (instance != null) {
+                return instance.value().asClass().name().toString();
+            }
+            return null;
         }
     }
 }

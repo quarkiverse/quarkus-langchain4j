@@ -338,10 +338,6 @@ They can be in any CDI scope, including request scope, application scope, or ses
 
 The scope of the guardrail is important as it defines the lifecycle of the guardrail, especially when the guardrail is stateful.
 
-IMPORTANT: You cannot use **output** guardrails on AI service method returning a `Multi`.
-This is because it would require accumulating the items from the stream before calling the guardrails.
-This would go against the idea of streaming the results.
-
 === Declaring Output Guardrails
 
 Output guardrails are declared on the AI Service interface. You can declare output guardrails in two ways:
@@ -405,6 +401,45 @@ Then, the `ConsistentStoryGuardrail` is executed to check that the story is cons
 
 If the `JsonGuardrail` fails, the `ConsistentStoryGuardrail` is not executed.
 However, if the `ConsistentStoryGuardrail` fails with a retry or reprompt, the `JsonGuardrail` is executed again with the new response.
+
+=== Output Guardrails for Streamed Responses
+
+Output guardrails can be applied to methods that return `Multi`, but not to those returning `TokenStream`.
+By default, Quarkus will automatically assemble the full response before executing the guardrail chain.
+Keep in mind that this may have a performance impact when handling large responses.
+
+To control when the guardrail chain is invoked during streaming, you can configure an accumulator:
+
+[source, java]
+----
+@UserMessage("...")
+@OutputGuardrails(MyGuardrail.class)
+@OutputGuardrailAccumulator(PassThroughAccumulator.class) // Defines the accumulator
+Multi<String> ask();
+----
+
+The `@OutputGuardrailAccumulator` annotation allows you to specify a custom accumulator.
+The accumulator must implement the `io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator` interface and be exposed as a CDI bean.
+Here’s a simple example of an accumulator that does not perform any accumulation:
+
+[source,java]
+----
+@ApplicationScoped
+public class PassThroughAccumulator implements OutputTokenAccumulator {
+
+    @Override
+    public Multi<String> accumulate(Multi<String> tokens) {
+        return tokens; // Passes the tokens through without accumulating
+    }
+}
+----
+
+You can create accumulators based on various criteria, such as the number of tokens, a specific separator, or time intervals.
+
+When an accumulator is set, the output guardrail chain is invoked for **each item** emitted by the `Multi` returned by the `accumulate` method.
+
+In the case of a retry, the accumulator is called again with the new response, restarting the stream from the beginning.
+The same behavior applies for reprompts.
 
 [#_detecting_hallucinations_in_the_rag_context]
 === Detecting Hallucinations in the RAG Context
