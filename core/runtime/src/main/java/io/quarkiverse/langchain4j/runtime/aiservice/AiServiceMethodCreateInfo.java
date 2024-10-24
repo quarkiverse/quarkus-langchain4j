@@ -14,6 +14,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
@@ -49,6 +50,9 @@ public final class AiServiceMethodCreateInfo {
     private transient final List<Class<? extends OutputGuardrail>> outputGuardrails = new CopyOnWriteArrayList<>();
     private transient final List<Class<? extends InputGuardrail>> inputGuardrails = new CopyOnWriteArrayList<>();
 
+    private final String outputTokenAccumulatorClassName;
+    private OutputTokenAccumulator accumulator;
+
     private final LazyValue<Integer> guardrailsMaxRetry;
 
     @RecordableConstructor
@@ -64,7 +68,8 @@ public final class AiServiceMethodCreateInfo {
             ResponseSchemaInfo responseSchemaInfo,
             List<String> toolClassNames,
             List<String> inputGuardrailsClassNames,
-            List<String> outputGuardrailsClassNames) {
+            List<String> outputGuardrailsClassNames,
+            String outputTokenAccumulatorClassName) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
@@ -85,6 +90,7 @@ public final class AiServiceMethodCreateInfo {
         this.toolClassNames = toolClassNames;
         this.inputGuardrailsClassNames = inputGuardrailsClassNames;
         this.outputGuardrailsClassNames = outputGuardrailsClassNames;
+        this.outputTokenAccumulatorClassName = outputTokenAccumulatorClassName;
         // Use a lazy value to get the value at runtime.
         this.guardrailsMaxRetry = new LazyValue<Integer>(new Supplier<Integer>() {
             @Override
@@ -173,6 +179,18 @@ public final class AiServiceMethodCreateInfo {
 
     public List<Class<? extends InputGuardrail>> getInputGuardrailsClasses() {
         return inputGuardrails;
+    }
+
+    public String getOutputTokenAccumulatorClassName() {
+        return outputTokenAccumulatorClassName;
+    }
+
+    public void setOutputTokenAccumulator(OutputTokenAccumulator accumulator) {
+        this.accumulator = accumulator;
+    }
+
+    public OutputTokenAccumulator getOutputTokenAccumulator() {
+        return accumulator;
     }
 
     public record UserMessageInfo(Optional<TemplateInfo> template,

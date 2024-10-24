@@ -51,6 +51,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
@@ -63,15 +64,17 @@ import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.subscription.MultiEmitter;
+import io.smallrye.mutiny.operators.AbstractMulti;
+import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
+import io.smallrye.mutiny.subscription.MultiSubscriber;
 
 /**
  * Provides the basic building blocks that the generated Interface methods call into
@@ -203,12 +206,8 @@ public class AiServiceMethodImplementationSupport {
                                 GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, (UserMessage) augmentedUserMessage,
                                         context.chatMemory(memoryId), ar);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
-                                return Multi.createFrom()
-                                        .emitter(new MultiEmitterConsumer(messagesToSend, effectiveToolSpecifications,
-                                                finalToolExecutors,
-                                                ar.contents(),
-                                                context,
-                                                memoryId));
+                                return new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
+                                        finalToolExecutors, ar.contents(), context, memoryId);
                             }
 
                             private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
@@ -248,17 +247,55 @@ public class AiServiceMethodImplementationSupport {
         }
 
         if (isTokenStream(returnType)) {
-            // TODO Indicate the output guardrails cannot be used when streaming
+            // TODO Indicate the output guardrails cannot be used when using token stream.
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             return new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
         }
 
         if (isMulti(returnType)) {
-            // TODO Indicate the output guardrails cannot be used when streaming
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            return Multi.createFrom().emitter(new MultiEmitterConsumer(messagesToSend, toolSpecifications,
-                    toolExecutors, augmentationResult != null ? augmentationResult.contents() : null, context, memoryId));
+
+            if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+                return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
+            }
+
+            var actualAugmentationResult = augmentationResult;
+            return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId)
+                    .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
+                    .map(chunk -> {
+                        OutputGuardrailResult result;
+                        try {
+                            result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
+                                    new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult));
+                        } catch (Exception e) {
+                            throw new GuardrailException(e.getMessage(), e);
+                        }
+
+                        if (!result.isSuccess()) {
+                            if (!result.isRetry()) {
+                                throw new GuardrailException(result.toString(), result.getFirstFailureException());
+                            } else if (result.getReprompt() != null) {
+                                chatMemory.add(new UserMessage(result.getReprompt()));
+                                throw new GuardrailsSupport.GuardrailRetryException();
+                            } else {
+                                // Retry without re-prompting
+                                throw new GuardrailsSupport.GuardrailRetryException();
+                            }
+                        } else {
+                            return chunk;
+                        }
+                    })
+                    // Retry logic:
+                    // 1. retry only on the custom RetryException
+                    // 2. If we still have a RetryException afterward, we fail.
+                    .onFailure(GuardrailsSupport.GuardrailRetryException.class).retry()
+                    .atMost(methodCreateInfo.getGuardrailsMaxRetry())
+                    .onFailure(GuardrailsSupport.GuardrailRetryException.class)
+                    .transform(t -> new GuardrailException(
+                            "Output validation failed. The guardrails have reached the maximum number of retries"));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
@@ -693,47 +730,42 @@ public class AiServiceMethodImplementationSupport {
         Object wrap(Input input, Function<Input, Object> fun);
     }
 
-    private static class MultiEmitterConsumer implements Consumer<MultiEmitter<? super String>> {
+    private static class TokenStreamMulti extends AbstractMulti<String> implements Multi<String> {
         private final List<ChatMessage> messagesToSend;
         private final List<ToolSpecification> toolSpecifications;
-        private final Map<String, ToolExecutor> toolExecutors;
-        private final List<dev.langchain4j.rag.content.Content> contents;
+        private final Map<String, ToolExecutor> toolsExecutors;
+        private final List<Content> contents;
         private final QuarkusAiServiceContext context;
         private final Object memoryId;
 
-        public MultiEmitterConsumer(List<ChatMessage> messagesToSend,
-                List<ToolSpecification> toolSpecifications,
+        public TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
                 Map<String, ToolExecutor> toolExecutors,
-                List<dev.langchain4j.rag.content.Content> contents,
-                QuarkusAiServiceContext context,
-                Object memoryId) {
+                List<Content> contents, QuarkusAiServiceContext context, Object memoryId) {
+            // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
             this.messagesToSend = messagesToSend;
             this.toolSpecifications = toolSpecifications;
-            this.toolExecutors = toolExecutors;
+            this.toolsExecutors = toolExecutors;
             this.contents = contents;
             this.context = context;
             this.memoryId = memoryId;
         }
 
         @Override
-        public void accept(MultiEmitter<? super String> em) {
-            new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors, contents, context, memoryId)
-                    .onNext(em::emit)
+        public void subscribe(MultiSubscriber<? super String> subscriber) {
+            UnicastProcessor<String> processor = UnicastProcessor.create();
+            processor.subscribe(subscriber);
+            var stream = new AiServiceTokenStream(messagesToSend, toolSpecifications,
+                    toolsExecutors, contents, context, memoryId);
+            stream
+                    .onNext(processor::onNext)
                     .onComplete(new Consumer<>() {
                         @Override
                         public void accept(Response<AiMessage> message) {
-                            em.complete();
+                            processor.onComplete();
                         }
                     })
-                    .onError(em::fail)
+                    .onError(processor::onError)
                     .start();
         }
-    }
-
-    private record GuardRailsResult(boolean success, Class<? extends OutputGuardrail> bean, Exception failure,
-            boolean retry, String reprompt) {
-
-        static GuardRailsResult SUCCESS = new GuardRailsResult(true, null, null, false, null);
-
     }
 }

@@ -24,6 +24,8 @@ import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
+import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
 
@@ -175,5 +177,45 @@ public class GuardrailsSupport {
         failures.addAll(first.failures());
         failures.addAll(second.failures());
         return producer.apply(failures);
+    }
+
+    public static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
+        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+            return upstream;
+        }
+        OutputTokenAccumulator accumulator;
+        synchronized (AiServiceMethodImplementationSupport.class) {
+            accumulator = methodCreateInfo.getOutputTokenAccumulator();
+            if (accumulator == null) {
+                String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
+                if (cn == null) {
+                    return upstream.collect().in(StringBuilder::new, StringBuilder::append)
+                            .map(StringBuilder::toString)
+                            .toMulti();
+                }
+                try {
+                    Class<? extends OutputTokenAccumulator> clazz = Class
+                            .forName(cn, true, Thread.currentThread().getContextClassLoader())
+                            .asSubclass(OutputTokenAccumulator.class);
+                    accumulator = CDI.current().select(clazz).get();
+                    methodCreateInfo.setOutputTokenAccumulator(accumulator);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Could not find " + OutputTokenAccumulator.class.getSimpleName() + " implementation class: " + cn,
+                            e);
+                }
+            }
+        }
+        var actual = accumulator;
+        return upstream.plug(s -> actual.accumulate(upstream));
+    }
+
+    public static OutputGuardrailResult invokeOutputGuardrailsForStream(AiServiceMethodCreateInfo methodCreateInfo,
+            OutputGuardrailParams outputGuardrailParams) {
+        return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams);
+    }
+
+    static class GuardrailRetryException extends RuntimeException {
+        // Marker class to indicate a retry to the downstream consumer.
     }
 }
