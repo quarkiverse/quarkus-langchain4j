@@ -26,8 +26,6 @@ import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxScoringModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxTokenGenerator;
-import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
-import io.quarkiverse.langchain4j.watsonx.prompt.impl.NoopPromptFormatter;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
@@ -108,20 +106,15 @@ public class WatsonxRecorder {
 
     public Supplier<ChatLanguageModel> generationModel(LangChain4jWatsonxConfig runtimeConfig,
             LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
-            String configName, PromptFormatter promptFormatter) {
+            String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
         LangChain4jWatsonxFixedRuntimeConfig.WatsonConfig watsonFixedRuntimeConfig = correspondingWatsonFixedRuntimeConfig(
                 fixedRuntimeConfig, configName);
 
-        if (promptFormatter != null && watsonFixedRuntimeConfig.chatModel().promptFormatter()) {
-            log.infof("The PromptFormatter for \"%s\" is loaded, the model tags are generated automatically.",
-                    watsonFixedRuntimeConfig.chatModel().modelId());
-        }
-
         if (watsonRuntimeConfig.enableIntegration()) {
 
-            var builder = generationBuilder(watsonRuntimeConfig, watsonFixedRuntimeConfig, configName, promptFormatter);
+            var builder = generationBuilder(watsonRuntimeConfig, watsonFixedRuntimeConfig, configName);
             return new Supplier<>() {
                 @Override
                 public ChatLanguageModel get() {
@@ -142,7 +135,7 @@ public class WatsonxRecorder {
     }
 
     public Supplier<StreamingChatLanguageModel> generationStreamingModel(LangChain4jWatsonxConfig runtimeConfig,
-            LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig, String configName, PromptFormatter promptFormatter) {
+            LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig, String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
         LangChain4jWatsonxFixedRuntimeConfig.WatsonConfig watsonFixedRuntimeConfig = correspondingWatsonFixedRuntimeConfig(
@@ -150,7 +143,7 @@ public class WatsonxRecorder {
 
         if (watsonRuntimeConfig.enableIntegration()) {
 
-            var builder = generationBuilder(watsonRuntimeConfig, watsonFixedRuntimeConfig, configName, promptFormatter);
+            var builder = generationBuilder(watsonRuntimeConfig, watsonFixedRuntimeConfig, configName);
             return new Supplier<>() {
                 @Override
                 public StreamingChatLanguageModel get() {
@@ -316,7 +309,7 @@ public class WatsonxRecorder {
     private WatsonxGenerationModel.Builder generationBuilder(
             LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig,
             LangChain4jWatsonxFixedRuntimeConfig.WatsonConfig watsonFixedRuntimeConfig,
-            String configName, PromptFormatter promptFormatter) {
+            String configName) {
 
         ChatModelConfig chatModelConfig = watsonRuntimeConfig.chatModel();
         var configProblems = checkConfigurations(watsonRuntimeConfig, configName);
@@ -362,7 +355,7 @@ public class WatsonxRecorder {
                 .repetitionPenalty(firstOrDefault(null, chatModelConfig.repetitionPenalty()))
                 .truncateInputTokens(chatModelConfig.truncateInputTokens().orElse(null))
                 .includeStopSequence(chatModelConfig.includeStopSequence().orElse(null))
-                .promptFormatter(promptFormatter == null ? new NoopPromptFormatter(promptJoiner) : promptFormatter);
+                .promptJoiner(promptJoiner);
     }
 
     private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonRuntimeConfig(LangChain4jWatsonxConfig runtimeConfig,

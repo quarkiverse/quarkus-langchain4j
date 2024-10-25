@@ -5,7 +5,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
-import static io.quarkiverse.langchain4j.deployment.TemplateUtil.getTemplateFromAnnotationInstance;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -13,12 +12,10 @@ import java.util.function.Supplier;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
@@ -27,8 +24,6 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.deployment.items.WatsonxChatModelProviderBuildItem;
-import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
-import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatterMapper;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
@@ -42,7 +37,6 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 
 public class WatsonxProcessor {
 
-    private static final Logger log = Logger.getLogger(WatsonxProcessor.class);
     private static final String FEATURE = "langchain4j-watsonx";
     private static final String PROVIDER = "watsonx";
 
@@ -77,92 +71,19 @@ public class WatsonxProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             BuildProducer<WatsonxChatModelProviderBuildItem> chatModelBuilder) {
 
-        var index = indexBuildItem.getIndex();
-        var annotationInstances = index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES);
-
         for (var selected : selectedChatItem) {
 
-            if (!PROVIDER.equals(selected.getProvider())) {
+            if (!PROVIDER.equals(selected.getProvider()))
                 continue;
-            }
 
             String configName = selected.getConfigName();
-
-            String modelId = NamedConfigUtil.isDefault(configName)
-                    ? fixedRuntimeConfig.defaultConfig().chatModel().modelId()
-                    : fixedRuntimeConfig.namedConfig().get(configName).chatModel().modelId();
-
             String mode = NamedConfigUtil.isDefault(configName)
                     ? fixedRuntimeConfig.defaultConfig().chatModel().mode()
                     : fixedRuntimeConfig.namedConfig().get(configName).chatModel().mode();
 
-            if (mode.equalsIgnoreCase("chat")) {
-
-                chatModelBuilder.produce(new WatsonxChatModelProviderBuildItem(configName, mode, null));
-
-            } else if (mode.equalsIgnoreCase("generation")) {
-
-                boolean promptFormatterIsEnabled = NamedConfigUtil.isDefault(configName)
-                        ? fixedRuntimeConfig.defaultConfig().chatModel().promptFormatter()
-                        : fixedRuntimeConfig.namedConfig().get(configName).chatModel().promptFormatter();
-
-                PromptFormatter promptFormatter = null;
-
-                if (promptFormatterIsEnabled) {
-                    promptFormatter = PromptFormatterMapper.get(modelId);
-                    if (promptFormatter == null) {
-                        log.warnf(
-                                "The \"%s\" model does not have a PromptFormatter implementation, no tags are automatically generated.",
-                                modelId);
-                    }
-                }
-
-                var registerAiService = annotationInstances.stream()
-                        .filter(annotationInstance -> {
-                            var modelName = annotationInstance.value("modelName");
-                            if (modelName == null) {
-                                return configName.equals(NamedConfigUtil.DEFAULT_NAME);
-                            } else {
-                                return configName.equals(modelName.asString());
-                            }
-                        }).findFirst();
-
-                if (!registerAiService.isEmpty()) {
-
-                    var classInfo = registerAiService.get().target().asClass();
-                    var tools = classInfo.annotation(LangChain4jDotNames.REGISTER_AI_SERVICES).value("tools");
-
-                    if (tools != null) {
-                        if (!promptFormatterIsEnabled)
-                            throw new RuntimeException("The prompt-formatter must be enabled to use the tool functionality");
-
-                        if (!PromptFormatterMapper.toolIsSupported(modelId))
-                            throw new RuntimeException(
-                                    "The tool functionality is not supported for the model \"%s\"".formatted(modelId));
-                    }
-
-                    if (promptFormatter != null) {
-                        var systemMessage = getTemplateFromAnnotationInstance(
-                                classInfo.annotation(LangChain4jDotNames.SYSTEM_MESSAGE));
-                        var userMessage = getTemplateFromAnnotationInstance(
-                                classInfo.annotation(LangChain4jDotNames.USER_MESSAGE));
-                        var tokenAlreadyExist = promptFormatter.tokens().stream()
-                                .filter(token -> systemMessage.contains(token) || userMessage.contains(token))
-                                .findFirst();
-
-                        if (tokenAlreadyExist.isPresent()) {
-                            log.warnf(
-                                    "The prompt in the AIService \"%s\" already contains one or more tags for the model \"%s\", the prompt-formatter option is disabled."
-                                            .formatted(classInfo.name().toString(), modelId));
-                            promptFormatter = null;
-                        }
-                    }
-                }
-
-                chatModelBuilder.produce(new WatsonxChatModelProviderBuildItem(configName, mode, promptFormatter));
-
-            } else {
-                throw new RuntimeException(
+            switch (mode.toLowerCase()) {
+                case "chat", "generation" -> chatModelBuilder.produce(new WatsonxChatModelProviderBuildItem(configName, mode));
+                default -> throw new RuntimeException(
                         "The \"mode\" value for the model \"%s\" is not valid. Choose one between [\"chat\", \"generation\"]"
                                 .formatted(mode, configName));
             }
@@ -189,10 +110,8 @@ public class WatsonxProcessor {
                 chatLanguageModel = recorder.chatModel(runtimeConfig, fixedRuntimeConfig, configName);
                 streamingChatLanguageModel = recorder.streamingChatModel(runtimeConfig, fixedRuntimeConfig, configName);
             } else {
-                PromptFormatter promptFormatter = selected.getPromptFormatter();
-                chatLanguageModel = recorder.generationModel(runtimeConfig, fixedRuntimeConfig, configName, promptFormatter);
-                streamingChatLanguageModel = recorder.generationStreamingModel(runtimeConfig, fixedRuntimeConfig, configName,
-                        promptFormatter);
+                chatLanguageModel = recorder.generationModel(runtimeConfig, fixedRuntimeConfig, configName);
+                streamingChatLanguageModel = recorder.generationStreamingModel(runtimeConfig, fixedRuntimeConfig, configName);
             }
 
             var chatBuilder = SyntheticBeanBuildItem

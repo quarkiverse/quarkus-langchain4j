@@ -146,7 +146,6 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals(0, runtimeConfig.chatModel().truncateInputTokens().get());
         assertEquals(false, runtimeConfig.chatModel().includeStopSequence().get());
         assertEquals("@", runtimeConfig.chatModel().promptJoiner());
-        assertEquals(true, fixedRuntimeConfig.chatModel().promptFormatter());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
         assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
         assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelId());

@@ -1,18 +1,19 @@
 package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
+import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-import org.jboss.logging.Logger;
-
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -26,26 +27,18 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
-import io.quarkiverse.langchain4j.watsonx.prompt.PromptFormatter;
 import io.smallrye.mutiny.Context;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class WatsonxGenerationModel extends Watsonx
         implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
-    private static final Logger log = Logger.getLogger(WatsonxGenerationModel.class);
-
     private final TextGenerationParameters parameters;
-    private final PromptFormatter promptFormatter;
+    private final String promptJoiner;
 
     public WatsonxGenerationModel(Builder builder) {
         super(builder);
 
-        if (builder.promptFormatter != null) {
-            this.promptFormatter = builder.promptFormatter;
-        } else {
-            this.promptFormatter = null;
-        }
+        this.promptJoiner = builder.promptJoiner;
 
         LengthPenalty lengthPenalty = null;
         if (Objects.nonNull(builder.decayFactor) || Objects.nonNull(builder.startIndex)) {
@@ -70,14 +63,12 @@ public class WatsonxGenerationModel extends Watsonx
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications),
-                parameters);
-        boolean toolsEnabled = (toolSpecifications != null && toolSpecifications.size() > 0) ? true : false;
+    public Response<AiMessage> generate(List<ChatMessage> messages) {
 
         Result result = retryOn(new Callable<TextGenerationResponse>() {
             @Override
             public TextGenerationResponse call() throws Exception {
+                TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
                 return client.generation(request, version);
             }
         }).results().get(0);
@@ -87,37 +78,19 @@ public class WatsonxGenerationModel extends Watsonx
                 result.inputTokenCount(),
                 result.generatedTokenCount());
 
-        AiMessage content;
-
-        if (toolsEnabled && result.generatedText().startsWith(promptFormatter.toolExecution())) {
-            var tools = result.generatedText().replace(promptFormatter.toolExecution(), "");
-            content = AiMessage.from(promptFormatter.toolExecutionRequestFormatter(tools));
-        } else {
-            content = AiMessage.from(result.generatedText());
-        }
-
+        AiMessage content = AiMessage.from(result.generatedText());
         return Response.from(content, tokenUsage, finishReason);
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
-            StreamingResponseHandler<AiMessage> handler) {
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages, toolSpecifications),
-                parameters);
+    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
 
         Context context = Context.empty();
         context.put("response", new ArrayList<TextGenerationResponse>());
-        context.put("toolExecution", false);
-        final boolean toolsEnabled = (toolSpecifications != null && toolSpecifications.size() > 0) ? true : false;
 
-        var mutiny = client.generationStreaming(request, version);
-        if (toolsEnabled) {
-            // Today Langchain4j doesn't allow to use the async operation with tools.
-            // One idea might be to give to the developer the possibility to use the VirtualThread.
-            mutiny.emitOn(Infrastructure.getDefaultWorkerPool());
-        }
-
-        mutiny.subscribe()
+        client.generationStreaming(request, version)
+                .subscribe()
                 .with(context,
                         new Consumer<TextGenerationResponse>() {
                             @Override
@@ -132,25 +105,9 @@ public class WatsonxGenerationModel extends Watsonx
                                     if (chunk.isEmpty())
                                         return;
 
-                                    boolean isToolExecutionState = context.get("toolExecution");
                                     List<TextGenerationResponse> responses = context.get("response");
                                     responses.add(response);
-
-                                    if (isToolExecutionState) {
-                                        // If we are in the tool execution state, the chunk is associated with the tool execution,
-                                        // which means that it must not be sent to the client.
-                                    } else {
-
-                                        // Check if the chunk contains the "ToolExecution" tag.
-                                        if (toolsEnabled && chunk.startsWith(promptFormatter.toolExecution().trim())) {
-                                            // If true, enter in the ToolExecutionState.
-                                            context.put("toolExecution", true);
-                                            return;
-                                        }
-
-                                        // Send the chunk to the client.
-                                        handler.onNext(chunk);
-                                    }
+                                    handler.onNext(chunk);
 
                                 } catch (Exception e) {
                                     handler.onError(e);
@@ -167,7 +124,6 @@ public class WatsonxGenerationModel extends Watsonx
                             @Override
                             public void run() {
                                 List<TextGenerationResponse> list = context.get("response");
-                                boolean isToolExecutionState = context.get("toolExecution");
 
                                 int inputTokenCount = 0;
                                 int outputTokenCount = 0;
@@ -194,15 +150,7 @@ public class WatsonxGenerationModel extends Watsonx
                                 FinishReason finishReason = toFinishReason(stopReason);
 
                                 String message = builder.toString();
-
-                                if (isToolExecutionState) {
-                                    context.put("toolExecution", false);
-                                    var tools = message.replace(promptFormatter.toolExecution(), "");
-                                    content = AiMessage.from(promptFormatter.toolExecutionRequestFormatter(tools));
-                                } else {
-                                    content = AiMessage.from(message);
-                                }
-
+                                content = AiMessage.from(message);
                                 handler.onComplete(Response.from(content, tokenUsage, finishReason));
                             }
                         });
@@ -210,7 +158,7 @@ public class WatsonxGenerationModel extends Watsonx
 
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
-        var input = toInput(messages, null);
+        var input = toInput(messages);
         var request = new TokenizationRequest(modelId, input, projectId);
 
         return retryOn(new Callable<Integer>() {
@@ -221,39 +169,37 @@ public class WatsonxGenerationModel extends Watsonx
         });
     }
 
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, List.of());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages, List.of(toolSpecification));
-    }
-
-    @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, List.of(), handler);
-    }
-
-    @Override
-    public void generate(List<ChatMessage> messages, ToolSpecification toolSpecification,
-            StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, List.of(toolSpecification), handler);
-    }
-
     public static Builder builder() {
         return new Builder();
     }
 
-    private String toInput(List<ChatMessage> messages, List<ToolSpecification> tools) {
-        var prompt = promptFormatter.format(messages, tools);
-        log.debugf("""
-                Formatted prompt:
-                -----------------
-                %s
-                -----------------""", prompt);
-        return prompt;
+    private String toInput(List<ChatMessage> messages) {
+        return messages.stream()
+                .map(new Function<ChatMessage, String>() {
+                    @Override
+                    public String apply(ChatMessage chatMessage) {
+                        return switch (chatMessage.type()) {
+                            case AI -> {
+                                AiMessage aiMessage = (AiMessage) chatMessage;
+                                yield aiMessage.text();
+                            }
+                            case SYSTEM -> {
+                                SystemMessage systemMessage = (SystemMessage) chatMessage;
+                                yield systemMessage.text();
+                            }
+                            case USER -> {
+                                UserMessage userMessage = (UserMessage) chatMessage;
+                                if (userMessage.hasSingleText())
+                                    yield userMessage.singleText();
+                                else
+                                    throw new RuntimeException(
+                                            "For the generation model, the UserMessage can contain only a single text");
+                            }
+                            case TOOL_EXECUTION_RESULT ->
+                                throw new RuntimeException("The generation model doesn't allow the use of tools");
+                        };
+                    }
+                }).collect(joining(this.promptJoiner));
     }
 
     private FinishReason toFinishReason(String reason) {
@@ -280,7 +226,7 @@ public class WatsonxGenerationModel extends Watsonx
         private Double repetitionPenalty;
         private Integer truncateInputTokens;
         private Boolean includeStopSequence;
-        private PromptFormatter promptFormatter;
+        private String promptJoiner;
 
         public Builder decodingMethod(String decodingMethod) {
             this.decodingMethod = decodingMethod;
@@ -347,8 +293,8 @@ public class WatsonxGenerationModel extends Watsonx
             return this;
         }
 
-        public Builder promptFormatter(PromptFormatter promptFormatter) {
-            this.promptFormatter = promptFormatter;
+        public Builder promptJoiner(String promptJoiner) {
+            this.promptJoiner = promptJoiner;
             return this;
         }
 

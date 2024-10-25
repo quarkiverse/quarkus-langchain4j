@@ -96,7 +96,6 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(null, runtimeConfig.chatModel().stopSequences().orElse(null));
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
         assertEquals("\n", runtimeConfig.chatModel().promptJoiner());
-        assertEquals(false, fixedRuntimeConfig.chatModel().promptFormatter());
         assertTrue(runtimeConfig.chatModel().topK().isEmpty());
         assertTrue(runtimeConfig.chatModel().topP().isEmpty());
         assertTrue(runtimeConfig.chatModel().repetitionPenalty().isEmpty());

@@ -18,19 +18,6 @@ public interface ChatModelFixedRuntimeConfig {
     String modelId();
 
     /**
-     * Configuration property that enables or disables the functionality of the prompt formatter for the `generation` mode.
-     *
-     * <ul>
-     * <li><code>true</code>: When enabled, prompts are automatically enriched with the specific tags defined by the model.</li>
-     * <li><code>false</code>: Prompts will not be enriched with the model's tags.</li>
-     * </ul>
-     * <p>
-     * <strong>Applicable in modes:</strong> <code>[generation]</code>
-     */
-    @WithDefault("false")
-    boolean promptFormatter();
-
-    /**
      * Specifies the mode of interaction with the selected model.
      * <p>
      * This property allows you to choose between two modes of operation:
@@ -42,5 +29,4 @@ public interface ChatModelFixedRuntimeConfig {
      */
     @WithDefault("chat")
     String mode();
-
 }

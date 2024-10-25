@@ -22,11 +22,9 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class CacheTokenTest extends WireMockAbstract {
+public class AiChatCacheTokenTest extends WireMockAbstract {
 
     static int cacheTimeout = 2000;
     static String RESPONSE_401 = """
@@ -49,7 +47,6 @@ public class CacheTokenTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
@@ -57,12 +54,6 @@ public class CacheTokenTest extends WireMockAbstract {
 
     @Inject
     StreamingChatLanguageModel streamingChatModel;
-
-    @Inject
-    EmbeddingModel embeddingModel;
-
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
 
     @Test
     void try_token_cache() throws InterruptedException {
@@ -82,15 +73,13 @@ public class CacheTokenTest extends WireMockAbstract {
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
-                Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
+                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
+                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API,
+                        WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API))
                 .forEach(entry -> {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 200)
                             .token("3secondstoken")
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
@@ -100,12 +89,6 @@ public class CacheTokenTest extends WireMockAbstract {
         // --- Test ChatLanguageModel --- //
         assertDoesNotThrow(() -> chatModel.generate("message"));
         assertDoesNotThrow(() -> chatModel.generate("message")); // cache.
-
-        // --- Test EmbeddingModel --- //
-        assertDoesNotThrow(() -> embeddingModel.embed("message")); // cache.
-
-        // --- Test TokenCountEstimator --- //
-        assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
 
         // --- Test StreamingChatLanguageModel --- //
         streamingChatModel.generate("message", streamingResponseHandler(new AtomicReference<AiMessage>())); // cache.
@@ -129,11 +112,9 @@ public class CacheTokenTest extends WireMockAbstract {
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
-                Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
+                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
+                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API,
+                        WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API))
                 .forEach(entry -> {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 401)
                             .token("expired_token")
@@ -144,7 +125,7 @@ public class CacheTokenTest extends WireMockAbstract {
                     mockServers.mockWatsonxBuilder(entry.getKey(), 200)
                             .token("my_super_token")
                             .scenario("retry", Scenario.STARTED)
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
@@ -154,15 +135,7 @@ public class CacheTokenTest extends WireMockAbstract {
         // --- Test ChatLanguageModel --- //
         assertDoesNotThrow(() -> chatModel.generate("message"));
 
-        Thread.sleep(cacheTimeout);
-
-        // --- Test EmbeddingModel --- //
-        assertDoesNotThrow(() -> embeddingModel.embed("message"));
-
-        Thread.sleep(cacheTimeout);
-
-        // --- Test TokenCountEstimator --- //
-        assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
+        //Thread.sleep(cacheTimeout);
 
         // --- Test StreamingChatLanguageModel --- //
         // Thread.sleep(cacheTimeout);
