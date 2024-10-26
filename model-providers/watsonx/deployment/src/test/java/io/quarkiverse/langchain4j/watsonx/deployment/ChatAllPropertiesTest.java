@@ -35,6 +35,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.space-id", "my-space-id")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.log-requests", "true")
@@ -91,7 +92,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().toString());
         assertEquals(WireMockUtil.URL_IAM_SERVER, runtimeConfig.iam().baseUrl().toString());
         assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey());
-        assertEquals(WireMockUtil.PROJECT_ID, runtimeConfig.projectId());
+        assertEquals("my-space-id", runtimeConfig.spaceId().orElse(null));
+        assertEquals(WireMockUtil.PROJECT_ID, runtimeConfig.projectId().orElse(null));
         assertEquals(Duration.ofSeconds(60), runtimeConfig.timeout().get());
         assertEquals(Duration.ofSeconds(60), runtimeConfig.iam().timeout().get());
         assertEquals(true, runtimeConfig.logRequests().orElse(false));
@@ -113,13 +115,14 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
         var messages = List.<TextChatMessage> of(
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, projectId, messages, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, parameters);
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
@@ -133,9 +136,10 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
-        var body = new TokenizationRequest(modelId, "test", projectId);
+        var body = new TokenizationRequest(modelId, "test", spaceId, projectId);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
@@ -149,13 +153,14 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
         var messagesToSend = List.<TextChatMessage> of(
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, projectId, messagesToSend, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))

@@ -75,7 +75,8 @@ public class AiGenerationServiceTest extends WireMockAbstract {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
         String modelId = chatModelConfig.modelId();
-        String projectId = watsonConfig.projectId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
         String input = new StringBuilder()
                 .append("This is a systemMessage")
                 .append(chatModelConfig.promptJoiner())
@@ -89,6 +90,6 @@ public class AiGenerationServiceTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextGenerationRequest(modelId, projectId, input, parameters);
+        return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }
 }

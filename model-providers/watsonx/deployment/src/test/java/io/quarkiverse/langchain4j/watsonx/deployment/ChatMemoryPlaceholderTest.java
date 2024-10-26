@@ -293,7 +293,8 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
         String modelId = chatModelConfig.modelId();
-        String projectId = watsonConfig.projectId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
         TextGenerationParameters parameters = TextGenerationParameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
                 .temperature(chatModelConfig.temperature())
@@ -302,6 +303,6 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextGenerationRequest(modelId, projectId, input, parameters);
+        return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }
 }

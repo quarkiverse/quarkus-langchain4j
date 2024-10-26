@@ -4,13 +4,13 @@ import java.util.List;
 
 import dev.langchain4j.data.segment.TextSegment;
 
-public record ScoringRequest(String modelId, String projectId, String query, List<ScoringInput> inputs,
+public record ScoringRequest(String modelId, String spaceId, String projectId, String query, List<ScoringInput> inputs,
         ScoringParameters parameters) {
 
-    public static ScoringRequest of(String modelId, String projectId, String query, List<TextSegment> segments,
+    public static ScoringRequest of(String modelId, String spaceId, String projectId, String query, List<TextSegment> segments,
             ScoringParameters parameters) {
         var inputs = segments.stream().map(ScoringInput::of).toList();
-        return new ScoringRequest(modelId, projectId, query, inputs, parameters);
+        return new ScoringRequest(modelId, spaceId, projectId, query, inputs, parameters);
     }
 
     public record ScoringInput(String text) {

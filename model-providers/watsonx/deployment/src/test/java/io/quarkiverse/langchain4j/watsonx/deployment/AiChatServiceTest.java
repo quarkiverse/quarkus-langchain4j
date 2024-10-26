@@ -436,7 +436,8 @@ public class AiChatServiceTest extends WireMockAbstract {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelId();
-        String projectId = watsonConfig.projectId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
 
         TextChatParameters parameters = TextChatParameters.builder()
                 .frequencyPenalty(0.0)
@@ -449,6 +450,6 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextChatRequest(modelId, projectId, messages, tools, parameters);
+        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
     }
 }

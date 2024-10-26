@@ -111,9 +111,11 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, spaceId, projectId, "SystemMessage\nUserMessage",
+                parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -128,7 +130,8 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     void check_scoring_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.scoringModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
         var segments = List.of(
                 TextSegment.from(
@@ -146,7 +149,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
                 TextSegment.from(
                         "To Kill a Mockingbird' is a novel by Harper Lee published in 1960. It was immediately successful, winning the Pulitzer Prize, and has become a classic of modern American literature."));
 
-        ScoringRequest request = ScoringRequest.of(modelId, projectId, "Who wrote 'To Kill a Mockingbird'?",
+        ScoringRequest request = ScoringRequest.of(modelId, spaceId, projectId, "Who wrote 'To Kill a Mockingbird'?",
                 segments, null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_SCORING_API, 200)
@@ -170,9 +173,10 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     void check_embedding_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.embeddingModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
-        EmbeddingRequest request = new EmbeddingRequest(modelId, projectId,
+        EmbeddingRequest request = new EmbeddingRequest(modelId, spaceId, projectId,
                 List.of("Embedding THIS!"), null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
@@ -189,9 +193,10 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
-        var body = new TokenizationRequest(modelId, "test", projectId);
+        var body = new TokenizationRequest(modelId, "test", spaceId, projectId);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -205,9 +210,11 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.generationModel().modelId();
-        String projectId = config.projectId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
 
-        TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
+        TextGenerationRequest body = new TextGenerationRequest(modelId, spaceId, projectId, "SystemMessage\nUserMessage",
+                parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(body))

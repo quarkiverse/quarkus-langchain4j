@@ -70,8 +70,9 @@ public class TokenCountEstimatorTest extends WireMockAbstract {
 
         var modelId = langchain4jWatsonConfig.defaultConfig().generationModel().modelId();
         var input = "Write a tagline for an alumni\nassociation: Together we";
-        var projectId = langchain4jWatsonConfig.defaultConfig().projectId();
-        var body = new TokenizationRequest(modelId, input, projectId);
+        var spaceId = langchain4jWatsonConfig.defaultConfig().spaceId().orElse(null);
+        var projectId = langchain4jWatsonConfig.defaultConfig().projectId().orElse(null);
+        var body = new TokenizationRequest(modelId, input, spaceId, projectId);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -86,8 +87,9 @@ public class TokenCountEstimatorTest extends WireMockAbstract {
 
         var modelId = langchain4jWatsonConfig.defaultConfig().generationModel().modelId();
         var input = "Write a tagline for an alumni association: Together we";
-        var projectId = langchain4jWatsonConfig.defaultConfig().projectId();
-        var body = new TokenizationRequest(modelId, input, projectId);
+        var spaceId = langchain4jWatsonConfig.defaultConfig().spaceId().orElse(null);
+        var projectId = langchain4jWatsonConfig.defaultConfig().projectId().orElse(null);
+        var body = new TokenizationRequest(modelId, input, spaceId, projectId);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))

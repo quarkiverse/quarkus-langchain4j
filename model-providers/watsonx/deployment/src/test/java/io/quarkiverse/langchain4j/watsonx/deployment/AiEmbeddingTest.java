@@ -82,7 +82,7 @@ public class AiEmbeddingTest extends WireMockAbstract {
                 .build();
 
         var input = "Embedding THIS!";
-        EmbeddingRequest request = new EmbeddingRequest(WireMockUtil.DEFAULT_EMBEDDING_MODEL, WireMockUtil.PROJECT_ID,
+        EmbeddingRequest request = new EmbeddingRequest(WireMockUtil.DEFAULT_EMBEDDING_MODEL, null, WireMockUtil.PROJECT_ID,
                 List.of(input, input, input), null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
@@ -139,7 +139,7 @@ public class AiEmbeddingTest extends WireMockAbstract {
                 .response(WireMockUtil.BEARER_TOKEN, new Date())
                 .build();
 
-        EmbeddingRequest request = new EmbeddingRequest(WireMockUtil.DEFAULT_EMBEDDING_MODEL, WireMockUtil.PROJECT_ID,
+        EmbeddingRequest request = new EmbeddingRequest(WireMockUtil.DEFAULT_EMBEDDING_MODEL, null, WireMockUtil.PROJECT_ID,
                 List.of(input), null);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)

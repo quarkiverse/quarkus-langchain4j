@@ -68,7 +68,8 @@ public class WatsonxGenerationModel extends Watsonx
         Result result = retryOn(new Callable<TextGenerationResponse>() {
             @Override
             public TextGenerationResponse call() throws Exception {
-                TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
+                TextGenerationRequest request = new TextGenerationRequest(modelId, spaceId, projectId, toInput(messages),
+                        parameters);
                 return client.generation(request, version);
             }
         }).results().get(0);
@@ -84,7 +85,7 @@ public class WatsonxGenerationModel extends Watsonx
 
     @Override
     public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        TextGenerationRequest request = new TextGenerationRequest(modelId, projectId, toInput(messages), parameters);
+        TextGenerationRequest request = new TextGenerationRequest(modelId, spaceId, projectId, toInput(messages), parameters);
 
         Context context = Context.empty();
         context.put("response", new ArrayList<TextGenerationResponse>());
@@ -159,7 +160,7 @@ public class WatsonxGenerationModel extends Watsonx
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
         var input = toInput(messages);
-        var request = new TokenizationRequest(modelId, input, projectId);
+        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
 
         return retryOn(new Callable<Integer>() {
             @Override

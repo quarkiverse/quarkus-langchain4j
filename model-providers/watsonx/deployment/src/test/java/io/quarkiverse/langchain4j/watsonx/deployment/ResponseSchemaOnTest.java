@@ -261,6 +261,8 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
     private TextGenerationRequest from(List<ChatMessage> messages) {
         var config = langchain4jWatsonConfig.defaultConfig();
         var modelId = config.generationModel().modelId();
+        var spaceId = config.spaceId().orElse(null);
+        var projectId = config.projectId().orElse(null);
 
         var parameters = TextGenerationParameters.builder()
                 .decodingMethod(config.generationModel().decodingMethod())
@@ -274,6 +276,6 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 .map(ChatMessage::text)
                 .collect(Collectors.joining("\n"));
 
-        return new TextGenerationRequest(modelId, config.projectId(), input, parameters);
+        return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }
 }

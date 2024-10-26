@@ -38,7 +38,6 @@ public class WatsonxRecorder {
 
     private static final String DUMMY_URL = "https://dummy.ai/api";
     private static final String DUMMY_API_KEY = "dummy";
-    private static final String DUMMY_PROJECT_ID = "dummy";
     private static final Map<String, WatsonxTokenGenerator> tokenGeneratorCache = new HashMap<>();
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
@@ -178,7 +177,8 @@ public class WatsonxRecorder {
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), watsonConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), watsonConfig.logResponses()))
                     .version(watsonConfig.version())
-                    .projectId(watsonConfig.projectId())
+                    .spaceId(watsonConfig.spaceId().orElse(null))
+                    .projectId(watsonConfig.projectId().orElse(null))
                     .modelId(embeddingModelConfig.modelId())
                     .truncateInputTokens(embeddingModelConfig.truncateInputTokens().orElse(null));
 
@@ -229,7 +229,8 @@ public class WatsonxRecorder {
                 .logRequests(firstOrDefault(false, rerankModelConfig.logRequests(), watsonConfig.logRequests()))
                 .logResponses(firstOrDefault(false, rerankModelConfig.logResponses(), watsonConfig.logResponses()))
                 .version(watsonConfig.version())
-                .projectId(watsonConfig.projectId())
+                .spaceId(watsonConfig.spaceId().orElse(null))
+                .projectId(watsonConfig.projectId().orElse(null))
                 .modelId(rerankModelConfig.modelId())
                 .truncateInputTokens(rerankModelConfig.truncateInputTokens().orElse(null));
 
@@ -281,7 +282,8 @@ public class WatsonxRecorder {
                 .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), watsonRuntimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), watsonRuntimeConfig.logResponses()))
                 .version(watsonRuntimeConfig.version())
-                .projectId(watsonRuntimeConfig.projectId())
+                .spaceId(watsonRuntimeConfig.spaceId().orElse(null))
+                .projectId(watsonRuntimeConfig.projectId().orElse(null))
                 .modelId(watsonRuntimeConfig.generationModel().modelId())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
                 .logprobs(chatModelConfig.logprobs())
@@ -327,7 +329,8 @@ public class WatsonxRecorder {
                 .logRequests(firstOrDefault(false, generationModelConfig.logRequests(), watsonRuntimeConfig.logRequests()))
                 .logResponses(firstOrDefault(false, generationModelConfig.logResponses(), watsonRuntimeConfig.logResponses()))
                 .version(watsonRuntimeConfig.version())
-                .projectId(watsonRuntimeConfig.projectId())
+                .spaceId(watsonRuntimeConfig.spaceId().orElse(null))
+                .projectId(watsonRuntimeConfig.projectId().orElse(null))
                 .modelId(watsonRuntimeConfig.generationModel().modelId())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)
@@ -367,9 +370,11 @@ public class WatsonxRecorder {
         if (DUMMY_API_KEY.equals(apiKey)) {
             configProblems.add(createApiKeyConfigProblem(configName));
         }
-        String projectId = watsonConfig.projectId();
-        if (DUMMY_PROJECT_ID.equals(projectId)) {
-            configProblems.add(createProjectIdProblem(configName));
+        if (watsonConfig.projectId().isEmpty() && watsonConfig.spaceId().isEmpty()) {
+            var config = NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".");
+            var errorMessage = "One of the two properties quarkus.langchain4j.watsonx%s%s / quarkus.langchain4j.watsonx%s%s is required, but could not be found in any config source";
+            configProblems.add(new ConfigValidationException.Problem(
+                    String.format(errorMessage, config, "project-id", config, "space-id")));
         }
 
         return configProblems;
@@ -381,10 +386,6 @@ public class WatsonxRecorder {
 
     private ConfigValidationException.Problem createApiKeyConfigProblem(String configName) {
         return createConfigProblem("api-key", configName);
-    }
-
-    private ConfigValidationException.Problem createProjectIdProblem(String configName) {
-        return createConfigProblem("project-id", configName);
     }
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {

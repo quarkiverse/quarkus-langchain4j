@@ -68,7 +68,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                 ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, parameters);
 
         TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
             @Override
@@ -105,7 +105,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                 ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, parameters);
         Context context = Context.empty();
         context.put(TOOLS_CONTEXT, new ArrayList<StreamingToolFetcher>());
         context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
@@ -228,7 +228,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
         var input = messages.stream().map(ChatMessage::text).collect(Collectors.joining());
-        var request = new TokenizationRequest(modelId, input, projectId);
+        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
 
         return retryOn(new Callable<Integer>() {
             @Override

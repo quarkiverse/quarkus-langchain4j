@@ -39,7 +39,7 @@ public class WatsonxScoringModel extends Watsonx implements ScoringModel {
         if (Objects.isNull(textSegments) || textSegments.isEmpty())
             return Response.from(List.of());
 
-        ScoringRequest request = ScoringRequest.of(modelId, projectId, query, textSegments, parameters);
+        ScoringRequest request = ScoringRequest.of(modelId, spaceId, projectId, query, textSegments, parameters);
         ScoringResponse response = retryOn(new Callable<ScoringResponse>() {
             @Override
             public ScoringResponse call() throws Exception {
