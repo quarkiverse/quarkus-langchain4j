@@ -66,13 +66,14 @@ jobs:
                 | jq -R -s -c 'split("\n")[:-1]')
           
           # Integration tests (without the in-process embedding models)
-          # Remove JLama from the list
+          # Remove JLama and Llama3 from the list
           cd integration-tests
           IT_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | grep -v jlama \
+                | grep -v llama3-java \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
           

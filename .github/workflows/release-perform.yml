@@ -26,3 +26,4 @@ jobs:
     secrets: inherit
     with:
       version: ${{github.event.inputs.tag || github.ref_name}}
+      java_version: 23
