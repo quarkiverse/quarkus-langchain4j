@@ -32,7 +32,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .overrideConfigKey("quarkus.langchain4j.response-schema", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
@@ -259,14 +259,14 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
     }
 
     private TextGenerationRequest from(List<ChatMessage> messages) {
-        var modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
         var config = langchain4jWatsonConfig.defaultConfig();
+        var modelId = config.generationModel().modelId();
 
         var parameters = TextGenerationParameters.builder()
-                .decodingMethod(config.chatModel().decodingMethod())
-                .temperature(config.chatModel().temperature())
-                .minNewTokens(config.chatModel().minNewTokens())
-                .maxNewTokens(config.chatModel().maxNewTokens())
+                .decodingMethod(config.generationModel().decodingMethod())
+                .temperature(config.generationModel().temperature())
+                .minNewTokens(config.generationModel().minNewTokens())
+                .maxNewTokens(config.generationModel().maxNewTokens())
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 

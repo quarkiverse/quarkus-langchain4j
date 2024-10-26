@@ -8,6 +8,7 @@ import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
 
@@ -33,8 +34,16 @@ public interface LangChain4jWatsonxFixedRuntimeConfig {
     interface WatsonConfig {
 
         /**
-         * Chat model related settings
+         * Specifies the mode of interaction with the LLM model.
+         * <p>
+         * This property allows you to choose between two modes of operation:
+         * <ul>
+         * <li><strong>chat</strong>: prompts are automatically enriched with the specific tags defined by the model</li>
+         * <li><strong>generation</strong>: prompts require manual specification of tags</li>
+         * </ul>
+         * <strong>Allowable values:</strong> <code>[chat, generation]</code>
          */
-        ChatModelFixedRuntimeConfig chatModel();
+        @WithDefault("chat")
+        String mode();
     }
 }

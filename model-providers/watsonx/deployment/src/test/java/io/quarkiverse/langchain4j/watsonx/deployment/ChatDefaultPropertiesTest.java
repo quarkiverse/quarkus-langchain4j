@@ -39,7 +39,6 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "chat")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -50,8 +49,13 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     }
 
     static TextChatParameters parameters = TextChatParameters.builder()
-            .maxTokens(200)
+            .frequencyPenalty(0.0)
+            .logprobs(false)
+            .maxTokens(1024)
+            .n(1)
+            .presencePenalty(0.0)
             .temperature(1.0)
+            .topP(1.0)
             .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
             .build();
 
@@ -67,24 +71,27 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
-        var fixedRuntimeConfig = langchain4jWatsonFixedRuntimeConfig.defaultConfig();
         assertEquals(Optional.empty(), runtimeConfig.timeout());
         assertEquals(Optional.empty(), runtimeConfig.iam().timeout());
         assertEquals(false, runtimeConfig.logRequests().orElse(false));
         assertEquals(false, runtimeConfig.logResponses().orElse(false));
         assertEquals(WireMockUtil.VERSION, runtimeConfig.version());
-        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, fixedRuntimeConfig.chatModel().modelId());
-        assertEquals(200, runtimeConfig.chatModel().maxNewTokens());
+        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelId());
+        assertEquals(0, runtimeConfig.chatModel().frequencyPenalty());
+        assertEquals(false, runtimeConfig.chatModel().logprobs());
+        assertTrue(runtimeConfig.chatModel().topLogprobs().isEmpty());
+        assertEquals(1024, runtimeConfig.chatModel().maxTokens());
+        assertEquals(1, runtimeConfig.chatModel().n());
+        assertEquals(0, runtimeConfig.chatModel().presencePenalty());
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
-        assertTrue(runtimeConfig.chatModel().topP().isEmpty());
-        assertTrue(runtimeConfig.chatModel().responseFormat().isEmpty());
+        assertEquals(1.0, runtimeConfig.chatModel().topP());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
     }
 
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         var messages = List.<TextChatMessage> of(
@@ -105,7 +112,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         var body = new TokenizationRequest(modelId, "test", projectId);
@@ -121,7 +128,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         var messagesToSend = List.<TextChatMessage> of(

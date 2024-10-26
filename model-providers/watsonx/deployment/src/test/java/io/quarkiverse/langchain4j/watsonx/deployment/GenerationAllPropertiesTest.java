@@ -51,23 +51,22 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.grant-type", "grantME")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "my_super_model")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-joiner", "@")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.decoding-method", "greedy")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.length-penalty.decay-factor", "1.1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.length-penalty.start-index", "0")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.max-new-tokens", "200")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.min-new-tokens", "10")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.random-seed", "2")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.stop-sequences", "\n,\n\n")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.temperature", "1.5")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-k", "90")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-p", "0.5")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.repetition-penalty", "2.0")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.truncate-input-tokens", "0")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.include-stop-sequence", "false")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-id", "my_super_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.prompt-joiner", "@")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.decoding-method", "greedy")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.length-penalty.decay-factor", "1.1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.length-penalty.start-index", "0")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.max-new-tokens", "200")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.min-new-tokens", "10")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.random-seed", "2")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.stop-sequences", "\n,\n\n")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.temperature", "1.5")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.top-k", "90")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.top-p", "0.5")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.repetition-penalty", "2.0")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.truncate-input-tokens", "0")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.include-stop-sequence", "false")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id", "my_super_embedding_model")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens", "10")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.model-id", "my_super_scoring_model")
@@ -120,7 +119,6 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
-        var fixedRuntimeConfig = langchain4jWatsonFixedRuntimeConfig.defaultConfig();
         assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().toString());
         assertEquals(WireMockUtil.URL_IAM_SERVER, runtimeConfig.iam().baseUrl().toString());
         assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey());
@@ -131,21 +129,21 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals(true, runtimeConfig.logRequests().orElse(false));
         assertEquals(true, runtimeConfig.logResponses().orElse(false));
         assertEquals("aaaa-mm-dd", runtimeConfig.version());
-        assertEquals("my_super_model", fixedRuntimeConfig.chatModel().modelId());
-        assertEquals("greedy", runtimeConfig.chatModel().decodingMethod());
-        assertEquals(1.1, runtimeConfig.chatModel().lengthPenalty().decayFactor().get());
-        assertEquals(0, runtimeConfig.chatModel().lengthPenalty().startIndex().get());
-        assertEquals(200, runtimeConfig.chatModel().maxNewTokens());
-        assertEquals(10, runtimeConfig.chatModel().minNewTokens());
-        assertEquals(2, runtimeConfig.chatModel().randomSeed().get());
-        assertEquals(List.of("\n", "\n\n"), runtimeConfig.chatModel().stopSequences().get());
-        assertEquals(1.5, runtimeConfig.chatModel().temperature());
-        assertEquals(90, runtimeConfig.chatModel().topK().get());
-        assertEquals(0.5, runtimeConfig.chatModel().topP().get());
-        assertEquals(2.0, runtimeConfig.chatModel().repetitionPenalty().get());
-        assertEquals(0, runtimeConfig.chatModel().truncateInputTokens().get());
-        assertEquals(false, runtimeConfig.chatModel().includeStopSequence().get());
-        assertEquals("@", runtimeConfig.chatModel().promptJoiner());
+        assertEquals("my_super_model", runtimeConfig.generationModel().modelId());
+        assertEquals("greedy", runtimeConfig.generationModel().decodingMethod());
+        assertEquals(1.1, runtimeConfig.generationModel().lengthPenalty().decayFactor().get());
+        assertEquals(0, runtimeConfig.generationModel().lengthPenalty().startIndex().get());
+        assertEquals(200, runtimeConfig.generationModel().maxNewTokens());
+        assertEquals(10, runtimeConfig.generationModel().minNewTokens());
+        assertEquals(2, runtimeConfig.generationModel().randomSeed().get());
+        assertEquals(List.of("\n", "\n\n"), runtimeConfig.generationModel().stopSequences().get());
+        assertEquals(1.5, runtimeConfig.generationModel().temperature());
+        assertEquals(90, runtimeConfig.generationModel().topK().get());
+        assertEquals(0.5, runtimeConfig.generationModel().topP().get());
+        assertEquals(2.0, runtimeConfig.generationModel().repetitionPenalty().get());
+        assertEquals(0, runtimeConfig.generationModel().truncateInputTokens().get());
+        assertEquals(false, runtimeConfig.generationModel().includeStopSequence().get());
+        assertEquals("@", runtimeConfig.generationModel().promptJoiner());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
         assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
         assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelId());
@@ -155,7 +153,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);
@@ -232,7 +230,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         var body = new TokenizationRequest(modelId, "test", projectId);
@@ -248,7 +246,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage@UserMessage", parameters);

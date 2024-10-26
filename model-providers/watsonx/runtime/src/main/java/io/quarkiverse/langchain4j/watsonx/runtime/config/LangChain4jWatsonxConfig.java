@@ -105,6 +105,11 @@ public interface LangChain4jWatsonxConfig {
         ChatModelConfig chatModel();
 
         /**
+         * Generation model related settings.
+         */
+        GenerationModelConfig generationModel();
+
+        /**
          * Embedding model related settings.
          */
         EmbeddingModelConfig embeddingModel();

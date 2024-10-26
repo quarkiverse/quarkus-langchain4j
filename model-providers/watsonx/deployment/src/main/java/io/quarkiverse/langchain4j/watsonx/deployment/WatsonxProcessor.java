@@ -23,7 +23,6 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
-import io.quarkiverse.langchain4j.watsonx.deployment.items.WatsonxChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
@@ -32,7 +31,6 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
-import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 
 public class WatsonxProcessor {
@@ -65,11 +63,13 @@ public class WatsonxProcessor {
     }
 
     @BuildStep
-    void findChatModels(
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void generateBeans(WatsonxRecorder recorder, LangChain4jWatsonxConfig runtimeConfig,
             LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
-            CombinedIndexBuildItem indexBuildItem,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            BuildProducer<WatsonxChatModelProviderBuildItem> chatModelBuilder) {
+            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedScoringModelProviderBuildItem> selectedScoring,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
 
@@ -78,40 +78,22 @@ public class WatsonxProcessor {
 
             String configName = selected.getConfigName();
             String mode = NamedConfigUtil.isDefault(configName)
-                    ? fixedRuntimeConfig.defaultConfig().chatModel().mode()
-                    : fixedRuntimeConfig.namedConfig().get(configName).chatModel().mode();
-
-            switch (mode.toLowerCase()) {
-                case "chat", "generation" -> chatModelBuilder.produce(new WatsonxChatModelProviderBuildItem(configName, mode));
-                default -> throw new RuntimeException(
-                        "The \"mode\" value for the model \"%s\" is not valid. Choose one between [\"chat\", \"generation\"]"
-                                .formatted(mode, configName));
-            }
-        }
-    }
-
-    @BuildStep
-    @Record(ExecutionTime.RUNTIME_INIT)
-    void generateBeans(WatsonxRecorder recorder, LangChain4jWatsonxConfig runtimeConfig,
-            LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
-            List<WatsonxChatModelProviderBuildItem> selectedChatItem,
-            List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            List<SelectedScoringModelProviderBuildItem> selectedScoring,
-            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
-
-        for (var selected : selectedChatItem) {
-
-            String configName = selected.getConfigName();
+                    ? fixedRuntimeConfig.defaultConfig().mode()
+                    : fixedRuntimeConfig.namedConfig().get(configName).mode();
 
             Supplier<ChatLanguageModel> chatLanguageModel;
             Supplier<StreamingChatLanguageModel> streamingChatLanguageModel;
 
-            if (selected.getMode().equals("chat")) {
-                chatLanguageModel = recorder.chatModel(runtimeConfig, fixedRuntimeConfig, configName);
-                streamingChatLanguageModel = recorder.streamingChatModel(runtimeConfig, fixedRuntimeConfig, configName);
+            if (mode.equalsIgnoreCase("chat")) {
+                chatLanguageModel = recorder.chatModel(runtimeConfig, configName);
+                streamingChatLanguageModel = recorder.streamingChatModel(runtimeConfig, configName);
+            } else if (mode.equalsIgnoreCase("generation")) {
+                chatLanguageModel = recorder.generationModel(runtimeConfig, configName);
+                streamingChatLanguageModel = recorder.generationStreamingModel(runtimeConfig, configName);
             } else {
-                chatLanguageModel = recorder.generationModel(runtimeConfig, fixedRuntimeConfig, configName);
-                streamingChatLanguageModel = recorder.generationStreamingModel(runtimeConfig, fixedRuntimeConfig, configName);
+                throw new RuntimeException(
+                        "The \"mode\" value for the model \"%s\" is not valid. Choose one between [\"chat\", \"generation\"]"
+                                .formatted(mode, configName));
             }
 
             var chatBuilder = SyntheticBeanBuildItem

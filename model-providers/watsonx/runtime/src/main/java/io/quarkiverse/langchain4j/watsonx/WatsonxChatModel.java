@@ -48,7 +48,12 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         super(builder);
 
         this.parameters = TextChatParameters.builder()
+                .frequencyPenalty(builder.frequencyPenalty)
+                .logprobs(builder.logprobs)
+                .topLogprobs(builder.topLogprobs)
                 .maxTokens(builder.maxTokens)
+                .n(builder.n)
+                .presencePenalty(builder.presencePenalty)
                 .temperature(builder.temperature)
                 .topP(builder.topP)
                 .timeLimit(builder.timeout.toMillis())
@@ -273,13 +278,43 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
 
     public static final class Builder extends Watsonx.Builder<Builder> {
 
+        private Double frequencyPenalty;
+        private Boolean logprobs;
+        private Integer topLogprobs;
         private Integer maxTokens;
+        private Integer n;
+        private Double presencePenalty;
         private Double temperature;
         private Double topP;
         private String responseFormat;
 
+        public Builder frequencyPenalty(Double frequencyPenalty) {
+            this.frequencyPenalty = frequencyPenalty;
+            return this;
+        }
+
+        public Builder logprobs(Boolean logprobs) {
+            this.logprobs = logprobs;
+            return this;
+        }
+
+        public Builder topLogprobs(Integer topLogprobs) {
+            this.topLogprobs = topLogprobs;
+            return this;
+        }
+
         public Builder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
+            return this;
+        }
+
+        public Builder n(Integer n) {
+            this.n = n;
+            return this;
+        }
+
+        public Builder presencePenalty(Double presencePenalty) {
+            this.presencePenalty = presencePenalty;
             return this;
         }
 

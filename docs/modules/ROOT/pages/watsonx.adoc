@@ -75,8 +75,10 @@ To choose between one of these two modes, add the `chat-model.mode` property to 
 
 [source,properties,subs=attributes+]
 ----
-quarkus.langchain4j.watsonx.chat-model.mode=chat  // or 'generate'
+quarkus.langchain4j.watsonx.mode=chat  // or 'generate'
 ----
+
+NOTE: Depending on the mode selected, the values for configuring the model are found under the `chat-model` or `generation-model` properties.
 
 ==== Chat Mode
 
@@ -92,7 +94,6 @@ quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
 quarkus.langchain4j.watsonx.chat-model.model-id=mistralai/mistral-large
-quarkus.langchain4j.watsonx.chat-model.mode=chat
 ----
 
 [source,java]
@@ -115,8 +116,8 @@ In `generation` mode, you have complete control over the structure of your promp
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
-quarkus.langchain4j.watsonx.chat-model.model-id=mistralai/mistral-large
-quarkus.langchain4j.watsonx.chat-model.mode=generation
+quarkus.langchain4j.watsonx.generation-model.model-id=mistralai/mistral-large
+quarkus.langchain4j.watsonx.mode=generation
 ----
 
 [source,java]

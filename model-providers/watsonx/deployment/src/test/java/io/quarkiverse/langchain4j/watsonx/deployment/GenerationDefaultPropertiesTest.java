@@ -44,7 +44,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -80,27 +80,26 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
-        var fixedRuntimeConfig = langchain4jWatsonFixedRuntimeConfig.defaultConfig();
         assertEquals(Optional.empty(), runtimeConfig.timeout());
         assertEquals(Optional.empty(), runtimeConfig.iam().timeout());
         assertEquals(false, runtimeConfig.logRequests().orElse(false));
         assertEquals(false, runtimeConfig.logResponses().orElse(false));
         assertEquals(WireMockUtil.VERSION, runtimeConfig.version());
-        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, fixedRuntimeConfig.chatModel().modelId());
-        assertEquals("greedy", runtimeConfig.chatModel().decodingMethod());
-        assertEquals(null, runtimeConfig.chatModel().lengthPenalty().decayFactor().orElse(null));
-        assertEquals(null, runtimeConfig.chatModel().lengthPenalty().startIndex().orElse(null));
-        assertEquals(200, runtimeConfig.chatModel().maxNewTokens());
-        assertEquals(0, runtimeConfig.chatModel().minNewTokens());
-        assertEquals(null, runtimeConfig.chatModel().randomSeed().orElse(null));
-        assertEquals(null, runtimeConfig.chatModel().stopSequences().orElse(null));
-        assertEquals(1.0, runtimeConfig.chatModel().temperature());
-        assertEquals("\n", runtimeConfig.chatModel().promptJoiner());
-        assertTrue(runtimeConfig.chatModel().topK().isEmpty());
-        assertTrue(runtimeConfig.chatModel().topP().isEmpty());
-        assertTrue(runtimeConfig.chatModel().repetitionPenalty().isEmpty());
-        assertTrue(runtimeConfig.chatModel().truncateInputTokens().isEmpty());
-        assertTrue(runtimeConfig.chatModel().includeStopSequence().isEmpty());
+        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, runtimeConfig.generationModel().modelId());
+        assertEquals("greedy", runtimeConfig.generationModel().decodingMethod());
+        assertEquals(null, runtimeConfig.generationModel().lengthPenalty().decayFactor().orElse(null));
+        assertEquals(null, runtimeConfig.generationModel().lengthPenalty().startIndex().orElse(null));
+        assertEquals(200, runtimeConfig.generationModel().maxNewTokens());
+        assertEquals(0, runtimeConfig.generationModel().minNewTokens());
+        assertEquals(null, runtimeConfig.generationModel().randomSeed().orElse(null));
+        assertEquals(null, runtimeConfig.generationModel().stopSequences().orElse(null));
+        assertEquals(1.0, runtimeConfig.generationModel().temperature());
+        assertEquals("\n", runtimeConfig.generationModel().promptJoiner());
+        assertTrue(runtimeConfig.generationModel().topK().isEmpty());
+        assertTrue(runtimeConfig.generationModel().topP().isEmpty());
+        assertTrue(runtimeConfig.generationModel().repetitionPenalty().isEmpty());
+        assertTrue(runtimeConfig.generationModel().truncateInputTokens().isEmpty());
+        assertTrue(runtimeConfig.generationModel().includeStopSequence().isEmpty());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
         assertEquals(WireMockUtil.DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelId());
         assertTrue(runtimeConfig.embeddingModel().truncateInputTokens().isEmpty());
@@ -111,7 +110,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
@@ -189,7 +188,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         var body = new TokenizationRequest(modelId, "test", projectId);
@@ -205,7 +204,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
+        String modelId = config.generationModel().modelId();
         String projectId = config.projectId();
 
         TextGenerationRequest body = new TextGenerationRequest(modelId, projectId, "SystemMessage\nUserMessage", parameters);
