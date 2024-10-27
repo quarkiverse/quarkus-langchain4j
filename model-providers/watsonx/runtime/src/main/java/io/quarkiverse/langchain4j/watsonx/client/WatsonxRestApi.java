@@ -23,6 +23,7 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.ScoringRequest;
@@ -177,15 +178,22 @@ public interface WatsonxRestApi {
                 return;
             }
             response.bodyHandler(new Handler<>() {
-
                 @Override
                 public void handle(Buffer body) {
+                    String prettyBody;
                     try {
+                        prettyBody = ObjectMapperHolder.WRITER
+                                .writeValueAsString(ObjectMapperHolder.MAPPER.readTree(bodyToString(body)));
+                    } catch (Exception e) {
+                        prettyBody = bodyToString(body);
+                    }
+                    try {
+
                         log.infof(
                                 "Response:\n- status code: %s\n- headers: %s\n- body: %s",
                                 response.statusCode(),
                                 inOneLine(response.headers()),
-                                bodyToString(body));
+                                prettyBody);
                     } catch (Exception e) {
                         log.warn("Failed to log response", e);
                     }

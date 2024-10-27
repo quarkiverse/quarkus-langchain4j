@@ -83,7 +83,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
         public static final ObjectMapper MAPPER;
         public static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<>() {
         };
-        private static final ObjectWriter WRITER;
+        public static final ObjectWriter WRITER;
 
         static {
             MAPPER = Arc.container().instance(ObjectMapper.class).get()
