@@ -122,7 +122,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, null, parameters);
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
@@ -160,7 +160,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, null, parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))

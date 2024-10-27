@@ -21,7 +21,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.StreamingToolFetcher;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
@@ -65,10 +65,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         var convertedMessages = messages.stream().map(TextChatMessage::convert).toList();
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0)
-                ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
+                ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
 
         TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
             @Override
@@ -102,10 +102,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
             StreamingResponseHandler<AiMessage> handler) {
         var convertedMessages = messages.stream().map(TextChatMessage::convert).toList();
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0)
-                ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
+                ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
         Context context = Context.empty();
         context.put(TOOLS_CONTEXT, new ArrayList<StreamingToolFetcher>());
         context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());

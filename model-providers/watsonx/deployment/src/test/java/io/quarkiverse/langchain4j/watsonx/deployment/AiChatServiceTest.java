@@ -36,8 +36,8 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAs
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools.TextChatParameterFunction;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool.TextChatParameterFunction;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall.TextChatFunctionCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
@@ -111,8 +111,8 @@ public class AiChatServiceTest extends WireMockAbstract {
         }
     }
 
-    static List<TextChatParameterTools> tools = List.of(
-            new TextChatParameterTools("function", new TextChatParameterFunction(
+    static List<TextChatParameterTool> tools = List.of(
+            new TextChatParameterTool("function", new TextChatParameterFunction(
                     "sum",
                     "Execute the sum of two numbers",
                     Map.<String, Object> of(
@@ -432,7 +432,7 @@ public class AiChatServiceTest extends WireMockAbstract {
         }
     }
 
-    private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTools> tools) {
+    private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTool> tools) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelId();
@@ -450,6 +450,6 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
+        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, null, parameters);
     }
 }
