@@ -1,0 +1,327 @@
+:summaryTableId: quarkus-langchain4j-openshift-ai_quarkus-langchain4j
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-enabled[`quarkus.langchain4j.openshift-ai.chat-model.enabled`]##
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-base-url[`quarkus.langchain4j.openshift-ai.base-url`]##
+
+[.description]
+--
+Base URL where OpenShift AI serving is running, such as `https://flant5s-l-predictor-ch2023.apps.cluster-hj2qv.dynamic.redhatworkshops.io:443/api`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`https://dummy.ai/api`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-timeout[`quarkus.langchain4j.openshift-ai.timeout`]##
+
+[.description]
+--
+Timeout for OpenShift AI calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10s`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-requests[`quarkus.langchain4j.openshift-ai.log-requests`]##
+
+[.description]
+--
+Whether the OpenShift AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-log-responses[`quarkus.langchain4j.openshift-ai.log-responses`]##
+
+[.description]
+--
+Whether the OpenShift AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-enable-integration[`quarkus.langchain4j.openshift-ai.enable-integration`]##
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-model-id[`quarkus.langchain4j.openshift-ai.chat-model.model-id`]##
+
+[.description]
+--
+Model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-requests[`quarkus.langchain4j.openshift-ai.chat-model.log-requests`]##
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-chat-model-log-responses[`quarkus.langchain4j.openshift-ai.chat-model.log-responses`]##
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+h|[[quarkus-langchain4j-openshift-ai_section_quarkus-langchain4j-openshift-ai]] [.section-name.section-level0]##link:#quarkus-langchain4j-openshift-ai_section_quarkus-langchain4j-openshift-ai[Named model config]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-base-url[`quarkus.langchain4j.openshift-ai."model-name".base-url`]##
+
+[.description]
+--
+Base URL where OpenShift AI serving is running, such as `https://flant5s-l-predictor-ch2023.apps.cluster-hj2qv.dynamic.redhatworkshops.io:443/api`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|`https://dummy.ai/api`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-timeout[`quarkus.langchain4j.openshift-ai."model-name".timeout`]##
+
+[.description]
+--
+Timeout for OpenShift AI calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`10s`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-requests[`quarkus.langchain4j.openshift-ai."model-name".log-requests`]##
+
+[.description]
+--
+Whether the OpenShift AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-log-responses[`quarkus.langchain4j.openshift-ai."model-name".log-responses`]##
+
+[.description]
+--
+Whether the OpenShift AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-enable-integration[`quarkus.langchain4j.openshift-ai."model-name".enable-integration`]##
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the OpenAI provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-model-id[`quarkus.langchain4j.openshift-ai."model-name".chat-model.model-id`]##
+
+[.description]
+--
+Model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-requests[`quarkus.langchain4j.openshift-ai."model-name".chat-model.log-requests`]##
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-openshift-ai_quarkus-langchain4j-openshift-ai-model-name-chat-model-log-responses[`quarkus.langchain4j.openshift-ai."model-name".chat-model.log-responses`]##
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENSHIFT_AI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-openshift-ai_quarkus-langchain4j]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
+
+:!summaryTableId:

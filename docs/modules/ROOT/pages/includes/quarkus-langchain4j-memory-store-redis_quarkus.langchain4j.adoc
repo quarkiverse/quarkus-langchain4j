@@ -1,0 +1,31 @@
+:summaryTableId: quarkus-langchain4j-memory-store-redis_quarkus-langchain4j
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-redis_quarkus-langchain4j-memorystore-redis-client-name[`quarkus.langchain4j.memorystore.redis.client-name`]##
+
+[.description]
+--
+The name of the Redis client to use. These clients are configured by means of the `redis-client` extension. If unspecified, it will use the default Redis client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_REDIS_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_REDIS_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+|===
+
+
+:!summaryTableId:
