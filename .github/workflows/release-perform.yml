@@ -21,9 +21,23 @@ concurrency:
 
 jobs:
   perform-release:
-    name: Perform Release
-    uses: quarkiverse/.github/.github/workflows/perform-release.yml@main
-    secrets: inherit
-    with:
-      version: ${{github.event.inputs.tag || github.ref_name}}
-      java_version: 23
+    steps:
+    - name: Perform Release
+      uses: quarkiverse/.github/.github/workflows/perform-release.yml@main
+      secrets: inherit
+      with:
+        version: ${{github.event.inputs.tag || github.ref_name}}
+        java_version: 23
+
+    - name: Update dependency versions for the samples
+      run: |
+        while IFS= read -r -d '' pom
+        do
+        ./mvnw org.codehaus.mojo:versions-maven-plugin:2.16.2:set-property -Dproperty=quarkus-langchain4j.version -DnewVersion=${{steps.metadata.outputs.current-version}}  -f "$(dirname "$pom")";
+        done  <   <(find samples/ -name pom.xml -print0)          
+        git commit -a -m "Update dependencies in samples"
+
+    - name: Push changes to ${{github.base_ref}} branch
+      run: |
+        git push
+        git push origin ${{steps.metadata.outputs.current-version}}  
