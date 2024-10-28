@@ -14,7 +14,7 @@ For instance, an application utilizing this extension can:
 - Generate personalized text such as emails or reports
 
 This extension is built upon the https://github.com/langchain4j/langchain4j[LangChain4j library].
-It offers a declarative approach to interact with diverse LLMs like OpenAI, Hugging Face, or Ollama. It facilitates LLM-invoked functions within Quarkus applications and allows document loading within the LLM "context".
+It offers a declarative approach to interact with diverse LLMs like OpenAI, Hugging Face, Ollama, or Jlama. It facilitates LLM-invoked functions within Quarkus applications and allows document loading within the LLM "context".
 
 image::llms-big-picture.png[width=600,align="center"]
 

@@ -13,6 +13,7 @@
 ** xref:openai.adoc[OpenAI]
 ** xref:huggingface.adoc[HuggingFace]
 ** xref:ollama.adoc[Ollama]
+** xref:jlama.adoc[Jlama]
 ** xref:podman.adoc[Podman AI Lab]
 ** xref:anthropic.adoc[Anthropic (Claude)]
 ** xref:mistral.adoc[Mistral AI]
