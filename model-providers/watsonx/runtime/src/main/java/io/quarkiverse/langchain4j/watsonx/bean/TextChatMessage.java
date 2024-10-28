@@ -212,22 +212,22 @@ public sealed interface TextChatMessage
         }
     }
 
-    public record TextChatParameterTools(String type, TextChatParameterFunction function) {
+    public record TextChatParameterTool(String type, TextChatParameterFunction function) {
         public record TextChatParameterFunction(String name, String description, Map<String, Object> parameters) {
         }
 
         /**
-         * Creates a {@link TextChatParameterTools} from a {@link ToolSpecification}.
+         * Creates a {@link TextChatParameterTool} from a {@link ToolSpecification}.
          *
          * @param toolExecutionRequest the tool specification to convert
-         * @return the created {@link TextChatParameterTools}
+         * @return the created {@link TextChatParameterTool}
          */
-        public static TextChatParameterTools of(ToolSpecification toolSpecification) {
+        public static TextChatParameterTool of(ToolSpecification toolSpecification) {
             var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(), Map.of(
                     "type", toolSpecification.parameters().type(),
                     "properties", toolSpecification.parameters().properties(),
                     "required", toolSpecification.parameters().required()));
-            return new TextChatParameterTools("function", parameters);
+            return new TextChatParameterTool("function", parameters);
         }
     }
 

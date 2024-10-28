@@ -19,7 +19,7 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.GenerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -31,7 +31,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -291,9 +291,10 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
 
     private TextGenerationRequest createRequest(String input) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
-        String projectId = watsonConfig.projectId();
+        GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
+        String modelId = chatModelConfig.modelId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
         TextGenerationParameters parameters = TextGenerationParameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
                 .temperature(chatModelConfig.temperature())
@@ -302,6 +303,6 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextGenerationRequest(modelId, projectId, input, parameters);
+        return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }
 }

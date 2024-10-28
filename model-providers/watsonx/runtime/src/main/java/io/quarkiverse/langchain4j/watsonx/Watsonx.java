@@ -12,7 +12,7 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public abstract class Watsonx {
 
-    protected final String modelId, projectId, version;
+    protected final String modelId, projectId, spaceId, version;
     protected final WatsonxRestApi client;
 
     public Watsonx(Builder<?> builder) {
@@ -31,6 +31,7 @@ public abstract class Watsonx {
 
         this.client = restClientBuilder.build(WatsonxRestApi.class);
         this.modelId = builder.modelId;
+        this.spaceId = builder.spaceId;
         this.projectId = builder.projectId;
         this.version = builder.version;
     }
@@ -39,11 +40,28 @@ public abstract class Watsonx {
         return client;
     }
 
+    public String getModelId() {
+        return modelId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getSpaceId() {
+        return spaceId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
     @SuppressWarnings("unchecked")
     public static abstract class Builder<T extends Builder<T>> {
 
         protected String modelId;
         protected String version;
+        protected String spaceId;
         protected String projectId;
         protected Duration timeout;
         protected URL url;
@@ -58,6 +76,11 @@ public abstract class Watsonx {
 
         public T version(String version) {
             this.version = version;
+            return (T) this;
+        }
+
+        public T spaceId(String spaceId) {
+            this.spaceId = spaceId;
             return (T) this;
         }
 

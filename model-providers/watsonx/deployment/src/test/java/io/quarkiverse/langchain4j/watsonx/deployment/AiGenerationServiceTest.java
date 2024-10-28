@@ -1,34 +1,24 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Date;
-import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
-
-import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.GenerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -41,10 +31,9 @@ public class AiGenerationServiceTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.model-id", "mistralai/mistral-large")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.prompt-formatter", "true")
-            .overrideConfigKey("quarkus.langchain4j.watsonx.chat-model.mode", "generation")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, Calculator.class));
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-id", "mistralai/mistral-large")
+            .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class));
 
     @Override
     void handlerBeforeEach() {
@@ -65,34 +54,11 @@ public class AiGenerationServiceTest extends WireMockAbstract {
         Multi<String> streaming(String text);
     }
 
-    @Singleton
-    @RegisterAiService(tools = Calculator.class)
-    @SystemMessage("This is a systemMessage")
-    interface AIServiceWithTool {
-        String chat(@MemoryId String memoryId, @UserMessage String text);
-
-        Multi<String> streaming(@MemoryId String memoryId, @UserMessage String text);
-    }
-
     @Inject
     AIService aiService;
 
     @Inject
-    AIServiceWithTool aiServiceWithTool;
-
-    @Inject
     ChatMemoryStore memory;
-
-    @Singleton
-    static class Calculator {
-
-        @Tool("Execute the sum of two numbers")
-        public int sum(int first, int second) {
-            return first + second;
-        }
-    }
-
-    static String TOOL_CALL = "[TOOL_CALLS] [{\\\"id\\\":\\\"1\\\",\\\"name\\\":\\\"sum\\\",\\\"arguments\\\":{\\\"first\\\":1,\\\"second\\\":1}}]</s>";
 
     @Test
     void chat() throws Exception {
@@ -105,157 +71,16 @@ public class AiGenerationServiceTest extends WireMockAbstract {
         assertEquals("AI Response", aiService.chat("Hello"));
     }
 
-    @Test
-    void chat_with_tool() throws Exception {
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
-                .scenario(Scenario.STARTED, "TOOL_CALL")
-                .response("""
-                        {
-                            "model_id": "mistralai/mistral-large",
-                            "created_at": "2024-01-21T17:06:14.052Z",
-                            "results": [
-                                {
-                                    "generated_text": "%s",
-                                    "generated_token_count": 5,
-                                    "input_token_count": 50,
-                                    "stop_reason": "eos_token",
-                                    "seed": 2123876088
-                                }
-                            ]
-                        }""".formatted(TOOL_CALL))
-                .build();
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
-                .scenario("TOOL_CALL", "AI_RESPONSE")
-                .response("""
-                        {
-                            "model_id": "mistralai/mistral-large",
-                            "created_at": "2024-01-21T17:06:14.052Z",
-                            "results": [
-                                {
-                                    "generated_text": "The result is 2",
-                                    "generated_token_count": 5,
-                                    "input_token_count": 50,
-                                    "stop_reason": "eos_token",
-                                    "seed": 2123876088
-                                }
-                            ]
-                        }""")
-                .build();
-
-        var result = aiServiceWithTool.chat("no_streaming", "Execute the sum of 1 + 1");
-        assertEquals("The result is 2", result);
-
-        var messages = memory.getMessages("no_streaming");
-        assertEquals("This is a systemMessage", messages.get(0).text());
-        assertEquals("Execute the sum of 1 + 1", messages.get(1).text());
-        assertEquals("The result is 2", messages.get(4).text());
-
-        if (messages.get(2) instanceof AiMessage aiMessage) {
-            assertTrue(aiMessage.hasToolExecutionRequests());
-            assertEquals("{\"first\":1,\"second\":1}", aiMessage.toolExecutionRequests().get(0).arguments());
-        } else {
-            fail("The third message is not of type AiMessage");
-        }
-
-        if (messages.get(3) instanceof ToolExecutionResultMessage toolResultMessage) {
-            assertEquals(2, Integer.parseInt(toolResultMessage.text()));
-        } else {
-            fail("The fourth message is not of type ToolExecutionResultMessage");
-        }
-    }
-
-    @Test
-    void streaming_chat() throws Exception {
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API, 200)
-                .body(mapper.writeValueAsString(generateRequest()))
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API)
-                .build();
-
-        var result = aiService.streaming("Hello").collect().asList().await().indefinitely();
-        assertEquals(List.of(". ", "I'", "m ", "a beginner"), result);
-    }
-
-    @Test
-    void streaming_chat_with_tool() throws Exception {
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API, 200)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario(Scenario.STARTED, "TOOL_CALL")
-                .response(
-                        """
-                                id: 1
-                                event: message
-                                data: {}
-
-                                id: 2
-                                event: message
-                                data: {"modelId":"mistralai/mistral-large","results":[{"generated_text":"","generated_token_count":0,"input_token_count":2,"stop_reason":"not_finished"}]}
-
-                                id: 3
-                                event: message
-                                data: {"modelId":"mistralai/mistral-large","results":[{"generated_text":"%s","generated_token_count":0,"input_token_count":2,"stop_reason":"not_finished"}]}
-
-                                id: 4
-                                event: close"""
-                                .formatted(TOOL_CALL))
-                .build();
-
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API, 200)
-                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .scenario("TOOL_CALL", "AI_RESPONSE")
-                .response(
-                        """
-                                id: 1
-                                event: message
-                                data: {}
-
-                                id: 2
-                                event: message
-                                data: {"modelId":"mistralai/mistral-large","results":[{"generated_text":"","generated_token_count":0,"input_token_count":2,"stop_reason":"not_finished"}]}
-
-                                id: 3
-                                event: message
-                                data: {"modelId":"mistralai/mistral-large","results":[{"generated_text":"The result is 2","generated_token_count":0,"input_token_count":2,"stop_reason":"not_finished"}]}
-
-                                id: 4
-                                event: close""")
-                .build();
-
-        var result = aiServiceWithTool.streaming("streaming", "Execute the sum of 1 + 1").collect().asList().await()
-                .indefinitely();
-        assertEquals("The result is 2", result.get(0));
-
-        var messages = memory.getMessages("streaming");
-        assertEquals("This is a systemMessage", messages.get(0).text());
-        assertEquals("Execute the sum of 1 + 1", messages.get(1).text());
-        assertEquals("The result is 2", messages.get(4).text());
-
-        if (messages.get(2) instanceof AiMessage aiMessage) {
-            assertTrue(aiMessage.hasToolExecutionRequests());
-            assertEquals("{\"first\":1,\"second\":1}", aiMessage.toolExecutionRequests().get(0).arguments());
-        } else {
-            fail("The third message is not of type AiMessage");
-        }
-
-        if (messages.get(3) instanceof ToolExecutionResultMessage toolResultMessage) {
-            assertEquals(2, Integer.parseInt(toolResultMessage.text()));
-        } else {
-            fail("The fourth message is not of type ToolExecutionResultMessage");
-        }
-    }
-
     private TextGenerationRequest generateRequest() {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
-        ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
-        String projectId = watsonConfig.projectId();
+        GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
+        String modelId = chatModelConfig.modelId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
         String input = new StringBuilder()
-                .append("<s>[INST] This is a systemMessage [/INST]</s>")
-                .append("[INST] This is a userMessage Hello [/INST]")
+                .append("This is a systemMessage")
+                .append(chatModelConfig.promptJoiner())
+                .append("This is a userMessage Hello")
                 .toString();
         TextGenerationParameters parameters = TextGenerationParameters.builder()
                 .decodingMethod(chatModelConfig.decodingMethod())
@@ -265,6 +90,6 @@ public class AiGenerationServiceTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextGenerationRequest(modelId, projectId, input, parameters);
+        return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }
 }

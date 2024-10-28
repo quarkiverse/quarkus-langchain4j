@@ -11,6 +11,10 @@ public interface ScoringModelConfig {
 
     /**
      * Model id to use.
+     * <p>
+     * To view the complete model list, <a href=
+     * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp">click
+     * here</a>.
      */
     @WithDefault("cross-encoder/ms-marco-minilm-l-12-v2")
     String modelId();

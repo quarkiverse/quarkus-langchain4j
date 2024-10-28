@@ -65,12 +65,16 @@ public interface LangChain4jWatsonxConfig {
         String version();
 
         /**
-         * The project that contains the watsonx.ai resource.
+         * The space that contains the resource. Either <code>space_id</code> or <code>project_id</code> has to be given.
+         */
+        Optional<String> spaceId();
+
+        /**
+         * The space that contains the resource. Either <code>space_id</code> or project_id has to be given.
          * <p>
          * To look up your project id, <a href="https://dataplatform.cloud.ibm.com/projects/?context=wx">click here</a>.
          */
-        @WithDefault("dummy")
-        String projectId();
+        Optional<String> projectId();
 
         /**
          * Whether the watsonx.ai client should log requests.
@@ -103,6 +107,11 @@ public interface LangChain4jWatsonxConfig {
          * Chat model related settings.
          */
         ChatModelConfig chatModel();
+
+        /**
+         * Generation model related settings.
+         */
+        GenerationModelConfig generationModel();
 
         /**
          * Embedding model related settings.

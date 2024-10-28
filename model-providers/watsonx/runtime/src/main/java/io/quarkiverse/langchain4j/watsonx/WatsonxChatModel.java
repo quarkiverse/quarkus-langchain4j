@@ -21,7 +21,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.StreamingToolFetcher;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
@@ -48,7 +48,12 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         super(builder);
 
         this.parameters = TextChatParameters.builder()
+                .frequencyPenalty(builder.frequencyPenalty)
+                .logprobs(builder.logprobs)
+                .topLogprobs(builder.topLogprobs)
                 .maxTokens(builder.maxTokens)
+                .n(builder.n)
+                .presencePenalty(builder.presencePenalty)
                 .temperature(builder.temperature)
                 .topP(builder.topP)
                 .timeLimit(builder.timeout.toMillis())
@@ -60,10 +65,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
     public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         var convertedMessages = messages.stream().map(TextChatMessage::convert).toList();
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0)
-                ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
+                ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
 
         TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
             @Override
@@ -97,10 +102,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
             StreamingResponseHandler<AiMessage> handler) {
         var convertedMessages = messages.stream().map(TextChatMessage::convert).toList();
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0)
-                ? toolSpecifications.stream().map(TextChatParameterTools::of).toList()
+                ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, projectId, convertedMessages, tools, parameters);
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
         Context context = Context.empty();
         context.put(TOOLS_CONTEXT, new ArrayList<StreamingToolFetcher>());
         context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
@@ -223,7 +228,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
     @Override
     public int estimateTokenCount(List<ChatMessage> messages) {
         var input = messages.stream().map(ChatMessage::text).collect(Collectors.joining());
-        var request = new TokenizationRequest(modelId, input, projectId);
+        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
 
         return retryOn(new Callable<Integer>() {
             @Override
@@ -273,13 +278,43 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
 
     public static final class Builder extends Watsonx.Builder<Builder> {
 
+        private Double frequencyPenalty;
+        private Boolean logprobs;
+        private Integer topLogprobs;
         private Integer maxTokens;
+        private Integer n;
+        private Double presencePenalty;
         private Double temperature;
         private Double topP;
         private String responseFormat;
 
+        public Builder frequencyPenalty(Double frequencyPenalty) {
+            this.frequencyPenalty = frequencyPenalty;
+            return this;
+        }
+
+        public Builder logprobs(Boolean logprobs) {
+            this.logprobs = logprobs;
+            return this;
+        }
+
+        public Builder topLogprobs(Integer topLogprobs) {
+            this.topLogprobs = topLogprobs;
+            return this;
+        }
+
         public Builder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
+            return this;
+        }
+
+        public Builder n(Integer n) {
+            this.n = n;
+            return this;
+        }
+
+        public Builder presencePenalty(Double presencePenalty) {
+            this.presencePenalty = presencePenalty;
             return this;
         }
 

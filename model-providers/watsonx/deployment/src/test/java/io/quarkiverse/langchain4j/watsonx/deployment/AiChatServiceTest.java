@@ -36,8 +36,8 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAs
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTools.TextChatParameterFunction;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool.TextChatParameterFunction;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall.TextChatFunctionCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
@@ -111,8 +111,8 @@ public class AiChatServiceTest extends WireMockAbstract {
         }
     }
 
-    static List<TextChatParameterTools> tools = List.of(
-            new TextChatParameterTools("function", new TextChatParameterFunction(
+    static List<TextChatParameterTool> tools = List.of(
+            new TextChatParameterTool("function", new TextChatParameterFunction(
                     "sum",
                     "Execute the sum of two numbers",
                     Map.<String, Object> of(
@@ -264,9 +264,9 @@ public class AiChatServiceTest extends WireMockAbstract {
         assertEquals("The result is 2", result);
 
         var messages = memory.getMessages("no_streaming");
-        assertEquals("This is a systemMessage", messages.get(0).text());
-        assertEquals("Execute the sum of 1 + 1", messages.get(1).text());
-        assertEquals("The result is 2", messages.get(4).text());
+        assertEquals("This is a systemMessage", ((dev.langchain4j.data.message.SystemMessage) messages.get(0)).text());
+        assertEquals("Execute the sum of 1 + 1", ((dev.langchain4j.data.message.UserMessage) messages.get(1)).singleText());
+        assertEquals("The result is 2", ((dev.langchain4j.data.message.AiMessage) messages.get(4)).text());
 
         if (messages.get(2) instanceof AiMessage aiMessage) {
             assertTrue(aiMessage.hasToolExecutionRequests());
@@ -414,9 +414,9 @@ public class AiChatServiceTest extends WireMockAbstract {
         assertEquals(List.of("The res", "ult is 2"), result);
 
         var messages = memory.getMessages("streaming");
-        assertEquals("This is a systemMessage", messages.get(0).text());
-        assertEquals("Execute the sum of 1 + 1", messages.get(1).text());
-        assertEquals("The result is 2", messages.get(4).text());
+        assertEquals("This is a systemMessage", ((dev.langchain4j.data.message.SystemMessage) messages.get(0)).text());
+        assertEquals("Execute the sum of 1 + 1", ((dev.langchain4j.data.message.UserMessage) messages.get(1)).singleText());
+        assertEquals("The result is 2", ((dev.langchain4j.data.message.AiMessage) messages.get(4)).text());
 
         if (messages.get(2) instanceof AiMessage aiMessage) {
             assertTrue(aiMessage.hasToolExecutionRequests());
@@ -432,18 +432,24 @@ public class AiChatServiceTest extends WireMockAbstract {
         }
     }
 
-    private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTools> tools) {
+    private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTool> tools) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = langchain4jWatsonFixedRuntimeConfig.defaultConfig().chatModel().modelId();
-        String projectId = watsonConfig.projectId();
+        String modelId = chatModelConfig.modelId();
+        String spaceId = watsonConfig.spaceId().orElse(null);
+        String projectId = watsonConfig.projectId().orElse(null);
 
         TextChatParameters parameters = TextChatParameters.builder()
-                .temperature(chatModelConfig.temperature())
-                .maxTokens(chatModelConfig.maxNewTokens())
+                .frequencyPenalty(0.0)
+                .logprobs(false)
+                .maxTokens(1024)
+                .n(1)
+                .presencePenalty(0.0)
+                .temperature(1.0)
+                .topP(1.0)
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextChatRequest(modelId, projectId, messages, tools, parameters);
+        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, null, parameters);
     }
 }

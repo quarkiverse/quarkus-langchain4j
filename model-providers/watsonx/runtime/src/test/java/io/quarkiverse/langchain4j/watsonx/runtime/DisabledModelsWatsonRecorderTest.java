@@ -13,11 +13,9 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig.WatsonConfig;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
 
 class DisabledModelsWatsonRecorderTest {
     LangChain4jWatsonxConfig runtimeConfig = mock(LangChain4jWatsonxConfig.class);
-    LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig = mock(LangChain4jWatsonxFixedRuntimeConfig.class);
 
     WatsonConfig defaultConfig = mock(WatsonConfig.class);
     WatsonxRecorder recorder = new WatsonxRecorder();
@@ -34,13 +32,13 @@ class DisabledModelsWatsonRecorderTest {
     @Test
     void disabledChatModel() {
         assertThat(recorder
-                .generationModel(runtimeConfig, fixedRuntimeConfig, NamedConfigUtil.DEFAULT_NAME, null)
+                .generationModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME)
                 .get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
 
         assertThat(
-                recorder.generationStreamingModel(runtimeConfig, fixedRuntimeConfig, NamedConfigUtil.DEFAULT_NAME, null).get())
+                recorder.generationStreamingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
 

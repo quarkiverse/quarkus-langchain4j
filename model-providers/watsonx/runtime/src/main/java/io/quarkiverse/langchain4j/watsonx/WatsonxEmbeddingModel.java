@@ -41,7 +41,7 @@ public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, To
                 .map(TextSegment::text)
                 .collect(Collectors.toList());
 
-        EmbeddingRequest request = new EmbeddingRequest(modelId, projectId, inputs, parameters);
+        EmbeddingRequest request = new EmbeddingRequest(modelId, spaceId, projectId, inputs, parameters);
         EmbeddingResponse result = retryOn(new Callable<EmbeddingResponse>() {
             @Override
             public EmbeddingResponse call() throws Exception {
@@ -63,7 +63,7 @@ public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, To
         if (Objects.isNull(text) || text.isEmpty())
             return 0;
 
-        var request = new TokenizationRequest(modelId, text, projectId);
+        var request = new TokenizationRequest(modelId, text, spaceId, projectId);
         return retryOn(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
