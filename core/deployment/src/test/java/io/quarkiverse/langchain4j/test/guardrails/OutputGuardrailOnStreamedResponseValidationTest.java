@@ -139,6 +139,14 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
         assertThat(fatal.spy()).isEqualTo(1);
     }
 
+    @Test
+    @ActivateRequestContext
+    void testRewritingWhileStreamingIsNotAllowed() {
+        assertThatThrownBy(() -> aiService.rewriting("1").collect().asList().await().indefinitely())
+                .isInstanceOf(GuardrailException.class)
+                .hasMessageContaining("Attempting to rewrite the LLM output while streaming is not allowed");
+    }
+
     @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
@@ -187,6 +195,9 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
         @OutputGuardrailAccumulator(PassThroughAccumulator.class)
         Multi<String> fatalWithPassThroughAccumulator(@MemoryId String mem);
 
+        @UserMessage("Say Hi!")
+        @OutputGuardrails({ RewritingGuardrail.class })
+        Multi<String> rewriting(@MemoryId String mem);
     }
 
     @RequestScoped
@@ -269,6 +280,16 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
 
         public int spy() {
             return spy.get();
+        }
+    }
+
+    @RequestScoped
+    public static class RewritingGuardrail implements OutputGuardrail {
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            String text = responseFromLLM.text();
+            return successWith(text + ",1");
         }
     }
 

@@ -290,6 +290,10 @@ public class AiServiceMethodImplementationSupport {
                                 throw new GuardrailsSupport.GuardrailRetryException();
                             }
                         } else {
+                            if (result.isRewrittenResult()) {
+                                throw new GuardrailException(
+                                        "Attempting to rewrite the LLM output while streaming is not allowed");
+                            }
                             return chunk;
                         }
                     })

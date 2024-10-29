@@ -10,20 +10,29 @@ import java.util.stream.Collectors;
  * @param result The result of the output guardrail validation.
  * @param failures The list of failures, empty if the validation succeeded.
  */
-public record OutputGuardrailResult(Result result, List<Failure> failures) implements GuardrailResult<OutputGuardrailResult> {
+public record OutputGuardrailResult(Result result, String successfulResult,
+        List<Failure> failures) implements GuardrailResult<OutputGuardrailResult> {
 
     private static final OutputGuardrailResult SUCCESS = new OutputGuardrailResult();
 
     private OutputGuardrailResult() {
-        this(Result.SUCCESS, Collections.emptyList());
+        this(Result.SUCCESS, null, Collections.emptyList());
+    }
+
+    private OutputGuardrailResult(String successfulResult) {
+        this(Result.SUCCESS_WITH_RESULT, successfulResult, Collections.emptyList());
     }
 
     OutputGuardrailResult(List<Failure> failures, boolean fatal) {
-        this(fatal ? Result.FATAL : Result.FAILURE, failures);
+        this(fatal ? Result.FATAL : Result.FAILURE, null, failures);
     }
 
     public static OutputGuardrailResult success() {
         return SUCCESS;
+    }
+
+    public static OutputGuardrailResult successWith(String successfulResult) {
+        return new OutputGuardrailResult(successfulResult);
     }
 
     public static OutputGuardrailResult failure(List<? extends GuardrailResult.Failure> failures) {
@@ -32,11 +41,21 @@ public record OutputGuardrailResult(Result result, List<Failure> failures) imple
 
     @Override
     public boolean isSuccess() {
-        return result == Result.SUCCESS;
+        return result == Result.SUCCESS || result == Result.SUCCESS_WITH_RESULT;
+    }
+
+    @Override
+    public boolean isRewrittenResult() {
+        return result == Result.SUCCESS_WITH_RESULT;
     }
 
     public boolean isRetry() {
         return !isSuccess() && failures.stream().anyMatch(Failure::retry);
+    }
+
+    public OutputGuardrailResult blockRetry() {
+        failures().set(0, failures().get(0).blockRetry());
+        return this;
     }
 
     public String getReprompt() {
@@ -95,6 +114,13 @@ public record OutputGuardrailResult(Result result, List<Failure> failures) imple
         @Override
         public Failure withGuardrailClass(Class<? extends Guardrail> guardrailClass) {
             return new Failure(message(), cause(), guardrailClass, retry, reprompt);
+        }
+
+        public Failure blockRetry() {
+            return retry
+                    ? new Failure("Retry or reprompt is not allowed after a rewritten output", cause(), guardrailClass, false,
+                            reprompt)
+                    : this;
         }
 
         @Override
