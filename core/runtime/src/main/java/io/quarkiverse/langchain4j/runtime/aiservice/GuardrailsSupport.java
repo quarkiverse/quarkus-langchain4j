@@ -37,7 +37,7 @@ public class GuardrailsSupport {
 
             result = invokeInputGuardRails(methodCreateInfo,
                     new InputGuardrailParams(userMessage, chatMemory, augmentationResult, userMessageTemplate,
-                            templateVariables));
+                            Collections.unmodifiableMap(templateVariables)));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }

@@ -273,7 +273,8 @@ public class AiServiceMethodImplementationSupport {
                         try {
                             result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
                                     new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult,
-                                            methodCreateInfo.getUserMessageTemplate(), templateVariables));
+                                            methodCreateInfo.getUserMessageTemplate(),
+                                            Collections.unmodifiableMap(templateVariables)));
                         } catch (Exception e) {
                             throw new GuardrailException(e.getMessage(), e);
                         }
@@ -365,7 +366,7 @@ public class AiServiceMethodImplementationSupport {
         response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory, context.chatModel, response,
                 toolSpecifications,
                 new OutputGuardrailParams(response.content(), chatMemory, augmentationResult, userMessageTemplate,
-                        templateVariables));
+                        Collections.unmodifiableMap(templateVariables)));
 
         // everything worked as expected so let's commit the messages
         chatMemory.commit();

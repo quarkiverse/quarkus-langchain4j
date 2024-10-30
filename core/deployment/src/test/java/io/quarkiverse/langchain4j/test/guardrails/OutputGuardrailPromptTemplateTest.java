@@ -139,7 +139,7 @@ public class OutputGuardrailPromptTemplateTest {
     void shouldWorkWithNoUserMessage() {
         // UserMessage annotation is not provided, then no user message template should be available
         aiService.saySomething("Is this a parameter or a prompt?");
-        assertThat(guardrailValidation.spyUserMessageTemplate()).isNull();
+        assertThat(guardrailValidation.spyUserMessageTemplate()).isEmpty();
         assertThat(guardrailValidation.spyVariables()).isEmpty();
     }
 

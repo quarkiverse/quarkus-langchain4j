@@ -12,8 +12,8 @@ import dev.langchain4j.rag.AugmentationResult;
  * @param userMessage the user message, cannot be {@code null}
  * @param memory the memory, can be {@code null} or empty
  * @param augmentationResult the augmentation result, can be {@code null}
- * @param userMessageTemplate the user message template, can be {@code null} when @UserMessage is not provided.
- * @param variables the variable to be used with userMessageTemplate, can be {@code null} or empty
+ * @param userMessageTemplate the user message template, cannot be {@code null}
+ * @param variables the variable to be used with userMessageTemplate, cannot be {@code null}
  */
 public record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
         AugmentationResult augmentationResult, String userMessageTemplate,
