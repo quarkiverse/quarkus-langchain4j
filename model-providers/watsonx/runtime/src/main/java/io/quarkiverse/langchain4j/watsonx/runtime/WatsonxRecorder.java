@@ -284,7 +284,7 @@ public class WatsonxRecorder {
                 .version(watsonRuntimeConfig.version())
                 .spaceId(watsonRuntimeConfig.spaceId().orElse(null))
                 .projectId(watsonRuntimeConfig.projectId().orElse(null))
-                .modelId(watsonRuntimeConfig.generationModel().modelId())
+                .modelId(watsonRuntimeConfig.chatModel().modelId())
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
                 .logprobs(chatModelConfig.logprobs())
                 .topLogprobs(chatModelConfig.topLogprobs().orElse(null))

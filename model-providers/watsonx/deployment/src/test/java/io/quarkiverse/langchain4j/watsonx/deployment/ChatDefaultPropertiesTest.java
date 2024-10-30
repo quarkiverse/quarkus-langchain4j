@@ -91,7 +91,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -113,7 +113,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -130,7 +130,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
