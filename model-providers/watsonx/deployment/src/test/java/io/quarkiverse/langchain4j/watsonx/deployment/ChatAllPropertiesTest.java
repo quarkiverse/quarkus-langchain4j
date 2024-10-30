@@ -89,9 +89,9 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
-        assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().toString());
+        assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().orElse(null).toString());
         assertEquals(WireMockUtil.URL_IAM_SERVER, runtimeConfig.iam().baseUrl().toString());
-        assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey());
+        assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey().orElse(null));
         assertEquals("my-space-id", runtimeConfig.spaceId().orElse(null));
         assertEquals(WireMockUtil.PROJECT_ID, runtimeConfig.projectId().orElse(null));
         assertEquals(Duration.ofSeconds(60), runtimeConfig.timeout().get());

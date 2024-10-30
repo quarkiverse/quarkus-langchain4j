@@ -40,16 +40,14 @@ public interface LangChain4jWatsonxConfig {
         /**
          * Base URL of the watsonx.ai API.
          */
-        @WithDefault("https://dummy.ai/api")
-        String baseUrl();
+        Optional<String> baseUrl();
 
         /**
          * IBM Cloud API key.
          * <p>
          * To create a new API key, follow this <a href="https://cloud.ibm.com/iam/apikeys">link</a>.
          */
-        @WithDefault("dummy")
-        String apiKey();
+        Optional<String> apiKey();
 
         /**
          * Timeout for watsonx.ai calls.
