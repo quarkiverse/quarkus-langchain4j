@@ -75,6 +75,7 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import io.vertx.core.Context;
 
 /**
  * Provides the basic building blocks that the generated Interface methods call into
@@ -210,7 +211,8 @@ public class AiServiceMethodImplementationSupport {
                                         context.chatMemory(memoryId), ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
                                 return new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
-                                        finalToolExecutors, ar.contents(), context, memoryId);
+                                        finalToolExecutors, ar.contents(), context, memoryId,
+                                        methodCreateInfo.isSwitchToWorkerThread());
                             }
 
                             private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
@@ -261,12 +263,14 @@ public class AiServiceMethodImplementationSupport {
 
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
                 return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
+                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
+                        methodCreateInfo.isSwitchToWorkerThread());
             }
 
             var actualAugmentationResult = augmentationResult;
             return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId)
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
+                    methodCreateInfo.isSwitchToWorkerThread())
                     .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
                     .map(chunk -> {
                         OutputGuardrailResult result;
@@ -761,10 +765,11 @@ public class AiServiceMethodImplementationSupport {
         private final List<Content> contents;
         private final QuarkusAiServiceContext context;
         private final Object memoryId;
+        private final boolean mustSwitchToWorkerThread;
 
         public TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
                 Map<String, ToolExecutor> toolExecutors,
-                List<Content> contents, QuarkusAiServiceContext context, Object memoryId) {
+                List<Content> contents, QuarkusAiServiceContext context, Object memoryId, boolean mustSwitchToWorkerThread) {
             // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
             this.messagesToSend = messagesToSend;
             this.toolSpecifications = toolSpecifications;
@@ -772,15 +777,20 @@ public class AiServiceMethodImplementationSupport {
             this.contents = contents;
             this.context = context;
             this.memoryId = memoryId;
+            this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         }
 
         @Override
         public void subscribe(MultiSubscriber<? super String> subscriber) {
             UnicastProcessor<String> processor = UnicastProcessor.create();
             processor.subscribe(subscriber);
+            createTokenStream(processor);
+        }
+
+        private void createTokenStream(UnicastProcessor<String> processor) {
             var stream = new AiServiceTokenStream(messagesToSend, toolSpecifications,
                     toolsExecutors, contents, context, memoryId);
-            stream
+            TokenStream tokenStream = stream
                     .onNext(processor::onNext)
                     .onComplete(new Consumer<>() {
                         @Override
@@ -788,8 +798,12 @@ public class AiServiceMethodImplementationSupport {
                             processor.onComplete();
                         }
                     })
-                    .onError(processor::onError)
-                    .start();
+                    .onError(processor::onError);
+            if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+                Infrastructure.getDefaultWorkerPool().execute(tokenStream::start);
+            } else {
+                tokenStream.start();
+            }
         }
     }
 }

@@ -291,7 +291,7 @@ class ToolExecutorTest {
                     toolSpecification.name())) { // this only works because TestTool does not contain overloaded methods
                 toolExecutor = new QuarkusToolExecutor(
                         new QuarkusToolExecutor.Context(testTool, invokerClassName, methodCreateInfo.methodName(),
-                                methodCreateInfo.argumentMapperClassName()));
+                                methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel()));
                 break;
             }
         }

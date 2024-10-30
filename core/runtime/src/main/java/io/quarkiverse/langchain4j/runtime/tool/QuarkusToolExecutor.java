@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 
 import org.jboss.logging.Logger;
@@ -15,6 +16,9 @@ import dev.langchain4j.internal.Json;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
+import io.quarkus.virtual.threads.VirtualThreadsRecorder;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.Context;
 
 public class QuarkusToolExecutor implements ToolExecutor {
 
@@ -22,7 +26,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     private final Context context;
 
-    public record Context(Object tool, String toolInvokerName, String methodName, String argumentMapperClassName) {
+    public record Context(Object tool, String toolInvokerName, String methodName, String argumentMapperClassName,
+            ToolMethodCreateInfo.ExecutionModel executionModel) {
     }
 
     public interface Wrapper {
@@ -38,21 +43,66 @@ public class QuarkusToolExecutor implements ToolExecutor {
     public String execute(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
         log.debugv("About to execute {0}", toolExecutionRequest);
 
-        ToolInvoker invokerInstance = createInvokerInstance();
+        // TODO Tools invocation are "imperative"
+        // TODO This method is called from the caller thread
+        // TODO So, we need to handle the dispatch here, depending on the caller thread and the tool invocation
+        // TODO Note that we need to return a String in an imperative manner.
+        // TODO We may have to check who's going to call this method from a non-blocking thread to handle the dispatch there.
 
+        ToolInvoker invokerInstance = createInvokerInstance();
         Object[] params = prepareArguments(toolExecutionRequest, invokerInstance.methodMetadata(), memoryId);
+        // When required to block, we are invoked on a worker thread (stream with blocking tools).
+        switch (context.executionModel) {
+            case BLOCKING:
+                if (io.vertx.core.Context.isOnEventLoopThread()) {
+                    throw new IllegalStateException("Cannot execute blocking tools on event loop thread");
+                }
+                return invoke(params, invokerInstance);
+            case NON_BLOCKING:
+                return invoke(params, invokerInstance);
+            case VIRTUAL_THREAD:
+                if (io.vertx.core.Context.isOnEventLoopThread()) {
+                    throw new IllegalStateException("Cannot execute virtual thread tools on event loop thread");
+                }
+                try {
+                    return VirtualThreadsRecorder.getCurrent().submit(() -> invoke(params, invokerInstance))
+                            .get();
+                } catch (Exception e) {
+                    if (e instanceof CompletionException) {
+                        return e.getCause().getMessage();
+                    }
+                    return e.getMessage();
+                }
+            default:
+                throw new IllegalStateException("Unknown execution model: " + context.executionModel);
+        }
+
+    }
+
+    private String invoke(Object[] params, ToolInvoker invokerInstance) {
         try {
             if (log.isDebugEnabled()) {
                 log.debugv("Attempting to invoke tool {0} with parameters {1}", context.tool, Arrays.toString(params));
             }
-            Object invocationResult = invokerInstance.invoke(context.tool,
-                    params);
-            String result = handleResult(invokerInstance, invocationResult);
+            Object invocationResult = invokerInstance.invoke(context.tool, params);
+            String result;
+            if (invocationResult instanceof Uni<?>) { // TODO CS
+                if (io.vertx.core.Context.isOnEventLoopThread()) {
+                    throw new IllegalStateException(
+                            "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");
+                }
+                result = handleResult(invokerInstance, ((Uni<?>) invocationResult).await().indefinitely());
+            } else {
+                result = handleResult(invokerInstance, invocationResult);
+            }
             log.debugv("Tool execution result: {0}", result);
             return result;
         } catch (Exception e) {
             if (e instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) e;
+            }
+            if (e instanceof IllegalStateException) {
+                throw (IllegalStateException) e;
             }
             log.error("Error while executing tool '" + context.tool.getClass() + "'", e);
             return e.getMessage();

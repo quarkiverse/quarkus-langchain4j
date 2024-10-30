@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -69,6 +70,7 @@ import io.quarkiverse.langchain4j.deployment.devui.ToolProviderInfo;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -123,6 +125,7 @@ import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServicesProcessor {
@@ -760,6 +763,58 @@ public class AiServicesProcessor {
         }
     }
 
+    /**
+     * Because the tools execution uses an imperative API (`String execute(...)`) and uses the caller thread, we need
+     * to anticipate the need to dispatch the invocation on a worker thread.
+     * This is the case for AI service methods that returns `Uni`, `CompletionStage` and `Multi` (stream) and that uses
+     * tools returning `Uni`, `CompletionStage` or that are blocking.
+     * Basically, for "reactive AI service method, the switch is necessary except if all the tools are imperative (return `T`)
+     * and marked explicitly as blocking (using `@Blocking`).
+     *
+     * @param method the AI method
+     * @param tools the tools
+     */
+    public boolean detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(
+            MethodInfo method,
+            List<String> associatedTools,
+            List<ToolMethodBuildItem> tools) {
+        boolean reactive = method.returnType().name().equals(DotName.createSimple(Uni.class.getName()))
+                || method.returnType().name().equals(DotName.createSimple(CompletionStage.class.getName()))
+                || method.returnType().name().equals(DotName.createSimple(Multi.class.getName()));
+
+        boolean requireSwitchToWorkerThread = false;
+
+        if (associatedTools.isEmpty()) {
+            // No tools, no need to dispatch
+            return false;
+        }
+
+        if (!reactive) {
+            // We are already on a thread we can block.
+            return false;
+        }
+
+        // We need to find if any of the tools that could be used by the method is requiring a blocking execution
+        for (String classname : associatedTools) {
+            // Look for the tool in the list of tools
+            boolean found = false;
+            for (ToolMethodBuildItem tool : tools) {
+                if (tool.getDeclaringClassName().equals(classname)) {
+                    found = true;
+                    if (tool.requiresSwitchToWorkerThread()) {
+                        requireSwitchToWorkerThread = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                throw new RuntimeException("No tools detected in " + classname);
+            }
+        }
+
+        return requireSwitchToWorkerThread;
+    }
+
     @BuildStep
     public void validateGuardrails(SynthesisFinishedBuildItem synthesisFinished,
             List<AiServicesMethodBuildItem> methods,
@@ -857,7 +912,8 @@ public class AiServicesProcessor {
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             Optional<MetricsCapabilityBuildItem> metricsCapability,
-            Capabilities capabilities) {
+            Capabilities capabilities,
+            List<ToolMethodBuildItem> tools) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -1026,7 +1082,8 @@ public class AiServicesProcessor {
                                 addOpenTelemetrySpan,
                                 config.responseSchema(),
                                 allowedPredicates,
-                                ignoredPredicates);
+                                ignoredPredicates,
+                                tools);
                         if (!methodCreateInfo.getToolClassNames().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
                                     .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
@@ -1068,7 +1125,9 @@ public class AiServicesProcessor {
 
                             aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
                                     methodCreateInfo.getInputGuardrailsClassNames(),
-                                    methodCreateInfo.getOutputGuardrailsClassNames()));
+                                    methodCreateInfo.getOutputGuardrailsClassNames(),
+                                    gatherMethodToolClassNames(methodInfo),
+                                    methodCreateInfo));
                         }
                     }
 
@@ -1155,7 +1214,8 @@ public class AiServicesProcessor {
             MethodInfo method, IndexView index, boolean addMicrometerMetrics,
             boolean addOpenTelemetrySpans, boolean generateResponseSchema,
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
-            Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
+            Collection<Predicate<AnnotationInstance>> ignoredPredicates,
+            List<ToolMethodBuildItem> tools) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -1200,11 +1260,14 @@ public class AiServicesProcessor {
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 
+        boolean switchToWorkerThread = detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, methodToolClassNames,
+                tools);
+
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, inputGuardrails,
-                outputGuardrails, accumulatorClassName);
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, switchToWorkerThread,
+                inputGuardrails, outputGuardrails, accumulatorClassName);
     }
 
     private void validateReturnType(MethodInfo method) {
@@ -1688,11 +1751,17 @@ public class AiServicesProcessor {
         private final MethodInfo methodInfo;
         private final List<String> outputGuardrails;
         private final List<String> inputGuardrails;
+        private final List<String> tools;
+        private final AiServiceMethodCreateInfo methodCreateInfo;
 
-        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> inputGuardrails, List<String> outputGuardrails) {
+        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> inputGuardrails, List<String> outputGuardrails,
+                List<String> tools,
+                AiServiceMethodCreateInfo methodCreateInfo) {
             this.methodInfo = methodInfo;
             this.inputGuardrails = inputGuardrails;
             this.outputGuardrails = outputGuardrails;
+            this.tools = tools;
+            this.methodCreateInfo = methodCreateInfo;
         }
 
         public List<String> getOutputGuardrails() {
@@ -1705,6 +1774,10 @@ public class AiServicesProcessor {
 
         public MethodInfo getMethodInfo() {
             return methodInfo;
+        }
+
+        public AiServiceMethodCreateInfo getMethodCreateInfo() {
+            return methodCreateInfo;
         }
 
         public static List<String> gatherGuardrails(MethodInfo methodInfo, DotName annotation) {
