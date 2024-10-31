@@ -89,9 +89,9 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_config() throws Exception {
         var runtimeConfig = langchain4jWatsonConfig.defaultConfig();
-        assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().toString());
+        assertEquals(WireMockUtil.URL_WATSONX_SERVER, runtimeConfig.baseUrl().orElse(null).toString());
         assertEquals(WireMockUtil.URL_IAM_SERVER, runtimeConfig.iam().baseUrl().toString());
-        assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey());
+        assertEquals(WireMockUtil.API_KEY, runtimeConfig.apiKey().orElse(null));
         assertEquals("my-space-id", runtimeConfig.spaceId().orElse(null));
         assertEquals(WireMockUtil.PROJECT_ID, runtimeConfig.projectId().orElse(null));
         assertEquals(Duration.ofSeconds(60), runtimeConfig.timeout().get());
@@ -114,7 +114,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -135,7 +135,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -152,7 +152,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
