@@ -16,14 +16,16 @@ public class EasyRetrievalAugmentor implements RetrievalAugmentor {
 
     private DefaultRetrievalAugmentor delegate;
 
-    public EasyRetrievalAugmentor(Integer maxResults, EmbeddingModel embeddingModel, EmbeddingStore embeddingStore) {
-        EmbeddingStoreContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
+    public EasyRetrievalAugmentor(EasyRagConfig config, EmbeddingModel embeddingModel, EmbeddingStore embeddingStore) {
+        var contentRetrieverBuilder = EmbeddingStoreContentRetriever.builder()
                 .embeddingModel(embeddingModel)
                 .embeddingStore(embeddingStore)
-                .maxResults(maxResults)
-                .build();
+                .maxResults(config.maxResults());
+
+        config.minScore().ifPresent(contentRetrieverBuilder::minScore);
+
         delegate = DefaultRetrievalAugmentor.builder()
-                .contentRetriever(contentRetriever).build();
+                .contentRetriever(contentRetrieverBuilder.build()).build();
     }
 
     @Override

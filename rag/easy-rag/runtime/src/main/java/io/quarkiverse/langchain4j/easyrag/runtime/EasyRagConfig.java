@@ -2,7 +2,8 @@ package io.quarkiverse.langchain4j.easyrag.runtime;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
-import io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion;
+import java.util.OptionalDouble;
+
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -51,6 +52,11 @@ public interface EasyRagConfig {
      */
     @WithDefault("5")
     Integer maxResults();
+
+    /**
+     * The minimum score for results to return when querying the retrieval augmentor.
+     */
+    OptionalDouble minScore();
 
     /**
      * The strategy to decide whether document ingestion into the store
