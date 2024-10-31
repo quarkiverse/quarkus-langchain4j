@@ -15,7 +15,7 @@ Ethical concerns and biases within LLMs are topics of ongoing discussion and res
 Continued research and development in LLMs are constantly pushing the boundaries of what AI can achieve in language understanding and generation.
 
 LLMs are a core component of the Quarkus LangChain4j extension.
-The extension does not serve its own LLMs, but rather provides a standard interface for interacting with many different LLMs such as OpenAI GPT-3/4, Hugging Face, and Ollama.
+The extension does not serve its own LLMs, but rather provides a standard interface for interacting with many different LLMs such as OpenAI GPT-3/4, Hugging Face, Ollama, and Jlama.
 This xref:ai-services.adoc[interface] is designed to be simple and intuitive, allowing developers to quickly integrate LLMs into their applications.
 
 Note that each LLM has a different feature set.
@@ -24,6 +24,7 @@ Please check the specific documentation for the LLM you are using to see what fe
 - xref:openai.adoc[OpenAI (GPT-3/4)]
 - xref:huggingface.adoc[Hugging Face]
 - xref:ollama.adoc[Ollama]
+- xref:jlama.adoc[Jlama]
 - xref:watsonx.adoc[IBM watsonx.ai]
 - xref:mistral.adoc[Mistral AI]
 

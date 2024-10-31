@@ -1,0 +1,94 @@
+= Jlama
+
+include::./includes/attributes.adoc[]
+
+https://github.com/tjake/Jlama[Jlama] provides a way to run large language models (LLMs) locally and in pure Java and embedded in your Quarkus application.
+You can run many https://huggingface.co/tjake[models] such as LLama3, Mistral, Granite and many others on your machine.
+
+[#_prerequisites]
+== Prerequisites
+
+To use Jlama it is necessary to run on Java 21 or later. This is because it utilizes the new https://openjdk.org/jeps/448[Vector API] for faster inference. Note that the Vector API is still a Java preview features, so it is required to explicitly enable it.
+
+Since the Vector API are still a preview feature in Java 21, and up to the latest Java 23, it is necessary to enable it on the JVM by launching it with the following flags:
+
+[source]
+----
+--enable-preview --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+----
+
+or equivalently to configure the quarkus-maven-plugin in the pom.xml file of your project as it follows:
+
+[source,xml,subs=attributes+]
+----
+<configuration>
+    <jvmArgs>--enable-preview --enable-native-access=ALL-UNNAMED</jvmArgs>
+    <modules>
+        <module>jdk.incubator.vector</module>
+    </modules>
+</configuration>
+----
+
+=== Dev Mode
+
+Quarkus LangChain4j automatically handles the pulling of the models configured by the application, so there is no need for users to do so manually.
+
+WARNING: When running Quarkus in dev mode C2 compilation is not enabled and this can make Jlama excessively slow. This limitation will be fixed with Quarkus 3.17 when `<forceC2>true</forceC2>` is set.
+
+WARNING: Models are huge, so make sure you have enough disk space.
+
+NOTE: Due to model's large size, pulling them can take time
+
+== Using Jlama
+
+To let Jlama running inference on your models, add the following dependency into your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-jlama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured Jlama model.
+
+By default, the extension uses as model https://huggingface.co/tjake/TinyLlama-1.1B-Chat-v1.0-Jlama-Q4[`TinyLlama-1.1B-Chat-v1.0-Jlama-Q4`].
+You can change it by setting the `quarkus.langchain4j.jlama.chat-model.model-name` property in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.jlama.chat-model.model-name=tjake/granite-3.0-2b-instruct-JQ4
+----
+
+=== Configuration
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-jlama.adoc[leveloffset=+1,opts=optional]
+
+== Document Retriever and Embedding
+
+Jlama also provides embedding models.
+By default, it uses `intfloat/e5-small-v2`.
+
+You can change the default embedding model by setting the `quarkus.langchain4j.jlama.embedding-model.model-name` property in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+
+quarkus.langchain4j.jlama.chat-model.model-id=tjake/granite-3.0-2b-instruct-JQ4
+quarkus.langchain4j.jlama.embedding-model.model-id=intfloat/e5-small-v2
+----
+
+If no other LLM extension is installed, retrieve the embedding model as follows:
+
+[source, java]
+----
+@Inject EmbeddingModel model; // Injects the embedding model
+----
+
+
