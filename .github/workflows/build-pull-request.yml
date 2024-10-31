@@ -126,7 +126,17 @@ jobs:
 
       - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
         run: |
-          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp    
+          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp
+
+      # Build Llama3.java if JDK >= 22. See https://x.com/tjake/status/1849141171475399083?t=EpgVJCPLC17fCXio0FvnhA&s=19 for the reason
+      - name: Build Llama3-java extension
+        if: ${{ matrix.java >= 22 }}
+        run: |
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/llama3-java/pom.xml
+
+      - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
+        run: |
+          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp              
 
 
   native-tests:
