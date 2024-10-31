@@ -10,6 +10,7 @@ import jakarta.enterprise.inject.Instance;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
@@ -54,4 +55,5 @@ public class DotNames {
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
+    public static final DotName TOOL = DotName.createSimple(Tool.class);
 }

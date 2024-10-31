@@ -8,6 +8,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_I
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -778,9 +778,9 @@ public class AiServicesProcessor {
             MethodInfo method,
             List<String> associatedTools,
             List<ToolMethodBuildItem> tools) {
-        boolean reactive = method.returnType().name().equals(DotName.createSimple(Uni.class.getName()))
-                || method.returnType().name().equals(DotName.createSimple(CompletionStage.class.getName()))
-                || method.returnType().name().equals(DotName.createSimple(Multi.class.getName()));
+        boolean reactive = method.returnType().name().equals(DotNames.UNI)
+                || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
+                || method.returnType().name().equals(DotNames.MULTI);
 
         boolean requireSwitchToWorkerThread = false;
 
@@ -1260,14 +1260,28 @@ public class AiServicesProcessor {
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 
-        boolean switchToWorkerThread = detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, methodToolClassNames,
-                tools);
+        //  Detect if tools execution may block the caller thread.
+        boolean switchToWorkerThread = detectIfToolExecutionRequiresAWorkerThread(method, tools, methodToolClassNames);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, switchToWorkerThread,
                 inputGuardrails, outputGuardrails, accumulatorClassName);
+    }
+
+    private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
+            List<String> methodToolClassNames) {
+        List<String> allTools = new ArrayList<>(methodToolClassNames);
+        // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
+        AnnotationInstance annotation = method.declaringClass().annotation(REGISTER_AI_SERVICES);
+        if (annotation != null) {
+            AnnotationValue value = annotation.value("tools");
+            if (value != null) {
+                allTools.addAll(Arrays.stream(value.asClassArray()).map(t -> t.name().toString()).toList());
+            }
+        }
+        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools);
     }
 
     private void validateReturnType(MethodInfo method) {

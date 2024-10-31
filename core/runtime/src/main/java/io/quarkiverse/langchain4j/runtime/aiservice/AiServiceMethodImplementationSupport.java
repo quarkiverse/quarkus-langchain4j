@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Flow;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -70,6 +69,7 @@ import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
@@ -193,6 +193,7 @@ public class AiServiceMethodImplementationSupport {
                 augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
                 userMessage = (UserMessage) augmentationResult.chatMessage();
             } else {
+                // TODO duplicated context propagation.
                 // this a special case where we can't block, so we need to delegate the retrieval augmentation to a worker pool
                 CompletableFuture<AugmentationResult> augmentationResultCF = CompletableFuture.supplyAsync(new Supplier<>() {
                     @Override
@@ -784,23 +785,32 @@ public class AiServiceMethodImplementationSupport {
         public void subscribe(MultiSubscriber<? super String> subscriber) {
             UnicastProcessor<String> processor = UnicastProcessor.create();
             processor.subscribe(subscriber);
+
             createTokenStream(processor);
         }
 
         private void createTokenStream(UnicastProcessor<String> processor) {
-            var stream = new AiServiceTokenStream(messagesToSend, toolSpecifications,
-                    toolsExecutors, contents, context, memoryId);
+            Context ctxt = null;
+            if (mustSwitchToWorkerThread) {
+                // we create or retrieve the current context, to use `executeBlocking` when required.
+                ctxt = VertxContext.getOrCreateDuplicatedContext();
+            }
+
+            var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
+                    toolsExecutors, contents, context, memoryId, ctxt);
             TokenStream tokenStream = stream
                     .onNext(processor::onNext)
-                    .onComplete(new Consumer<>() {
-                        @Override
-                        public void accept(Response<AiMessage> message) {
-                            processor.onComplete();
-                        }
-                    })
+                    .onComplete(message -> processor.onComplete())
                     .onError(processor::onError);
+            // This is equivalent to "run subscription on worker thread"
             if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-                Infrastructure.getDefaultWorkerPool().execute(tokenStream::start);
+                ctxt.executeBlocking(new Callable<Void>() {
+                    @Override
+                    public Void call() {
+                        tokenStream.start();
+                        return null;
+                    }
+                });
             } else {
                 tokenStream.start();
             }

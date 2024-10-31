@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -68,6 +69,7 @@ import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.execannotations.ExecutionModelAnnotationsAllowedBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -261,6 +263,16 @@ public class ToolProcessor {
         }
 
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    @BuildStep
+    ExecutionModelAnnotationsAllowedBuildItem toolsMethods() {
+        return new ExecutionModelAnnotationsAllowedBuildItem(new Predicate<MethodInfo>() {
+            @Override
+            public boolean test(MethodInfo method) {
+                return method.hasDeclaredAnnotation(DotNames.TOOL);
+            }
+        });
     }
 
     private void validateExecutionModel(ToolMethodCreateInfo methodCreateInfo, MethodInfo toolMethod,

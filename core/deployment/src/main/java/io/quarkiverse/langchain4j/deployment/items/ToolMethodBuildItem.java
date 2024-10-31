@@ -6,6 +6,10 @@ import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 
+/**
+ * A build item that represents a method that is annotated with {@link dev.langchain4j.agent.tool.Tool}.
+ * It contains the method info and the tool method create info.
+ */
 public final class ToolMethodBuildItem extends MultiBuildItem {
 
     private final MethodInfo toolsMethodInfo;
@@ -33,13 +37,11 @@ public final class ToolMethodBuildItem extends MultiBuildItem {
      * Returns true if the method requires a switch to a worker thread, even if the method is non-blocking.
      * This is because of the tools executor limitation (imperative API).
      *
-     *
      * @return true if the method requires a switch to a worker thread
      */
     public boolean requiresSwitchToWorkerThread() {
         return !(toolMethodCreateInfo.executionModel() == ToolMethodCreateInfo.ExecutionModel.NON_BLOCKING
                 && isImperativeMethod());
-
     }
 
     private boolean isImperativeMethod() {
