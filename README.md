@@ -37,12 +37,12 @@ To incorporate Quarkus LangChain4j into your Quarkus project, add the following 
 </dependency>
 ```
 
-or, to use hugging face:
+or, to use Ollama:
 
 ```xml
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
+    <artifactId>quarkus-langchain4j-ollama</artifactId>
     <version>{latest-version}</version>
 </dependency>
 ```
