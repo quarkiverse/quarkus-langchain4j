@@ -9,6 +9,7 @@
     </parent>
     <artifactId>quarkus-langchain4j-neo4j-parent</artifactId>
     <name>Quarkus LangChain4j - Neo4j embedding store - Parent</name>
+    <description>Provides the Neo4j embedding store for LangChain4j</description>
     <packaging>pom</packaging>
 
     <modules>
