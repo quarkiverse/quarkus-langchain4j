@@ -72,7 +72,7 @@ public class EasyRagRecorder {
                 EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, Default.Literal.INSTANCE);
                 EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class,
                         Default.Literal.INSTANCE);
-                return new EasyRetrievalAugmentor(config.maxResults(), model, store);
+                return new EasyRetrievalAugmentor(config, model, store);
             }
         };
     }
