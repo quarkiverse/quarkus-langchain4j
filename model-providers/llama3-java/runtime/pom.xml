@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-llama3-java-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.21.0.CR3</version>
     </parent>
     <artifactId>quarkus-langchain4j-llama3-java</artifactId>
     <name>Quarkus LangChain4j - Llama3 - Java - Runtime</name>
@@ -83,7 +83,7 @@
                      -->
                     <source>21</source>
                     <target>21</target>
-                    <release combine.self="override"/>  <!-- make sure -release is not passed to javac-->
+                    <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
                     <compilerArgs>
                         <arg>--add-modules=jdk.incubator.vector</arg>
                     </compilerArgs>
