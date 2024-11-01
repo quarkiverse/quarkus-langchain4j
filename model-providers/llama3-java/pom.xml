@@ -8,7 +8,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>quarkus-langchain4j-llama3-java-parent</artifactId>
-    <name>Quarkus LangChain4j - Llama 3 - Java - Parent</name>
+    <name>Quarkus LangChain4j - Llama3 - Java - Parent</name>
     <packaging>pom</packaging>
 
     <properties>

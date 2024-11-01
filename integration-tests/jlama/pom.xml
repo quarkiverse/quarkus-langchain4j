@@ -134,5 +134,17 @@
                 <quarkus.package.type>native</quarkus.package.type>
             </properties>
         </profile>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>prepareRelease</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- when a release is performed, we don't want to spend time downloading the models -->
+                <quarkus.langchain4j.jlama.include-models-in-artifact>false</quarkus.langchain4j.jlama.include-models-in-artifact>
+            </properties>
+        </profile>
     </profiles>
 </project>

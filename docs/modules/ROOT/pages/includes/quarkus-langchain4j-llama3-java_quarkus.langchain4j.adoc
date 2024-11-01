@@ -1,0 +1,342 @@
+:summaryTableId: quarkus-langchain4j-llama3-java_quarkus-langchain4j
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-include-models-in-artifact]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-include-models-in-artifact[`quarkus.langchain4j.llama3.include-models-in-artifact`]##
+
+[.description]
+--
+Determines whether the necessary Jlama models are downloaded and included in the jar at build time. Currently, this option is only valid for `fast-jar` deployments.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_INCLUDE_MODELS_IN_ARTIFACT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_INCLUDE_MODELS_IN_ARTIFACT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-enabled[`quarkus.langchain4j.llama3.chat-model.enabled`]##
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-model-name[`quarkus.langchain4j.llama3.chat-model.model-name`]##
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`mukel/Llama-3.2-1B-Instruct-GGUF`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-quantization[`quarkus.langchain4j.llama3.chat-model.quantization`]##
+
+[.description]
+--
+Quantization of the model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_QUANTIZATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_QUANTIZATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`Q4_0`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-pre-load-in-native]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-pre-load-in-native[`quarkus.langchain4j.llama3.chat-model.pre-load-in-native`]##
+
+[.description]
+--
+Llama3.java supports AOT model preloading, enabling 0-overhead, instant inference, with minimal TTFT (time-to-first-token). A specialized, larger binary will be generated, with no parsing overhead for that particular model. It can still run other models, although incurring the usual parsing overhead.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_PRE_LOAD_IN_NATIVE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_PRE_LOAD_IN_NATIVE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-models-path]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-models-path[`quarkus.langchain4j.llama3.models-path`]##
+
+[.description]
+--
+Location on the file-system which serves as a cache for the models
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_MODELS_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_MODELS_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|path
+|`${user.name}/.llama3java/models`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature[`quarkus.langchain4j.llama3.chat-model.temperature`]##
+
+[.description]
+--
+TODO
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens[`quarkus.langchain4j.llama3.chat-model.max-tokens`]##
+
+[.description]
+--
+TODO
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration[`quarkus.langchain4j.llama3.enable-integration`]##
+
+[.description]
+--
+Whether to enable the integration. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-requests]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-requests[`quarkus.langchain4j.llama3.log-requests`]##
+
+[.description]
+--
+Whether Jlama should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-responses]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-responses[`quarkus.langchain4j.llama3.log-responses`]##
+
+[.description]
+--
+Whether Jlama client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+h|[[quarkus-langchain4j-llama3-java_section_quarkus-langchain4j-llama3]] [.section-name.section-level0]##link:#quarkus-langchain4j-llama3-java_section_quarkus-langchain4j-llama3[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-model-name[`quarkus.langchain4j.llama3."model-name".chat-model.model-name`]##
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`mukel/Llama-3.2-1B-Instruct-GGUF`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-quantization[`quarkus.langchain4j.llama3."model-name".chat-model.quantization`]##
+
+[.description]
+--
+Quantization of the model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_QUANTIZATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_QUANTIZATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`Q4_0`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-pre-load-in-native]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-pre-load-in-native[`quarkus.langchain4j.llama3."model-name".chat-model.pre-load-in-native`]##
+
+[.description]
+--
+Llama3.java supports AOT model preloading, enabling 0-overhead, instant inference, with minimal TTFT (time-to-first-token). A specialized, larger binary will be generated, with no parsing overhead for that particular model. It can still run other models, although incurring the usual parsing overhead.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_PRE_LOAD_IN_NATIVE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_PRE_LOAD_IN_NATIVE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-temperature[`quarkus.langchain4j.llama3."model-name".chat-model.temperature`]##
+
+[.description]
+--
+TODO
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens[`quarkus.langchain4j.llama3."model-name".chat-model.max-tokens`]##
+
+[.description]
+--
+TODO
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration[`quarkus.langchain4j.llama3."model-name".enable-integration`]##
+
+[.description]
+--
+Whether to enable the integration. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-requests[`quarkus.langchain4j.llama3."model-name".log-requests`]##
+
+[.description]
+--
+Whether Jlama should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-responses[`quarkus.langchain4j.llama3."model-name".log-responses`]##
+
+[.description]
+--
+Whether Jlama client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+
+|===
+
+
+:!summaryTableId:
