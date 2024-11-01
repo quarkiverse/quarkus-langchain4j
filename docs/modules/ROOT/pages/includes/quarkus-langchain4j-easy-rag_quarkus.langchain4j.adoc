@@ -110,6 +110,23 @@ endif::add-copy-button-to-env-var[]
 |int
 |`5`
 
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-min-score[`quarkus.langchain4j.easy-rag.min-score`]##
+
+[.description]
+--
+The minimum score for results to return when querying the retrieval augmentor.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_MIN_SCORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_MIN_SCORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
 a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-ingestion-strategy[`quarkus.langchain4j.easy-rag.ingestion-strategy`]##
 
 [.description]

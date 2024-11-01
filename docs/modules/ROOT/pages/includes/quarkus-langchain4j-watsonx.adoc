@@ -96,7 +96,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://dummy.ai/api`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key[`quarkus.langchain4j.watsonx.api-key`]##
 
@@ -115,7 +115,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout[`quarkus.langchain4j.watsonx.timeout`]##
 
@@ -1008,7 +1008,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://dummy.ai/api`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key[`quarkus.langchain4j.watsonx."model-name".api-key`]##
 
@@ -1027,7 +1027,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout[`quarkus.langchain4j.watsonx."model-name".timeout`]##
 

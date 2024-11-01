@@ -1,21 +1,19 @@
-
-:summaryTableId: quarkus-langchain4j-bam
+:summaryTableId: quarkus-langchain4j-bam_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
 |===
 
-h|[[quarkus-langchain4j-bam_configuration]]link:#quarkus-langchain4j-bam_configuration[Configuration property]
-
+h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-enabled]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-enabled[quarkus.langchain4j.bam.chat-model.enabled]`
-
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-enabled[`quarkus.langchain4j.bam.chat-model.enabled`]##
 
 [.description]
 --
 Whether the chat model should be enabled
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_ENABLED+++[]
@@ -23,16 +21,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`true`
 
-
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-enabled]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-enabled[quarkus.langchain4j.bam.embedding-model.enabled]`
-
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-enabled[`quarkus.langchain4j.bam.embedding-model.enabled`]##
 
 [.description]
 --
 Whether the embedding model should be enabled
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_ENABLED+++[]
@@ -40,16 +38,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`true`
 
-
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-enabled]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-enabled[quarkus.langchain4j.bam.moderation-model.enabled]`
-
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-enabled[`quarkus.langchain4j.bam.moderation-model.enabled`]##
 
 [.description]
 --
 Whether the model should be enabled
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_ENABLED+++[]
@@ -57,16 +55,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`true`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-base-url]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-base-url[quarkus.langchain4j.bam.base-url]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-base-url]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-base-url[`quarkus.langchain4j.bam.base-url`]##
 
 [.description]
 --
 Base URL where the BAM serving is running
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_BASE_URL+++[]
@@ -74,17 +72,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
- 
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
 |`https://bam-api.res.ibm.com`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-api-key]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-api-key[quarkus.langchain4j.bam.api-key]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-api-key]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-api-key[`quarkus.langchain4j.bam.api-key`]##
 
 [.description]
 --
 BAM API key
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_API_KEY+++[]
@@ -92,16 +89,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_API_KEY+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`dummy`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-timeout]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-timeout[quarkus.langchain4j.bam.timeout]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-timeout]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-timeout[`quarkus.langchain4j.bam.timeout`]##
 
 [.description]
 --
 Timeout for BAM calls
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_TIMEOUT+++[]
@@ -109,17 +106,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-version]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-version[quarkus.langchain4j.bam.version]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-version]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-version[`quarkus.langchain4j.bam.version`]##
 
 [.description]
 --
 Version to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_VERSION+++[]
@@ -127,16 +123,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_VERSION+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`2024-04-15`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests[quarkus.langchain4j.bam.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-requests[`quarkus.langchain4j.bam.log-requests`]##
 
 [.description]
 --
 Whether the BAM client should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_LOG_REQUESTS+++[]
@@ -144,16 +140,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-responses[quarkus.langchain4j.bam.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-log-responses[`quarkus.langchain4j.bam.log-responses`]##
 
 [.description]
 --
 Whether the BAM client should log responses
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_LOG_RESPONSES+++[]
@@ -161,16 +157,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-enable-integration]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-enable-integration[quarkus.langchain4j.bam.enable-integration]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-enable-integration]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-enable-integration[`quarkus.langchain4j.bam.enable-integration`]##
 
 [.description]
 --
 Whether to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_ENABLE_INTEGRATION+++[]
@@ -178,16 +174,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`true`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-model-id[quarkus.langchain4j.bam.chat-model.model-id]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-model-id[`quarkus.langchain4j.bam.chat-model.model-id`]##
 
 [.description]
 --
 Model to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MODEL_ID+++[]
@@ -195,18 +191,18 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`ibm/granite-13b-chat-v2`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-decoding-method]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-decoding-method[quarkus.langchain4j.bam.chat-model.decoding-method]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-decoding-method[`quarkus.langchain4j.bam.chat-model.decoding-method`]##
 
 [.description]
 --
 Represents the strategy used for picking the tokens during generation of the output text. Options are greedy and sample. Value defaults to sample if not specified.
 
 During text generation when parameter value is set to greedy, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative sample strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the top_k and top_p parameters described below.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_DECODING_METHOD+++[]
@@ -214,16 +210,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_DECODING_METHOD+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`greedy`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-include-stop-sequence]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-include-stop-sequence[quarkus.langchain4j.bam.chat-model.include-stop-sequence]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-include-stop-sequence]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-include-stop-sequence[`quarkus.langchain4j.bam.chat-model.include-stop-sequence`]##
 
 [.description]
 --
 Pass false to omit matched stop sequences from the end of the output text. The default is currently true meaning that the output will end with the stop sequence text when matched.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++[]
@@ -231,16 +227,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-temperature]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-temperature[quarkus.langchain4j.bam.chat-model.temperature]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-temperature[`quarkus.langchain4j.bam.chat-model.temperature`]##
 
 [.description]
 --
 A value used to modify the next-token probabilities in sampling mode. Values less than 1.0 sharpen the probability distribution, resulting in "less random" output. Values greater than 1.0 flatten the probability distribution, resulting in "more random" output. A value of 1.0 has no effect and is the default. The allowed range is 0.0 to 2.0.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TEMPERATURE+++[]
@@ -248,16 +244,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |`1.0`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-min-new-tokens[quarkus.langchain4j.bam.chat-model.min-new-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-min-new-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-min-new-tokens[`quarkus.langchain4j.bam.chat-model.min-new-tokens`]##
 
 [.description]
 --
 If stop sequences are given, they are ignored until minimum tokens are generated. Defaults to 0.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MIN_NEW_TOKENS+++[]
@@ -265,16 +261,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MIN_NEW_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |`0`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-max-new-tokens[quarkus.langchain4j.bam.chat-model.max-new-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-max-new-tokens[`quarkus.langchain4j.bam.chat-model.max-new-tokens`]##
 
 [.description]
 --
 The maximum number of new tokens to be generated. The range is 0 to 1024.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MAX_NEW_TOKENS+++[]
@@ -282,16 +278,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_MAX_NEW_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |`200`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-random-seed]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-random-seed[quarkus.langchain4j.bam.chat-model.random-seed]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-random-seed[`quarkus.langchain4j.bam.chat-model.random-seed`]##
 
 [.description]
 --
 Random number generator seed to use in sampling mode for experimental repeatability. Must be >= 1.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_RANDOM_SEED+++[]
@@ -299,16 +295,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_RANDOM_SEED+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-stop-sequences]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-stop-sequences[quarkus.langchain4j.bam.chat-model.stop-sequences]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-stop-sequences[`quarkus.langchain4j.bam.chat-model.stop-sequences`]##
 
 [.description]
 --
 Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored. The list may contain up to 6 strings.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_STOP_SEQUENCES+++[]
@@ -316,16 +312,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_STOP_SEQUENCES+++`
 endif::add-copy-button-to-env-var[]
---|list of string 
+--
+|list of string
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-time-limit]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-time-limit[quarkus.langchain4j.bam.chat-model.time-limit]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-time-limit]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-time-limit[`quarkus.langchain4j.bam.chat-model.time-limit`]##
 
 [.description]
 --
 Time limit in milliseconds - if not completed within this time, generation will stop. The text generated so far will be returned along with the time_limit stop reason.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TIME_LIMIT+++[]
@@ -333,16 +329,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TIME_LIMIT+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-k]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-k[quarkus.langchain4j.bam.chat-model.top-k]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-k[`quarkus.langchain4j.bam.chat-model.top-k`]##
 
 [.description]
 --
 The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for sampling mode, with range from 1 to 100. When decoding_strategy is set to sample, only the top_k most likely tokens are considered as candidates for the next generated token.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TOP_K+++[]
@@ -350,16 +346,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-p]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-p[quarkus.langchain4j.bam.chat-model.top-p]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-top-p[`quarkus.langchain4j.bam.chat-model.top-p`]##
 
 [.description]
 --
 Similar to top_k except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least top_p. The valid range is 0.0 to 1.0 where 1.0 is equivalent to disabled and is the default. Also known as nucleus sampling.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TOP_P+++[]
@@ -367,16 +363,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-typical-p]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-typical-p[quarkus.langchain4j.bam.chat-model.typical-p]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-typical-p]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-typical-p[`quarkus.langchain4j.bam.chat-model.typical-p`]##
 
 [.description]
 --
 Local typicality measures how similar the conditional probability of predicting a target token next is to the expected conditional probability of predicting a random token next, given the partial text already generated. If set to float < 1, the smallest set of the most locally typical tokens with probabilities that add up to typical_p or higher are kept for generation.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TYPICAL_P+++[]
@@ -384,16 +380,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TYPICAL_P+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-repetition-penalty]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-repetition-penalty[quarkus.langchain4j.bam.chat-model.repetition-penalty]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-repetition-penalty[`quarkus.langchain4j.bam.chat-model.repetition-penalty`]##
 
 [.description]
 --
 Represents the penalty for penalizing tokens that have already been generated or belong to the context. The range is 1.0 to 2.0 and defaults to 1.0 (no penalty).
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_REPETITION_PENALTY+++[]
@@ -401,16 +397,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_REPETITION_PENALTY+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-truncate-input-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-truncate-input-tokens[quarkus.langchain4j.bam.chat-model.truncate-input-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-truncate-input-tokens[`quarkus.langchain4j.bam.chat-model.truncate-input-tokens`]##
 
 [.description]
 --
 Represents the number to which input tokens would be truncated. Can be used to avoid requests failing due to input being longer than configured limits. Zero means don't truncate.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++[]
@@ -418,16 +414,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-beam-width]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-beam-width[quarkus.langchain4j.bam.chat-model.beam-width]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-beam-width]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-beam-width[`quarkus.langchain4j.bam.chat-model.beam-width`]##
 
 [.description]
 --
 Multiple output sequences of tokens are generated, using your decoding selection, and then the output sequence with the highest overall probability is returned. When beam search is enabled, there will be a performance penalty, and Stop sequences will not be available.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_BEAM_WIDTH+++[]
@@ -435,16 +431,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_BEAM_WIDTH+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests[quarkus.langchain4j.bam.chat-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-requests[`quarkus.langchain4j.bam.chat-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM chat model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_REQUESTS+++[]
@@ -452,16 +448,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses[quarkus.langchain4j.bam.chat-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-chat-model-log-responses[`quarkus.langchain4j.bam.chat-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM chat model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_RESPONSES+++[]
@@ -469,16 +465,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_CHAT_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id[quarkus.langchain4j.bam.embedding-model.model-id]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-model-id[`quarkus.langchain4j.bam.embedding-model.model-id`]##
 
 [.description]
 --
 Model to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_MODEL_ID+++[]
@@ -486,16 +482,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`ibm/slate.125m.english.rtrvr`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests[quarkus.langchain4j.bam.embedding-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-requests[`quarkus.langchain4j.bam.embedding-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM embedding model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_REQUESTS+++[]
@@ -503,16 +499,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses[quarkus.langchain4j.bam.embedding-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-embedding-model-log-responses[`quarkus.langchain4j.bam.embedding-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM embedding model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_RESPONSES+++[]
@@ -520,16 +516,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_EMBEDDING_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate[quarkus.langchain4j.bam.moderation-model.messages-to-moderate]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-messages-to-moderate[`quarkus.langchain4j.bam.moderation-model.messages-to-moderate`]##
 
 [.description]
 --
 What types of messages are subject to moderation checks.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_MESSAGES_TO_MODERATE+++[]
@@ -537,19 +533,18 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_MESSAGES_TO_MODERATE+++`
 endif::add-copy-button-to-env-var[]
--- a|list of 
-`system`, `user`, `ai`, `tool-execution-result` 
+--
+a|list of ChatMessageType
 |`user`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap[quarkus.langchain4j.bam.moderation-model.hap]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-hap[`quarkus.langchain4j.bam.moderation-model.hap`]##
 
 [.description]
 --
 The HAP detector is intended to identify hateful, abusive, and/or profane language.
 
 The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_HAP+++[]
@@ -557,18 +552,18 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_HAP+++`
 endif::add-copy-button-to-env-var[]
---|float 
+--
+|float
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias[quarkus.langchain4j.bam.moderation-model.social-bias]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-social-bias[`quarkus.langchain4j.bam.moderation-model.social-bias`]##
 
 [.description]
 --
 The social bias detector is intended to identify subtle forms of hate speech and discriminatory content which may easily go undetected by keyword detection systems or HAP classifiers.
 
 The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_SOCIAL_BIAS+++[]
@@ -576,16 +571,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_SOCIAL_BIAS+++`
 endif::add-copy-button-to-env-var[]
---|float 
+--
+|float
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests[quarkus.langchain4j.bam.moderation-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-requests[`quarkus.langchain4j.bam.moderation-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM moderation model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_REQUESTS+++[]
@@ -593,16 +588,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses[quarkus.langchain4j.bam.moderation-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-moderation-model-log-responses[`quarkus.langchain4j.bam.moderation-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM moderation model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_RESPONSES+++[]
@@ -610,21 +605,20 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM_MODERATION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-h|[[quarkus-langchain4j-bam_quarkus-langchain4j-bam-named-config-named-model-config]]link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-named-config-named-model-config[Named model config]
-
+h|[[quarkus-langchain4j-bam_section_quarkus-langchain4j-bam]] [.section-name.section-level0]##link:#quarkus-langchain4j-bam_section_quarkus-langchain4j-bam[Named model config]##
 h|Type
 h|Default
 
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-base-url]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-base-url[quarkus.langchain4j.bam."model-name".base-url]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-base-url[`quarkus.langchain4j.bam."model-name".base-url`]##
 
 [.description]
 --
 Base URL where the BAM serving is running
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__BASE_URL+++[]
@@ -632,17 +626,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/net/URL.html[URL]
- 
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
 |`https://bam-api.res.ibm.com`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-api-key]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-api-key[quarkus.langchain4j.bam."model-name".api-key]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-api-key[`quarkus.langchain4j.bam."model-name".api-key`]##
 
 [.description]
 --
 BAM API key
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__API_KEY+++[]
@@ -650,16 +643,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__API_KEY+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`dummy`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-timeout]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-timeout[quarkus.langchain4j.bam."model-name".timeout]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-timeout[`quarkus.langchain4j.bam."model-name".timeout`]##
 
 [.description]
 --
 Timeout for BAM calls
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__TIMEOUT+++[]
@@ -667,17 +660,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
---|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version[quarkus.langchain4j.bam."model-name".version]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-version[`quarkus.langchain4j.bam."model-name".version`]##
 
 [.description]
 --
 Version to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__VERSION+++[]
@@ -685,16 +677,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__VERSION+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`2024-04-15`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests[quarkus.langchain4j.bam."model-name".log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-requests[`quarkus.langchain4j.bam."model-name".log-requests`]##
 
 [.description]
 --
 Whether the BAM client should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__LOG_REQUESTS+++[]
@@ -702,16 +694,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-responses[quarkus.langchain4j.bam."model-name".log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-log-responses[`quarkus.langchain4j.bam."model-name".log-responses`]##
 
 [.description]
 --
 Whether the BAM client should log responses
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__LOG_RESPONSES+++[]
@@ -719,16 +711,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-enable-integration]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-enable-integration[quarkus.langchain4j.bam."model-name".enable-integration]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-enable-integration[`quarkus.langchain4j.bam."model-name".enable-integration`]##
 
 [.description]
 --
 Whether to enable the integration. Defaults to `true`, which means requests are made to the BAM provider. Set to `false` to disable all requests.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__ENABLE_INTEGRATION+++[]
@@ -736,16 +728,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`true`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-model-id[quarkus.langchain4j.bam."model-name".chat-model.model-id]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-model-id[`quarkus.langchain4j.bam."model-name".chat-model.model-id`]##
 
 [.description]
 --
 Model to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
@@ -753,12 +745,11 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`ibm/granite-13b-chat-v2`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-decoding-method]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-decoding-method[quarkus.langchain4j.bam."model-name".chat-model.decoding-method]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-decoding-method[`quarkus.langchain4j.bam."model-name".chat-model.decoding-method`]##
 
 [.description]
 --
@@ -766,22 +757,23 @@ Represents the strategy used for picking the tokens during generation of the out
 
 During text generation when parameter value is set to greedy, each successive token corresponds to the highest probability token given the text that has already been generated. This strategy can lead to repetitive results especially for longer output sequences. The alternative sample strategy generates text by picking subsequent tokens based on the probability distribution of possible next tokens defined by (i.e., conditioned on) the already-generated text and the top_k and top_p parameters described below.
 
+
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_DECODING_METHOD+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_DECODING_METHOD+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`greedy`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-include-stop-sequence]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-include-stop-sequence[quarkus.langchain4j.bam."model-name".chat-model.include-stop-sequence]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-include-stop-sequence]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-include-stop-sequence[`quarkus.langchain4j.bam."model-name".chat-model.include-stop-sequence`]##
 
 [.description]
 --
 Pass false to omit matched stop sequences from the end of the output text. The default is currently true meaning that the output will end with the stop sequence text when matched.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++[]
@@ -789,16 +781,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_INCLUDE_STOP_SEQUENCE+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-temperature]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-temperature[quarkus.langchain4j.bam."model-name".chat-model.temperature]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-temperature[`quarkus.langchain4j.bam."model-name".chat-model.temperature`]##
 
 [.description]
 --
 A value used to modify the next-token probabilities in sampling mode. Values less than 1.0 sharpen the probability distribution, resulting in "less random" output. Values greater than 1.0 flatten the probability distribution, resulting in "more random" output. A value of 1.0 has no effect and is the default. The allowed range is 0.0 to 2.0.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
@@ -806,16 +798,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |`1.0`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-min-new-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-min-new-tokens[quarkus.langchain4j.bam."model-name".chat-model.min-new-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-min-new-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-min-new-tokens[`quarkus.langchain4j.bam."model-name".chat-model.min-new-tokens`]##
 
 [.description]
 --
 If stop sequences are given, they are ignored until minimum tokens are generated. Defaults to 0.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++[]
@@ -823,16 +815,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MIN_NEW_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |`0`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-max-new-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-max-new-tokens[quarkus.langchain4j.bam."model-name".chat-model.max-new-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-max-new-tokens[`quarkus.langchain4j.bam."model-name".chat-model.max-new-tokens`]##
 
 [.description]
 --
 The maximum number of new tokens to be generated. The range is 0 to 1024.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++[]
@@ -840,16 +832,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_MAX_NEW_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |`200`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-random-seed]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-random-seed[quarkus.langchain4j.bam."model-name".chat-model.random-seed]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-random-seed[`quarkus.langchain4j.bam."model-name".chat-model.random-seed`]##
 
 [.description]
 --
 Random number generator seed to use in sampling mode for experimental repeatability. Must be >= 1.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++[]
@@ -857,16 +849,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_RANDOM_SEED+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-stop-sequences]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-stop-sequences[quarkus.langchain4j.bam."model-name".chat-model.stop-sequences]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-stop-sequences[`quarkus.langchain4j.bam."model-name".chat-model.stop-sequences`]##
 
 [.description]
 --
 Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored. The list may contain up to 6 strings.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++[]
@@ -874,16 +866,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_STOP_SEQUENCES+++`
 endif::add-copy-button-to-env-var[]
---|list of string 
+--
+|list of string
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-time-limit]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-time-limit[quarkus.langchain4j.bam."model-name".chat-model.time-limit]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-time-limit]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-time-limit[`quarkus.langchain4j.bam."model-name".chat-model.time-limit`]##
 
 [.description]
 --
 Time limit in milliseconds - if not completed within this time, generation will stop. The text generated so far will be returned along with the time_limit stop reason.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TIME_LIMIT+++[]
@@ -891,16 +883,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TIME_LIMIT+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-k]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-k[quarkus.langchain4j.bam."model-name".chat-model.top-k]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-k[`quarkus.langchain4j.bam."model-name".chat-model.top-k`]##
 
 [.description]
 --
 The number of highest probability vocabulary tokens to keep for top-k-filtering. Only applies for sampling mode, with range from 1 to 100. When decoding_strategy is set to sample, only the top_k most likely tokens are considered as candidates for the next generated token.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
@@ -908,16 +900,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-p]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-p[quarkus.langchain4j.bam."model-name".chat-model.top-p]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-top-p[`quarkus.langchain4j.bam."model-name".chat-model.top-p`]##
 
 [.description]
 --
 Similar to top_k except the candidates to generate the next token are the most likely tokens with probabilities that add up to at least top_p. The valid range is 0.0 to 1.0 where 1.0 is equivalent to disabled and is the default. Also known as nucleus sampling.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
@@ -925,16 +917,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-typical-p]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-typical-p[quarkus.langchain4j.bam."model-name".chat-model.typical-p]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-typical-p]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-typical-p[`quarkus.langchain4j.bam."model-name".chat-model.typical-p`]##
 
 [.description]
 --
 Local typicality measures how similar the conditional probability of predicting a target token next is to the expected conditional probability of predicting a random token next, given the partial text already generated. If set to float < 1, the smallest set of the most locally typical tokens with probabilities that add up to typical_p or higher are kept for generation.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TYPICAL_P+++[]
@@ -942,16 +934,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TYPICAL_P+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-repetition-penalty]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-repetition-penalty[quarkus.langchain4j.bam."model-name".chat-model.repetition-penalty]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-repetition-penalty[`quarkus.langchain4j.bam."model-name".chat-model.repetition-penalty`]##
 
 [.description]
 --
 Represents the penalty for penalizing tokens that have already been generated or belong to the context. The range is 1.0 to 2.0 and defaults to 1.0 (no penalty).
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++[]
@@ -959,16 +951,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_REPETITION_PENALTY+++`
 endif::add-copy-button-to-env-var[]
---|double 
+--
+|double
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-truncate-input-tokens]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-truncate-input-tokens[quarkus.langchain4j.bam."model-name".chat-model.truncate-input-tokens]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-truncate-input-tokens[`quarkus.langchain4j.bam."model-name".chat-model.truncate-input-tokens`]##
 
 [.description]
 --
 Represents the number to which input tokens would be truncated. Can be used to avoid requests failing due to input being longer than configured limits. Zero means don't truncate.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++[]
@@ -976,16 +968,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_TRUNCATE_INPUT_TOKENS+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-beam-width]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-beam-width[quarkus.langchain4j.bam."model-name".chat-model.beam-width]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-beam-width]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-beam-width[`quarkus.langchain4j.bam."model-name".chat-model.beam-width`]##
 
 [.description]
 --
 Multiple output sequences of tokens are generated, using your decoding selection, and then the output sequence with the highest overall probability is returned. When beam search is enabled, there will be a performance penalty, and Stop sequences will not be available.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_BEAM_WIDTH+++[]
@@ -993,16 +985,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_BEAM_WIDTH+++`
 endif::add-copy-button-to-env-var[]
---|int 
+--
+|int
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests[quarkus.langchain4j.bam."model-name".chat-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-requests[`quarkus.langchain4j.bam."model-name".chat-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM chat model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
@@ -1010,16 +1002,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses[quarkus.langchain4j.bam."model-name".chat-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-chat-model-log-responses[`quarkus.langchain4j.bam."model-name".chat-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM chat model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
@@ -1027,16 +1019,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id[quarkus.langchain4j.bam."model-name".embedding-model.model-id]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-model-id[`quarkus.langchain4j.bam."model-name".embedding-model.model-id`]##
 
 [.description]
 --
 Model to use
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
@@ -1044,16 +1036,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
---|string 
+--
+|string
 |`ibm/slate.125m.english.rtrvr`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests[quarkus.langchain4j.bam."model-name".embedding-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-requests[`quarkus.langchain4j.bam."model-name".embedding-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM embedding model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++[]
@@ -1061,16 +1053,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses[quarkus.langchain4j.bam."model-name".embedding-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-embedding-model-log-responses[`quarkus.langchain4j.bam."model-name".embedding-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM embedding model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++[]
@@ -1078,16 +1070,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate[quarkus.langchain4j.bam."model-name".moderation-model.messages-to-moderate]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-messages-to-moderate[`quarkus.langchain4j.bam."model-name".moderation-model.messages-to-moderate`]##
 
 [.description]
 --
 What types of messages are subject to moderation checks.
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_MESSAGES_TO_MODERATE+++[]
@@ -1095,13 +1087,11 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_MESSAGES_TO_MODERATE+++`
 endif::add-copy-button-to-env-var[]
--- a|list of 
-`system`, `user`, `ai`, `tool-execution-result` 
+--
+a|list of ChatMessageType
 |`user`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap[quarkus.langchain4j.bam."model-name".moderation-model.hap]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-hap[`quarkus.langchain4j.bam."model-name".moderation-model.hap`]##
 
 [.description]
 --
@@ -1109,18 +1099,18 @@ The HAP detector is intended to identify hateful, abusive, and/or profane langua
 
 The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
+
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_HAP+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_HAP+++`
 endif::add-copy-button-to-env-var[]
---|float 
+--
+|float
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias[quarkus.langchain4j.bam."model-name".moderation-model.social-bias]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-social-bias[`quarkus.langchain4j.bam."model-name".moderation-model.social-bias`]##
 
 [.description]
 --
@@ -1128,22 +1118,23 @@ The social bias detector is intended to identify subtle forms of hate speech and
 
 The float is a value from 0.1 to 1 that allows you to control when a content must be flagged by the detector.
 
+
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_SOCIAL_BIAS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_SOCIAL_BIAS+++`
 endif::add-copy-button-to-env-var[]
---|float 
+--
+|float
 |
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests[quarkus.langchain4j.bam."model-name".moderation-model.log-requests]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-requests[`quarkus.langchain4j.bam."model-name".moderation-model.log-requests`]##
 
 [.description]
 --
 Whether the BAM moderation model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++[]
@@ -1151,16 +1142,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
-
-a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses]]`link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses[quarkus.langchain4j.bam."model-name".moderation-model.log-responses]`
-
+a| [[quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bam_quarkus-langchain4j-bam-model-name-moderation-model-log-responses[`quarkus.langchain4j.bam."model-name".moderation-model.log-responses`]##
 
 [.description]
 --
 Whether the BAM moderation model should log requests
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++[]
@@ -1168,13 +1159,16 @@ endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BAM__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
---|boolean 
+--
+|boolean
 |`false`
 
+
 |===
+
 ifndef::no-duration-note[]
 [NOTE]
-[id='duration-note-anchor-{summaryTableId}']
+[id=duration-note-anchor-quarkus-langchain4j-bam_quarkus-langchain4j]
 .About the Duration format
 ====
 To write duration values, use the standard `java.time.Duration` format.
@@ -1191,3 +1185,5 @@ In other cases, the simplified format is translated to the `java.time.Duration` 
 * If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
+
+:!summaryTableId:
