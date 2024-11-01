@@ -6,8 +6,8 @@
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-integration-test-jlama</artifactId>
-    <name>Quarkus LangChain4j - Integration Tests - Jlama</name>
+    <artifactId>quarkus-langchain4j-integration-test-llama3-java</artifactId>
+    <name>Quarkus LangChain4j - Integration Tests - Llama3 Java</name>
     <properties>
         <skipITs>true</skipITs>
         <maven.compiler.release>21</maven.compiler.release>

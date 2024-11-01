@@ -38,5 +38,14 @@
         <module>jlama</module>
       </modules>
     </profile>
+    <profile>
+      <id>jdk22-plus</id>
+      <activation>
+        <jdk>[22,)</jdk>
+      </activation>
+      <modules>
+        <module>llama3-java</module>
+      </modules>
+    </profile>
   </profiles>
 </project>
