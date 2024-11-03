@@ -2,8 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.spi.CDI;
@@ -30,11 +29,15 @@ import io.smallrye.mutiny.Multi;
 public class GuardrailsSupport {
 
     public static void invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
-            ChatMemory chatMemory, AugmentationResult augmentationResult) {
+            ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
         InputGuardrailResult result;
         try {
+
+            String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
+
             result = invokeInputGuardRails(methodCreateInfo,
-                    new InputGuardrailParams(userMessage, chatMemory, augmentationResult));
+                    new InputGuardrailParams(userMessage, chatMemory, augmentationResult, userMessageTemplate,
+                            Collections.unmodifiableMap(templateVariables)));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }
@@ -85,7 +88,7 @@ public class GuardrailsSupport {
                 }
                 attempt++;
                 output = new OutputGuardrailParams(response.content(), output.memory(),
-                        output.augmentationResult());
+                        output.augmentationResult(), output.userMessageTemplate(), output.variables());
             } else {
                 break;
             }

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -191,6 +193,13 @@ public final class AiServiceMethodCreateInfo {
 
     public OutputTokenAccumulator getOutputTokenAccumulator() {
         return accumulator;
+    }
+
+    public String getUserMessageTemplate() {
+        Optional<String> userMessageTemplateOpt = this.getUserMessageInfo().template()
+                .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
+
+        return userMessageTemplateOpt.orElse(EMPTY);
     }
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
