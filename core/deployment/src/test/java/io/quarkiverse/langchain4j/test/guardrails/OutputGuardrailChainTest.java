@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +29,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -78,6 +80,20 @@ public class OutputGuardrailChainTest {
         assertThat(firstGuardrail.lastAccess()).isLessThan(secondGuardrail.lastAccess());
     }
 
+    @Test
+    @ActivateRequestContext
+    void testThatRewritesTheOutputTwiceInTheChain() {
+        assertThat(aiService.rewritingSuccess("1", "foo")).isEqualTo("Hi!,1,2");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testThatRepromptAfterRewriteIsNotAllowed() {
+        assertThatExceptionOfType(GuardrailException.class)
+                .isThrownBy(() -> aiService.repromptAfterRewrite("1", "foo"))
+                .withMessageContaining("Retry or reprompt is not allowed after a rewritten output");
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
@@ -89,6 +105,12 @@ public class OutputGuardrailChainTest {
 
         @OutputGuardrails({ FirstGuardrail.class, FailingGuardrail.class, SecondGuardrail.class })
         String failingFirstTwo(@MemoryId String mem, @UserMessage String message);
+
+        @OutputGuardrails({ FirstRewritingGuardrail.class, SecondRewritingGuardrail.class })
+        String rewritingSuccess(@MemoryId String mem, @UserMessage String message);
+
+        @OutputGuardrails({ FirstRewritingGuardrail.class, RepromptingGuardrail.class })
+        String repromptAfterRewrite(@MemoryId String mem, @UserMessage String message);
 
     }
 
@@ -161,6 +183,42 @@ public class OutputGuardrailChainTest {
 
         public int spy() {
             return spy.get();
+        }
+    }
+
+    @RequestScoped
+    public static class FirstRewritingGuardrail implements OutputGuardrail {
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            String text = responseFromLLM.text();
+            return successWith(text + ",1");
+        }
+    }
+
+    @RequestScoped
+    public static class SecondRewritingGuardrail implements OutputGuardrail {
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            String text = responseFromLLM.text();
+            return successWith(text + ",2");
+        }
+    }
+
+    @RequestScoped
+    public static class RepromptingGuardrail implements OutputGuardrail {
+
+        private boolean firstCall = true;
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            if (firstCall) {
+                firstCall = false;
+                String text = responseFromLLM.text();
+                return reprompt("Wrong message", text + ", " + text);
+            }
+            return success();
         }
     }
 

@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import jakarta.enterprise.inject.spi.CDI;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -57,8 +58,9 @@ public class GuardrailsSupport {
         if (max <= 0) {
             max = 1;
         }
+
+        OutputGuardrailResult result = null;
         while (attempt < max) {
-            OutputGuardrailResult result;
             try {
                 result = invokeOutputGuardRails(methodCreateInfo, output);
             } catch (Exception e) {
@@ -97,7 +99,18 @@ public class GuardrailsSupport {
         if (attempt == max) {
             throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries");
         }
+
+        if (result.isRewrittenResult()) {
+            response = rewriteResponseWithText(response, result.successfulResult());
+        }
+
         return response;
+    }
+
+    public static Response<AiMessage> rewriteResponseWithText(Response<AiMessage> response, String text) {
+        List<ToolExecutionRequest> tools = response.content().toolExecutionRequests();
+        AiMessage content = tools != null && !tools.isEmpty() ? new AiMessage(text, tools) : new AiMessage(text);
+        return new Response<>(content, response.tokenUsage(), response.finishReason(), response.metadata());
     }
 
     @SuppressWarnings("unchecked")
@@ -160,7 +173,10 @@ public class GuardrailsSupport {
         for (Class<? extends Guardrail> bean : classes) {
             GR result = (GR) CDI.current().select(bean).get().validate(params).validatedBy(bean);
             if (result.isFatal()) {
-                return result;
+                return accumulatedResults.isRewrittenResult() ? (GR) result.blockRetry() : result;
+            }
+            if (result.isRewrittenResult()) {
+                params = params.withText(result.successfulResult());
             }
             accumulatedResults = compose(accumulatedResults, result, producer);
         }
@@ -168,17 +184,17 @@ public class GuardrailsSupport {
         return accumulatedResults;
     }
 
-    private static <GR extends GuardrailResult> GR compose(GR first, GR second,
+    private static <GR extends GuardrailResult> GR compose(GR oldResult, GR newResult,
             Function<List<? extends GuardrailResult.Failure>, GR> producer) {
-        if (first.isSuccess()) {
-            return second;
+        if (oldResult.isSuccess()) {
+            return newResult;
         }
-        if (second.isSuccess()) {
-            return first;
+        if (newResult.isSuccess()) {
+            return oldResult;
         }
         List<? extends GuardrailResult.Failure> failures = new ArrayList<>();
-        failures.addAll(first.failures());
-        failures.addAll(second.failures());
+        failures.addAll(oldResult.failures());
+        failures.addAll(newResult.failures());
         return producer.apply(failures);
     }
 

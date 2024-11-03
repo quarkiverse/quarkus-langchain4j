@@ -16,6 +16,10 @@ public interface GuardrailResult<GR extends GuardrailResult> {
          */
         SUCCESS,
         /**
+         * A successful validation with a specific result.
+         */
+        SUCCESS_WITH_RESULT,
+        /**
          * A failed validation not preventing the subsequent validations eventually registered to be evaluated.
          */
         FAILURE,
@@ -26,6 +30,18 @@ public interface GuardrailResult<GR extends GuardrailResult> {
     }
 
     boolean isSuccess();
+
+    default boolean isRewrittenResult() {
+        return false;
+    }
+
+    default GuardrailResult<GR> blockRetry() {
+        throw new UnsupportedOperationException();
+    }
+
+    default String successfulResult() {
+        throw new UnsupportedOperationException();
+    }
 
     boolean isFatal();
 

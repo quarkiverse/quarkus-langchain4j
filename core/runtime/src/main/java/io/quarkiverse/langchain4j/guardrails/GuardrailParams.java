@@ -18,4 +18,12 @@ public interface GuardrailParams {
      * @return the augmentation result, can be {@code null}
      */
     AugmentationResult augmentationResult();
+
+    /**
+     * Recreate this guardrail param with the given input or output text.
+     *
+     * @param text The text of the rewritten param.
+     * @return A clone of this guardrail params with the given input or output text.
+     */
+    GuardrailParams withText(String text);
 }

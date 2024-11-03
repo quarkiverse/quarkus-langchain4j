@@ -51,6 +51,14 @@ public interface OutputGuardrail extends Guardrail<OutputGuardrailParams, Output
     }
 
     /**
+     * @return The result of a successful output guardrail validation with a specific result.
+     * @param successfulResult The successful result.
+     */
+    default OutputGuardrailResult successWith(String successfulResult) {
+        return OutputGuardrailResult.successWith(successfulResult);
+    }
+
+    /**
      * @param message A message describing the failure.
      * @return The result of a failed output guardrail validation.
      */

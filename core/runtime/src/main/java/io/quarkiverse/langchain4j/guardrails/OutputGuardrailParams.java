@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.guardrails;
 
+import java.util.List;
 import java.util.Map;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.rag.AugmentationResult;
@@ -18,4 +20,11 @@ import dev.langchain4j.rag.AugmentationResult;
 public record OutputGuardrailParams(AiMessage responseFromLLM, ChatMemory memory,
         AugmentationResult augmentationResult, String userMessageTemplate,
         Map<String, Object> variables) implements GuardrailParams {
+
+    @Override
+    public OutputGuardrailParams withText(String text) {
+        List<ToolExecutionRequest> tools = responseFromLLM.toolExecutionRequests();
+        AiMessage aiMessage = tools != null && !tools.isEmpty() ? new AiMessage(text, tools) : new AiMessage(text);
+        return new OutputGuardrailParams(aiMessage, memory, augmentationResult, userMessageTemplate, variables);
+    }
 }

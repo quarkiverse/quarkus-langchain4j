@@ -18,4 +18,9 @@ import dev.langchain4j.rag.AugmentationResult;
 public record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
         AugmentationResult augmentationResult, String userMessageTemplate,
         Map<String, Object> variables) implements GuardrailParams {
+
+    @Override
+    public InputGuardrailParams withText(String text) {
+        throw new UnsupportedOperationException();
+    }
 }
