@@ -55,6 +55,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(builder.baseUrl)
+                .configName(builder.configName)
                 .tlsConfigurationName(builder.tlsConfigurationName)
                 .openAiApiKey(builder.apiKey)
                 .organizationId(builder.organizationId)
@@ -139,6 +140,7 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
     public static class Builder {
         private String baseUrl;
+        private String configName;
         private String tlsConfigurationName;
         private String apiKey;
         private String organizationId;
@@ -156,6 +158,11 @@ public class QuarkusOpenAiImageModel implements ImageModel {
 
         public Builder baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder configName(String configName) {
+            this.configName = configName;
             return this;
         }
 

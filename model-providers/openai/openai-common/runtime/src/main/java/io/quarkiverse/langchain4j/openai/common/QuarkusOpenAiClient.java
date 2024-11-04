@@ -527,6 +527,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         @Override
         public Builder get() {
             var result = new Builder();
+            result.configName(AdditionalPropertiesHack.getAndClearConfigName());
             result.tlsConfigurationName(AdditionalPropertiesHack.getAndClearTlsConfigurationName());
             return result;
         }

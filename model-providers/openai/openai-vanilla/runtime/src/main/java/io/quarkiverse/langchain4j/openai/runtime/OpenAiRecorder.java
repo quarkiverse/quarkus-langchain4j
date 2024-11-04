@@ -72,6 +72,7 @@ public class OpenAiRecorder {
 
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -129,6 +130,7 @@ public class OpenAiRecorder {
             var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -182,6 +184,7 @@ public class OpenAiRecorder {
             var builder = (QuarkusOpenAiEmbeddingModelBuilderFactory.Builder) OpenAiEmbeddingModel.builder();
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -230,6 +233,7 @@ public class OpenAiRecorder {
             var builder = (QuarkusOpenAiModerationModelBuilderFactory.Builder) OpenAiModerationModel.builder();
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
+                    .configName(configName)
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
                     .timeout(openAiConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -272,6 +276,7 @@ public class OpenAiRecorder {
             }
             ImageModelConfig imageModelConfig = openAiConfig.imageModel();
             var builder = QuarkusOpenAiImageModel.builder()
+                    .configName(configName)
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .baseUrl(openAiConfig.baseUrl())
                     .apiKey(apiKey)
