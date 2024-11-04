@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -189,6 +191,8 @@ public class JlamaProcessor {
                         // we pull one model at a time and provide progress updates to the user via logging
                         LOGGER.info("Pulling model " + modelName);
 
+                        AtomicReference<Long> LAST_UPDATE_REF = new AtomicReference<>();
+
                         try {
                             registry.downloadModel(modelName, Optional.empty(), Optional.of(new ProgressReporter() {
                                 @Override
@@ -199,6 +203,12 @@ public class JlamaProcessor {
                                         return;
                                     }
 
+                                    if (!logUpdate(LAST_UPDATE_REF.get())) {
+                                        return;
+                                    }
+
+                                    LAST_UPDATE_REF.set(System.nanoTime());
+
                                     BigDecimal percentage = new BigDecimal(sizeDownloaded).divide(new BigDecimal(totalSize), 4,
                                             RoundingMode.HALF_DOWN).multiply(ONE_HUNDRED);
                                     BigDecimal progress = percentage.setScale(2, RoundingMode.HALF_DOWN);
@@ -206,7 +216,23 @@ public class JlamaProcessor {
                                         // avoid showing 100% for too long
                                         LOGGER.infof("Verifying and cleaning up\n", progress);
                                     } else {
-                                        LOGGER.infof("Progress: %s%%\n", progress);
+                                        LOGGER.infof("%s - Progress: %s%%\n", modelName, progress);
+                                    }
+                                }
+
+                                /**
+                                 * @param lastUpdate The last update time in nanoseconds
+                                 *        Determines whether we should log an update.
+                                 *        This is done in order to not overwhelm the console with updates which might make
+                                 *        canceling the download difficult. See
+                                 *        <a href="https://github.com/quarkiverse/quarkus-langchain4j/issues/1044">this</a>
+                                 */
+                                private boolean logUpdate(Long lastUpdate) {
+                                    if (lastUpdate == null) {
+                                        return true;
+                                    } else {
+                                        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime())
+                                                - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
                                     }
                                 }
                             }));

@@ -93,6 +93,7 @@ public class DevServicesOllamaProcessor {
             for (String model : modelsToPull) {
                 // we pull one model at a time and provide progress updates to the user via logging
                 LOGGER.info("Pulling model " + model);
+                AtomicReference<Long> LAST_UPDATE_REF = new AtomicReference<>();
 
                 CompletableFuture<Void> cf = new CompletableFuture<>();
                 client.pullAsync(model).subscribe(new Flow.Subscriber<>() {
@@ -109,6 +110,11 @@ public class DevServicesOllamaProcessor {
                         clientThreadName.compareAndSet(null, Thread.currentThread().getName());
                         if ((line.total() != null) && (line.completed() != null) && (line.status() != null)
                                 && line.status().contains("pulling")) {
+                            if (!logUpdate(LAST_UPDATE_REF.get())) {
+                                return;
+                            }
+
+                            LAST_UPDATE_REF.set(System.nanoTime());
                             BigDecimal percentage = new BigDecimal(line.completed()).divide(new BigDecimal(line.total()), 4,
                                     RoundingMode.HALF_DOWN).multiply(ONE_HUNDRED);
                             BigDecimal progress = percentage.setScale(2, RoundingMode.HALF_DOWN);
@@ -116,8 +122,24 @@ public class DevServicesOllamaProcessor {
                                 // avoid showing 100% for too long
                                 LOGGER.infof("Verifying and cleaning up\n", progress);
                             } else {
-                                LOGGER.infof("Progress: %s%%\n", progress);
+                                LOGGER.infof("%s - Progress: %s%%\n", model, progress);
                             }
+                        }
+                    }
+
+                    /**
+                     * @param lastUpdate The last update time in nanoseconds
+                     *        Determines whether we should log an update.
+                     *        This is done in order to not overwhelm the console with updates which might make
+                     *        canceling the download difficult. See
+                     *        <a href="https://github.com/quarkiverse/quarkus-langchain4j/issues/1044">this</a>
+                     */
+                    private boolean logUpdate(Long lastUpdate) {
+                        if (lastUpdate == null) {
+                            return true;
+                        } else {
+                            return TimeUnit.NANOSECONDS.toMillis(System.nanoTime())
+                                    - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
                         }
                     }
 
