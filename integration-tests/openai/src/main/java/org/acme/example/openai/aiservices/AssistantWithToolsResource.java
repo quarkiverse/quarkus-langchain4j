@@ -1,5 +1,6 @@
 package org.acme.example.openai.aiservices;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,6 +25,18 @@ public class AssistantWithToolsResource {
 
     public AssistantWithToolsResource(Assistant assistant) {
         this.assistant = assistant;
+    }
+
+    public static class TestData {
+        String foo;
+        Integer bar;
+        Double baz;
+
+        TestData(String foo, Integer bar, Double baz) {
+            this.foo = foo;
+            this.bar = bar;
+            this.baz = baz;
+        }
     }
 
     @GET
@@ -53,6 +66,25 @@ public class AssistantWithToolsResource {
         @Tool("Calculates the square root of a number")
         double sqrt(int x) {
             return Math.sqrt(x);
+        }
+
+        @Tool("Calculates the the sum of all provided numbers")
+        double sumAll(List<Double> x) {
+
+            return x.stream().reduce(0.0, (a, b) -> a + b);
+        }
+
+        @Tool("Evaluate test data object")
+        public TestData evaluateTestObject(List<TestData> data) {
+            return new TestData("Empty", 0, 0.0);
+        }
+
+        @Tool("Calculates all factors of the provided integer.")
+        List<Integer> getFactors(int x) {
+            return java.util.stream.IntStream.rangeClosed(1, x)
+                    .filter(i -> x % i == 0)
+                    .boxed()
+                    .toList();
         }
     }
 

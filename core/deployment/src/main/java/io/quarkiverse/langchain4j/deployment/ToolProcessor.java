@@ -26,9 +26,11 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.MethodParameterInfo;
+import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassVisitor;
@@ -406,11 +408,27 @@ public class ToolProcessor {
 
     private Iterable<JsonSchemaProperty> toJsonSchemaProperties(MethodParameterInfo parameter, IndexView index) {
         Type type = parameter.type();
-        DotName typeName = parameter.type().name();
-
         AnnotationInstance pInstance = parameter.annotation(P);
+
         JsonSchemaProperty description = pInstance == null ? null : description(pInstance.value().asString());
 
+        return toJsonSchemaProperties(type, index, description);
+    }
+
+    private Iterable<JsonSchemaProperty> toJsonSchemaProperties(Type type, IndexView index, JsonSchemaProperty description) {
+        DotName typeName = type.name();
+
+        if (type.kind() == Type.Kind.WILDCARD_TYPE) {
+            Type boundType = type.asWildcardType().extendsBound();
+            if (boundType == null) {
+                boundType = type.asWildcardType().superBound();
+            }
+            if (boundType != null) {
+                return toJsonSchemaProperties(boundType, index, description);
+            } else {
+                throw new IllegalArgumentException("Unsupported wildcard type with no bounds: " + type);
+            }
+        }
         if (DotNames.STRING.equals(typeName) || DotNames.CHARACTER.equals(typeName)
                 || DotNames.PRIMITIVE_CHAR.equals(typeName)) {
             return removeNulls(STRING, description);
@@ -435,17 +453,64 @@ public class ToolProcessor {
             return removeNulls(NUMBER, description);
         }
 
-        if ((type.kind() == Type.Kind.ARRAY)
-                || DotNames.LIST.equals(typeName)
-                || DotNames.SET.equals(typeName)) { // TODO something else?
-            return removeNulls(ARRAY, description); // TODO provide type of array?
+        // TODO something else?
+        if (type.kind() == Type.Kind.ARRAY || DotNames.LIST.equals(typeName) || DotNames.SET.equals(typeName)) {
+            ParameterizedType parameterizedType = type.kind() == Type.Kind.PARAMETERIZED_TYPE ? type.asParameterizedType()
+                    : null;
+
+            Type elementType = parameterizedType != null ? parameterizedType.arguments().get(0)
+                    : type.asArrayType().component();
+
+            Iterable<JsonSchemaProperty> elementProperties = toJsonSchemaProperties(elementType, index, null);
+
+            JsonSchemaProperty itemsSchema;
+            if (isComplexType(elementType)) {
+                Map<String, Object> fieldDescription = new HashMap<>();
+
+                for (JsonSchemaProperty fieldProperty : elementProperties) {
+                    fieldDescription.put(fieldProperty.key(), fieldProperty.value());
+                }
+                itemsSchema = JsonSchemaProperty.from("items", fieldDescription);
+            } else {
+                itemsSchema = JsonSchemaProperty.items(elementProperties.iterator().next());
+            }
+
+            return removeNulls(ARRAY, itemsSchema, description);
         }
 
         if (isEnum(type, index)) {
             return removeNulls(STRING, enums(enumConstants(type)), description);
         }
 
-        return removeNulls(OBJECT, description); // TODO provide internals
+        if (type.kind() == Type.Kind.CLASS) {
+            Map<String, Object> properties = new HashMap<>();
+            ClassInfo classInfo = index.getClassByName(type.name());
+
+            List<String> required = new ArrayList<>();
+            if (classInfo != null) {
+                for (FieldInfo field : classInfo.fields()) {
+                    String fieldName = field.name();
+
+                    Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(field.type(), index, null);
+                    Map<String, Object> fieldDescription = new HashMap<>();
+
+                    for (JsonSchemaProperty fieldProperty : fieldSchema) {
+                        fieldDescription.put(fieldProperty.key(), fieldProperty.value());
+                    }
+
+                    properties.put(fieldName, fieldDescription);
+                }
+            }
+
+            JsonSchemaProperty objectSchema = JsonSchemaProperty.from("properties", properties);
+            return removeNulls(OBJECT, objectSchema, JsonSchemaProperty.from("required", required), description);
+        }
+
+        throw new IllegalArgumentException("Unsupported type: " + type);
+    }
+
+    private boolean isComplexType(Type type) {
+        return type.kind() == Type.Kind.CLASS || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
     }
 
     private Iterable<JsonSchemaProperty> removeNulls(JsonSchemaProperty... properties) {
