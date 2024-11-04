@@ -16,6 +16,7 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
 @Path("assistant-with-tool")
@@ -28,8 +29,13 @@ public class AssistantWithToolsResource {
     }
 
     public static class TestData {
+        @Description("Foo description for structured output")
         String foo;
+
+        @Description("Foo description for structured output")
         Integer bar;
+
+        @Description("Foo description for structured output")
         Double baz;
 
         TestData(String foo, Integer bar, Double baz) {
@@ -44,10 +50,18 @@ public class AssistantWithToolsResource {
         return assistant.chat(message);
     }
 
+    @GET
+    @Path("/many")
+    public List<TestData> getMany(@RestQuery String message) {
+        return assistant.chats(message);
+    }
+
     @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
     public interface Assistant {
 
         String chat(String userMessage);
+
+        List<TestData> chats(String userMessage);
     }
 
     @Singleton

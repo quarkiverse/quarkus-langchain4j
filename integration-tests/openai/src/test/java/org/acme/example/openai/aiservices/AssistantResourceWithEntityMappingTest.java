@@ -12,9 +12,9 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-public class AssistantResourceWithToolsTest {
+public class AssistantResourceWithEntityMappingTest {
 
-    @TestHTTPEndpoint(AssistantWithToolsResource.class)
+    @TestHTTPEndpoint(EntityMappedResource.class)
     @TestHTTPResource
     URL url;
 
@@ -23,7 +23,7 @@ public class AssistantResourceWithToolsTest {
         given()
                 .baseUri(url.toString())
                 .queryParam("message", "This is a test")
-                .get()
+                .post()
                 .then()
                 .statusCode(200)
                 .body(containsString("MockGPT"));
@@ -32,9 +32,9 @@ public class AssistantResourceWithToolsTest {
     @Test
     public void getMany() {
         given()
-                .baseUri(url.toString() + "/many")
+                .baseUri(url.toString() + "/generateMapped")
                 .queryParam("message", "This is a test")
-                .get()
+                .post()
                 .then()
                 .statusCode(200)
                 .body(containsString("MockGPT"));

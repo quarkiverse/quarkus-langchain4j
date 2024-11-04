@@ -41,6 +41,7 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
@@ -498,6 +499,13 @@ public class ToolProcessor {
                         fieldDescription.put(fieldProperty.key(), fieldProperty.value());
                     }
 
+                    if (field.hasAnnotation(Description.class)) {
+                        AnnotationInstance descriptionAnnotation = field.annotation(Description.class);
+                        if (descriptionAnnotation != null && descriptionAnnotation.value() != null) {
+                            String[] descriptionValue = descriptionAnnotation.value().asStringArray();
+                            fieldDescription.put("description", String.join(",", descriptionValue));
+                        }
+                    }
                     properties.put(fieldName, fieldDescription);
                 }
             }
