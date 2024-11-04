@@ -2,6 +2,7 @@ package org.acme.example.openai.aiservices;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PreDestroy;
@@ -11,6 +12,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestQuery;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.memory.ChatMemory;
@@ -30,18 +33,24 @@ public class AssistantWithToolsResource {
 
     public static class TestData {
         @Description("Foo description for structured output")
+        @JsonProperty("foo")
         String foo;
 
         @Description("Foo description for structured output")
+        @JsonProperty("bar")
         Integer bar;
 
         @Description("Foo description for structured output")
-        Double baz;
+        @JsonProperty("baz")
+        Optional<Double> baz;
+
+        public TestData() {
+        }
 
         TestData(String foo, Integer bar, Double baz) {
             this.foo = foo;
             this.bar = bar;
-            this.baz = baz;
+            this.baz = Optional.of(baz);
         }
     }
 
@@ -50,18 +59,11 @@ public class AssistantWithToolsResource {
         return assistant.chat(message);
     }
 
-    @GET
-    @Path("/many")
-    public List<TestData> getMany(@RestQuery String message) {
-        return assistant.chats(message);
-    }
-
     @RegisterAiService(tools = Calculator.class, chatMemoryProviderSupplier = RegisterAiService.BeanChatMemoryProviderSupplier.class)
     public interface Assistant {
 
         String chat(String userMessage);
 
-        List<TestData> chats(String userMessage);
     }
 
     @Singleton

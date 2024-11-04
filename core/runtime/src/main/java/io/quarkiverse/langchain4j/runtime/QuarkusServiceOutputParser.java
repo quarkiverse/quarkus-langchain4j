@@ -1,6 +1,9 @@
 package io.quarkiverse.langchain4j.runtime;
 
 import java.lang.reflect.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,12 +11,12 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.TypeUtils;
-//import dev.langchain4j.service.output.OutputParser;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.smallrye.mutiny.Multi;
@@ -23,13 +26,18 @@ public class QuarkusServiceOutputParser extends ServiceOutputParser {
 
     @Override
     public String outputFormatInstructions(Type returnType) {
-        Class<?> rawClass = getRawClass(returnType);
+        boolean isOptional = isJavaOptional(returnType);
+        Type actualType = isOptional ? unwrapOptionalType(returnType) : returnType;
+
+        Class<?> rawClass = getRawClass(actualType);
 
         if (rawClass != String.class && rawClass != AiMessage.class && rawClass != TokenStream.class
+                && rawClass != ChatMessage.class
                 && rawClass != Response.class && !Multi.class.equals(rawClass)) {
             try {
                 var schema = this.toJsonSchema(returnType);
-                return "You must answer strictly with json according to the following json schema format: " + schema;
+                return "You must answer strictly with json according to the following json schema format. Use description metadata to fill data properly: "
+                        + schema;
             } catch (Exception e) {
                 return "";
             }
@@ -52,7 +60,7 @@ public class QuarkusServiceOutputParser extends ServiceOutputParser {
             return response;
         } else {
             AiMessage aiMessage = response.content();
-            if (rawReturnClass == AiMessage.class) {
+            if (rawReturnClass == AiMessage.class || rawReturnClass == ChatMessage.class) {
                 return aiMessage;
             } else {
                 String text = aiMessage.text();
@@ -77,7 +85,10 @@ public class QuarkusServiceOutputParser extends ServiceOutputParser {
 
     public String toJsonSchema(Type type) throws Exception {
         Map<String, Object> schema = new HashMap<>();
-        Class<?> rawClass = getRawClass(type);
+        boolean isOptional = isJavaOptional(type);
+        Type actualType = isOptional ? unwrapOptionalType(type) : type;
+
+        Class<?> rawClass = getRawClass(actualType);
 
         if (type instanceof WildcardType wildcardType) {
             Type boundType = wildcardType.getUpperBounds().length > 0 ? wildcardType.getUpperBounds()[0]
@@ -97,6 +108,12 @@ public class QuarkusServiceOutputParser extends ServiceOutputParser {
             Type elementType = getElementType(type);
             Map<String, Object> itemsSchema = toJsonSchemaMap(elementType);
             schema.put("items", itemsSchema);
+        } else if (rawClass == LocalDate.class || rawClass == Date.class) {
+            schema.put("type", "string");
+            schema.put("format", "date");
+        } else if (rawClass == LocalDateTime.class || rawClass == OffsetDateTime.class) {
+            schema.put("type", "string");
+            schema.put("format", "date-time");
         } else if (rawClass.isEnum()) {
             schema.put("type", "string");
             schema.put("enum", getEnumConstants(rawClass));
@@ -104,20 +121,62 @@ public class QuarkusServiceOutputParser extends ServiceOutputParser {
             schema.put("type", "object");
             Map<String, Object> properties = new HashMap<>();
 
+            List<String> required = new ArrayList<>();
             for (Field field : rawClass.getDeclaredFields()) {
-                field.setAccessible(true);
-                Map<String, Object> fieldSchema = toJsonSchemaMap(field.getGenericType());
-                properties.put(field.getName(), fieldSchema);
-                if (field.isAnnotationPresent(Description.class)) {
-                    Description description = field.getAnnotation(Description.class);
-                    fieldSchema.put("description", description.value());
+                try {
+                    field.setAccessible(true);
+                    Type fieldType = field.getGenericType();
+
+                    // Check if the field is Optional and unwrap it if necessary
+                    boolean fieldIsOptional = isJavaOptional(fieldType);
+                    Type fieldActualType = fieldIsOptional ? unwrapOptionalType(fieldType) : fieldType;
+
+                    Map<String, Object> fieldSchema = toJsonSchemaMap(fieldActualType);
+                    properties.put(field.getName(), fieldSchema);
+
+                    if (field.isAnnotationPresent(Description.class)) {
+                        Description description = field.getAnnotation(Description.class);
+                        fieldSchema.put("description", String.join(",", description.value()));
+                    }
+
+                    // Only add to required if it is not Optional
+                    if (!fieldIsOptional) {
+                        required.add(field.getName());
+                    } else {
+                        fieldSchema.put("nullable", true); // Mark as nullable in the JSON schema
+                    }
+
+                } catch (Exception e) {
+
                 }
+
             }
             schema.put("properties", properties);
+            if (!required.isEmpty()) {
+                schema.put("required", required);
+            }
         }
-
+        if (isOptional) {
+            schema.put("nullable", true);
+        }
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(schema); // Convert the schema map to a JSON string
+    }
+
+    private boolean isJavaOptional(Type type) {
+        if (type instanceof ParameterizedType) {
+            Type rawType = ((ParameterizedType) type).getRawType();
+            return rawType == Optional.class || rawType == OptionalInt.class || rawType == OptionalLong.class
+                    || rawType == OptionalDouble.class;
+        }
+        return false;
+    }
+
+    private Type unwrapOptionalType(Type optionalType) {
+        if (optionalType instanceof ParameterizedType) {
+            return ((ParameterizedType) optionalType).getActualTypeArguments()[0];
+        }
+        return optionalType;
     }
 
     private Class<?> getRawClass(Type type) {

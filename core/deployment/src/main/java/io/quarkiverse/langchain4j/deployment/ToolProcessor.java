@@ -83,6 +83,16 @@ public class ToolProcessor {
             Object.class);
     private static final Logger log = Logger.getLogger(ToolProcessor.class);
 
+    public static final DotName OPTIONAL = DotName.createSimple("java.util.Optional");
+    public static final DotName OPTIONAL_INT = DotName.createSimple("java.util.OptionalInt");
+    public static final DotName OPTIONAL_LONG = DotName.createSimple("java.util.OptionalLong");
+    public static final DotName OPTIONAL_DOUBLE = DotName.createSimple("java.util.OptionalDouble");
+
+    private static final DotName DATE = DotName.createSimple("java.util.Date");
+    private static final DotName LOCAL_DATE = DotName.createSimple("java.time.LocalDate");
+    private static final DotName LOCAL_DATE_TIME = DotName.createSimple("java.time.LocalDateTime");
+    private static final DotName OFFSET_DATE_TIME = DotName.createSimple("java.time.OffsetDateTime");
+
     @BuildStep
     public void telemetry(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
         var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
@@ -453,7 +463,15 @@ public class ToolProcessor {
                 || DotNames.BIG_DECIMAL.equals(typeName)) {
             return removeNulls(NUMBER, description);
         }
+        if (LOCAL_DATE_TIME.equals(typeName) || OFFSET_DATE_TIME.equals(typeName)) {
+            return removeNulls(JsonSchemaProperty.from("type", "string"), JsonSchemaProperty.from("format", "date-time"),
+                    description);
+        }
 
+        if (DATE.equals(typeName) || LOCAL_DATE.equals(typeName)) {
+            return removeNulls(JsonSchemaProperty.from("type", "string"), JsonSchemaProperty.from("format", "date"),
+                    description);
+        }
         // TODO something else?
         if (type.kind() == Type.Kind.ARRAY || DotNames.LIST.equals(typeName) || DotNames.SET.equals(typeName)) {
             ParameterizedType parameterizedType = type.kind() == Type.Kind.PARAMETERIZED_TYPE ? type.asParameterizedType()
@@ -488,11 +506,18 @@ public class ToolProcessor {
             ClassInfo classInfo = index.getClassByName(type.name());
 
             List<String> required = new ArrayList<>();
+
             if (classInfo != null) {
                 for (FieldInfo field : classInfo.fields()) {
                     String fieldName = field.name();
+                    Type fieldType = field.type();
 
-                    Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(field.type(), index, null);
+                    boolean isOptional = isJavaOptionalType(fieldType);
+                    if (isOptional) {
+                        fieldType = unwrapOptionalType(fieldType);
+                    }
+
+                    Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(fieldType, index, null);
                     Map<String, Object> fieldDescription = new HashMap<>();
 
                     for (JsonSchemaProperty fieldProperty : fieldSchema) {
@@ -506,6 +531,10 @@ public class ToolProcessor {
                             fieldDescription.put("description", String.join(",", descriptionValue));
                         }
                     }
+                    if (!isOptional) {
+                        required.add(fieldName);
+                    }
+
                     properties.put(fieldName, fieldDescription);
                 }
             }
@@ -517,8 +546,37 @@ public class ToolProcessor {
         throw new IllegalArgumentException("Unsupported type: " + type);
     }
 
+    private boolean isJavaOptionalType(Type type) {
+        DotName typeName = type.name();
+        return typeName.equals(DotName.createSimple("java.util.Optional"))
+                || typeName.equals(DotName.createSimple("java.util.OptionalInt"))
+                || typeName.equals(DotName.createSimple("java.util.OptionalLong"))
+                || typeName.equals(DotName.createSimple("java.util.OptionalDouble"));
+    }
+
+    private Type unwrapOptionalType(Type optionalType) {
+        if (optionalType.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType parameterizedType = optionalType.asParameterizedType();
+            return parameterizedType.arguments().get(0);
+        }
+        return optionalType;
+    }
+
     private boolean isComplexType(Type type) {
         return type.kind() == Type.Kind.CLASS || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
+    }
+
+    private boolean isOptionalField(FieldInfo field, IndexView index) {
+        Type fieldType = field.type();
+        DotName fieldTypeName = fieldType.name();
+
+        if (OPTIONAL.equals(fieldTypeName) || OPTIONAL_INT.equals(fieldTypeName) || OPTIONAL_LONG.equals(fieldTypeName)
+                || OPTIONAL_DOUBLE.equals(fieldTypeName)) {
+            return true;
+        }
+
+        return false;
+
     }
 
     private Iterable<JsonSchemaProperty> removeNulls(JsonSchemaProperty... properties) {

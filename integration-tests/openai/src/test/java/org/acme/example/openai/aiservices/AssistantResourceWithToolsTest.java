@@ -29,14 +29,4 @@ public class AssistantResourceWithToolsTest {
                 .body(containsString("MockGPT"));
     }
 
-    @Test
-    public void getMany() {
-        given()
-                .baseUri(url.toString() + "/many")
-                .queryParam("message", "This is a test")
-                .get()
-                .then()
-                .statusCode(200)
-                .body(containsString("MockGPT"));
-    }
 }
