@@ -12,11 +12,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.io.file.PathUtils;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.logging.Logger;
@@ -201,23 +201,25 @@ public class Llama3Processor {
                                                 // avoid showing 100% for too long
                                                 LOGGER.infof("Verifying and cleaning up\n", progress);
                                             } else {
-                                                LOGGER.infof("Progress: %s%%\n", progress);
+                                                LOGGER.infof("%s - Progress: %s%%\n", model.name(), progress);
                                             }
                                         }
 
                                         /**
                                          * @param lastUpdate The last update time in nanoseconds
                                          *        Determines whether we should log an update.
-                                         *        This is done in order to not overwhelm the console with updates which might make
+                                         *        This is done in order to not overwhelm the console with updates which might
+                                         *        make
                                          *        canceling the download difficult. See
-                                         *        <a href="https://github.com/quarkiverse/quarkus-langchain4j/issues/1044">this</a>
+                                         *        <a href=
+                                         *        "https://github.com/quarkiverse/quarkus-langchain4j/issues/1044">this</a>
                                          */
                                         private boolean logUpdate(Long lastUpdate) {
                                             if (lastUpdate == null) {
                                                 return true;
                                             } else {
                                                 return TimeUnit.NANOSECONDS.toMillis(System.nanoTime())
-                                                       - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
+                                                        - TimeUnit.NANOSECONDS.toMillis(lastUpdate) > 1_000;
                                             }
                                         }
                                     }));

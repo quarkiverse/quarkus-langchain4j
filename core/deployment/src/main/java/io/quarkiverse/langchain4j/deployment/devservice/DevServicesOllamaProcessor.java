@@ -122,7 +122,7 @@ public class DevServicesOllamaProcessor {
                                 // avoid showing 100% for too long
                                 LOGGER.infof("Verifying and cleaning up\n", progress);
                             } else {
-                                LOGGER.infof("Progress: %s%%\n", progress);
+                                LOGGER.infof("%s - Progress: %s%%\n", model, progress);
                             }
                         }
                     }
