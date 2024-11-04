@@ -13,7 +13,13 @@ public class QuarkusOpenAiEmbeddingModelBuilderFactory implements OpenAiEmbeddin
 
     public static class Builder extends OpenAiEmbeddingModel.OpenAiEmbeddingModelBuilder {
 
+        private String configName;
         private String tlsConfigurationName;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder tlsConfigurationName(String tlsConfigurationName) {
             this.tlsConfigurationName = tlsConfigurationName;
@@ -22,6 +28,7 @@ public class QuarkusOpenAiEmbeddingModelBuilderFactory implements OpenAiEmbeddin
 
         @Override
         public OpenAiEmbeddingModel build() {
+            AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             return super.build();
         }

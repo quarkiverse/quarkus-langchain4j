@@ -26,6 +26,15 @@ public final class AdditionalPropertiesHack {
         PROPS.set(new HashMap<>());
     }
 
+    public static void setConfigName(String configName) {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return;
+        }
+        map.put("configName", configName);
+    }
+
     public static void setTlsConfigurationName(String tlsConfigurationName) {
         Map<String, String> map = PROPS.get();
         if (map == null) {
@@ -33,6 +42,15 @@ public final class AdditionalPropertiesHack {
             return;
         }
         map.put("tlsConfigurationName", tlsConfigurationName);
+    }
+
+    public static String getAndClearConfigName() {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return null;
+        }
+        return map.remove("configName");
     }
 
     public static String getAndClearTlsConfigurationName() {

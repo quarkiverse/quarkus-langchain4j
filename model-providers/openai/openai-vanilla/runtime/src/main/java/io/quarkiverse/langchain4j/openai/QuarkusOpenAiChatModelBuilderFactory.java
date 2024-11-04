@@ -12,7 +12,13 @@ public class QuarkusOpenAiChatModelBuilderFactory implements OpenAiChatModelBuil
 
     public static class Builder extends OpenAiChatModel.OpenAiChatModelBuilder {
 
+        private String configName;
         private String tlsConfigurationName;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder tlsConfigurationName(String tlsConfigurationName) {
             this.tlsConfigurationName = tlsConfigurationName;
@@ -21,6 +27,7 @@ public class QuarkusOpenAiChatModelBuilderFactory implements OpenAiChatModelBuil
 
         @Override
         public OpenAiChatModel build() {
+            AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             return super.build();
         }

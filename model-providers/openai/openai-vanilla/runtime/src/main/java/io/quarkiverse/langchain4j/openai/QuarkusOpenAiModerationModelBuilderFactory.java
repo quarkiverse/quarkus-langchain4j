@@ -13,7 +13,13 @@ public class QuarkusOpenAiModerationModelBuilderFactory implements OpenAiModerat
 
     public static class Builder extends OpenAiModerationModel.OpenAiModerationModelBuilder {
 
+        private String configName;
         private String tlsConfigurationName;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder tlsConfigurationName(String tlsConfigurationName) {
             this.tlsConfigurationName = tlsConfigurationName;
@@ -22,6 +28,7 @@ public class QuarkusOpenAiModerationModelBuilderFactory implements OpenAiModerat
 
         @Override
         public OpenAiModerationModel build() {
+            AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             return super.build();
         }

@@ -13,7 +13,13 @@ public class QuarkusOpenAiStreamingChatModelBuilderFactory implements OpenAiStre
 
     public static class Builder extends OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder {
 
+        private String configName;
         private String tlsConfigurationName;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder tlsConfigurationName(String tlsConfigurationName) {
             this.tlsConfigurationName = tlsConfigurationName;
@@ -22,6 +28,7 @@ public class QuarkusOpenAiStreamingChatModelBuilderFactory implements OpenAiStre
 
         @Override
         public OpenAiStreamingChatModel build() {
+            AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             return super.build();
         }
