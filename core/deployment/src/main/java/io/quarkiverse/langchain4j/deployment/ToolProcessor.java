@@ -9,7 +9,6 @@ import static dev.langchain4j.agent.tool.JsonSchemaProperty.STRING;
 import static dev.langchain4j.agent.tool.JsonSchemaProperty.description;
 import static dev.langchain4j.agent.tool.JsonSchemaProperty.enums;
 import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -200,11 +199,19 @@ public class ToolProcessor {
                         }
 
                         AnnotationInstance pInstance = parameter.annotation(P);
-                        if (pInstance != null && pInstance.value("required") != null
+                        Iterable<JsonSchemaProperty> jsonSchemaProperties;
+
+                        try {
+                            jsonSchemaProperties = toJsonSchemaProperties(parameter, index);
+                        } catch (ClassNotIndexedException ex) {
+                            jsonSchemaProperties = toJsonSchemaProperties(parameter, indexBuildItem.getComputingIndex());
+                        }
+
+                        if ((pInstance != null) && (pInstance.value("required") != null)
                                 && !pInstance.value("required").asBoolean()) {
-                            builder.addOptionalParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+                            builder.addOptionalParameter(parameter.name(), jsonSchemaProperties);
                         } else {
-                            builder.addParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+                            builder.addParameter(parameter.name(), jsonSchemaProperties);
                         }
                     }
 
@@ -423,12 +430,14 @@ public class ToolProcessor {
             if (boundType == null) {
                 boundType = type.asWildcardType().superBound();
             }
+
             if (boundType != null) {
                 return toJsonSchemaProperties(boundType, index, description);
             } else {
                 throw new IllegalArgumentException("Unsupported wildcard type with no bounds: " + type);
             }
         }
+
         if (DotNames.STRING.equals(typeName) || DotNames.CHARACTER.equals(typeName)
                 || DotNames.PRIMITIVE_CHAR.equals(typeName)) {
             return removeNulls(STRING, description);
@@ -489,17 +498,22 @@ public class ToolProcessor {
             List<String> required = new ArrayList<>();
             if (classInfo != null) {
                 for (FieldInfo field : classInfo.fields()) {
-                    String fieldName = field.name();
+                    if (!"this$0".equals(field.name()) && !Modifier.isStatic(field.flags())) {
+                        // Skip inner class reference
+                        String fieldName = field.name();
 
-                    Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(field.type(), index, null);
-                    Map<String, Object> fieldDescription = new HashMap<>();
+                        Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(field.type(), index, null);
+                        Map<String, Object> fieldDescription = new HashMap<>();
 
-                    for (JsonSchemaProperty fieldProperty : fieldSchema) {
-                        fieldDescription.put(fieldProperty.key(), fieldProperty.value());
+                        for (JsonSchemaProperty fieldProperty : fieldSchema) {
+                            fieldDescription.put(fieldProperty.key(), fieldProperty.value());
+                        }
+
+                        properties.put(fieldName, fieldDescription);
                     }
-
-                    properties.put(fieldName, fieldDescription);
                 }
+            } else {
+                throw new ClassNotIndexedException(type.name());
             }
 
             JsonSchemaProperty objectSchema = JsonSchemaProperty.from("properties", properties);
@@ -516,7 +530,7 @@ public class ToolProcessor {
     private Iterable<JsonSchemaProperty> removeNulls(JsonSchemaProperty... properties) {
         return stream(properties)
                 .filter(Objects::nonNull)
-                .collect(toList());
+                .toList();
     }
 
     private boolean isEnum(Type returnType, IndexView index) {
@@ -552,4 +566,18 @@ public class ToolProcessor {
             return transformer.applyTo(classVisitor);
         }
     }
+
+    private static class ClassNotIndexedException extends RuntimeException {
+        private final DotName dotName;
+
+        public ClassNotIndexedException(DotName dotName) {
+            super("'%s' is not indexed".formatted(dotName.toString()), null, true, false);
+            this.dotName = dotName;
+        }
+
+        public DotName getDotName() {
+            return this.dotName;
+        }
+    }
+
 }
