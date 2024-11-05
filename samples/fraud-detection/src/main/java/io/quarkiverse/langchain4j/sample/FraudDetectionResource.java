@@ -2,9 +2,12 @@ package io.quarkiverse.langchain4j.sample;
 
 import java.util.List;
 
+import io.smallrye.mutiny.Multi;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("/fraud")
@@ -28,6 +31,13 @@ public class FraudDetectionResource {
     @Path("/amount")
     public String detectBaseOnAmount(@RestQuery long customerId) {
         return service.detectAmountFraudForCustomer(customerId);
+    }
+
+    @GET
+    @Path("/amount/streamed")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public Multi<String> detectBaseOnAmountReactive(@RestQuery long customerId) {
+        return service.detectAmountFraudForCustomerStreamed(customerId);
     }
 
     @GET
