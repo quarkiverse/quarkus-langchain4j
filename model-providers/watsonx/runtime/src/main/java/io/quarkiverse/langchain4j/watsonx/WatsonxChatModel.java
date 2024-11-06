@@ -32,7 +32,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.smallrye.mutiny.Context;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
@@ -110,14 +109,8 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         context.put(TOOLS_CONTEXT, new ArrayList<StreamingToolFetcher>());
         context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
 
-        var mutiny = client.streamingChat(request, version);
-        if (tools != null) {
-            // Today Langchain4j doesn't allow to use the async operation with tools.
-            // One idea might be to give to the developer the possibility to use the VirtualThread.
-            mutiny.emitOn(Infrastructure.getDefaultWorkerPool());
-        }
-
-        mutiny.subscribe()
+        client.streamingChat(request, version)
+                .subscribe()
                 .with(context,
                         new Consumer<TextStreamingChatResponse>() {
                             @Override
