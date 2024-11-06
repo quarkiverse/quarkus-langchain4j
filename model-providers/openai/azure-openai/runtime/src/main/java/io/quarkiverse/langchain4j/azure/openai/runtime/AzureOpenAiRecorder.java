@@ -24,6 +24,7 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.image.ImageModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
@@ -49,6 +50,8 @@ public class AzureOpenAiRecorder {
 
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
             LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
@@ -58,8 +61,6 @@ public class AzureOpenAiRecorder {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -85,6 +86,9 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
+
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -100,7 +104,8 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAzureOpenAiConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+            LangChain4jAzureOpenAiConfig runtimeConfig,
             String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
@@ -108,8 +113,6 @@ public class AzureOpenAiRecorder {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
 
             var builder = AzureOpenAiStreamingChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
@@ -130,16 +133,19 @@ public class AzureOpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
+
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
                     return new DisabledStreamingChatLanguageModel();
                 }
             };
@@ -189,7 +195,7 @@ public class AzureOpenAiRecorder {
         if (azureAiConfig.enableIntegration()) {
             var apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            throwIfApiKeysNotConfigured(apiKey, adToken, configName);
+            throwIfApiKeysNotConfigured(apiKey, adToken, false, configName);
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()
@@ -293,8 +299,8 @@ public class AzureOpenAiRecorder {
         return azureAiConfig;
     }
 
-    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, String configName) {
-        if ((apiKey != null) == (adToken != null)) {
+    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
+        if ((apiKey != null) == (adToken != null) && !authProviderAvailable) {
             throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
         }
     }
@@ -315,6 +321,10 @@ public class AzureOpenAiRecorder {
         return new ConfigValidationException.Problem(String.format(
                 "SRCFG00014: The config property quarkus.langchain4j.azure-openai%s%s is required but it could not be found in any config source",
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
+    }
+
+    private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
     }
 
     public void cleanUp(ShutdownContext shutdown) {

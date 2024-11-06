@@ -9,12 +9,13 @@ import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 
 /**
- * Login resource which returns a poem welcome page to the authenticated user 
+ * Login resource which returns a poem welcome page to the authenticated user
  */
-@Path("/login")
+@Path("/model")
 @Authenticated
 public class LoginResource {
 
@@ -26,8 +27,9 @@ public class LoginResource {
     Template poem;
 
     @GET
+    @Path("{model}")
     @Produces("text/html")
-    public TemplateInstance poem() {
-        return poem.data("name", idToken.getName());
+    public TemplateInstance poem(@PathParam("model") String model) {
+        return poem.data("name", idToken.getName()).data("model", model);
     }
 }
