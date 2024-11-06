@@ -45,6 +45,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 
 public class AiChatServiceTest extends WireMockAbstract {
@@ -106,6 +107,7 @@ public class AiChatServiceTest extends WireMockAbstract {
     @Singleton
     static class Calculator {
         @Tool("Execute the sum of two numbers")
+        @Blocking
         public int sum(int first, int second) {
             return first + second;
         }
