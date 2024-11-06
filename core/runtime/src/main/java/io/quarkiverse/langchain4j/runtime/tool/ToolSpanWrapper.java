@@ -23,6 +23,7 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
             BiFunction<ToolExecutionRequest, Object, String> fun) {
         Span span = tracer.spanBuilder("langchain4j.tools." + toolExecutionRequest.name()).startSpan();
         try (Scope scope = span.makeCurrent()) {
+            // TODO Handle async method here.
             return fun.apply(toolExecutionRequest, memoryId);
         } catch (Throwable t) {
             span.recordException(t);

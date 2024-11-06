@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Flow;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -70,11 +69,13 @@ import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.operators.AbstractMulti;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
+import io.vertx.core.Context;
 
 /**
  * Provides the basic building blocks that the generated Interface methods call into
@@ -192,6 +193,7 @@ public class AiServiceMethodImplementationSupport {
                 augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
                 userMessage = (UserMessage) augmentationResult.chatMessage();
             } else {
+                // TODO duplicated context propagation.
                 // this a special case where we can't block, so we need to delegate the retrieval augmentation to a worker pool
                 CompletableFuture<AugmentationResult> augmentationResultCF = CompletableFuture.supplyAsync(new Supplier<>() {
                     @Override
@@ -210,7 +212,8 @@ public class AiServiceMethodImplementationSupport {
                                         context.chatMemory(memoryId), ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
                                 return new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
-                                        finalToolExecutors, ar.contents(), context, memoryId);
+                                        finalToolExecutors, ar.contents(), context, memoryId,
+                                        methodCreateInfo.isSwitchToWorkerThread());
                             }
 
                             private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
@@ -261,12 +264,14 @@ public class AiServiceMethodImplementationSupport {
 
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
                 return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
+                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
+                        methodCreateInfo.isSwitchToWorkerThread());
             }
 
             var actualAugmentationResult = augmentationResult;
             return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId)
+                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
+                    methodCreateInfo.isSwitchToWorkerThread())
                     .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
                     .map(chunk -> {
                         OutputGuardrailResult result;
@@ -761,10 +766,11 @@ public class AiServiceMethodImplementationSupport {
         private final List<Content> contents;
         private final QuarkusAiServiceContext context;
         private final Object memoryId;
+        private final boolean mustSwitchToWorkerThread;
 
         public TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
                 Map<String, ToolExecutor> toolExecutors,
-                List<Content> contents, QuarkusAiServiceContext context, Object memoryId) {
+                List<Content> contents, QuarkusAiServiceContext context, Object memoryId, boolean mustSwitchToWorkerThread) {
             // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
             this.messagesToSend = messagesToSend;
             this.toolSpecifications = toolSpecifications;
@@ -772,24 +778,42 @@ public class AiServiceMethodImplementationSupport {
             this.contents = contents;
             this.context = context;
             this.memoryId = memoryId;
+            this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         }
 
         @Override
         public void subscribe(MultiSubscriber<? super String> subscriber) {
             UnicastProcessor<String> processor = UnicastProcessor.create();
             processor.subscribe(subscriber);
-            var stream = new AiServiceTokenStream(messagesToSend, toolSpecifications,
-                    toolsExecutors, contents, context, memoryId);
-            stream
+
+            createTokenStream(processor);
+        }
+
+        private void createTokenStream(UnicastProcessor<String> processor) {
+            Context ctxt = null;
+            if (mustSwitchToWorkerThread) {
+                // we create or retrieve the current context, to use `executeBlocking` when required.
+                ctxt = VertxContext.getOrCreateDuplicatedContext();
+            }
+
+            var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
+                    toolsExecutors, contents, context, memoryId, ctxt, mustSwitchToWorkerThread);
+            TokenStream tokenStream = stream
                     .onNext(processor::onNext)
-                    .onComplete(new Consumer<>() {
-                        @Override
-                        public void accept(Response<AiMessage> message) {
-                            processor.onComplete();
-                        }
-                    })
-                    .onError(processor::onError)
-                    .start();
+                    .onComplete(message -> processor.onComplete())
+                    .onError(processor::onError);
+            // This is equivalent to "run subscription on worker thread"
+            if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+                ctxt.executeBlocking(new Callable<Void>() {
+                    @Override
+                    public Void call() {
+                        tokenStream.start();
+                        return null;
+                    }
+                });
+            } else {
+                tokenStream.start();
+            }
         }
     }
 }

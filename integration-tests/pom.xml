@@ -26,6 +26,7 @@
     <module>rag-pgvector</module>
     <module>rag-pgvector-flyway</module>
     <module>easy-rag</module>
+    <module>tools</module>
   </modules>
 
   <profiles>

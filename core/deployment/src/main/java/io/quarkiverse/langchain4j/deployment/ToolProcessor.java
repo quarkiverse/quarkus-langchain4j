@@ -8,6 +8,12 @@ import static dev.langchain4j.agent.tool.JsonSchemaProperty.OBJECT;
 import static dev.langchain4j.agent.tool.JsonSchemaProperty.STRING;
 import static dev.langchain4j.agent.tool.JsonSchemaProperty.description;
 import static dev.langchain4j.agent.tool.JsonSchemaProperty.enums;
+import static io.quarkiverse.langchain4j.deployment.DotNames.BLOCKING;
+import static io.quarkiverse.langchain4j.deployment.DotNames.COMPLETION_STAGE;
+import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
+import static io.quarkiverse.langchain4j.deployment.DotNames.NON_BLOCKING;
+import static io.quarkiverse.langchain4j.deployment.DotNames.RUN_ON_VIRTUAL_THREAD;
+import static io.quarkiverse.langchain4j.deployment.DotNames.UNI;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 
@@ -15,10 +21,13 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -41,6 +50,7 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
@@ -61,6 +71,7 @@ import io.quarkus.deployment.builditem.BytecodeTransformerBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.execannotations.ExecutionModelAnnotationsAllowedBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -74,12 +85,14 @@ public class ToolProcessor {
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
+
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
+
     private static final Logger log = Logger.getLogger(ToolProcessor.class);
 
     @BuildStep
@@ -91,7 +104,9 @@ public class ToolProcessor {
     }
 
     @BuildStep
-    public void handleTools(CombinedIndexBuildItem indexBuildItem,
+    public void handleTools(
+            BuildProducer<ToolMethodBuildItem> toolMethodBuildItemProducer,
+            CombinedIndexBuildItem indexBuildItem,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
@@ -106,6 +121,8 @@ public class ToolProcessor {
 
         List<String> generatedInvokerClasses = new ArrayList<>();
         List<String> generatedArgumentMapperClasses = new ArrayList<>();
+
+        Set<String> toolsNames = new HashSet<>();
 
         if (!instances.isEmpty()) {
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
@@ -223,7 +240,17 @@ public class ToolProcessor {
                     ToolSpecification toolSpecification = builder.build();
                     ToolMethodCreateInfo methodCreateInfo = new ToolMethodCreateInfo(
                             toolMethod.name(), invokerClassName,
-                            toolSpecification, argumentMapperClassName);
+                            toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod));
+
+                    validateExecutionModel(methodCreateInfo, toolMethod, validation);
+
+                    if (toolsNames.add(toolName)) {
+                        toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
+                    } else {
+                        validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                                new IllegalStateException("A tool with the name '" + toolName
+                                        + "' is already declared. Tools method name must be unique.")));
+                    }
 
                     metadata.computeIfAbsent(className.toString(), (c) -> new ArrayList<>()).add(methodCreateInfo);
 
@@ -248,13 +275,49 @@ public class ToolProcessor {
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
     }
 
+    @BuildStep
+    ExecutionModelAnnotationsAllowedBuildItem toolsMethods() {
+        return new ExecutionModelAnnotationsAllowedBuildItem(new Predicate<MethodInfo>() {
+            @Override
+            public boolean test(MethodInfo method) {
+                return method.hasDeclaredAnnotation(DotNames.TOOL);
+            }
+        });
+    }
+
+    private void validateExecutionModel(ToolMethodCreateInfo methodCreateInfo, MethodInfo toolMethod,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation) {
+        String methodName = toolMethod.declaringClass().name() + "." + toolMethod.name();
+
+        if (MULTI.equals(toolMethod.returnType().name())) {
+            validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                    new Exception("Method " + methodName + " returns Multi, which is not supported for tools")));
+        }
+
+        if (methodCreateInfo.executionModel() == ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD) {
+            // We can't use Uni or CS with virtual thread
+            if (UNI.equals(toolMethod.returnType().name())) {
+                validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                        new Exception("Method " + methodName
+                                + " returns Uni, which is not supported with @RunOnVirtualThread for tools")));
+            }
+            if (COMPLETION_STAGE.equals(toolMethod.returnType().name())) {
+                validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                        new Exception("Method " + methodName
+                                + " returns CompletionStage, which is not supported with @RunOnVirtualThread for tools")));
+            }
+        }
+
+    }
+
     /**
      * Transforms ToolsMetadataBeforeRemovalBuildItem into ToolsMetadataBuildItem by filtering
      * out tools belonging to beans that have been removed by ArC.
      */
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
-    public ToolsMetadataBuildItem filterOutRemovedTools(ToolsMetadataBeforeRemovalBuildItem beforeRemoval,
+    public ToolsMetadataBuildItem filterOutRemovedTools(
+            ToolsMetadataBeforeRemovalBuildItem beforeRemoval,
             ValidationPhaseBuildItem validationPhase,
             RecorderContext recorderContext,
             ToolsRecorder recorder) {
@@ -551,5 +614,21 @@ public class ToolProcessor {
             }
             return transformer.applyTo(classVisitor);
         }
+    }
+
+    private ToolMethodCreateInfo.ExecutionModel determineExecutionModel(MethodInfo methodInfo) {
+        if (methodInfo.hasAnnotation(BLOCKING)) {
+            return ToolMethodCreateInfo.ExecutionModel.BLOCKING;
+        }
+        Type returnedType = methodInfo.returnType();
+        if (methodInfo.hasAnnotation(NON_BLOCKING)
+                || UNI.equals(returnedType.name()) || COMPLETION_STAGE.equals(returnedType.name())
+                || MULTI.equals(returnedType.name())) {
+            return ToolMethodCreateInfo.ExecutionModel.NON_BLOCKING;
+        }
+        if (methodInfo.hasAnnotation(RUN_ON_VIRTUAL_THREAD)) {
+            return ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD;
+        }
+        return ToolMethodCreateInfo.ExecutionModel.BLOCKING;
     }
 }

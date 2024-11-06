@@ -4,13 +4,19 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 
 import jakarta.enterprise.inject.Instance;
 
 import org.jboss.jandex.DotName;
 
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.common.annotation.NonBlocking;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 
 public class DotNames {
 
@@ -38,10 +44,16 @@ public class DotNames {
     public static final DotName LIST = DotName.createSimple(List.class);
     public static final DotName SET = DotName.createSimple(Set.class);
     public static final DotName MULTI = DotName.createSimple(Multi.class);
+    public static final DotName UNI = DotName.createSimple(Uni.class);
+    public static final DotName BLOCKING = DotName.createSimple(Blocking.class);
+    public static final DotName NON_BLOCKING = DotName.createSimple(NonBlocking.class);
+    public static final DotName COMPLETION_STAGE = DotName.createSimple(CompletionStage.class);
+    public static final DotName RUN_ON_VIRTUAL_THREAD = DotName.createSimple(RunOnVirtualThread.class);
 
     public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
     public static final DotName RECORD = DotName.createSimple(Record.class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
 
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
+    public static final DotName TOOL = DotName.createSimple(Tool.class);
 }

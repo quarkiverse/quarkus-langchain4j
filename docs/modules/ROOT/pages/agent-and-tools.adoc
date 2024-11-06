@@ -90,6 +90,87 @@ If a method of an AI Service needs to use tools other than the ones configured o
 In this case  `@Toolbox` completely overrides `@RegisterAiService(tools=...)`
 ====
 
+== Tools execution model
+
+Tools can have different execution models:
+
+- _blocking_ - the tools execution blocks the caller thread
+- _non-blocking_ - the tools execution is asynchronous and does not block the caller thread
+- _run on a virtual threads - the tools execution is asynchronous and runs on a new virtual thread
+
+The execution model is configured using the `@Blocking`, `@NonBlocking` and `@RunOnVirtualThread` annotations.
+In addition, tool methods returning `CompletionStage` or `Uni` are considered non-blocking (if no annotations are used).
+
+For example, the following tool is considered blocking:
+
+[source,java]
+----
+@Tool("get the customer name for the given customerId")
+public String getCustomerName(long id) {
+    return find("id", id).firstResult().name;
+}
+----
+
+The following tool is considered non-blocking:
+
+[source,java]
+----
+@Tool("add a and b")
+@NonBlocking
+int sum(int a, int b) {
+    return a + b;
+}
+----
+
+This other tool is considered non-blocking as well:
+
+[source,java]
+----
+@Tool("get the customer name for the given customerId")
+public Uni<String> getCustomerName(long id) {
+    // ...
+}
+----
+
+The following tool runs on a virtual thread:
+
+[source,java]
+----
+@Tool("get the customer name for the given customerId")
+@RunOnVirtualThread
+public String getCustomerName(long id) {
+    return find("id", id).firstResult().name;
+}
+----
+
+=== Streaming
+
+The execution model is particularly important when using streamed response.
+Indeed, streamed response are executed on the _event loop_, which cannot be blocked.
+Thus, in this case, based on the execution model of the tool, Quarkus LangChain4J will automatically switch to a worker thread to execute the tool.
+This mechanism allows to avoid blocking the _event loop_, while still allowing to use blocking tools (like database access).
+
+For example, let's imagine the following AI service method:
+
+[source,java]
+----
+@UserMessage("...")
+@ToolBox({TransactionRepository.class, CustomerRepository.class})
+Multi<String> detectAmountFraudForCustomerStreamed(long customerId);
+----
+
+This method returns a stream of tokens.
+Each token is emitted on the event loop.
+The given tools are blocking (they access a database using a blocking manner).
+Thus, Quarkus LangChain4J will automatically switch to a worker thread before invoking the tools, to avoid blocking the event loop.
+
+=== Request scope
+
+When the request scope is active when invoking the LLM, the tool execution is also bound to the request scope.
+It means that you can propagate data to the tools execution, for example, a security context or a transaction context.
+
+The propagation also works with virtual thread or when Quarkus LangChain4J automatically switches to a worker thread.
+
 == Dynamically Use Tools at Runtime
 
 By default, tools in Quarkus are static, defined during the build phase.

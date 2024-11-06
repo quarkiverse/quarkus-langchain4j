@@ -56,6 +56,7 @@ public final class AiServiceMethodCreateInfo {
     private OutputTokenAccumulator accumulator;
 
     private final LazyValue<Integer> guardrailsMaxRetry;
+    private final boolean switchToWorkerThread;
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName, String methodName,
@@ -69,6 +70,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<SpanInfo> spanInfo,
             ResponseSchemaInfo responseSchemaInfo,
             List<String> toolClassNames,
+            boolean switchToWorkerThread,
             List<String> inputGuardrailsClassNames,
             List<String> outputGuardrailsClassNames,
             String outputTokenAccumulatorClassName) {
@@ -101,6 +103,7 @@ public final class AiServiceMethodCreateInfo {
                         .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
             }
         });
+        this.switchToWorkerThread = switchToWorkerThread;
     }
 
     public String getInterfaceName() {
@@ -200,6 +203,10 @@ public final class AiServiceMethodCreateInfo {
                 .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
 
         return userMessageTemplateOpt.orElse(EMPTY);
+    }
+
+    public boolean isSwitchToWorkerThread() {
+        return switchToWorkerThread;
     }
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
