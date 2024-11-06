@@ -28,4 +28,5 @@ public class AssistantResourceWithToolsTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
     }
+
 }

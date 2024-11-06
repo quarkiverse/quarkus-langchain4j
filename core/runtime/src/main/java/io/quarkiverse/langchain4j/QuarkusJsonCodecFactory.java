@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +17,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -27,11 +30,11 @@ import io.quarkus.arc.Arc;
 public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     @Override
-    public Json.JsonCodec create() {
+    public Codec create() {
         return new Codec();
     }
 
-    private static class Codec implements Json.JsonCodec {
+    public static class Codec implements Json.JsonCodec {
 
         private static final Pattern sanitizePattern = Pattern.compile("(?s)\\{.*\\}|\\[.*\\]");
 
@@ -58,6 +61,31 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 }
                 throw new UncheckedIOException(e);
             }
+        }
+
+        public <T> T fromJson(String json, Type type) {
+            try {
+                String sanitizedJson = sanitize(json, type.getClass());
+                JavaType javaType = ObjectMapperHolder.MAPPER.getTypeFactory().constructType(type);
+                return ObjectMapperHolder.MAPPER.readValue(sanitizedJson, javaType);
+            } catch (JsonProcessingException e) {
+                if (e instanceof JsonParseException && isEnumType(type)) {
+                    // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
+                    // and Jackson does not handle it
+                    if (type instanceof ParameterizedType) {
+                        Class<? extends Enum> enumClass = (Class<? extends Enum>) ((ParameterizedType) type).getRawType();
+                        return (T) Enum.valueOf(enumClass, json);
+                    } else {
+
+                        return (T) Enum.valueOf((Class<? extends Enum>) type, json);
+                    }
+                }
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        private boolean isEnumType(Type type) {
+            return type instanceof Class<?> && ((Class<?>) type).isEnum();
         }
 
         private <T> String sanitize(String original, Class<T> type) {

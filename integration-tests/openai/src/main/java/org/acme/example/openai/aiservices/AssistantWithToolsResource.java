@@ -2,6 +2,7 @@ package org.acme.example.openai.aiservices;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PreDestroy;
@@ -12,10 +13,13 @@ import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestQuery;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.RegisterAiService;
 
 @Path("assistant-with-tool")
@@ -28,14 +32,25 @@ public class AssistantWithToolsResource {
     }
 
     public static class TestData {
+        @Description("Foo description for structured output")
+        @JsonProperty("foo")
         String foo;
+
+        @Description("Foo description for structured output")
+        @JsonProperty("bar")
         Integer bar;
-        Double baz;
+
+        @Description("Foo description for structured output")
+        @JsonProperty("baz")
+        Optional<Double> baz;
+
+        public TestData() {
+        }
 
         TestData(String foo, Integer bar, Double baz) {
             this.foo = foo;
             this.bar = bar;
-            this.baz = baz;
+            this.baz = Optional.of(baz);
         }
     }
 
@@ -48,6 +63,7 @@ public class AssistantWithToolsResource {
     public interface Assistant {
 
         String chat(String userMessage);
+
     }
 
     @Singleton
