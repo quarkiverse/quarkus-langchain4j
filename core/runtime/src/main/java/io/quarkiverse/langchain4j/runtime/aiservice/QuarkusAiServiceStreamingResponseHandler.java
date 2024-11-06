@@ -21,6 +21,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
 
 /**
@@ -45,6 +46,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
     private final Context executionContext;
+    private final boolean mustSwitchToWorkerThread;
 
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
@@ -54,7 +56,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
             List<ChatMessage> temporaryMemory,
             TokenUsage tokenUsage,
             List<ToolSpecification> toolSpecifications,
-            Map<String, ToolExecutor> toolExecutors, Context cxtx) {
+            Map<String, ToolExecutor> toolExecutors, boolean mustSwitchToWorkerThread, Context cxtx) {
         this.context = ensureNotNull(context, "context");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
@@ -68,6 +70,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
 
+        this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
     }
 
@@ -77,14 +80,19 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     }
 
     private void executeTools(Runnable runnable) {
-        if (executionContext != null && Context.isOnEventLoopThread()) {
-            executionContext.executeBlocking(new Callable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    runnable.run();
-                    return null;
-                }
-            });
+        if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+            if (executionContext != null) {
+                executionContext.executeBlocking(new Callable<Object>() {
+                    @Override
+                    public Object call() {
+                        runnable.run();
+                        return null;
+                    }
+                });
+            } else {
+                // We do not have a context, switching to worker thread.
+                Infrastructure.getDefaultWorkerPool().execute(runnable);
+            }
         } else {
             runnable.run();
         }
@@ -125,7 +133,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                                     TokenUsage.sum(tokenUsage, response.tokenUsage()),
                                     toolSpecifications,
                                     toolExecutors,
-                                    executionContext));
+                                    mustSwitchToWorkerThread, executionContext));
                 }
             });
         } else {

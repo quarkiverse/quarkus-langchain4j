@@ -811,7 +811,6 @@ public class AiServicesProcessor {
                 throw new RuntimeException("No tools detected in " + classname);
             }
         }
-
         return requireSwitchToWorkerThread;
     }
 

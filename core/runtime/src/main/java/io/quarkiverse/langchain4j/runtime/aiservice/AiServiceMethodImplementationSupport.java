@@ -797,7 +797,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                    toolsExecutors, contents, context, memoryId, ctxt);
+                    toolsExecutors, contents, context, memoryId, ctxt, mustSwitchToWorkerThread);
             TokenStream tokenStream = stream
                     .onNext(processor::onNext)
                     .onComplete(message -> processor.onComplete())

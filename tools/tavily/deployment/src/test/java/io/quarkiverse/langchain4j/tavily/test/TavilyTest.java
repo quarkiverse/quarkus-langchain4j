@@ -104,7 +104,6 @@ public class TavilyTest extends WiremockAware {
                 .build();
         WebSearchResults result = webSearchEngine.search(searchRequest);
         LoggedRequest actualRequest = singleLoggedRequest();
-        System.out.println(actualRequest);
 
         // verify the request
         assertEquals(actualRequest.getHeader("Accept"), "application/json");

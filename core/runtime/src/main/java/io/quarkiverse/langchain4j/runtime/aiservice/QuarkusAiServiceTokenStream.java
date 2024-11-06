@@ -38,6 +38,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final AiServiceContext context;
     private final Object memoryId;
     private final Context cxtx;
+    private final boolean mustSwitchToWorkerThread;
 
     private Consumer<String> tokenHandler;
     private Consumer<List<Content>> contentsHandler;
@@ -55,7 +56,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             Map<String, ToolExecutor> toolExecutors,
             List<Content> retrievedContents,
             AiServiceContext context,
-            Object memoryId, Context ctxt) {
+            Object memoryId, Context ctxt, boolean mustSwitchToWorkerThread) {
         this.messages = ensureNotEmpty(messages, "messages");
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
@@ -63,7 +64,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.context = ensureNotNull(context, "context");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
         ensureNotNull(context.streamingChatModel, "streamingChatModel");
-        this.cxtx = ctxt; // If set, it means we need to switch to a worker thread to execute tools.
+        this.cxtx = ctxt; // If set, it means we need to handle the context propagation.
+        this.mustSwitchToWorkerThread = mustSwitchToWorkerThread; // If true, we need to switch to a worker thread to execute tools.
     }
 
     @Override
@@ -114,6 +116,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 new TokenUsage(),
                 toolSpecifications,
                 toolExecutors,
+                mustSwitchToWorkerThread,
                 cxtx);
 
         if (contentsHandler != null && retrievedContents != null) {

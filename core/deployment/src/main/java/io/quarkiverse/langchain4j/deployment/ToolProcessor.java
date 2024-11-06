@@ -21,9 +21,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -119,6 +121,8 @@ public class ToolProcessor {
 
         List<String> generatedInvokerClasses = new ArrayList<>();
         List<String> generatedArgumentMapperClasses = new ArrayList<>();
+
+        Set<String> toolsNames = new HashSet<>();
 
         if (!instances.isEmpty()) {
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
@@ -240,7 +244,13 @@ public class ToolProcessor {
 
                     validateExecutionModel(methodCreateInfo, toolMethod, validation);
 
-                    toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
+                    if (toolsNames.add(toolName)) {
+                        toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
+                    } else {
+                        validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                                new IllegalStateException("A tool with the name '" + toolName
+                                        + "' is already declared. Tools method name must be unique.")));
+                    }
 
                     metadata.computeIfAbsent(className.toString(), (c) -> new ArrayList<>()).add(methodCreateInfo);
 
