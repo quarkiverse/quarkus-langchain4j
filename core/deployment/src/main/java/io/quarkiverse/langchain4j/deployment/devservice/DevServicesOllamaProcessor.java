@@ -41,7 +41,7 @@ public class DevServicesOllamaProcessor {
     private static final String OLLAMA_PROVIDER = "ollama";
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    @BuildStep
+    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = Langchain4jDevServicesEnabled.class)
     private void handleModels(List<DevServicesChatModelRequiredBuildItem> devServicesChatModels,
             List<DevServicesEmbeddingModelRequiredBuildItem> devServicesEmbeddingModels,
             LoggingSetupBuildItem loggingSetupBuildItem,

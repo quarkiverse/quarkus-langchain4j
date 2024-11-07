@@ -32,6 +32,7 @@ import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuild
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ImageModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ImplicitlyUserConfiguredChatProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.InProcessEmbeddingBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ProviderHolder;
@@ -81,6 +82,7 @@ public class BeansProcessor {
             List<RequestChatModelBeanBuildItem> requestChatModelBeanItems,
             List<RequestModerationModelBeanBuildItem> requestModerationModelBeanBuildItems,
             List<RequestImageModelBeanBuildItem> requestImageModelBeanBuildItems,
+            List<ImplicitlyUserConfiguredChatProviderBuildItem> userConfiguredProviderBuildItems,
             LangChain4jBuildConfig buildConfig,
             Optional<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItem,
             BuildProducer<SelectedChatModelProviderBuildItem> selectedChatProducer,
@@ -146,6 +148,15 @@ public class BeansProcessor {
                         userSelectedProvider = Optional.empty();
                     }
                     configNamespace = modelName + ".chat-model";
+                }
+                if (userSelectedProvider.isEmpty() && !NamedConfigUtil.isDefault(modelName)) {
+                    // let's see if the user has configured a model name for one of the named providers
+                    List<ImplicitlyUserConfiguredChatProviderBuildItem> matchingImplicitlyUserConfiguredChatProviders = userConfiguredProviderBuildItems
+                            .stream().filter(bi -> bi.getConfigName().equals(modelName))
+                            .toList();
+                    if (matchingImplicitlyUserConfiguredChatProviders.size() == 1) {
+                        userSelectedProvider = Optional.of(matchingImplicitlyUserConfiguredChatProviders.get(0).getProvider());
+                    }
                 }
 
                 String provider = selectProvider(
