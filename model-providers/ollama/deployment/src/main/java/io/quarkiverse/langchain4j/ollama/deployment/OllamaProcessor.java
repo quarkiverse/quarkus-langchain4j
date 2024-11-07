@@ -21,6 +21,7 @@ import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBui
 import io.quarkiverse.langchain4j.deployment.items.DevServicesChatModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesEmbeddingModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ImplicitlyUserConfiguredChatProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.ollama.runtime.OllamaRecorder;
@@ -65,6 +66,14 @@ public class OllamaProcessor {
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
         }
+    }
+
+    @BuildStep
+    public void implicitlyConfiguredProviders(LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig,
+            BuildProducer<ImplicitlyUserConfiguredChatProviderBuildItem> producer) {
+        fixedRuntimeConfig.namedConfig().keySet().forEach(configName -> {
+            producer.produce(new ImplicitlyUserConfiguredChatProviderBuildItem(configName, PROVIDER));
+        });
     }
 
     @BuildStep(onlyIfNot = IsNormal.class, onlyIf = Langchain4jDevServicesEnabled.class)

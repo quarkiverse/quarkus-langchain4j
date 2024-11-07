@@ -52,6 +52,10 @@ public class MultipleChatProvidersTest {
     @ModelName("c8")
     ChatLanguageModel eighthNamedModel;
 
+    @Inject
+    @ModelName("c9")
+    ChatLanguageModel ninthNamedModel;
+
     @Test
     void defaultModel() {
         assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
@@ -90,5 +94,10 @@ public class MultipleChatProvidersTest {
     @Test
     void eighthNamedModel() {
         assertThat(ClientProxy.unwrap(eighthNamedModel)).isInstanceOf(WatsonxGenerationModel.class);
+    }
+
+    @Test
+    void ninthNamedModel() {
+        assertThat(ClientProxy.unwrap(ninthNamedModel)).isInstanceOf(OllamaChatLanguageModel.class);
     }
 }
