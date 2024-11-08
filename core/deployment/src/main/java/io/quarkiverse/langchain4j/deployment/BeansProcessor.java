@@ -11,6 +11,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_CO
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -100,9 +101,36 @@ public class BeansProcessor {
         Set<String> requestedImageModels = new HashSet<>();
         Set<String> tokenCountEstimators = new HashSet<>();
 
+        // detection of injection points for default models
+        boolean defaultChatModelRequested = false;
+        boolean defaultScoringModelRequested = false;
+        boolean defaultEmbeddingModelRequested = false;
+        boolean defaultModerationModelRequested = false;
+        boolean defaultImageModelRequested = false;
+
+        // default model names
+        final String chatModelConfigNamespace = "chat-model";
+        final String embeddingModelConfigNamespace = "embedding-model";
+        final String scoringModelConfigNamespace = "scoring-model";
+        final String moderationModelConfigNamespace = "moderation-model";
+        final String imageModelConfigNamespace = "image-model";
+
+        // separator symbol for named configs
+        final String dot = ".";
+
+        // bean types for models
+        final String chatModelBeanType = "ChatLanguageModel or StreamingChatLanguageModel";
+        final String embeddingModelBeanType = "EmbeddingModel";
+        final String scoringModelBeanType = "ScoringModel";
+        final String moderationModelBeanType = "ModerationModel";
+        final String imageModelBeanType = "ImageModel";
+
         for (InjectionPointInfo ip : beanDiscoveryFinished.getInjectionPoints()) {
             DotName requiredName = ip.getRequiredType().name();
             String modelName = determineModelName(ip);
+            if (modelName == null) {
+                continue;
+            }
             if (CHAT_MODEL.equals(requiredName)) {
                 requestedChatModels.add(modelName);
             } else if (STREAMING_CHAT_MODEL.equals(requiredName)) {
@@ -140,14 +168,15 @@ public class BeansProcessor {
                 String configNamespace;
                 if (NamedConfigUtil.isDefault(modelName)) {
                     userSelectedProvider = buildConfig.defaultConfig().chatModel().provider();
-                    configNamespace = "chat-model";
+                    configNamespace = chatModelConfigNamespace;
+                    defaultChatModelRequested = true;
                 } else {
                     if (buildConfig.namedConfig().containsKey(modelName)) {
                         userSelectedProvider = buildConfig.namedConfig().get(modelName).chatModel().provider();
                     } else {
                         userSelectedProvider = Optional.empty();
                     }
-                    configNamespace = modelName + ".chat-model";
+                    configNamespace = modelName + dot + chatModelConfigNamespace;
                 }
                 if (userSelectedProvider.isEmpty() && !NamedConfigUtil.isDefault(modelName)) {
                     // let's see if the user has configured a model name for one of the named providers
@@ -163,7 +192,7 @@ public class BeansProcessor {
                         chatCandidateItems,
                         beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
                         userSelectedProvider,
-                        "ChatLanguageModel or StreamingChatLanguageModel",
+                        chatModelBeanType,
                         configNamespace);
                 if (provider != null) {
                     selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, modelName));
@@ -177,21 +206,22 @@ public class BeansProcessor {
             String configNamespace;
             if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().scoringModel().provider();
-                configNamespace = "scoring-model";
+                configNamespace = scoringModelConfigNamespace;
+                defaultScoringModelRequested = true;
             } else {
                 if (buildConfig.namedConfig().containsKey(modelName)) {
                     userSelectedProvider = buildConfig.namedConfig().get(modelName).scoringModel().provider();
                 } else {
                     userSelectedProvider = Optional.empty();
                 }
-                configNamespace = modelName + ".scoring-model";
+                configNamespace = modelName + dot + scoringModelConfigNamespace;
             }
 
             String provider = selectProvider(
                     scoringCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(ScoringModel.class),
                     userSelectedProvider,
-                    "ScoringModel",
+                    scoringModelBeanType,
                     configNamespace);
             if (provider != null) {
                 selectedScoringProducer.produce(new SelectedScoringModelProviderBuildItem(provider, modelName));
@@ -203,14 +233,15 @@ public class BeansProcessor {
             String configNamespace;
             if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
-                configNamespace = "embedding-model";
+                configNamespace = embeddingModelConfigNamespace;
+                defaultEmbeddingModelRequested = true;
             } else {
                 if (buildConfig.namedConfig().containsKey(modelName)) {
                     userSelectedProvider = buildConfig.namedConfig().get(modelName).embeddingModel().provider();
                 } else {
                     userSelectedProvider = Optional.empty();
                 }
-                configNamespace = modelName + ".embedding-model";
+                configNamespace = modelName + dot + embeddingModelConfigNamespace;
             }
 
             String provider = selectEmbeddingModelProvider(
@@ -218,7 +249,7 @@ public class BeansProcessor {
                     embeddingCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
                     userSelectedProvider,
-                    "EmbeddingModel",
+                    embeddingModelBeanType,
                     configNamespace);
             if (provider != null) {
                 selectedEmbeddingProducer.produce(new SelectedEmbeddingModelCandidateBuildItem(provider, modelName));
@@ -231,7 +262,7 @@ public class BeansProcessor {
             Optional<String> userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
             String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
-                    userSelectedProvider, "EmbeddingModel", "embedding-model");
+                    userSelectedProvider, embeddingModelBeanType, embeddingModelConfigNamespace);
             selectedEmbeddingProducer
                     .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
         }
@@ -241,21 +272,22 @@ public class BeansProcessor {
             String configNamespace;
             if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().moderationModel().provider();
-                configNamespace = "moderation-model";
+                configNamespace = moderationModelConfigNamespace;
+                defaultModerationModelRequested = true;
             } else {
                 if (buildConfig.namedConfig().containsKey(modelName)) {
                     userSelectedProvider = buildConfig.namedConfig().get(modelName).moderationModel().provider();
                 } else {
                     userSelectedProvider = Optional.empty();
                 }
-                configNamespace = modelName + ".moderation-model";
+                configNamespace = modelName + dot + moderationModelConfigNamespace;
             }
 
             String provider = selectProvider(
                     moderationCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(ModerationModel.class),
                     userSelectedProvider,
-                    "ModerationModel",
+                    moderationModelBeanType,
                     configNamespace);
             if (provider != null) {
                 selectedModerationProducer.produce(new SelectedModerationModelProviderBuildItem(provider, modelName));
@@ -267,24 +299,170 @@ public class BeansProcessor {
             String configNamespace;
             if (NamedConfigUtil.isDefault(modelName)) {
                 userSelectedProvider = buildConfig.defaultConfig().imageModel().provider();
-                configNamespace = "image-model";
+                configNamespace = imageModelConfigNamespace;
+                defaultImageModelRequested = true;
             } else {
                 if (buildConfig.namedConfig().containsKey(modelName)) {
                     userSelectedProvider = buildConfig.namedConfig().get(modelName).imageModel().provider();
                 } else {
                     userSelectedProvider = Optional.empty();
                 }
-                configNamespace = modelName + ".image-model";
+                configNamespace = modelName + dot + imageModelConfigNamespace;
             }
 
             String provider = selectProvider(
                     imageCandidateItems,
                     beanDiscoveryFinished.beanStream().withBeanType(ImageModel.class),
                     userSelectedProvider,
-                    "ImageModel",
+                    imageModelBeanType,
                     configNamespace);
             if (provider != null) {
                 selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, modelName));
+            }
+        }
+
+        // There can be configured models for which we found no injection points.
+        // While we cannot perform full validation of those, we can still add them as beans.
+        // This enabled injection such as @Inject @Any Instance<ChatLanguageModel>
+
+        // process default configuration
+        LangChain4jBuildConfig.BaseConfig defaultConfig = buildConfig.defaultConfig();
+        if (!defaultChatModelRequested && !defaultConfig.chatModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.chatModel().provider();
+            String provider = selectProvider(
+                    chatCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                    userSelectedProvider,
+                    chatModelBeanType,
+                    chatModelConfigNamespace);
+            if (provider != null) {
+                selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+        if (!defaultEmbeddingModelRequested && !defaultConfig.embeddingModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.embeddingModel().provider();
+            String provider = selectEmbeddingModelProvider(
+                    inProcessEmbeddingBuildItems,
+                    embeddingCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                    userSelectedProvider,
+                    embeddingModelBeanType,
+                    embeddingModelConfigNamespace);
+            if (provider != null) {
+                selectedEmbeddingProducer
+                        .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+
+        if (!defaultScoringModelRequested && !defaultConfig.scoringModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.scoringModel().provider();
+            String provider = selectProvider(
+                    scoringCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ScoringModel.class),
+                    userSelectedProvider,
+                    scoringModelBeanType,
+                    scoringModelConfigNamespace);
+            if (provider != null) {
+                selectedScoringProducer
+                        .produce(new SelectedScoringModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+        if (!defaultModerationModelRequested && !defaultConfig.moderationModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.moderationModel().provider();
+            String provider = selectProvider(
+                    moderationCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ModerationModel.class),
+                    userSelectedProvider,
+                    moderationModelBeanType,
+                    moderationModelConfigNamespace);
+            if (provider != null) {
+                selectedModerationProducer
+                        .produce(new SelectedModerationModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+        if (!defaultImageModelRequested && !defaultConfig.imageModel().provider().isEmpty()) {
+            Optional<String> userSelectedProvider = defaultConfig.imageModel().provider();
+            String provider = selectProvider(
+                    imageCandidateItems,
+                    beanDiscoveryFinished.beanStream().withBeanType(ImageModel.class),
+                    userSelectedProvider,
+                    imageModelBeanType,
+                    imageModelConfigNamespace);
+            if (provider != null) {
+                selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+        }
+
+        // process named configuration
+        for (Map.Entry<String, LangChain4jBuildConfig.BaseConfig> entry : buildConfig.namedConfig().entrySet()) {
+            LangChain4jBuildConfig.BaseConfig value = entry.getValue();
+            if (!requestedStreamingChatModels.contains(entry.getKey()) &&
+                    !requestedChatModels.contains(entry.getKey()) &&
+                    !value.chatModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.chatModel().provider();
+                String configNamespace = entry.getKey() + dot + chatModelConfigNamespace;
+                String provider = selectProvider(
+                        chatCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                        userSelectedProvider,
+                        chatModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedChatProducer.produce(new SelectedChatModelProviderBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestEmbeddingModels.contains(entry.getKey()) && !value.embeddingModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.embeddingModel().provider();
+                String configNamespace = entry.getKey() + dot + embeddingModelConfigNamespace;
+                String provider = selectEmbeddingModelProvider(
+                        inProcessEmbeddingBuildItems,
+                        embeddingCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                        userSelectedProvider,
+                        embeddingModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedEmbeddingProducer.produce(new SelectedEmbeddingModelCandidateBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestScoringModels.contains(entry.getKey()) && !value.scoringModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.scoringModel().provider();
+                String configNamespace = entry.getKey() + dot + scoringModelConfigNamespace;
+                String provider = selectProvider(
+                        scoringCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(ScoringModel.class),
+                        userSelectedProvider,
+                        scoringModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedScoringProducer.produce(new SelectedScoringModelProviderBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestedModerationModels.contains(entry.getKey()) && !value.moderationModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.moderationModel().provider();
+                String configNamespace = entry.getKey() + dot + moderationModelConfigNamespace;
+                String provider = selectProvider(
+                        moderationCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(ModerationModel.class),
+                        userSelectedProvider,
+                        moderationModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedModerationProducer.produce(new SelectedModerationModelProviderBuildItem(provider, entry.getKey()));
+                }
+            }
+            if (!requestedImageModels.contains(entry.getKey()) && !value.imageModel().provider().isEmpty()) {
+                Optional<String> userSelectedProvider = value.imageModel().provider();
+                String configNamespace = entry.getKey() + dot + imageModelConfigNamespace;
+                String provider = selectProvider(
+                        imageCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(ImageModel.class),
+                        userSelectedProvider,
+                        imageModelBeanType,
+                        configNamespace);
+                if (provider != null) {
+                    selectedImageProducer.produce(new SelectedImageModelProviderBuildItem(provider, entry.getKey()));
+                }
             }
         }
 
@@ -297,6 +475,10 @@ public class BeansProcessor {
             if ((value != null) && !value.isEmpty()) {
                 return value;
             }
+        }
+        // @Inject @Any Instance<Foo> should not be treated as default name
+        if (modelNameInstance == null && ip.isProgrammaticLookup()) {
+            return null;
         }
         return NamedConfigUtil.DEFAULT_NAME;
     }
