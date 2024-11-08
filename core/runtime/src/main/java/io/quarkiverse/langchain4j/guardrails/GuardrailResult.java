@@ -31,7 +31,7 @@ public interface GuardrailResult<GR extends GuardrailResult> {
 
     boolean isSuccess();
 
-    default boolean isRewrittenResult() {
+    default boolean hasRewrittenResult() {
         return false;
     }
 
@@ -39,7 +39,11 @@ public interface GuardrailResult<GR extends GuardrailResult> {
         throw new UnsupportedOperationException();
     }
 
-    default String successfulResult() {
+    default String successfulText() {
+        throw new UnsupportedOperationException();
+    }
+
+    default Object successfulResult() {
         throw new UnsupportedOperationException();
     }
 
