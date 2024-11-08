@@ -2,6 +2,8 @@ package org.acme.example.multiple;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,10 @@ public class MultipleEmbeddingModelsTest {
     @ModelName("c2")
     EmbeddingModel fourthNamedModel;
 
+    @Inject
+    @Any
+    Instance<EmbeddingModel> anyModel;
+
     @Test
     void firstNamedModel() {
         assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiEmbeddingModel.class);
@@ -61,5 +67,12 @@ public class MultipleEmbeddingModelsTest {
     @Test
     void fifthNamedModel() {
         assertThat(ClientProxy.unwrap(fifthNamedModel)).isInstanceOf(AllMiniLmL6V2EmbeddingModel.class);
+    }
+
+    @Test
+    void anyInstanceInjection() {
+        // e4 model has no direct injection point; we only request it via Instance<T>
+        assertThat(anyModel.handlesStream()
+                .anyMatch(handle -> handle.getBean().getQualifiers().contains(ModelName.Literal.of("e4")))).isTrue();
     }
 }

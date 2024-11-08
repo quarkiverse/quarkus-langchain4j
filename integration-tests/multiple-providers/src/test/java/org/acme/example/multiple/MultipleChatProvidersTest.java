@@ -2,6 +2,8 @@ package org.acme.example.multiple;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,10 @@ public class MultipleChatProvidersTest {
     @ModelName("c9")
     ChatLanguageModel ninthNamedModel;
 
+    @Inject
+    @Any
+    Instance<ChatLanguageModel> anyModel;
+
     @Test
     void defaultModel() {
         assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
@@ -99,5 +105,12 @@ public class MultipleChatProvidersTest {
     @Test
     void ninthNamedModel() {
         assertThat(ClientProxy.unwrap(ninthNamedModel)).isInstanceOf(OllamaChatLanguageModel.class);
+    }
+
+    @Test
+    void anyInstanceInjection() {
+        // c10 model has no direct injection point; we only request it via Instance<T>
+        assertThat(anyModel.handlesStream()
+                .anyMatch(handle -> handle.getBean().getQualifiers().contains(ModelName.Literal.of("c10")))).isTrue();
     }
 }
