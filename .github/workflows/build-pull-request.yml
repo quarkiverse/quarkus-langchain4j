@@ -59,12 +59,12 @@ jobs:
       - name: Compute matrices
         id: matrices
         run: |
-          # Compute the JVM tests 
+          # Compute the JVM tests
           ALL_MODULES=$(find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
-          
+
           # Integration tests (without the in-process embedding models)
           # Remove JLama and Llama3 from the list
           cd integration-tests
@@ -76,27 +76,43 @@ jobs:
                 | grep -v llama3-java \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
-          
-          # We extract in process embedding models as there are many modules and we want parallelism 
+
+          # We extract in process embedding models as there are many modules and we want parallelism
           cd in-process-embedding-models
           IN_PROCESS_EMBEDDING_MODULES=$( \
               find . -mindepth 2 -maxdepth 2 -type f -name 'pom.xml' -exec dirname {} \; \
                 | sed 's|^\./||' \
                 | sort -u \
                 | jq -R -s -c 'split("\n")[:-1]')
-                    
+
           echo "all_modules=${ALL_MODULES}" >> $GITHUB_OUTPUT
           echo "it_modules=${IT_MODULES}" >> $GITHUB_OUTPUT
           echo "in_process_embedding_modules=${IN_PROCESS_EMBEDDING_MODULES}" >> $GITHUB_OUTPUT
 
-  test-jvm:
+      # Publish build reports
+      - name: Prepare build reports archive
+        if: always()
+        run: |
+          7z a -tzip build-reports.zip -r \
+              'target/build-report.json' \
+              LICENSE
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "build-reports-${{ github.run_attempt }}-Quick Build"
+          path: |
+            build-reports.zip
+          retention-days: 7
+
+  jvm-tests:
     needs: quick-build
     strategy:
       fail-fast: false
       matrix:
         java: [ 17, 21, 23 ]
         module: ${{fromJson(needs.quick-build.outputs.all_modules)}}
-    name: Build and Test ${{ matrix.module }} on Java ${{ matrix.java }}
+    name: JVM tests - ${{ matrix.module }} - Java ${{ matrix.java }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -128,16 +144,32 @@ jobs:
       - name: Build Llama3-java extension
         if: ${{ matrix.java >= 22 }}
         run: |
-          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/llama3-java/pom.xml           
+          ./mvnw -B clean install -DskipTests -Dno-format -ntp -f model-providers/llama3-java/pom.xml
 
       - name: Run tests of ${{ matrix.module }} with JDK ${{ matrix.java }}
         run: |
-          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp         
+          cd ${{ matrix.module }} && ../mvnw -B verify -Dci=true -Dno-format -ntp
 
+      # Publish build reports
+      - name: Prepare build reports archive
+        if: always()
+        run: |
+          7z a -tzip build-reports.zip -r \
+              '**/target/*-reports/TEST-*.xml' \
+              'target/build-report.json' \
+              LICENSE
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "build-reports-${{ github.run_attempt }}-JVM tests - ${{ matrix.module }} - Java ${{ matrix.java }}"
+          path: |
+            build-reports.zip
+          retention-days: 7
 
   native-tests:
     needs: quick-build
-    name: Native tests ${{matrix.module}}
+    name: Native tests - ${{matrix.module}}
     strategy:
       fail-fast: false
       matrix:
@@ -166,9 +198,26 @@ jobs:
         run: |
           cd integration-tests/${{matrix.module}} && ../../mvnw -B verify -Dnative -Dci=true -Dquarkus.native.container-build -Dnative.surefire.skip -Dno-format -ntp
 
+      # Publish build reports
+      - name: Prepare build reports archive
+        if: always()
+        run: |
+          7z a -tzip build-reports.zip -r \
+              '**/target/*-reports/TEST-*.xml' \
+              'target/build-report.json' \
+              LICENSE
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "build-reports-${{ github.run_attempt }}-Native tests - ${{matrix.module}}"
+          path: |
+            build-reports.zip
+          retention-days: 7
+
   in-process-embedding-model-tests:
     needs: quick-build
-    name: Native tests ${{matrix.module}}
+    name: In process embedding model tests - ${{matrix.module}}
     strategy:
       fail-fast: false
       matrix:
@@ -197,3 +246,41 @@ jobs:
         run: |
           cd integration-tests/in-process-embedding-models/${{matrix.module}}
           ../../../mvnw -B verify -Dnative -Dquarkus.native.container-build -Dci=true -Dnative.surefire.skip -Dno-format -ntp
+
+      # Publish build reports
+      - name: Prepare build reports archive
+        if: always()
+        run: |
+          7z a -tzip build-reports.zip -r \
+              '**/target/*-reports/TEST-*.xml' \
+              'target/build-report.json' \
+              LICENSE
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: "build-reports-${{ github.run_attempt }}-In process embedding model tests - ${{matrix.module}}"
+          path: |
+            build-reports.zip
+          retention-days: 7
+
+  build-report:
+    runs-on: ubuntu-latest
+    name: Build report
+    needs: [quick-build, jvm-tests, native-tests, in-process-embedding-model-tests]
+    if: always()
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: build-reports-artifacts
+          pattern: "build-reports-${{ github.run_attempt }}-"
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Produce report and add it as job summary
+        uses: quarkusio/action-build-reporter@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          build-reports-artifacts-path: build-reports-artifacts
