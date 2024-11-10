@@ -19,7 +19,7 @@
         <module>fraud-detection</module>
         <module>review-triage</module>
         <module>secure-fraud-detection</module>
-        <module>secure-vertex-ai-gemini-poem</module>
+        <module>secure-poem-multiple-models</module>
         <module>sql-chatbot</module>
     </modules>
 

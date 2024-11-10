@@ -1,7 +1,8 @@
 package io.quarkiverse.langchain4j.azure.openai.runtime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class DisabledModelsAzureOpenAiRecorderTest {
 
     @Test
     void disabledStreamingChatModel() {
-        assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
     }
