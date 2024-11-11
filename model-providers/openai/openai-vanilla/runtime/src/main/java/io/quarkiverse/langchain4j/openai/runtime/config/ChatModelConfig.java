@@ -23,7 +23,7 @@ public interface ChatModelConfig {
      * answer.
      * It is recommended to alter this or topP, but not both.
      */
-    @WithDefault("1.0")
+    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
     Double temperature();
 
     /**

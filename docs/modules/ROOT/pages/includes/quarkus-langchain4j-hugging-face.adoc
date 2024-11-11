@@ -129,7 +129,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_CHAT_MODEL_TEMPERATURE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-chat-model-max-new-tokens[`quarkus.langchain4j.huggingface.chat-model.max-new-tokens`]##
 
@@ -447,7 +447,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__CHAT_MODE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-model-name-chat-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-model-name-chat-model-max-new-tokens[`quarkus.langchain4j.huggingface."model-name".chat-model.max-new-tokens`]##
 

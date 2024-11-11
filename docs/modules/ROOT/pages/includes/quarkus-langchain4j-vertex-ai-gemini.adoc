@@ -203,7 +203,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_TEMPERA
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.0`
+|`${quarkus.langchain4j.temperature}`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai.gemini.chat-model.max-output-tokens`]##
 
@@ -505,7 +505,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.0`
+|`${quarkus.langchain4j.temperature}`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai.gemini."model-name".chat-model.max-output-tokens`]##
 

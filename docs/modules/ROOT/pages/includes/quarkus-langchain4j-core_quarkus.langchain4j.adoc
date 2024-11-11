@@ -186,6 +186,23 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-temperature[`quarkus.langchain4j.temperature`]##
+
+[.description]
+--
+Global temperature for LLM APIs
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-guardrails-max-retries[`quarkus.langchain4j.guardrails.max-retries`]##
 
 [.description]

@@ -31,7 +31,7 @@ public interface ChatModelConfig {
      * Float (0.0-100.0). The temperature of the sampling operation. 1 means regular sampling, 0 means always take the highest
      * score, 100.0 is getting closer to uniform probability
      */
-    @WithDefault("1.0")
+    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
     Double temperature();
 
     /**

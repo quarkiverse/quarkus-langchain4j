@@ -371,7 +371,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_TEMPERATUR
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-top-p[`quarkus.langchain4j.azure-openai.chat-model.top-p`]##
 
@@ -1166,7 +1166,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MOD
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-top-p[`quarkus.langchain4j.azure-openai."model-name".chat-model.top-p`]##
 

@@ -90,7 +90,7 @@ public interface GenerationModelConfig {
      * <p>
      * <strong>Possible values:</strong> <code>0 ≤ value ≤ 2</code>
      */
-    @WithDefault("1.0")
+    @WithDefault("${quarkus.langchain4j.temperature:1.0}")
     Double temperature();
 
     /**

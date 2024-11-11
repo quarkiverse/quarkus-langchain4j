@@ -26,7 +26,7 @@ public interface ChatModelConfig {
      * If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the
      * temperature.
      */
-    @WithDefault("0.0")
+    @WithDefault("${quarkus.langchain4j.temperature:0.0}")
     Double temperature();
 
     /**

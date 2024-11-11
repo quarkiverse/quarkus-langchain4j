@@ -178,7 +178,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TEMPERATURE+++
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.0`
+|`${quarkus.langchain4j.temperature:0.0}`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai.chat-model.max-output-tokens`]##
 
@@ -428,7 +428,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_T
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.0`
+|`${quarkus.langchain4j.temperature:0.0}`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai."model-name".chat-model.max-output-tokens`]##
 

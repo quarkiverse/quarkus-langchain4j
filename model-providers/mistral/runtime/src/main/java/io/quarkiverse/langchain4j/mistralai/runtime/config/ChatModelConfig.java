@@ -24,6 +24,7 @@ public interface ChatModelConfig {
      * It is generally recommended to set this or the {@code top-k} property but not both.
      */
     @ConfigDocDefault("0.7")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     OptionalDouble temperature();
 
     /**

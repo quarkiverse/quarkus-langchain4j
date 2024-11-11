@@ -435,7 +435,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p[`quarkus.langchain4j.watsonx.chat-model.top-p`]##
 
@@ -682,7 +682,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GENERATION_MODEL_TEMPERATU
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-k]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-k[`quarkus.langchain4j.watsonx.generation-model.top-k`]##
 
@@ -1347,7 +1347,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p[`quarkus.langchain4j.watsonx."model-name".chat-model.top-p`]##
 
@@ -1594,7 +1594,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GENERATION_MO
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-k]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-k[`quarkus.langchain4j.watsonx."model-name".generation-model.top-k`]##
 

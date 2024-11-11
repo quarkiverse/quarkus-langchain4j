@@ -46,7 +46,7 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-lang
 
 [.description]
 --
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
+Model to use
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -57,7 +57,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`llama3.1`
+|`llama3.2`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[`quarkus.langchain4j.ollama.embedding-model.model-id`]##
 
@@ -193,7 +193,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.8`
+|`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict[`quarkus.langchain4j.ollama.chat-model.num-predict`]##
 
@@ -352,7 +352,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_EMBEDDING_MODEL_TEMPERATURE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.8`
+|`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict[`quarkus.langchain4j.ollama.embedding-model.num-predict`]##
 
@@ -464,7 +464,7 @@ a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-lang
 
 [.description]
 --
-Model to use. According to link:https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names[Ollama docs], the default value is `llama3`
+Model to use
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -475,7 +475,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`llama3.1`
+|`llama3.2`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[`quarkus.langchain4j.ollama."model-name".embedding-model.model-id`]##
 
@@ -611,7 +611,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__CHAT_MODEL_TEM
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.8`
+|`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict[`quarkus.langchain4j.ollama."model-name".chat-model.num-predict`]##
 
@@ -770,7 +770,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__EMBEDDING_MODE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.8`
+|`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict[`quarkus.langchain4j.ollama."model-name".embedding-model.num-predict`]##
 
