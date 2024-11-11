@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/png" href="favicon.ico">
+
+    <script src="/_importmap/dynamic-importmap.js"></script>
+
+    <script type="module">
+        import 'components/demo-welcome.js';
+        import 'wc-chatbot';
+    </script>
+    
+    <script type="module">
+        import \{LitElement} from 'lit';
+
+    export class DemoChat extends LitElement {
+    
+    connectedCallback() {
+        const chatBot = document.getElementsByTagName("chat-bot")[0];
+
+        const socket = new WebSocket("wss://" + window.location.host + "/chatbot?ticket={ticket}");
+        socket.onmessage = function (event) {
+            chatBot.hideAllLoading();
+            chatBot.sendMessage(event.data, {
+                right: false,
+                sender: \{name: 'Bob', id: '007'}
+            });
+        }
+
+        chatBot.addEventListener("sent", function (e) {
+            if (e.detail.message.right === true) {
+                // User message
+                socket.send(e.detail.message.message);
+                chatBot.sendMessage("", {
+                    right: false,
+                    sender: \{name: 'Bob', id: '007'},
+                    loading: true
+                });
+            }
+        });
+    }
+}
+
+customElements.define('demo-chat', DemoChat);
+    </script>
+
+    <link rel="stylesheet" href="fonts/red-hat-font.min.css">
+
+    <title>MovieMuse</title>
+
+    <style>
+        :root {
+            --main-bg-color: hsla(0, 0%, 100%, 0.21);
+            --main-highlight-text-color: #fcb11c;
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            font-family: 'Red Hat Text', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: var(--main-bg-color);
+        }
+
+        chat-bot {
+            --chatbot-avatar-bg-color: var(--main-highlight-text-color);
+            --chatbot-avatar-margin: 10%;
+            --chatbot-header-bg-color: var(--main-highlight-text-color);;
+            --chatbot-header-title-color: #FFFFFF;
+            --chatbot-body-bg-color: var(--main-bg-color);
+            --chatbot-send-button-color: var(--main-highlight-text-color);;
+        }
+
+       .title {
+         text-align: center;
+         padding: 1em;
+         background: var(--main-bg-color);
+        }
+
+        .middle {
+            margin-top: 2em;
+            overflow: hidden;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="title">
+<h1>Hi, {name}</h1>
+</div>
+
+<demo-welcome></demo-welcome>
+
+<div class="middle">
+
+    <demo-chat>
+        <chat-bot></chat-bot>
+    </demo-chat>
+</div>
+
+<div class="title">
+<a href="/logout">Logout</a>
+</div>
+</body>
+
+</html>

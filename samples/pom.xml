@@ -20,6 +20,7 @@
         <module>review-triage</module>
         <module>secure-fraud-detection</module>
         <module>secure-poem-multiple-models</module>
+        <module>secure-sql-chatbot</module>
         <module>sql-chatbot</module>
     </modules>
 

@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.sample;
+package io.quarkiverse.langchain4j.sample.chatbot;
 
 import io.quarkus.oidc.OidcSession;
 import io.quarkus.security.Authenticated;
