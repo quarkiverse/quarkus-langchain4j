@@ -1,0 +1,100 @@
+index,movie_name,year_of_release,category,run_time,genre,imdb_rating,votes,gross_total
+1,The Godfather,1972,R,175,"Crime, Drama",9.2,1860471,134.97
+2,The Silence of the Lambs,1991,R,118,"Crime, Drama, Thriller",8.6,1435344,130.74
+3,Star Wars: Episode V - The Empire Strikes Back,1980,PG,124,"Action, Adventure, Fantasy",8.7,1294805,290.48
+4,The Shawshank Redemption,1994,R,142,Drama,9.3,2683302,28.34
+5,The Shining,1980,R,146,"Drama, Horror",8.4,1025560,44.02
+6,Casablanca,1942,PG,102,"Drama, Romance, War",8.5,574092,1.02
+7,One Flew Over the Cuckoo's Nest,1975,R,133,Drama,8.7,1010102,112
+8,Indiana Jones and the Raiders of the Lost Ark,1981,PG,115,"Action, Adventure",8.4,969143,248.16
+9,The Lord of the Rings: The Return of the King,2003,PG-13,201,"Action, Adventure, Drama",9,1849082,377.85
+10,Star Wars: Episode IV - A New Hope,1977,PG,121,"Action, Adventure, Fantasy",8.6,1367430,322.74
+11,The Dark Knight,2008,PG-13,152,"Action, Crime, Drama",9,2656768,534.86
+12,The Godfather: Part II,1974,R,202,"Crime, Drama",9,1273349,57.3
+13,Aliens,1986,R,137,"Action, Adventure, Sci-Fi",8.4,720623,85.16
+14,Schindler's List,1993,R,195,"Biography, Drama, History",9,1357621,96.9
+15,Inception,2010,PG-13,148,"Action, Adventure, Sci-Fi",8.8,2356293,292.58
+16,The Lord of the Rings: The Fellowship of the Ring,2001,PG-13,178,"Action, Adventure, Drama",8.8,1878557,315.54
+17,Alien,1979,R,117,"Horror, Sci-Fi",8.5,885635,78.9
+18,Some Like It Hot,1959,Passed,121,"Comedy, Music, Romance",8.2,269346,25
+19,Blade Runner,1982,R,117,"Action, Drama, Sci-Fi",8.1,773425,32.87
+20,Se7en,1995,R,127,"Crime, Drama, Mystery",8.6,1655745,100.13
+21,Apocalypse Now,1979,R,147,"Drama, Mystery, War",8.5,669994,83.47
+22,12 Angry Men,1957,Approved,96,"Crime, Drama",9,792729,4.36
+23,The Lord of the Rings: The Two Towers,2002,PG-13,179,"Action, Adventure, Drama",8.8,1669715,342.55
+24,Terminator 2: Judgment Day,1991,R,137,"Action, Sci-Fi",8.6,1101850,204.84
+25,Star Wars: Episode VI - Return of the Jedi,1983,PG,131,"Action, Adventure, Fantasy",8.3,1056750,309.13
+26,Die Hard,1988,R,132,"Action, Thriller",8.2,887967,83.01
+27,Gone with the Wind,1939,Passed,238,"Drama, Romance, War",8.2,317621,198.68
+28,Taxi Driver,1976,R,114,"Crime, Drama",8.2,836871,28.26
+29,Pulp Fiction,1994,R,154,"Crime, Drama",8.9,2058574,107.93
+30,The Bridge on the River Kwai,1957,PG,161,"Adventure, Drama, War",8.2,222540,44.91
+31,The Lion King,1994,G,88,"Animation, Adventure, Drama",8.5,1060900,422.78
+32,North by Northwest,1959,Approved,136,"Action, Adventure, Mystery",8.3,330232,13.28
+33,Rear Window,1954,PG,112,"Mystery, Thriller",8.5,493926,36.76
+34,Léon: The Professional,1994,R,110,"Action, Crime, Drama",8.5,1164087,19.5
+35,Back to the Future,1985,PG,116,"Adventure, Comedy, Sci-Fi",8.5,1208582,210.61
+36,Citizen Kane,1941,PG,119,"Drama, Mystery",8.3,444359,1.59
+37,Goodfellas,1990,R,145,"Biography, Crime, Drama",8.7,1164128,46.84
+38,Memento,2000,R,113,"Mystery, Thriller",8.4,1241252,25.54
+39,American Beauty,1999,R,122,Drama,8.4,1157536,130.1
+40,As Good as It Gets,1997,PG-13,139,"Comedy, Drama, Romance",7.7,301756,148.48
+41,Forrest Gump,1994,PG-13,142,"Drama, Romance",8.8,2082477,330.25
+42,Singin' in the Rain,1952,G,103,"Comedy, Musical, Romance",8.3,244548,8.82
+43,Braveheart,1995,R,178,"Biography, Drama, History",8.4,1040416,75.6
+44,Saving Private Ryan,1998,R,169,"Drama, War",8.6,1394262,216.54
+45,Rain Man,1988,R,133,Drama,8,517528,178.8
+46,The King's Speech,2010,R,118,"Biography, Drama, History",8,683379,138.8
+47,2001: A Space Odyssey,1968,G,149,"Adventure, Sci-Fi",8.3,671980,56.95
+48,Kill Bill: Vol. 1,2003,R,111,"Action, Crime, Drama",8.2,1119120,70.1
+49,Avanti!,1972,R,144,"Comedy, Romance",7.2,10748,3.3
+50,"The Good, the Bad and the Ugly",1966,Approved,178,"Adventure, Western",8.8,763678,6.1
+51,Amélie,2001,R,122,"Comedy, Romance",8.3,759411,33.23
+52,Modern Times,1936,G,87,"Comedy, Drama, Romance",8.5,244162,0.16
+53,Lost in Translation,2003,R,102,"Comedy, Drama",7.7,458613,44.59
+54,Full Metal Jacket,1987,R,116,"Drama, War",8.3,745546,46.36
+55,Requiem for a Dream,2000,R,102,Drama,8.3,845362,3.64
+56,Fight Club,1999,R,139,Drama,8.8,2128902,37.03
+57,No Country for Old Men,2007,R,122,"Crime, Drama, Thriller",8.2,977336,74.28
+58,Django Unchained,2012,R,165,"Drama, Western",8.4,1557890,162.81
+59,Children of Men,2006,R,109,"Action, Drama, Sci-Fi",7.9,503642,35.55
+60,Ratatouille,2007,G,111,"Animation, Adventure, Comedy",8.1,741322,206.45
+61,The Lives of Others,2006,R,137,"Drama, Mystery, Thriller",8.4,391480,11.29
+62,The Prestige,2006,PG-13,130,"Drama, Mystery, Sci-Fi",8.5,1336235,53.09
+63,V for Vendetta,2005,R,132,"Action, Drama, Sci-Fi",8.2,1125038,70.51
+64,Chinatown,1974,R,130,"Drama, Mystery, Thriller",8.2,329110,8.49
+65,City of God,2002,R,130,"Crime, Drama",8.6,758914,7.56
+66,To Have and Have Not,1944,Passed,100,"Adventure, Comedy, Film-Noir",7.8,35528,1
+67,Fargo,1996,R,98,"Crime, Thriller",8.1,681256,24.61
+68,Life of Pi,2012,PG,127,"Adventure, Drama, Fantasy",7.9,634357,124.99
+69,Slumdog Millionaire,2008,R,120,"Crime, Drama, Romance",8,848344,141.32
+70,Vertigo,1958,PG,128,"Mystery, Romance, Thriller",8.3,404626,3.2
+71,Trainspotting,1996,R,93,Drama,8.1,690138,16.5
+72,Interstellar,2014,PG-13,169,"Adventure, Drama, Sci-Fi",8.6,1835790,188.02
+73,The Thing,1982,R,109,"Horror, Mystery, Sci-Fi",8.2,428474,13.78
+74,The Third Man,1949,Approved,93,"Film-Noir, Mystery, Thriller",8.1,173206,0.45
+75,12 Monkeys,1995,R,129,"Mystery, Sci-Fi, Thriller",8,621205,57.14
+76,Life Is Beautiful,1997,PG-13,116,"Comedy, Drama, Romance",8.6,697226,57.6
+77,The Pianist,2002,R,150,"Biography, Drama, Music",8.5,834842,32.57
+78,Magnolia,1999,R,188,Drama,8,315037,22.46
+79,The Dark Knight Rises,2012,PG-13,164,"Action, Drama",8.4,1708002,448.14
+80,Star Wars: Episode VII - The Force Awakens,2015,PG-13,138,"Action, Adventure, Sci-Fi",7.8,933771,936.66
+81,The Hobbit: The Desolation of Smaug,2013,PG-13,161,"Adventure, Fantasy",7.8,667864,258.37
+82,Mad Max: Fury Road,2015,R,120,"Action, Adventure, Sci-Fi",8.1,1006158,154.06
+83,12 Years a Slave,2013,R,134,"Biography, Drama, History",8.1,703824,56.67
+84,Indiana Jones and the Last Crusade,1989,PG-13,127,"Action, Adventure",8.2,758057,197.17
+85,"O Brother, Where Art Thou?",2000,PG-13,107,"Adventure, Comedy, Crime",7.7,315173,45.51
+86,Inglourious Basterds,2009,R,153,"Adventure, Drama, War",8.3,1453288,120.54
+87,The Departed,2006,R,151,"Crime, Drama, Thriller",8.5,1328252,132.38
+88,A Beautifuld,2001,PG-13,135,"Biography, Drama",8.2,935549,170.74
+89,District 9,2009,R,112,"Action, Sci-Fi, Thriller",7.9,685403,115.65
+90,The Piano,1993,R,121,"Drama, Music, Romance",7.5,89819,40.16
+91,Mystic River,2003,R,138,"Crime, Drama, Mystery",7.9,459918,90.14
+92,The Insider,1999,R,157,"Biography, Drama, Thriller",7.8,172759,28.97
+93,L.A. Confidential,1997,R,138,"Crime, Drama, Mystery",8.2,585555,64.62
+94,Heat,1995,R,170,"Action, Crime, Drama",8.3,658033,67.44
+95,The Usual Suspects,1995,R,106,"Crime, Drama, Mystery",8.5,1087832,23.34
+96,Cool Hand Luke,1967,GP,127,"Crime, Drama",8.1,178888,16.22
+97,Eternal Sunshine of the Spotlessd,2004,R,108,"Drama, Romance, Sci-Fi",8.3,1011004,34.4
+98,City Lights,1931,G,87,"Comedy, Drama, Romance",8.5,186059,0.02
+99,The Matrix,1999,R,136,"Action, Sci-Fi",8.7,1916083,171.48
