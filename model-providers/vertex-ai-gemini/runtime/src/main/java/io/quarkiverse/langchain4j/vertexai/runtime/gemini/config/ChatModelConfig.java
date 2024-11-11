@@ -36,7 +36,7 @@ public interface ChatModelConfig {
      * <p>
      * Default for gemini-1.0-pro-001: 0.9
      */
-    @WithDefault("0.0")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     OptionalDouble temperature();
 
     /**

@@ -41,7 +41,7 @@ public class VertexAiGeminiRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
 
-            if (chatModelConfig.temperature().isEmpty()) {
+            if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
             }
             if (chatModelConfig.topK().isPresent()) {

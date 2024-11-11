@@ -4,6 +4,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -30,6 +31,11 @@ public interface LangChain4jConfig {
      */
     @ConfigDocDefault("10s")
     Optional<Duration> timeout();
+
+    /**
+     * Global temperature for LLM APIs
+     */
+    OptionalDouble temperature();
 
     /**
      * Guardrails configuration

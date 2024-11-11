@@ -5,6 +5,7 @@ import java.util.OptionalInt;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
+import io.smallrye.config.WithDefault;
 
 @ConfigGroup
 public interface ChatModelConfig {
@@ -18,6 +19,7 @@ public interface ChatModelConfig {
      * both.
      */
     @ConfigDocDefault("0.3f")
+    @WithDefault("${quarkus.langchain4j.temperature}")
     OptionalDouble temperature();
 
     /**
