@@ -49,7 +49,7 @@ public class OllamaChatLanguageModelModelIdTest extends WiremockAware {
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
                                         {
-                                          "model": "llama3.1",
+                                          "model": "llama3.2",
                                           "created_at": "2024-05-03T10:27:56.84235715Z",
                                           "message": {
                                             "role": "assistant",

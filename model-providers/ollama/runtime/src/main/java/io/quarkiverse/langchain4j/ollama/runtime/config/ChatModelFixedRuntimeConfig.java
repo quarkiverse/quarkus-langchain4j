@@ -7,10 +7,8 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelFixedRuntimeConfig {
 
     /**
-     * Model to use. According to <a href="https://github.com/jmorganca/ollama/blob/main/docs/api.md#model-names">Ollama
-     * docs</a>,
-     * the default value is {@code llama3}
+     * Model to use
      */
-    @WithDefault("llama3.1")
+    @WithDefault("llama3.2")
     String modelId();
 }
