@@ -156,10 +156,7 @@ public class WatsonxRecorder {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
             }
 
-            String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-            WatsonxTokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                    createTokenGenerator(watsonConfig.iam(),
-                            firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey())));
+            String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
             URL url;
             try {
@@ -170,7 +167,7 @@ public class WatsonxRecorder {
 
             EmbeddingModelConfig embeddingModelConfig = watsonConfig.embeddingModel();
             var builder = WatsonxEmbeddingModel.builder()
-                    .tokenGenerator(tokenGenerator)
+                    .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                     .url(url)
                     .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -209,10 +206,7 @@ public class WatsonxRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
-        String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-        WatsonxTokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                createTokenGenerator(watsonConfig.iam(),
-                        firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey())));
+        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         URL url;
         try {
@@ -223,7 +217,7 @@ public class WatsonxRecorder {
 
         ScoringModelConfig rerankModelConfig = watsonConfig.scoringModel();
         var builder = WatsonxScoringModel.builder()
-                .tokenGenerator(tokenGenerator)
+                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, rerankModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -242,17 +236,6 @@ public class WatsonxRecorder {
         };
     }
 
-    private Function<? super String, ? extends WatsonxTokenGenerator> createTokenGenerator(IAMConfig iamConfig, String apiKey) {
-        return new Function<String, WatsonxTokenGenerator>() {
-
-            @Override
-            public WatsonxTokenGenerator apply(String iamUrl) {
-                return new WatsonxTokenGenerator(iamConfig.baseUrl(), iamConfig.timeout().orElse(Duration.ofSeconds(10)),
-                        iamConfig.grantType(), apiKey);
-            }
-        };
-    }
-
     private WatsonxChatModel.Builder chatBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
@@ -263,10 +246,7 @@ public class WatsonxRecorder {
         }
 
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-        WatsonxTokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                createTokenGenerator(watsonConfig.iam(),
-                        firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey())));
+        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         URL url;
         try {
@@ -276,7 +256,7 @@ public class WatsonxRecorder {
         }
 
         return WatsonxChatModel.builder()
-                .tokenGenerator(tokenGenerator)
+                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -306,10 +286,7 @@ public class WatsonxRecorder {
         }
 
         GenerationModelConfig generationModelConfig = watsonConfig.generationModel();
-        String iamUrl = watsonConfig.iam().baseUrl().toExternalForm();
-        WatsonxTokenGenerator tokenGenerator = tokenGeneratorCache.computeIfAbsent(iamUrl,
-                createTokenGenerator(watsonConfig.iam(),
-                        firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey())));
+        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         URL url;
         try {
@@ -323,7 +300,7 @@ public class WatsonxRecorder {
         String promptJoiner = generationModelConfig.promptJoiner();
 
         return WatsonxGenerationModel.builder()
-                .tokenGenerator(tokenGenerator)
+                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, generationModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -346,6 +323,18 @@ public class WatsonxRecorder {
                 .truncateInputTokens(generationModelConfig.truncateInputTokens().orElse(null))
                 .includeStopSequence(generationModelConfig.includeStopSequence().orElse(null))
                 .promptJoiner(promptJoiner);
+    }
+
+    private WatsonxTokenGenerator createTokenGenerator(IAMConfig iamConfig, String apiKey) {
+        return tokenGeneratorCache.computeIfAbsent(apiKey,
+                new Function<String, WatsonxTokenGenerator>() {
+                    @Override
+                    public WatsonxTokenGenerator apply(String iamUrl) {
+                        return new WatsonxTokenGenerator(iamConfig.baseUrl(),
+                                iamConfig.timeout().orElse(Duration.ofSeconds(10)),
+                                iamConfig.grantType(), apiKey);
+                    }
+                });
     }
 
     private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonRuntimeConfig(LangChain4jWatsonxConfig runtimeConfig,

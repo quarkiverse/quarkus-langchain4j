@@ -13,7 +13,7 @@ import io.smallrye.mutiny.Uni;
  */
 public class BearerTokenHeaderFactory extends ReactiveClientHeadersFactory {
 
-    private WatsonxTokenGenerator tokenGenerator;
+    private final WatsonxTokenGenerator tokenGenerator;
 
     public BearerTokenHeaderFactory(WatsonxTokenGenerator tokenGenerator) {
         this.tokenGenerator = tokenGenerator;
