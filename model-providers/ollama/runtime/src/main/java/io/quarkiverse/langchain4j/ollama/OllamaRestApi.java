@@ -33,6 +33,7 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
@@ -85,7 +86,8 @@ public interface OllamaRestApi {
             try {
                 return context.proceed();
             } catch (ClientWebApplicationException e) {
-                if (e.getCause() instanceof JsonParseException) {
+                Throwable cause = e.getCause();
+                if ((cause instanceof JsonParseException) || (cause instanceof MismatchedInputException)) {
                     if (e.getResponse().getStatus() == 200) {
                         Object invokedMethod = context.getProperty("org.eclipse.microprofile.rest.client.invokedMethod");
                         if ((invokedMethod != null) && invokedMethod.toString().contains("OllamaRestApi.streamingChat")) {
