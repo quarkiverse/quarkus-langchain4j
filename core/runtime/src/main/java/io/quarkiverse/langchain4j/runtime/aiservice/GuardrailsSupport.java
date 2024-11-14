@@ -2,7 +2,10 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import jakarta.enterprise.inject.spi.CDI;
@@ -100,17 +103,22 @@ public class GuardrailsSupport {
             throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries");
         }
 
-        if (result.isRewrittenResult()) {
-            response = rewriteResponseWithText(response, result.successfulResult());
+        if (result.hasRewrittenResult()) {
+            response = rewriteResponse(response, result);
         }
 
         return response;
     }
 
-    public static Response<AiMessage> rewriteResponseWithText(Response<AiMessage> response, String text) {
+    public static Response<AiMessage> rewriteResponse(Response<AiMessage> response, OutputGuardrailResult result) {
         List<ToolExecutionRequest> tools = response.content().toolExecutionRequests();
-        AiMessage content = tools != null && !tools.isEmpty() ? new AiMessage(text, tools) : new AiMessage(text);
-        return new Response<>(content, response.tokenUsage(), response.finishReason(), response.metadata());
+        AiMessage content = tools != null && !tools.isEmpty() ? new AiMessage(result.successfulText(), tools)
+                : new AiMessage(result.successfulText());
+        Map<String, Object> metadata = response.metadata();
+        if (result.successfulResult() != null) {
+            metadata.put(OutputGuardrailResult.class.getName(), result.successfulResult());
+        }
+        return new Response<>(content, response.tokenUsage(), response.finishReason(), metadata);
     }
 
     @SuppressWarnings("unchecked")
@@ -173,10 +181,10 @@ public class GuardrailsSupport {
         for (Class<? extends Guardrail> bean : classes) {
             GR result = (GR) CDI.current().select(bean).get().validate(params).validatedBy(bean);
             if (result.isFatal()) {
-                return accumulatedResults.isRewrittenResult() ? (GR) result.blockRetry() : result;
+                return accumulatedResults.hasRewrittenResult() ? (GR) result.blockRetry() : result;
             }
-            if (result.isRewrittenResult()) {
-                params = params.withText(result.successfulResult());
+            if (result.hasRewrittenResult()) {
+                params = params.withText(result.successfulText());
             }
             accumulatedResults = compose(accumulatedResults, result, producer);
         }

@@ -94,6 +94,12 @@ public class OutputGuardrailChainTest {
                 .withMessageContaining("Retry or reprompt is not allowed after a rewritten output");
     }
 
+    @Test
+    @ActivateRequestContext
+    void testThatRewritesTheOutputWithAResult() {
+        assertThat(aiService.rewritingSuccessWithResult("1", "foo")).isSameAs(RewritingGuardrailWithResult.RESULT);
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
@@ -111,6 +117,9 @@ public class OutputGuardrailChainTest {
 
         @OutputGuardrails({ FirstRewritingGuardrail.class, RepromptingGuardrail.class })
         String repromptAfterRewrite(@MemoryId String mem, @UserMessage String message);
+
+        @OutputGuardrails({ FirstRewritingGuardrail.class, RewritingGuardrailWithResult.class })
+        Integer rewritingSuccessWithResult(@MemoryId String mem, @UserMessage String message);
 
     }
 
@@ -203,6 +212,18 @@ public class OutputGuardrailChainTest {
         public OutputGuardrailResult validate(AiMessage responseFromLLM) {
             String text = responseFromLLM.text();
             return successWith(text + ",2");
+        }
+    }
+
+    @RequestScoped
+    public static class RewritingGuardrailWithResult implements OutputGuardrail {
+
+        static final Integer RESULT = 1_000;
+
+        @Override
+        public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            String text = responseFromLLM.text();
+            return successWith(text + ",2", RESULT);
         }
     }
 

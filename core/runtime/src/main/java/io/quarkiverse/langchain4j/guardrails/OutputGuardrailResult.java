@@ -10,29 +10,37 @@ import java.util.stream.Collectors;
  * @param result The result of the output guardrail validation.
  * @param failures The list of failures, empty if the validation succeeded.
  */
-public record OutputGuardrailResult(Result result, String successfulResult,
+public record OutputGuardrailResult(Result result, String successfulText, Object successfulResult,
         List<Failure> failures) implements GuardrailResult<OutputGuardrailResult> {
 
     private static final OutputGuardrailResult SUCCESS = new OutputGuardrailResult();
 
     private OutputGuardrailResult() {
-        this(Result.SUCCESS, null, Collections.emptyList());
+        this(Result.SUCCESS, null, null, Collections.emptyList());
     }
 
-    private OutputGuardrailResult(String successfulResult) {
-        this(Result.SUCCESS_WITH_RESULT, successfulResult, Collections.emptyList());
+    private OutputGuardrailResult(String successfulText) {
+        this(Result.SUCCESS_WITH_RESULT, successfulText, null, Collections.emptyList());
+    }
+
+    private OutputGuardrailResult(String successfulText, Object successfulResult) {
+        this(Result.SUCCESS_WITH_RESULT, successfulText, successfulResult, Collections.emptyList());
     }
 
     OutputGuardrailResult(List<Failure> failures, boolean fatal) {
-        this(fatal ? Result.FATAL : Result.FAILURE, null, failures);
+        this(fatal ? Result.FATAL : Result.FAILURE, null, null, failures);
     }
 
     public static OutputGuardrailResult success() {
         return SUCCESS;
     }
 
-    public static OutputGuardrailResult successWith(String successfulResult) {
-        return new OutputGuardrailResult(successfulResult);
+    public static OutputGuardrailResult successWith(String successfulText) {
+        return new OutputGuardrailResult(successfulText);
+    }
+
+    public static OutputGuardrailResult successWith(String successfulText, Object successfulResult) {
+        return new OutputGuardrailResult(successfulText, successfulResult);
     }
 
     public static OutputGuardrailResult failure(List<? extends GuardrailResult.Failure> failures) {
@@ -45,7 +53,7 @@ public record OutputGuardrailResult(Result result, String successfulResult,
     }
 
     @Override
-    public boolean isRewrittenResult() {
+    public boolean hasRewrittenResult() {
         return result == Result.SUCCESS_WITH_RESULT;
     }
 
@@ -88,7 +96,7 @@ public record OutputGuardrailResult(Result result, String successfulResult,
     @Override
     public String toString() {
         if (isSuccess()) {
-            return "success";
+            return hasRewrittenResult() ? "Success with '" + successfulText + "'" : "Success";
         }
         return failures.stream().map(Failure::toString).collect(Collectors.joining(", "));
     }

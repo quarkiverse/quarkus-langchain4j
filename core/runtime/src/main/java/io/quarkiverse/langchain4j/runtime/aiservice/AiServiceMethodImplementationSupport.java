@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static dev.langchain4j.internal.Exceptions.runtime;
+import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
@@ -295,7 +296,7 @@ public class AiServiceMethodImplementationSupport {
                                 throw new GuardrailsSupport.GuardrailRetryException();
                             }
                         } else {
-                            if (result.isRewrittenResult()) {
+                            if (result.hasRewrittenResult()) {
                                 throw new GuardrailException(
                                         "Attempting to rewrite the LLM output while streaming is not allowed");
                             }
@@ -367,7 +368,7 @@ public class AiServiceMethodImplementationSupport {
                 audit.addLLMToApplicationMessage(response);
             }
 
-            tokenUsageAccumulator = tokenUsageAccumulator.add(response.tokenUsage());
+            tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
         }
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
@@ -380,7 +381,13 @@ public class AiServiceMethodImplementationSupport {
         // everything worked as expected so let's commit the messages
         chatMemory.commit();
 
-        response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason());
+        Object guardrailResult = response.metadata().get(OutputGuardrailResult.class.getName());
+        if (guardrailResult != null && isTypeOf(returnType, guardrailResult.getClass())) {
+            return guardrailResult;
+        }
+
+        response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason(), response.metadata());
+
         if (isResult(returnType)) {
             var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response, resultTypeParam((ParameterizedType) returnType));
             return Result.builder()
@@ -389,9 +396,9 @@ public class AiServiceMethodImplementationSupport {
                     .sources(augmentationResult == null ? null : augmentationResult.contents())
                     .finishReason(response.finishReason())
                     .build();
-        } else {
-            return SERVICE_OUTPUT_PARSER.parse(response, returnType);
         }
+
+        return SERVICE_OUTPUT_PARSER.parse(response, returnType);
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
