@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.llama3;
 
 import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static io.quarkiverse.langchain4j.llama3.MessageMapper.toLlama3Message;
+import static io.quarkiverse.langchain4j.llama3.copy.Llama3.BATCH_SIZE;
 import static io.quarkiverse.langchain4j.llama3.copy.Llama3.selectSampler;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
     private void runInference(Llama model, Sampler sampler, Llama3.Options options,
             List<ChatFormat.Message> messages,
             StreamingResponseHandler<AiMessage> handler) {
-        Llama.State state = model.createNewState();
+        Llama.State state = model.createNewState(BATCH_SIZE);
         ChatFormat chatFormat = new ChatFormat(model.tokenizer());
 
         List<Integer> promptTokens = new ArrayList<>(chatFormat.encodeDialogPrompt(true, messages));
