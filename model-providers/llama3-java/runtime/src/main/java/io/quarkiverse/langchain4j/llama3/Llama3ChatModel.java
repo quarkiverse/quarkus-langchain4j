@@ -96,7 +96,7 @@ public class Llama3ChatModel implements ChatLanguageModel {
 
     private InferenceResponse runInference(Llama model, Sampler sampler, Llama3.Options options,
             List<ChatFormat.Message> messages) {
-        Llama.State state = model.createNewState();
+        Llama.State state = model.createNewState(Llama3.BATCH_SIZE);
         ChatFormat chatFormat = new ChatFormat(model.tokenizer());
 
         List<Integer> promptTokens = new ArrayList<>(chatFormat.encodeDialogPrompt(true, messages));

@@ -51,7 +51,7 @@ public final class AOT {
      * No checksum/hash is checked for performance reasons.
      */
     public static Llama tryUsePreLoaded(Path modelPath, int contextLength) throws IOException {
-        PartialModel preLoaded = AOT.PRELOADED_GGUF;
+        AOT.PartialModel preLoaded = AOT.PRELOADED_GGUF;
         if (preLoaded == null) {
             return null; // no pre-loaded model stored
         }

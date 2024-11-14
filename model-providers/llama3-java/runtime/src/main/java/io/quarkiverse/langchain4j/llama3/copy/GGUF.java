@@ -108,7 +108,7 @@ public final class GGUF {
         // gguf_tensor_info_t tensor_infos[header.tensor_count];
         this.tensorInfos = HashMap.newHashMap(tensorCount);
         for (int i = 0; i < tensorCount; ++i) {
-            GGUFTensorInfo ti = readTensorInfo(fileChannel);
+            GGUF.GGUFTensorInfo ti = readTensorInfo(fileChannel);
             assert !tensorInfos.containsKey(ti.name);
             tensorInfos.put(ti.name, ti);
         }
@@ -156,7 +156,7 @@ public final class GGUF {
         return GGMLType.fromId(ggmlTypeId);
     }
 
-    private GGUFTensorInfo readTensorInfo(FileChannel fileChannel) throws IOException {
+    private GGUF.GGUFTensorInfo readTensorInfo(FileChannel fileChannel) throws IOException {
         // The name of the tensor. It is a standard GGUF string, with the caveat that
         // it must be at most 64 bytes long.
         String name = readString(fileChannel); // gguf_string_t name;
@@ -180,7 +180,7 @@ public final class GGUF {
         // Must be a multiple of `ALIGNMENT`.
         long offset = readLong(fileChannel); // uint64_t offset;
         assert offset % getAlignment() == 0;
-        return new GGUFTensorInfo(name, dimensions, ggmlType, offset);
+        return new GGUF.GGUFTensorInfo(name, dimensions, ggmlType, offset);
     }
 
     private String readString(FileChannel fileChannel) throws IOException {
