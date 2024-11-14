@@ -39,6 +39,17 @@ WARNING: Models are huge, so make sure you have enough disk space.
 
 NOTE: Due to model's large size, pulling them can take time
 
+=== Native mode
+
+Currently, Llama3.java only works in native mode with Early Access version's of Oracle GraalVM 24 (which can be easily downloaded with https://sdkman.io[SDKMan]).
+
+To achieve the best performance in native mode, it is suggested to configure the application with the following:
+
+[source,properties,subs=attributes+]
+----
+quarkus.native.additional-build-args=-O3,-march=native
+----
+
 == Using Llama3.java
 
 To let Llama3.java running inference on your models, add the following dependency into your project:
