@@ -1,7 +1,11 @@
 package io.quarkiverse.langchain4j.guardrails;
 
+import java.util.List;
 import java.util.Map;
 
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.ContentType;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.rag.AugmentationResult;
@@ -21,6 +25,14 @@ public record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
 
     @Override
     public InputGuardrailParams withText(String text) {
-        throw new UnsupportedOperationException();
+        return new InputGuardrailParams(rewriteUserMessage(userMessage, text), memory, augmentationResult, userMessageTemplate,
+                variables);
+    }
+
+    public static UserMessage rewriteUserMessage(UserMessage userMessage, String text) {
+        List<Content> rewrittenContent = userMessage.contents().stream()
+                .map(c -> c.type() == ContentType.TEXT ? new TextContent(text) : c).toList();
+        return userMessage.name() == null ? new UserMessage(rewrittenContent)
+                : new UserMessage(userMessage.name(), rewrittenContent);
     }
 }

@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
+import static io.quarkiverse.langchain4j.guardrails.InputGuardrailParams.rewriteUserMessage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,7 @@ import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
 
-    public static void invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
+    public static UserMessage invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
             ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
         InputGuardrailResult result;
         try {
@@ -48,6 +49,11 @@ public class GuardrailsSupport {
         if (!result.isSuccess()) {
             throw new GuardrailException(result.toString(), result.getFirstFailureException());
         }
+
+        if (result.hasRewrittenResult()) {
+            userMessage = rewriteUserMessage(userMessage, result.successfulText());
+        }
+        return userMessage;
     }
 
     public static Response<AiMessage> invokeOutputGuardrails(AiServiceMethodCreateInfo methodCreateInfo,

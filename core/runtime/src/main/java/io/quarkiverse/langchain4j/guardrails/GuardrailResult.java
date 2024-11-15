@@ -29,10 +29,14 @@ public interface GuardrailResult<GR extends GuardrailResult> {
         FATAL
     }
 
-    boolean isSuccess();
+    Result getResult();
+
+    default boolean isSuccess() {
+        return getResult() == Result.SUCCESS || getResult() == Result.SUCCESS_WITH_RESULT;
+    }
 
     default boolean hasRewrittenResult() {
-        return false;
+        return getResult() == Result.SUCCESS_WITH_RESULT;
     }
 
     default GuardrailResult<GR> blockRetry() {

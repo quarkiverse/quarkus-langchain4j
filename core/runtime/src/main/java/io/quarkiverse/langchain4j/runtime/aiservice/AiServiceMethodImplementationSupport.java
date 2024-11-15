@@ -211,9 +211,10 @@ public class AiServiceMethodImplementationSupport {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
 
                                 ChatMemory memory = context.chatMemory(memoryId);
-                                GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, (UserMessage) augmentedUserMessage,
+                                UserMessage guardrailsMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo,
+                                        (UserMessage) augmentedUserMessage,
                                         memory, ar, templateVariables);
-                                List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
+                                List<ChatMessage> messagesToSend = messagesToSend(guardrailsMessage, needsMemorySeed);
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
                                         methodCreateInfo.isSwitchToWorkerThread());
@@ -223,25 +224,19 @@ public class AiServiceMethodImplementationSupport {
                                                 templateVariables)));
                             }
 
-                            private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
+                            private List<ChatMessage> messagesToSend(UserMessage augmentedUserMessage,
                                     boolean needsMemorySeed) {
-                                List<ChatMessage> messagesToSend;
-                                ChatMemory chatMemory;
-                                if (context.hasChatMemory()) {
-                                    chatMemory = context.chatMemory(memoryId);
-                                    messagesToSend = createMessagesToSendForExistingMemory(systemMessage, augmentedUserMessage,
-                                            chatMemory, needsMemorySeed, context, methodCreateInfo);
-                                } else {
-                                    messagesToSend = createMessagesToSendForNoMemory(systemMessage, augmentedUserMessage,
-                                            needsMemorySeed, context, methodCreateInfo);
-                                }
-                                return messagesToSend;
+                                return context.hasChatMemory()
+                                        ? createMessagesToSendForExistingMemory(systemMessage, augmentedUserMessage,
+                                                context.chatMemory(memoryId), needsMemorySeed, context, methodCreateInfo)
+                                        : createMessagesToSendForNoMemory(systemMessage, augmentedUserMessage,
+                                                needsMemorySeed, context, methodCreateInfo);
                             }
                         });
             }
         }
 
-        GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
+        userMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemory(memoryId) : null,
                 augmentationResult, templateVariables);
 
