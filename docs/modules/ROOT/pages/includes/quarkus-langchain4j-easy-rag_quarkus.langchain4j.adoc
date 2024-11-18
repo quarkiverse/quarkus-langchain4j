@@ -141,7 +141,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_INGESTION_STRATEGY+++`
 endif::add-copy-button-to-env-var[]
 --
-a|IngestionStrategy
+a|`on`, `off`, `manual`
 |`on`
 
 a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-reuse-embeddings-enabled[`quarkus.langchain4j.easy-rag.reuse-embeddings.enabled`]##
