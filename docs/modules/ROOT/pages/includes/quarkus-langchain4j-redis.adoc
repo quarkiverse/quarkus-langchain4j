@@ -107,7 +107,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_DISTANCE_METRIC+++`
 endif::add-copy-button-to-env-var[]
 --
-a|DistanceMetric
+a|`l2`, `ip`, `cosine`
 |`cosine`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name[`quarkus.langchain4j.redis.vector-field-name`]##
@@ -177,7 +177,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_VECTOR_ALGORITHM+++`
 endif::add-copy-button-to-env-var[]
 --
-a|VectorAlgorithm
+a|`flat`, `hnsw`
 |`hnsw`
 
 |===

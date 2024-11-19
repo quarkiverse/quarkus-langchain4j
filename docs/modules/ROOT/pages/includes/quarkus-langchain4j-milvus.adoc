@@ -328,7 +328,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_INDEX_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|IndexType
+a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`
 |`flat`
 
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type[`quarkus.langchain4j.milvus.metric-type`]##
@@ -345,7 +345,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_METRIC_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|MetricType
+a|`none`, `l2`, `ip`, `cosine`, `hamming`, `jaccard`
 |`cosine`
 
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-consistency-level]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-consistency-level[`quarkus.langchain4j.milvus.consistency-level`]##
@@ -362,7 +362,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_CONSISTENCY_LEVEL+++`
 endif::add-copy-button-to-env-var[]
 --
-a|ConsistencyLevelEnum
+a|`strong`, `bounded`, `eventually`
 |`eventually`
 
 |===

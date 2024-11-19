@@ -107,7 +107,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_DEVSERVICES_COLLECTION_VECTOR_PARAMS_DISTANCE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|Distance
+a|`unknown-distance`, `cosine`, `euclid`, `dot`, `manhattan`
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-collection-vector-params-size[`quarkus.langchain4j.qdrant.devservices.collection.vector-params.size`]##

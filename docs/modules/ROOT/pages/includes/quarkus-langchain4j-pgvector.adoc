@@ -147,7 +147,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_METADATA_STORAGE_MODE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|MetadataStorageMode
+a|`column-per-key`, `combined-json`, `combined-jsonb`
 |`combined-json`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions[`quarkus.langchain4j.pgvector.metadata.column-definitions`]##

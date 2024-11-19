@@ -28,7 +28,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|Type
+a|`message-window`, `token-window`
 |`message-window`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled[`quarkus.langchain4j.devservices.enabled`]##
