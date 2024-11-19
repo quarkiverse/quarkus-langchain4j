@@ -100,7 +100,6 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
     @Override
     public void onComplete(Response<AiMessage> response) {
-
         AiMessage aiMessage = response.content();
         addToMemory(aiMessage);
 
