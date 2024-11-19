@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.guardrails;
+package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -6,14 +6,21 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import io.quarkus.test.junit.QuarkusTest;
+import io.quarkiverse.langchain4j.guardrails.JsonGuardrailsUtils;
+import io.quarkus.test.QuarkusUnitTest;
 
-@QuarkusTest
 class JsonGuardrailsUtilsTest {
+
+    @RegisterExtension
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
     JsonGuardrailsUtils jsonGuardrailsUtils;

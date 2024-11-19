@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ApplicationScoped
-class JsonGuardrailsUtils {
+public class JsonGuardrailsUtils {
 
     @Inject
     ObjectMapper objectMapper;
@@ -16,7 +16,7 @@ class JsonGuardrailsUtils {
     private JsonGuardrailsUtils() {
     }
 
-    String trimNonJson(String llmResponse) {
+    public String trimNonJson(String llmResponse) {
         int jsonMapStart = llmResponse.indexOf('{');
         int jsonListStart = llmResponse.indexOf('[');
         if (jsonMapStart < 0 && jsonListStart < 0) {
@@ -29,7 +29,7 @@ class JsonGuardrailsUtils {
         return jsonEnd >= 0 && jsonStart < jsonEnd ? llmResponse.substring(jsonStart, jsonEnd + 1) : null;
     }
 
-    <T> T deserialize(String json, Class<T> expectedOutputClass) {
+    public <T> T deserialize(String json, Class<T> expectedOutputClass) {
         try {
             return objectMapper.readValue(json, expectedOutputClass);
         } catch (JsonProcessingException e) {
@@ -37,7 +37,7 @@ class JsonGuardrailsUtils {
         }
     }
 
-    <T> T deserialize(String json, TypeReference<T> expectedOutputType) {
+    public <T> T deserialize(String json, TypeReference<T> expectedOutputType) {
         try {
             return objectMapper.readValue(json, expectedOutputType);
         } catch (JsonProcessingException e) {
