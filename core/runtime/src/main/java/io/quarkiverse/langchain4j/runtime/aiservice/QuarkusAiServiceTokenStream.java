@@ -126,7 +126,14 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         if (isNullOrEmpty(toolSpecifications)) {
             context.streamingChatModel.generate(messages, handler);
         } else {
-            context.streamingChatModel.generate(messages, toolSpecifications, handler);
+            try {
+                // Some model do not support function calling with tool specifications
+                context.streamingChatModel.generate(messages, toolSpecifications, handler);
+            } catch (Exception e) {
+                if (errorHandler != null) {
+                    errorHandler.accept(e);
+                }
+            }
         }
     }
 
