@@ -4,6 +4,7 @@ import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static io.quarkiverse.langchain4j.llama3.MessageMapper.toLlama3Message;
 import static io.quarkiverse.langchain4j.llama3.copy.Llama3.BATCH_SIZE;
 import static io.quarkiverse.langchain4j.llama3.copy.Llama3.selectSampler;
+import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -79,7 +80,13 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
         );
         Sampler sampler = selectSampler(model.configuration().vocabularySize, options.temperature(), options.topp(),
                 options.seed());
-        runInference(model, sampler, options, llama3Messages, handler);
+
+        runOutEventLoop(new Runnable() {
+            @Override
+            public void run() {
+                runInference(model, sampler, options, llama3Messages, handler);
+            }
+        });
     }
 
     private void runInference(Llama model, Sampler sampler, Llama3.Options options,

@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.jlama;
 
 import static io.quarkiverse.langchain4j.jlama.JlamaModel.toFinishReason;
+import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.functions.Generator;
 import com.github.tjake.jlama.safetensors.DType;
+import com.github.tjake.jlama.safetensors.prompt.PromptContext;
 import com.github.tjake.jlama.safetensors.prompt.PromptSupport;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -32,17 +34,21 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
                 .withRetry(() -> registry.downloadModel(builder.modelName, Optional.ofNullable(builder.authToken)), 3);
 
         JlamaModel.Loader loader = jlamaModel.loader();
-        if (builder.quantizeModelAtRuntime != null && builder.quantizeModelAtRuntime)
+        if (builder.quantizeModelAtRuntime != null && builder.quantizeModelAtRuntime) {
             loader = loader.quantized();
+        }
 
-        if (builder.workingQuantizedType != null)
+        if (builder.workingQuantizedType != null) {
             loader = loader.workingQuantizationType(builder.workingQuantizedType);
+        }
 
-        if (builder.threadCount != null)
+        if (builder.threadCount != null) {
             loader = loader.threadCount(builder.threadCount);
+        }
 
-        if (builder.workingDirectory != null)
+        if (builder.workingDirectory != null) {
             loader = loader.workingDirectory(builder.workingDirectory);
+        }
 
         this.model = loader.load();
         this.temperature = builder.temperature == null ? 0.7f : builder.temperature;
@@ -55,8 +61,32 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
 
     @Override
     public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        if (model.promptSupport().isEmpty())
+        PromptContext promptContext = createPromptContext(messages);
+        runOutEventLoop(new Runnable() {
+            @Override
+            public void run() {
+                internalGenerate(handler, promptContext);
+            }
+        });
+    }
+
+    private void internalGenerate(StreamingResponseHandler<AiMessage> handler, PromptContext promptContext) {
+        try {
+            Generator.Response r = model.generate(id, promptContext, temperature, maxTokens, (token, time) -> {
+                handler.onNext(token);
+            });
+
+            handler.onComplete(Response.from(AiMessage.from(r.responseText), new TokenUsage(r.promptTokens, r.generatedTokens),
+                    toFinishReason(r.finishReason)));
+        } catch (Throwable t) {
+            handler.onError(t);
+        }
+    }
+
+    private PromptContext createPromptContext(List<ChatMessage> messages) {
+        if (model.promptSupport().isEmpty()) {
             throw new UnsupportedOperationException("This model does not support chat generation");
+        }
 
         PromptSupport.Builder promptBuilder = model.promptSupport().get().builder();
         for (ChatMessage message : messages) {
@@ -67,17 +97,7 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
                 default -> throw new IllegalArgumentException("Unsupported message type: " + message.type());
             }
         }
-
-        try {
-            Generator.Response r = model.generate(id, promptBuilder.build(), temperature, maxTokens, (token, time) -> {
-                handler.onNext(token);
-            });
-
-            handler.onComplete(Response.from(AiMessage.from(r.responseText), new TokenUsage(r.promptTokens, r.generatedTokens),
-                    toFinishReason(r.finishReason)));
-        } catch (Throwable t) {
-            handler.onError(t);
-        }
+        return promptBuilder.build();
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
