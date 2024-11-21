@@ -11,7 +11,9 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -271,7 +273,8 @@ public class JlamaProcessor {
         Path quarkusAppDir = jarPath.getParent();
         Path jlamaInQuarkusAppDir = quarkusAppDir.resolve("jlama");
 
-        for (ModelDownloadedBuildItem bi : models) {
+        // Using LinkedHashSet to guarantee uniqueness of models
+        for (ModelDownloadedBuildItem bi : new LinkedHashSet<>(models)) {
             try {
                 JlamaModelRegistry.ModelInfo modelInfo = JlamaModelRegistry.ModelInfo.from(bi.getModelName());
                 Path targetDir = jlamaInQuarkusAppDir.resolve(modelInfo.toFileName());
@@ -300,6 +303,20 @@ public class JlamaProcessor {
 
         public Path getDirectory() {
             return directory;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof ModelDownloadedBuildItem that)) {
+                return false;
+            }
+
+            return Objects.equals(modelName, that.modelName) && Objects.equals(directory, that.directory);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(modelName, directory);
         }
     }
 }
