@@ -230,7 +230,6 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         @Override
         public void onCompletion() {
-            handleMessageStop();
         }
 
         @Override
