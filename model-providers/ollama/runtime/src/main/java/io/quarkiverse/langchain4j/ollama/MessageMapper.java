@@ -27,6 +27,8 @@ import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 // TODO: this could use a lot of refactoring
@@ -140,8 +142,14 @@ final class MessageMapper {
     }
 
     private static Tool toTool(ToolSpecification toolSpecification) {
+        Tool.Function.Parameters functionParameters;
+        if (toolSpecification.toolParameters() != null) {
+            functionParameters = toFunctionParameters(toolSpecification.toolParameters());
+        } else {
+            functionParameters = toFunctionParameters(toolSpecification.parameters());
+        }
         return new Tool(Tool.Type.FUNCTION, new Tool.Function(toolSpecification.name(), toolSpecification.description(),
-                toFunctionParameters(toolSpecification.parameters())));
+                functionParameters));
     }
 
     private static Tool.Function.Parameters toFunctionParameters(ToolParameters toolParameters) {
@@ -150,4 +158,13 @@ final class MessageMapper {
         }
         return Tool.Function.Parameters.objectType(toolParameters.properties(), toolParameters.required());
     }
+
+    private static Tool.Function.Parameters toFunctionParameters(JsonObjectSchema parameters) {
+        if (parameters == null) {
+            return Tool.Function.Parameters.empty();
+        }
+        return Tool.Function.Parameters.objectType(JsonSchemaElementHelper.toMap(parameters.properties()),
+                parameters.required());
+    }
+
 }

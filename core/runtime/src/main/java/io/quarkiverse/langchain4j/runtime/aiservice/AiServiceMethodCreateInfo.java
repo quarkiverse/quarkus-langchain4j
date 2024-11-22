@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +200,7 @@ public final class AiServiceMethodCreateInfo {
         Optional<String> userMessageTemplateOpt = this.getUserMessageInfo().template()
                 .flatMap(AiServiceMethodCreateInfo.TemplateInfo::text);
 
-        return userMessageTemplateOpt.orElse(EMPTY);
+        return userMessageTemplateOpt.orElse("");
     }
 
     public boolean isSwitchToWorkerThread() {

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -54,6 +56,23 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                     // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
                     // and Jackson does not handle it
                     Class<? extends Enum> enumClass = type.asSubclass(Enum.class);
+                    return (T) Enum.valueOf(enumClass, json);
+                }
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        @Override
+        public <T> T fromJson(String json, Type type) {
+            JavaType javaType = ObjectMapperHolder.MAPPER.constructType(type);
+            try {
+                String sanitizedJson = sanitize(json, javaType.getRawClass());
+                return ObjectMapperHolder.MAPPER.readValue(sanitizedJson, javaType);
+            } catch (JsonProcessingException e) {
+                if ((e instanceof JsonParseException) && (javaType.isEnumType())) {
+                    // this is the case where LangChain4j simply passes the string value of the enum to Json.fromJson()
+                    // and Jackson does not handle it
+                    Class<? extends Enum> enumClass = javaType.getRawClass().asSubclass(Enum.class);
                     return (T) Enum.valueOf(enumClass, json);
                 }
                 throw new UncheckedIOException(e);

@@ -35,6 +35,7 @@ public record Tool(Type type, Function function) {
             public static Parameters empty() {
                 return new Parameters(OBJECT_TYPE, Collections.emptyMap(), Collections.emptyList());
             }
+
         }
     }
 }

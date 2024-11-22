@@ -223,10 +223,11 @@ public sealed interface TextChatMessage
          * @return the created {@link TextChatParameterTool}
          */
         public static TextChatParameterTool of(ToolSpecification toolSpecification) {
+            // FIXME: toolSpecification.toolParameters() is deprecated, we might receive a value in parameters() instead
             var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(), Map.of(
-                    "type", toolSpecification.parameters().type(),
-                    "properties", toolSpecification.parameters().properties(),
-                    "required", toolSpecification.parameters().required()));
+                    "type", toolSpecification.toolParameters().type(),
+                    "properties", toolSpecification.toolParameters().properties(),
+                    "required", toolSpecification.toolParameters().required()));
             return new TextChatParameterTool("function", parameters);
         }
     }

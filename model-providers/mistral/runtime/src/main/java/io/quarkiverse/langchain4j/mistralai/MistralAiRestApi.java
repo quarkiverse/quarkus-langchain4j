@@ -39,6 +39,8 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRespo
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.NotBody;
 import io.smallrye.mutiny.Multi;
@@ -81,6 +83,10 @@ public interface MistralAiRestApi {
     @Path("models")
     @GET
     MistralAiModelResponse models(@NotBody String token);
+
+    @Path("moderations")
+    @POST
+    MistralAiModerationResponse moderation(MistralAiModerationRequest mistralAiModerationRequest, @NotBody String token);
 
     /**
      * The point of this is to properly set the {@code stream} value of the request
