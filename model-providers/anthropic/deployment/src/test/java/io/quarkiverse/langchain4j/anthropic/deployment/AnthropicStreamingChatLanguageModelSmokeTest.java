@@ -182,6 +182,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
 
                 event: message_stop
                 data: {"type":"message_stop"           }
+
                 """;
 
         wireMockServer.stubFor(
