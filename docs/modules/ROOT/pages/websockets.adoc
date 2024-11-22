@@ -42,7 +42,7 @@ import io.quarkus.websockets.next.OnTextMessage;
 import io.quarkus.websockets.next.WebSocket;
 
 @WebSocket(path = "/websocket")
-public static class WebSocketChatBot {
+public class WebSocketChatBot {
 
     private final SessionScopedChatBot bot;
 
