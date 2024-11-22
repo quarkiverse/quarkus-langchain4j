@@ -1,30 +1,22 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.ARRAY;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.BOOLEAN;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.INTEGER;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.NUMBER;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.OBJECT;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.STRING;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.description;
-import static dev.langchain4j.agent.tool.JsonSchemaProperty.enums;
 import static io.quarkiverse.langchain4j.deployment.DotNames.BLOCKING;
 import static io.quarkiverse.langchain4j.deployment.DotNames.COMPLETION_STAGE;
 import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
 import static io.quarkiverse.langchain4j.deployment.DotNames.NON_BLOCKING;
 import static io.quarkiverse.langchain4j.deployment.DotNames.RUN_ON_VIRTUAL_THREAD;
 import static io.quarkiverse.langchain4j.deployment.DotNames.UNI;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -45,17 +37,32 @@ import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
-import dev.langchain4j.agent.tool.JsonSchemaProperty;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
-import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.JsonArraySchema;
+import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
+import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
+import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
+import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
+import dev.langchain4j.model.chat.request.json.JsonStringSchema;
+import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
+import io.quarkiverse.langchain4j.runtime.tool.JsonArraySchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonBooleanSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonEnumSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonIntegerSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonNumberSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonObjectSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonReferenceSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.JsonStringSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
-import io.quarkiverse.langchain4j.runtime.tool.ToolParametersObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpecificationObjectSubstitution;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -87,6 +94,7 @@ public class ToolProcessor {
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
+    private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
             .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
@@ -209,6 +217,9 @@ public class ToolProcessor {
                             .name(toolName)
                             .description(toolDescription);
 
+                    var properties = new LinkedHashMap<String, JsonSchemaElement>(toolMethod.parametersCount());
+                    var required = new ArrayList<String>(toolMethod.parametersCount());
+
                     MethodParameterInfo memoryIdParameter = null;
                     for (MethodParameterInfo parameter : toolMethod.parameters()) {
                         if (parameter.hasAnnotation(TOOL_MEMORY_ID)) {
@@ -216,14 +227,21 @@ public class ToolProcessor {
                             continue;
                         }
 
-                        AnnotationInstance pInstance = parameter.annotation(P);
-                        if (pInstance != null && pInstance.value("required") != null
-                                && !pInstance.value("required").asBoolean()) {
-                            builder.addOptionalParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
-                        } else {
-                            builder.addParameter(parameter.name(), toJsonSchemaProperties(parameter, index));
+                        var pInstance = parameter.annotation(P);
+                        var jsonSchemaElement = toJsonSchemaElement(parameter, index);
+                        properties.put(parameter.name(), jsonSchemaElement);
+
+                        if ((pInstance == null)
+                                || ((pInstance.value("required") != null) && pInstance.value("required").asBoolean())) {
+                            required.add(parameter.name());
                         }
                     }
+
+                    builder.parameters(
+                            JsonObjectSchema.builder()
+                                    .properties(properties)
+                                    .required(required)
+                                    .build());
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
                             Collectors.toMap(MethodParameterInfo::name, i -> Integer.valueOf(i.position())));
@@ -324,8 +342,23 @@ public class ToolProcessor {
         if (beforeRemoval != null) {
             recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
                     ToolSpecificationObjectSubstitution.class);
-            recorderContext.registerSubstitution(ToolParameters.class, ToolParametersObjectSubstitution.Serialized.class,
-                    ToolParametersObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonArraySchema.class, JsonArraySchemaObjectSubstitution.Serialized.class,
+                    JsonArraySchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonBooleanSchema.class, JsonBooleanSchemaObjectSubstitution.Serialized.class,
+                    JsonBooleanSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonEnumSchema.class, JsonEnumSchemaObjectSubstitution.Serialized.class,
+                    JsonEnumSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonIntegerSchema.class, JsonIntegerSchemaObjectSubstitution.Serialized.class,
+                    JsonIntegerSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonNumberSchema.class, JsonNumberSchemaObjectSubstitution.Serialized.class,
+                    JsonNumberSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonObjectSchema.class, JsonObjectSchemaObjectSubstitution.Serialized.class,
+                    JsonObjectSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonReferenceSchema.class,
+                    JsonReferenceSchemaObjectSubstitution.Serialized.class,
+                    JsonReferenceSchemaObjectSubstitution.class);
+            recorderContext.registerSubstitution(JsonStringSchema.class, JsonStringSchemaObjectSubstitution.Serialized.class,
+                    JsonStringSchemaObjectSubstitution.class);
             Map<String, List<ToolMethodCreateInfo>> metadataWithoutRemovedBeans = beforeRemoval.getMetadata().entrySet()
                     .stream()
                     .filter(entry -> validationPhase.getContext().removedBeans().stream()
@@ -469,16 +502,14 @@ public class ToolProcessor {
         return implClassName;
     }
 
-    private Iterable<JsonSchemaProperty> toJsonSchemaProperties(MethodParameterInfo parameter, IndexView index) {
+    private JsonSchemaElement toJsonSchemaElement(MethodParameterInfo parameter, IndexView index) {
         Type type = parameter.type();
-        AnnotationInstance pInstance = parameter.annotation(P);
+        String description = descriptionFrom(parameter);
 
-        JsonSchemaProperty description = pInstance == null ? null : description(pInstance.value().asString());
-
-        return toJsonSchemaProperties(type, index, description);
+        return toJsonSchemaElement(type, index, description);
     }
 
-    private Iterable<JsonSchemaProperty> toJsonSchemaProperties(Type type, IndexView index, JsonSchemaProperty description) {
+    private JsonSchemaElement toJsonSchemaElement(Type type, IndexView index, String description) {
         DotName typeName = type.name();
 
         if (type.kind() == Type.Kind.WILDCARD_TYPE) {
@@ -487,18 +518,18 @@ public class ToolProcessor {
                 boundType = type.asWildcardType().superBound();
             }
             if (boundType != null) {
-                return toJsonSchemaProperties(boundType, index, description);
+                return toJsonSchemaElement(boundType, index, description);
             } else {
                 throw new IllegalArgumentException("Unsupported wildcard type with no bounds: " + type);
             }
         }
         if (DotNames.STRING.equals(typeName) || DotNames.CHARACTER.equals(typeName)
                 || DotNames.PRIMITIVE_CHAR.equals(typeName)) {
-            return removeNulls(STRING, description);
+            return JsonStringSchema.builder().description(description).build();
         }
 
         if (DotNames.BOOLEAN.equals(typeName) || DotNames.PRIMITIVE_BOOLEAN.equals(typeName)) {
-            return removeNulls(BOOLEAN, description);
+            return JsonBooleanSchema.builder().description(description).build();
         }
 
         if (DotNames.BYTE.equals(typeName) || DotNames.PRIMITIVE_BYTE.equals(typeName)
@@ -506,14 +537,14 @@ public class ToolProcessor {
                 || DotNames.INTEGER.equals(typeName) || DotNames.PRIMITIVE_INT.equals(typeName)
                 || DotNames.LONG.equals(typeName) || DotNames.PRIMITIVE_LONG.equals(typeName)
                 || DotNames.BIG_INTEGER.equals(typeName)) {
-            return removeNulls(INTEGER, description);
+            return JsonIntegerSchema.builder().description(description).build();
         }
 
         // TODO put constraints on min and max?
         if (DotNames.FLOAT.equals(typeName) || DotNames.PRIMITIVE_FLOAT.equals(typeName)
                 || DotNames.DOUBLE.equals(typeName) || DotNames.PRIMITIVE_DOUBLE.equals(typeName)
                 || DotNames.BIG_DECIMAL.equals(typeName)) {
-            return removeNulls(NUMBER, description);
+            return JsonNumberSchema.builder().description(description).build();
         }
 
         // TODO something else?
@@ -524,49 +555,40 @@ public class ToolProcessor {
             Type elementType = parameterizedType != null ? parameterizedType.arguments().get(0)
                     : type.asArrayType().component();
 
-            Iterable<JsonSchemaProperty> elementProperties = toJsonSchemaProperties(elementType, index, null);
+            JsonSchemaElement element = toJsonSchemaElement(elementType, index, null);
 
-            JsonSchemaProperty itemsSchema;
-            if (isComplexType(elementType)) {
-                Map<String, Object> fieldDescription = new HashMap<>();
-
-                for (JsonSchemaProperty fieldProperty : elementProperties) {
-                    fieldDescription.put(fieldProperty.key(), fieldProperty.value());
-                }
-                itemsSchema = JsonSchemaProperty.from("items", fieldDescription);
-            } else {
-                itemsSchema = JsonSchemaProperty.items(elementProperties.iterator().next());
-            }
-
-            return removeNulls(ARRAY, itemsSchema, description);
+            return JsonArraySchema.builder().description(description).items(element).build();
         }
 
         if (isEnum(type, index)) {
-            return removeNulls(STRING, enums(enumConstants(type)), description);
+            var enums = Arrays.stream(enumConstants(type))
+                    .filter(e -> e.getClass().isEnum())
+                    .map(e -> ((Enum<?>) e).name())
+                    .toList();
+
+            return JsonEnumSchema.builder()
+                    .enumValues(enums)
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)))
+                    .build();
         }
 
-        if (type.kind() == Type.Kind.CLASS) {
-            Map<String, Object> properties = new HashMap<>();
-            ClassInfo classInfo = index.getClassByName(type.name());
+        if (isComplexType(type)) {
+            var builder = JsonObjectSchema.builder()
+                    .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)));
 
-            List<String> required = new ArrayList<>();
-            if (classInfo != null) {
-                for (FieldInfo field : classInfo.fields()) {
-                    String fieldName = field.name();
+            Optional.ofNullable(index.getClassByName(type.name()))
+                    .map(ClassInfo::fields)
+                    .orElseGet(List::of)
+                    .forEach(field -> {
+                        var fieldName = field.name();
+                        var fieldType = field.type();
+                        var fieldDescription = descriptionFrom(field);
+                        var fieldSchema = toJsonSchemaElement(fieldType, index, fieldDescription);
 
-                    Iterable<JsonSchemaProperty> fieldSchema = toJsonSchemaProperties(field.type(), index, null);
-                    Map<String, Object> fieldDescription = new HashMap<>();
+                        builder.addProperty(fieldName, fieldSchema);
+                    });
 
-                    for (JsonSchemaProperty fieldProperty : fieldSchema) {
-                        fieldDescription.put(fieldProperty.key(), fieldProperty.value());
-                    }
-
-                    properties.put(fieldName, fieldDescription);
-                }
-            }
-
-            JsonSchemaProperty objectSchema = JsonSchemaProperty.from("properties", properties);
-            return removeNulls(OBJECT, objectSchema, JsonSchemaProperty.from("required", required), description);
+            return builder.build();
         }
 
         throw new IllegalArgumentException("Unsupported type: " + type);
@@ -576,18 +598,34 @@ public class ToolProcessor {
         return type.kind() == Type.Kind.CLASS || type.kind() == Type.Kind.PARAMETERIZED_TYPE;
     }
 
-    private Iterable<JsonSchemaProperty> removeNulls(JsonSchemaProperty... properties) {
-        return stream(properties)
-                .filter(Objects::nonNull)
-                .collect(toList());
-    }
-
     private boolean isEnum(Type returnType, IndexView index) {
         if (returnType.kind() != Type.Kind.CLASS) {
             return false;
         }
         ClassInfo maybeEnum = index.getClassByName(returnType.name());
         return maybeEnum != null && maybeEnum.isEnum();
+    }
+
+    private static String descriptionFrom(String[] description) {
+        return (description != null) ? String.join(" ", description) : null;
+    }
+
+    private static String descriptionFrom(Type type) {
+        return Optional.ofNullable(type.annotation(DESCRIPTION))
+                .map(annotationInstance -> descriptionFrom(annotationInstance.value().asStringArray()))
+                .orElse(null);
+    }
+
+    private static String descriptionFrom(FieldInfo field) {
+        return Optional.ofNullable(field.annotation(DESCRIPTION))
+                .map(annotationInstance -> descriptionFrom(annotationInstance.value().asStringArray()))
+                .orElse(null);
+    }
+
+    private static String descriptionFrom(MethodParameterInfo parameter) {
+        return Optional.ofNullable(parameter.annotation(P))
+                .map(p -> p.value().asString())
+                .orElse(null);
     }
 
     private static Object[] enumConstants(Type type) {

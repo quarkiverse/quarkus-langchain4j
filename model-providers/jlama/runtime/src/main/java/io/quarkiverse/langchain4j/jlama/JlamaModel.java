@@ -127,12 +127,7 @@ public class JlamaModel {
                 .name(toolSpecification.name())
                 .description(toolSpecification.description());
 
-        if (toolSpecification.toolParameters() != null) {
-            for (Map.Entry<String, Map<String, Object>> p : toolSpecification.toolParameters().properties().entrySet()) {
-                builder.addParameter(p.getKey(), p.getValue(),
-                        toolSpecification.toolParameters().required().contains(p.getKey()));
-            }
-        } else if (toolSpecification.parameters() != null) {
+        if (toolSpecification.parameters() != null) {
             for (Map.Entry<String, JsonSchemaElement> p : toolSpecification.parameters().properties().entrySet()) {
                 builder.addParameter(p.getKey(), JsonSchemaElementHelper.toMap(p.getValue()),
                         toolSpecification.parameters().required().contains(p.getKey()));
