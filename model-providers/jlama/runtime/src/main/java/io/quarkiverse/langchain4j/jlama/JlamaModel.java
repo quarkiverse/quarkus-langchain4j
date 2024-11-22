@@ -14,6 +14,8 @@ import com.github.tjake.jlama.safetensors.prompt.Function;
 import com.github.tjake.jlama.safetensors.prompt.Tool;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import dev.langchain4j.model.output.FinishReason;
 
 /**
@@ -125,8 +127,16 @@ public class JlamaModel {
                 .name(toolSpecification.name())
                 .description(toolSpecification.description());
 
-        for (Map.Entry<String, Map<String, Object>> p : toolSpecification.parameters().properties().entrySet()) {
-            builder.addParameter(p.getKey(), p.getValue(), toolSpecification.parameters().required().contains(p.getKey()));
+        if (toolSpecification.toolParameters() != null) {
+            for (Map.Entry<String, Map<String, Object>> p : toolSpecification.toolParameters().properties().entrySet()) {
+                builder.addParameter(p.getKey(), p.getValue(),
+                        toolSpecification.toolParameters().required().contains(p.getKey()));
+            }
+        } else if (toolSpecification.parameters() != null) {
+            for (Map.Entry<String, JsonSchemaElement> p : toolSpecification.parameters().properties().entrySet()) {
+                builder.addParameter(p.getKey(), JsonSchemaElementHelper.toMap(p.getValue()),
+                        toolSpecification.parameters().required().contains(p.getKey()));
+            }
         }
 
         return Tool.from(builder.build());

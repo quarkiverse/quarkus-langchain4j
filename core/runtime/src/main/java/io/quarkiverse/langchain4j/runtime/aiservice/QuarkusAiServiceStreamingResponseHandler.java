@@ -20,6 +20,7 @@ import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
@@ -38,6 +39,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
     private final Consumer<String> tokenHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
+    private final Consumer<ToolExecution> toolExecuteHandler;
     private final Consumer<Throwable> errorHandler;
 
     private final List<ChatMessage> temporaryMemory;
@@ -51,6 +53,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
             Consumer<String> tokenHandler,
+            Consumer<ToolExecution> toolExecuteHandler,
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler,
             List<ChatMessage> temporaryMemory,
@@ -62,6 +65,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
         this.tokenHandler = ensureNotNull(tokenHandler, "tokenHandler");
         this.completionHandler = completionHandler;
+        this.toolExecuteHandler = toolExecuteHandler;
         this.errorHandler = errorHandler;
 
         this.temporaryMemory = new ArrayList<>(temporaryMemory);
@@ -116,6 +120,12 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                                 toolExecutionRequest,
                                 toolExecutionResult);
+                        ToolExecution toolExecution = ToolExecution.builder()
+                                .request(toolExecutionRequest).result(toolExecutionResult)
+                                .build();
+                        if (toolExecuteHandler != null) {
+                            toolExecuteHandler.accept(toolExecution);
+                        }
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                     }
 
@@ -126,6 +136,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                                     context,
                                     memoryId,
                                     tokenHandler,
+                                    toolExecuteHandler,
                                     completionHandler,
                                     errorHandler,
                                     temporaryMemory,

@@ -56,6 +56,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
@@ -607,5 +608,11 @@ public class BeansProcessor {
                 .produce(new LogCleanupFilterBuildItem("ai.djl.util.Platform", Level.INFO, "Found matching platform from"));
         logCleanupFilters
                 .produce(new LogCleanupFilterBuildItem("ai.djl.huggingface.tokenizers.jni.LibUtils", Level.INFO, "Extracting"));
+    }
+
+    @BuildStep
+    public void nativeSupport(BuildProducer<RuntimeInitializedClassBuildItem> producer) {
+        // RetryUtils initializes a java.lang.Random instance
+        producer.produce(new RuntimeInitializedClassBuildItem("dev.langchain4j.internal.RetryUtils"));
     }
 }

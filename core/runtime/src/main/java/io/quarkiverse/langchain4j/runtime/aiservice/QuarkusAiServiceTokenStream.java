@@ -20,6 +20,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
 
@@ -44,12 +45,14 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private Consumer<List<Content>> contentsHandler;
     private Consumer<Throwable> errorHandler;
     private Consumer<Response<AiMessage>> completionHandler;
+    private Consumer<ToolExecution> toolExecuteHandler;
 
     private int onNextInvoked;
     private int onCompleteInvoked;
     private int onRetrievedInvoked;
     private int onErrorInvoked;
     private int ignoreErrorsInvoked;
+    private int toolExecuteInvoked;
 
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications,
@@ -83,6 +86,13 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     }
 
     @Override
+    public TokenStream onToolExecuted(Consumer<ToolExecution> toolExecuteHandler) {
+        this.toolExecuteHandler = toolExecuteHandler;
+        this.toolExecuteInvoked++;
+        return this;
+    }
+
+    @Override
     public TokenStream onComplete(Consumer<Response<AiMessage>> completionHandler) {
         this.completionHandler = completionHandler;
         this.onCompleteInvoked++;
@@ -110,6 +120,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 context,
                 memoryId,
                 tokenHandler,
+                toolExecuteHandler,
                 completionHandler,
                 errorHandler,
                 initTemporaryMemory(context, messages),
@@ -148,6 +159,10 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         if (onRetrievedInvoked > 1) {
             throw new IllegalConfigurationException("onRetrieved must be invoked at most 1 time");
+        }
+
+        if (toolExecuteInvoked > 1) {
+            throw new IllegalConfigurationException("onToolExecuted must be invoked at most 1 time");
         }
 
         if (onErrorInvoked + ignoreErrorsInvoked != 1) {

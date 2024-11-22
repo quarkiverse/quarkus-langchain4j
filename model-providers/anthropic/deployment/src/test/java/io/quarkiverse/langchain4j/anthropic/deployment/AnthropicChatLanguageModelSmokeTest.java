@@ -92,6 +92,7 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                       "text" : "Hello, how are you today?"
                     } ]
                   } ],
+                  "system" : [ ],
                   "max_tokens" : 1024,
                   "stream" : false,
                   "top_k" : 40

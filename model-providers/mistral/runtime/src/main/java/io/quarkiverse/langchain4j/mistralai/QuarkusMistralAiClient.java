@@ -25,6 +25,8 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRespo
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiUsage;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
@@ -114,6 +116,12 @@ public class QuarkusMistralAiClient extends MistralAiClient {
     @Override
     public MistralAiEmbeddingResponse embedding(MistralAiEmbeddingRequest request) {
         return restApi.embedding(request, apiKey);
+    }
+
+    // TODO: we don't provide support for MistralAiModerationModel yet
+    @Override
+    public MistralAiModerationResponse moderation(MistralAiModerationRequest mistralAiModerationRequest) {
+        return restApi.moderation(mistralAiModerationRequest, apiKey);
     }
 
     @Override
