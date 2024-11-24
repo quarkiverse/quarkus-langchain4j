@@ -1,0 +1,14 @@
+name: Langchain4j - Codestarts - Chatbot
+#description: Do something useful.
+metadata:
+#  keywords:
+#    - langchain4j-chatbot
+#  guide: https://quarkiverse.github.io/quarkiverse-docs/langchain4j-chatbot/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+#  categories:
+#    - "miscellaneous"
+#  status: "preview"
+  codestart:
+    name: langchain4j-chatbot
+    languages:
+      - "java"
+    artifact: "io.quarkiverse.langchain4j:quarkus-langchain4j-chatbot:codestarts:jar:${project.version}"

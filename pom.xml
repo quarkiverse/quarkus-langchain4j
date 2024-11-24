@@ -20,6 +20,7 @@
     <module>quarkus-integrations</module>
     <module>rag</module>
     <module>tools</module>
+    <module>codestarts</module>
     <module>testing-internal</module>
   </modules>
   <scm>
