@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/png" href="favicon.ico">
+
+    <script src="/_importmap/dynamic-importmap.js"></script>
+
+    <script type="module">
+        import 'icons/font-awesome.js';
+        import 'components/chatbot-title.js';
+        import 'components/chatbot-chat.js';
+        import 'wc-chatbot';
+    </script>
+
+    <link rel="stylesheet" href="fonts/red-hat-font.min.css">
+
+    <title>Quarkus Chatbot</title>
+
+    <style>
+        :root {
+            --main-bg-color: rgb(246, 242, 242);
+            --main-highlight-text-color: rgba(237, 98, 128);
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            font-family: 'Red Hat Text', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: var(--lumo-body-text-color);
+            background: var(--main-bg-color);
+        }
+
+        chat-bot {
+            --chatbot-avatar-bg-color: rgba(237, 98, 128);
+            --chatbot-avatar-margin: 10%;
+            --chatbot-header-bg-color: rgba(237, 98, 128);
+            --chatbot-header-title-color: #FFFFFF;
+            --chatbot-body-bg-color: var(--main-bg-color);
+            --chatbot-send-button-color: rgba(237, 98, 128);
+        }
+
+         chat-bot::part(chat-bubble) {
+             --chat-bubble-avatar-color: rgba(237, 98, 128);
+             --chat-bubble-color: rgba(203, 232, 237, 0.71);
+             --chat-bubble-right-color: rgb(157, 238, 244);
+             --chat-bubble-font-color: #333;
+             --chat-bubble-font-right-color: #333;
+             --chat-bubble-delay: 0.2s;
+         }
+
+        .middle {
+            margin-top: 2em;
+            overflow: hidden;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<chatbot-title></chatbot-title>
+
+<div class="middle">
+    <chatbot-chat>
+        <chat-bot></chat-bot>
+    </chatbot-chat>
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+name: langchain4j-chatbot-codestart
+ref: langchain4j-chatbot
+type: code
+tags: extension-codestart
+metadata:
+  title: Langchain4j - Codestarts - Chatbot
+  description: Start coding with Langchain4j - Codestarts - Chatbot
+#  path: /some-path
+  related-guide-section: https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/index.html
+
+output-strategy:
+  "src/main/resources/META-INF/resources/index.html": replace
+  "src/main/resources/META-INF/resources/components/*": replace
+  "src/main/resources/META-INF/resources/fonts/*": replace
+  "src/main/resources/META-INF/resources/icons/*": replace
