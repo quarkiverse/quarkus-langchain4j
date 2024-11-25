@@ -17,6 +17,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
+import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
@@ -44,6 +45,9 @@ public final class AiServiceMethodCreateInfo {
     private final List<String> outputGuardrailsClassNames;
     private final List<String> inputGuardrailsClassNames;
 
+    // support for response augmenter, potentially null
+    private final String responseAugmenterClassName;
+
     // these are populated when the AiService method is first called which can happen on any thread
     private transient final List<ToolSpecification> toolSpecifications = new CopyOnWriteArrayList<>();
     private transient final Map<String, ToolExecutor> toolExecutors = new ConcurrentHashMap<>();
@@ -51,6 +55,7 @@ public final class AiServiceMethodCreateInfo {
     // Don't cache the instances, because of scope issues (some will need to be re-queried)
     private transient final List<Class<? extends OutputGuardrail>> outputGuardrails = new CopyOnWriteArrayList<>();
     private transient final List<Class<? extends InputGuardrail>> inputGuardrails = new CopyOnWriteArrayList<>();
+    private transient Class<? extends AiResponseAugmenter<?>> augmenter;
 
     private final String outputTokenAccumulatorClassName;
     private OutputTokenAccumulator accumulator;
@@ -73,7 +78,8 @@ public final class AiServiceMethodCreateInfo {
             boolean switchToWorkerThread,
             List<String> inputGuardrailsClassNames,
             List<String> outputGuardrailsClassNames,
-            String outputTokenAccumulatorClassName) {
+            String outputTokenAccumulatorClassName,
+            String responseAugmenterClassName) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
@@ -104,6 +110,7 @@ public final class AiServiceMethodCreateInfo {
             }
         });
         this.switchToWorkerThread = switchToWorkerThread;
+        this.responseAugmenterClassName = responseAugmenterClassName;
     }
 
     public String getInterfaceName() {
@@ -174,6 +181,33 @@ public final class AiServiceMethodCreateInfo {
         return outputGuardrails;
     }
 
+    public String getResponseAugmenterClassName() {
+        return responseAugmenterClassName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends AiResponseAugmenter<?>> getResponseAugmenter() {
+        if (this.responseAugmenterClassName == null) {
+            return null;
+        }
+
+        synchronized (this) {
+            if (this.augmenter == null) { // Not loaded yet.
+                try {
+                    this.augmenter = (Class<? extends AiResponseAugmenter<?>>) Class.forName(
+                            getResponseAugmenterClassName(), true,
+                            Thread.currentThread().getContextClassLoader());
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Could not find " + AiResponseAugmenter.class.getSimpleName() + " implementation class: "
+                                    + getResponseAugmenterClassName(),
+                            e);
+                }
+            }
+            return augmenter;
+        }
+    }
+
     public int getGuardrailsMaxRetry() {
         return guardrailsMaxRetry.get();
     }
@@ -207,6 +241,10 @@ public final class AiServiceMethodCreateInfo {
 
     public boolean isSwitchToWorkerThread() {
         return switchToWorkerThread;
+    }
+
+    public void setResponseAugmenter(Class<? extends AiResponseAugmenter<?>> augmenter) {
+        this.augmenter = augmenter;
     }
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
