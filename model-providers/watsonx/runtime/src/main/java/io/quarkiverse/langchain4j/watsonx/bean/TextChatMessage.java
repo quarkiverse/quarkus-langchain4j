@@ -16,6 +16,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAssistant;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageTool;
@@ -174,7 +175,7 @@ public sealed interface TextChatMessage
         /**
          * Creates a {@link TextChatMessageTool}.
          *
-         * @param message the content of the message tool.
+         * @param content the content of the message tool.
          * @param toolCallId the unique identifier of the message tool.
          * @return the created {@link TextChatMessageTool}.
          */
@@ -219,15 +220,16 @@ public sealed interface TextChatMessage
         /**
          * Creates a {@link TextChatParameterTool} from a {@link ToolSpecification}.
          *
-         * @param toolExecutionRequest the tool specification to convert
+         * @param toolSpecification the tool specification to convert
          * @return the created {@link TextChatParameterTool}
          */
         public static TextChatParameterTool of(ToolSpecification toolSpecification) {
-            // FIXME: toolSpecification.toolParameters() is deprecated, we might receive a value in parameters() instead
+            var toolParams = JsonSchemaElementHelper.toMap(toolSpecification.parameters());
+
             var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(), Map.of(
-                    "type", toolSpecification.toolParameters().type(),
-                    "properties", toolSpecification.toolParameters().properties(),
-                    "required", toolSpecification.toolParameters().required()));
+                    "type", toolParams.get("type"),
+                    "properties", toolParams.get("properties"),
+                    "required", toolParams.get("required")));
             return new TextChatParameterTool("function", parameters);
         }
     }

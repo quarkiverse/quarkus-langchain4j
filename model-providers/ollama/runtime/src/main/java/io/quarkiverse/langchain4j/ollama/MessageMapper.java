@@ -16,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolParameters;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -142,21 +141,10 @@ final class MessageMapper {
     }
 
     private static Tool toTool(ToolSpecification toolSpecification) {
-        Tool.Function.Parameters functionParameters;
-        if (toolSpecification.toolParameters() != null) {
-            functionParameters = toFunctionParameters(toolSpecification.toolParameters());
-        } else {
-            functionParameters = toFunctionParameters(toolSpecification.parameters());
-        }
+        Tool.Function.Parameters functionParameters = toFunctionParameters(toolSpecification.parameters());
+
         return new Tool(Tool.Type.FUNCTION, new Tool.Function(toolSpecification.name(), toolSpecification.description(),
                 functionParameters));
-    }
-
-    private static Tool.Function.Parameters toFunctionParameters(ToolParameters toolParameters) {
-        if (toolParameters == null) {
-            return Tool.Function.Parameters.empty();
-        }
-        return Tool.Function.Parameters.objectType(toolParameters.properties(), toolParameters.required());
     }
 
     private static Tool.Function.Parameters toFunctionParameters(JsonObjectSchema parameters) {
