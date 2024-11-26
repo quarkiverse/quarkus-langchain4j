@@ -14,6 +14,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
+import static io.quarkus.arc.processor.DotNames.NAMED;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -380,6 +381,12 @@ public class AiServicesProcessor {
 
             String imageModelName = chatModelName; // TODO: should we have a separate setting for this?
 
+            AnnotationInstance namedAnno = declarativeAiServiceClassInfo.annotation(NAMED);
+            Optional<String> beanName = Optional.empty();
+            if (namedAnno != null) {
+                beanName = Optional.ofNullable(namedAnno.value().asString());
+            }
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -398,7 +405,8 @@ public class AiServicesProcessor {
                             chatModelName,
                             moderationModelName,
                             imageModelName,
-                            toolProviderClassName));
+                            toolProviderClassName,
+                            beanName));
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
 
@@ -704,6 +712,8 @@ public class AiServicesProcessor {
                 configurator.addInjectionPoint(ClassType.create(toolProvider));
                 allToolProviders.add(toolProvider);
             }
+
+            bi.getBeanName().ifPresent(beanName -> configurator.named(beanName));
 
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
