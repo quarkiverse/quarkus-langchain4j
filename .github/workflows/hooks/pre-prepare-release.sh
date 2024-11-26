@@ -4,5 +4,5 @@ do
 done  <   <(find samples/ -name pom.xml -print0)
 git commit -a -m "Update dependencies in samples"
 
-jbang .github/updateReadme.java "${CURRENT_VERSION}" "${NEXT_VERSION}"
-git commit -a -m "Update README"
+jbang .github/updateReadme.java "${CURRENT_VERSION}"
+git commit -a -m "Update README to ${CURRENT_VERSION}"
