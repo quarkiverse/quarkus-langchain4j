@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.deployment;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -30,6 +31,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final String chatModelName;
     private final String moderationModelName;
     private final String imageModelName;
+    private final Optional<String> beanName;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -48,7 +50,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String chatModelName,
             String moderationModelName,
             String imageModelName,
-            DotName toolProviderClassDotName) {
+            DotName toolProviderClassDotName,
+            Optional<String> beanName) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -66,6 +69,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.moderationModelName = moderationModelName;
         this.imageModelName = imageModelName;
         this.toolProviderClassDotName = toolProviderClassDotName;
+        this.beanName = beanName;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -134,5 +138,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getToolProviderClassDotName() {
         return toolProviderClassDotName;
+    }
+
+    public Optional<String> getBeanName() {
+        return beanName;
     }
 }
