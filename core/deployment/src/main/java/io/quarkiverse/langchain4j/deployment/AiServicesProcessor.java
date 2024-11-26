@@ -1362,14 +1362,14 @@ public class AiServicesProcessor {
             }
         }
 
-        if ((templateParams.size() == 1) && (params.size() == 1)) {
-            // the special 'it' param is supported when the method only has one parameter
-            templateParams.add(new TemplateParameterInfo(0, "it"));
-        }
-
         if (!templateParams.isEmpty() && templateParams.stream().map(TemplateParameterInfo::name).allMatch(Objects::isNull)) {
             log.warn(
                     "The application has been compiled without the '-parameters' being set flag on javac. Make sure your build tool is configured to pass this flag to javac, otherwise Quarkus LangChain4j is unlikely to work properly without it.");
+        }
+
+        if ((templateParams.size() == 1) && (params.size() == 1)) {
+            // the special 'it' param is supported when the method only has one parameter
+            templateParams.add(new TemplateParameterInfo(0, "it"));
         }
 
         return templateParams;
