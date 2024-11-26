@@ -8,17 +8,16 @@ import java.io.IOException;
 class updateReadme {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.err.println("Usage: 'jbang updateReadme.java oldVersion newVersion'");
+        if (args.length != 1) {
+            System.err.println("Usage: 'jbang updateReadme.java newVersion'");
             System.exit(1);
         } else {
-            String oldVersion = args[0];
-            String newVersion = args[1];
+            String newVersion = args[0];
 
             Path readmePath = Path.of("README.md");
 
             String oldContent = Files.readString(readmePath, StandardCharsets.UTF_8);
-            String newContent = oldContent.replace(oldVersion, newVersion);
+            String newContent = oldContent.replaceAll("(?s)<version[^>]*>.*?</version>", "<version>" + newVersion + "</version>");
             Files.write(readmePath, newContent.getBytes(StandardCharsets.UTF_8));
         }
     }
