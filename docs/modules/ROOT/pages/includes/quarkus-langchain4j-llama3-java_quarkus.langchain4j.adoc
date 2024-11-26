@@ -114,7 +114,7 @@ a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-tempe
 
 [.description]
 --
-TODO
+Temperature in ++[++0,inf++]++
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -125,13 +125,13 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|
+|`0.1`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens[`quarkus.langchain4j.llama3.chat-model.max-tokens`]##
 
 [.description]
 --
-TODO
+Number of steps to run for < 0 = limited by context length
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -142,7 +142,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_CHAT_MODEL_MAX_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|
+|`512`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration[`quarkus.langchain4j.llama3.enable-integration`]##
 
@@ -254,7 +254,7 @@ a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-
 
 [.description]
 --
-TODO
+Temperature in ++[++0,inf++]++
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -265,13 +265,13 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_TEM
 endif::add-copy-button-to-env-var[]
 --
 |double
-|
+|`0.1`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens[`quarkus.langchain4j.llama3."model-name".chat-model.max-tokens`]##
 
 [.description]
 --
-TODO
+Number of steps to run for < 0 = limited by context length
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -282,7 +282,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3__MODEL_NAME__CHAT_MODEL_MAX
 endif::add-copy-button-to-env-var[]
 --
 |int
-|
+|`512`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration[`quarkus.langchain4j.llama3."model-name".enable-integration`]##
 

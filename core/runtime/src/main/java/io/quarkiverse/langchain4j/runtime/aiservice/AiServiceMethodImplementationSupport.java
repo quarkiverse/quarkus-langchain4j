@@ -66,6 +66,7 @@ import io.quarkiverse.langchain4j.audit.Audit;
 import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
+import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
@@ -209,12 +210,17 @@ public class AiServiceMethodImplementationSupport {
                             public Flow.Publisher<?> apply(AugmentationResult ar) {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
 
+                                ChatMemory memory = context.chatMemory(memoryId);
                                 GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, (UserMessage) augmentedUserMessage,
-                                        context.chatMemory(memoryId), ar, templateVariables);
+                                        memory, ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(augmentedUserMessage, needsMemorySeed);
-                                return new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
+                                var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
                                         methodCreateInfo.isSwitchToWorkerThread());
+                                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                                        new ResponseAugmenterParams((UserMessage) augmentedUserMessage,
+                                                memory, ar, methodCreateInfo.getUserMessageTemplate(),
+                                                templateVariables)));
                             }
 
                             private List<ChatMessage> messagesToSend(ChatMessage augmentedUserMessage,
@@ -260,16 +266,20 @@ public class AiServiceMethodImplementationSupport {
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
         }
 
+        var actualAugmentationResult = augmentationResult;
+        var actualUserMessage = userMessage;
         if (isMulti(returnType)) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
-                return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+                var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                         (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
                         methodCreateInfo.isSwitchToWorkerThread());
+                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                        new ResponseAugmenterParams(actualUserMessage,
+                                chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
+                                Collections.unmodifiableMap(templateVariables))));
             }
 
-            var actualAugmentationResult = augmentationResult;
             return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
                     methodCreateInfo.isSwitchToWorkerThread())
@@ -310,7 +320,11 @@ public class AiServiceMethodImplementationSupport {
                     .atMost(methodCreateInfo.getGuardrailsMaxRetry())
                     .onFailure(GuardrailsSupport.GuardrailRetryException.class)
                     .transform(t -> new GuardrailException(
-                            "Output validation failed. The guardrails have reached the maximum number of retries"));
+                            "Output validation failed. The guardrails have reached the maximum number of retries"))
+                    .plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                            new ResponseAugmenterParams(actualUserMessage,
+                                    chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
+                                    Collections.unmodifiableMap(templateVariables))));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
@@ -388,8 +402,11 @@ public class AiServiceMethodImplementationSupport {
 
         response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason(), response.metadata());
 
+        var responseAugmenterParam = new ResponseAugmenterParams(userMessage, chatMemory, augmentationResult,
+                userMessageTemplate, templateVariables);
         if (isResult(returnType)) {
             var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response, resultTypeParam((ParameterizedType) returnType));
+            parsedResponse = ResponseAugmenterSupport.invoke(parsedResponse, methodCreateInfo, responseAugmenterParam);
             return Result.builder()
                     .content(parsedResponse)
                     .tokenUsage(tokenUsageAccumulator)
@@ -398,7 +415,8 @@ public class AiServiceMethodImplementationSupport {
                     .build();
         }
 
-        return SERVICE_OUTPUT_PARSER.parse(response, returnType);
+        return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(response, returnType),
+                methodCreateInfo, responseAugmenterParam);
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,

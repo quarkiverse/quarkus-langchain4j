@@ -7,6 +7,7 @@
 ** xref:prompt-engineering.adoc[Prompt Engineering 101]
 ** xref:prompt-generation.adoc[Prompt Generation]
 ** xref:guardrails.adoc[Guardrails]
+** xref:response-augmenter.adoc[Response Augmenter]
 
 * LLMs
 ** xref:llms.adoc[LLMs]

@@ -13,6 +13,9 @@ import org.jboss.jandex.DotName;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
+import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
+import io.quarkiverse.langchain4j.response.ResponseAugmenter;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -58,4 +61,16 @@ public class DotNames {
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);
+
+    public static final DotName OUTPUT_GUARDRAIL_ACCUMULATOR = DotName.createSimple(OutputGuardrailAccumulator.class);
+
+    /**
+     * The {@link AiResponseAugmenter} interface.
+     */
+    public static final DotName AI_RESPONSE_AUGMENTER = DotName.createSimple(AiResponseAugmenter.class);
+
+    /**
+     * The {@link ResponseAugmenter} annotation.
+     */
+    public static final DotName RESPONSE_AUGMENTER_ANNOTATION = DotName.createSimple(ResponseAugmenter.class);
 }

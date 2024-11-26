@@ -67,6 +67,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.devui.ToolProviderInfo;
+import io.quarkiverse.langchain4j.deployment.items.AiServicesMethodBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
@@ -102,7 +103,6 @@ import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.arc.processor.BuiltinScope;
-import io.quarkus.builder.item.MultiBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
@@ -125,7 +125,6 @@ import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AiServicesProcessor {
@@ -186,7 +185,7 @@ public class AiServicesProcessor {
         }
         Set<DotName> returnTypesToRegister = new HashSet<>();
         for (AiServicesMethodBuildItem aiServicesMethodBuildItem : aiServicesMethodBuildItems) {
-            Type type = aiServicesMethodBuildItem.methodInfo.returnType();
+            Type type = aiServicesMethodBuildItem.getMethodInfo().returnType();
             if (type.kind() == Type.Kind.PRIMITIVE) {
                 continue;
             }
@@ -747,7 +746,7 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
-    public void markUsedOutputGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
+    public void markUsedGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (AiServicesMethodBuildItem method : methods) {
             List<String> list = new ArrayList<>(method.getOutputGuardrails());
@@ -755,10 +754,21 @@ public class AiServicesProcessor {
             for (String cn : list) {
                 unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
             }
-            DotName dotName = DotName.createSimple(OutputGuardrailAccumulator.class);
-            if (method.methodInfo.hasAnnotation(dotName)) {
-                unremovableProducer.produce(
-                        UnremovableBeanBuildItem.beanTypes(method.methodInfo.annotation(dotName).value().asClass().name()));
+            if (method.getMethodInfo().hasAnnotation(DotNames.OUTPUT_GUARDRAIL_ACCUMULATOR)) {
+                DotName name = method.getMethodInfo().annotation(DotNames.OUTPUT_GUARDRAIL_ACCUMULATOR)
+                        .value().asClass().name();
+                unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(name));
+            }
+        }
+    }
+
+    @BuildStep
+    public void markUsedResponseAugmenterUnremovable(List<AiServicesMethodBuildItem> methods,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        for (AiServicesMethodBuildItem method : methods) {
+            var cn = method.getResponseAugmenter();
+            if (cn != null) {
+                unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
             }
         }
     }
@@ -830,29 +840,31 @@ public class AiServicesProcessor {
             }
 
             DotName dotName = DotName.createSimple(OutputGuardrailAccumulator.class);
-            if (method.methodInfo.hasAnnotation(dotName)) {
+            if (method.getMethodInfo().hasAnnotation(dotName)) {
                 // We have an accumulator
                 // Check that the accumulator exists
-                var bean = method.methodInfo.annotation(dotName).value().asClass().name();
+                var bean = method.getMethodInfo().annotation(dotName).value().asClass().name();
                 if (synthesisFinished.beanStream().withBeanType(bean).isEmpty()) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("Missing accumulator bean: " + bean.toString())));
                 }
 
                 // Check that the accumulator is used on a method retuning a Multi
-                DotName returnedType = method.methodInfo.returnType().name();
+                DotName returnedType = method.getMethodInfo().returnType().name();
                 if (!DotName.createSimple(Multi.class).equals(returnedType)) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("OutputGuardrailAccumulator can only be used on method returning a " +
                                     "`Multi<X>`: found `%s` for method `%s.%s`".formatted(returnedType,
-                                            method.methodInfo.declaringClass().toString(), method.methodInfo.name()))));
+                                            method.getMethodInfo().declaringClass().toString(),
+                                            method.getMethodInfo().name()))));
                 }
 
                 // Check that the method have output guardrails
-                if (method.outputGuardrails.isEmpty()) {
+                if (method.getOutputGuardrails().isEmpty()) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
                             new DeploymentException("OutputGuardrailAccumulator used without OutputGuardrails in method `%s.%s`"
-                                    .formatted(method.methodInfo.declaringClass().toString(), method.methodInfo.name()))));
+                                    .formatted(method.getMethodInfo().declaringClass().toString(),
+                                            method.getMethodInfo().name()))));
                 }
             }
         }
@@ -1125,7 +1137,7 @@ public class AiServicesProcessor {
                             aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
                                     methodCreateInfo.getInputGuardrailsClassNames(),
                                     methodCreateInfo.getOutputGuardrailsClassNames(),
-                                    gatherMethodToolClassNames(methodInfo),
+                                    methodCreateInfo.getResponseAugmenterClassName(),
                                     methodCreateInfo));
                         }
                     }
@@ -1259,6 +1271,8 @@ public class AiServicesProcessor {
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 
+        String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
+
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThread = detectIfToolExecutionRequiresAWorkerThread(method, tools, methodToolClassNames);
 
@@ -1266,7 +1280,7 @@ public class AiServicesProcessor {
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, switchToWorkerThread,
-                inputGuardrails, outputGuardrails, accumulatorClassName);
+                inputGuardrails, outputGuardrails, accumulatorClassName, responseAugmenterClassName);
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
@@ -1759,70 +1773,4 @@ public class AiServicesProcessor {
         }
     }
 
-    public static final class AiServicesMethodBuildItem extends MultiBuildItem {
-
-        private final MethodInfo methodInfo;
-        private final List<String> outputGuardrails;
-        private final List<String> inputGuardrails;
-        private final List<String> tools;
-        private final AiServiceMethodCreateInfo methodCreateInfo;
-
-        public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> inputGuardrails, List<String> outputGuardrails,
-                List<String> tools,
-                AiServiceMethodCreateInfo methodCreateInfo) {
-            this.methodInfo = methodInfo;
-            this.inputGuardrails = inputGuardrails;
-            this.outputGuardrails = outputGuardrails;
-            this.tools = tools;
-            this.methodCreateInfo = methodCreateInfo;
-        }
-
-        public List<String> getOutputGuardrails() {
-            return outputGuardrails;
-        }
-
-        public List<String> getInputGuardrails() {
-            return inputGuardrails;
-        }
-
-        public MethodInfo getMethodInfo() {
-            return methodInfo;
-        }
-
-        public AiServiceMethodCreateInfo getMethodCreateInfo() {
-            return methodCreateInfo;
-        }
-
-        public static List<String> gatherGuardrails(MethodInfo methodInfo, DotName annotation) {
-            List<String> guardrails = new ArrayList<>();
-            AnnotationInstance instance = methodInfo.annotation(annotation);
-            if (instance == null) {
-                // Check on class
-                instance = methodInfo.declaringClass().declaredAnnotation(annotation);
-            }
-            if (instance != null) {
-                Type[] array = instance.value().asClassArray();
-                for (Type type : array) {
-                    // Make sure each guardrail is used only once
-                    if (!guardrails.contains(type.name().toString())) {
-                        guardrails.add(type.name().toString());
-                    }
-                }
-            }
-            return guardrails;
-        }
-
-        public static String gatherAccumulator(MethodInfo methodInfo) {
-            DotName annotation = DotName.createSimple(OutputGuardrailAccumulator.class);
-            AnnotationInstance instance = methodInfo.annotation(annotation);
-            if (instance == null) {
-                // Check on class
-                instance = methodInfo.declaringClass().declaredAnnotation(annotation);
-            }
-            if (instance != null) {
-                return instance.value().asClass().name().toString();
-            }
-            return null;
-        }
-    }
 }
