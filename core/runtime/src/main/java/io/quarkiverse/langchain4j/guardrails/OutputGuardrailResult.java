@@ -48,13 +48,8 @@ public record OutputGuardrailResult(Result result, String successfulText, Object
     }
 
     @Override
-    public boolean isSuccess() {
-        return result == Result.SUCCESS || result == Result.SUCCESS_WITH_RESULT;
-    }
-
-    @Override
-    public boolean hasRewrittenResult() {
-        return result == Result.SUCCESS_WITH_RESULT;
+    public Result getResult() {
+        return result;
     }
 
     public boolean isRetry() {

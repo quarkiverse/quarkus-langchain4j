@@ -10,20 +10,29 @@ import java.util.stream.Collectors;
  * @param result The result of the input guardrail validation.
  * @param failures The list of failures, empty if the validation succeeded.
  */
-public record InputGuardrailResult(Result result, List<Failure> failures) implements GuardrailResult<InputGuardrailResult> {
+public record InputGuardrailResult(Result result, String successfulText,
+        List<Failure> failures) implements GuardrailResult<InputGuardrailResult> {
 
     private static final InputGuardrailResult SUCCESS = new InputGuardrailResult();
 
     private InputGuardrailResult() {
-        this(Result.SUCCESS, Collections.emptyList());
+        this(Result.SUCCESS, null, Collections.emptyList());
+    }
+
+    private InputGuardrailResult(String successfulText) {
+        this(Result.SUCCESS_WITH_RESULT, successfulText, Collections.emptyList());
     }
 
     InputGuardrailResult(List<Failure> failures, boolean fatal) {
-        this(fatal ? Result.FATAL : Result.FAILURE, failures);
+        this(fatal ? Result.FATAL : Result.FAILURE, null, failures);
     }
 
     public static InputGuardrailResult success() {
         return InputGuardrailResult.SUCCESS;
+    }
+
+    public static InputGuardrailResult successWith(String successfulText) {
+        return new InputGuardrailResult(successfulText);
     }
 
     public static InputGuardrailResult failure(List<? extends GuardrailResult.Failure> failures) {
@@ -31,8 +40,8 @@ public record InputGuardrailResult(Result result, List<Failure> failures) implem
     }
 
     @Override
-    public boolean isSuccess() {
-        return result == Result.SUCCESS;
+    public Result getResult() {
+        return result;
     }
 
     @Override
@@ -54,7 +63,7 @@ public record InputGuardrailResult(Result result, List<Failure> failures) implem
     @Override
     public String toString() {
         if (isSuccess()) {
-            return "success";
+            return hasRewrittenResult() ? "Success with '" + successfulText + "'" : "Success";
         }
         return failures.stream().map(Failure::toString).collect(Collectors.joining(", "));
     }

@@ -48,6 +48,14 @@ public interface InputGuardrail extends Guardrail<InputGuardrailParams, InputGua
     }
 
     /**
+     * @return The result of a successful input guardrail validation with a specific text.
+     * @param successfulText The text of the successful result.
+     */
+    default InputGuardrailResult successWith(String successfulText) {
+        return InputGuardrailResult.successWith(successfulText);
+    }
+
+    /**
      * @param message A message describing the failure.
      * @return The result of a failed input guardrail validation.
      */
