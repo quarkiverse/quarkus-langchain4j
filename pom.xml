@@ -39,7 +39,7 @@
     <wiremock.version>3.9.1</wiremock.version>
     <sundrio.version>0.200.0</sundrio.version>
     <quarkus-wiremock.version>1.4.0</quarkus-wiremock.version>
-    <quarkus-neo4j.version>5.0.0</quarkus-neo4j.version>
+    <quarkus-neo4j.version>5.0.1</quarkus-neo4j.version>
     <jlama.version>0.8.3</jlama.version>
   </properties>
   <dependencyManagement>
