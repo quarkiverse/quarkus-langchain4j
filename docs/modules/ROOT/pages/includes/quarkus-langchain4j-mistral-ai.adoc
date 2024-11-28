@@ -42,6 +42,23 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-enabled[`quarkus.langchain4j.mistralai.moderation-model.enabled`]##
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
 a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-base-url[`quarkus.langchain4j.mistralai.base-url`]##
 
 [.description]
@@ -281,6 +298,57 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-model-name[`quarkus.langchain4j.mistralai.moderation-model.model-name`]##
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`mistral-moderation-latest`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-requests[`quarkus.langchain4j.mistralai.moderation-model.log-requests`]##
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-moderation-model-log-responses[`quarkus.langchain4j.mistralai.moderation-model.log-responses`]##
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_MODERATION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -580,6 +648,57 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI_
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__EMBEDDING_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-model-name[`quarkus.langchain4j.mistralai."model-name".moderation-model.model-name`]##
+
+[.description]
+--
+Model name to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_MODEL_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`mistral-moderation-latest`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-requests[`quarkus.langchain4j.mistralai."model-name".moderation-model.log-requests`]##
+
+[.description]
+--
+Whether moderation model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-moderation-model-log-responses[`quarkus.langchain4j.mistralai."model-name".moderation-model.log-responses`]##
+
+[.description]
+--
+Whether moderation model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__MODERATION_MODEL_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

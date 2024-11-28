@@ -13,10 +13,14 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiEmbeddingModel;
+import dev.langchain4j.model.mistralai.MistralAiModerationModel;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
+import dev.langchain4j.model.moderation.DisabledModerationModel;
+import dev.langchain4j.model.moderation.ModerationModel;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
+import io.quarkiverse.langchain4j.mistralai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -166,15 +170,51 @@ public class MistralAiRecorder {
         }
     }
 
+    public Supplier<ModerationModel> moderationModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
+        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
+                configName);
+
+        if (mistralAiConfig.enableIntegration()) {
+            String apiKey = mistralAiConfig.apiKey();
+            ModerationModelConfig moderationModelConfig = mistralAiConfig.moderationModel();
+
+            if (DUMMY_KEY.equals(apiKey)) {
+                throw new ConfigValidationException(createApiKeyConfigProblem(configName));
+            }
+
+            var builder = new MistralAiModerationModel.Builder()
+                    .baseUrl(mistralAiConfig.baseUrl())
+                    .apiKey(apiKey)
+                    .modelName(moderationModelConfig.modelName())
+                    .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), mistralAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), mistralAiConfig.logResponses()))
+                    .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
+
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public ModerationModel get() {
+                    return new DisabledModerationModel();
+                }
+            };
+        }
+    }
+
     private LangChain4jMistralAiConfig.MistralAiConfig correspondingMistralAiConfig(
             LangChain4jMistralAiConfig runtimeConfig, String configName) {
-        LangChain4jMistralAiConfig.MistralAiConfig huggingFaceConfig;
+        LangChain4jMistralAiConfig.MistralAiConfig config;
         if (NamedConfigUtil.isDefault(configName)) {
-            huggingFaceConfig = runtimeConfig.defaultConfig();
+            config = runtimeConfig.defaultConfig();
         } else {
-            huggingFaceConfig = runtimeConfig.namedConfig().get(configName);
+            config = runtimeConfig.namedConfig().get(configName);
         }
-        return huggingFaceConfig;
+        return config;
     }
 
     private ConfigValidationException.Problem[] createApiKeyConfigProblem(String configName) {

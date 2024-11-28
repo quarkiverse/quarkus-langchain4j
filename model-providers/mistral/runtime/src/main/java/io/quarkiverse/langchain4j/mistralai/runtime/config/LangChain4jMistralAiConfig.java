@@ -67,6 +67,11 @@ public interface LangChain4jMistralAiConfig {
         EmbeddingModelConfig embeddingModel();
 
         /**
+         * Moderation model related settings
+         */
+        ModerationModelConfig moderationModel();
+
+        /**
          * Whether the Mistral client should log requests
          */
         @ConfigDocDefault("false")

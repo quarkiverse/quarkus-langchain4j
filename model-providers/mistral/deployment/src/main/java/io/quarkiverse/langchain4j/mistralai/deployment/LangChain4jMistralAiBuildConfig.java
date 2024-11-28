@@ -19,4 +19,9 @@ public interface LangChain4jMistralAiBuildConfig {
      */
     EmbeddingModelBuildConfig embeddingModel();
 
+    /**
+     * Moderation model related settings
+     */
+    ModerationModelBuildConfig moderationModel();
+
 }
