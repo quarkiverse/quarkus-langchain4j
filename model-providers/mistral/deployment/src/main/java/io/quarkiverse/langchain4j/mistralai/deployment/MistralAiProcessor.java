@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.mistralai.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
@@ -15,8 +16,10 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ModerationModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.SelectedModerationModelProviderBuildItem;
 import io.quarkiverse.langchain4j.mistralai.runtime.MistralAiRecorder;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -52,12 +55,16 @@ public class MistralAiProcessor {
     @BuildStep
     public void providerCandidates(BuildProducer<ChatModelProviderCandidateBuildItem> chatProducer,
             BuildProducer<EmbeddingModelProviderCandidateBuildItem> embeddingProducer,
+            BuildProducer<ModerationModelProviderCandidateBuildItem> moderationProducer,
             LangChain4jMistralAiBuildConfig config) {
         if (config.chatModel().enabled().isEmpty() || config.chatModel().enabled().get()) {
             chatProducer.produce(new ChatModelProviderCandidateBuildItem(PROVIDER));
         }
         if (config.embeddingModel().enabled().isEmpty() || config.embeddingModel().enabled().get()) {
             embeddingProducer.produce(new EmbeddingModelProviderCandidateBuildItem(PROVIDER));
+        }
+        if (config.moderationModel().enabled().isEmpty() || config.moderationModel().enabled().get()) {
+            moderationProducer.produce(new ModerationModelProviderCandidateBuildItem(PROVIDER));
         }
     }
 
@@ -67,6 +74,7 @@ public class MistralAiProcessor {
     void generateBeans(MistralAiRecorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
+            List<SelectedModerationModelProviderBuildItem> selectedModeration,
             LangChain4jMistralAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
@@ -103,6 +111,20 @@ public class MistralAiProcessor {
                         .unremovable()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.embeddingModel(config, configName));
+                addQualifierIfNecessary(builder, configName);
+                beanProducer.produce(builder.done());
+            }
+        }
+
+        for (var selected : selectedModeration) {
+            if (PROVIDER.equals(selected.getProvider())) {
+                String configName = selected.getConfigName();
+                var builder = SyntheticBeanBuildItem
+                        .configure(MODERATION_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.moderationModel(config, configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
