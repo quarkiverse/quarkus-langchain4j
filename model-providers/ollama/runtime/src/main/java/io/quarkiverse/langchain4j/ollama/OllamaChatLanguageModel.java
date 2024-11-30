@@ -6,15 +6,12 @@ import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
 import static io.quarkiverse.langchain4j.ollama.MessageMapper.toTools;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -29,7 +26,6 @@ import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
@@ -137,25 +133,10 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                     AiMessage.from(response.message().content()),
                     new TokenUsage(response.promptEvalCount(), response.evalCount()));
         } else {
-            try {
-                List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>(toolCalls.size());
-                for (ToolCall toolCall : toolCalls) {
-                    ToolCall.FunctionCall functionCall = toolCall.function();
-
-                    // TODO: we need to update LangChain4j to make ToolExecutionRequest use a map instead of a String
-                    String argumentsStr = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
-                            .writeValueAsString(functionCall.arguments());
-                    toolExecutionRequests.add(ToolExecutionRequest.builder()
-                            .name(functionCall.name())
-                            .arguments(argumentsStr)
-                            .build());
-                }
-
-                result = Response.from(aiMessage(toolExecutionRequests),
-                        new TokenUsage(response.promptEvalCount(), response.evalCount()));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Unable to parse tool call response", e);
-            }
+            List<ToolExecutionRequest> toolExecutionRequests = toolCalls.stream().map(ToolCall::toToolExecutionRequest)
+                    .toList();
+            result = Response.from(aiMessage(toolExecutionRequests),
+                    new TokenUsage(response.promptEvalCount(), response.evalCount()));
         }
         return result;
     }
