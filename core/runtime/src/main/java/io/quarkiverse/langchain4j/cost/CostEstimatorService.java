@@ -28,10 +28,13 @@ public class CostEstimatorService {
     public Cost estimate(ChatModelResponseContext response) {
         TokenUsage tokenUsage = response.response().tokenUsage();
         CostEstimator.CostContext costContext = new MyCostContext(tokenUsage, response);
+        return estimate(costContext);
+    }
 
+    public Cost estimate(CostEstimator.CostContext context) {
         for (CostEstimator costEstimator : costEstimators) {
-            if (costEstimator.supports(costContext)) {
-                CostEstimator.CostResult costResult = costEstimator.estimate(costContext);
+            if (costEstimator.supports(context)) {
+                CostEstimator.CostResult costResult = costEstimator.estimate(context);
                 if (costResult != null) {
                     BigDecimal totalCost = costResult.inputTokensCost().add(costResult.outputTokensCost());
                     return new Cost(totalCost, costResult.currency());
