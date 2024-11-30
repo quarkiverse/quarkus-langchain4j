@@ -2,23 +2,31 @@ package io.quarkiverse.langchain4j.ollama;
 
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
 import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
+import static io.quarkiverse.langchain4j.ollama.MessageMapper.toTools;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 import io.smallrye.mutiny.Context;
 
 /**
  * Use to have streaming feature on models used trough Ollama.
  */
 public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageModel {
+    private static final String TOOLS_CONTEXT = "TOOLS";
+    private static final String TOKEN_USAGE_CONTEXT = "TOKEN_USAGE";
+    private static final String RESPONSE_CONTEXT = "RESPONSE";
     private final OllamaClient client;
     private final String model;
     private final String format;
@@ -37,18 +45,23 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+    public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
+            StreamingResponseHandler<AiMessage> handler) {
         ensureNotEmpty(messages, "messages");
+        var tools = (toolSpecifications != null && toolSpecifications.size() > 0) ? toTools(toolSpecifications) : null;
 
         ChatRequest request = ChatRequest.builder()
                 .model(model)
                 .messages(toOllamaMessages(messages))
                 .options(options)
                 .format(format)
+                .tools(tools)
                 .stream(true)
                 .build();
 
-        Context context = Context.of("response", new ArrayList<ChatResponse>());
+        Context context = Context.empty();
+        context.put(RESPONSE_CONTEXT, new ArrayList<ChatResponse>());
+        context.put(TOOLS_CONTEXT, new ArrayList<ToolExecutionRequest>());
 
         client.streamingChat(request)
                 .subscribe()
@@ -58,13 +71,31 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                             @SuppressWarnings("unchecked")
                             public void accept(ChatResponse response) {
                                 try {
-                                    if ((response == null) || (response.message() == null)
-                                            || (response.message().content() == null)
-                                            || response.message().content().isEmpty()) {
+                                    if ((response == null) || (response.message() == null)) {
                                         return;
                                     }
-                                    ((List<ChatResponse>) context.get("response")).add(response);
-                                    handler.onNext(response.message().content());
+
+                                    if (response.message().toolCalls() != null) {
+                                        List<ToolExecutionRequest> toolContext = context.get(TOOLS_CONTEXT);
+                                        List<ToolCall> toolCalls = response.message().toolCalls();
+                                        toolCalls.stream()
+                                                .map(ToolCall::toToolExecutionRequest)
+                                                .forEach(toolContext::add);
+                                    }
+
+                                    if (!response.message().content().isEmpty()) {
+                                        ((List<ChatResponse>) context.get(RESPONSE_CONTEXT)).add(response);
+                                        handler.onNext(response.message().content());
+                                    }
+
+                                    if (response.done()) {
+                                        TokenUsage tokenUsage = new TokenUsage(
+                                                response.evalCount(),
+                                                response.promptEvalCount(),
+                                                response.evalCount() + response.promptEvalCount());
+                                        context.put(TOKEN_USAGE_CONTEXT, tokenUsage);
+                                    }
+
                                 } catch (Exception e) {
                                     handler.onError(e);
                                 }
@@ -78,17 +109,37 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                         },
                         new Runnable() {
                             @Override
-                            @SuppressWarnings("unchecked")
                             public void run() {
-                                var list = ((List<ChatResponse>) context.get("response"));
-                                StringBuilder builder = new StringBuilder();
-                                for (ChatResponse response : list) {
-                                    builder.append(response.message().content());
+
+                                TokenUsage tokenUsage = context.get(TOKEN_USAGE_CONTEXT);
+                                List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
+                                List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
+
+                                if (toolExecutionRequests.size() > 0) {
+                                    handler.onComplete(Response.from(AiMessage.from(toolExecutionRequests), tokenUsage));
+                                    return;
                                 }
-                                AiMessage message = new AiMessage(builder.toString());
-                                handler.onComplete(Response.from(message));
+
+                                String response = chatResponses.stream()
+                                        .map(ChatResponse::message)
+                                        .map(Message::content)
+                                        .collect(Collectors.joining());
+
+                                AiMessage message = new AiMessage(response);
+                                handler.onComplete(Response.from(message, tokenUsage));
                             }
                         });
+    }
+
+    @Override
+    public void generate(List<ChatMessage> messages, ToolSpecification toolSpecification,
+            StreamingResponseHandler<AiMessage> handler) {
+        generate(messages, List.of(toolSpecification), handler);
+    }
+
+    @Override
+    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+        generate(messages, List.of(), handler);
     }
 
     /**

@@ -142,6 +142,8 @@ public interface WatsonxRestApi {
 
         private static final Logger log = Logger.getLogger(WatsonClientLogger.class);
         private static final Pattern BEARER_PATTERN = Pattern.compile("(Bearer\\s*)(\\w{4})(\\w+)(\\w{4})");
+        private static final Pattern BASE64_IMAGE_PATTERN = Pattern.compile("(data:.+;base64,)(.{15})(.+)(.{15})([\\s\\S]*)");
+
         private final boolean logRequests;
         private final boolean logResponses;
 
@@ -205,7 +207,7 @@ public interface WatsonxRestApi {
             if (body == null) {
                 return "";
             }
-            return body.toString();
+            return formatBase64ImageForLogging(body.toString());
         }
 
         private String inOneLine(MultiMap headers) {
@@ -237,6 +239,26 @@ public interface WatsonxRestApi {
                 return sb.toString();
             } catch (Exception e) {
                 return "Failed to mask the API key.";
+            }
+        }
+
+        private static String formatBase64ImageForLogging(String body) {
+            try {
+
+                if (body == null || body.isBlank())
+                    return body;
+
+                Matcher matcher = BASE64_IMAGE_PATTERN.matcher(body);
+
+                StringBuilder sb = new StringBuilder();
+                while (matcher.find()) {
+                    matcher.appendReplacement(sb,
+                            matcher.group(1) + matcher.group(2) + "..." + matcher.group(4) + matcher.group(5));
+                }
+
+                return sb.isEmpty() ? body : sb.toString();
+            } catch (Exception e) {
+                return "Failed to format the base64 image value.";
             }
         }
 

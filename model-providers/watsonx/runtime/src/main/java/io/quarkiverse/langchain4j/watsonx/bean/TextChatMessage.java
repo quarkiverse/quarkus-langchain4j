@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.base64Image;
+import static java.util.Objects.isNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,8 +132,9 @@ public sealed interface TextChatMessage
                     }
                     case IMAGE -> {
                         var imageContent = ImageContent.class.cast(content);
-                        var base64 = "data:image/%s;base64,%s".formatted(
-                                imageContent.image().mimeType(),
+                        var mimeType = imageContent.image().mimeType();
+                        var base64 = "data:%s;base64,%s".formatted(
+                                isNull(mimeType) ? "image" : mimeType,
                                 base64Image(imageContent.image()));
                         values.add(Map.of(
                                 "type", "image_url",
@@ -225,11 +227,8 @@ public sealed interface TextChatMessage
          */
         public static TextChatParameterTool of(ToolSpecification toolSpecification) {
             var toolParams = JsonSchemaElementHelper.toMap(toolSpecification.parameters());
-
-            var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(), Map.of(
-                    "type", toolParams.get("type"),
-                    "properties", toolParams.get("properties"),
-                    "required", toolParams.get("required")));
+            var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(),
+                    toolParams);
             return new TextChatParameterTool("function", parameters);
         }
     }
