@@ -38,7 +38,7 @@ public interface LangChain4jLlama3FixedRuntimeConfig {
      * Location on the file-system which serves as a cache for the models
      *
      */
-    @ConfigDocDefault("${user.name}/.llama3java/models")
+    @ConfigDocDefault("${user.home}/.llama3java/models")
     Optional<Path> modelsPath();
 
     @ConfigGroup
