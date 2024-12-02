@@ -138,7 +138,8 @@ public class AzureOpenAiRecorder {
                 public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
-
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };

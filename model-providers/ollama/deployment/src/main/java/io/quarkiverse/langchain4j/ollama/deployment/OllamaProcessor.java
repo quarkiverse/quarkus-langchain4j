@@ -161,7 +161,9 @@ public class OllamaProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, fixedRuntimeConfig, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .createWith(recorder.streamingChatModel(config, fixedRuntimeConfig, configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
