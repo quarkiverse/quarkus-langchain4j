@@ -38,7 +38,7 @@ public interface LangChain4jJlamaFixedRuntimeConfig {
      * Location on the file-system which serves as a cache for the models
      *
      */
-    @ConfigDocDefault("${user.name}/.jlama/models")
+    @ConfigDocDefault("${user.home}/.jlama/models")
     Optional<Path> modelsPath();
 
     @ConfigGroup
