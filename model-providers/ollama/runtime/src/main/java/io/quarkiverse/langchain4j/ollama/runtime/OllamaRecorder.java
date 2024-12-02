@@ -133,7 +133,8 @@ public class OllamaRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOllamaConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+            LangChain4jOllamaConfig runtimeConfig,
             LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig, String configName) {
         LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
@@ -166,16 +167,20 @@ public class OllamaRecorder {
                     .options(optionsBuilder.build())
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(
+                        SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(
+                        SyntheticCreationalContext<StreamingChatLanguageModel> context) {
                     return new DisabledStreamingChatLanguageModel();
                 }
             };

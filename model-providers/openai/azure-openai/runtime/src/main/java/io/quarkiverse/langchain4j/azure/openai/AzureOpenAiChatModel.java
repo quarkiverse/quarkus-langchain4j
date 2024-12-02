@@ -126,7 +126,6 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
-        ;
     }
 
     @Override

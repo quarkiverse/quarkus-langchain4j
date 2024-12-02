@@ -117,7 +117,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jOpenAiConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+            LangChain4jOpenAiConfig runtimeConfig,
             String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
 
@@ -154,20 +155,22 @@ public class OpenAiRecorder {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(
+                        SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(
+                        SyntheticCreationalContext<StreamingChatLanguageModel> streamingChatLanguageModelSyntheticCreationalContext) {
                     return new DisabledStreamingChatLanguageModel();
                 }
-
             };
         }
     }
