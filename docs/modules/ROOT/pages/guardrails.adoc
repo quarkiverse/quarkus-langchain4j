@@ -106,7 +106,7 @@ The scope of the guardrail is important as it defines the lifecycle of the guard
 === Declaring Input Guardrails
 
 Input guardrails are declared on the AI Service interface.
-You can declare output guardrails in two ways:
+You can declare input guardrails in two ways:
 
 - By annotating the AI Service interface with `@InputGuardrails` and listing the guardrails - these guardrails will be applied to all the methods of the AI Service.
 - By annotating the method of the AI Service with `@InputGuardrails` and listing the guardrails - these guardrails will be applied to this method only.
