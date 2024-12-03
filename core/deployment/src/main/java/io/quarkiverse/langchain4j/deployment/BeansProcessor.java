@@ -261,11 +261,14 @@ public class BeansProcessor {
             // in case multiple embedding model providers are available,
             // the user has to specify `quarkus.langchain4j.embedding-model.provider` to choose one
             Optional<String> userSelectedProvider = buildConfig.defaultConfig().embeddingModel().provider();
-            String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
-                    beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
-                    userSelectedProvider, embeddingModelBeanType, embeddingModelConfigNamespace);
-            selectedEmbeddingProducer
-                    .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            if (userSelectedProvider.isEmpty()) {
+                String provider = selectEmbeddingModelProvider(inProcessEmbeddingBuildItems, embeddingCandidateItems,
+                        beanDiscoveryFinished.beanStream().withBeanType(EmbeddingModel.class),
+                        userSelectedProvider, embeddingModelBeanType, embeddingModelConfigNamespace);
+                selectedEmbeddingProducer
+                        .produce(new SelectedEmbeddingModelCandidateBuildItem(provider, NamedConfigUtil.DEFAULT_NAME));
+            }
+            // else: if the user actually selected a provider, the model will be registered automatically below anyway
         }
 
         for (String modelName : requestedModerationModels) {
