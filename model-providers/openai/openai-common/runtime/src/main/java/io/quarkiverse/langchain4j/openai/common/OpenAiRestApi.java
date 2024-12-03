@@ -192,10 +192,11 @@ public interface OpenAiRestApi {
 
         @Override
         public void filter(ResteasyReactiveClientRequestContext requestContext) {
-            requestContext
-                    .getHeaders()
-                    .putSingle("Authorization", authorizer.getAuthorization(new AuthInputImpl(requestContext.getMethod(),
-                            requestContext.getUri(), requestContext.getHeaders())));
+            String authValue = authorizer.getAuthorization(new AuthInputImpl(requestContext.getMethod(),
+                    requestContext.getUri(), requestContext.getHeaders()));
+            if (authValue != null) {
+                requestContext.getHeaders().putSingle("Authorization", authValue);
+            }
         }
 
         private record AuthInputImpl(

@@ -170,10 +170,13 @@ public interface OllamaRestApi {
 
         @Override
         public void filter(ClientRequestContext context) {
-            context.getHeaders().putSingle(
-                    "Authorization",
-                    authorizer
-                            .getAuthorization(new AuthInputImpl(context.getMethod(), context.getUri(), context.getHeaders())));
+            String authValue = authorizer.getAuthorization(new AuthInputImpl(
+                    context.getMethod(),
+                    context.getUri(),
+                    context.getHeaders()));
+            if (authValue != null) {
+                context.getHeaders().putSingle("Authorization", authValue);
+            }
         }
 
         private record AuthInputImpl(

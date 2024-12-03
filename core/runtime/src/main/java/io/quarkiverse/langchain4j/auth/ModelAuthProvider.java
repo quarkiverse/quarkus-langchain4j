@@ -23,6 +23,7 @@ public interface ModelAuthProvider {
      *
      * @param input representation of an HTTP request to the model provider.
      * @return authorization data which must include an HTTP Authorization scheme value, for example: "Bearer the_access_token".
+     *         Returning null will result in no Authorization header being set.
      */
     String getAuthorization(Input input);
 
