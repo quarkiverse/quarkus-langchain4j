@@ -146,11 +146,10 @@ public interface VertxAiGeminiRestApi {
                 public void run() {
                     try {
                         final Input authInput = new AuthInputImpl(context.getMethod(), context.getUri(), context.getHeaders());
-                        String authorization = authorizer != null ? authorizer.getAuthorization(authInput) : null;
-                        if (authorization == null) {
-                            authorization = defaultAuthorizer.getAuthorization(authInput);
+                        var auth = (authorizer != null ? authorizer : defaultAuthorizer).getAuthorization(authInput);
+                        if (auth != null) {
+                            context.getHeaders().add("Authorization", auth);
                         }
-                        context.getHeaders().add("Authorization", authorization);
                         context.resume();
                     } catch (Exception e) {
                         context.resume(e);
