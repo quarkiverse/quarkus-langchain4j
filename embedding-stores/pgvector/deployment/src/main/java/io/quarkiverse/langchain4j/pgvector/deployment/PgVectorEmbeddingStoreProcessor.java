@@ -80,7 +80,7 @@ class PgVectorEmbeddingStoreProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.pgVectorAgroalPoolInterceptor())
+                .supplier(recorder.pgVectorAgroalPoolInterceptor(config))
                 .qualifiers(datasourceQualifier)
                 .done());
 

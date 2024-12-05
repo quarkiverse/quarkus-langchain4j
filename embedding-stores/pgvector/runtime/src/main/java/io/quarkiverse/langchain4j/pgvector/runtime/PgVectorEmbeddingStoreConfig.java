@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.pgvector.runtime;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
+import io.smallrye.config.WithName;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +53,14 @@ public interface PgVectorEmbeddingStoreConfig {
      */
     @WithDefault("false")
     Boolean dropTableFirst();
+
+    /**
+     * Whether the PG extension should be created on Start.
+     * By Default, if it's dev or test environment the value is overridden to true
+     */
+    @WithDefault("false")
+    @WithName("register-vector-pg-extension")
+    Boolean registerVectorPGExtension();
 
     /**
      * Metadata configuration.

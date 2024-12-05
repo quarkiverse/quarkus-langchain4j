@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.pgvector;
 
+import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -14,10 +15,18 @@ import io.quarkus.runtime.configuration.ConfigUtils;
  */
 public class PgVectorAgroalPoolInterceptor implements AgroalPoolInterceptor {
 
+    PgVectorEmbeddingStoreConfig config;
+
+    public PgVectorAgroalPoolInterceptor(PgVectorEmbeddingStoreConfig config) {
+        this.config = config;
+    }
+
     @Override
     public void onConnectionCreate(Connection connection) {
         try (Statement statement = connection.createStatement()) {
-            if (ConfigUtils.isProfileActive("dev") || ConfigUtils.isProfileActive("test")) {
+            boolean createExtension =
+                ConfigUtils.isProfileActive("dev") || ConfigUtils.isProfileActive("test") || this.config.registerVectorPGExtension();
+            if (createExtension) {
                 statement.executeUpdate("CREATE EXTENSION IF NOT EXISTS vector");
             }
             PGvector.addVectorType(connection);
