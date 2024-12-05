@@ -17,7 +17,7 @@ import com.github.tjake.jlama.util.ProgressReporter;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class JlamaModelRegistry {
 
-    private static final String DEFAULT_MODEL_CACHE_PATH = System.getProperty("user.home", "") + File.separator + ".jlama"
+    private static final String DEFAULT_MODEL_CACHE_PATH = System.getProperty("user.home", "") + File.separator + ".langchain4j"
             + File.separator + "models";
     private final Path modelCachePath;
 

@@ -35,7 +35,7 @@ Quarkus LangChain4j automatically handles the pulling of the models configured b
 
 WARNING: When running Quarkus in dev mode C2 compilation is not enabled and this can make Jlama excessively slow. This limitation will be fixed with Quarkus 3.17 when `<forceC2>true</forceC2>` is set.
 
-WARNING: Models are huge, so make sure you have enough disk space.
+WARNING: Models are huge, so make sure you have enough disk space. Model location can be controlled using `quarkus.langchain4j.jlama.models-path` property.
 
 NOTE: Due to model's large size, pulling them can take time
 

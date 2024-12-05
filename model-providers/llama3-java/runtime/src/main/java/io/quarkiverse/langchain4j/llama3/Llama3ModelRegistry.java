@@ -38,7 +38,7 @@ public class Llama3ModelRegistry {
 
     private static final Logger log = Logger.getLogger(Llama3ModelRegistry.class);
 
-    private static final String DEFAULT_MODEL_CACHE_PATH = System.getProperty("user.home", "") + File.separator + ".llama3java"
+    private static final String DEFAULT_MODEL_CACHE_PATH = System.getProperty("user.home", "") + File.separator + ".langchain4j"
             + File.separator + "models";
     public static String FINISHED_MARKER = ".finished";
 
