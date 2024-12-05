@@ -35,11 +35,11 @@ public class PgVectorEmbeddingStoreRecorder {
         };
     }
 
-    public Supplier<PgVectorAgroalPoolInterceptor> pgVectorAgroalPoolInterceptor() {
+    public Supplier<PgVectorAgroalPoolInterceptor> pgVectorAgroalPoolInterceptor(PgVectorEmbeddingStoreConfig config) {
         return new Supplier<>() {
             @Override
             public PgVectorAgroalPoolInterceptor get() {
-                return new PgVectorAgroalPoolInterceptor();
+                return new PgVectorAgroalPoolInterceptor(config);
             }
         };
     }
