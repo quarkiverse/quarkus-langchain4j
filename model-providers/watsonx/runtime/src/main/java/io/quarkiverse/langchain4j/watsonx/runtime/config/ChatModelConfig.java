@@ -70,7 +70,7 @@ public interface ChatModelConfig {
     Double presencePenalty();
 
     /**
-     * What sampling temperature to use,. Higher values like <code>0.8</code> will make the output more random, while lower
+     * What sampling temperature to use. Higher values like <code>0.8</code> will make the output more random, while lower
      * values
      * like <code>0.2</code> will make it more focused and deterministic.
      * <p>

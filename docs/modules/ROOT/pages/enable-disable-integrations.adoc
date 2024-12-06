@@ -2,9 +2,9 @@
 
 include::./includes/attributes.adoc[]
 
-By default, all integrations with AI providers (OpenAI, HuggingFace, Azure OpenAI, etc) are enabled. This means that live calls are made to the configured AI provider.
+By default, all integrations with AI providers (OpenAI, HuggingFace, Azure OpenAI, etc.) are enabled. This means that live calls are made to the configured AI provider.
 
-Each provider has an `enable-integration` property (i.e. `quarkus.langchain4j.openai.enable-integration`, `quarkus.langchain4j.huggingface.enable-integration`, etc) that can be set to `false` to disable the integration. This property is read at runtime.
+Each provider has an `enable-integration` property (i.e. `quarkus.langchain4j.openai.enable-integration`, `quarkus.langchain4j.huggingface.enable-integration`, etc.) that can be set to `false` to disable the integration. This property is read at runtime.
 
 When disabled, any call made to the AI provider will end up in an `dev.langchain4j.model.ModelDisabledException` runtime exception being thrown.
 
