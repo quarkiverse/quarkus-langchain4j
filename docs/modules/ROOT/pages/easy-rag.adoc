@@ -14,7 +14,7 @@ ingest them into an in-memory embedding store.
 
 Apache Tika, a library for parsing various file formats, is used under the
 hood, so your documents can be in any of its supported formats (plain text,
-PDF, DOCX, HTML, etc), including images with text, which will be parsed
+PDF, DOCX, HTML, etc.), including images with text, which will be parsed
 using OCR (OCR requires to have the Tesseract library installed in your
 system - see https://cwiki.apache.org/confluence/display/TIKA/TikaOCR).
 

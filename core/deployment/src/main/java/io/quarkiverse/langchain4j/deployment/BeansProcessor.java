@@ -600,9 +600,9 @@ public class BeansProcessor {
     }
 
     @BuildStep
-    public void unremoveableBeans(BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
-        unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(ObjectMapper.class));
-        unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelAuthProvider.class));
+    public void unremovableBeans(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ObjectMapper.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(ModelAuthProvider.class));
     }
 
     @BuildStep

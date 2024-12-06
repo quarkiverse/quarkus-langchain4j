@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 /**
- * Exception thrown when a input or output guardrail validation fails.
+ * Exception thrown when an input or output guardrail validation fails.
  * <p>
  * This exception is not intended to be used in guardrail implementation.
  */

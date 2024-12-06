@@ -477,7 +477,7 @@ public class AiServicesProcessor {
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
-            BuildProducer<UnremovableBeanBuildItem> unremoveableProducer) {
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
         boolean needsChatModelBean = false;
         boolean needsStreamingChatModelBean = false;
@@ -668,7 +668,7 @@ public class AiServicesProcessor {
                     // constructor to obtain an instance.
                     if (bi.isCustomRetrievalAugmentorSupplierClassIsABean()) {
                         configurator.addInjectionPoint(ClassType.create(retrievalAugmentorSupplierClassName));
-                        unremoveableProducer
+                        unremovableProducer
                                 .produce(UnremovableBeanBuildItem.beanClassNames(retrievalAugmentorSupplierClassName));
                     }
                 }
@@ -724,34 +724,34 @@ public class AiServicesProcessor {
         }
 
         if (needsChatModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MODEL));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MODEL));
         }
         if (needsStreamingChatModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.STREAMING_CHAT_MODEL));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.STREAMING_CHAT_MODEL));
         }
         if (needsChatMemoryProviderBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
         }
         if (needsRetrieverBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVER));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVER));
         }
         if (needsRetrievalAugmentorBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVAL_AUGMENTOR));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVAL_AUGMENTOR));
         }
         if (needsAuditServiceBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AUDIT_SERVICE));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AUDIT_SERVICE));
         }
         if (needsModerationModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));
         }
         if (needsImageModelBean) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.IMAGE_MODEL));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.IMAGE_MODEL));
         }
         if (!allToolProviders.isEmpty()) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolProviders));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolProviders));
         }
         if (!allToolNames.isEmpty()) {
-            unremoveableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
         }
     }
 

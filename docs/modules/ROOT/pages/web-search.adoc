@@ -13,7 +13,7 @@ WebSearchEngine engine;
 
 and then use it by calling its `search` method.
 
-If you want to let an chat model use web search by itself, there are
+If you want to let a chat model use web search by itself, there are
 generally two recommended ways to accomplish this: either by implementing a
 tool that uses it, or as a content retriever inside a RAG pipeline. The
 https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-web-search[chatbot-web-search]
