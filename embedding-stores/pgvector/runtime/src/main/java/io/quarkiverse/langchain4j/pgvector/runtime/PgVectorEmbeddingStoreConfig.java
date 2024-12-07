@@ -10,6 +10,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.pgvector")
@@ -52,6 +53,14 @@ public interface PgVectorEmbeddingStoreConfig {
      */
     @WithDefault("false")
     Boolean dropTableFirst();
+
+    /**
+     * Whether the PG extension should be created on Start.
+     * By Default, if it's dev or test environment the value is overridden to true
+     */
+    @WithDefault("false")
+    @WithName("register-vector-pg-extension")
+    Boolean registerVectorPGExtension();
 
     /**
      * Metadata configuration.

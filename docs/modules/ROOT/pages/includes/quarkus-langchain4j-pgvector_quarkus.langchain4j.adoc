@@ -127,6 +127,23 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension[`quarkus.langchain4j.pgvector.register-vector-pg-extension`]##
+
+[.description]
+--
+Whether the PG extension should be created on Start. By Default, if it's dev or test environment the value is overridden to true
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_PGVECTOR_REGISTER_VECTOR_PG_EXTENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_PGVECTOR_REGISTER_VECTOR_PG_EXTENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode[`quarkus.langchain4j.pgvector.metadata.storage-mode`]##
 
 [.description]
