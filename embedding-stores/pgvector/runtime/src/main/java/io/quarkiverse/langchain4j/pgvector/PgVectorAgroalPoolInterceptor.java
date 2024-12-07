@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.pgvector;
 
-import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -8,6 +7,7 @@ import java.sql.Statement;
 import com.pgvector.PGvector;
 
 import io.agroal.api.AgroalPoolInterceptor;
+import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 /**
