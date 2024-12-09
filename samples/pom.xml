@@ -17,6 +17,7 @@
         <module>cli-translator</module>
         <module>email-a-poem</module>
         <module>fraud-detection</module>
+        <module>mcp-tools</module>
         <module>review-triage</module>
         <module>secure-fraud-detection</module>
         <module>secure-poem-multiple-models</module>
