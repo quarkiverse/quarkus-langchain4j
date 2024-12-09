@@ -11,10 +11,14 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
+
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.scoring.ScoringModel;
@@ -30,6 +34,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.GenerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.IAMConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ScoringModelConfig;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -38,80 +43,94 @@ public class WatsonxRecorder {
 
     private static final Map<String, WatsonxTokenGenerator> tokenGeneratorCache = new HashMap<>();
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
+    private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+            LangChain4jWatsonxConfig runtimeConfig, String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
 
             var builder = chatBuilder(runtimeConfig, configName);
-            return new Supplier<>() {
+
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return builder.build();
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    return builder
+                            .tokenGenerator(createTokenGenerator(watsonRuntimeConfig.iam(), apiKey))
+                            .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
+                            .build();
                 }
             };
 
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
-
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jWatsonxConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+            LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
 
             var builder = chatBuilder(runtimeConfig, configName);
-            return new Supplier<>() {
+
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return builder.build();
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                    return builder
+                            .tokenGenerator(createTokenGenerator(watsonRuntimeConfig.iam(), apiKey))
+                            .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
+                            .build();
                 }
             };
 
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
                     return new DisabledStreamingChatLanguageModel();
                 }
-
             };
         }
     }
 
-    public Supplier<ChatLanguageModel> generationModel(LangChain4jWatsonxConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> generationModel(
+            LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
 
             var builder = generationBuilder(runtimeConfig, configName);
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return builder.build();
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    return builder
+                            .tokenGenerator(createTokenGenerator(watsonRuntimeConfig.iam(), apiKey))
+                            .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
+                            .build();
                 }
             };
 
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
 
@@ -119,26 +138,30 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> generationStreamingModel(LangChain4jWatsonxConfig runtimeConfig,
+    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> generationStreamingModel(
+            LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
 
             var builder = generationBuilder(runtimeConfig, configName);
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return builder.build();
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                    return builder
+                            .tokenGenerator(createTokenGenerator(watsonRuntimeConfig.iam(), apiKey))
+                            .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
+                            .build();
                 }
             };
 
         } else {
-            return new Supplier<>() {
-
+            return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
                     return new DisabledStreamingChatLanguageModel();
                 }
 
@@ -167,7 +190,6 @@ public class WatsonxRecorder {
 
             EmbeddingModelConfig embeddingModelConfig = watsonConfig.embeddingModel();
             var builder = WatsonxEmbeddingModel.builder()
-                    .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                     .url(url)
                     .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -181,7 +203,9 @@ public class WatsonxRecorder {
             return new Supplier<>() {
                 @Override
                 public WatsonxEmbeddingModel get() {
-                    return builder.build();
+                    return builder
+                            .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
+                            .build();
                 }
             };
 
@@ -217,7 +241,6 @@ public class WatsonxRecorder {
 
         ScoringModelConfig rerankModelConfig = watsonConfig.scoringModel();
         var builder = WatsonxScoringModel.builder()
-                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, rerankModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -231,7 +254,9 @@ public class WatsonxRecorder {
         return new Supplier<>() {
             @Override
             public WatsonxScoringModel get() {
-                return builder.build();
+                return builder
+                        .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
+                        .build();
             }
         };
     }
@@ -246,7 +271,6 @@ public class WatsonxRecorder {
         }
 
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         URL url;
         try {
@@ -256,7 +280,6 @@ public class WatsonxRecorder {
         }
 
         return WatsonxChatModel.builder()
-                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), watsonConfig.logRequests()))
@@ -300,7 +323,6 @@ public class WatsonxRecorder {
         String promptJoiner = generationModelConfig.promptJoiner();
 
         return WatsonxGenerationModel.builder()
-                .tokenGenerator(createTokenGenerator(watsonConfig.iam(), apiKey))
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
                 .logRequests(firstOrDefault(false, generationModelConfig.logRequests(), watsonConfig.logRequests()))

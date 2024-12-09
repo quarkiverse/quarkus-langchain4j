@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
+import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 
 public record TextStreamingChatResponse(String id, String modelId, List<TextChatResultChoice> choices, Long created,
@@ -17,6 +18,12 @@ public record TextStreamingChatResponse(String id, String modelId, List<TextChat
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record TextChatUsage(Integer completionTokens, Integer promptTokens, Integer totalTokens) {
+        public TokenUsage toTokenUsage() {
+            return new TokenUsage(
+                    promptTokens,
+                    completionTokens,
+                    totalTokens);
+        }
     }
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)

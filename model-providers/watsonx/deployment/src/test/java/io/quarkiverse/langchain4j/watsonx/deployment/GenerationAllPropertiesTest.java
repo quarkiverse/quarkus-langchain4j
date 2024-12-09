@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.Date;
@@ -21,10 +22,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
@@ -268,7 +271,25 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
         var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(messages, WireMockUtil.streamingResponseHandler(streamingResponse));
+        streamingChatModel.generate(messages, new StreamingResponseHandler<>() {
+            @Override
+            public void onNext(String token) {
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fail("Streaming failed: %s".formatted(error.getMessage()), error);
+            }
+
+            @Override
+            public void onComplete(Response<AiMessage> response) {
+                assertEquals(FinishReason.LENGTH, response.finishReason());
+                assertEquals(2, response.tokenUsage().inputTokenCount());
+                assertEquals(14, response.tokenUsage().outputTokenCount());
+                assertEquals(16, response.tokenUsage().totalTokenCount());
+                streamingResponse.set(response.content());
+            }
+        });
 
         await().atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(2))
@@ -277,5 +298,6 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertThat(streamingResponse.get().text())
                 .isNotNull()
                 .isEqualTo(". I'm a beginner");
+
     }
 }

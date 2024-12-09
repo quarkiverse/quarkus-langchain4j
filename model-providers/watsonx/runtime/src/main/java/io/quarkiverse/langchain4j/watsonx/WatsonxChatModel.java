@@ -4,7 +4,9 @@ import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,8 @@ import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.listener.ChatModelRequest;
+import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
@@ -35,6 +39,7 @@ import io.smallrye.mutiny.Context;
 
 public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, StreamingChatLanguageModel, TokenCountEstimator {
 
+    private static final String ID_CONTEXT = "ID";
     private static final String USAGE_CONTEXT = "USAGE";
     private static final String FINISH_REASON_CONTEXT = "FINISH_REASON";
     private static final String ROLE_CONTEXT = "ROLE";
@@ -67,12 +72,20 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                 ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
+        Map<Object, Object> attributes = new ConcurrentHashMap<>();
+        ChatModelRequest chatModelRequest = toChatModelRequest(messages, toolSpecifications);
+        beforeSentRequest(chatModelRequest, attributes);
 
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
         TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
             @Override
             public TextChatResponse call() throws Exception {
-                return client.chat(request, version);
+                try {
+                    return client.chat(request, version);
+                } catch (RuntimeException exception) {
+                    onRequestError(exception, chatModelRequest, null, attributes);
+                    throw exception;
+                }
             }
         });
 
@@ -80,11 +93,11 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         TextChatResultMessage message = choice.message();
         TextChatUsage usage = response.usage();
 
-        AiMessage content;
+        AiMessage aiMessage;
         if (message.toolCalls() != null && message.toolCalls().size() > 0) {
-            content = AiMessage.from(message.toolCalls().stream().map(TextChatToolCall::convert).toList());
+            aiMessage = AiMessage.from(message.toolCalls().stream().map(TextChatToolCall::convert).toList());
         } else {
-            content = AiMessage.from(message.content().trim());
+            aiMessage = AiMessage.from(message.content().trim());
         }
 
         var finishReason = toFinishReason(choice.finishReason());
@@ -93,7 +106,9 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                 usage.completionTokens(),
                 usage.totalTokens());
 
-        return Response.from(content, tokenUsage, finishReason);
+        ChatModelResponse chatModelResponse = toChatModelResponse(response.id(), aiMessage, tokenUsage, finishReason);
+        afterReceivedResponse(chatModelResponse, chatModelRequest, attributes);
+        return Response.from(aiMessage, tokenUsage, finishReason);
     }
 
     @Override
@@ -103,6 +118,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0)
                 ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
+
+        Map<Object, Object> attributes = new ConcurrentHashMap<>();
+        ChatModelRequest chatModelRequest = toChatModelRequest(messages, toolSpecifications);
+        beforeSentRequest(chatModelRequest, attributes);
 
         TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, convertedMessages, tools, null, parameters);
         Context context = Context.empty();
@@ -124,6 +143,10 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                                     }
 
                                     var message = chunk.choices().get(0);
+
+                                    if (!context.contains(ID_CONTEXT) && chunk.id() != null) {
+                                        context.put(ID_CONTEXT, chunk.id());
+                                    }
 
                                     if (message.finishReason() != null) {
                                         context.put(FINISH_REASON_CONTEXT, message.finishReason());
@@ -183,6 +206,27 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                         new Consumer<Throwable>() {
                             @Override
                             public void accept(Throwable error) {
+
+                                AiMessage aiMessage = null;
+                                TokenUsage tokenUsage = null;
+                                String id = context.contains(ID_CONTEXT) ? context.get(ID_CONTEXT) : null;
+                                FinishReason finishReason = context.contains(FINISH_REASON_CONTEXT)
+                                        ? toFinishReason(context.get(FINISH_REASON_CONTEXT))
+                                        : null;
+
+                                if (context.contains(COMPLETE_MESSAGE_CONTEXT)) {
+                                    StringBuilder message = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                    aiMessage = AiMessage.from(message.toString());
+                                }
+
+                                if (context.contains(USAGE_CONTEXT)) {
+                                    TextStreamingChatResponse.TextChatUsage textChatUsage = context.get(USAGE_CONTEXT);
+                                    tokenUsage = textChatUsage.toTokenUsage();
+                                }
+
+                                ChatModelResponse chatModelResponse = toChatModelResponse(id, aiMessage, tokenUsage,
+                                        finishReason);
+                                onRequestError(error, chatModelRequest, chatModelResponse, attributes);
                                 handler.onError(error);
                             }
                         },
@@ -190,11 +234,9 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                             @Override
                             public void run() {
 
-                                TextStreamingChatResponse.TextChatUsage usage = context.get(USAGE_CONTEXT);
-                                TokenUsage tokenUsage = new TokenUsage(
-                                        usage.promptTokens(),
-                                        usage.completionTokens(),
-                                        usage.totalTokens());
+                                String id = context.get(ID_CONTEXT);
+                                TextStreamingChatResponse.TextChatUsage textChatUsage = context.get(USAGE_CONTEXT);
+                                TokenUsage tokenUsage = textChatUsage.toTokenUsage();
 
                                 String finishReason = context.get(FINISH_REASON_CONTEXT);
                                 FinishReason finishReasonObj = toFinishReason(finishReason);
@@ -211,6 +253,11 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                                 } else {
 
                                     StringBuilder message = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                    AiMessage aiMessage = AiMessage.from(message.toString());
+                                    ChatModelResponse chatModelResponse = toChatModelResponse(id, aiMessage, tokenUsage,
+                                            finishReasonObj);
+
+                                    afterReceivedResponse(chatModelResponse, chatModelRequest, attributes);
                                     handler.onComplete(
                                             Response.from(AiMessage.from(message.toString()), tokenUsage, finishReasonObj));
                                 }
@@ -254,6 +301,28 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    private ChatModelRequest toChatModelRequest(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+        return ChatModelRequest.builder()
+                .maxTokens(parameters.getMaxTokens())
+                .messages(messages)
+                .model(modelId)
+                .temperature(parameters.getTemperature())
+                .toolSpecifications(toolSpecifications)
+                .topP(parameters.getTopP())
+                .build();
+    }
+
+    private ChatModelResponse toChatModelResponse(String id, AiMessage aiMessage, TokenUsage tokenUsage,
+            FinishReason finishReason) {
+        return ChatModelResponse.builder()
+                .aiMessage(aiMessage)
+                .finishReason(finishReason)
+                .id(id)
+                .model(modelId)
+                .tokenUsage(tokenUsage)
+                .build();
     }
 
     private FinishReason toFinishReason(String reason) {

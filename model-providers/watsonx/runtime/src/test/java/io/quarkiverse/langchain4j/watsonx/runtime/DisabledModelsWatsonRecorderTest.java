@@ -32,13 +32,12 @@ class DisabledModelsWatsonRecorderTest {
     @Test
     void disabledChatModel() {
         assertThat(recorder
-                .generationModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME)
-                .get())
+                .generationModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatLanguageModel.class);
 
         assertThat(
-                recorder.generationStreamingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).get())
+                recorder.generationStreamingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
 

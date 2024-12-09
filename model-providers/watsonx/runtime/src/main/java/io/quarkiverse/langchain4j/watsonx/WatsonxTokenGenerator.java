@@ -15,7 +15,7 @@ import io.smallrye.mutiny.Uni;
 
 public class WatsonxTokenGenerator {
 
-    private final static Semaphore lock = new Semaphore(1);
+    private final Semaphore lock = new Semaphore(1);
     private final IAMRestApi client;
     private final String apiKey;
     private final String grantType;

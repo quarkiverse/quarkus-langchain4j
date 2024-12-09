@@ -7,15 +7,19 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
@@ -26,6 +30,7 @@ import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -86,8 +91,8 @@ public class WatsonxProcessor {
                     ? fixedRuntimeConfig.defaultConfig().mode()
                     : fixedRuntimeConfig.namedConfig().get(configName).mode();
 
-            Supplier<ChatLanguageModel> chatLanguageModel;
-            Supplier<StreamingChatLanguageModel> streamingChatLanguageModel;
+            Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatLanguageModel;
+            Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatLanguageModel;
 
             if (mode.equalsIgnoreCase("chat")) {
                 chatLanguageModel = recorder.chatModel(runtimeConfig, configName);
@@ -106,7 +111,9 @@ public class WatsonxProcessor {
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(chatLanguageModel);
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                    .createWith(chatLanguageModel);
 
             addQualifierIfNecessary(chatBuilder, configName);
             beanProducer.produce(chatBuilder.done());
@@ -116,7 +123,9 @@ public class WatsonxProcessor {
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(chatLanguageModel);
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                    .createWith(chatLanguageModel);
 
             addQualifierIfNecessary(tokenizerBuilder, configName);
             beanProducer.produce(tokenizerBuilder.done());
@@ -126,7 +135,9 @@ public class WatsonxProcessor {
                     .setRuntimeInit()
                     .defaultBean()
                     .scope(ApplicationScoped.class)
-                    .supplier(streamingChatLanguageModel);
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                    .createWith(streamingChatLanguageModel);
 
             addQualifierIfNecessary(streamingBuilder, configName);
             beanProducer.produce(streamingBuilder.done());
@@ -171,9 +182,8 @@ public class WatsonxProcessor {
 
     /**
      * When both {@code rest-client-jackson} and {@code rest-client-jsonb} are present on the classpath we need to make sure
-     * that Jackson is used.
-     * This is not a proper solution as it affects all clients, but it's better than the having the reader/writers be selected
-     * at random.
+     * that Jackson is used. This is not a proper solution as it affects all clients, but it's better than the having the
+     * reader/writers be selected at random.
      */
     @BuildStep
     public void deprioritizeJsonb(Capabilities capabilities,
