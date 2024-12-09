@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
@@ -22,7 +24,6 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
 
 /**
@@ -49,6 +50,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     private final Map<String, ToolExecutor> toolExecutors;
     private final Context executionContext;
     private final boolean mustSwitchToWorkerThread;
+    private final boolean switchToWorkerForEmission;
+    private final ExecutorService executor;
 
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
@@ -59,7 +62,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
             List<ChatMessage> temporaryMemory,
             TokenUsage tokenUsage,
             List<ToolSpecification> toolSpecifications,
-            Map<String, ToolExecutor> toolExecutors, boolean mustSwitchToWorkerThread, Context cxtx) {
+            Map<String, ToolExecutor> toolExecutors,
+            boolean mustSwitchToWorkerThread,
+            boolean switchToWorkerForEmission,
+            Context cxtx) {
         this.context = ensureNotNull(context, "context");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
@@ -76,36 +82,82 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
+        this.switchToWorkerForEmission = switchToWorkerForEmission;
+        if (executionContext == null) {
+            // We do not have a context, but we still need to make sure we are not blocking the event loop and ordered
+            // is respected.
+            executor = Executors.newSingleThreadExecutor();
+        } else {
+            executor = null;
+        }
+    }
+
+    public QuarkusAiServiceStreamingResponseHandler(AiServiceContext context, Object memoryId, Consumer<String> tokenHandler,
+            Consumer<ToolExecution> toolExecuteHandler, Consumer<Response<AiMessage>> completionHandler,
+            Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
+            List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
+            boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
+            ExecutorService executor) {
+        this.context = context;
+        this.memoryId = memoryId;
+        this.tokenHandler = tokenHandler;
+        this.toolExecuteHandler = toolExecuteHandler;
+        this.completionHandler = completionHandler;
+        this.errorHandler = errorHandler;
+        this.temporaryMemory = temporaryMemory;
+        this.tokenUsage = sum;
+        this.toolSpecifications = toolSpecifications;
+        this.toolExecutors = toolExecutors;
+        this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
+        this.switchToWorkerForEmission = switchToWorkerForEmission;
+        this.executionContext = executionContext;
+        this.executor = executor;
     }
 
     @Override
     public void onNext(String token) {
-        tokenHandler.accept(token);
+        execute(new Runnable() {
+            @Override
+            public void run() {
+                tokenHandler.accept(token);
+            }
+        });
+
     }
 
     private void executeTools(Runnable runnable) {
         if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-            if (executionContext != null) {
-                executionContext.executeBlocking(new Callable<Object>() {
-                    @Override
-                    public Object call() {
-                        runnable.run();
-                        return null;
-                    }
-                });
-            } else {
-                // We do not have a context, switching to worker thread.
-                Infrastructure.getDefaultWorkerPool().execute(runnable);
-            }
+            executeOnWorkerThread(runnable);
         } else {
             runnable.run();
+        }
+    }
+
+    private void execute(Runnable runnable) {
+        if (switchToWorkerForEmission && Context.isOnEventLoopThread()) {
+            executeOnWorkerThread(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+
+    private void executeOnWorkerThread(Runnable runnable) {
+        if (executionContext != null) {
+            executionContext.executeBlocking(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    runnable.run();
+                    return null;
+                }
+            }, true);
+        } else {
+            executor.submit(runnable);
         }
     }
 
     @Override
     public void onComplete(Response<AiMessage> response) {
         AiMessage aiMessage = response.content();
-        addToMemory(aiMessage);
 
         if (aiMessage.hasToolExecutionRequests()) {
             // Tools execution may block the caller thread. When the caller thread is the event loop thread, and
@@ -113,6 +165,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
             executeTools(new Runnable() {
                 @Override
                 public void run() {
+                    addToMemory(aiMessage);
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
@@ -143,16 +196,33 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                                     TokenUsage.sum(tokenUsage, response.tokenUsage()),
                                     toolSpecifications,
                                     toolExecutors,
-                                    mustSwitchToWorkerThread, executionContext));
+                                    mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor));
                 }
             });
         } else {
             if (completionHandler != null) {
-                completionHandler.accept(Response.from(
-                        aiMessage,
-                        TokenUsage.sum(tokenUsage, response.tokenUsage()),
-                        response.finishReason()));
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            addToMemory(aiMessage);
+                            completionHandler.accept(Response.from(
+                                    aiMessage,
+                                    TokenUsage.sum(tokenUsage, response.tokenUsage()),
+                                    response.finishReason()));
+                        } finally {
+                            shutdown(); // Terminal event, we can shutdown the executor
+                        }
+                    }
+                };
+                execute(runnable);
             }
+        }
+    }
+
+    private void shutdown() {
+        if (executor != null) {
+            executor.shutdown();
         }
     }
 
@@ -173,12 +243,19 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     @Override
     public void onError(Throwable error) {
         if (errorHandler != null) {
-            try {
-                errorHandler.accept(error);
-            } catch (Exception e) {
-                log.error("While handling the following error...", error);
-                log.error("...the following error happened", e);
-            }
+            execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        errorHandler.accept(error);
+                    } catch (Exception e) {
+                        log.error("While handling the following error...", error);
+                        log.error("...the following error happened", e);
+                    } finally {
+                        shutdown(); // Terminal event, we can shutdown the executor
+                    }
+                }
+            });
         } else {
             log.warn("Ignored error", error);
         }

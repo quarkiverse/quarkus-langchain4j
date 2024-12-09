@@ -59,7 +59,7 @@ public final class AiServiceMethodCreateInfo {
     private OutputTokenAccumulator accumulator;
 
     private final LazyValue<Integer> guardrailsMaxRetry;
-    private final boolean switchToWorkerThread;
+    private final boolean switchToWorkerThreadForToolExecution;
 
     @RecordableConstructor
     public AiServiceMethodCreateInfo(String interfaceName, String methodName,
@@ -73,7 +73,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<SpanInfo> spanInfo,
             ResponseSchemaInfo responseSchemaInfo,
             List<String> toolClassNames,
-            boolean switchToWorkerThread,
+            boolean switchToWorkerThreadForToolExecution,
             List<String> inputGuardrailsClassNames,
             List<String> outputGuardrailsClassNames,
             String outputTokenAccumulatorClassName,
@@ -107,7 +107,7 @@ public final class AiServiceMethodCreateInfo {
                         .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
             }
         });
-        this.switchToWorkerThread = switchToWorkerThread;
+        this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.responseAugmenterClassName = responseAugmenterClassName;
     }
 
@@ -237,8 +237,8 @@ public final class AiServiceMethodCreateInfo {
         return userMessageTemplateOpt.orElse("");
     }
 
-    public boolean isSwitchToWorkerThread() {
-        return switchToWorkerThread;
+    public boolean isSwitchToWorkerThreadForToolExecution() {
+        return switchToWorkerThreadForToolExecution;
     }
 
     public void setResponseAugmenter(Class<? extends AiResponseAugmenter<?>> augmenter) {
