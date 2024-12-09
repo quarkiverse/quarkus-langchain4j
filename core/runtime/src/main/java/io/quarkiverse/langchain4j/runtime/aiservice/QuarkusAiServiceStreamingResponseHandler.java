@@ -49,6 +49,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     private final Map<String, ToolExecutor> toolExecutors;
     private final Context executionContext;
     private final boolean mustSwitchToWorkerThread;
+    private final boolean switchToWorkerForEmission;
 
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
@@ -59,7 +60,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
             List<ChatMessage> temporaryMemory,
             TokenUsage tokenUsage,
             List<ToolSpecification> toolSpecifications,
-            Map<String, ToolExecutor> toolExecutors, boolean mustSwitchToWorkerThread, Context cxtx) {
+            Map<String, ToolExecutor> toolExecutors,
+            boolean mustSwitchToWorkerThread,
+            boolean switchToWorkerForEmission,
+            Context cxtx) {
         this.context = ensureNotNull(context, "context");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
@@ -76,36 +80,53 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
+        this.switchToWorkerForEmission = switchToWorkerForEmission;
     }
 
     @Override
     public void onNext(String token) {
-        tokenHandler.accept(token);
+        execute(new Runnable() {
+            @Override
+            public void run() {
+                tokenHandler.accept(token);
+            }
+        });
+
     }
 
     private void executeTools(Runnable runnable) {
         if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-            if (executionContext != null) {
-                executionContext.executeBlocking(new Callable<Object>() {
-                    @Override
-                    public Object call() {
-                        runnable.run();
-                        return null;
-                    }
-                });
-            } else {
-                // We do not have a context, switching to worker thread.
-                Infrastructure.getDefaultWorkerPool().execute(runnable);
-            }
+            executeOnWorkerThread(runnable);
         } else {
             runnable.run();
+        }
+    }
+
+    private void execute(Runnable runnable) {
+        if (switchToWorkerForEmission && Context.isOnEventLoopThread()) {
+            executeOnWorkerThread(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+
+    private void executeOnWorkerThread(Runnable runnable) {
+        if (executionContext != null) {
+            executionContext.executeBlocking(new Callable<Object>() {
+                @Override
+                public Object call() throws Exception {
+                    runnable.run();
+                    return null;
+                }
+            });
+        } else {
+            Infrastructure.getDefaultWorkerPool().execute(runnable);
         }
     }
 
     @Override
     public void onComplete(Response<AiMessage> response) {
         AiMessage aiMessage = response.content();
-        addToMemory(aiMessage);
 
         if (aiMessage.hasToolExecutionRequests()) {
             // Tools execution may block the caller thread. When the caller thread is the event loop thread, and
@@ -113,6 +134,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
             executeTools(new Runnable() {
                 @Override
                 public void run() {
+                    addToMemory(aiMessage);
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
@@ -143,15 +165,22 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                                     TokenUsage.sum(tokenUsage, response.tokenUsage()),
                                     toolSpecifications,
                                     toolExecutors,
-                                    mustSwitchToWorkerThread, executionContext));
+                                    mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext));
                 }
             });
         } else {
             if (completionHandler != null) {
-                completionHandler.accept(Response.from(
-                        aiMessage,
-                        TokenUsage.sum(tokenUsage, response.tokenUsage()),
-                        response.finishReason()));
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        addToMemory(aiMessage);
+                        completionHandler.accept(Response.from(
+                                aiMessage,
+                                TokenUsage.sum(tokenUsage, response.tokenUsage()),
+                                response.finishReason()));
+                    }
+                };
+                execute(runnable);
             }
         }
     }
@@ -173,12 +202,17 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     @Override
     public void onError(Throwable error) {
         if (errorHandler != null) {
-            try {
-                errorHandler.accept(error);
-            } catch (Exception e) {
-                log.error("While handling the following error...", error);
-                log.error("...the following error happened", e);
-            }
+            execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        errorHandler.accept(error);
+                    } catch (Exception e) {
+                        log.error("While handling the following error...", error);
+                        log.error("...the following error happened", e);
+                    }
+                }
+            });
         } else {
             log.warn("Ignored error", error);
         }
