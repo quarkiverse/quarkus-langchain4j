@@ -42,6 +42,40 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled[`quarkus.langchain4j.ollama.devservices.enabled`]##
+
+[.description]
+--
+If Dev Services for Ollama has been explicitly enabled or disabled. Dev Services are generally enabled by default, unless there is an existing configuration present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-image-name[`quarkus.langchain4j.ollama.devservices.image-name`]##
+
+[.description]
+--
+The Ollama container image to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`ollama/ollama:latest`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[`quarkus.langchain4j.ollama.chat-model.model-id`]##
 
 [.description]

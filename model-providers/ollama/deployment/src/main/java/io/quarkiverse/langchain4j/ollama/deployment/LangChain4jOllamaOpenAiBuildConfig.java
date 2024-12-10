@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ollama.deployment;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
+import io.quarkiverse.langchain4j.ollama.deployment.devservices.OllamaDevServicesBuildConfig;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
@@ -18,4 +19,9 @@ public interface LangChain4jOllamaOpenAiBuildConfig {
      * Embedding model related settings
      */
     EmbeddingModelBuildConfig embeddingModel();
+
+    /**
+     * Dev services related settings
+     */
+    OllamaDevServicesBuildConfig devservices();
 }
