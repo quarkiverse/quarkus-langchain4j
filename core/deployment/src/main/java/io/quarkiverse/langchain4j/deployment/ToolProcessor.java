@@ -6,6 +6,7 @@ import static io.quarkiverse.langchain4j.deployment.DotNames.MULTI;
 import static io.quarkiverse.langchain4j.deployment.DotNames.NON_BLOCKING;
 import static io.quarkiverse.langchain4j.deployment.DotNames.RUN_ON_VIRTUAL_THREAD;
 import static io.quarkiverse.langchain4j.deployment.DotNames.UNI;
+import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -46,21 +47,12 @@ import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
-import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
-import io.quarkiverse.langchain4j.runtime.tool.JsonArraySchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonBooleanSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonEnumSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonIntegerSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonNumberSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonObjectSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonReferenceSchemaObjectSubstitution;
-import io.quarkiverse.langchain4j.runtime.tool.JsonStringSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
@@ -342,23 +334,7 @@ public class ToolProcessor {
         if (beforeRemoval != null) {
             recorderContext.registerSubstitution(ToolSpecification.class, ToolSpecificationObjectSubstitution.Serialized.class,
                     ToolSpecificationObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonArraySchema.class, JsonArraySchemaObjectSubstitution.Serialized.class,
-                    JsonArraySchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonBooleanSchema.class, JsonBooleanSchemaObjectSubstitution.Serialized.class,
-                    JsonBooleanSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonEnumSchema.class, JsonEnumSchemaObjectSubstitution.Serialized.class,
-                    JsonEnumSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonIntegerSchema.class, JsonIntegerSchemaObjectSubstitution.Serialized.class,
-                    JsonIntegerSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonNumberSchema.class, JsonNumberSchemaObjectSubstitution.Serialized.class,
-                    JsonNumberSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonObjectSchema.class, JsonObjectSchemaObjectSubstitution.Serialized.class,
-                    JsonObjectSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonReferenceSchema.class,
-                    JsonReferenceSchemaObjectSubstitution.Serialized.class,
-                    JsonReferenceSchemaObjectSubstitution.class);
-            recorderContext.registerSubstitution(JsonStringSchema.class, JsonStringSchemaObjectSubstitution.Serialized.class,
-                    JsonStringSchemaObjectSubstitution.class);
+            registerJsonSchema(recorderContext);
             Map<String, List<ToolMethodCreateInfo>> metadataWithoutRemovedBeans = beforeRemoval.getMetadata().entrySet()
                     .stream()
                     .filter(entry -> validationPhase.getContext().removedBeans().stream()

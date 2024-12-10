@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime.tool;
+package io.quarkiverse.langchain4j.runtime.substitution;
 
 import java.util.List;
 import java.util.Map;
