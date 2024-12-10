@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static dev.langchain4j.internal.Exceptions.runtime;
+import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
+import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
@@ -42,6 +44,10 @@ import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -70,6 +76,7 @@ import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
@@ -148,11 +155,14 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
-        UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs);
+
+        boolean supportsJsonSchema = supportsJsonSchema(context);
+
+        UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs, supportsJsonSchema);
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
-        if (isImage(returnType) || isResultImage(returnType)) {
+        if (TypeUtil.isImage(returnType) || TypeUtil.isResultImage(returnType)) {
             return doImplementGenerateImage(methodCreateInfo, context, audit, systemMessage, userMessage, memoryId, returnType,
                     templateVariables);
         }
@@ -191,7 +201,7 @@ public class AiServiceMethodImplementationSupport {
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
-            if (!isMulti(returnType)) {
+            if (!TypeUtil.isMulti(returnType)) {
                 augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
                 userMessage = (UserMessage) augmentationResult.chatMessage();
             } else {
@@ -254,7 +264,7 @@ public class AiServiceMethodImplementationSupport {
                     methodCreateInfo);
         }
 
-        if (isTokenStream(returnType)) {
+        if (TypeUtil.isTokenStream(returnType)) {
             // TODO Indicate the output guardrails cannot be used when using token stream.
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             return new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors,
@@ -263,7 +273,7 @@ public class AiServiceMethodImplementationSupport {
 
         var actualAugmentationResult = augmentationResult;
         var actualUserMessage = userMessage;
-        if (isMulti(returnType)) {
+        if (TypeUtil.isMulti(returnType)) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
                 var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
@@ -326,9 +336,33 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        Response<AiMessage> response = toolSpecifications == null
-                ? context.chatModel.generate(messagesToSend)
-                : context.chatModel.generate(messagesToSend, toolSpecifications);
+        Optional<JsonSchema> jsonSchema = Optional.empty();
+        if (supportsJsonSchema) {
+            jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
+        }
+
+        Response<AiMessage> response;
+        if (jsonSchema.isPresent()) {
+            ChatRequest chatRequest = ChatRequest.builder()
+                    .messages(messagesToSend)
+                    .toolSpecifications(toolSpecifications)
+                    .responseFormat(ResponseFormat.builder()
+                            .type(JSON)
+                            .jsonSchema(jsonSchema.get())
+                            .build())
+                    .build();
+
+            ChatResponse chatResponse = context.chatModel.chat(chatRequest);
+            response = new Response<>(
+                    chatResponse.aiMessage(),
+                    chatResponse.tokenUsage(),
+                    chatResponse.finishReason());
+        } else {
+            response = toolSpecifications == null
+                    ? context.chatModel.generate(messagesToSend)
+                    : context.chatModel.generate(messagesToSend, toolSpecifications);
+        }
+
         log.debug("AI response obtained");
         if (audit != null) {
             audit.addLLMToApplicationMessage(response);
@@ -391,7 +425,7 @@ public class AiServiceMethodImplementationSupport {
         chatMemory.commit();
 
         Object guardrailResult = response.metadata().get(OutputGuardrailResult.class.getName());
-        if (guardrailResult != null && isTypeOf(returnType, guardrailResult.getClass())) {
+        if (guardrailResult != null && TypeUtil.isTypeOf(returnType, guardrailResult.getClass())) {
             return guardrailResult;
         }
 
@@ -399,8 +433,9 @@ public class AiServiceMethodImplementationSupport {
 
         var responseAugmenterParam = new ResponseAugmenterParams(userMessage, chatMemory, augmentationResult,
                 userMessageTemplate, templateVariables);
-        if (isResult(returnType)) {
-            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response, resultTypeParam((ParameterizedType) returnType));
+        if (TypeUtil.isResult(returnType)) {
+            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response,
+                    TypeUtil.resultTypeParam((ParameterizedType) returnType));
             parsedResponse = ResponseAugmenterSupport.invoke(parsedResponse, methodCreateInfo, responseAugmenterParam);
             return Result.builder()
                     .content(parsedResponse)
@@ -441,9 +476,9 @@ public class AiServiceMethodImplementationSupport {
             audit.onCompletion(imageResponse.content());
         }
 
-        if (isImage(returnType)) {
+        if (TypeUtil.isImage(returnType)) {
             return imageResponse.content();
-        } else if (isResultImage(returnType)) {
+        } else if (TypeUtil.isResultImage(returnType)) {
             return Result.builder()
                     .content(imageResponse)
                     .tokenUsage(imageResponse.tokenUsage())
@@ -511,44 +546,9 @@ public class AiServiceMethodImplementationSupport {
         return result;
     }
 
-    private static boolean isTokenStream(Type returnType) {
-        return isTypeOf(returnType, TokenStream.class);
-    }
-
-    private static boolean isMulti(Type returnType) {
-        return isTypeOf(returnType, Multi.class);
-    }
-
-    private static boolean isResult(Type returnType) {
-        return isTypeOf(returnType, Result.class);
-    }
-
-    private static Type resultTypeParam(ParameterizedType returnType) {
-        if (!isTypeOf(returnType, Result.class)) {
-            throw new IllegalStateException("Can only be called with Result<T> type");
-        }
-        return returnType.getActualTypeArguments()[0];
-    }
-
-    private static boolean isImage(Type returnType) {
-        return isTypeOf(returnType, Image.class);
-    }
-
-    private static boolean isResultImage(Type returnType) {
-        if (!isImage(returnType)) {
-            return false;
-        }
-        return isImage(resultTypeParam((ParameterizedType) returnType));
-    }
-
-    private static boolean isTypeOf(Type type, Class<?> clazz) {
-        if (type instanceof Class<?>) {
-            return type.equals(clazz);
-        }
-        if (type instanceof ParameterizedType pt) {
-            return isTypeOf(pt.getRawType(), clazz);
-        }
-        throw new IllegalStateException("Unsupported return type " + type);
+    private static boolean supportsJsonSchema(AiServiceContext context) {
+        return context.chatModel != null
+                && context.chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
@@ -594,7 +594,7 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static UserMessage prepareUserMessage(AiServiceContext context, AiServiceMethodCreateInfo createInfo,
-            Object[] methodArgs) {
+            Object[] methodArgs, boolean supportsJsonSchema) {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = createInfo.getUserMessageInfo();
 
         String userName = null;
@@ -644,7 +644,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             // No response schema placeholder found in the @SystemMessage and @UserMessage, concat it to the UserMessage.
-            if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema) {
+            if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema && !supportsJsonSchema) {
                 templateText = templateText.concat(ResponseSchemaUtil.placeholder());
             }
 
@@ -664,10 +664,9 @@ public class AiServiceMethodImplementationSupport {
                                 + paramIndex + " is null");
             }
 
-            // TODO: Understand how to enable the {response_schema} for the @StructuredPrompt.
             String text = toString(argValue);
             return createUserMessage(userName, imageContent,
-                    text.concat(createInfo.getResponseSchemaInfo().outputFormatInstructions()));
+                    text.concat(supportsJsonSchema ? "" : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
                     + "'. Please contact the maintainers");

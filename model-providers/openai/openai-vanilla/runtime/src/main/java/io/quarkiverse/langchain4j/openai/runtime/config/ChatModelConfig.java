@@ -77,6 +77,11 @@ public interface ChatModelConfig {
     Optional<String> responseFormat();
 
     /**
+     * Whether responses follow JSON Schema for Structured Outputs
+     */
+    Optional<Boolean> strictJsonSchema();
+
+    /**
      * The list of stop words to use.
      *
      * @return

@@ -14,6 +14,8 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.OPTIONAL_DENY;
+import static io.quarkiverse.langchain4j.deployment.ObjectSubstitutionUtil.registerJsonSchema;
+import static io.quarkiverse.langchain4j.runtime.types.TypeUtil.isMulti;
 import static io.quarkus.arc.processor.DotNames.NAMED;
 
 import java.io.IOException;
@@ -61,7 +63,9 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import dev.langchain4j.exception.IllegalConfigurationException;
+import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.Moderate;
+import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -117,6 +121,7 @@ import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
 import io.quarkus.gizmo.FieldDescriptor;
@@ -922,6 +927,7 @@ public class AiServicesProcessor {
     public void handleAiServices(
             LangChain4jBuildConfig config,
             AiServicesRecorder recorder,
+            RecorderContext recorderContext,
             CombinedIndexBuildItem indexBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<MethodParameterAllowedAnnotationsBuildItem> methodParameterAllowedAnnotationsItems,
@@ -1178,6 +1184,7 @@ public class AiServicesProcessor {
 
         }
 
+        registerJsonSchema(recorderContext);
         recorder.setMetadata(perClassMetadata);
     }
 
@@ -1246,8 +1253,10 @@ public class AiServicesProcessor {
 
         // TODO give user ability to provide custom OutputParser
         String outputFormatInstructions = "";
-        if (generateResponseSchema && !returnType.equals(Multi.class))
+        Optional<JsonSchema> structuredOutputSchema = Optional.empty();
+        if (!returnType.equals(Multi.class)) {
             outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
+        }
 
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates, ignoredPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
@@ -1255,7 +1264,7 @@ public class AiServicesProcessor {
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
-                userMessageInfo.template(), outputFormatInstructions);
+                userMessageInfo.template(), outputFormatInstructions, jsonSchemaFrom(returnType));
 
         if (!generateResponseSchema && responseSchemaInfo.isInSystemMessage())
             throw new RuntimeException(
@@ -1291,6 +1300,13 @@ public class AiServicesProcessor {
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, switchToWorkerThread,
                 inputGuardrails, outputGuardrails, accumulatorClassName, responseAugmenterClassName);
+    }
+
+    private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
+        if (isMulti(returnType)) {
+            return Optional.empty();
+        }
+        return JsonSchemas.jsonSchemaFrom(returnType);
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,

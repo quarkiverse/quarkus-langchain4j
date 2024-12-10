@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.runtime.tool;
+package io.quarkiverse.langchain4j.runtime.substitution;
 
 import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
 import io.quarkus.runtime.ObjectSubstitution;

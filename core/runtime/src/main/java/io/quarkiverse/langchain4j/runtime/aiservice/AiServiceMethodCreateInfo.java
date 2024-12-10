@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
@@ -370,11 +371,12 @@ public final class AiServiceMethodCreateInfo {
     }
 
     public record ResponseSchemaInfo(boolean enabled, boolean isInSystemMessage, Optional<Boolean> isInUserMessage,
-            String outputFormatInstructions) {
+            String outputFormatInstructions, Optional<JsonSchema> structuredOutputSchema) {
 
         public static ResponseSchemaInfo of(boolean enabled, Optional<TemplateInfo> systemMessageInfo,
                 Optional<TemplateInfo> userMessageInfo,
-                String outputFormatInstructions) {
+                String outputFormatInstructions,
+                Optional<JsonSchema> structuredOutputSchema) {
 
             boolean systemMessage = systemMessageInfo.flatMap(TemplateInfo::text)
                     .map(text -> text.contains(ResponseSchemaUtil.placeholder()))
@@ -385,7 +387,8 @@ public final class AiServiceMethodCreateInfo {
                 userMessage = Optional.of(userMessageInfo.get().text.get().contains(ResponseSchemaUtil.placeholder()));
             }
 
-            return new ResponseSchemaInfo(enabled, systemMessage, userMessage, outputFormatInstructions);
+            return new ResponseSchemaInfo(enabled, systemMessage, userMessage, outputFormatInstructions,
+                    structuredOutputSchema);
         }
     }
 }

@@ -85,6 +85,7 @@ public class OpenAiRecorder {
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null))
+                    .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);
