@@ -718,8 +718,6 @@ public class AiServicesProcessor {
                 allToolProviders.add(toolProvider);
             }
 
-            bi.getBeanName().ifPresent(beanName -> configurator.named(beanName));
-
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
@@ -1057,12 +1055,16 @@ public class AiServicesProcessor {
                 try (ClassCreator classCreator = classCreatorBuilder.build()) {
                     if (isRegisteredService) {
                         // we need to make this a bean, so we need to add the proper scope annotation
-                        DotName scopeInfo = declarativeAiServiceItems.stream()
+                        DeclarativeAiServiceBuildItem matchingBI = declarativeAiServiceItems.stream()
                                 .filter(bi -> bi.getServiceClassInfo().equals(iface))
                                 .findFirst().orElseThrow(() -> new IllegalStateException(
-                                        "Unable to determine the CDI scope of " + iface))
-                                .getCdiScope();
+                                        "Unable to determine the CDI scope of " + iface));
+                        DotName scopeInfo = matchingBI.getCdiScope();
                         classCreator.addAnnotation(scopeInfo.toString());
+                        if (matchingBI.getBeanName().isPresent()) {
+                            classCreator.addAnnotation(
+                                    AnnotationInstance.builder(NAMED).add("value", matchingBI.getBeanName().get()).build());
+                        }
                     }
 
                     FieldDescriptor contextField = classCreator.getFieldCreator("context", QuarkusAiServiceContext.class)

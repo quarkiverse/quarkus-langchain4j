@@ -108,7 +108,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LLAMA3_MODELS_PATH+++`
 endif::add-copy-button-to-env-var[]
 --
 |path
-|`${user.home}/.langchain4j/models`
+|`${user.name}/.llama3java/models`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature[`quarkus.langchain4j.llama3.chat-model.temperature`]##
 
