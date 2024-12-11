@@ -56,7 +56,7 @@ public interface ChatModelConfig {
     Optional<Integer> seed();
 
     /**
-     * the format to return a response in. Currently, the only accepted value is {@code json}
+     * The format to return a response in. Format can be {@code json} or a JSON schema.
      */
     Optional<String> format();
 

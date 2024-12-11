@@ -121,11 +121,14 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                         if (response.model() != null) {
                                             context.put(MODEL_ID, response.model());
                                         }
-                                        TokenUsage tokenUsage = new TokenUsage(
-                                                response.evalCount(),
-                                                response.promptEvalCount(),
-                                                response.evalCount() + response.promptEvalCount());
-                                        context.put(TOKEN_USAGE_CONTEXT, tokenUsage);
+
+                                        if (response.evalCount() != null && response.promptEvalCount() != null) {
+                                            TokenUsage tokenUsage = new TokenUsage(
+                                                    response.evalCount(),
+                                                    response.promptEvalCount(),
+                                                    response.evalCount() + response.promptEvalCount());
+                                            context.put(TOKEN_USAGE_CONTEXT, tokenUsage);
+                                        }
                                     }
 
                                 } catch (Exception e) {
@@ -170,7 +173,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                             @Override
                             public void run() {
 
-                                TokenUsage tokenUsage = context.get(TOKEN_USAGE_CONTEXT);
+                                TokenUsage tokenUsage = context.contains(TOKEN_USAGE_CONTEXT) ? context.get(TOKEN_USAGE_CONTEXT)
+                                        : null;
                                 List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
                                 List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
 
