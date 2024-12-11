@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -493,6 +494,20 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         // make sure the class is properly generated - see https://github.com/quarkiverse/quarkus-langchain4j/issues/954
         ImageDescriber unwrapped = ClientProxy.unwrap(imageDescriber);
         unwrapped.getClass().getConstructor(QuarkusAiServiceContext.class).getAnnotation(Inject.class);
+    }
+
+    @RegisterAiService
+    @Named("namedAssistant")
+    @ApplicationScoped
+    interface NamedAssistant extends AssistantBase {
+
+        String chat(String message);
+    }
+
+    @Test
+    public void test_named_assistant() throws Exception {
+        Object namedAssistant = Arc.container().instance("namedAssistant").get();
+        assertThat(namedAssistant).isInstanceOf(NamedAssistant.class);
     }
 
     private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {
