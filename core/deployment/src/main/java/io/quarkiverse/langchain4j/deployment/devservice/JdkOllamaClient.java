@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.deployment.devservice;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.ConnectException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -35,6 +36,15 @@ public class JdkOllamaClient implements OllamaClient {
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Override
+    public boolean isRunning() {
+        try (var s = new Socket(this.options.host(), this.options.port())) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

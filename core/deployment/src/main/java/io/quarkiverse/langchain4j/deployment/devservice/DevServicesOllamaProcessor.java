@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,6 +24,7 @@ import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesChatModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesEmbeddingModelRequiredBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.DevServicesModelRequired;
+import io.quarkiverse.langchain4j.deployment.items.DevServicesOllamaConfigBuildItem;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -46,9 +48,11 @@ public class DevServicesOllamaProcessor {
             List<DevServicesEmbeddingModelRequiredBuildItem> devServicesEmbeddingModels,
             LoggingSetupBuildItem loggingSetupBuildItem,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
+            Optional<DevServicesOllamaConfigBuildItem> ollamaDevServicesConfig,
             LaunchModeBuildItem launchMode,
             LangChain4jBuildConfig config,
             BuildProducer<DevServicesResultBuildItem> producer) {
+
         if (devServicesChatModels.isEmpty() && devServicesEmbeddingModels.isEmpty()) {
             return;
         }
@@ -57,18 +61,27 @@ public class DevServicesOllamaProcessor {
         var ollamaEmbeddingModels = devServicesEmbeddingModels.stream().filter(bi -> OLLAMA_PROVIDER.equals(bi.getProvider()))
                 .toList();
 
-        List<DevServicesModelRequired> allOllamaModels = new ArrayList<>();
+        Set<DevServicesModelRequired> allOllamaModels = new LinkedHashSet<>();
         allOllamaModels.addAll(ollamaChatModels);
         allOllamaModels.addAll(ollamaEmbeddingModels);
         if (allOllamaModels.isEmpty()) {
             return;
         }
 
-        OllamaClient client = OllamaClient.create(new OllamaClient.Options("localhost", config.devservices().port()));
+        var devServiceHost = ollamaDevServicesConfig
+                .map(c -> c.getConfig().get("langchain4j-ollama-dev-service.ollama.host"))
+                .orElse("localhost");
+
+        var devServicePort = ollamaDevServicesConfig
+                .map(c -> c.getConfig().get("langchain4j-ollama-dev-service.ollama.port"))
+                .map(Integer::parseInt)
+                .orElseGet(() -> config.devservices().port());
+
+        OllamaClient client = OllamaClient.create(new OllamaClient.Options(devServiceHost, devServicePort));
         try {
             Set<ModelName> localModels = client.localModels().stream().map(mi -> ModelName.of(mi.name()))
                     .collect(Collectors.toSet());
-            List<String> modelsToPull = new ArrayList<>(ollamaChatModels.size() + ollamaEmbeddingModels.size());
+            List<String> modelsToPull = new ArrayList<>(allOllamaModels.size());
             for (var requiredModel : allOllamaModels) {
                 if (localModels.contains(ModelName.of(requiredModel.getModelName()))) {
                     LOGGER.debug("Ollama already has model " + requiredModel.getModelName() + " pulled locally");
@@ -92,7 +105,7 @@ public class DevServicesOllamaProcessor {
                     });
             for (String model : modelsToPull) {
                 // we pull one model at a time and provide progress updates to the user via logging
-                LOGGER.info("Pulling model " + model);
+                LOGGER.infof("Pulling model %s", model);
                 AtomicReference<Long> LAST_UPDATE_REF = new AtomicReference<>();
 
                 CompletableFuture<Void> cf = new CompletableFuture<>();
@@ -120,9 +133,9 @@ public class DevServicesOllamaProcessor {
                             BigDecimal progress = percentage.setScale(2, RoundingMode.HALF_DOWN);
                             if (progress.compareTo(ONE_HUNDRED) >= 0) {
                                 // avoid showing 100% for too long
-                                LOGGER.infof("Verifying and cleaning up\n", progress);
+                                LOGGER.info("Verifying and cleaning up\n");
                             } else {
-                                LOGGER.infof("%s - Progress: %s%%\n", model, progress);
+                                LOGGER.infof("Downloading %s - Progress: %s%%\n", model, progress);
                             }
                         }
                     }
@@ -171,7 +184,7 @@ public class DevServicesOllamaProcessor {
 
             compressor.close();
 
-            String ollamaBaseUrl = String.format("http://localhost:%d", config.devservices().port());
+            String ollamaBaseUrl = String.format("http://%s:%d", devServiceHost, devServicePort);
 
             Map<String, String> modelBaseUrls = new HashMap<>();
             for (var bi : allOllamaModels) {

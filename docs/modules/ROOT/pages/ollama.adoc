@@ -20,7 +20,26 @@ Once installed, check that Ollama is running using:
 
 === Dev Service
 
-Quarkus LangChain4j automatically handles the pulling of the models configured by the application, so there is no need for users to do so manually.
+The Dev Service included with the Ollama extension can do lots of things.
+
+The Dev Service automatically handles the pulling of the models configured by the application, so there is no need for users to do so manually.
+
+Additionally, if you aren't already running a local Ollama instance (either via the https://ollama.com/download[desktop client] or a local container image) then it will first start the https://java.testcontainers.org/modules/ollama[Ollama container] on a random port and bind it to your application by setting `quarkus.langchain4j.ollama.*.base-url` to the URL where Ollama is running.
+
+The container will also share downloaded models with any local client, so a model only needs to be downloaded the first time, regardless of whether you use the local Ollama client or the container provided by the Dev Service.
+
+If the Dev Service starts an Ollama container, it will expose the following configuration properties that you can use within your own configuration should you need to:
+
+[source,properties,subs=attributes+]
+----
+langchain4j-ollama-dev-service.ollama.host=host <1>
+langchain4j-ollama-dev-service.ollama.port=port <2>
+langchain4j-ollama-dev-service.ollama.endpoint=http://${langchain4j-ollama-dev-service.ollama.host}:${langchain4j-ollama-dev-service.ollama.port} <3>
+----
+
+. The host that the container is running on. Typically `localhost`, but it could be the name of the container network.
+. The port that the Ollama container is running on.
+. The fully-qualified url (host + port) to the running Ollama container.
 
 WARNING: Models are huge. For example Llama3 is 4.7Gb, so make sure you have enough disk space.
 
@@ -41,7 +60,7 @@ To integrate with models running on Ollama, add the following dependency into yo
 
 If no other LLM extension is installed, link:../ai-services.adoc[AI Services] will automatically utilize the configured Ollama model.
 
-By default, the extension uses `llama3.1`, the model we pulled in the previous section.
+By default, the extension uses `llama3.2`, the model we pulled in the previous section.
 You can change it by setting the `quarkus.langchain4j.ollama.chat-model.model-id` property in the `application.properties` file:
 
 [source,properties,subs=attributes+]

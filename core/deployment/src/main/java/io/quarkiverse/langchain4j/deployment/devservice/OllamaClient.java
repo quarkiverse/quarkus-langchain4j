@@ -12,6 +12,11 @@ public interface OllamaClient {
     }
 
     /**
+     * Whether or not the server is running
+     */
+    boolean isRunning();
+
+    /**
      * Returns a list of all models the server has
      */
     List<ModelInfo> localModels();
