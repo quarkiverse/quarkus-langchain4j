@@ -22,6 +22,7 @@
         <module>secure-poem-multiple-models</module>
         <module>secure-sql-chatbot</module>
         <module>sql-chatbot</module>
+        <module>weather-agent</module>
     </modules>
 
     <build>
