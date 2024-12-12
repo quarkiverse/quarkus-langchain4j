@@ -1295,13 +1295,15 @@ public class AiServicesProcessor {
         String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
 
         //  Detect if tools execution may block the caller thread.
-        boolean switchToWorkerThread = detectIfToolExecutionRequiresAWorkerThread(method, tools, methodToolClassNames);
+        boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
+                methodToolClassNames);
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames, switchToWorkerThread,
-                inputGuardrails, outputGuardrails, accumulatorClassName, responseAugmenterClassName);
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames,
+                switchToWorkerThreadForToolExecution, inputGuardrails, outputGuardrails, accumulatorClassName,
+                responseAugmenterClassName);
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
