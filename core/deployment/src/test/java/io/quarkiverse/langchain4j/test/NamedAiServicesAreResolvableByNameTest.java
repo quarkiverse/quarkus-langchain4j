@@ -1,9 +1,13 @@
 package io.quarkiverse.langchain4j.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
+import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -51,6 +55,10 @@ public class NamedAiServicesAreResolvableByNameTest {
 
     @Test
     void namedAiServiceCouldBeResolvedByNameTest() {
-        assertEquals(1, beanManager.getBeans(MY_NAMED_SERVICE_BEAN).size());
+        Set<Bean<?>> beans = beanManager.getBeans(MY_NAMED_SERVICE_BEAN);
+        assertEquals(1, beans.size());
+        Bean<?> bean = beans.iterator().next();
+        assertNotNull(bean);
+        assertTrue(MyNamedService.class.isAssignableFrom(bean.getBeanClass()));
     }
 }
