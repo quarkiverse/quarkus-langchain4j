@@ -1,12 +1,14 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import java.util.List;
+import java.util.Map;
+
+import jakarta.enterprise.util.AnnotationLiteral;
 
 public record DeclarativeAiServiceCreateInfo(
         String serviceClassName,
         String languageModelSupplierClassName,
         String streamingChatLanguageModelSupplierClassName,
-        List<String> toolsClassNames,
+        Map<String, AnnotationLiteral<?>> toolsClassInfo,
         String toolProviderSupplier,
         String chatMemoryProviderSupplierClassName,
         String retrieverClassName,

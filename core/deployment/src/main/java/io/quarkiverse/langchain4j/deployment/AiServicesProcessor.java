@@ -43,8 +43,10 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -77,6 +79,7 @@ import io.quarkiverse.langchain4j.deployment.items.MethodParameterAllowedAnnotat
 import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotationsBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
+import io.quarkiverse.langchain4j.deployment.items.ToolQualifierProvider;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
@@ -262,11 +265,18 @@ public class AiServicesProcessor {
                 chatModelNames.add(chatModelName);
             }
 
-            List<DotName> toolDotNames = Collections.emptyList();
+            List<ClassInfo> toolClassInfos = Collections.emptyList();
             AnnotationValue toolsInstance = instance.value("tools");
             if (toolsInstance != null) {
-                toolDotNames = Arrays.stream(toolsInstance.asClassArray()).map(Type::name)
-                        .collect(Collectors.toList());
+                toolClassInfos = Arrays.stream(toolsInstance.asClassArray()).map(t -> {
+                    var ci = index.getClassByName(t.name());
+                    if (ci == null) {
+                        throw new IllegalArgumentException("Cannot find class " + t.name()
+                                + " in index. Please make sure it's a valid CDI bean known to Quarkus");
+                    }
+                    return ci;
+                })
+                        .toList();
             }
 
             // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
@@ -397,7 +407,7 @@ public class AiServicesProcessor {
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
                             streamingChatLanguageModelSupplierClassDotName,
-                            toolDotNames,
+                            toolClassInfos,
                             chatMemoryProviderSupplierClassDotName,
                             retrieverClassDotName,
                             retrievalAugmentorSupplierClassName,
@@ -477,10 +487,26 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
+    public void toolQualifiers(BuildProducer<ToolQualifierProvider.BuildItem> producer) {
+        producer.produce(new ToolQualifierProvider.BuildItem(new ToolQualifierProvider() {
+            @Override
+            public boolean supports(ClassInfo classInfo) {
+                return classInfo.hasAnnotation(DotNames.REGISTER_REST_CLIENT);
+            }
+
+            @Override
+            public AnnotationLiteral<?> qualifier(ClassInfo classInfo) {
+                return new RestClient.RestClientLiteral();
+            }
+        }));
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleDeclarativeServices(AiServicesRecorder recorder,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<SelectedChatModelProviderBuildItem> selectedChatModelProvider,
+            List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
 
@@ -507,7 +533,19 @@ public class AiServicesProcessor {
                     ? bi.getStreamingChatLanguageModelSupplierClassDotName().toString()
                     : null);
 
-            List<String> toolClassNames = bi.getToolDotNames().stream().map(DotName::toString).collect(Collectors.toList());
+            List<ToolQualifierProvider> toolQualifierProviders = toolQualifierProviderItems.stream().map(
+                    ToolQualifierProvider.BuildItem::getProvider).toList();
+            Map<String, AnnotationLiteral<?>> toolToQualifierMap = new HashMap<>();
+            for (ClassInfo ci : bi.getToolClassInfos()) {
+                AnnotationLiteral<?> qualifier = null;
+                for (ToolQualifierProvider provider : toolQualifierProviders) {
+                    if (provider.supports(ci)) {
+                        qualifier = provider.qualifier(ci);
+                        break;
+                    }
+                }
+                toolToQualifierMap.put(ci.name().toString(), qualifier);
+            }
 
             String toolProviderSupplierClassName = (bi.getToolProviderClassDotName() != null
                     ? bi.getToolProviderClassDotName().toString()
@@ -597,7 +635,7 @@ public class AiServicesProcessor {
                                     serviceClassName,
                                     chatLanguageModelSupplierClassName,
                                     streamingChatLanguageModelSupplierClassName,
-                                    toolClassNames,
+                                    toolToQualifierMap,
                                     toolProviderSupplierClassName,
                                     chatMemoryProviderSupplierClassName, retrieverClassName,
                                     retrievalAugmentorSupplierClassName,
@@ -639,12 +677,16 @@ public class AiServicesProcessor {
                 needsChatModelBean = true;
             }
 
-            if (!toolClassNames.isEmpty()) {
-                for (String toolClassName : toolClassNames) {
-                    DotName dotName = DotName.createSimple(toolClassName);
+            for (var entry : toolToQualifierMap.entrySet()) {
+                DotName dotName = DotName.createSimple(entry.getKey());
+                AnnotationLiteral<?> qualifier = entry.getValue();
+                if (qualifier == null) {
                     configurator.addInjectionPoint(ClassType.create(dotName));
-                    allToolNames.add(dotName);
+                } else {
+                    configurator.addInjectionPoint(ClassType.create(dotName),
+                            AnnotationInstance.builder(qualifier.annotationType()).build());
                 }
+                allToolNames.add(dotName);
             }
 
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {

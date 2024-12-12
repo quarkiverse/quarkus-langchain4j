@@ -16,7 +16,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final ClassInfo serviceClassInfo;
     private final DotName chatLanguageModelSupplierClassDotName;
     private final DotName streamingChatLanguageModelSupplierClassDotName;
-    private final List<DotName> toolDotNames;
+    private final List<ClassInfo> toolClassInfos;
     private final DotName toolProviderClassDotName;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
@@ -37,7 +37,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             ClassInfo serviceClassInfo,
             DotName chatLanguageModelSupplierClassDotName,
             DotName streamingChatLanguageModelSupplierClassDotName,
-            List<DotName> toolDotNames,
+            List<ClassInfo> toolClassInfos,
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrieverClassDotName,
             DotName retrievalAugmentorSupplierClassDotName,
@@ -55,7 +55,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
-        this.toolDotNames = toolDotNames;
+        this.toolClassInfos = toolClassInfos;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrieverClassDotName = retrieverClassDotName;
         this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
@@ -84,8 +84,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         return streamingChatLanguageModelSupplierClassDotName;
     }
 
-    public List<DotName> getToolDotNames() {
-        return toolDotNames;
+    public List<ClassInfo> getToolClassInfos() {
+        return toolClassInfos;
     }
 
     public DotName getChatMemoryProviderSupplierClassDotName() {

@@ -92,6 +92,7 @@ public class ToolProcessor {
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
+    private static final ResultHandle[] EMPTY_RESULT_HANDLE_ARRAY = new ResultHandle[0];
 
     private static final Logger log = Logger.getLogger(ToolProcessor.class);
 
@@ -136,7 +137,19 @@ public class ToolProcessor {
 
                 MethodInfo methodInfo = instance.target().asMethod();
                 ClassInfo classInfo = methodInfo.declaringClass();
-                if (classInfo.isInterface() || Modifier.isAbstract(classInfo.flags())) {
+                boolean causeValidationError = false;
+                if (classInfo.isInterface()) {
+
+                    if (classInfo.hasAnnotation(LangChain4jDotNames.REGISTER_AI_SERVICES) || classInfo.hasAnnotation(
+                            DotNames.REGISTER_REST_CLIENT)) {
+                        // we allow tools on method of these interfaces because we know they will be beans
+                    } else {
+                        causeValidationError = true;
+                    }
+                } else if (Modifier.isAbstract(classInfo.flags())) {
+                    causeValidationError = true;
+                }
+                if (causeValidationError) {
                     validation.produce(
                             new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
                                     "@Tool is only supported on non-abstract classes, all other usages are ignored. Offending method is '"
@@ -409,16 +422,21 @@ public class ToolProcessor {
                     MethodDescriptor.ofMethod(implClassName, "invoke", Object.class, Object.class, Object[].class));
 
             ResultHandle result;
+            ResultHandle[] targetMethodHandles = EMPTY_RESULT_HANDLE_ARRAY;
             if (methodInfo.parametersCount() > 0) {
                 List<ResultHandle> argumentHandles = new ArrayList<>(methodInfo.parametersCount());
                 for (int i = 0; i < methodInfo.parametersCount(); i++) {
                     argumentHandles.add(invokeMc.readArrayValue(invokeMc.getMethodParam(1), i));
                 }
-                ResultHandle[] targetMethodHandles = argumentHandles.toArray(new ResultHandle[0]);
-                result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
+                targetMethodHandles = argumentHandles.toArray(EMPTY_RESULT_HANDLE_ARRAY);
+            }
+
+            if (methodInfo.declaringClass().isInterface()) {
+                result = invokeMc.invokeInterfaceMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
                         targetMethodHandles);
             } else {
-                result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0));
+                result = invokeMc.invokeVirtualMethod(MethodDescriptor.of(methodInfo), invokeMc.getMethodParam(0),
+                        targetMethodHandles);
             }
 
             boolean toolReturnsVoid = methodInfo.returnType().kind() == Type.Kind.VOID;
