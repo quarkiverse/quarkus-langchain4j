@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.ollama;
 
 import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
+import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
+import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 import static io.quarkiverse.langchain4j.ollama.MessageMapper.toOllamaMessages;
 import static io.quarkiverse.langchain4j.ollama.MessageMapper.toTools;
 
@@ -9,14 +11,18 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -24,12 +30,16 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public class OllamaChatLanguageModel implements ChatLanguageModel {
 
     private static final Logger log = Logger.getLogger(OllamaChatLanguageModel.class);
+    private static final ObjectMapper objectMapper = QuarkusJsonCodecFactory.SnakeCaseObjectMapperHolder.MAPPER;
 
     private final OllamaClient client;
     private final String model;
@@ -51,29 +61,33 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, Collections.emptyList());
-    }
+    public dev.langchain4j.model.chat.response.ChatResponse chat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
+        List<ChatMessage> messages = chatRequest.messages();
+        List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
+        ResponseFormat responseFormat = chatRequest.responseFormat();
 
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages,
-                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         ensureNotEmpty(messages, "messages");
 
-        ChatRequest request = ChatRequest.builder()
+        ChatRequest.Builder builder = ChatRequest.builder()
                 .model(model)
                 .messages(toOllamaMessages(messages))
-                .tools(toTools(toolSpecifications))
+                .tools(toolSpecifications == null ? null : toTools(toolSpecifications))
                 .options(options)
-                .format(format)
-                .stream(false)
-                .build();
+                .stream(false);
 
+        if (format != null && !format.isBlank()) {
+            // If the developer specifies something in the "format" property, it has high priority.
+            builder.format(format);
+        } else if (responseFormat != null && responseFormat.type().equals(JSON)) {
+            try {
+                var jsonSchema = JsonSchemaElementHelper.toMap(responseFormat.jsonSchema().rootElement());
+                builder.format(objectMapper.writeValueAsString(jsonSchema));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ChatRequest request = builder.build();
         ChatModelRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
         ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
@@ -105,7 +119,11 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                 }
             });
 
-            return response;
+            return dev.langchain4j.model.chat.response.ChatResponse.builder()
+                    .aiMessage(response.content())
+                    .finishReason(response.finishReason())
+                    .build();
+
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -123,6 +141,34 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
             throw e;
         }
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+        var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
+                .messages(messages)
+                .toolSpecifications(toolSpecifications)
+                .build());
+
+        return Response.from(chatResponse.aiMessage());
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages) {
+        return generate(messages, Collections.emptyList());
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+        return generate(messages,
+                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
+    }
+
+    @Override
+    public Set<Capability> supportedCapabilities() {
+        if (format == null || !format.equalsIgnoreCase("json"))
+            return Set.of(RESPONSE_FORMAT_JSON_SCHEMA);
+        return Set.of();
     }
 
     private static Response<AiMessage> toResponse(ChatResponse response) {

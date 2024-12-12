@@ -2,7 +2,14 @@ package io.quarkiverse.langchain4j.ollama;
 
 import java.util.List;
 
-public record ChatRequest(String model, List<Message> messages, List<Tool> tools, Options options, String format,
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+public record ChatRequest(
+        String model,
+        List<Message> messages,
+        List<Tool> tools,
+        Options options,
+        @JsonSerialize(using = FormatJsonSerializer.class) String format,
         Boolean stream) {
 
     public static Builder builder() {
