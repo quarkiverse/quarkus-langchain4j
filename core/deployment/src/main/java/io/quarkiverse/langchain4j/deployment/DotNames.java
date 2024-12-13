@@ -8,6 +8,7 @@ import java.util.concurrent.CompletionStage;
 
 import jakarta.enterprise.inject.Instance;
 
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agent.tool.Tool;
@@ -61,6 +62,8 @@ public class DotNames {
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);
+
+    public static final DotName REGISTER_REST_CLIENT = DotName.createSimple(RegisterRestClient.class);
 
     public static final DotName OUTPUT_GUARDRAIL_ACCUMULATOR = DotName.createSimple(OutputGuardrailAccumulator.class);
 

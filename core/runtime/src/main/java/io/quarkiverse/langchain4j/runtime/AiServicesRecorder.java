@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -148,12 +149,21 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    List<String> toolsClasses = info.toolsClassNames();
+                    Map<String, AnnotationLiteral<?>> toolsClasses = info.toolsClassInfo();
                     if ((toolsClasses != null) && !toolsClasses.isEmpty()) {
                         List<Object> tools = new ArrayList<>(toolsClasses.size());
-                        for (String toolClass : toolsClasses) {
-                            Object tool = creationalContext.getInjectedReference(
-                                    Thread.currentThread().getContextClassLoader().loadClass(toolClass));
+                        for (var entry : toolsClasses.entrySet()) {
+                            AnnotationLiteral<?> qualifier = entry.getValue();
+                            Object tool;
+                            if (qualifier != null) {
+                                tool = creationalContext.getInjectedReference(
+                                        Thread.currentThread().getContextClassLoader().loadClass(entry.getKey()),
+                                        qualifier);
+                            } else {
+                                tool = creationalContext.getInjectedReference(
+                                        Thread.currentThread().getContextClassLoader().loadClass(entry.getKey()));
+                            }
+
                             tools.add(tool);
                         }
                         quarkusAiServices.tools(tools);

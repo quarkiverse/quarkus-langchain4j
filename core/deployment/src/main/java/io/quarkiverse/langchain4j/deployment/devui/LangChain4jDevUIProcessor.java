@@ -78,7 +78,7 @@ public class LangChain4jDevUIProcessor {
     private void addAiServicesPage(CardPageBuildItem card, List<DeclarativeAiServiceBuildItem> aiServices) {
         List<AiServiceInfo> infos = new ArrayList<>();
         for (DeclarativeAiServiceBuildItem aiService : aiServices) {
-            List<String> tools = aiService.getToolDotNames().stream().map(dotName -> dotName.toString()).toList();
+            List<String> tools = aiService.getToolClassInfos().stream().map(ci -> ci.name().toString()).toList();
             infos.add(new AiServiceInfo(aiService.getServiceClassInfo().name().toString(), tools));
         }
 
