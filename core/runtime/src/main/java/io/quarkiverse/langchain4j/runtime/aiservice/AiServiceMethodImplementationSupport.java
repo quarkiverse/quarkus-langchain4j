@@ -152,6 +152,7 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             QuarkusAiServiceContext context, Audit audit) {
+        boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
@@ -227,7 +228,7 @@ public class AiServiceMethodImplementationSupport {
                                 List<ChatMessage> messagesToSend = messagesToSend(guardrailsMessage, needsMemorySeed);
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
-                                        methodCreateInfo.isSwitchToWorkerThread());
+                                        methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
                                 return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                                         new ResponseAugmenterParams((UserMessage) augmentedUserMessage,
                                                 memory, ar, methodCreateInfo.getUserMessageTemplate(),
@@ -278,7 +279,7 @@ public class AiServiceMethodImplementationSupport {
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
                 var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                         (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
-                        methodCreateInfo.isSwitchToWorkerThread());
+                        methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
                 return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                         new ResponseAugmenterParams(actualUserMessage,
                                 chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
@@ -287,7 +288,7 @@ public class AiServiceMethodImplementationSupport {
 
             return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
-                    methodCreateInfo.isSwitchToWorkerThread())
+                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread)
                     .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
                     .map(chunk -> {
                         OutputGuardrailResult result;
@@ -785,11 +786,13 @@ public class AiServiceMethodImplementationSupport {
         private final List<Content> contents;
         private final QuarkusAiServiceContext context;
         private final Object memoryId;
-        private final boolean mustSwitchToWorkerThread;
+        private final boolean switchToWorkerThreadForToolExecution;
+        private final boolean isCallerRunningOnWorkerThread;
 
         public TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
                 Map<String, ToolExecutor> toolExecutors,
-                List<Content> contents, QuarkusAiServiceContext context, Object memoryId, boolean mustSwitchToWorkerThread) {
+                List<Content> contents, QuarkusAiServiceContext context, Object memoryId,
+                boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread) {
             // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
             this.messagesToSend = messagesToSend;
             this.toolSpecifications = toolSpecifications;
@@ -797,7 +800,8 @@ public class AiServiceMethodImplementationSupport {
             this.contents = contents;
             this.context = context;
             this.memoryId = memoryId;
-            this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
+            this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
+            this.isCallerRunningOnWorkerThread = isCallerRunningOnWorkerThread;
         }
 
         @Override
@@ -810,19 +814,20 @@ public class AiServiceMethodImplementationSupport {
 
         private void createTokenStream(UnicastProcessor<String> processor) {
             Context ctxt = null;
-            if (mustSwitchToWorkerThread) {
+            if (switchToWorkerThreadForToolExecution || isCallerRunningOnWorkerThread) {
                 // we create or retrieve the current context, to use `executeBlocking` when required.
                 ctxt = VertxContext.getOrCreateDuplicatedContext();
             }
 
             var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                    toolsExecutors, contents, context, memoryId, ctxt, mustSwitchToWorkerThread);
+                    toolsExecutors, contents, context, memoryId, ctxt, switchToWorkerThreadForToolExecution,
+                    isCallerRunningOnWorkerThread);
             TokenStream tokenStream = stream
                     .onNext(processor::onNext)
                     .onComplete(message -> processor.onComplete())
                     .onError(processor::onError);
             // This is equivalent to "run subscription on worker thread"
-            if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
+            if (switchToWorkerThreadForToolExecution && Context.isOnEventLoopThread()) {
                 ctxt.executeBlocking(new Callable<Void>() {
                     @Override
                     public Void call() {

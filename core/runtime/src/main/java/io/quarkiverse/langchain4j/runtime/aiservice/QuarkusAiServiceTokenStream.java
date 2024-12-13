@@ -39,7 +39,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final AiServiceContext context;
     private final Object memoryId;
     private final Context cxtx;
-    private final boolean mustSwitchToWorkerThread;
+    private final boolean switchToWorkerThreadForToolExecution;
+    private final boolean switchToWorkerForEmission;
 
     private Consumer<String> tokenHandler;
     private Consumer<List<Content>> contentsHandler;
@@ -59,7 +60,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             Map<String, ToolExecutor> toolExecutors,
             List<Content> retrievedContents,
             AiServiceContext context,
-            Object memoryId, Context ctxt, boolean mustSwitchToWorkerThread) {
+            Object memoryId, Context ctxt, boolean switchToWorkerThreadForToolExecution,
+            boolean switchToWorkerForEmission) {
         this.messages = ensureNotEmpty(messages, "messages");
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
@@ -68,7 +70,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.memoryId = ensureNotNull(memoryId, "memoryId");
         ensureNotNull(context.streamingChatModel, "streamingChatModel");
         this.cxtx = ctxt; // If set, it means we need to handle the context propagation.
-        this.mustSwitchToWorkerThread = mustSwitchToWorkerThread; // If true, we need to switch to a worker thread to execute tools.
+        this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution; // If true, we need to switch to a worker thread to execute tools.
+        this.switchToWorkerForEmission = switchToWorkerForEmission;
     }
 
     @Override
@@ -127,7 +130,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 new TokenUsage(),
                 toolSpecifications,
                 toolExecutors,
-                mustSwitchToWorkerThread,
+                switchToWorkerThreadForToolExecution,
+                switchToWorkerForEmission,
                 cxtx);
 
         if (contentsHandler != null && retrievedContents != null) {
