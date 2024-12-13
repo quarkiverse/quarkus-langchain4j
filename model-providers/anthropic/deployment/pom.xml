@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-anthropic-parent</artifactId>
-        <version>0.23.0.CR1</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-anthropic-deployment</artifactId>
     <name>Quarkus LangChain4j - Anthropic - Deployment</name>
