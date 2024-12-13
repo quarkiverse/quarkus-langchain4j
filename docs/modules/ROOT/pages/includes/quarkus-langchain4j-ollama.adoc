@@ -324,7 +324,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-format]] [
 
 [.description]
 --
-the format to return a response in. Currently, the only accepted value is `json`
+The format to return a response in. Format can be `json` or a JSON schema.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -742,7 +742,7 @@ a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model
 
 [.description]
 --
-the format to return a response in. Currently, the only accepted value is `json`
+The format to return a response in. Format can be `json` or a JSON schema.
 
 
 ifdef::add-copy-button-to-env-var[]
