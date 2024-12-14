@@ -45,14 +45,14 @@ class DisabledModelsAzureOpenAiRecorderTest {
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
 
     @Test
     void disabledImageModel() {
-        assertThat(recorder.imageModel(config, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.imageModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledImageModel.class);
     }
