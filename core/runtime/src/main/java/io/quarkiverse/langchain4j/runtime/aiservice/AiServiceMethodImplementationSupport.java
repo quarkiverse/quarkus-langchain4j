@@ -464,7 +464,7 @@ public class AiServiceMethodImplementationSupport {
             audit.initialMessages(systemMessage, userMessage);
         }
 
-        //TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
+        // TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
         AugmentationResult augmentationResult = null;
 
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
@@ -644,14 +644,16 @@ public class AiServiceMethodImplementationSupport {
                                 .formatted(ResponseSchemaUtil.placeholder(), createInfo.getInterfaceName()));
             }
 
-            // No response schema placeholder found in the @SystemMessage and @UserMessage, concat it to the UserMessage.
-            if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema && !supportsJsonSchema) {
-                templateText = templateText.concat(ResponseSchemaUtil.placeholder());
+            if (createInfo.getResponseSchemaInfo().enabled()) {
+                // No response schema placeholder found in the @SystemMessage and @UserMessage, concat it to the UserMessage.
+                if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema && !supportsJsonSchema) {
+                    templateText = templateText.concat(ResponseSchemaUtil.placeholder());
+                }
+
+                templateVariables.put(ResponseSchemaUtil.templateParam(),
+                        createInfo.getResponseSchemaInfo().outputFormatInstructions());
             }
 
-            // we do not need to apply the instructions as they have already been added to the template text at build time
-            templateVariables.put(ResponseSchemaUtil.templateParam(),
-                    createInfo.getResponseSchemaInfo().outputFormatInstructions());
             Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
             return createUserMessage(userName, imageContent, prompt.text());
 
@@ -667,7 +669,8 @@ public class AiServiceMethodImplementationSupport {
 
             String text = toString(argValue);
             return createUserMessage(userName, imageContent,
-                    text.concat(supportsJsonSchema ? "" : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
+                    text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
+                            : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
                     + "'. Please contact the maintainers");

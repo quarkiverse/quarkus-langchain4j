@@ -15,6 +15,8 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -282,6 +284,11 @@ public class WireMockUtil {
             return this;
         }
 
+        public WatsonxBuilder body(StringValuePattern stringValuePattern) {
+            builder.withRequestBody(stringValuePattern);
+            return this;
+        }
+
         public WatsonxBuilder token(String token) {
             this.token = token;
             return this;
@@ -297,8 +304,8 @@ public class WireMockUtil {
             return this;
         }
 
-        public void build() {
-            watsonServer.stubFor(
+        public StubMapping build() {
+            return watsonServer.stubFor(
                     builder
                             .withHeader("Authorization", equalTo("Bearer %s".formatted(token)))
                             .willReturn(aResponse()
