@@ -26,7 +26,7 @@ To use web search as a tool that the LLM can decide to execute (and the
 relevant search results will be the return value of the tool execution), you
 can either use the provided tool from the upstream LangChain4j project,
 in class `dev.langchain4j.web.search.WebSearchTool`, or implement your own tool
-if that one does not fit your requirements. The `samples/chatbot-web-search`
+if that one does not fit your requirements. The https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-web-search[chatbot-web-search]
 example demonstrates how to use the provided tool.
 
 == Using Web search in a RAG pipeline
