@@ -43,6 +43,9 @@ public class AiServicesRecorder {
     private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
+    private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
+
     // the key is the interface's class name
     private static final Map<String, AiServiceClassCreateInfo> metadata = new HashMap<>();
 
@@ -169,13 +172,23 @@ public class AiServicesRecorder {
                         quarkusAiServices.tools(tools);
                     }
 
-                    if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
-                            .equals(info.toolProviderSupplier())) {
-                        Class<?> toolProviderClass = Thread.currentThread().getContextClassLoader()
-                                .loadClass(info.toolProviderSupplier());
-                        Supplier<? extends ToolProvider> toolProvider = (Supplier<? extends ToolProvider>) creationalContext
-                                .getInjectedReference(toolProviderClass);
-                        quarkusAiServices.toolProvider(toolProvider.get());
+                    if (info.toolProviderSupplier() != null) {
+                        if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
+                                .equals(info.toolProviderSupplier())) {
+                            // specific provider
+                            Class<?> toolProviderClass = Thread.currentThread().getContextClassLoader()
+                                    .loadClass(info.toolProviderSupplier());
+                            Supplier<? extends ToolProvider> toolProvider = (Supplier<? extends ToolProvider>) creationalContext
+                                    .getInjectedReference(toolProviderClass);
+                            quarkusAiServices.toolProvider(toolProvider.get());
+                        } else {
+                            // if-exists provider
+                            Instance<ToolProvider> instance = creationalContext
+                                    .getInjectedReference(TOOL_PROVIDER_TYPE_LITERAL);
+                            if (instance.isResolvable()) {
+                                quarkusAiServices.toolProvider(instance.get());
+                            }
+                        }
                     }
 
                     if (info.chatMemoryProviderSupplierClassName() != null) {

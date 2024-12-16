@@ -210,6 +210,17 @@ public @interface RegisterAiService {
     }
 
     /**
+     * Marker that is used when the user does not want any tool provider
+     */
+    final class NoToolProviderSupplier implements Supplier<ToolProvider> {
+
+        @Override
+        public ToolProvider get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
      * Marker that is used to tell Quarkus to use the {@link RetrievalAugmentor} that the user has configured as a CDI bean.
      * If no such bean exists, then no retrieval augmentor will be used.
      */

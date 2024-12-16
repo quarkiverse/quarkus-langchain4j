@@ -39,7 +39,10 @@ class ToolProviderTest {
     MyServiceWithCustomToolProvider myServiceWithTools;
 
     @Inject
-    MyServiceWithDefaultToolProviderConfig myServiceWithoutTools;
+    MyServiceWithDefaultToolProviderConfig myServiceWithIfExistsTools;
+
+    @Inject
+    MyServiceWithNoToolProvider myServiceWithNoToolProvider;
 
     @ApplicationScoped
     public static class MyCustomToolProviderSupplier implements Supplier<ToolProvider> {
@@ -108,9 +111,14 @@ class ToolProviderTest {
         String chat(@UserMessage String msg, @MemoryId Object id);
     }
 
-    @RegisterAiService(chatLanguageModelSupplier = BlockingChatLanguageModelSupplierTest.MyModelSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    @RegisterAiService(chatLanguageModelSupplier = TestAiSupplier.class)
     interface MyServiceWithDefaultToolProviderConfig {
-        String chat(String msg);
+        String chat(@UserMessage String msg, @MemoryId Object id);
+    }
+
+    @RegisterAiService(toolProviderSupplier = RegisterAiService.NoToolProviderSupplier.class, chatLanguageModelSupplier = TestAiSupplier.class, chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    interface MyServiceWithNoToolProvider {
+        String chat(@UserMessage String msg, @MemoryId Object id);
     }
 
     @RegisterExtension
@@ -128,8 +136,15 @@ class ToolProviderTest {
 
     @Test
     @ActivateRequestContext
+    void testCallDefaultTools() {
+        String answer = myServiceWithIfExistsTools.chat("hello", 1);
+        assertEquals("0", answer);
+    }
+
+    @Test
+    @ActivateRequestContext
     void testCallNoTools() {
-        String answer = myServiceWithoutTools.chat("hello");
+        String answer = myServiceWithNoToolProvider.chat("hello", 1);
         assertEquals("42", answer);
     }
 }
