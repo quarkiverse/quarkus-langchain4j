@@ -153,16 +153,14 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(
+            LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
             String apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            if (apiKey == null && adToken == null) {
-                throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
-            }
             var builder = AzureOpenAiEmbeddingModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.EMBEDDING))
                     .apiKey(apiKey)
@@ -174,29 +172,31 @@ public class AzureOpenAiRecorder {
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public EmbeddingModel get() {
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     return new DisabledEmbeddingModel();
                 }
             };
         }
     }
 
-    public Supplier<ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
+    public Function<SyntheticCreationalContext<ImageModel>, ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig,
+            String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
             var apiKey = azureAiConfig.apiKey().orElse(null);
             String adToken = azureAiConfig.adToken().orElse(null);
-            throwIfApiKeysNotConfigured(apiKey, adToken, false, configName);
 
             var imageModelConfig = azureAiConfig.imageModel();
             var builder = AzureOpenAiImageModel.builder()
@@ -236,16 +236,18 @@ public class AzureOpenAiRecorder {
 
             builder.persistDirectory(persistDirectory);
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ImageModel get() {
+                public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ImageModel get() {
+                public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
                     return new DisabledImageModel();
                 }
             };

@@ -121,13 +121,17 @@ public class AzureOpenAiProcessor {
         for (var selected : selectedEmbedding) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
+
+                var embeddingModel = recorder.embeddingModel(config, configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
                         .unremovable()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .createWith(embeddingModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -136,12 +140,16 @@ public class AzureOpenAiProcessor {
         for (var selected : selectedImage) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
+
+                var imageModel = recorder.imageModel(config, configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(IMAGE_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.imageModel(config, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .createWith(imageModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
