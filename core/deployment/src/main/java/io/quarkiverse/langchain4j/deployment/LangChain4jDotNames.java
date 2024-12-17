@@ -25,6 +25,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.CreatedAware;
@@ -104,6 +105,9 @@ public class LangChain4jDotNames {
     static final DotName BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsToolProviderSupplier.class);
 
+    static final DotName NO_TOOL_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.NoToolProviderSupplier.class);
+
     static final DotName QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER = DotName.createSimple(
             QuarkusAiServiceContextQualifier.class);
 
@@ -113,5 +117,5 @@ public class LangChain4jDotNames {
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
-    static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProcessor.class);
+    static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
 }

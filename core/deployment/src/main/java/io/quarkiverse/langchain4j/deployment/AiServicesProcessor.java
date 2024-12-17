@@ -349,10 +349,14 @@ public class AiServicesProcessor {
             DotName toolProviderClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER;
             AnnotationValue toolProviderValue = instance.value("toolProviderSupplier");
             if (toolProviderValue != null) {
-                toolProviderClassName = toolProviderValue.asClass().name();
-                validateSupplierAndRegisterForReflection(toolProviderClassName, index, reflectiveClassProducer);
-                toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
-                        declarativeAiServiceClassInfo.simpleName()));
+                if (LangChain4jDotNames.NO_TOOL_PROVIDER_SUPPLIER.equals(toolProviderValue.asClass().name())) {
+                    toolProviderClassName = null;
+                } else {
+                    toolProviderClassName = toolProviderValue.asClass().name();
+                    validateSupplierAndRegisterForReflection(toolProviderClassName, index, reflectiveClassProducer);
+                    toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
+                            declarativeAiServiceClassInfo.simpleName()));
+                }
             }
 
             DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
@@ -753,7 +757,11 @@ public class AiServicesProcessor {
                 needsImageModelBean = true;
             }
 
-            if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
+            if (RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
+                    .equals(toolProviderSupplierClassName)) {
+                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                        new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
+            } else if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
                     .equals(toolProviderSupplierClassName) && toolProviderSupplierClassName != null) {
                 DotName toolProvider = DotName.createSimple(toolProviderSupplierClassName);
                 configurator.addInjectionPoint(ClassType.create(toolProvider));
