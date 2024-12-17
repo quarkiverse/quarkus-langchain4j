@@ -1,5 +1,5 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
-//DEPS io.quarkus.platform:quarkus-bom:3.15.1@pom
+//DEPS io.quarkus.platform:quarkus-bom:3.15.2@pom
 //DEPS io.quarkus:quarkus-picocli
 //DEPS io.quarkiverse.langchain4j:quarkus-langchain4j-openai:0.21.0.CR4
 //Q:CONFIG quarkus.banner.enabled=false
