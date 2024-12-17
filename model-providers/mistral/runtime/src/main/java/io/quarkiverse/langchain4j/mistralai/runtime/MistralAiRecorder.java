@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.mistralai.runtime;
 
+import static io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig.MistralAiConfig.DEFAULT_API_KEY;
+import static io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig.MistralAiConfig.DEFAULT_BASE_URL;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
@@ -27,22 +29,22 @@ import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class MistralAiRecorder {
-    private static final String DUMMY_KEY = "dummy";
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
                 configName);
 
         if (mistralAiConfig.enableIntegration()) {
-            String apiKey = mistralAiConfig.apiKey();
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
 
-            if (DUMMY_KEY.equals(apiKey)) {
+            String apiKey = mistralAiConfig.apiKey();
+            String baseUrl = mistralAiConfig.baseUrl();
+            if (DEFAULT_API_KEY.equals(apiKey) && DEFAULT_BASE_URL.equals(baseUrl)) {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = MistralAiChatModel.builder()
-                    .baseUrl(mistralAiConfig.baseUrl())
+                    .baseUrl(baseUrl)
                     .apiKey(apiKey)
                     .modelName(chatModelConfig.modelName())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), mistralAiConfig.logRequests()))
@@ -87,15 +89,16 @@ public class MistralAiRecorder {
                 configName);
 
         if (mistralAiConfig.enableIntegration()) {
-            String apiKey = mistralAiConfig.apiKey();
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
 
-            if (DUMMY_KEY.equals(apiKey)) {
+            String apiKey = mistralAiConfig.apiKey();
+            String baseUrl = mistralAiConfig.baseUrl();
+            if (DEFAULT_API_KEY.equals(apiKey) && DEFAULT_BASE_URL.equals(baseUrl)) {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = MistralAiStreamingChatModel.builder()
-                    .baseUrl(mistralAiConfig.baseUrl())
+                    .baseUrl(baseUrl)
                     .apiKey(apiKey)
                     .modelName(chatModelConfig.modelName())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), mistralAiConfig.logRequests()))
@@ -139,10 +142,11 @@ public class MistralAiRecorder {
                 configName);
 
         if (mistralAiConfig.enableIntegration()) {
-            String apiKey = mistralAiConfig.apiKey();
             EmbeddingModelConfig embeddingModelConfig = mistralAiConfig.embeddingModel();
 
-            if (DUMMY_KEY.equals(apiKey)) {
+            String apiKey = mistralAiConfig.apiKey();
+            String baseUrl = mistralAiConfig.baseUrl();
+            if (DEFAULT_API_KEY.equals(apiKey) && DEFAULT_BASE_URL.equals(baseUrl)) {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
@@ -175,15 +179,16 @@ public class MistralAiRecorder {
                 configName);
 
         if (mistralAiConfig.enableIntegration()) {
-            String apiKey = mistralAiConfig.apiKey();
             ModerationModelConfig moderationModelConfig = mistralAiConfig.moderationModel();
 
-            if (DUMMY_KEY.equals(apiKey)) {
+            String apiKey = mistralAiConfig.apiKey();
+            String baseUrl = mistralAiConfig.baseUrl();
+            if (DEFAULT_API_KEY.equals(apiKey) && DEFAULT_BASE_URL.equals(baseUrl)) {
                 throw new ConfigValidationException(createApiKeyConfigProblem(configName));
             }
 
             var builder = new MistralAiModerationModel.Builder()
-                    .baseUrl(mistralAiConfig.baseUrl())
+                    .baseUrl(baseUrl)
                     .apiKey(apiKey)
                     .modelName(moderationModelConfig.modelName())
                     .logRequests(firstOrDefault(false, moderationModelConfig.logRequests(), mistralAiConfig.logRequests()))

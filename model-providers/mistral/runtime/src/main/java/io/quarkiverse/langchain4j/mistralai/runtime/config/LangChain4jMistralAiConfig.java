@@ -37,16 +37,20 @@ public interface LangChain4jMistralAiConfig {
 
     @ConfigGroup
     interface MistralAiConfig {
+
+        String DEFAULT_BASE_URL = "https://api.mistral.ai/v1/";
+        String DEFAULT_API_KEY = "dummy";
+
         /**
          * Base URL of Mistral API
          */
-        @WithDefault("https://api.mistral.ai/v1/")
+        @WithDefault(DEFAULT_BASE_URL)
         String baseUrl();
 
         /**
          * Mistral API key
          */
-        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it
+        @WithDefault(DEFAULT_API_KEY)
         String apiKey();
 
         /**
