@@ -92,6 +92,7 @@
                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                 <maven.home>${maven.home}</maven.home>
+                <quarkus.langchain4j.openai.base-url>https://mockgpt.wiremockapi.cloud/v1</quarkus.langchain4j.openai.base-url>
               </systemPropertyVariables>
             </configuration>
           </execution>
