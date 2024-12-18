@@ -1,0 +1,14 @@
+---
+- name: "Sample1"
+  parameters:
+    - "What types of cars do you offer for rental?"
+  expected-output: |
+    We offer three categories of cars:
+      1.	Compact Commuter – Ideal for city driving, fuel-efficient, and budget-friendly. Example: Toyota Corolla, Honda Civic.
+      2.	Family Explorer SUV – Perfect for family trips with spacious seating for up to 7 passengers. Example: Toyota RAV4, Hyundai Santa Fe.
+      3.	Luxury Cruiser – Designed for traveling in style with premium features. Example: Mercedes-Benz E-Class, BMW 5 Series.
+- name: "Sample2"
+  parameters:
+    - "Can I cancel my car rental booking at any time?"
+  expected-output: |
+    Our cancellation policy states that reservations can be canceled up to 11 days prior to the start of the booking period. If the booking period is less than 4 days, cancellations are not permitted.
