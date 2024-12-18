@@ -61,7 +61,10 @@ public class SpanChatModelListener implements ChatModelListener {
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
             ChatModelResponse response = responseContext.response();
-            span.setAttribute("gen_ai.response.id", response.id()).setAttribute("gen_ai.response.model", response.model());
+            span.setAttribute("gen_ai.response.id", response.id());
+            if (response.model() != null) {
+                span.setAttribute("gen_ai.response.model", response.model());
+            }
             if (response.finishReason() != null) {
                 span.setAttribute("gen_ai.response.finish_reasons", response.finishReason().toString());
             }
