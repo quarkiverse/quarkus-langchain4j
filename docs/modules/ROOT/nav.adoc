@@ -8,6 +8,7 @@
 ** xref:prompt-generation.adoc[Prompt Generation]
 ** xref:guardrails.adoc[Guardrails]
 ** xref:response-augmenter.adoc[Response Augmenter]
+** xref:testing.adoc[Testing]
 
 * LLMs
 ** xref:llms.adoc[LLMs]

@@ -1,0 +1,634 @@
+= Testing AI-Infused Applications
+
+The `quarkus-langchain4j-testing-scorer-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused applications.
+It integrates with JUnit 5 and offers tools for automating evaluation processes, scoring outputs, and generating evaluation reports using customizable evaluation strategies.
+
+== Maven Dependency
+
+To use the `ScorerExtension`, include the following Maven dependency in your pom.xml:
+
+[source, xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-testing-scorer-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+== Using the extension
+
+To use the extension, annotate your test class with `@ExtendWith(ScorerExtension.class)` or `@AiScorer`:
+
+[source,java]
+----
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import io.quarkiverse.langchain4j.scorer.junit5.ScorerExtension;
+
+@ExtendWith(ScorerExtension.class)
+public class MyScorerTests {
+
+    // Test cases go here
+}
+----
+
+Or, you can use the `@AiScorer` annotation:
+
+[source,java]
+----
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
+
+@AiScorer
+public class MyScorerTests {
+
+    // Test cases go here
+}
+----
+
+This Junit 5 extension can be combined with `@QuarkusTest` to test Quarkus applications:
+
+[source,java]
+----
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
+
+@QuarkusTest
+@AiScorer
+public class MyScorerTests {
+
+    // Test cases go here
+}
+----
+
+== Concepts
+
+=== Scorer
+
+The `Scorer` (`io.quarkiverse.langchain4j.testing.scorer.Scorer`) is a utility that evaluates a _set of samples_ (represented by `io.quarkiverse.langchain4j.testing.scorer.Samples`) against a function (part of the application) and a set of evaluation strategies.
+It can run evaluations concurrently and produces an `EvaluationReport` summarizing the results and providing the _score_.
+
+The _score_ is the percentage of passed evaluations (between 0.0 and 100.0).
+It is calculated as the ratio of the number of passed evaluations to the total number of evaluations.
+
+In general, tests using the `Scorer` follow this pattern:
+
+[source,java]
+----
+
+@Inject CustomerSupportAssistant assistant; // The AI Service to test
+
+ @Test
+void testAiService(@ScorerConfiguration(concurrency = 5) Scorer scorer, // The scorer instance, with concurrency set to 5
+                   @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) { // The samples loaded from a YAML file
+
+    // Define the function that will be evaluated
+    // The parameters comes from the sample
+    // The output of this function will be compared to the expected output in the samples
+    Function<Parameters, String> function = parameters -> {
+        return assistant.chat(parameters.get(0));
+    };
+
+    EvaluationReport report = scorer.evaluate(samples, function,
+            new SemanticSimilarityStrategy(0.8)); // The evaluation strategy
+    assertThat(report.score()).isGreaterThanOrEqualTo(70); // Assert the score
+}
+----
+
+=== Samples
+
+A `Sample` (`io.quarkiverse.langchain4j.testing.scorer.EvaluationSample`) represents a single input-output test case.
+It includes:
+- a name: the name of the sample,
+- the parameters: the parameter data for the test,
+- the expected output: the expected result that will be evaluated,
+- the tags: metadata that can categorize the sample for targeted evaluation (tags are optional).
+
+When tags are set, the score can be calculated per tag (in addition to the global score).
+
+A list of samples is represented by `Samples` (`io.quarkiverse.langchain4j.testing.scorer.Samples`).
+
+Samples can be defined using a builder pattern:
+
+[source, java]
+----
+var s1 = EvaluationSample.<String>builder()
+            .withName("sample1")
+            .withParameter("value1")
+            .withExpectedOutput("my expected result2")
+            .build();
+
+    var s2 = EvaluationSample.<String>builder()
+            .withName("sample2")
+            .withParameter("value2")
+            .withExpectedOutput("my expected results")
+            .build();
+
+    Samples<String> samples = new Samples<>(List.of(s1, s2));
+----
+
+Alternatively, samples can be loaded from a YAML file using the `@SampleLocation` annotation:
+
+[source, yaml]
+----
+- name: Sample1
+  parameters:
+    - "parameter1"
+  expectedOutput: "expected1"
+  tags: ["tag1"]
+- name: Sample2
+  parameters:
+    - "parameter2"
+  expectedOutput: "expected2"
+  tags: ["tag1"]
+----
+
+=== Evaluation Strategy
+
+An `EvaluationStrategy` (`io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy`) defines how to evaluate a sample.
+The framework includes ready-to-use strategies (detailed below), and you can implement custom ones.
+
+[source, java]
+----
+/**
+ * A strategy to evaluate the output of a model.
+ * @param <T> the type of the output.
+ */
+public interface EvaluationStrategy<T> {
+
+    /**
+     * Evaluate the output of a model.
+     * @param sample the sample to evaluate.
+     * @param output the output of the model.
+     * @return {@code true} if the output is correct, {@code false} otherwise.
+     */
+    boolean evaluate(EvaluationSample<T> sample, T output);
+
+}
+----
+
+=== Evaluation Report
+
+The `EvaluationReport` aggregates the results of all evaluations. It provides:
+
+- a global score (percentage of passed evaluations).
+- the scores per tag.
+- the possibility to dump the report as Markdown.
+
+== Writing Tests with Scorer
+
+=== Example Test Using Field Injection
+
+[source, java]
+----
+@ExtendWith(ScorerExtension.class)
+public class ScorerFieldInjectionTest {
+
+    @ScorerConfiguration(concurrency = 4)
+    private Scorer scorer;
+
+    @Test
+    void evaluateSamples() {
+        // Define test samples
+        Samples<String> samples = new Samples<>(
+                EvaluationSample.<String>builder().withName("Sample1").withParameter("p1").withExpectedOutput("expected1").build(),
+                EvaluationSample.<String>builder().withName("Sample2").withParameter("p2").withExpectedOutput("expected2").build()
+        );
+
+        // Define evaluation strategies
+        EvaluationStrategy<String> strategy = new SemanticSimilarityStrategy(0.85);
+
+        // Evaluate samples
+        EvaluationReport report = scorer.evaluate(samples, parameters -> {
+            // Replace with your function under test
+            return "actualOutput";
+        }, strategy);
+
+        // Assert results
+        assertThat(report.score()).isGreaterThan(50.0);
+    }
+}
+----
+
+=== Example Test Using Parameter Injection
+
+[source, java]
+----
+
+@ExtendWith(ScorerExtension.class)
+public class ScorerParameterInjectionTest {
+
+    // ....
+
+    @Test
+    void evaluateWithInjectedScorer(
+        @ScorerConfiguration(concurrency = 2) Scorer scorer,
+        @SampleLocation("test-samples.yaml") Samples<String> samples
+    ) {
+        // Use an evaluation strategy
+        EvaluationStrategy<String> strategy = new AiJudgeStrategy(myChatLanguageModel);
+
+        // Evaluate samples
+        EvaluationReport report = scorer.evaluate(samples, parameters -> {
+            // Replace with your function under test
+            return "actualOutput";
+        }, strategy);
+
+        // Assert results
+        assertThat(report.evaluations()).isNotEmpty();
+        assertThat(report.score()).isGreaterThan(50.0);
+    }
+}
+----
+
+== Built-in Evaluation Strategies
+
+=== Semantic Similarity
+
+The `SemanticSimilarityStrategy` (`io.quarkiverse.langchain4j.testing.scorer.similarity.SemanticSimilarityStrategy`) evaluates the similarity between the actual output and the expected output using cosine similarity. It requires an embedding model and a minimum similarity threshold.
+
+**Maven Dependency:**
+
+[source, xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-testing-scorer-semantic-similarity</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+**Examples:**
+
+[source, java]
+----
+EvaluationStrategy<String> strategy = new SemanticSimilarityStrategy(0.9);
+EvaluationStrategy<String> strategy2 = new SemanticSimilarityStrategy(embeddingModel, 0.85);
+----
+
+=== AI Judge
+
+The `AiJudgeStrategy` leverages an AI model to determine if the actual output matches the expected output.
+It uses a configurable evaluation prompt and `ChatModel`.
+
+**Maven Dependency**
+
+[source, xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-testing-scorer-ai-judge</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+**Example:**
+
+[source, java]
+----
+EvaluationStrategy<String> strategy = new AiJudgeStrategy(myChatLanguageModel, """
+                You are an AI evaluating a response and the expected output.
+                You need to evaluate whether the model response is correct or not.
+                Return true if the response is correct, false otherwise.
+
+                Response to evaluate: {response}
+                Expected output: {expected_output}
+
+                """);
+----
+
+== Creating a Custom Evaluation Strategy
+
+To implement your own evaluation strategy, implement the `EvaluationStrategy` interface:
+
+[source, java]
+----
+import io.quarkiverse.langchain4j.testing.scorer.*;
+
+public class MyCustomStrategy implements EvaluationStrategy<String> {
+
+    @Override
+    public boolean evaluate(EvaluationSample<String> sample, String output) {
+        // Custom evaluation logic
+        return output.equalsIgnoreCase(sample.expectedOutput());
+    }
+}
+----
+
+Then, use the custom strategy in your test:
+
+[source, java]
+----
+EvaluationStrategy<String> strategy = new MyCustomStrategy();
+EvaluationReport report = scorer.evaluate(samples, parameters -> {
+    return "actualOutput";
+}, strategy);
+----
+
+Here is an exmaple of a custom strategy that can be used to verify the correctness of a vector search:
+
+[source, java]
+----
+public class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<String>> {
+
+        @Override
+        public boolean evaluate(EvaluationSample<List<String>> sample, List<String> response) {
+            List<String> expected = sample.expectedOutput();
+            int found = 0;
+            for (String seg : expected) {
+                // Make sure that the response contains the expected segment
+                boolean segFound = false;
+                for (String s : response) {
+                    if (s.toLowerCase().contains(seg.toLowerCase())) {
+                        segFound = true;
+                        found++;
+                        break;
+                    }
+                }
+                if (!segFound) {
+                    System.out.println("Segment not found: " + seg);
+                }
+            }
+            return found == expected.size();
+        }
+
+    }
+----
+
+== Injecting Samples
+
+You can load samples directly from a YAML file using the `@SampleLocation` annotation:
+
+[source, yaml]
+----
+- name: Sample1
+  parameters:
+   - "value1"
+  expectedOutput: "expected1"
+  tags: ["tag1"]
+- name: Sample2
+  parameters:
+    - "value2"
+  expectedOutput: "expected2"
+  tags: ["tag2"]
+----
+
+Then, inject the samples into your test method:
+
+[source, java]
+----
+@Test
+void evaluateWithSamples(@SampleLocation("test-samples.yaml") Samples<String> samples) {
+    // Use samples in your test
+}
+----
+
+== Example of tests using Quarkus
+
+Let's imagine an _AI Service_ used by a Chatbot to generate responses.
+Let's also imagine that this _AI Service_ has access to a (RAG) _content retriever_.
+The associated tests could be:
+
+[source, java]
+----
+package dev.langchain4j.quarkus;
+
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.quarkus.workshop.CustomerSupportAssistant;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.rag.query.Metadata;
+import io.quarkiverse.langchain4j.scorer.junit5.AiScorer;
+import io.quarkiverse.langchain4j.scorer.junit5.SampleLocation;
+import io.quarkiverse.langchain4j.scorer.junit5.ScorerConfiguration;
+import io.quarkiverse.langchain4j.testing.scorer.EvaluationReport;
+import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
+import io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy;
+import io.quarkiverse.langchain4j.testing.scorer.Parameters;
+import io.quarkiverse.langchain4j.testing.scorer.Samples;
+import io.quarkiverse.langchain4j.testing.scorer.Scorer;
+import io.quarkiverse.langchain4j.testing.scorer.judge.AiJudgeStrategy;
+import io.quarkiverse.langchain4j.testing.scorer.similarity.SemanticSimilarityStrategy;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@QuarkusTest
+@AiScorer
+public class AssistantTest {
+
+    // Just a function calling the AI Service and returning the response as a String.
+    @Inject
+    AiServiceEvaluation aiServiceEvaluation;
+
+    // The content retriever from the RAG pattern I want to test
+    @Inject
+    RetrievalAugmentor retriever;
+
+    // Test the AI Service using the Semantic Similarity Strategy
+    @Test
+    void testAiService(@ScorerConfiguration(concurrency = 5) Scorer scorer,
+                       @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) {
+
+        EvaluationReport report = scorer.evaluate(samples, aiServiceEvaluation,
+                new SemanticSimilarityStrategy(0.8));
+        assertThat(report.score()).isGreaterThanOrEqualTo(70);
+    }
+
+    // Test the AI Service using the AI Judge Strategy
+    @Test
+    void testAiServiceUsingAiJudge(Scorer scorer,
+                                   @SampleLocation("src/test/resources/samples.yaml") Samples<String> samples) {
+        var judge = OpenAiChatModel.builder()
+                .baseUrl("http://localhost:11434/v1") // Ollama
+                .modelName("mistral")
+                .build();
+        EvaluationReport report = scorer.evaluate(samples, aiServiceEvaluation,
+                new AiJudgeStrategy(judge));
+        assertThat(report.score()).isGreaterThanOrEqualTo(70);
+    }
+
+    // Evaluation strategy can be CDI beans (which means they can easily be injected)
+    @Inject
+    TextSegmentEvaluationStrategy textSegmentEvaluationStrategy;
+
+    // Test of the RAG retriever
+    @Test
+    void testRagRetriever(Scorer scorer, @SampleLocation("src/test/resources/content-retriever-samples.yaml") Samples<List<String>> samples) {
+        EvaluationReport report = scorer.evaluate(samples, i -> runRetriever(i.get(0)),
+                textSegmentEvaluationStrategy);
+        assertThat(report.score()).isEqualTo(100); // Expect full success
+    }
+
+    private List<String> runRetriever(String query) {
+        UserMessage message = UserMessage.userMessage(query);
+        AugmentationRequest request = new AugmentationRequest(message,
+                new Metadata(message, UUID.randomUUID().toString(), List.of()));
+        var res = retriever.augment(request);
+        return res.contents().stream().map(Content::textSegment).map(TextSegment::text).toList();
+    }
+
+    @Singleton
+    public static class AiServiceEvaluation implements Function<Parameters, String> {
+
+        @Inject
+        CustomerSupportAssistant assistant;
+
+        @ActivateRequestContext
+        @Override
+        public String apply(Parameters params) {
+            return assistant.chat(UUID.randomUUID().toString(), params.get(0)).collect()
+                    .in(StringBuilder::new, StringBuilder::append).map(StringBuilder::toString).await().indefinitely();
+        }
+    }
+
+    @Singleton
+    public static class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<String>> {
+
+        @Override
+        public boolean evaluate(EvaluationSample<List<String>> sample, List<String> response) {
+            List<String> expected = sample.expectedOutput();
+            int found = 0;
+            for (String seg : expected) {
+                // Make sure that the response contains the expected segment
+                boolean segFound = false;
+                for (String s : response) {
+                    if (s.toLowerCase().contains(seg.toLowerCase())) {
+                        segFound = true;
+                        found++;
+                        break;
+                    }
+                }
+                if (!segFound) {
+                    System.out.println("Segment not found: " + seg);
+                }
+            }
+            return found == expected.size();
+        }
+
+    }
+}
+----
+
+This test class demonstrates how to use the `ScorerExtension` to evaluate an AI Service and a RAG retriever using different strategies.
+The associated samples are:
+
+[source, yaml]
+----
+---
+- name: "car types"
+  parameters:
+    - "What types of cars do you offer for rental?"
+  expected-output: |
+    We offer three categories of cars:
+      1.	Compact Commuter – Ideal for city driving, fuel-efficient, and budget-friendly. Example: Toyota Corolla, Honda Civic.
+      2.	Family Explorer SUV – Perfect for family trips with spacious seating for up to 7 passengers. Example: Toyota RAV4, Hyundai Santa Fe.
+      3.	Luxury Cruiser – Designed for traveling in style with premium features. Example: Mercedes-Benz E-Class, BMW 5 Series.
+- name: "cancellation"
+  parameters:
+    - "Can I cancel my car rental booking at any time?"
+  expected-output: |
+    Our cancellation policy states that reservations can be canceled up to 11 days prior to the start of the booking period. If the booking period is less than 4 days, cancellations are not permitted.
+- name: "teaching"
+  parameters:
+    - "Am I allowed to use the rental car to teach someone how to drive?"
+  expected-output: |
+    No, rental cars from Miles of Smiles cannot be used for teaching someone to drive, as outlined in our Terms of Use under “Use of Vehicle.”
+- name: "damages"
+  parameters:
+    - "What happens if the car is damaged during my rental period?"
+  expected-output: |
+    You will be held liable for any damage, loss, or theft that occurs during the rental period, as stated in our Terms of Use under “Liability.”
+- name: "requirements"
+  parameters:
+    - "What are the requirements for making a car rental booking?"
+  expected-output: |
+    To make a booking, you need to provide accurate, current, and complete information during the reservation process. All bookings are also subject to vehicle availability.
+- name: "race"
+  parameters:
+    - "Can I use the rental car for a race or rally?"
+  expected-output: |
+    No, rental cars must not be used for any race, rally, or contest. This is prohibited as per our Terms of Use under “Use of Vehicle.”
+- name: "family"
+  parameters:
+    - "Do you offer cars suitable for long family trips?"
+  expected-output: |
+    Yes, we recommend the Family Explorer SUV for long family trips. It offers spacious seating for up to seven passengers, ample cargo space, and advanced driver-assistance features.
+- name: "alcohol"
+  parameters:
+      - "Is there any restriction on alcohol consumption while using the rental car?"
+  expected-output: |
+    Yes, you are not allowed to drive the rental car while under the influence of alcohol or drugs. This is strictly prohibited as stated in our Terms of Use.
+- name: "other questions"
+  parameters:
+   - What should I do if I have questions unrelated to car rentals?
+  expected-output: |
+    For questions unrelated to car rentals, I recommend contacting the appropriate department. I’m here to assist with any car rental-related inquiries!
+- name: "categories"
+  parameters:
+      - "Which car category is best for someone who values luxury and comfort?"
+  expected-output: |
+    If you value luxury and comfort, the Luxury Cruiser is the perfect choice. It offers premium interiors, cutting-edge technology, and unmatched comfort for a first-class driving experience.
+----
+
+and for the content retriever:
+
+[source, yaml]
+----
+---
+- name: cancellation_policy_test
+  parameters:
+    - What is the cancellation policy for car rentals?
+  expected-outputs:
+    - "Reservations can be cancelled up to 11 days prior to the start of the booking period."
+    - "If the booking period is less than 4 days, cancellations are not permitted."
+
+- name: vehicle_restrictions_test
+  parameters:
+    - What are the restrictions on how the rental car can be used?
+  expected-outputs:
+    - "All cars rented from Miles of Smiles must not be used:"
+    - "for any illegal purpose or in connection with any criminal offense."
+    - "for teaching someone to drive."
+    - "in any race, rally or contest."
+    - "while under the influence of alcohol or drugs."
+
+- name: car_types_test
+  parameters:
+    - What types of cars are available for rent?
+  expected-outputs:
+    - "Compact Commuter"
+    - "Perfect for city driving and short commutes, this fuel-efficient and easy-to-park car is your ideal companion for urban adventures"
+    - "Family Explorer SUV"
+    - "Designed for road trips, family vacations, or adventures with friends, this spacious and versatile SUV offers ample cargo space, comfortable seating for up to seven passengers"
+    - "Luxury Cruiser"
+    - "For those who want to travel in style, the Luxury Cruiser delivers unmatched comfort, cutting-edge technology, and a touch of elegance"
+
+- name: car_damage_liability_test
+  parameters:
+    - What happens if I damage the car during my rental period?
+  expected-outputs:
+    - "Users will be held liable for any damage, loss, or theft that occurs during the rental period"
+
+- name: governing_law_test
+  parameters:
+    - Under what law are the terms and conditions governed?
+  expected-outputs:
+    - "These terms will be governed by and construed in accordance with the laws of the United States of America"
+    - "Any disputes relating to these terms will be subject to the exclusive jurisdiction of the courts of United States"
+----
