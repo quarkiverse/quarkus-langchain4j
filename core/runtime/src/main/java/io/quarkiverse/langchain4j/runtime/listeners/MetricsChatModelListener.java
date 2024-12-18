@@ -16,7 +16,6 @@ import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.quarkiverse.langchain4j.cost.Cost;
@@ -78,9 +77,10 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         ChatModelRequest request = responseContext.request();
         ChatModelResponse response = responseContext.response();
-        Tags tags = Tags.of(
-                Tag.of("gen_ai.request.model", request.model()),
-                Tag.of("gen_ai.response.model", response.model()));
+        Tags tags = Tags.of("gen_ai.request.model", request.model());
+        if (response.model() != null) {
+            tags = tags.and("gen_ai.response.model", response.model());
+        }
         if (ContextLocals.duplicatedContextActive()) {
             String aiServiceClassName = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
             if (aiServiceClassName != null) {
@@ -112,10 +112,13 @@ public class MetricsChatModelListener implements ChatModelListener {
             return;
         }
 
-        Tags tags = Tags.of(
-                Tag.of("gen_ai.request.model", errorContext.request().model()),
-                Tag.of("gen_ai.response.model", errorContext.partialResponse().model()),
-                Tag.of("error.type", aiMessage.text()));
+        Tags tags = Tags.of("gen_ai.request.model", errorContext.request().model());
+        if (errorContext.partialResponse().model() != null) {
+            tags = tags.and("gen_ai.response.model", errorContext.partialResponse().model());
+        }
+        if (aiMessage.text() != null) {
+            tags = tags.and("error.type", aiMessage.text());
+        }
         duration.withTags(tags).record(endTime - startTime, TimeUnit.NANOSECONDS);
     }
 
