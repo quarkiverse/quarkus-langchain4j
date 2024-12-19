@@ -328,7 +328,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_INDEX_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`
+a|`none`, `flat`, `ivf-flat`, `ivf-sq8`, `ivf-pq`, `hnsw`, `diskann`, `autoindex`, `scann`, `gpu-ivf-flat`, `gpu-ivf-pq`, `gpu-brute-force`, `gpu-cagra`, `bin-flat`, `bin-ivf-flat`, `trie`, `stl-sort`, `inverted`, `sparse-inverted-index`, `sparse-wand`
 |`flat`
 
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metric-type[`quarkus.langchain4j.milvus.metric-type`]##
