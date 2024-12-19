@@ -80,5 +80,7 @@ public interface GuardrailResult<GR extends GuardrailResult> {
         String message();
 
         Throwable cause();
+
+        Class<? extends Guardrail> guardrailClass();
     }
 }

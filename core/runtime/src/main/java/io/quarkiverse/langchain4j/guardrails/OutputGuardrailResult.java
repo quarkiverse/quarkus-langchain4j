@@ -96,7 +96,7 @@ public record OutputGuardrailResult(Result result, String successfulText, Object
         return failures.stream().map(Failure::toString).collect(Collectors.joining(", "));
     }
 
-    record Failure(String message, Throwable cause, Class<? extends Guardrail> guardrailClass, boolean retry,
+    public record Failure(String message, Throwable cause, Class<? extends Guardrail> guardrailClass, boolean retry,
             String reprompt) implements GuardrailResult.Failure {
         public Failure(String message) {
             this(message, null);
