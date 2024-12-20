@@ -37,6 +37,23 @@ public interface ChatModelConfig {
     Optional<String> endpoint();
 
     /**
+     * The Azure AD token to use for this operation.
+     * If present, then the requests towards OpenAI will include this in the Authorization header.
+     * Note that this property overrides the functionality of {@code quarkus.langchain4j.azure-openai.embedding-model.api-key}.
+     */
+    Optional<String> adToken();
+
+    /**
+     * The API version to use for this operation. This follows the YYYY-MM-DD format
+     */
+    Optional<String> apiVersion();
+
+    /**
+     * Azure OpenAI API key
+     */
+    Optional<String> apiKey();
+
+    /**
      * What sampling temperature to use, with values between 0 and 2.
      * Higher values means the model will take more risks.
      * A value of 0.9 is good for more creative applications, while 0 (argmax sampling) is good for ones with a well-defined
