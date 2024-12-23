@@ -41,6 +41,7 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.openai.OpenAiStreamingResponseBuilder;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
@@ -202,7 +203,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                     }
                 })
                 .onComplete(() -> {
-                    Response<AiMessage> response = responseBuilder.build();
+                    ChatResponse response = responseBuilder.build();
 
                     ChatModelResponse modelListenerResponse = createModelListenerResponse(
                             responseId.get(),
@@ -220,10 +221,13 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                         }
                     });
 
-                    handler.onComplete(response);
+                    Response<AiMessage> aiResponse = Response.from(response.aiMessage(),
+                            response.tokenUsage(),
+                            response.finishReason());
+                    handler.onComplete(aiResponse);
                 })
                 .onError((error) -> {
-                    Response<AiMessage> response = responseBuilder.build();
+                    ChatResponse response = responseBuilder.build();
 
                     ChatModelResponse modelListenerPartialResponse = createModelListenerResponse(
                             responseId.get(),
@@ -282,7 +286,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
 
     private ChatModelResponse createModelListenerResponse(String responseId,
             String responseModel,
-            Response<AiMessage> response) {
+            ChatResponse response) {
         if (response == null) {
             return null;
         }
@@ -292,7 +296,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                 .model(responseModel)
                 .tokenUsage(response.tokenUsage())
                 .finishReason(response.finishReason())
-                .aiMessage(response.content())
+                .aiMessage(response.aiMessage())
                 .build();
     }
 

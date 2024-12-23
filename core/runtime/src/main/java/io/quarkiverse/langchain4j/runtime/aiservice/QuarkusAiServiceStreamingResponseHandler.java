@@ -19,6 +19,10 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
@@ -31,16 +35,17 @@ import io.vertx.core.Context;
  * The main difference with the upstream implementation is the thread switch when receiving the `completion` event
  * when there is tool execution requests.
  */
-public class QuarkusAiServiceStreamingResponseHandler implements StreamingResponseHandler<AiMessage> {
+public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatResponseHandler {
 
     private final Logger log = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class);
 
     private final AiServiceContext context;
     private final Object memoryId;
 
-    private final Consumer<String> tokenHandler;
+    private final Consumer<String> partialResponseHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
     private final Consumer<ToolExecution> toolExecuteHandler;
+    private final Consumer<ChatResponse> completeResponseHandler;
     private final Consumer<Throwable> errorHandler;
 
     private final List<ChatMessage> temporaryMemory;
@@ -55,8 +60,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
 
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
-            Consumer<String> tokenHandler,
+            Consumer<String> partialResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler,
+            Consumer<ChatResponse> completeResponseHandler,
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler,
             List<ChatMessage> temporaryMemory,
@@ -69,7 +75,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
         this.context = ensureNotNull(context, "context");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
-        this.tokenHandler = ensureNotNull(tokenHandler, "tokenHandler");
+        this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
+        this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
         this.toolExecuteHandler = toolExecuteHandler;
         this.errorHandler = errorHandler;
@@ -92,16 +99,19 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
         }
     }
 
-    public QuarkusAiServiceStreamingResponseHandler(AiServiceContext context, Object memoryId, Consumer<String> tokenHandler,
-            Consumer<ToolExecution> toolExecuteHandler, Consumer<Response<AiMessage>> completionHandler,
+    public QuarkusAiServiceStreamingResponseHandler(AiServiceContext context, Object memoryId,
+            Consumer<String> partialResponseHandler,
+            Consumer<ToolExecution> toolExecuteHandler, Consumer<ChatResponse> completeResponseHandler,
+            Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
             ExecutorService executor) {
         this.context = context;
         this.memoryId = memoryId;
-        this.tokenHandler = tokenHandler;
+        this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.toolExecuteHandler = toolExecuteHandler;
+        this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
         this.errorHandler = errorHandler;
         this.temporaryMemory = temporaryMemory;
@@ -115,11 +125,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     }
 
     @Override
-    public void onNext(String token) {
+    public void onPartialResponse(String partialResponse) {
         execute(new Runnable() {
             @Override
             public void run() {
-                tokenHandler.accept(token);
+                partialResponseHandler.accept(partialResponse);
             }
         });
 
@@ -156,8 +166,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
     }
 
     @Override
-    public void onComplete(Response<AiMessage> response) {
-        AiMessage aiMessage = response.content();
+    public void onCompleteResponse(ChatResponse completeResponse) {
+        AiMessage aiMessage = completeResponse.aiMessage();
 
         if (aiMessage.hasToolExecutionRequests()) {
             // Tools execution may block the caller thread. When the caller thread is the event loop thread, and
@@ -182,37 +192,58 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingRespon
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                     }
 
-                    context.streamingChatModel.generate(
-                            QuarkusAiServiceStreamingResponseHandler.this.messagesToSend(memoryId),
+                    ChatRequest chatRequest = ChatRequest.builder()
+                            .messages(messagesToSend(memoryId))
+                            .toolSpecifications(toolSpecifications)
+                            .build();
+                    QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
+                            context,
+                            memoryId,
+                            partialResponseHandler,
+                            toolExecuteHandler,
+                            completeResponseHandler,
+                            completionHandler,
+                            errorHandler,
+                            temporaryMemory,
+                            TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
                             toolSpecifications,
-                            new QuarkusAiServiceStreamingResponseHandler(
-                                    context,
-                                    memoryId,
-                                    tokenHandler,
-                                    toolExecuteHandler,
-                                    completionHandler,
-                                    errorHandler,
-                                    temporaryMemory,
-                                    TokenUsage.sum(tokenUsage, response.tokenUsage()),
-                                    toolSpecifications,
-                                    toolExecutors,
-                                    mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor));
+                            toolExecutors,
+                            mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor);
+                    context.streamingChatModel.chat(chatRequest, handler);
                 }
             });
         } else {
-            if (completionHandler != null) {
+            if (completeResponseHandler != null) {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
                         try {
+                            ChatResponse finalChatResponse = ChatResponse.builder()
+                                    .aiMessage(aiMessage)
+                                    .metadata(ChatResponseMetadata.builder()
+                                            .id(completeResponse.metadata().id())
+                                            .modelName(completeResponse.metadata().modelName())
+                                            .tokenUsage(TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()))
+                                            .finishReason(completeResponse.metadata().finishReason())
+                                            .build())
+                                    .build();
                             addToMemory(aiMessage);
-                            completionHandler.accept(Response.from(
-                                    aiMessage,
-                                    TokenUsage.sum(tokenUsage, response.tokenUsage()),
-                                    response.finishReason()));
+                            completeResponseHandler.accept(finalChatResponse);
                         } finally {
                             shutdown(); // Terminal event, we can shutdown the executor
                         }
+                    }
+                };
+                execute(runnable);
+            } else if (completionHandler != null) {
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        Response<AiMessage> finalResponse = Response.from(aiMessage,
+                                TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
+                                completeResponse.metadata().finishReason());
+                        addToMemory(aiMessage);
+                        completionHandler.accept(finalResponse);
                     }
                 };
                 execute(runnable);
