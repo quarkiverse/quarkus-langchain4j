@@ -1,0 +1,37 @@
+= Model Context Protocol
+
+LangChain4j supports the Model Context Protocol (MCP) to communicate with
+MCP compliant servers that can provide and execute tools. General
+information about the protocol can be found at the
+https://modelcontextprotocol.io/[MCP website]. More detailed information can
+also be found in the https://docs.langchain4j.dev/tutorials/mcp[LangChain4j
+documentation], this documentation focuses on features that Quarkus provides
+on top of the upstream module. For an example project that uses MCP, see
+https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-tools[mcp-tools]
+project in the `quarkus-langchain4j` repository.
+
+NOTE: There is also a Quarkus extension for developing MCP servers. See
+https://github.com/quarkiverse/quarkus-mcp-server[GitHub repo] and
+https://docs.quarkiverse.io/quarkus-mcp-server/dev/index.html[documentation].
+
+== Declaratively generating a tool provider backed by MCP
+
+Quarkus offers a way to generate a tool provider backed by one or more MCP
+servers declaratively from the configuration model. When using this, all AI
+services that don't explicitly declare to use a different tool provider will
+then be wired up to it, without having to write any MCP-specific code in the
+AI service. Example:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.github.transport-type=stdio
+quarkus.langchain4j.mcp.github.command=npm,exec,@modelcontextprotocol/server-github
+quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>
+----
+
+With this configuration, Quarkus will generate a tool provider that talks to the `server-github`
+MCP server. The server will be started automatically as a subprocess using the provided command
+(`npm exec @modelcontextprotocol/server-github`). The `environment.*` properties define
+environment variables that will be passed to the subprocess. With this configuration, any
+AI Service that does not declare a specific tool provider will be wired to this one.
+

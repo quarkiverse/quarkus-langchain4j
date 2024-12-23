@@ -151,6 +151,11 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     @Override
+    public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        addAllInternal(ids, embeddings, embedded);
+    }
+
+    @Override
     public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding embedding, int maxResults, double minScore) {
         indexExists.get();
         QueryRequest request = new QueryRequest(namespace, (long) maxResults, true, true, embedding.vector());

@@ -1,0 +1,174 @@
+:summaryTableId: quarkus-langchain4j-mcp_quarkus-langchain4j
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type[`quarkus.langchain4j.mcp."client-name".transport-type`]##
+
+[.description]
+--
+Transport type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TRANSPORT_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TRANSPORT_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`stdio`, `http`
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`quarkus.langchain4j.mcp."client-name".url`]##
+
+[.description]
+--
+The URL of the SSE endpoint. This only applies to MCP clients using the HTTP transport.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command[`quarkus.langchain4j.mcp."client-name".command`]##
+
+[.description]
+--
+The command to execute to spawn the MCP server process. This only applies to MCP clients using the STDIO transport.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__COMMAND+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__COMMAND+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var[`quarkus.langchain4j.mcp."client-name".environment."env-var"`]##
+
+[.description]
+--
+Environment variables for the spawned MCP server process. This only applies to MCP clients using the STDIO transport.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ENVIRONMENT__ENV_VAR_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ENVIRONMENT__ENV_VAR_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests[`quarkus.langchain4j.mcp."client-name".log-requests`]##
+
+[.description]
+--
+Whether to log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses[`quarkus.langchain4j.mcp."client-name".log-responses`]##
+
+[.description]
+--
+Whether to log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`quarkus.langchain4j.mcp."client-name".tool-execution-timeout`]##
+
+[.description]
+--
+Timeout for tool executions performed by the MCP client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TOOL_EXECUTION_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TOOL_EXECUTION_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|`60S`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`quarkus.langchain4j.mcp.generate-tool-provider`]##
+
+[.description]
+--
+Whether the MCP extension should automatically generate a ToolProvider that is wired up to all the configured MCP clients. The default is true if at least one MCP client is configured, false otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]
+
+:!summaryTableId:

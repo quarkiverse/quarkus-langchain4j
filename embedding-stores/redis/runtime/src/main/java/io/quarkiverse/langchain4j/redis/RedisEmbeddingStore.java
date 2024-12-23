@@ -120,6 +120,11 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
         return ids;
     }
 
+    @Override
+    public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        addAllInternal(ids, embeddings, embedded);
+    }
+
     private void addInternal(String id, Embedding embedding, TextSegment embedded) {
         addAllInternal(singletonList(id), singletonList(embedding), embedded == null ? null : singletonList(embedded));
     }

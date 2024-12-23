@@ -58,14 +58,13 @@ public class OllamaJsonOutputTest extends WiremockAware {
                                                     "content": "Tell me something about Alan Wake\\nYou must answer strictly in the following JSON format: {\\n\\\"firstname\\\": (The firstname; type: string),\\n\\\"lastname\\\": (The lastname; type: string)\\n}"
                                                 }
                                             ],
-                                            "stream": false,
                                             "options": {
                                                 "temperature": 0.8,
                                                 "top_k": 40,
                                                 "top_p": 0.9
                                             },
-                                            "tools": [],
-                                            "format": "json"
+                                            "format": "json",
+                                            "stream": false
                                         }"""))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")

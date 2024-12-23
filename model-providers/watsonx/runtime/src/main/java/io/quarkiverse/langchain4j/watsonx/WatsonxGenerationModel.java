@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.joining;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -16,11 +17,13 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
@@ -68,6 +71,16 @@ public class WatsonxGenerationModel extends Watsonx
                 .truncateInputTokens(builder.truncateInputTokens)
                 .includeStopSequence(builder.includeStopSequence)
                 .build();
+    }
+
+    @Override
+    public ChatRequestParameters defaultRequestParameters() {
+        return null;
+    }
+
+    @Override
+    public Set<Capability> supportedCapabilities() {
+        return Set.of();
     }
 
     @Override

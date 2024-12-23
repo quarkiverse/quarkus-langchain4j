@@ -179,6 +179,11 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
         return ids;
     }
 
+    @Override
+    public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        addAllInternal(ids, embeddings, embedded);
+    }
+
     private void addInternal(String id, Embedding embedding, TextSegment textSegment) {
         addAllInternal(singletonList(id), singletonList(embedding), textSegment == null ? null : singletonList(textSegment));
     }

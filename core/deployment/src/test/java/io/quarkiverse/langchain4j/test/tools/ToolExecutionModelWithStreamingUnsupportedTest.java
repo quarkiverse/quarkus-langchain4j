@@ -24,6 +24,7 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -61,8 +62,8 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         String uuid = UUID.randomUUID().toString();
         assertThatThrownBy(() -> aiService.hello("abc", "hi - " + uuid)
                 .collect().asList().map(l -> String.join(" ", l)).await().indefinitely())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tools", "supported");
+                .isInstanceOf(UnsupportedFeatureException.class)
+                .hasMessageContaining("tools", "supported");
     }
 
     @Test
@@ -92,7 +93,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         });
 
         Awaitility.await().until(() -> failure.get() != null || result.get() != null);
-        assertThat(failure.get()).hasMessageContaining("Tools", "supported");
+        assertThat(failure.get()).hasMessageContaining("tools", "supported");
         assertThat(result.get()).isNull();
     }
 
@@ -113,7 +114,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
             }
         }).get();
 
-        assertThat(r).contains("Tools", "supported");
+        assertThat(r).contains("tools", "supported");
     }
 
     @Test
@@ -122,8 +123,8 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         String uuid = UUID.randomUUID().toString();
         assertThatThrownBy(() -> aiService.helloNonBlocking("abc", "hiNonBlocking - " + uuid)
                 .collect().asList().map(l -> String.join(" ", l)).await().indefinitely())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tools", "supported");
+                .isInstanceOf(UnsupportedFeatureException.class)
+                .hasMessageContaining("tools", "supported");
     }
 
     @Test
@@ -153,7 +154,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         });
 
         Awaitility.await().until(() -> result.get() != null);
-        assertThat(result.get()).contains("Tools", "supported");
+        assertThat(result.get()).contains("tools", "supported");
     }
 
     @Test
@@ -182,7 +183,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         });
 
         Awaitility.await().until(() -> result.get() != null);
-        assertThat(result.get()).contains("Tools", "supported");
+        assertThat(result.get()).contains("tools", "supported");
     }
 
     @Test
@@ -204,7 +205,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
             }
         }).get();
 
-        assertThat(r).contains("Tools", "supported");
+        assertThat(r).contains("tools", "supported");
     }
 
     @Test
@@ -213,8 +214,8 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         String uuid = UUID.randomUUID().toString();
         assertThatThrownBy(() -> aiService.helloUni("abc", "hiUni - " + uuid)
                 .collect().asList().map(l -> String.join(" ", l)).await().indefinitely())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tools", "supported");
+                .isInstanceOf(UnsupportedFeatureException.class)
+                .hasMessageContaining("tools", "supported");
     }
 
     @Test
@@ -244,7 +245,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         });
 
         Awaitility.await().until(() -> failure.get() != null || result.get() != null);
-        assertThat(failure.get()).hasMessageContaining("Tools", "supported");
+        assertThat(failure.get()).hasMessageContaining("tools", "supported");
         assertThat(result.get()).isNull();
     }
 
@@ -267,7 +268,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
             }
         }).get();
 
-        assertThat(r).contains("Tools", "supported");
+        assertThat(r).contains("tools", "supported");
     }
 
     @Test
@@ -277,8 +278,8 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         String uuid = UUID.randomUUID().toString();
         assertThatThrownBy(() -> aiService.helloVirtualTools("abc", "hiVirtualThread - " + uuid)
                 .collect().asList().map(l -> String.join(" ", l)).await().indefinitely())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tools", "supported");
+                .isInstanceOf(UnsupportedFeatureException.class)
+                .hasMessageContaining("tools", "supported");
     }
 
     @Test
@@ -299,7 +300,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
             }
         }).get();
 
-        assertThat(r).contains("Tools", "supported");
+        assertThat(r).contains("tools", "supported");
     }
 
     @Test
@@ -328,7 +329,7 @@ public class ToolExecutionModelWithStreamingUnsupportedTest {
         });
 
         Awaitility.await().until(() -> failure.get() != null || result.get() != null);
-        assertThat(failure.get()).hasMessageContaining("Tools", "supported");
+        assertThat(failure.get()).hasMessageContaining("tools", "supported");
         assertThat(result.get()).isNull();
     }
 
