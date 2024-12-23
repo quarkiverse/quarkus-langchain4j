@@ -66,6 +66,9 @@ release.properties
 # Quarkus CLI
 .quarkus
 
+# dotenv
+.env
+
 #Dolphin
 .directory
 /samples/chatbot/dev.sh

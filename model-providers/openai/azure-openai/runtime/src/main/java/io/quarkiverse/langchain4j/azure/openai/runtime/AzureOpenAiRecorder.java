@@ -30,7 +30,6 @@ import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiEmbeddingModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiImageModel;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.ChatModelConfig;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig.EndpointType;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
@@ -58,17 +57,16 @@ public class AzureOpenAiRecorder {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
-            ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
-            String apiKey = azureAiConfig.apiKey().orElse(null);
-            String adToken = azureAiConfig.adToken().orElse(null);
-
+            var chatModelConfig = azureAiConfig.chatModel();
+            var apiKey = firstOrDefault(null, chatModelConfig.apiKey(), azureAiConfig.apiKey());
+            var adToken = firstOrDefault(null, chatModelConfig.adToken(), azureAiConfig.adToken());
             var builder = AzureOpenAiChatModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.CHAT))
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
                     .apiKey(apiKey)
                     .adToken(adToken)
                     // .tokenizer(new OpenAiTokenizer("<modelName>")) TODO: Set the tokenizer, it is always null!!
-                    .apiVersion(azureAiConfig.apiVersion())
+                    .apiVersion(chatModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), azureAiConfig.logRequests()))
@@ -158,15 +156,15 @@ public class AzureOpenAiRecorder {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
-            EmbeddingModelConfig embeddingModelConfig = azureAiConfig.embeddingModel();
-            String apiKey = azureAiConfig.apiKey().orElse(null);
-            String adToken = azureAiConfig.adToken().orElse(null);
+            var embeddingModelConfig = azureAiConfig.embeddingModel();
+            var apiKey = firstOrDefault(null, embeddingModelConfig.apiKey(), azureAiConfig.apiKey());
+            var adToken = firstOrDefault(null, embeddingModelConfig.adToken(), azureAiConfig.adToken());
             var builder = AzureOpenAiEmbeddingModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.EMBEDDING))
                     .apiKey(apiKey)
                     .adToken(adToken)
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
-                    .apiVersion(azureAiConfig.apiVersion())
+                    .apiVersion(embeddingModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
@@ -195,15 +193,14 @@ public class AzureOpenAiRecorder {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
         if (azureAiConfig.enableIntegration()) {
-            var apiKey = azureAiConfig.apiKey().orElse(null);
-            String adToken = azureAiConfig.adToken().orElse(null);
-
             var imageModelConfig = azureAiConfig.imageModel();
+            var apiKey = firstOrDefault(null, imageModelConfig.apiKey(), azureAiConfig.apiKey());
+            var adToken = firstOrDefault(null, imageModelConfig.adToken(), azureAiConfig.adToken());
             var builder = AzureOpenAiImageModel.builder()
                     .endpoint(getEndpoint(azureAiConfig, configName, EndpointType.IMAGE))
                     .apiKey(apiKey)
                     .adToken(adToken)
-                    .apiVersion(azureAiConfig.apiVersion())
+                    .apiVersion(imageModelConfig.apiVersion().orElse(azureAiConfig.apiVersion()))
                     .timeout(azureAiConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), azureAiConfig.logRequests()))
