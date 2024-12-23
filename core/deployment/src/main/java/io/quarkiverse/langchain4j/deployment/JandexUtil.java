@@ -229,7 +229,7 @@ class JandexUtil {
         // figure out which arguments we passed to the supertype
         List<Type> appliedArguments;
 
-        // we passed them explicitely
+        // we passed them explicitly
         if (appliedType.kind() == Type.Kind.PARAMETERIZED_TYPE) {
             appliedArguments = appliedType.asParameterizedType().arguments();
         } else {

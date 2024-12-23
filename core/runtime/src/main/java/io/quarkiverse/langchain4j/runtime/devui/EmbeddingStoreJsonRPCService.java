@@ -72,7 +72,7 @@ public class EmbeddingStoreJsonRPCService {
     private static final Pattern COMMA_OR_NEWLINE = Pattern.compile(",|\\r?\\n");
 
     public String add(String id, String text, String metadata) {
-        verifyEmbedingModelAndStore();
+        verifyEmbeddingModelAndStore();
         if (id == null || id.isEmpty()) {
             return embeddingStore.add(embeddingModel.embed(text).content(), TextSegment.from(text, parseMetadata(metadata)));
         } else {
@@ -96,7 +96,7 @@ public class EmbeddingStoreJsonRPCService {
     // FIXME: the limit argument can be changed to int after https://github.com/quarkusio/quarkus/issues/37481 is fixed
     // LangChain4jDevUIJsonRpcTest will need to be adjusted accordingly
     public JsonArray findRelevant(String text, String limit) {
-        verifyEmbedingModelAndStore();
+        verifyEmbeddingModelAndStore();
         int limitInt = Integer.parseInt(limit);
         JsonArray result = new JsonArray();
         for (EmbeddingMatch<TextSegment> match : embeddingStore.findRelevant(embeddingModel.embed(text).content(), limitInt)) {
@@ -119,7 +119,7 @@ public class EmbeddingStoreJsonRPCService {
         return result;
     }
 
-    private void verifyEmbedingModelAndStore() {
+    private void verifyEmbeddingModelAndStore() {
         if (embeddingModel == null) {
             throw new RuntimeException("No embedding model found in CDI. Please add an embedding model to your application.");
         }
