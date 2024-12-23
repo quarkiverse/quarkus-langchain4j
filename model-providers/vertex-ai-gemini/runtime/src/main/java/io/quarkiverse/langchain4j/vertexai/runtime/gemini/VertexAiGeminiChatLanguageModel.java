@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
+import static dev.langchain4j.data.message.AiMessage.aiMessage;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -10,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -57,15 +61,47 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        GenerateContentRequest request = ContentMapper.map(messages, Collections.emptyList(), generationConfig);
+    public dev.langchain4j.model.chat.response.ChatResponse chat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
+        GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
+                generationConfig);
 
         GenerateContentResponse response = restApi.generateContent(request, apiMetadata);
 
+        String text = GenerateContentResponseHandler.getText(response);
+        List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler.getToolExecutionRequests(response);
+        AiMessage aiMessage = toolExecutionRequests == null || toolExecutionRequests.isEmpty()
+                ? aiMessage(text)
+                : aiMessage(text, toolExecutionRequests);
+        return dev.langchain4j.model.chat.response.ChatResponse.builder()
+                .aiMessage(aiMessage)
+                .tokenUsage(GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()))
+                .finishReason(FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response)))
+                .build();
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+        var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
+                .messages(messages)
+                .toolSpecifications(toolSpecifications)
+                .build());
+
         return Response.from(
-                AiMessage.from(GenerateContentResponseHandler.getText(response)),
-                GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()),
-                FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response)));
+                chatResponse.aiMessage(),
+                chatResponse.tokenUsage(),
+                chatResponse.finishReason());
+
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages) {
+        return generate(messages, Collections.emptyList());
+    }
+
+    @Override
+    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+        return generate(messages,
+                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
     }
 
     public static Builder builder() {
