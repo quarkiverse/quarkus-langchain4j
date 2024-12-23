@@ -80,9 +80,9 @@ It eliminates a risk of non-authenticated users attempting to trick LLM.
 Even though browsers do not enforce Single Origin Policy (SOP) for WebSockets HTTP upgrade requests, enabling
 CORS origin check can add an extra protection in combination with verifying the expected authentication credentials.
 
-For example, attackers can set `Origin` themselves but they will not have the HTTPS bound authentication session cookie
+For example, attackers can set `Origin` themselves, but they will not have the HTTPS bound authentication session cookie
 which can be used to authenticate a WSS WebSockets upgrade request.
-Or if the authenticated user is tricked into visiting an unfriendly web site, then a WSS WebSockets upgrade request will fail
+Or if the authenticated user is tricked into visiting an unfriendly website, then a WSS WebSockets upgrade request will fail
 at the Quarkus CORS check level.
 
 ### Custom WebSocket ticket system
