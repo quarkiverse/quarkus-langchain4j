@@ -4,9 +4,9 @@ This advanced secure poem demo showcases how users authenticated with Google can
 
 ## The Demo
 
-Demo asks either Vertex AI Gemini or Azure OpenAI LLM to write a short 1 paragraph poem, using the access token acquired during the OIDC authorization code flow with either Google or Microsoft Entra ID OpenId Connect provider.
+Demo asks either Vertex AI Gemini or Azure OpenAI LLM to write a short 1-paragraph poem, using the access token acquired during the OIDC authorization code flow with either Google or Microsoft Entra ID OpenId Connect provider.
 
-### OpenId Connect authenticaion
+### OpenId Connect authentication
 
 This demo requires users to authenticate with either Google or Microsoft Entra ID.
 
@@ -96,7 +96,7 @@ quarkus.langchain4j.azure-openai.openai.log-responses=true
 
 ### ChatLanguageModel
 
-This demo leverages ChatLanguageModel instead of the the AI service abstraction to simplify managing multiple models, with the interaction between the LLM and the application handled through the ChatLanguageModel interface.
+This demo leverages ChatLanguageModel instead of the AI service abstraction to simplify managing multiple models, with the interaction between the LLM and the application handled through the ChatLanguageModel interface.
 
 ```java
 package io.quarkiverse.langchain4j.sample;
@@ -167,7 +167,7 @@ mvn quarkus:dev
 ```
 
 Access `http://localhost:8080`, login to Quarkus PoemResource using either Google or Microsoft Entra ID, and follow a provided application link to read the poem.
-Use the logout link to logout and try another OpenId Connect provider and model. For example, if you've started with Google and Vertex AI Gemini, try Microsoft Entra ID and Azure OpenAI next, or vice versa.
+Use the logout link to log out and try another OpenId Connect provider and model. For example, if you've started with Google and Vertex AI Gemini, try Microsoft Entra ID and Azure OpenAI next, or vice versa.
 
 You do not have to have both Google and Microsoft Entra ID accounts enabled in order to run this demo.
 

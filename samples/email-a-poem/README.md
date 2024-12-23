@@ -77,7 +77,7 @@ echo http://localhost:$GRAFANA_PORT
 
 Open your browser at `http://localhost:${GRAFANA_PORT}`
 
-When prompted to login, use `admin:admin`  as the username / password combination.
+When prompted to log in, use `admin:admin`  as the username / password combination.
 
 From the menu on the top left, click on `Explore`. On the page, select `Tempo` as the datasource (next to `Outline`), then go to `Query type`, select `Search` and select `quarkus-langchain4j-sample-poem` from the dropdown options of `Service Name`.
 Now hit `Run query` in the top right corner.

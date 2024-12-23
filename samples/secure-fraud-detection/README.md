@@ -23,7 +23,7 @@ To enable fraud detection, we provide the LLM with access to the custom [FraudDe
 
 `FraudDetectionContentRetriever` is registered by [FraudDetectionRetrievalAugmentor](./src/main/java/io/quarkiverse/langchain4j/samples/FraudDetectionRetrievalAugmentor.java).
 
-It can only be accessed securely and it retrieves transaction data for the currently authenticated user through two Panache repositories:
+It can only be accessed securely, and it retrieves transaction data for the currently authenticated user through two Panache repositories:
 
 - [CustomerRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/CustomerRepository.java)
 - [TransactionRepository.java](./src/main/java/io/quarkiverse/langchain4j/samples/TransactionRepository.java)
