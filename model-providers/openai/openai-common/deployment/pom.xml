@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-openai-common-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.23.0.CR2</version>
     </parent>
     <artifactId>quarkus-langchain4j-openai-common-deployment</artifactId>
     <name>Quarkus LangChain4j - OpenAI - Common - Deployment</name>
