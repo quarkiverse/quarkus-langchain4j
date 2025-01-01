@@ -37,7 +37,7 @@
     <langchain4j-embeddings.version>1.0.0-alpha1</langchain4j-embeddings.version>
     <quarkus-antora.version>1.0.1</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
-    <assertj.version>3.27.0</assertj.version>
+    <assertj.version>3.27.1</assertj.version>
     <wiremock.version>3.10.0</wiremock.version>
     <sundrio.version>0.200.0</sundrio.version>
     <quarkus-wiremock.version>1.4.1</quarkus-wiremock.version>
