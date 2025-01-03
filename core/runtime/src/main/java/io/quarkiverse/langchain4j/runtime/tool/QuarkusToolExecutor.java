@@ -18,7 +18,6 @@ import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkus.virtual.threads.VirtualThreadsRecorder;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.Context;
 
 public class QuarkusToolExecutor implements ToolExecutor {
 
