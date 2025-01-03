@@ -17,12 +17,13 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-bge-small-en-v15</artifactId>
+            <version>${langchain4j-embeddings.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-testing-scorer-core</artifactId>
-            <version>999-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
