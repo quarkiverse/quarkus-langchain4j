@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import jakarta.enterprise.context.ApplicationScoped;
