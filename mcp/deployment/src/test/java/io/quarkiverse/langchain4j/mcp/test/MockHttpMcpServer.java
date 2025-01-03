@@ -85,6 +85,7 @@ public class MockHttpMcpServer {
     private volatile SseEventSink sink;
     private volatile Sse sse;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private volatile boolean initializationNotificationReceived = false;
 
     @Inject
     ScheduledExecutorService scheduledExecutorService;
@@ -111,12 +112,21 @@ public class MockHttpMcpServer {
         if (method.equals("notifications/cancelled")) {
             return Response.ok().build();
         }
+        if (method.equals("notifications/initialized")) {
+            if (initializationNotificationReceived) {
+                return Response.serverError().entity("Duplicate 'notifications/initialized' message").build();
+            }
+            initializationNotificationReceived = true;
+            return Response.ok().build();
+        }
         String operationId = message.get("id").asText();
         if (method.equals("initialize")) {
             initialize(operationId);
         } else if (method.equals("tools/list")) {
+            ensureInitialized();
             listTools(operationId);
         } else if (method.equals("tools/call")) {
+            ensureInitialized();
             if (message.get("params").get("name").asText().equals("add")) {
                 executeAddOperation(message, operationId);
             } else if (message.get("params").get("name").asText().equals("longRunningOperation")) {
@@ -126,6 +136,13 @@ public class MockHttpMcpServer {
             }
         }
         return Response.accepted().build();
+    }
+
+    // throw an exception if we haven't received the 'notifications/initialized' message yet
+    private void ensureInitialized() {
+        if (!initializationNotificationReceived) {
+            throw new IllegalStateException("The client has not sent the 'notifications/initialized' message yet");
+        }
     }
 
     private void listTools(String operationId) {

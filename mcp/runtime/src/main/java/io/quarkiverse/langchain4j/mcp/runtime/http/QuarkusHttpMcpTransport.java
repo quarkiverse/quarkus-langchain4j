@@ -16,6 +16,7 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.mcp.client.protocol.CancellationNotification;
+import dev.langchain4j.mcp.client.protocol.InitializationNotification;
 import dev.langchain4j.mcp.client.protocol.McpCallToolRequest;
 import dev.langchain4j.mcp.client.protocol.McpClientMessage;
 import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
@@ -24,6 +25,7 @@ import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Uni;
 
 public class QuarkusHttpMcpTransport implements McpTransport {
 
@@ -79,37 +81,49 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
-        return execute(request, request.getId());
+        return execute(request, request.getId()).onItem()
+                .transformToUni(
+                        response -> execute(new InitializationNotification(), null).onItem().transform(ignored -> response))
+                .subscribeAsCompletionStage();
     }
 
     @Override
     public CompletableFuture<JsonNode> listTools(McpListToolsRequest operation) {
-        return execute(operation, operation.getId());
+        return execute(operation, operation.getId()).subscribeAsCompletionStage();
     }
 
     @Override
     public void cancelOperation(long operationId) {
         CancellationNotification cancellationNotification = new CancellationNotification(operationId, "Timeout");
-        execute(cancellationNotification, null);
+        execute(cancellationNotification, null).subscribe().with(ignored -> {
+        });
     }
 
     @Override
     public CompletableFuture<JsonNode> executeTool(McpCallToolRequest operation) {
-        return execute(operation, operation.getId());
+        return execute(operation, operation.getId()).subscribeAsCompletionStage();
     }
 
-    private CompletableFuture<JsonNode> execute(McpClientMessage request, Long id) {
+    private Uni<JsonNode> execute(McpClientMessage request, Long id) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
+        Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
         if (id != null) {
             operationHandler.startOperation(id, future);
         }
-        postEndpoint.post(request).onItem().invoke(response -> {
-            int statusCode = response.getStatus();
-            if (!isExpectedStatusCode(statusCode)) {
-                throw new RuntimeException("Unexpected status code: " + statusCode);
-            }
-        }).subscribeAsCompletionStage();
-        return future;
+        postEndpoint.post(request)
+                .onFailure().invoke(future::completeExceptionally)
+                .onItem().invoke(response -> {
+                    int statusCode = response.getStatus();
+                    if (!isExpectedStatusCode(statusCode)) {
+                        future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                    }
+                    // For messages with null ID, we don't wait for a response in the SSE channel,
+                    // so if the server accepted the request, we consider the operation done
+                    if (id == null) {
+                        future.complete(null);
+                    }
+                }).subscribeAsCompletionStage();
+        return uni;
     }
 
     private boolean isExpectedStatusCode(int statusCode) {
