@@ -6,51 +6,58 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.apache.camel.dataformat.bindy.annotation.CsvRecord;
+import org.apache.camel.dataformat.bindy.annotation.DataField;
 import org.hibernate.annotations.Comment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "movie", schema = "public")
+@CsvRecord(separator = ",", skipFirstLine = true )
 public class Movie {
 
     @Id
     @GeneratedValue
     private int id;
 
-    @Column(name = "index")
+    @Column
+    @DataField(pos = 1)
     private int index;
 
     @Column(name = "movie_name")
-    @JsonProperty("movie_name")
+    @DataField(pos = 2)
     private String movieName;
 
     @Column(name = "year_of_release")
-    @JsonProperty("year_of_release")
+    @DataField(pos = 3)
     private int yearOfRelease;
 
-    @Column(name = "category")
+    @Column
+    @DataField(pos = 4)
     private String category;
 
     @Column(name = "run_time")
-    @JsonProperty("run_time")
     @Comment("in minutes")
+    @DataField(pos = 5)
     private int runTime;
 
-    @Column(name = "genre")
+    @Column
     @Comment("this is a comma-separated list of genres")
+    @DataField(pos = 6)
     private String genre;
 
     @Column(name = "imdb_rating")
-    @JsonProperty("imdb_rating")
+    @DataField(pos = 7)
     private float imdbRating;
 
-    @Column(name = "votes")
+    @Column
+    @DataField(pos = 8)
     private Integer votes;
 
     @Column(name = "gross_total")
-    @JsonProperty("gross_total")
     @Comment("in millions of US dollars")
+    @DataField(pos = 9)
     private float grossTotal;
 
     public int getId() {

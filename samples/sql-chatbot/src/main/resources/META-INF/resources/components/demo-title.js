@@ -42,7 +42,7 @@ export class DemoTitle extends LitElement {
                 <h1>Movie Muse</h1>
             </div>
             <div class="explanation">
-                This demo shows how to build a chatbot powered by GPT 3.5 and advanced retrieval augmented generation.
+                This demo shows how to build a chatbot powered by GPT 4o-mini and advanced retrieval augmented generation.
                 The application ingested a CSV files listing the top 100 movies from IMDB.
                 You can now ask questions about the movies and the application will answer.
                 For example <em>What is the rating of the movie Inception?</em> or <em>What comedy movies are in the database?</em>

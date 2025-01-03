@@ -18,6 +18,7 @@
         <quarkus.platform.version>3.15.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
+        <camel.quarkus.version>3.15.1</camel.quarkus.version>
         <quarkus-langchain4j.version>0.23.0.CR2</quarkus-langchain4j.version>
     </properties>
 
@@ -55,11 +56,28 @@
             <artifactId>quarkus-langchain4j-openai</artifactId>
             <version>${quarkus-langchain4j.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-        </dependency>
 
+        <!-- Data Ingestion with Apache Camel -->
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-file</artifactId>
+            <version>${camel.quarkus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-jpa</artifactId>
+            <version>${camel.quarkus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-csv</artifactId>
+            <version>${camel.quarkus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel.quarkus</groupId>
+            <artifactId>camel-quarkus-bindy</artifactId>
+            <version>${camel.quarkus.version}</version>
+        </dependency>
 
         <!-- UI -->
         <dependency>
