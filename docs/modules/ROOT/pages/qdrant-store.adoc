@@ -1,0 +1,31 @@
+= Qdrant Store for Retrieval Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+
+When implementing Retrieval Augmented Generation (RAG), a robust document store is crucial. This guide demonstrates how to leverage a https://qdrant.tech/[Qdrant] database as the document store.
+
+== Leveraging the Qdrant Document Store
+
+To make use of the Qdrant document store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-qdrant</artifactId>
+</dependency>
+----
+
+== Configuration Settings
+
+Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-qdrant.adoc[leveloffset=+1,opts=optional]
+
+== Dev Services
+To use the Qdrant Dev Services, 3 configuration properties are required:
+
+* `quarkus.langchain4j.qdrant.devservices.service-name` which specifies the name of the collection to create
+* `quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance` which specifies the distance function used for comparing vectors
+* `quarkus.langchain4j.qdrant.devservices.collection.vector-params.size` which specifies the size of the vectors.
+
