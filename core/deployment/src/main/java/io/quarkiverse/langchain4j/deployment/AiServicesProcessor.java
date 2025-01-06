@@ -522,6 +522,7 @@ public class AiServicesProcessor {
         boolean needsAuditServiceBean = false;
         boolean needsModerationModelBean = false;
         boolean needsImageModelBean = false;
+        boolean needsToolProviderBean = false;
         Set<DotName> allToolNames = new HashSet<>();
         Set<DotName> allToolProviders = new HashSet<>();
 
@@ -761,7 +762,8 @@ public class AiServicesProcessor {
                     .equals(toolProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                         new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
-            } else if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
+                needsToolProviderBean = true;
+            } else if (!RegisterAiService.NoToolProviderSupplier.class.getName()
                     .equals(toolProviderSupplierClassName) && toolProviderSupplierClassName != null) {
                 DotName toolProvider = DotName.createSimple(toolProviderSupplierClassName);
                 configurator.addInjectionPoint(ClassType.create(toolProvider));
@@ -799,6 +801,9 @@ public class AiServicesProcessor {
         }
         if (needsImageModelBean) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.IMAGE_MODEL));
+        }
+        if (needsToolProviderBean) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.TOOL_PROVIDER));
         }
         if (!allToolProviders.isEmpty()) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolProviders));
