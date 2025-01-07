@@ -55,16 +55,17 @@ public class OutputGuardrailResultAssert extends AbstractObjectAssert<OutputGuar
 
     /**
      * Asserts that the actual {@code OutputGuardrailResult} represents a successful state.
-     * A successful state is determined by having a {@link Result} of {@link Result#SUCCESS}
-     * and being equal to {@link OutputGuardrailResult#success()}.
+     * A successful state is determined by having {@link OutputGuardrailResult#isSuccess()}.
      *
      * @return this assertion object for method chaining
      * @throws AssertionError if the actual result is not successful as per the aforementioned criteria
      */
     public OutputGuardrailResultAssert isSuccessful() {
         isNotNull();
-        hasResult(Result.SUCCESS);
-        isEqualTo(OutputGuardrailResult.success());
+
+        if (!actual.isSuccess()) {
+            throw failure("Expected result to be successful but was <%s>", actual.getResult());
+        }
 
         return this;
     }
