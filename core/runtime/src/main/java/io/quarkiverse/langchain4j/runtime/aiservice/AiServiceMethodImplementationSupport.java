@@ -44,10 +44,10 @@ import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -337,32 +337,7 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        Optional<JsonSchema> jsonSchema = Optional.empty();
-        if (supportsJsonSchema) {
-            jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
-        }
-
-        Response<AiMessage> response;
-        if (jsonSchema.isPresent()) {
-            ChatRequest chatRequest = ChatRequest.builder()
-                    .messages(messagesToSend)
-                    .toolSpecifications(toolSpecifications)
-                    .responseFormat(ResponseFormat.builder()
-                            .type(JSON)
-                            .jsonSchema(jsonSchema.get())
-                            .build())
-                    .build();
-
-            ChatResponse chatResponse = context.chatModel.chat(chatRequest);
-            response = new Response<>(
-                    chatResponse.aiMessage(),
-                    chatResponse.tokenUsage(),
-                    chatResponse.finishReason());
-        } else {
-            response = toolSpecifications == null
-                    ? context.chatModel.generate(messagesToSend)
-                    : context.chatModel.generate(messagesToSend, toolSpecifications);
-        }
+        var response = executeRequest(context, methodCreateInfo, messagesToSend, toolSpecifications);
 
         log.debug("AI response obtained");
         if (audit != null) {
@@ -448,6 +423,46 @@ public class AiServiceMethodImplementationSupport {
 
         return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(response, returnType),
                 methodCreateInfo, responseAugmenterParam);
+    }
+
+    private static Response<AiMessage> executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
+            ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
+        var chatRequest = ChatRequest.builder()
+                .messages(messagesToSend)
+                .toolSpecifications(toolSpecifications)
+                .responseFormat(
+                        ResponseFormat.builder()
+                                .type(JSON)
+                                .jsonSchema(jsonSchema)
+                                .build())
+                .build();
+
+        var response = chatModel.chat(chatRequest);
+
+        return new Response<>(
+                response.aiMessage(),
+                response.tokenUsage(),
+                response.finishReason());
+    }
+
+    private static Response<AiMessage> executeRequest(List<ChatMessage> messagesToSend, ChatLanguageModel chatModel,
+            List<ToolSpecification> toolSpecifications) {
+        return (toolSpecifications == null) ? chatModel.generate(messagesToSend)
+                : chatModel.generate(messagesToSend, toolSpecifications);
+    }
+
+    static Response<AiMessage> executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
+            ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
+        var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
+                : Optional.<JsonSchema> empty();
+
+        return jsonSchema.isPresent() ? executeRequest(jsonSchema.get(), messagesToSend, chatModel, toolSpecifications)
+                : executeRequest(messagesToSend, chatModel, toolSpecifications);
+    }
+
+    static Response<AiMessage> executeRequest(QuarkusAiServiceContext context, AiServiceMethodCreateInfo methodCreateInfo,
+            List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications) {
+        return executeRequest(methodCreateInfo, messagesToSend, context.chatModel, toolSpecifications);
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
@@ -547,9 +562,12 @@ public class AiServiceMethodImplementationSupport {
         return result;
     }
 
+    private static boolean supportsJsonSchema(ChatLanguageModel chatModel) {
+        return (chatModel != null) && chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
+    }
+
     private static boolean supportsJsonSchema(AiServiceContext context) {
-        return context.chatModel != null
-                && context.chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
+        return supportsJsonSchema(context.chatModel);
     }
 
     private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,

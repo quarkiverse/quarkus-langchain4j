@@ -81,24 +81,18 @@ public class GuardrailsSupport {
             if (!result.isSuccess()) {
                 if (!result.isRetry()) {
                     throw new GuardrailException(result.toString(), result.getFirstFailureException());
-                } else if (result.getReprompt() != null) {
-                    // Retry with re-prompting
-                    chatMemory.add(userMessage(result.getReprompt()));
-                    if (toolSpecifications == null) {
-                        response = chatModel.generate(chatMemory.messages());
-                    } else {
-                        response = chatModel.generate(chatMemory.messages(), toolSpecifications);
-                    }
-                    chatMemory.add(response.content());
                 } else {
-                    // Retry without re-prompting
-                    if (toolSpecifications == null) {
-                        response = chatModel.generate(chatMemory.messages());
-                    } else {
-                        response = chatModel.generate(chatMemory.messages(), toolSpecifications);
+                    // Retry
+                    if (result.getReprompt() != null) {
+                        // Retry with reprompting
+                        chatMemory.add(userMessage(result.getReprompt()));
                     }
+
+                    response = AiServiceMethodImplementationSupport.executeRequest(methodCreateInfo, chatMemory.messages(),
+                            chatModel, toolSpecifications);
                     chatMemory.add(response.content());
                 }
+
                 attempt++;
                 output = new OutputGuardrailParams(response.content(), output.memory(),
                         output.augmentationResult(), output.userMessageTemplate(), output.variables());
