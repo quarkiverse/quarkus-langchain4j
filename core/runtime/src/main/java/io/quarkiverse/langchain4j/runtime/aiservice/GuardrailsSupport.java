@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.spi.CDI;
 
@@ -106,7 +108,15 @@ public class GuardrailsSupport {
         }
 
         if (attempt == max) {
-            throw new GuardrailException("Output validation failed. The guardrails have reached the maximum number of retries");
+            var failureMessages = Optional.ofNullable(result.failures())
+                    .orElseGet(List::of)
+                    .stream()
+                    .map(OutputGuardrailResult.Failure::message)
+                    .collect(Collectors.joining(System.lineSeparator()));
+
+            throw new GuardrailException(
+                    "Output validation failed. The guardrails have reached the maximum number of retries. Guardrail messages:"
+                            + System.lineSeparator() + failureMessages);
         }
 
         if (result.hasRewrittenResult()) {
