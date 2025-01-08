@@ -73,9 +73,10 @@ public class ChatJsonRPCService {
             @All List<RetrievalAugmentor> retrievalAugmentors,
             ChatMemoryProvider memoryProvider,
             QuarkusToolExecutorFactory toolExecutorFactory,
-            @All List<Supplier<ToolProvider>> toolProviders) {
+            @All List<Supplier<ToolProvider>> toolProvidersSuppliers,
+            @All List<ToolProvider> toolProviders) {
         this.model = models.get(0);
-        this.toolProvider = getToolProvider(toolProviders);
+        this.toolProvider = getToolProvider(toolProvidersSuppliers, toolProviders);
         this.streamingModel = streamingModels.isEmpty() ? Optional.empty() : Optional.of(streamingModels.get(0));
         this.retrievalAugmentor = null;
         for (Supplier<RetrievalAugmentor> supplier : retrievalAugmentorSuppliers) {
@@ -347,10 +348,19 @@ public class ChatJsonRPCService {
         });
     }
 
-    private ToolProvider getToolProvider(List<Supplier<ToolProvider>> toolProviders) {
-        for (Supplier<ToolProvider> provider : toolProviders) {
+    /**
+     * Get the first available tool provider that we can find in the CDI container...
+     */
+    private ToolProvider getToolProvider(List<Supplier<ToolProvider>> toolProviderSuppliers,
+            List<ToolProvider> toolProviders) {
+        for (Supplier<ToolProvider> provider : toolProviderSuppliers) {
             if (provider.get() != null) {
                 return provider.get();
+            }
+        }
+        for (ToolProvider provider : toolProviders) {
+            if (provider != null) {
+                return provider;
             }
         }
         return null;
