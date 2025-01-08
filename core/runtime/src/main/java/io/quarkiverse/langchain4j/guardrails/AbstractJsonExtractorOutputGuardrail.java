@@ -40,9 +40,19 @@ public abstract class AbstractJsonExtractorOutputGuardrail implements OutputGuar
             }
         }
 
-        return reprompt("Invalid JSON",
-                "Make sure you return a valid JSON object following "
-                        + "the specified format");
+        return invokeInvalidJson(responseFromLLM, json);
+    }
+
+    protected OutputGuardrailResult invokeInvalidJson(AiMessage aiMessage, String json) {
+        return reprompt(getInvalidJsonMessage(aiMessage, json), getInvalidJsonReprompt(aiMessage, json));
+    }
+
+    protected String getInvalidJsonMessage(AiMessage aiMessage, String json) {
+        return "Invalid JSON";
+    }
+
+    protected String getInvalidJsonReprompt(AiMessage aiMessage, String json) {
+        return "Make sure you return a valid JSON object following the specified format";
     }
 
     protected Object deserialize(String llmResponse) {
