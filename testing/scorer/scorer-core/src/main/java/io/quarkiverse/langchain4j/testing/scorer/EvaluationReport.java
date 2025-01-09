@@ -56,6 +56,17 @@ public class EvaluationReport {
      * @throws IOException if an error occurs while writing the report
      */
     public void writeReport(File output) throws IOException {
+        writeReport(output, false);
+    }
+
+    /**
+     * Write the report to a file using the Markdown syntax.
+     *
+     * @param output the output file, must not be {@code null}
+     * @param includeResult whether to include the expectedOutput and result of the evaluation in the report
+     * @throws IOException if an error occurs while writing the report
+     */
+    public void writeReport(File output, boolean includeResult) throws IOException {
         StringBuilder buffer = new StringBuilder();
         buffer.append("# Evaluation Report\n\n");
         buffer.append("**Global Score**: ").append(score).append("\n\n");
@@ -69,9 +80,14 @@ public class EvaluationReport {
         }
 
         buffer.append("\n## Details\n\n");
+        var detailHeader = includeResult ? "### " : "- ";
         for (Scorer.EvaluationResult<?> evaluation : evaluations) {
-            buffer.append("- ").append(evaluation.sample().name()).append(": ")
+            buffer.append(detailHeader).append(evaluation.sample().name()).append(": ")
                     .append(evaluation.passed() ? "PASSED" : "FAILED").append("\n");
+            if (includeResult) {
+                buffer.append("#### Result\n").append(evaluation.result()).append("\n");
+                buffer.append("#### Expected Output\n").append(evaluation.sample().expectedOutput()).append("\n");
+            }
         }
 
         Files.write(output.toPath(), buffer.toString().getBytes());

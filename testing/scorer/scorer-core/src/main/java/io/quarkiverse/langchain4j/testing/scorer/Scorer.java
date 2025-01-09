@@ -39,8 +39,8 @@ public class Scorer implements Closeable {
                     var response = execute(sample, function);
                     LOG.infof("Evaluating sample `%s`", sample.name());
                     for (EvaluationStrategy<T> strategy : strategies) {
-                        EvaluationResult<T> evaluation = new EvaluationResult<>(sample,
-                                strategy.evaluate(sample, response));
+                        EvaluationResult<T> evaluation = EvaluationResult.fromCompletedEvaluation(sample,
+                                response, strategy.evaluate(sample, response));
                         LOG.infof("Evaluation of sample `%s` with strategy `%s`: %s", sample.name(),
                                 strategy.getClass().getSimpleName(),
                                 evaluation.passed() ? "OK" : "KO");
@@ -48,7 +48,7 @@ public class Scorer implements Closeable {
                     }
                 } catch (Throwable e) {
                     LOG.errorf(e, "Failed to evaluate sample `%s`", sample.name());
-                    evaluations.add(new EvaluationResult<>(sample, false));
+                    evaluations.add(EvaluationResult.fromEvaluationThrowable(sample, e));
                 } finally {
                     latch.countDown();
                 }
@@ -66,7 +66,14 @@ public class Scorer implements Closeable {
         executor.shutdown();
     }
 
-    public record EvaluationResult<T>(EvaluationSample<T> sample, boolean passed) {
+    public record EvaluationResult<T>(EvaluationSample<T> sample, T result, Throwable thrown, boolean passed) {
+        public static <T> EvaluationResult<T> fromCompletedEvaluation(EvaluationSample<T> sample, T result, boolean passed) {
+            return new EvaluationResult<>(sample, result, null, passed);
+        }
+
+        public static <T> EvaluationResult<T> fromEvaluationThrowable(EvaluationSample<T> sample, Throwable thrown) {
+            return new EvaluationResult<>(sample, null, thrown, false);
+        }
     }
 
     private <T> T execute(EvaluationSample<T> sample, Function<Parameters, T> function) {

@@ -27,7 +27,7 @@ class ScorerTest {
         EvaluationSample<String> sample1 = new EvaluationSample<>(
                 "Sample1",
                 new Parameters().add(new Parameter.UnnamedParameter("param1")),
-                "expected1",
+                "expected1:param1",
                 List.of("tag1", "tag2"));
 
         EvaluationSample<String> sample2 = new EvaluationSample<>(
@@ -36,7 +36,7 @@ class ScorerTest {
                 "expected2",
                 List.of("tag2"));
 
-        Function<Parameters, String> mockFunction = params -> "expected1";
+        Function<Parameters, String> mockFunction = params -> "expected1:param1";
         EvaluationStrategy<String> strategy = (sample, actual) -> actual.equals(sample.expectedOutput());
 
         Samples<String> samples = new Samples<>(sample1, sample2);
@@ -46,11 +46,12 @@ class ScorerTest {
         assertThat(report.score()).isEqualTo(50.0); // Only one sample should pass.
         assertThat(report.evaluations()).hasSize(2);
 
-        Scorer.EvaluationResult<?> result1 = report.evaluations().get(0);
-        assertThat(result1.passed()).isTrue();
-
-        Scorer.EvaluationResult<?> result2 = report.evaluations().get(1);
-        assertThat(result2.passed()).isFalse();
+        var actualEvaluations = report.evaluations().stream()
+                .map(e -> "%s[%s;%s=%s]".formatted(e.sample().name(), e.sample().expectedOutput(), e.result(), e.passed()))
+                .toList();
+        assertThat(actualEvaluations).containsExactlyInAnyOrder(
+                "Sample1[expected1:param1;expected1:param1=true]",
+                "Sample2[expected2;expected1:param1=false]");
     }
 
     @Test
