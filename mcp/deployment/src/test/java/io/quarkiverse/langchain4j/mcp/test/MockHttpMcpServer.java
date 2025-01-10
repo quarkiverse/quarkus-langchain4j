@@ -1,7 +1,12 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -25,6 +30,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 @Path("/mock-mcp")
 public class MockHttpMcpServer {
+
+    private final AtomicLong ID_GENERATOR = new AtomicLong(new Random().nextLong(1000, 5000));
+
+    // key = operation ID of the ping
+    // value = future that will be completed when the ping response for that ID is received
+    final Map<Long, CompletableFuture<Void>> pendingPings = new ConcurrentHashMap<>();
 
     // language=JSON
     public static final String TOOLS_LIST_RESPONSE = """
@@ -108,31 +119,42 @@ public class MockHttpMcpServer {
     @Consumes(MediaType.APPLICATION_JSON)
     @POST
     public Response post(JsonNode message) {
-        String method = message.get("method").asText();
-        if (method.equals("notifications/cancelled")) {
-            return Response.ok().build();
-        }
-        if (method.equals("notifications/initialized")) {
-            if (initializationNotificationReceived) {
-                return Response.serverError().entity("Duplicate 'notifications/initialized' message").build();
+        if (message.get("method") != null) {
+            String method = message.get("method").asText();
+            if (method.equals("notifications/cancelled")) {
+                return Response.ok().build();
             }
-            initializationNotificationReceived = true;
-            return Response.ok().build();
-        }
-        String operationId = message.get("id").asText();
-        if (method.equals("initialize")) {
-            initialize(operationId);
-        } else if (method.equals("tools/list")) {
-            ensureInitialized();
-            listTools(operationId);
-        } else if (method.equals("tools/call")) {
-            ensureInitialized();
-            if (message.get("params").get("name").asText().equals("add")) {
-                executeAddOperation(message, operationId);
-            } else if (message.get("params").get("name").asText().equals("longRunningOperation")) {
-                executeLongRunningOperation(message, operationId);
+            if (method.equals("notifications/initialized")) {
+                if (initializationNotificationReceived) {
+                    return Response.serverError().entity("Duplicate 'notifications/initialized' message").build();
+                }
+                initializationNotificationReceived = true;
+                return Response.ok().build();
+            }
+            String operationId = message.get("id").asText();
+            if (method.equals("initialize")) {
+                initialize(operationId);
+            } else if (method.equals("tools/list")) {
+                ensureInitialized();
+                listTools(operationId);
+            } else if (method.equals("tools/call")) {
+                ensureInitialized();
+                if (message.get("params").get("name").asText().equals("add")) {
+                    executeAddOperation(message, operationId);
+                } else if (message.get("params").get("name").asText().equals("longRunningOperation")) {
+                    executeLongRunningOperation(message, operationId);
+                } else {
+                    return Response.serverError().entity("Unknown operation").build();
+                }
+            }
+        } else {
+            // if 'method' is null, the message is probably a ping response
+            long id = message.get("id").asLong();
+            CompletableFuture<Void> future = pendingPings.remove(id);
+            if (future != null) {
+                future.complete(null);
             } else {
-                return Response.serverError().entity("Unknown operation").build();
+                return Response.serverError().entity("Received a ping response with unknown ID " + id).build();
             }
         }
         return Response.accepted().build();
@@ -202,6 +224,21 @@ public class MockHttpMcpServer {
                     .data(result)
                     .build());
         }, duration, TimeUnit.SECONDS);
+    }
+
+    long sendPing() {
+        ObjectNode initializeResponse = objectMapper.createObjectNode();
+        long id = ID_GENERATOR.incrementAndGet();
+        initializeResponse
+                .put("id", id)
+                .put("jsonrpc", "2.0")
+                .put("method", "ping");
+        sink.send(sse.newEventBuilder()
+                .name("message")
+                .data(initializeResponse)
+                .build());
+        pendingPings.put(id, new CompletableFuture<>());
+        return id;
     }
 
 }

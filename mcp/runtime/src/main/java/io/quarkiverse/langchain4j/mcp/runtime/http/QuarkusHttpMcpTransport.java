@@ -15,12 +15,9 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import dev.langchain4j.mcp.client.protocol.CancellationNotification;
 import dev.langchain4j.mcp.client.protocol.InitializationNotification;
-import dev.langchain4j.mcp.client.protocol.McpCallToolRequest;
 import dev.langchain4j.mcp.client.protocol.McpClientMessage;
 import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
-import dev.langchain4j.mcp.client.protocol.McpListToolsRequest;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
@@ -88,20 +85,14 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     }
 
     @Override
-    public CompletableFuture<JsonNode> listTools(McpListToolsRequest operation) {
+    public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
         return execute(operation, operation.getId()).subscribeAsCompletionStage();
     }
 
     @Override
-    public void cancelOperation(long operationId) {
-        CancellationNotification cancellationNotification = new CancellationNotification(operationId, "Timeout");
-        execute(cancellationNotification, null).subscribe().with(ignored -> {
+    public void executeOperationWithoutResponse(McpClientMessage operation) {
+        execute(operation, null).subscribe().with(ignored -> {
         });
-    }
-
-    @Override
-    public CompletableFuture<JsonNode> executeTool(McpCallToolRequest operation) {
-        return execute(operation, operation.getId()).subscribeAsCompletionStage();
     }
 
     private Uni<JsonNode> execute(McpClientMessage request, Long id) {

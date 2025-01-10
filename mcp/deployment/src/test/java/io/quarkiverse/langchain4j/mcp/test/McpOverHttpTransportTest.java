@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIterable;
 
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
@@ -16,10 +19,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -46,6 +51,11 @@ public class McpOverHttpTransportTest {
 
     @Inject
     ToolProvider toolProvider;
+
+    @Test
+    public void toolProviderShouldBeMcpBased() {
+        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(McpToolProvider.class);
+    }
 
     @Test
     public void providingTools() {
@@ -125,5 +135,16 @@ public class McpOverHttpTransportTest {
 
         // validate the tool execution result
         assertThat(toolExecutionResultString).isEqualTo("There was a timeout executing the tool");
+    }
+
+    @Inject
+    MockHttpMcpServer server;
+
+    @Test
+    public void respondingToServerPing() throws ExecutionException, InterruptedException, TimeoutException {
+        // force the server to send a ping request, the McpClient under test should respond to it
+        long operationId = server.sendPing();
+        // wait for the server to confirm reception of the ping response
+        server.pendingPings.get(operationId).get(5, TimeUnit.SECONDS);
     }
 }
