@@ -8,9 +8,9 @@ import java.util.List;
 /**
  * Report of the evaluation of a set of samples.
  */
-public class EvaluationReport {
+public class EvaluationReport<T> {
 
-    private final List<Scorer.EvaluationResult<?>> evaluations;
+    private final List<Scorer.EvaluationResult<T>> evaluations;
     private final double score;
 
     /**
@@ -18,7 +18,7 @@ public class EvaluationReport {
      *
      * @param evaluations the evaluations, must not be {@code null}, must not be empty.
      */
-    public EvaluationReport(List<Scorer.EvaluationResult<?>> evaluations) {
+    public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations) {
         this.evaluations = evaluations;
         this.score = 100.0 * evaluations.stream().filter(Scorer.EvaluationResult::passed).count() / evaluations.size();
     }
@@ -33,7 +33,7 @@ public class EvaluationReport {
     /**
      * @return the evaluations
      */
-    public List<Scorer.EvaluationResult<?>> evaluations() {
+    public List<Scorer.EvaluationResult<T>> evaluations() {
         return evaluations;
     }
 
