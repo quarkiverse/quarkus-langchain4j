@@ -185,6 +185,7 @@ public interface OpenAiRestApi {
 
     class OpenAIRestAPIFilter implements ResteasyReactiveClientRequestFilter {
         ModelAuthProvider authorizer;
+        Logger log = Logger.getLogger(OpenAIRestAPIFilter.class);
 
         public OpenAIRestAPIFilter(ModelAuthProvider authorizer) {
             this.authorizer = authorizer;
@@ -192,11 +193,20 @@ public interface OpenAiRestApi {
 
         @Override
         public void filter(ResteasyReactiveClientRequestContext requestContext) {
-            String authValue = authorizer.getAuthorization(new AuthInputImpl(requestContext.getMethod(),
-                    requestContext.getUri(), requestContext.getHeaders()));
-            if (authValue != null) {
-                requestContext.getHeaders().putSingle("Authorization", authValue);
-            }
+            requestContext.suspend();
+            authorizer
+                    .getAuthorizationAsync(
+                            new AuthInputImpl(
+                                    requestContext.getMethod(), requestContext.getUri(), requestContext.getHeaders()))
+                    .subscribe().with(authValue -> {
+                        if (authValue != null) {
+                            requestContext.getHeaders().putSingle("Authorization", authValue);
+                        }
+                        requestContext.resume();
+                    }, t -> {
+                        log.warnf(t, "failed on aquiring authorization, proceeding without it");
+                        requestContext.resume(t);
+                    });
         }
 
         private record AuthInputImpl(
