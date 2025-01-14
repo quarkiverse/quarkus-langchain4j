@@ -5,7 +5,15 @@ package io.quarkiverse.langchain4j.audit;
  * <p>
  * When using {@link io.quarkiverse.langchain4j.RegisterAiService} if the application provides an implementation
  * of {@link AuditService} that is a CDI bean, it will be used by default.
+ * </p>
+ * <p>
+ *
+ * @deprecated All the auditing stuff is going to be re-written, so don't use any of this stuff
+ * @see <a href=
+ *      "https://github.com/quarkiverse/quarkus-langchain4j/issues/1217">https://github.com/quarkiverse/quarkus-langchain4j/issues/1217</a>
+ *      </p>
  */
+@Deprecated(forRemoval = true)
 public interface AuditService {
 
     /**
