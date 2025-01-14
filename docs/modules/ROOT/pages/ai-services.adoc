@@ -436,6 +436,8 @@ The extension allows users to audit the process of implementing an AiService by 
 By default, if a bean of type `AuditService` is present in the application, it will be used in order to create an `Audit`, which received various callbacks pertaining to the implementation
 of the AiService method. More information can be found on the javadoc of these two classes.
 
+CAUTION: The above-mentioned auditing capabilities are https://github.com/quarkiverse/quarkus-langchain4j/issues/1217[in process of being re-written]. Until that is complete it is advised to not use the auditing features.
+
 === Working with images
 
 An _AI Service_ can also be used when working with images, both to describe an image and to generate one.

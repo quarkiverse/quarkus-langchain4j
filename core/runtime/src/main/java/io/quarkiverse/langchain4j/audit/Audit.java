@@ -12,7 +12,14 @@ import dev.langchain4j.model.output.Response;
 
 /**
  * Abstract class to be implemented in order to keep track of whatever information is useful for the application auditing.
+ * <p>
+ *
+ * @deprecated All the auditing stuff is going to be re-written, so don't use any of this stuff
+ * @see <a href=
+ *      "https://github.com/quarkiverse/quarkus-langchain4j/issues/1217">https://github.com/quarkiverse/quarkus-langchain4j/issues/1217</a>
+ *      </p>
  */
+@Deprecated(forRemoval = true)
 public abstract class Audit {
 
     /**
