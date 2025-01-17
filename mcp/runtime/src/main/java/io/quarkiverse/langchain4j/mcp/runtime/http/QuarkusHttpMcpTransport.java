@@ -126,6 +126,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         SseSubscriber listener = new SseSubscriber(operationHandler, logResponses, initializationFinished);
         sseEndpoint.get().subscribe().with(listener, throwable -> {
             if (!initializationFinished.isDone()) {
+                log.warn("Failed to connect to the SSE channel, the MCP client will not be used", throwable);
                 initializationFinished.completeExceptionally(throwable);
             }
         });
