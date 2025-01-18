@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
-import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -29,7 +28,6 @@ public interface LangChain4jWatsonxConfig {
     /**
      * Named model config.
      */
-    @ConfigDocSection
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
@@ -44,8 +42,6 @@ public interface LangChain4jWatsonxConfig {
 
         /**
          * IBM Cloud API key.
-         * <p>
-         * To create a new API key, follow this <a href="https://cloud.ibm.com/iam/apikeys">link</a>.
          */
         Optional<String> apiKey();
 
@@ -63,14 +59,16 @@ public interface LangChain4jWatsonxConfig {
         String version();
 
         /**
-         * The space that contains the resource. Either <code>space_id</code> or <code>project_id</code> has to be given.
+         * The space that contains the resource.
+         * <p>
+         * Either <code>space_id</code> or <code>project_id</code> has to be given.
          */
         Optional<String> spaceId();
 
         /**
-         * The space that contains the resource. Either <code>space_id</code> or project_id has to be given.
+         * The project that contains the resource.
          * <p>
-         * To look up your project id, <a href="https://dataplatform.cloud.ibm.com/projects/?context=wx">click here</a>.
+         * Either <code>space_id</code> or <code>project_id</code> has to be given.
          */
         Optional<String> projectId();
 

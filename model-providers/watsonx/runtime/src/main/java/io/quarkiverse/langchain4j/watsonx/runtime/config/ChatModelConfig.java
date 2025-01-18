@@ -11,12 +11,13 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * Model id to use.
+     * The model to use for the chat completion.
      * <p>
-     * To view the complete model list,
-     * <a href=
-     * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids">click
-     * here</a>.
+     * All available models are listed in the IBM Watsonx.ai documentation at the <a href="
+     * https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided">following
+     * link</a>.
+     * <p>
+     * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("mistralai/mistral-large")
     String modelId();
@@ -44,7 +45,7 @@ public interface ChatModelConfig {
      * probability. The option
      * <code>logprobs</code> must be set to <code>true</code> if this parameter is used.
      * <p>
-     * <strong>Possible values:</strong> <code>0 ≤ value ≤ 20</code> *
+     * <strong>Possible values:</strong> <code>0 ≤ value ≤ 20</code>
      */
     Optional<Integer> topLogprobs();
 
@@ -59,7 +60,7 @@ public interface ChatModelConfig {
     /**
      * How many chat completion choices to generate for each input message. Note that you will be charged based on the number of
      * generated tokens across
-     * all of the choices. Keep n as 1 to minimize costs
+     * all of the choices. Keep n as <code>1</code> to minimize costs
      */
     @WithDefault("1")
     Integer n();
@@ -83,8 +84,7 @@ public interface ChatModelConfig {
      * the output. Stop sequences
      * encountered prior to the minimum number of tokens being generated will be ignored.
      * <p>
-     * <strong>Possible values:</strong>
-     * <code>0 ≤ number of items ≤ 4, contains only unique items</code>
+     * <strong>Possible values:</strong> <code>0 ≤ number of items ≤ 4</code>
      */
     Optional<List<String>> stop();
 
@@ -93,8 +93,6 @@ public interface ChatModelConfig {
      * values like <code>0.2</code>
      * will make it more focused and deterministic.
      * <p>
-     * We generally recommend altering this or <code>top_p</code> but not both.
-     * <p>
      * <strong>Possible values:</strong> <code>0 < value < 2</code>
      */
     @WithDefault("${quarkus.langchain4j.temperature:1.0}")
@@ -102,11 +100,10 @@ public interface ChatModelConfig {
 
     /**
      *
-     * An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens
-     * with top_p probability
+     * An alternative to sampling with <code>temperature</code>, called nucleus sampling, where the model considers the results
+     * of the tokens
+     * with <code>top_p</code> probability
      * mass. So <code>0.1</code> means only the tokens comprising the top 10% probability mass are considered.
-     * <p>
-     * We generally recommend altering this or <code>temperature</code> but not both.
      * <p>
      * <strong>Possible values:</strong> <code>0 < value < 1</code>
      */
@@ -116,9 +113,7 @@ public interface ChatModelConfig {
     /**
      * Specifies the desired format for the model's output.
      * <p>
-     * <strong>Allowable values:</strong> <code>[json_object]</code> *
-     * <p>
-     * <strong>Applicable in modes:</strong> <code>[chat]</code>
+     * <strong>Allowable values:</strong> <code>[json_object]</code>
      */
     Optional<String> responseFormat();
 
