@@ -309,7 +309,6 @@ public class WatsonxRecorder {
         }
 
         GenerationModelConfig generationModelConfig = watsonConfig.generationModel();
-        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
 
         URL url;
         try {
@@ -351,7 +350,7 @@ public class WatsonxRecorder {
         return tokenGeneratorCache.computeIfAbsent(apiKey,
                 new Function<String, WatsonxTokenGenerator>() {
                     @Override
-                    public WatsonxTokenGenerator apply(String iamUrl) {
+                    public WatsonxTokenGenerator apply(String apiKey) {
                         return new WatsonxTokenGenerator(iamConfig.baseUrl(),
                                 iamConfig.timeout().orElse(Duration.ofSeconds(10)),
                                 iamConfig.grantType(), apiKey);
