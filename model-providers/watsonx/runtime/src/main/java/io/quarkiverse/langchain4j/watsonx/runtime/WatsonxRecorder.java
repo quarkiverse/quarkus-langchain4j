@@ -294,6 +294,8 @@ public class WatsonxRecorder {
                 .maxTokens(chatModelConfig.maxTokens())
                 .n(chatModelConfig.n())
                 .presencePenalty(chatModelConfig.presencePenalty())
+                .seed(chatModelConfig.seed().orElse(null))
+                .stop(chatModelConfig.stop().orElse(null))
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
                 .responseFormat(chatModelConfig.responseFormat().orElse(null));

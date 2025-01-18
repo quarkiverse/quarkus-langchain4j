@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.runtime.config;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
@@ -12,7 +13,8 @@ public interface ChatModelConfig {
     /**
      * Model id to use.
      * <p>
-     * To view the complete model list, <a href=
+     * To view the complete model list,
+     * <a href=
      * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-model-ids.html?context=wx&audience=wdp#model-ids">click
      * here</a>.
      */
@@ -21,8 +23,8 @@ public interface ChatModelConfig {
 
     /**
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's
-     * likelihood to
-     * repeat the same line verbatim.
+     * likelihood to repeat the same line
+     * verbatim.
      * <p>
      * <strong>Possible values:</strong> <code>-2 < value < 2</code>
      */
@@ -31,15 +33,16 @@ public interface ChatModelConfig {
 
     /**
      * Whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output
-     * token
-     * returned in the content of message.
+     * token returned in the
+     * content of message.
      */
     @WithDefault("false")
     Boolean logprobs();
 
     /**
      * An integer specifying the number of most likely tokens to return at each token position, each with an associated log
-     * probability. The option <code>logprobs</code> must be set to <code>true</code> if this parameter is used.
+     * probability. The option
+     * <code>logprobs</code> must be set to <code>true</code> if this parameter is used.
      * <p>
      * <strong>Possible values:</strong> <code>0 ≤ value ≤ 20</code> *
      */
@@ -47,22 +50,23 @@ public interface ChatModelConfig {
 
     /**
      * The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated
-     * tokens is limited by the model's context length.
+     * tokens is limited by the
+     * model's context length.
      */
     @WithDefault("1024")
     Integer maxTokens();
 
     /**
      * How many chat completion choices to generate for each input message. Note that you will be charged based on the number of
-     * generated tokens across all of the choices. Keep n as 1 to minimize costs
+     * generated tokens across
+     * all of the choices. Keep n as 1 to minimize costs
      */
     @WithDefault("1")
     Integer n();
 
     /**
      * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to
-     * talk
-     * about new topics.
+     * talk about new topics.
      * <p>
      * <strong>Possible values:</strong> <code>-2 < value < 2</code>
      */
@@ -70,9 +74,24 @@ public interface ChatModelConfig {
     Double presencePenalty();
 
     /**
+     * Random number generator seed to use in sampling mode for experimental repeatability.
+     */
+    Optional<Integer> seed();
+
+    /**
+     * Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of
+     * the output. Stop sequences
+     * encountered prior to the minimum number of tokens being generated will be ignored.
+     * <p>
+     * <strong>Possible values:</strong>
+     * <code>0 ≤ number of items ≤ 4, contains only unique items</code>
+     */
+    Optional<List<String>> stop();
+
+    /**
      * What sampling temperature to use. Higher values like <code>0.8</code> will make the output more random, while lower
-     * values
-     * like <code>0.2</code> will make it more focused and deterministic.
+     * values like <code>0.2</code>
+     * will make it more focused and deterministic.
      * <p>
      * We generally recommend altering this or <code>top_p</code> but not both.
      * <p>
@@ -84,8 +103,8 @@ public interface ChatModelConfig {
     /**
      *
      * An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens
-     * with
-     * top_p probability mass. So <code>0.1</code> means only the tokens comprising the top 10% probability mass are considered.
+     * with top_p probability
+     * mass. So <code>0.1</code> means only the tokens comprising the top 10% probability mass are considered.
      * <p>
      * We generally recommend altering this or <code>temperature</code> but not both.
      * <p>

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
+import java.util.List;
+
 public class TextChatParameters {
 
     public record TextChatResponseFormat(String type) {
@@ -11,6 +13,8 @@ public class TextChatParameters {
     private final Integer maxTokens;
     private final Integer n;
     private final Double presencePenalty;
+    private final Integer seed;
+    private final List<String> stop;
     private final Double temperature;
     private final Double topP;
     private final Long timeLimit;
@@ -26,6 +30,8 @@ public class TextChatParameters {
         this.temperature = builder.temperature;
         this.topP = builder.topP;
         this.timeLimit = builder.timeLimit;
+        this.seed = builder.seed;
+        this.stop = builder.stop;
 
         if (builder.responseFormat != null)
             this.responseFormat = new TextChatResponseFormat(builder.responseFormat);
@@ -73,6 +79,14 @@ public class TextChatParameters {
         return timeLimit;
     }
 
+    public Integer getSeed() {
+        return seed;
+    }
+
+    public List<String> getStop() {
+        return stop;
+    }
+
     public TextChatResponseFormat getResponseFormat() {
         return responseFormat;
     }
@@ -85,10 +99,12 @@ public class TextChatParameters {
         private Integer maxTokens;
         private Integer n;
         private Double presencePenalty;
+        private String responseFormat;
+        private Integer seed;
+        private List<String> stop;
         private Double temperature;
         private Double topP;
         private Long timeLimit;
-        private String responseFormat;
 
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
@@ -137,6 +153,16 @@ public class TextChatParameters {
 
         public Builder responseFormat(String responseFormat) {
             this.responseFormat = responseFormat;
+            return this;
+        }
+
+        public Builder seed(Integer seed) {
+            this.seed = seed;
+            return this;
+        }
+
+        public Builder stop(List<String> stop) {
+            this.stop = stop;
             return this;
         }
 
