@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.guardrails;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ContentType;
@@ -22,6 +23,14 @@ import dev.langchain4j.rag.AugmentationResult;
 public record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
         AugmentationResult augmentationResult, String userMessageTemplate,
         Map<String, Object> variables) implements GuardrailParams {
+
+    public static InputGuardrailParams from(UserMessage userMessage) {
+        return from(userMessage, null);
+    }
+
+    public static InputGuardrailParams from(UserMessage userMessage, Map<String, Object> variables) {
+        return new InputGuardrailParams(userMessage, null, null, null, Optional.ofNullable(variables).orElseGet(Map::of));
+    }
 
     @Override
     public InputGuardrailParams withText(String text) {
