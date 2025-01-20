@@ -121,11 +121,6 @@ class EmailContainsRequiredInformationOutputGuardrailTests {
     }
 
     private static OutputGuardrailParams createParams(String response, ClaimInfo claimInfo) {
-        return new OutputGuardrailParams(
-                AiMessage.from(response),
-                null,
-                null,
-                null,
-                Map.of("claimInfo", claimInfo));
+        return OutputGuardrailParams.from(AiMessage.from(response), Map.of("claimInfo", claimInfo));
     }
 }
