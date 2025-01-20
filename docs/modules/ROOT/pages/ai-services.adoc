@@ -156,11 +156,21 @@ We'll explore an alternative approach to avoid manual memory handling in the <<m
 While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions. If you have a single chat language model, no specific configuration is required.
 
 However, when multiple model providers are present in the application (such as OpenAI, Azure OpenAI, HuggingFace, etc.)
-each model needs to be given a name, which is then referenced by the AI service like so:
+each model needs to be given a name, which is then referenced by the AI service like below.
+The same also applies when you want to use different models that use the same provider (e.g. via OpenAI-APIs).
 
 [source,java]
 ----
 @RegisterAiService(modelName="m1")
+----
+
+or
+
+[source,java]
+----
+@Inject
+@ModelName("m3")
+EmbeddingModel embeddingModel;
 ----
 
 The configuration of the various models could look like so:
@@ -171,10 +181,15 @@ The configuration of the various models could look like so:
 quarkus.langchain4j.m1.chat-model.provider=openai
 # ensure that the model with the name 'm2', is provided by HuggingFace
 quarkus.langchain4j.m2.chat-model.provider=huggingface
+# ensure embedding model with the name 'm3', is provided by OpenAI again
+quarkus.langchain4j.m3.chat-model.provider=openai
+
 
 # configure the various aspects of each model
 quarkus.langchain4j.openai.m1.api-key=sk-...
 quarkus.langchain4j.huggingface.m2.api-key=sk-...
+quarkus.langchain4j.openai.m3.api-key=sk-...
+quarkus.langchain4j.openai.m3.embedding-model.model-name=text-emb...
 ----
 
 [#memory]
