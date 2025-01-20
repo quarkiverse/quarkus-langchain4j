@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import jakarta.inject.Inject;
 
@@ -12,6 +15,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -132,6 +137,49 @@ public class AiEmbeddingTest extends WireMockAbstract {
         assertEquals(vector, response.content().get(0).vectorAsList());
         assertEquals(vector, response.content().get(1).vectorAsList());
         assertEquals(vector, response.content().get(2).vectorAsList());
+    }
+
+    @Test
+    public void test_high_embedding_text_segments() throws Exception {
+        mockServers.mockIAMBuilder(200)
+                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .build();
+
+        var RESPONSE = """
+                {
+                    "model_id": "%s",
+                    "results": [],
+                    "created_at": "2024-02-21T17:32:28Z",
+                    "input_token_count": 10
+                }
+                """;
+
+        Function<List<String>, EmbeddingRequest> createRequest = (List<String> elementsToEmbed) -> {
+            return new EmbeddingRequest(WireMockUtil.DEFAULT_EMBEDDING_MODEL, null, WireMockUtil.PROJECT_ID, elementsToEmbed,
+                    null);
+        };
+
+        var list = IntStream.rangeClosed(1, 2001).mapToObj(String::valueOf).collect(Collectors.toList());
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
+                .scenario(Scenario.STARTED, "SECOND_CALL")
+                .body(mapper.writeValueAsString(createRequest.apply(list.subList(0, 1000))))
+                .response(RESPONSE.formatted(WireMockUtil.DEFAULT_EMBEDDING_MODEL))
+                .build();
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
+                .scenario("SECOND_CALL", "THIRD_CALL")
+                .body(mapper.writeValueAsString(createRequest.apply(list.subList(1000, 2000))))
+                .response(RESPONSE.formatted(WireMockUtil.DEFAULT_EMBEDDING_MODEL))
+                .build();
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_EMBEDDING_API, 200)
+                .scenario("THIRD_CALL", Scenario.STARTED)
+                .body(mapper.writeValueAsString(createRequest.apply(list.subList(2000, 2001))))
+                .response(RESPONSE.formatted(WireMockUtil.DEFAULT_EMBEDDING_MODEL))
+                .build();
+
+        embeddingModel.embedAll(list.stream().map(TextSegment::textSegment).toList());
     }
 
     private List<Float> mockEmbeddingServer(String input) throws Exception {
