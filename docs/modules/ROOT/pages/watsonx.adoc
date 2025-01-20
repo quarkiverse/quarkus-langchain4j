@@ -24,69 +24,77 @@ If no other extension is installed, xref:ai-services.adoc[AI Services] will auto
 === Configuration
 To use the watsonx.ai dependency, you must configure some required values in the `application.properties` file.
 
+---
+
 ==== Base URL
 The `base-url` property depends on the region of the provided service instance, use one of the following values:
 
 * Dallas: https://us-south.ml.cloud.ibm.com
 * Frankfurt: https://eu-de.ml.cloud.ibm.com
-* Tokyo: https://jp-tok.ml.cloud.ibm.com
 * London: https://eu-gb.ml.cloud.ibm.com
+* Tokyo: https://jp-tok.ml.cloud.ibm.com
+* Sydney: https://au-syd.ml.cloud.ibm.com
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
 ----
 
+---
+
 ==== Project ID
-To prompt foundation models in watsonx.ai programmatically, you need to pass the identifier (ID) of a project.
+To prompt foundation models in watsonx.ai, you need to pass the identifier of a project.
 
 To get the ID of a project, complete the following steps:
 
-1. Open the project, and then click the Manage tab.
-2. Copy the project ID from the Details section of the General page.
-
-NOTE: To view the list of projects, go to https://dataplatform.cloud.ibm.com/projects/?context=wx.
+1. Go to https://dataplatform.cloud.ibm.com/projects/?context=wx.
+2. Open the project, and then click the Manage tab.
+3. Copy the project ID from the Details section of the General page.
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.project-id=23d...
 ----
 
+NOTE: If you like, you can use the Space ID property with `quarkus.langchain4j.watsonx.space-id`
+
+---
+
 ==== API Key
-To prompt foundation models in IBM watsonx.ai programmatically, you need an IBM Cloud API key.
+To use foundation models in IBM Watsonx.ai, you need an IBM Cloud API key. 
+
+Follow these steps to generate one:
+
+1. Go to https://cloud.ibm.com/iam/apikeys.
+2. Click `Create +` button.
+3. Provide a name and description for your new API key, then click `Create`.
+4. Copy or securely save the API key.
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.api-key=hG-...
 ----
 
-NOTE: To determine the API key, go to https://cloud.ibm.com/iam/apikeys and generate it.
+---
 
-==== Interacting with Models
+=== Modes of Interaction
 
-The `watsonx.ai` module provides two different modes for interacting with LLM models: `generation` and `chat`. These modes allow you to tailor the interaction based on the complexity of your use case and how much control you want to have over the prompt structure.
+The `watsonx.ai` module provides two modes for interacting with large language models: `chat` and `generation`. These modes allow you to tailor interactions based on the complexity of your use case and the level of control you require over the prompt structure.
 
-You can select the interaction mode using the property `quarkus.langchain4j.watsonx.chat-model.mode`.
+You can select the interaction mode using the property `quarkus.langchain4j.watsonx.mode`.
 
-* `generation`: In this mode, you must explicitly structure the prompts using the required model-specific tags. This provides full control over the format of the prompt, but requires in-depth knowledge of the model being used. For best results, always refer to the documentation provided of each model to maximize the effectiveness of your prompts.
-* `chat`: This mode abstracts the complexity of tagging by automatically formatting prompts so you can focus on the content (*default value*).
+* **`chat`**: This mode abstracts the complexity of tagging by automatically formatting prompts (*default value*). 
+* **`generation`**: In this mode, you must explicitly structure the prompts using the required model-specific tags. This provides full control over the format of the prompt but requires in-depth knowledge of the model being used. For best results, always refer to the documentation provided for each model to maximize the effectiveness of your prompts.
 
-To choose between one of these two modes, add the `chat-model.mode` property to your `application.properties` file:
+Each mode uses its own property namespace for customization:
 
-[source,properties,subs=attributes+]
-----
-quarkus.langchain4j.watsonx.mode=chat  // or 'generate'
-----
+* For `chat` mode the properties are under `quarkus.langchain4j.watsonx.chat-model`.
+* For `generation` mode properties are under `quarkus.langchain4j.watsonx.generation-model`.
 
-NOTE: Depending on the mode selected, the values for configuring the model are found under the `chat-model` or `generation-model` properties.
+---
 
-==== Chat Mode
-
-In `chat` mode, you can interact with models without having to manually manage the tags of a prompt.
-
-You might choose this mode if you are looking for dynamic interactions where the model can build on previous messages and provide more contextually relevant responses. This mode simplifies the interaction by automatically managing the necessary tags, allowing you to focus on the content of your prompts rather than formatting.
-
-Chat mode also supports the use of `tools`, allowing the model to perform specific actions or retrieve external data as part of its responses. This extends the capabilities of the model, allowing it to perform complex tasks dynamically and adapt to your needs. More information about tools is available on the xref:./agent-and-tools.adoc[Agent and Tools] page.
+==== Chat Mode Example
+The following example demonstrates how to configure and use `chat` mode:
 
 [source,properties,subs=attributes+]
 ----
@@ -94,6 +102,7 @@ quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
 quarkus.langchain4j.watsonx.chat-model.model-id=mistralai/mistral-large
+quarkus.langchain4j.watsonx.mode=chat // You can omit this property, as 'chat' is the default mode.
 ----
 
 [source,java]
@@ -105,11 +114,10 @@ public interface AiService {
 }
 ----
 
-NOTE: The availability of `chat` and `tools` is currently limited to certain models. Not all models support these features, so be sure to consult the documentation for the specific model you are using to confirm whether these features are available.
+---
 
-==== Generation Mode
-
-In `generation` mode, you have complete control over the structure of your prompts by manually specifying tags for a specific model. This mode could be useful in scenarios where a single-response is desired.
+==== Generation Mode Example
+The following example demonstrates how to configure and use `generation` mode:
 
 [source,properties,subs=attributes+]
 ----
@@ -124,16 +132,13 @@ quarkus.langchain4j.watsonx.mode=generation
 ----
 @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
 public interface AiService {
-    @UserMessage("""
-        <s>[INST] You are a helpful assistant [/INST]</s>\
-        [INST] What is the capital of {capital}? [/INST]""")
+    @SystemMessage("<s>[INST] You are a helpful assistant [/INST]</s>")
+    @UserMessage("[INST] What is the capital of {capital}? [/INST]")
     public String askCapital(String capital);
 }
 ----
 
-NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with a new line. If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.chat-model.prompt-joiner=<value>`. By adjusting this property, you can define your preferred way of joining messages and ensure that the prompt structure meets your specific needs.
-
-NOTE: Sometimes it may be useful to use the `quarkus.langchain4j.watsonx.chat-model.stop-sequences` property to prevent the LLM model from returning more results than desired.
+NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with no separator (an empty string `""`). If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.generation-model.prompt-joiner=<value>`. 
 
 ==== All configuration properties
 

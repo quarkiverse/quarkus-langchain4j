@@ -10,11 +10,13 @@ import io.smallrye.config.WithDefault;
 public interface ScoringModelConfig {
 
     /**
-     * Model id to use.
+     * The id of the model to be used.
      * <p>
-     * To view the complete model list, <a href=
-     * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp">click
-     * here</a>.
+     * All available models are listed in the IBM Watsonx.ai documentation at the <a href="
+     * https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#reranker-overview">following
+     * link</a>.
+     * <p>
+     * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("cross-encoder/ms-marco-minilm-l-12-v2")
     String modelId();

@@ -61,10 +61,12 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
                 .maxTokens(builder.maxTokens)
                 .n(builder.n)
                 .presencePenalty(builder.presencePenalty)
+                .responseFormat(builder.responseFormat)
+                .seed(builder.seed)
+                .stop(builder.stop)
                 .temperature(builder.temperature)
                 .topP(builder.topP)
                 .timeLimit(builder.timeout.toMillis())
-                .responseFormat(builder.responseFormat)
                 .build();
     }
 
@@ -359,9 +361,11 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         private Integer maxTokens;
         private Integer n;
         private Double presencePenalty;
+        private String responseFormat;
+        private Integer seed;
+        private List<String> stop;
         private Double temperature;
         private Double topP;
-        private String responseFormat;
 
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
@@ -390,6 +394,16 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
 
         public Builder presencePenalty(Double presencePenalty) {
             this.presencePenalty = presencePenalty;
+            return this;
+        }
+
+        public Builder seed(Integer seed) {
+            this.seed = seed;
+            return this;
+        }
+
+        public Builder stop(List<String> stop) {
+            this.stop = stop;
             return this;
         }
 

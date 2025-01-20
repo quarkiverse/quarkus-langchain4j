@@ -83,6 +83,8 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(1024, runtimeConfig.chatModel().maxTokens());
         assertEquals(1, runtimeConfig.chatModel().n());
         assertEquals(0, runtimeConfig.chatModel().presencePenalty());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().seed());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().stop());
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
         assertEquals(1.0, runtimeConfig.chatModel().topP());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());

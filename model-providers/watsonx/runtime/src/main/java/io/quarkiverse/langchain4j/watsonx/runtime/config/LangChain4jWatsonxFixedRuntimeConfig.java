@@ -41,6 +41,7 @@ public interface LangChain4jWatsonxFixedRuntimeConfig {
          * <li><strong>chat</strong>: prompts are automatically enriched with the specific tags defined by the model</li>
          * <li><strong>generation</strong>: prompts require manual specification of tags</li>
          * </ul>
+         * <p>
          * <strong>Allowable values:</strong> <code>[chat, generation]</code>
          */
         @WithDefault("chat")

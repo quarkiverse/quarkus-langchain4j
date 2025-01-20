@@ -10,12 +10,13 @@ import io.smallrye.config.WithDefault;
 public interface EmbeddingModelConfig {
 
     /**
-     * Model id to use.
-     *
-     * To view the complete model list,
-     * <a href=
-     * "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp">click
-     * here</a>.
+     * The id of the model to be used.
+     * <p>
+     * All available models are listed in the IBM Watsonx.ai documentation at the <a href="
+     * https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided">following
+     * link</a>.
+     * <p>
+     * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("ibm/slate-125m-english-rtrvr")
     String modelId();

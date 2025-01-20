@@ -51,6 +51,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.max-tokens", "200")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.n", "2")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.presence-penalty", "2")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.seed", "41")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.stop", "word1,word2")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.temperature", "1.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-p", "0.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "new_format")
@@ -80,6 +82,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .maxTokens(200)
             .n(2)
             .presencePenalty(2.0)
+            .seed(41)
+            .stop(List.of("word1", "word2"))
             .temperature(1.5)
             .timeLimit(60000L)
             .topP(0.5)
@@ -106,6 +110,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals(200, runtimeConfig.chatModel().maxTokens());
         assertEquals(2, runtimeConfig.chatModel().n());
         assertEquals(2.0, runtimeConfig.chatModel().presencePenalty());
+        assertEquals(41, runtimeConfig.chatModel().seed().orElse(null));
+        assertEquals(List.of("word1", "word2"), runtimeConfig.chatModel().stop().orElse(null));
         assertEquals(1.5, runtimeConfig.chatModel().temperature());
         assertEquals(0.5, runtimeConfig.chatModel().topP());
         assertEquals("new_format", runtimeConfig.chatModel().responseFormat().orElse(null));
