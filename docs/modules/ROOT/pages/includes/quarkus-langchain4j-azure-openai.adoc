@@ -356,6 +356,57 @@ endif::add-copy-button-to-env-var[]
 |string
 |`<dummy>`
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-ad-token[`quarkus.langchain4j.azure-openai.chat-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-api-version[`quarkus.langchain4j.azure-openai.chat-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-api-key[`quarkus.langchain4j.azure-openai.chat-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-temperature[`quarkus.langchain4j.azure-openai.chat-model.temperature`]##
 
 [.description]
@@ -560,6 +611,57 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-ad-token[`quarkus.langchain4j.azure-openai.embedding-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-api-version[`quarkus.langchain4j.azure-openai.embedding-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-api-key[`quarkus.langchain4j.azure-openai.embedding-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_EMBEDDING_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-embedding-model-log-requests[`quarkus.langchain4j.azure-openai.embedding-model.log-requests`]##
 
 [.description]
@@ -657,6 +759,57 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-ad-token[`quarkus.langchain4j.azure-openai.image-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-api-version[`quarkus.langchain4j.azure-openai.image-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-image-model-api-key[`quarkus.langchain4j.azure-openai.image-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_IMAGE_MODEL_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -1151,6 +1304,57 @@ endif::add-copy-button-to-env-var[]
 |string
 |`<dummy>`
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-ad-token[`quarkus.langchain4j.azure-openai."model-name".chat-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-api-version[`quarkus.langchain4j.azure-openai."model-name".chat-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-api-key[`quarkus.langchain4j.azure-openai."model-name".chat-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-temperature[`quarkus.langchain4j.azure-openai."model-name".chat-model.temperature`]##
 
 [.description]
@@ -1355,6 +1559,57 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-ad-token[`quarkus.langchain4j.azure-openai."model-name".embedding-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-api-version[`quarkus.langchain4j.azure-openai."model-name".embedding-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-api-key[`quarkus.langchain4j.azure-openai."model-name".embedding-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__EMBEDDING_MODEL_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-embedding-model-log-requests[`quarkus.langchain4j.azure-openai."model-name".embedding-model.log-requests`]##
 
 [.description]
@@ -1452,6 +1707,57 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPEN
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_ENDPOINT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-ad-token]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-ad-token[`quarkus.langchain4j.azure-openai."model-name".image-model.ad-token`]##
+
+[.description]
+--
+The Azure AD token to use for this operation. If present, then the requests towards OpenAI will include this in the Authorization header. Note that this property overrides the functionality of `quarkus.langchain4j.azure-openai.embedding-model.api-key`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_AD_TOKEN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_AD_TOKEN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-api-version]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-api-version[`quarkus.langchain4j.azure-openai."model-name".image-model.api-version`]##
+
+[.description]
+--
+The API version to use for this operation. This follows the YYYY-MM-DD format
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-image-model-api-key[`quarkus.langchain4j.azure-openai."model-name".image-model.api-key`]##
+
+[.description]
+--
+Azure OpenAI API key
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__IMAGE_MODEL_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
