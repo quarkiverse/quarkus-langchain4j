@@ -32,6 +32,7 @@
 ** xref:csv.adoc[Loading CSV files]
 ** xref:neo4j.adoc[Neo4j Store]
 ** xref:qdrant-store.adoc[Qdrant Store]
+** xref:milvus-store.adoc[Milvus Store]
 
 * Additional tools
 ** xref:easy-rag.adoc[Easy RAG]
