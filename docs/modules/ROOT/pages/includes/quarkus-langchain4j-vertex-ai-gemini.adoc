@@ -165,7 +165,7 @@ a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-ch
 
 [.description]
 --
-The id of the model to use
+The id of the model to use. See https://ai.google.dev/gemini-api/docs/models/gemini
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -176,7 +176,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_I
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-pro`
+|`gemini-1.5-pro`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature[`quarkus.langchain4j.vertexai.gemini.chat-model.temperature`]##
 
@@ -467,7 +467,7 @@ a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-mo
 
 [.description]
 --
-The id of the model to use
+The id of the model to use. See https://ai.google.dev/gemini-api/docs/models/gemini
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -478,7 +478,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-pro`
+|`gemini-1.5-pro`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature[`quarkus.langchain4j.vertexai.gemini."model-name".chat-model.temperature`]##
 
