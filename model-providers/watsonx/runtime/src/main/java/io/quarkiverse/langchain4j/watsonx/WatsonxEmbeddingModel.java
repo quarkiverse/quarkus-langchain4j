@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, TokenCountEstimator {
 
     private final EmbeddingParameters parameters;
+    private static final int MAX_SIZE = 1000;
 
     public WatsonxEmbeddingModel(Builder builder) {
         super(builder);
@@ -37,24 +39,29 @@ public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, To
         if (Objects.isNull(textSegments) || textSegments.isEmpty())
             return Response.from(List.of());
 
-        var inputs = textSegments.stream()
-                .map(TextSegment::text)
-                .collect(Collectors.toList());
+        List<Embedding> result = new ArrayList<>();
 
-        EmbeddingRequest request = new EmbeddingRequest(modelId, spaceId, projectId, inputs, parameters);
-        EmbeddingResponse result = retryOn(new Callable<EmbeddingResponse>() {
-            @Override
-            public EmbeddingResponse call() throws Exception {
-                return client.embeddings(request, version);
-            }
-        });
+        // Watsonx.ai embedding API allows a maximum of 1000 elements per request.
+        for (int fromIndex = 0; fromIndex < textSegments.size(); fromIndex += MAX_SIZE) {
+            int toIndex = Math.min(fromIndex + MAX_SIZE, textSegments.size());
+            List<String> subList = textSegments.subList(fromIndex, toIndex).stream()
+                    .map(TextSegment::text)
+                    .collect(Collectors.toList());
 
-        return Response.from(
-                result.results()
-                        .stream()
-                        .map(Result::embedding)
-                        .map(Embedding::from)
-                        .collect(Collectors.toList()));
+            EmbeddingRequest request = new EmbeddingRequest(modelId, spaceId, projectId, subList, parameters);
+            EmbeddingResponse embeddingResponse = retryOn(new Callable<EmbeddingResponse>() {
+                @Override
+                public EmbeddingResponse call() throws Exception {
+                    return client.embeddings(request, version);
+                }
+            });
+            result.addAll(embeddingResponse.results().stream()
+                    .map(Result::embedding)
+                    .map(Embedding::from)
+                    .toList());
+        }
+
+        return Response.from(result);
     }
 
     @Override
