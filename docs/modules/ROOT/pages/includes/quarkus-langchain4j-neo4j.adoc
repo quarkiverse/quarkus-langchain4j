@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-neo4j_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-dimension]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-dimension[`quarkus.langchain4j.neo4j.dimension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-label]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-label[`quarkus.langchain4j.neo4j.label`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.label+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |`Document`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-embedding-property]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-embedding-property[`quarkus.langchain4j.neo4j.embedding-property`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.embedding-property+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |`embedding`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-id-property]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-id-property[`quarkus.langchain4j.neo4j.id-property`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.id-property+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |`id`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-metadata-prefix]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-metadata-prefix[`quarkus.langchain4j.neo4j.metadata-prefix`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.metadata-prefix+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-text-property]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-text-property[`quarkus.langchain4j.neo4j.text-property`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.text-property+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ endif::add-copy-button-to-env-var[]
 |`text`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-index-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-index-name[`quarkus.langchain4j.neo4j.index-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -128,6 +155,10 @@ endif::add-copy-button-to-env-var[]
 |`vector`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name[`quarkus.langchain4j.neo4j.database-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.database-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |`neo4j`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-retrieval-query]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-retrieval-query[`quarkus.langchain4j.neo4j.retrieval-query`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.neo4j.retrieval-query+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -169,5 +204,3 @@ endif::add-copy-button-to-env-var[]
 
 |===
 
-
-:!summaryTableId:

@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-pgvector_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-datasource[`quarkus.langchain4j.pgvector.datasource`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.datasource+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-table[`quarkus.langchain4j.pgvector.table`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.table+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |`embeddings`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-dimension[`quarkus.langchain4j.pgvector.dimension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-use-index[`quarkus.langchain4j.pgvector.use-index`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.use-index+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-index-list-size[`quarkus.langchain4j.pgvector.index-list-size`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.index-list-size+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-create-table[`quarkus.langchain4j.pgvector.create-table`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.create-table+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-drop-table-first[`quarkus.langchain4j.pgvector.drop-table-first`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.drop-table-first+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -128,6 +155,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-register-vector-pg-extension[`quarkus.langchain4j.pgvector.register-vector-pg-extension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.register-vector-pg-extension+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-storage-mode[`quarkus.langchain4j.pgvector.metadata.storage-mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.storage-mode+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -153,6 +188,8 @@ Metadata type:
  - COLUMN_PER_KEY: for static metadata, when you know in advance the list of metadata fields. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to define the right columns.
  - COMBINED_JSON: For dynamic metadata, when you don't know the list of metadata fields that will be used.
  - COMBINED_JSONB: Same as JSON, but stored in a binary way. Optimized for query on large dataset. In this case, you should also override the `quarkus.langchain4j.pgvector.metadata.column-definitions` property to change the type of the `metadata` column to COMBINED_JSONB.
+
+
 
 Default value: COMBINED_JSON
 
@@ -168,6 +205,10 @@ a|`column-per-key`, `combined-json`, `combined-jsonb`
 |`combined-json`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-column-definitions[`quarkus.langchain4j.pgvector.metadata.column-definitions`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.column-definitions+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -189,6 +230,10 @@ endif::add-copy-button-to-env-var[]
 |`metadata JSON NULL`
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-indexes[`quarkus.langchain4j.pgvector.metadata.indexes`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.indexes+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -212,6 +257,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type]] [.property-path]##link:#quarkus-langchain4j-pgvector_quarkus-langchain4j-pgvector-metadata-index-type[`quarkus.langchain4j.pgvector.metadata.index-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pgvector.metadata.index-type+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -234,5 +283,3 @@ endif::add-copy-button-to-env-var[]
 
 |===
 
-
-:!summaryTableId:

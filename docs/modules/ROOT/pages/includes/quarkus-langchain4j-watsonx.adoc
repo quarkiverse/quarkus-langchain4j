@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-watsonx_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-enabled[`quarkus.langchain4j.watsonx.chat-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-enabled[`quarkus.langchain4j.watsonx.embedding-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-enabled[`quarkus.langchain4j.watsonx.scoring-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-mode]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-mode[`quarkus.langchain4j.watsonx.mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.mode+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -69,6 +84,8 @@ This property allows you to choose between two modes of operation:
 
  - *chat*: prompts are automatically enriched with the specific tags defined by the model
  - *generation*: prompts require manual specification of tags
+
+
 
 *Allowable values:* `++[++chat, generation++]++`
 
@@ -84,6 +101,10 @@ endif::add-copy-button-to-env-var[]
 |`chat`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-base-url[`quarkus.langchain4j.watsonx.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -101,6 +122,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-api-key[`quarkus.langchain4j.watsonx.api-key`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -118,6 +143,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-timeout[`quarkus.langchain4j.watsonx.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -131,10 +160,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version[`quarkus.langchain4j.watsonx.version`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.version+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -152,6 +185,10 @@ endif::add-copy-button-to-env-var[]
 |`2024-03-14`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id[`quarkus.langchain4j.watsonx.space-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.space-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -171,6 +208,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-project-id[`quarkus.langchain4j.watsonx.project-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.project-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -190,6 +231,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests[`quarkus.langchain4j.watsonx.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -207,6 +252,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-responses[`quarkus.langchain4j.watsonx.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -224,6 +273,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration[`quarkus.langchain4j.watsonx.enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -241,6 +294,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-base-url[`quarkus.langchain4j.watsonx.iam.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -258,6 +315,10 @@ endif::add-copy-button-to-env-var[]
 |`https://iam.cloud.ibm.com`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-timeout[`quarkus.langchain4j.watsonx.iam.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -271,10 +332,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type[`quarkus.langchain4j.watsonx.iam.grant-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.iam.grant-type+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -292,6 +357,10 @@ endif::add-copy-button-to-env-var[]
 |`urn:ibm:params:oauth:grant-type:apikey`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id[`quarkus.langchain4j.watsonx.chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -314,6 +383,10 @@ endif::add-copy-button-to-env-var[]
 |`mistralai/mistral-large`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx.chat-model.frequency-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -333,6 +406,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-logprobs[`quarkus.langchain4j.watsonx.chat-model.logprobs`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -350,6 +427,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-logprobs[`quarkus.langchain4j.watsonx.chat-model.top-logprobs`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -369,6 +450,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-max-tokens[`quarkus.langchain4j.watsonx.chat-model.max-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -386,6 +471,10 @@ endif::add-copy-button-to-env-var[]
 |`1024`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-n]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-n[`quarkus.langchain4j.watsonx.chat-model.n`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.n+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -403,6 +492,10 @@ endif::add-copy-button-to-env-var[]
 |`1`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-presence-penalty[`quarkus.langchain4j.watsonx.chat-model.presence-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -422,6 +515,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-seed[`quarkus.langchain4j.watsonx.chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -439,6 +536,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-stop[`quarkus.langchain4j.watsonx.chat-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -458,6 +559,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-temperature[`quarkus.langchain4j.watsonx.chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -477,6 +582,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-top-p[`quarkus.langchain4j.watsonx.chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -496,6 +605,10 @@ endif::add-copy-button-to-env-var[]
 |`1`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-response-format[`quarkus.langchain4j.watsonx.chat-model.response-format`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -515,6 +628,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-requests[`quarkus.langchain4j.watsonx.chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -532,6 +649,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-log-responses[`quarkus.langchain4j.watsonx.chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -549,6 +670,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-model-id[`quarkus.langchain4j.watsonx.generation-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -571,6 +696,10 @@ endif::add-copy-button-to-env-var[]
 |`mistralai/mistral-large`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-decoding-method[`quarkus.langchain4j.watsonx.generation-model.decoding-method`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.decoding-method+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -590,6 +719,10 @@ endif::add-copy-button-to-env-var[]
 |`greedy`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-length-penalty-decay-factor]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-length-penalty-decay-factor[`quarkus.langchain4j.watsonx.generation-model.length-penalty.decay-factor`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.length-penalty.decay-factor+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -609,6 +742,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-length-penalty-start-index]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-length-penalty-start-index[`quarkus.langchain4j.watsonx.generation-model.length-penalty.start-index`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.length-penalty.start-index+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -628,6 +765,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-max-new-tokens[`quarkus.langchain4j.watsonx.generation-model.max-new-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.max-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -647,6 +788,10 @@ endif::add-copy-button-to-env-var[]
 |`200`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-min-new-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-min-new-tokens[`quarkus.langchain4j.watsonx.generation-model.min-new-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.min-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -666,6 +811,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-random-seed[`quarkus.langchain4j.watsonx.generation-model.random-seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -685,6 +834,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-stop-sequences[`quarkus.langchain4j.watsonx.generation-model.stop-sequences`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.stop-sequences+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -704,6 +857,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-temperature[`quarkus.langchain4j.watsonx.generation-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -723,6 +880,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-k]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-k[`quarkus.langchain4j.watsonx.generation-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -742,6 +903,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-top-p[`quarkus.langchain4j.watsonx.generation-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -761,6 +926,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-repetition-penalty[`quarkus.langchain4j.watsonx.generation-model.repetition-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -780,6 +949,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-truncate-input-tokens[`quarkus.langchain4j.watsonx.generation-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -799,6 +972,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-include-stop-sequence]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-include-stop-sequence[`quarkus.langchain4j.watsonx.generation-model.include-stop-sequence`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.include-stop-sequence+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -816,6 +993,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-log-requests[`quarkus.langchain4j.watsonx.generation-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -833,6 +1014,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-log-responses[`quarkus.langchain4j.watsonx.generation-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -850,6 +1035,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-prompt-joiner]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-prompt-joiner[`quarkus.langchain4j.watsonx.generation-model.prompt-joiner`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.generation-model.prompt-joiner+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -868,6 +1057,10 @@ endif::add-copy-button-to-env-var[]
 `
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id[`quarkus.langchain4j.watsonx.embedding-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -890,6 +1083,10 @@ endif::add-copy-button-to-env-var[]
 |`ibm/slate-125m-english-rtrvr`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-truncate-input-tokens[`quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -907,6 +1104,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-requests[`quarkus.langchain4j.watsonx.embedding-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -924,6 +1125,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-log-responses[`quarkus.langchain4j.watsonx.embedding-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -941,6 +1146,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-model-id[`quarkus.langchain4j.watsonx.scoring-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -963,6 +1172,10 @@ endif::add-copy-button-to-env-var[]
 |`cross-encoder/ms-marco-minilm-l-12-v2`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-truncate-input-tokens[`quarkus.langchain4j.watsonx.scoring-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -980,6 +1193,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-requests[`quarkus.langchain4j.watsonx.scoring-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -997,6 +1214,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-scoring-model-log-responses[`quarkus.langchain4j.watsonx.scoring-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.scoring-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1014,6 +1235,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url[`quarkus.langchain4j.watsonx."model-name".base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1031,6 +1256,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-api-key[`quarkus.langchain4j.watsonx."model-name".api-key`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".api-key+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1048,6 +1277,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-timeout[`quarkus.langchain4j.watsonx."model-name".timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1061,10 +1294,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version[`quarkus.langchain4j.watsonx."model-name".version`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".version+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1082,6 +1319,10 @@ endif::add-copy-button-to-env-var[]
 |`2024-03-14`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id[`quarkus.langchain4j.watsonx."model-name".space-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".space-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1101,6 +1342,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-project-id[`quarkus.langchain4j.watsonx."model-name".project-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".project-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1120,6 +1365,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests[`quarkus.langchain4j.watsonx."model-name".log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1137,6 +1386,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-responses[`quarkus.langchain4j.watsonx."model-name".log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1154,6 +1407,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-enable-integration[`quarkus.langchain4j.watsonx."model-name".enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1171,6 +1428,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-base-url[`quarkus.langchain4j.watsonx."model-name".iam.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1188,6 +1449,10 @@ endif::add-copy-button-to-env-var[]
 |`https://iam.cloud.ibm.com`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-timeout[`quarkus.langchain4j.watsonx."model-name".iam.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1201,10 +1466,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type[`quarkus.langchain4j.watsonx."model-name".iam.grant-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".iam.grant-type+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1222,6 +1491,10 @@ endif::add-copy-button-to-env-var[]
 |`urn:ibm:params:oauth:grant-type:apikey`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id[`quarkus.langchain4j.watsonx."model-name".chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1244,6 +1517,10 @@ endif::add-copy-button-to-env-var[]
 |`mistralai/mistral-large`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1263,6 +1540,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-logprobs[`quarkus.langchain4j.watsonx."model-name".chat-model.logprobs`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1280,6 +1561,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-logprobs[`quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.top-logprobs+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1299,6 +1584,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-max-tokens[`quarkus.langchain4j.watsonx."model-name".chat-model.max-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1316,6 +1605,10 @@ endif::add-copy-button-to-env-var[]
 |`1024`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-n]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-n[`quarkus.langchain4j.watsonx."model-name".chat-model.n`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.n+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1333,6 +1626,10 @@ endif::add-copy-button-to-env-var[]
 |`1`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-presence-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.presence-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.presence-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1352,6 +1649,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-seed[`quarkus.langchain4j.watsonx."model-name".chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1369,6 +1670,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-stop[`quarkus.langchain4j.watsonx."model-name".chat-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1388,6 +1693,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-temperature[`quarkus.langchain4j.watsonx."model-name".chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1407,6 +1716,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-top-p[`quarkus.langchain4j.watsonx."model-name".chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1426,6 +1739,10 @@ endif::add-copy-button-to-env-var[]
 |`1`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-response-format[`quarkus.langchain4j.watsonx."model-name".chat-model.response-format`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.response-format+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1445,6 +1762,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-requests[`quarkus.langchain4j.watsonx."model-name".chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1462,6 +1783,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-log-responses[`quarkus.langchain4j.watsonx."model-name".chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1479,6 +1804,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-model-id[`quarkus.langchain4j.watsonx."model-name".generation-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1501,6 +1830,10 @@ endif::add-copy-button-to-env-var[]
 |`mistralai/mistral-large`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-decoding-method[`quarkus.langchain4j.watsonx."model-name".generation-model.decoding-method`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.decoding-method+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1520,6 +1853,10 @@ endif::add-copy-button-to-env-var[]
 |`greedy`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-length-penalty-decay-factor]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-length-penalty-decay-factor[`quarkus.langchain4j.watsonx."model-name".generation-model.length-penalty.decay-factor`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.length-penalty.decay-factor+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1539,6 +1876,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-length-penalty-start-index]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-length-penalty-start-index[`quarkus.langchain4j.watsonx."model-name".generation-model.length-penalty.start-index`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.length-penalty.start-index+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1558,6 +1899,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-max-new-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-max-new-tokens[`quarkus.langchain4j.watsonx."model-name".generation-model.max-new-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.max-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1577,6 +1922,10 @@ endif::add-copy-button-to-env-var[]
 |`200`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-min-new-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-min-new-tokens[`quarkus.langchain4j.watsonx."model-name".generation-model.min-new-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.min-new-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1596,6 +1945,10 @@ endif::add-copy-button-to-env-var[]
 |`0`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-random-seed]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-random-seed[`quarkus.langchain4j.watsonx."model-name".generation-model.random-seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.random-seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1615,6 +1968,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-stop-sequences]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-stop-sequences[`quarkus.langchain4j.watsonx."model-name".generation-model.stop-sequences`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.stop-sequences+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1634,6 +1991,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-temperature]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-temperature[`quarkus.langchain4j.watsonx."model-name".generation-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1653,6 +2014,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:1.0}`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-k]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-k[`quarkus.langchain4j.watsonx."model-name".generation-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1672,6 +2037,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-p]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-top-p[`quarkus.langchain4j.watsonx."model-name".generation-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1691,6 +2060,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-repetition-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-repetition-penalty[`quarkus.langchain4j.watsonx."model-name".generation-model.repetition-penalty`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.repetition-penalty+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1710,6 +2083,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-truncate-input-tokens[`quarkus.langchain4j.watsonx."model-name".generation-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1729,6 +2106,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-include-stop-sequence]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-include-stop-sequence[`quarkus.langchain4j.watsonx."model-name".generation-model.include-stop-sequence`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.include-stop-sequence+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1746,6 +2127,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-log-requests[`quarkus.langchain4j.watsonx."model-name".generation-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1763,6 +2148,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-log-responses[`quarkus.langchain4j.watsonx."model-name".generation-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1780,6 +2169,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-prompt-joiner]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-prompt-joiner[`quarkus.langchain4j.watsonx."model-name".generation-model.prompt-joiner`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".generation-model.prompt-joiner+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1798,6 +2191,10 @@ endif::add-copy-button-to-env-var[]
 `
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id[`quarkus.langchain4j.watsonx."model-name".embedding-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1820,6 +2217,10 @@ endif::add-copy-button-to-env-var[]
 |`ibm/slate-125m-english-rtrvr`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-truncate-input-tokens[`quarkus.langchain4j.watsonx."model-name".embedding-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1837,6 +2238,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-requests[`quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1854,6 +2259,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-log-responses[`quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1871,6 +2280,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-model-id[`quarkus.langchain4j.watsonx."model-name".scoring-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1893,6 +2306,10 @@ endif::add-copy-button-to-env-var[]
 |`cross-encoder/ms-marco-minilm-l-12-v2`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-truncate-input-tokens[`quarkus.langchain4j.watsonx."model-name".scoring-model.truncate-input-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.truncate-input-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1910,6 +2327,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-requests[`quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1927,6 +2348,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-scoring-model-log-responses[`quarkus.langchain4j.watsonx."model-name".scoring-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".scoring-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1948,6 +2373,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode[`quarkus.langchain4j.watsonx."model-name".mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".mode+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -1957,6 +2386,8 @@ This property allows you to choose between two modes of operation:
 
  - *chat*: prompts are automatically enriched with the specific tags defined by the model
  - *generation*: prompts require manual specification of tags
+
+
 
 *Allowable values:* `++[++chat, generation++]++`
 
@@ -1993,5 +2424,3 @@ In other cases, the simplified format is translated to the `java.time.Duration` 
 * If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
-
-:!summaryTableId:

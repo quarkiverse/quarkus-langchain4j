@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-llama3-java_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-include-models-in-artifact]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-include-models-in-artifact[`quarkus.langchain4j.llama3.include-models-in-artifact`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.include-models-in-artifact+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-enabled[`quarkus.langchain4j.llama3.chat-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-model-name[`quarkus.langchain4j.llama3.chat-model.model-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |`mukel/Llama-3.2-1B-Instruct-GGUF`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-quantization[`quarkus.langchain4j.llama3.chat-model.quantization`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.quantization+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |`Q4_0`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-pre-load-in-native]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-pre-load-in-native[`quarkus.langchain4j.llama3.chat-model.pre-load-in-native`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.pre-load-in-native+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-models-path]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-models-path[`quarkus.langchain4j.llama3.models-path`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.models-path+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ endif::add-copy-button-to-env-var[]
 |`${user.home}/.langchain4j/models`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-temperature[`quarkus.langchain4j.llama3.chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -128,6 +155,10 @@ endif::add-copy-button-to-env-var[]
 |`0.1`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-chat-model-max-tokens[`quarkus.langchain4j.llama3.chat-model.max-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |`512`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-enable-integration[`quarkus.langchain4j.llama3.enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -162,6 +197,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-requests]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-requests[`quarkus.langchain4j.llama3.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -179,6 +218,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-responses]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-log-responses[`quarkus.langchain4j.llama3.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -200,6 +243,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-model-name[`quarkus.langchain4j.llama3."model-name".chat-model.model-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".chat-model.model-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -217,6 +264,10 @@ endif::add-copy-button-to-env-var[]
 |`mukel/Llama-3.2-1B-Instruct-GGUF`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-quantization[`quarkus.langchain4j.llama3."model-name".chat-model.quantization`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".chat-model.quantization+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -234,6 +285,10 @@ endif::add-copy-button-to-env-var[]
 |`Q4_0`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-pre-load-in-native]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-pre-load-in-native[`quarkus.langchain4j.llama3."model-name".chat-model.pre-load-in-native`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".chat-model.pre-load-in-native+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -251,6 +306,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-temperature[`quarkus.langchain4j.llama3."model-name".chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -268,6 +327,10 @@ endif::add-copy-button-to-env-var[]
 |`0.1`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-chat-model-max-tokens[`quarkus.langchain4j.llama3."model-name".chat-model.max-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".chat-model.max-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -285,6 +348,10 @@ endif::add-copy-button-to-env-var[]
 |`512`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-enable-integration[`quarkus.langchain4j.llama3."model-name".enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -302,6 +369,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-requests[`quarkus.langchain4j.llama3."model-name".log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -319,6 +390,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-llama3-java_quarkus-langchain4j-llama3-model-name-log-responses[`quarkus.langchain4j.llama3."model-name".log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.llama3."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -338,5 +413,3 @@ endif::add-copy-button-to-env-var[]
 
 |===
 
-
-:!summaryTableId:

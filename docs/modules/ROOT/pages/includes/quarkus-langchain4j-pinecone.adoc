@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-pinecone_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-api-key]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-api-key[`quarkus.langchain4j.pinecone.api-key`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-environment]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-environment[`quarkus.langchain4j.pinecone.environment`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.environment+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-project-id]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-project-id[`quarkus.langchain4j.pinecone.project-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.project-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-name[`quarkus.langchain4j.pinecone.index-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-dimension]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-dimension[`quarkus.langchain4j.pinecone.dimension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-pod-type]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-pod-type[`quarkus.langchain4j.pinecone.pod-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.pod-type+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ endif::add-copy-button-to-env-var[]
 |`s1.x1`
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout[`quarkus.langchain4j.pinecone.index-readiness-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.index-readiness-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -124,10 +151,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-pinecone_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace[`quarkus.langchain4j.pinecone.namespace`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.namespace+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-text-field-name]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-text-field-name[`quarkus.langchain4j.pinecone.text-field-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.text-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -162,6 +197,10 @@ endif::add-copy-button-to-env-var[]
 |`text`
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout[`quarkus.langchain4j.pinecone.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.pinecone.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -175,7 +214,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-pinecone_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |
 
 |===
@@ -199,5 +238,3 @@ In other cases, the simplified format is translated to the `java.time.Duration` 
 * If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
-
-:!summaryTableId:

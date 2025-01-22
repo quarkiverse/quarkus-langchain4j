@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-redis_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-client-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-client-name[`quarkus.langchain4j.redis.client-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-dimension]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-dimension[`quarkus.langchain4j.redis.dimension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-index-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-index-name[`quarkus.langchain4j.redis.index-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.index-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |`embedding-index`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields[`quarkus.langchain4j.redis.textual-metadata-fields`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.textual-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-numeric-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-numeric-metadata-fields[`quarkus.langchain4j.redis.numeric-metadata-fields`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.numeric-metadata-fields+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-distance-metric]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-distance-metric[`quarkus.langchain4j.redis.distance-metric`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.distance-metric+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ a|`l2`, `ip`, `cosine`
 |`cosine`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name[`quarkus.langchain4j.redis.vector-field-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.vector-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -128,6 +155,10 @@ endif::add-copy-button-to-env-var[]
 |`vector`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name[`quarkus.langchain4j.redis.scalar-field-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.scalar-field-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |`scalar`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix[`quarkus.langchain4j.redis.prefix`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.prefix+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -164,6 +199,10 @@ endif::add-copy-button-to-env-var[]
 |`embedding:`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm[`quarkus.langchain4j.redis.vector-algorithm`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.redis.vector-algorithm+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -182,5 +221,3 @@ a|`flat`, `hnsw`
 
 |===
 
-
-:!summaryTableId:
