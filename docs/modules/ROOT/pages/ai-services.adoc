@@ -28,9 +28,8 @@ Once registered, you can inject the _AI Service_ into your application:
 ----
 
 [#scope]
-[IMPORTANT]
-====
-The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory>> objects.
+=== Scope
+The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory,memory>> objects.
 This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (WebSocket support is expected to improve in the near future).
 For example when using a service in a CLI, it makes sense to have the service be `@ApplicationScoped` and the extension allows this simply if the service is annotated with `@ApplicationScoped`.
 ====
@@ -149,7 +148,7 @@ Hence, the AI Service can store the latest messages in a _memory_, often termed 
 String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 ----
 
-We'll explore an alternative approach to avoid manual memory handling in the <<memory>> section.
+We'll explore an alternative approach to avoid manual memory handling in the <<memory,memory>> section.
 
 == Configuring the Chat Language Model
 
@@ -211,7 +210,7 @@ The extension provides a default implementation of `ChatMemoryProvider` which do
 [IMPORTANT]
 ====
 The topic of `ChatMemory` cleanup is of paramount importance in order to avoid having the application terminate with `out of memory` errors. For this reason, the extension automatically removes all the `ChatMemory` objects from
-the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope>> that such bean are `@RequestScoped` be default).
+the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope,scope>> that such bean are `@RequestScoped` be default).
 
 However, in cases where more fine-grained control is needed (which is the case when the bean is declared as `@Singleton` or `@ApplicationScoped`) then `io.quarkiverse.langchain4j.ChatMemoryRemover` should be used to manually remove elements.
 ====
