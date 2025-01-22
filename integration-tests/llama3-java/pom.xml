@@ -11,6 +11,7 @@
     <properties>
         <skipITs>true</skipITs>
         <maven.compiler.release>21</maven.compiler.release>
+        <quarkus.version>3.18.0.CR1</quarkus.version>
     </properties>
     <dependencies>
         <dependency>
@@ -71,12 +72,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <jvmArgs>--enable-preview --enable-native-access=ALL-UNNAMED</jvmArgs>
-                    <modules>
-                        <module>jdk.incubator.vector</module>
-                    </modules>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>

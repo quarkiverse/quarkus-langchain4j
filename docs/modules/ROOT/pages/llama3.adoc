@@ -17,27 +17,12 @@ Since the Vector API are still a preview feature in Java 21, and up to the lates
 --enable-preview --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
 ----
 
-or equivalently to configure the quarkus-maven-plugin in the pom.xml file of your project as it follows:
-
-[source,xml,subs=attributes+]
-----
-<configuration>
-    <jvmArgs>--enable-preview --enable-native-access=ALL-UNNAMED</jvmArgs>
-    <modules>
-        <module>jdk.incubator.vector</module>
-    </modules>
-</configuration>
-----
-
 === Dev Mode
 
 Quarkus LangChain4j automatically handles the pulling of the models configured by the application, so there is no need for users to do so manually.
+Furthermore,  the extension properly configures the launch of Java process in order to ensure that the C2 compiler will be enabled (as without it, Llama3.java is virtually unusable).
 
-WARNING: When running Quarkus in dev mode C2 compilation is not enabled and this can make Llama3.java excessively slow. This limitation will be fixed with Quarkus 3.17 when `<forceC2>true</forceC2>` is set.
-
-WARNING: Models are huge, so make sure you have enough disk space. Models location can be controlled using `quarkus.langchain4j.llama3.models-path` property.
-
-NOTE: Due to model's large size, pulling them can take time
+WARNING: Models are generally very large and can take time to download while also consuming a large chunk of disk space. Models location can be controlled using `quarkus.langchain4j.llama3.models-path` property.
 
 === Native mode
 
