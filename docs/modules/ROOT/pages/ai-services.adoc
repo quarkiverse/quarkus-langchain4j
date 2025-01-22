@@ -210,7 +210,7 @@ The extension provides a default implementation of `ChatMemoryProvider` which do
 [IMPORTANT]
 ====
 The topic of `ChatMemory` cleanup is of paramount importance in order to avoid having the application terminate with `out of memory` errors. For this reason, the extension automatically removes all the `ChatMemory` objects from
-the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope,scope>> that such bean are `@RequestScoped` be default).
+the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope,scope>> that such beans are `@RequestScoped` by default).
 
 However, in cases where more fine-grained control is needed (which is the case when the bean is declared as `@Singleton` or `@ApplicationScoped`) then `io.quarkiverse.langchain4j.ChatMemoryRemover` should be used to manually remove elements.
 ====
