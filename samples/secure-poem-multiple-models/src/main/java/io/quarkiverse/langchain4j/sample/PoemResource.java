@@ -1,12 +1,12 @@
 package io.quarkiverse.langchain4j.sample;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.ModelName;
+import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
@@ -14,29 +14,52 @@ import jakarta.ws.rs.Path;
 @Authenticated
 public class PoemResource {
 
-    static final UserMessage USER_MESSAGE = 
-        UserMessage.from("Write a short 1 paragraph poem about Java programming language."
-                + "Set an author name to the model or deployment name which created the poem.");
+    static final String USER_MESSAGE = """
+            Write a short 1 paragraph poem about Java programming language.
+            Set an author name to the model or deployment name which created the poem.
+            Please start by greeting the currently logged in user and asking to enjoy reading the poem, address this user by name.""";
+
+    @RegisterAiService(tools = PoemTools.class)
+    public interface VertexAiGeminiPoemService {
+        @UserMessage(USER_MESSAGE)
+        String writePoem();
+    }
+    
+    @RegisterAiService(modelName= "openai", tools = PoemTools.class)
+    public interface AzureOpenAiPoemService {
+        @UserMessage(USER_MESSAGE)
+        String writePoem();
+    }
     
     @Inject
-    ChatLanguageModel vertexAiGemini;
-    
+    VertexAiGeminiPoemService vertexAiGemini;
+
     @Inject
-    @ModelName("openai")
-    ChatLanguageModel azureOpenAI;
-    
+    AzureOpenAiPoemService azureOpenAI;
+
     @GET
     @Path("vertex-gemini")
     public String getPoemGemini() {
-        Response<AiMessage> response = vertexAiGemini.generate(USER_MESSAGE);
-        return response.content().text();
+        return vertexAiGemini.writePoem();
     }
-        
+
     @GET
     @Path("azure-openai")
     public String getPoemAzureOpenAI() {
-        Response<AiMessage> response = azureOpenAI.generate(USER_MESSAGE);
-        return response.content().text();
+        return azureOpenAI.writePoem();
     }
+
+    @Singleton
+    public static class PoemTools {
+
+        @Inject
+        SecurityIdentity identity;
     
+        @Authenticated
+        @Tool("Returns the name of the logged-in user")
+        public String getLoggedInUserName() {
+            return identity.getPrincipal().getName();
+        }
+        
+    }
 }

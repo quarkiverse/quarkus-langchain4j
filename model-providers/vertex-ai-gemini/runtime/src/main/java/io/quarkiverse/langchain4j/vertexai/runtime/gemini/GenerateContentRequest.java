@@ -7,10 +7,18 @@ public record GenerateContentRequest(List<Content> contents, SystemInstruction s
 
     public record Content(String role, List<Part> parts) {
 
-        public record Part(String text, FunctionCall functionCall) {
+        public record Part(String text, FunctionCall functionCall, FunctionResponse functionResponse) {
 
             public static Part ofText(String text) {
-                return new Part(text, null);
+                return new Part(text, null, null);
+            }
+
+            public static Part ofFunctionCall(FunctionCall functionCall) {
+                return new Part(null, functionCall, null);
+            }
+
+            public static Part ofFunctionResponse(FunctionResponse functionResponse) {
+                return new Part(null, null, functionResponse);
             }
         }
     }

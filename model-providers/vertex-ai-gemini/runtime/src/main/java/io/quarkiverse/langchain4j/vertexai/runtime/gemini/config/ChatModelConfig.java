@@ -13,9 +13,12 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * The id of the model to use
+     * The id of the model to use.
+     *
+     * @see <a href=
+     *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("gemini-pro")
+    @WithDefault("gemini-1.5-pro")
     String modelId();
 
     /**

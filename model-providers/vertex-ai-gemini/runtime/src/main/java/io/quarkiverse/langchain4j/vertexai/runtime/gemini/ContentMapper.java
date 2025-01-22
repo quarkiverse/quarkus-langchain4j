@@ -1,15 +1,25 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 final class ContentMapper {
 
@@ -37,11 +47,31 @@ final class ContentMapper {
                     }
                     contents.add(new GenerateContentRequest.Content(role, parts));
                 } else if (message instanceof AiMessage am) {
-                    if (am.hasToolExecutionRequests()) {
-                        throw new IllegalArgumentException("The Gemini integration currently does not support tools");
+                    try {
+                        if (am.hasToolExecutionRequests()) {
+                            ToolExecutionRequest toolExecutionRequest = am.toolExecutionRequests().get(0);
+                            String argumentsStr = toolExecutionRequest.arguments();
+                            String name = toolExecutionRequest.name();
+                            Map<String, Object> arguments = QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.readValue(
+                                    argumentsStr,
+                                    Map.class);
+                            FunctionCall functionCall = new FunctionCall(name, arguments);
+                            contents.add(new GenerateContentRequest.Content(role,
+                                    List.of(GenerateContentRequest.Content.Part.ofFunctionCall(functionCall))));
+                        } else {
+                            contents.add(new GenerateContentRequest.Content(role,
+                                    List.of(GenerateContentRequest.Content.Part.ofText(am.text()))));
+                        }
+                    } catch (JsonProcessingException e) {
+                        throw new IllegalStateException("Unable to perform conversion of tool response", e);
                     }
+                } else if (message instanceof ToolExecutionResultMessage toolExecResult) {
+                    String toolName = toolExecResult.toolName();
+                    Object content = toolExecResult.text();
+                    FunctionResponse functionResponse = new FunctionResponse(toolName,
+                            new FunctionResponse.Response(toolName, content));
                     contents.add(new GenerateContentRequest.Content(role,
-                            List.of(GenerateContentRequest.Content.Part.ofText(am.text()))));
+                            List.of(GenerateContentRequest.Content.Part.ofFunctionResponse(functionResponse))));
                 } else {
                     throw new IllegalArgumentException(
                             "The Gemini integration currently does not support " + message.type() + " messages");
@@ -49,18 +79,37 @@ final class ContentMapper {
             }
         }
 
-        List<GenerateContentRequest.Tool> tools;
-        if (toolSpecifications == null || toolSpecifications.isEmpty()) {
-            tools = null;
-        } else {
-            tools = new ArrayList<>(toolSpecifications.size());
-            for (GenerateContentRequest.Tool tool : tools) {
-                // TODO: implement
-            }
-        }
-
         return new GenerateContentRequest(contents,
-                !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null, tools,
+                !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null,
+                toTools(toolSpecifications),
                 generationConfig);
+    }
+
+    static List<GenerateContentRequest.Tool> toTools(Collection<ToolSpecification> toolSpecifications) {
+        if (toolSpecifications == null) {
+            return null;
+        }
+        if (toolSpecifications.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<FunctionDeclaration> functionDeclarations = new ArrayList<>(toolSpecifications.size());
+        for (ToolSpecification toolSpecification : toolSpecifications) {
+            functionDeclarations.add(toFunctionDeclaration(toolSpecification));
+        }
+        return List.of(new GenerateContentRequest.Tool(functionDeclarations));
+    }
+
+    private static FunctionDeclaration toFunctionDeclaration(ToolSpecification toolSpecification) {
+        FunctionDeclaration.Parameters functionParameters = toFunctionParameters(toolSpecification.parameters());
+
+        return new FunctionDeclaration(toolSpecification.name(), toolSpecification.description(), functionParameters);
+    }
+
+    private static FunctionDeclaration.Parameters toFunctionParameters(JsonObjectSchema parameters) {
+        if (parameters == null) {
+            return FunctionDeclaration.Parameters.empty();
+        }
+        return FunctionDeclaration.Parameters.objectType(JsonSchemaElementHelper.toMap(parameters.properties()),
+                parameters.required());
     }
 }

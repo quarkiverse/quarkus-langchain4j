@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.model.output.TokenUsage;
 
 final class GenerateContentResponseHandler {
@@ -41,5 +43,18 @@ final class GenerateContentResponseHandler {
                 usageMetadata.promptTokenCount(),
                 usageMetadata.candidatesTokenCount(),
                 usageMetadata.totalTokenCount());
+    }
+
+    static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
+        List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
+        List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>();
+        for (GenerateContentResponse.Candidate.Part part : parts) {
+            FunctionCall functionCall = part.functionCall();
+            if (functionCall == null) {
+                continue;
+            }
+            toolExecutionRequests.add(functionCall.toToolExecutionRequest());
+        }
+        return toolExecutionRequests;
     }
 }

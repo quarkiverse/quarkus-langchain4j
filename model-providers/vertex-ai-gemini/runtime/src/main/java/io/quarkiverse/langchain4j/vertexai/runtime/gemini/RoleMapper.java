@@ -11,7 +11,7 @@ final class RoleMapper {
         return switch (type) {
             case USER -> "user";
             case AI -> "model";
-            case TOOL_EXECUTION_RESULT -> null;
+            case TOOL_EXECUTION_RESULT -> "user";
             default -> throw new IllegalArgumentException(type + " is not allowed.");
         };
     }
