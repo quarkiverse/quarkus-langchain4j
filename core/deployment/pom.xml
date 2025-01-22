@@ -31,14 +31,14 @@
             <artifactId>quarkus-langchain4j-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-devservices-common</artifactId>
             <scope>compile</scope>
             <version>${quarkus.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-websockets-next-deployment</artifactId>
@@ -122,7 +122,6 @@
                         <path>
                             <groupId>io.quarkus</groupId>
                             <artifactId>quarkus-extension-processor</artifactId>
-                            <version>${quarkus.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -139,5 +138,5 @@
             </plugin>
         </plugins>
     </build>
-    
+
 </project>
