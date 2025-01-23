@@ -80,8 +80,8 @@ You can change the default embedding model by setting the `quarkus.langchain4j.j
 quarkus.langchain4j.log-requests=true
 quarkus.langchain4j.log-responses=true
 
-quarkus.langchain4j.jlama.chat-model.model-id=tjake/granite-3.0-2b-instruct-JQ4
-quarkus.langchain4j.jlama.embedding-model.model-id=intfloat/e5-small-v2
+quarkus.langchain4j.jlama.chat-model.model-name=tjake/granite-3.0-2b-instruct-JQ4
+quarkus.langchain4j.jlama.embedding-model.model-name=intfloat/e5-small-v2
 ----
 
 If no other LLM extension is installed, retrieve the embedding model as follows:
