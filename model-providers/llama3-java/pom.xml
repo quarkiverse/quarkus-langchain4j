@@ -13,7 +13,7 @@
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
-        <quarkus.version>3.18.0.CR1</quarkus.version>
+        <quarkus.version>3.18.0</quarkus.version>
     </properties>
 
     <modules>

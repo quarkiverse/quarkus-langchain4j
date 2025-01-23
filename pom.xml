@@ -33,7 +33,7 @@
   </scm>
   <properties>
     <quarkus.version>3.15.2</quarkus.version>
-    <quarkus.extension-processor.version>3.18.0.CR1</quarkus.extension-processor.version>
+    <quarkus.extension-processor.version>3.18.0</quarkus.extension-processor.version>
     <langchain4j.version>1.0.0-alpha1</langchain4j.version>
     <langchain4j-embeddings.version>1.0.0-alpha1</langchain4j-embeddings.version>
     <quarkus-antora.version>1.0.2</quarkus-antora.version>
