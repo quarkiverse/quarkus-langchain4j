@@ -1,4 +1,3 @@
-:summaryTableId: quarkus-langchain4j-ollama_quarkus-langchain4j
 [.configuration-legend]
 icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
 [.configuration-reference.searchable, cols="80,.^10,.^10"]
@@ -9,6 +8,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-enabled[`quarkus.langchain4j.ollama.chat-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -26,6 +29,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-enabled[`quarkus.langchain4j.ollama.embedding-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -43,6 +50,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-enabled[`quarkus.langchain4j.ollama.devservices.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -60,6 +71,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-image-name[`quarkus.langchain4j.ollama.devservices.image-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -77,6 +92,10 @@ endif::add-copy-button-to-env-var[]
 |`ollama/ollama:latest`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[`quarkus.langchain4j.ollama.chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -94,6 +113,10 @@ endif::add-copy-button-to-env-var[]
 |`llama3.2`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-model-id[`quarkus.langchain4j.ollama.embedding-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -111,6 +134,10 @@ endif::add-copy-button-to-env-var[]
 |`nomic-embed-text`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-base-url[`quarkus.langchain4j.ollama.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -128,6 +155,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-tls-configuration-name[`quarkus.langchain4j.ollama.tls-configuration-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -145,6 +176,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-timeout[`quarkus.langchain4j.ollama.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -158,10 +193,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ollama_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests[`quarkus.langchain4j.ollama.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -179,6 +218,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-responses[`quarkus.langchain4j.ollama.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -196,6 +239,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-enable-integration]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-enable-integration[`quarkus.langchain4j.ollama.enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -213,6 +260,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-temperature[`quarkus.langchain4j.ollama.chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -230,6 +281,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-num-predict[`quarkus.langchain4j.ollama.chat-model.num-predict`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.num-predict+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -247,6 +302,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-stop[`quarkus.langchain4j.ollama.chat-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -264,6 +323,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-p[`quarkus.langchain4j.ollama.chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -281,6 +344,10 @@ endif::add-copy-button-to-env-var[]
 |`0.9`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-top-k[`quarkus.langchain4j.ollama.chat-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -298,16 +365,19 @@ endif::add-copy-button-to-env-var[]
 |`40`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-seed[`quarkus.langchain4j.ollama.chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
 With a static number the result is always the same. With a random number the result varies Example:
 
 ```
-```
-
 `Random random = new Random();
 int x = random.nextInt(Integer.MAX_VALUE);`
+```
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -321,6 +391,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-format]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-format[`quarkus.langchain4j.ollama.chat-model.format`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.format+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -338,6 +412,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-requests[`quarkus.langchain4j.ollama.chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -355,6 +433,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-log-responses[`quarkus.langchain4j.ollama.chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -372,6 +454,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-temperature[`quarkus.langchain4j.ollama.embedding-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -389,6 +475,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-num-predict[`quarkus.langchain4j.ollama.embedding-model.num-predict`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.num-predict+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -406,6 +496,10 @@ endif::add-copy-button-to-env-var[]
 |`128`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-stop]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-stop[`quarkus.langchain4j.ollama.embedding-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -423,6 +517,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-p[`quarkus.langchain4j.ollama.embedding-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -440,6 +538,10 @@ endif::add-copy-button-to-env-var[]
 |`0.9`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-k]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-top-k[`quarkus.langchain4j.ollama.embedding-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -457,6 +559,10 @@ endif::add-copy-button-to-env-var[]
 |`40`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-requests[`quarkus.langchain4j.ollama.embedding-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -474,6 +580,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-embedding-model-log-responses[`quarkus.langchain4j.ollama.embedding-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -495,6 +605,10 @@ h|Type
 h|Default
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-model-id[`quarkus.langchain4j.ollama."model-name".chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -512,6 +626,10 @@ endif::add-copy-button-to-env-var[]
 |`llama3.2`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-model-id[`quarkus.langchain4j.ollama."model-name".embedding-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -529,6 +647,10 @@ endif::add-copy-button-to-env-var[]
 |`nomic-embed-text`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-base-url[`quarkus.langchain4j.ollama."model-name".base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -546,6 +668,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-tls-configuration-name[`quarkus.langchain4j.ollama."model-name".tls-configuration-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -563,6 +689,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-timeout[`quarkus.langchain4j.ollama."model-name".timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".timeout+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -576,10 +706,14 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ollama_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests[`quarkus.langchain4j.ollama."model-name".log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -597,6 +731,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-responses[`quarkus.langchain4j.ollama."model-name".log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -614,6 +752,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-enable-integration[`quarkus.langchain4j.ollama."model-name".enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -631,6 +773,10 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-temperature[`quarkus.langchain4j.ollama."model-name".chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -648,6 +794,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-num-predict[`quarkus.langchain4j.ollama."model-name".chat-model.num-predict`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.num-predict+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -665,6 +815,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-stop[`quarkus.langchain4j.ollama."model-name".chat-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -682,6 +836,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-p[`quarkus.langchain4j.ollama."model-name".chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -699,6 +857,10 @@ endif::add-copy-button-to-env-var[]
 |`0.9`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-top-k[`quarkus.langchain4j.ollama."model-name".chat-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -716,16 +878,19 @@ endif::add-copy-button-to-env-var[]
 |`40`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-seed[`quarkus.langchain4j.ollama."model-name".chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
 With a static number the result is always the same. With a random number the result varies Example:
 
 ```
-```
-
 `Random random = new Random();
 int x = random.nextInt(Integer.MAX_VALUE);`
+```
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -739,6 +904,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-format]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-format[`quarkus.langchain4j.ollama."model-name".chat-model.format`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.format+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -756,6 +925,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-requests[`quarkus.langchain4j.ollama."model-name".chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -773,6 +946,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-chat-model-log-responses[`quarkus.langchain4j.ollama."model-name".chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -790,6 +967,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-temperature[`quarkus.langchain4j.ollama."model-name".embedding-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -807,6 +988,10 @@ endif::add-copy-button-to-env-var[]
 |`${quarkus.langchain4j.temperature:0.8}`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-num-predict[`quarkus.langchain4j.ollama."model-name".embedding-model.num-predict`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.num-predict+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -824,6 +1009,10 @@ endif::add-copy-button-to-env-var[]
 |`128`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-stop]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-stop[`quarkus.langchain4j.ollama."model-name".embedding-model.stop`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.stop+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -841,6 +1030,10 @@ endif::add-copy-button-to-env-var[]
 |
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-p[`quarkus.langchain4j.ollama."model-name".embedding-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -858,6 +1051,10 @@ endif::add-copy-button-to-env-var[]
 |`0.9`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-k]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-top-k[`quarkus.langchain4j.ollama."model-name".embedding-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -875,6 +1072,10 @@ endif::add-copy-button-to-env-var[]
 |`40`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-requests[`quarkus.langchain4j.ollama."model-name".embedding-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -892,6 +1093,10 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-embedding-model-log-responses[`quarkus.langchain4j.ollama."model-name".embedding-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".embedding-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
 
 [.description]
 --
@@ -930,5 +1135,3 @@ In other cases, the simplified format is translated to the `java.time.Duration` 
 * If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
-
-:!summaryTableId:

@@ -354,6 +354,7 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-config-doc-maven-plugin</artifactId>
+                <version>${quarkus.extension-processor.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <targetDirectory>${project.basedir}/modules/ROOT/pages/includes/</targetDirectory>
