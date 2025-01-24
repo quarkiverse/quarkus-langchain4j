@@ -124,8 +124,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
                                         if (response.evalCount() != null && response.promptEvalCount() != null) {
                                             TokenUsage tokenUsage = new TokenUsage(
-                                                    response.evalCount(),
                                                     response.promptEvalCount(),
+                                                    response.evalCount(),
                                                     response.evalCount() + response.promptEvalCount());
                                             context.put(TOKEN_USAGE_CONTEXT, tokenUsage);
                                         }
