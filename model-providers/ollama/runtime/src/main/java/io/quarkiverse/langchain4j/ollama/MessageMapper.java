@@ -126,6 +126,7 @@ final class MessageMapper {
             case USER -> Role.USER;
             case AI -> Role.ASSISTANT;
             case TOOL_EXECUTION_RESULT -> Role.TOOL;
+            default -> throw new IllegalArgumentException("Unsupported chat message type: " + chatMessageType);
         };
     }
 

@@ -41,6 +41,9 @@ public class ChatMessageTemplateExtension {
                 case SYSTEM, TOOL_EXECUTION_RESULT -> {
                     continue;
                 }
+                default -> {
+                    continue;
+                }
             }
         }
 
