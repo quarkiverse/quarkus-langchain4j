@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import org.jboss.logging.Logger;
 
@@ -101,7 +102,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
         try {
             ChatResponse chatResponse = client.chat(request);
-            Response<AiMessage> response = toResponse(chatResponse);
+            Response<AiMessage> response = toResponse(chatResponse, toolSpecifications);
 
             ChatModelResponse modelListenerResponse = createModelListenerResponse(
                     null,
@@ -171,7 +172,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
         return Set.of();
     }
 
-    private static Response<AiMessage> toResponse(ChatResponse response) {
+    private static Response<AiMessage> toResponse(ChatResponse response, List<ToolSpecification> toolSpecifications) {
         Response<AiMessage> result;
         List<ToolCall> toolCalls = response.message().toolCalls();
         if ((toolCalls == null) || toolCalls.isEmpty()) {
@@ -179,8 +180,11 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                     AiMessage.from(response.message().content()),
                     new TokenUsage(response.promptEvalCount(), response.evalCount()));
         } else {
-            List<ToolExecutionRequest> toolExecutionRequests = toolCalls.stream().map(ToolCall::toToolExecutionRequest)
+            List<ToolExecutionRequest> toolExecutionRequests = toolCalls.stream()
+                    .filter(createToolSpecificationChecker(toolSpecifications))
+                    .map(ToolCall::toToolExecutionRequest)
                     .toList();
+
             result = Response.from(aiMessage(toolExecutionRequests),
                     new TokenUsage(response.promptEvalCount(), response.evalCount()));
         }
@@ -217,6 +221,19 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
                 .finishReason(response.finishReason())
                 .aiMessage(response.content())
                 .build();
+    }
+
+    private static Predicate<? super ToolCall> createToolSpecificationChecker(
+            List<ToolSpecification> toolSpecifications) {
+        return toolCall -> toolSpecifications.stream()
+                .anyMatch(toolSpecification -> {
+                    if (toolSpecification.name().equals(toolCall.function().name())) {
+                        return true;
+                    }
+                    log.infov("Model tried to call tool {0} which is not present",
+                            toolCall.function().name());
+                    return false;
+                });
     }
 
     public static final class Builder {
