@@ -272,6 +272,8 @@ public class WatsonxGenerationModel extends Watsonx
                             }
                             case TOOL_EXECUTION_RESULT ->
                                 throw new RuntimeException("The generation model doesn't allow the use of tools");
+                            default ->
+                                throw new RuntimeException("Unsupported chat message type: " + chatMessage.type());
                         };
                     }
                 }).collect(joining(this.promptJoiner));

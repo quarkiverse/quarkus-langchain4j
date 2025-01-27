@@ -38,6 +38,8 @@ public sealed interface TextChatMessage
             case SYSTEM -> TextChatMessageSystem.of(SystemMessage.class.cast(chatMessage));
             case USER -> TextChatMessageUser.of(UserMessage.class.cast(chatMessage));
             case TOOL_EXECUTION_RESULT -> TextChatMessageTool.of(ToolExecutionResultMessage.class.cast(chatMessage));
+            default ->
+                throw new IllegalArgumentException("Unsupported chat message type: " + chatMessage.type());
         };
     }
 
