@@ -35,3 +35,7 @@ MCP server. The server will be started automatically as a subprocess using the p
 environment variables that will be passed to the subprocess. With this configuration, any
 AI Service that does not declare a specific tool provider will be wired to this one.
 
+== Configuration reference
+
+include::includes/quarkus-langchain4j-mcp.adoc[leveloffset=+1,opts=optional]
+
