@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
@@ -92,7 +93,7 @@ import io.vertx.core.Context;
 public class AiServiceMethodImplementationSupport {
 
     private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
-    private static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
+    private static final int DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
@@ -347,12 +348,12 @@ public class AiServiceMethodImplementationSupport {
 
         verifyModerationIfNeeded(moderationFuture);
 
-        int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
+        int maxSequentialToolExecutions = getMaxSequentialToolExecutions();
+        int executionsLeft = maxSequentialToolExecutions;
         while (true) {
 
             if (executionsLeft-- == 0) {
-                throw runtime("Something is wrong, exceeded %s sequential tool executions",
-                        MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+                throw runtime("Something is wrong, exceeded %s sequential tool executions", maxSequentialToolExecutions);
             }
 
             AiMessage aiMessage = response.content();
@@ -781,6 +782,12 @@ public class AiServiceMethodImplementationSupport {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    private static int getMaxSequentialToolExecutions() {
+        return ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
+                .orElse(
+                        DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
     }
 
     public static class Input {
