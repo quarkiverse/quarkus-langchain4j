@@ -35,6 +35,30 @@ MCP server. The server will be started automatically as a subprocess using the p
 environment variables that will be passed to the subprocess. With this configuration, any
 AI Service that does not declare a specific tool provider will be wired to this one.
 
+== Logging
+
+For declaratively defined MCP clients, Quarkus overrides the default handler
+for received MCP logging messages with a handler that, apart from simply
+logging them with an application logger, produces a CDI event for each
+message. So if you need your application to react to MCP logging messages,
+you can observe these events in a CDI bean like this:
+
+[source,java]
+----
+public void onLogMessage(@Observes @McpClientName("KEY") McpLogMessage logMessage) {
+    // ...
+}
+----
+
+The `McpLogMessage` class's fully qualified name is
+`dev.langchain4j.mcp.client.logging.McpLogMessage` and it contains the log
+message as a `JsonNode`, the log level and the logger name.
+
+The optional `@McpClientName` qualifier is used to specify the name of the
+MCP client that the log message is related to. This is useful when you have
+multiple MCP clients in your application and you want to react to log
+messages from a specific one.
+
 == Configuration reference
 
 include::includes/quarkus-langchain4j-mcp.adoc[leveloffset=+1,opts=optional]

@@ -9,8 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.Assertions;
+import org.awaitility.Awaitility;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -20,10 +23,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.logging.McpLogLevel;
+import dev.langchain4j.mcp.client.logging.McpLogMessage;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -63,12 +69,12 @@ public class McpOverHttpTransportTest {
         ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
 
         // verify the list of tools
-        assertThat(toolProviderResult.tools().size()).isEqualTo(2);
+        assertThat(toolProviderResult.tools().size()).isEqualTo(3);
         Set<String> toolNames = toolProviderResult.tools().keySet().stream()
                 .map(ToolSpecification::name)
                 .collect(Collectors.toSet());
         assertThatIterable(toolNames)
-                .containsExactlyInAnyOrder("add", "longRunningOperation");
+                .containsExactlyInAnyOrder("add", "longRunningOperation", "logging");
 
         // verify the 'add' tool
         ToolSpecification addTool = findToolByName(toolProviderResult, "add");
@@ -114,6 +120,49 @@ public class McpOverHttpTransportTest {
 
         // validate the tool execution result
         assertThat(toolExecutionResultString).isEqualTo("The sum of 5 and 12 is 17.");
+    }
+
+    /**
+     * Executes a tool that sends a log message to the client. Then, after the tool finishes,
+     * the client asserts that a CDI event was fired with the log message.
+     */
+    @Test
+    public void logging() {
+        ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
+
+        // find the 'add' tool and execute it on the MCP server
+        ToolExecutor executor = toolProviderResult.tools().entrySet().stream()
+                .filter(entry -> entry.getKey().name().equals("logging"))
+                .findFirst()
+                .get()
+                .getValue();
+        ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder()
+                .name("logging")
+                .arguments("{}")
+                .build();
+        String toolExecutionResultString = executor.execute(toolExecutionRequest, null);
+        Assertions.assertThat(toolExecutionResultString).isEqualTo("OK");
+
+        // wait for the log message to be received
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).until(() -> receivedLogMessageForClient1 != null);
+        assertThat(receivedLogMessageForClient1.level()).isEqualTo(McpLogLevel.INFO);
+        assertThat(receivedLogMessageForClient1.logger()).isEqualTo("mock-mcp");
+        assertThat(receivedLogMessageForClient1.data().get("message").asText()).isEqualTo("This is a log message");
+
+        // no client named 'client2' actually exists, so just make sure that no CDI event with this qualifier
+        // was fired
+        assertThat(receivedLogMessageForClient2).isNull();
+    }
+
+    private static volatile McpLogMessage receivedLogMessageForClient1 = null;
+    private static volatile McpLogMessage receivedLogMessageForClient2 = null;
+
+    public void onLogMessageClient1(@Observes @McpClientName("client1") McpLogMessage logMessage) {
+        receivedLogMessageForClient1 = logMessage;
+    }
+
+    public void onLogMessageClient2(@Observes @McpClientName("client2") McpLogMessage logMessage) {
+        receivedLogMessageForClient2 = logMessage;
     }
 
     @Test

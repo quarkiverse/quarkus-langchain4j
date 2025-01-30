@@ -85,6 +85,17 @@ public class MockHttpMcpServer {
                       "additionalProperties": false,
                       "$schema": "http://json-schema.org/draft-07/schema#"
                     }
+                  },
+                  {
+                    "name": "logging",
+                    "description": "Sends a log message to the client and then just returns 'OK'",
+                    "inputSchema": {
+                      "type": "object",
+                      "properties": {
+                      },
+                      "additionalProperties": false,
+                      "$schema": "http://json-schema.org/draft-07/schema#"
+                    }
                   }
                 ]
               },
@@ -141,6 +152,8 @@ public class MockHttpMcpServer {
                 ensureInitialized();
                 if (message.get("params").get("name").asText().equals("add")) {
                     executeAddOperation(message, operationId);
+                } else if (message.get("params").get("name").asText().equals("logging")) {
+                    executeLoggingOperation(message, operationId);
                 } else if (message.get("params").get("name").asText().equals("longRunningOperation")) {
                     executeLongRunningOperation(message, operationId);
                 } else {
@@ -158,6 +171,46 @@ public class MockHttpMcpServer {
             }
         }
         return Response.accepted().build();
+    }
+
+    private void executeLoggingOperation(JsonNode message, String operationId) {
+        ObjectNode logData = objectMapper.createObjectNode();
+        logData.put("message", "This is a log message");
+        ObjectNode log = buildLoggingMessage(logData);
+        sink.send(sse.newEventBuilder()
+                .name("message")
+                .data(log)
+                .build());
+        ObjectNode result = buildToolResult(operationId, "OK");
+        sink.send(sse.newEventBuilder()
+                .name("message")
+                .data(result)
+                .build());
+    }
+
+    private ObjectNode buildLoggingMessage(JsonNode message) {
+        ObjectNode log = objectMapper.createObjectNode();
+        log.put("jsonrpc", "2.0");
+        log.put("method", "notifications/message");
+        ObjectNode params = objectMapper.createObjectNode();
+        log.set("params", params);
+        params.put("level", "info");
+        params.put("logger", "mock-mcp");
+        params.set("data", message);
+        return log;
+    }
+
+    private ObjectNode buildToolResult(String operationId, String result) {
+        ObjectNode resultNode = objectMapper.createObjectNode();
+        resultNode.put("id", operationId);
+        resultNode.put("jsonrpc", "2.0");
+        ObjectNode resultContent = objectMapper.createObjectNode();
+        resultNode.set("result", resultContent);
+        resultContent.putArray("content")
+                .addObject()
+                .put("type", "text")
+                .put("text", result);
+        return resultNode;
     }
 
     // throw an exception if we haven't received the 'notifications/initialized' message yet
@@ -189,18 +242,10 @@ public class MockHttpMcpServer {
     }
 
     private void executeAddOperation(JsonNode message, String operationId) {
-        ObjectNode result = objectMapper.createObjectNode();
-        result.put("id", operationId);
-        result.put("jsonrpc", "2.0");
-        ObjectNode resultContent = objectMapper.createObjectNode();
-        result.set("result", resultContent);
         int a = message.get("params").get("arguments").get("a").asInt();
         int b = message.get("params").get("arguments").get("b").asInt();
         int additionResult = a + b;
-        resultContent.putArray("content")
-                .addObject()
-                .put("type", "text")
-                .put("text", "The sum of " + a + " and " + b + " is " + additionResult + ".");
+        ObjectNode result = buildToolResult(operationId, "The sum of " + a + " and " + b + " is " + additionResult + ".");
         sink.send(sse.newEventBuilder()
                 .name("message")
                 .data(result)
@@ -210,15 +255,7 @@ public class MockHttpMcpServer {
     private void executeLongRunningOperation(JsonNode message, String operationId) {
         int duration = message.get("params").get("arguments").get("duration").asInt();
         scheduledExecutorService.schedule(() -> {
-            ObjectNode result = objectMapper.createObjectNode();
-            result.put("id", operationId);
-            result.put("jsonrpc", "2.0");
-            ObjectNode resultContent = objectMapper.createObjectNode();
-            result.set("result", resultContent);
-            resultContent.putArray("content")
-                    .addObject()
-                    .put("type", "text")
-                    .put("text", "Operation completed.");
+            ObjectNode result = buildToolResult(operationId, "Operation completed.");
             sink.send(sse.newEventBuilder()
                     .name("message")
                     .data(result)
