@@ -1,0 +1,12 @@
+name: LangChain4j Neo4j embedding store
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the Neo4j embedding store for Quarkus LangChain4j
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - neo4j
+   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+   categories:
+     - "ai"
+   status: "experimental"
