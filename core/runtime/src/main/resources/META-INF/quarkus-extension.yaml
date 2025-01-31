@@ -1,4 +1,4 @@
-name: LangChain4j
+name: LangChain4j Core
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
 description: Provides the basic integration with LangChain4j
 metadata:

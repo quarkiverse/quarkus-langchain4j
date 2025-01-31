@@ -1,4 +1,4 @@
-name: Quarkus LangChain4j pgvector embedding store
+name: LangChain4j pgvector embedding store
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
 description: Provides the pgvector Embedding store for Quarkus LangChain4j
 metadata:
