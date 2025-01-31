@@ -10,4 +10,4 @@ metadata:
    guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
    categories:
      - "ai"
-   status: "preview"
+   status: "experimental"
