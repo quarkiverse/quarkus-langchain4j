@@ -22,6 +22,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ContentType;
+import dev.langchain4j.data.message.CustomMessage;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
@@ -111,6 +112,12 @@ final class MessageMapper {
             return Message.builder()
                     .role(toOllamaRole(TOOL_EXECUTION_RESULT))
                     .content(message.text())
+                    .build();
+        }
+
+        if (message instanceof CustomMessage customMessage) {
+            return Message.builder()
+                    .additionalFields(customMessage.attributes())
                     .build();
         }
 
