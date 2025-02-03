@@ -37,10 +37,10 @@ public class SpanChatModelListener implements ChatModelListener {
 
     @Inject
     public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
-            ChatModelSpanContributor extendedSpanChatModelListener) {
+            ChatModelSpanContributor chatModelSpanContributor) {
         this.tracer = tracer;
         this.costEstimatorService = costEstimatorService;
-        this.extendedSpanChatModelListener = extendedSpanChatModelListener;
+        this.extendedSpanChatModelListener = chatModelSpanContributor;
     }
 
     @Override

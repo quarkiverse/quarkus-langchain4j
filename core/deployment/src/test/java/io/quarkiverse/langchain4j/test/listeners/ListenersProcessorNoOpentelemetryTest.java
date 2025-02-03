@@ -19,26 +19,30 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
 import io.quarkiverse.langchain4j.runtime.listeners.SpanChatModelListener;
 import io.quarkus.test.QuarkusUnitTest;
 
-class ListenersProcessorNoSpanChatModelListenerTest {
+class ListenersProcessorNoOpentelemetryTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
-                            .addClasses(AiService.class, EchoChatLanguageModelSupplier.class))
-            .setForcedDependencies(null);
+                            .addClasses(AiService.class, EchoChatLanguageModelSupplier.class));
 
     @Inject
     AiService aiService;
     @Inject
     Instance<SpanChatModelListener> spanChatModelListenerInstance;
+    @Inject
+    Instance<ChatModelSpanContributor> chatModelSpanContributorInstance;
 
     @Test
     void shouldNotHaveSpanChatModelListenerWhenNoOtel() {
         assertThat(aiService).isNotNull();
         assertThatThrownBy(spanChatModelListenerInstance::get)
+                .isInstanceOf(UnsatisfiedResolutionException.class);
+        assertThatThrownBy(chatModelSpanContributorInstance::get)
                 .isInstanceOf(UnsatisfiedResolutionException.class);
     }
 
