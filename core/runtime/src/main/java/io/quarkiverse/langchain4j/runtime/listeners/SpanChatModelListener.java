@@ -33,13 +33,14 @@ public class SpanChatModelListener implements ChatModelListener {
 
     private final Tracer tracer;
     private final CostEstimatorService costEstimatorService;
-    private final ExtendedSpanChatModelListener extendedSpanChatModelListener;
-    
+    private final ChatModelSpanContributor extendedSpanChatModelListener;
+
     @Inject
-    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService, ExtendedSpanChatModelListener extendedSpanChatModelListener) {
-            this.tracer = tracer;
-            this.costEstimatorService = costEstimatorService;
-            this.extendedSpanChatModelListener = extendedSpanChatModelListener;
+    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
+            ChatModelSpanContributor extendedSpanChatModelListener) {
+        this.tracer = tracer;
+        this.costEstimatorService = costEstimatorService;
+        this.extendedSpanChatModelListener = extendedSpanChatModelListener;
     }
 
     @Override

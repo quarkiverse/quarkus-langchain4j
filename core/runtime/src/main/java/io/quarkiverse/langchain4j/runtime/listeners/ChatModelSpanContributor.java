@@ -7,47 +7,44 @@ import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import io.opentelemetry.api.trace.Span;
 
-/** 
- * extended ChatModelListener adding possibility to add custom attributes to span
+/**
+ * Contributes custom attributes, events or other data to the spans created by {@link SpanChatModelListener}.
  */
-public interface ExtendedSpanChatModelListener {
+public interface ChatModelSpanContributor {
     /**
-     * Allowing extendes Span-Attributes {@link SpanChatModelListener} 
+     * allows custom data to be added to the span
      *
      * @param requestContext The request context. It contains the {@link ChatModelRequest} and attributes.
-     *                       The attributes can be used to pass data between methods of this listener
-     *                       or between multiple listeners.
+     *        The attributes can be used to pass data between methods of this listener
+     *        or between multiple listeners.
      * @param currentSpan Span opened by {@link SpanChatModelListener}.
      */
     default void onRequest(ChatModelRequestContext requestContext, Span currentSpan) {
-
     }
 
     /**
-     * Allowing extendes Span-Attributes {@link SpanChatModelListener} 
+     * allows custom data to be added to the span
      *
      * @param responseContext The response context.
-     *                        It contains {@link ChatModelResponse}, corresponding {@link ChatModelRequest} and attributes.
-     *                        The attributes can be used to pass data between methods of this listener
-     *                        or between multiple listeners.
+     *        It contains {@link ChatModelResponse}, corresponding {@link ChatModelRequest} and attributes.
+     *        The attributes can be used to pass data between methods of this listener
+     *        or between multiple listeners.
      * @param currentSpan Span opened by {@link SpanChatModelListener}.
      */
     default void onResponse(ChatModelResponseContext responseContext, Span currentSpan) {
-
     }
 
     /**
-     * Allowing extendes Span-Attributes {@link SpanChatModelListener} 
+     * allows custom data to be added to the span
      *
      * @param errorContext The error context.
-     *                     It contains the error, corresponding {@link ChatModelRequest},
-     *                     partial {@link ChatModelResponse} (if available) and attributes.
-     *                     The attributes can be used to pass data between methods of this listener
-     *                     or between multiple listeners.
+     *        It contains the error, corresponding {@link ChatModelRequest},
+     *        partial {@link ChatModelResponse} (if available) and attributes.
+     *        The attributes can be used to pass data between methods of this listener
+     *        or between multiple listeners.
      * @param currentSpan Span opened by {@link SpanChatModelListener}.
      */
     default void onError(ChatModelErrorContext errorContext, Span currentSpan) {
-
     }
-    
+
 }
