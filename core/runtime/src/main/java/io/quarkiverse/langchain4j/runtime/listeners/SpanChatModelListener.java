@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime.listeners;
 
+import java.util.List;
 import java.util.Map;
 
 import jakarta.inject.Inject;
@@ -18,6 +19,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.quarkiverse.langchain4j.cost.Cost;
 import io.quarkiverse.langchain4j.cost.CostEstimatorService;
+import io.quarkus.arc.All;
 
 /**
  * Creates a span that follows the
@@ -33,11 +35,14 @@ public class SpanChatModelListener implements ChatModelListener {
 
     private final Tracer tracer;
     private final CostEstimatorService costEstimatorService;
+    private final List<ChatModelSpanContributor> chatModelSpanContributors;
 
     @Inject
-    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService) {
+    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
+            @All List<ChatModelSpanContributor> chatModelSpanContributors) {
         this.tracer = tracer;
         this.costEstimatorService = costEstimatorService;
+        this.chatModelSpanContributors = chatModelSpanContributors;
     }
 
     @Override
@@ -53,6 +58,7 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = requestContext.attributes();
         attributes.put(OTEL_SCOPE_KEY_NAME, scope);
         attributes.put(OTEL_SPAN_KEY_NAME, span);
+        notifyContributorsOnRequest(requestContext, span);
     }
 
     @Override
@@ -78,6 +84,7 @@ public class SpanChatModelListener implements ChatModelListener {
                     span.setAttribute("gen_ai.client.estimated_cost", costEstimate.toString());
                 }
             }
+            notifyContributorsOnResponse(responseContext, span);
             span.end();
         } else {
             // should never happen
@@ -92,6 +99,8 @@ public class SpanChatModelListener implements ChatModelListener {
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
             span.recordException(errorContext.error());
+            notifyContributorsOnError(errorContext, span);
+            span.end();
         } else {
             // should never happen
             log.warn("No Span found in response");
@@ -111,5 +120,40 @@ public class SpanChatModelListener implements ChatModelListener {
                 log.warn("Error closing scope", e);
             }
         }
+    }
+
+    private void notifyContributorsOnRequest(ChatModelRequestContext requestContext, Span span) {
+        for (ChatModelSpanContributor contributor : chatModelSpanContributors) {
+            try {
+                contributor.onRequest(requestContext, span);
+            } catch (Exception ex) {
+                recordLogAndSwallow(span, ex);
+            }
+        }
+    }
+
+    private void notifyContributorsOnResponse(ChatModelResponseContext responseContext, Span span) {
+        for (ChatModelSpanContributor contributor : chatModelSpanContributors) {
+            try {
+                contributor.onResponse(responseContext, span);
+            } catch (Exception ex) {
+                recordLogAndSwallow(span, ex);
+            }
+        }
+    }
+
+    private void notifyContributorsOnError(ChatModelErrorContext errorContext, Span span) {
+        for (ChatModelSpanContributor contributor : chatModelSpanContributors) {
+            try {
+                contributor.onError(errorContext, span);
+            } catch (Exception ex) {
+                recordLogAndSwallow(span, ex);
+            }
+        }
+    }
+
+    private void recordLogAndSwallow(Span span, Exception ex) {
+        span.recordException(ex);
+        log.warn("failure on contributor", ex);
     }
 }
