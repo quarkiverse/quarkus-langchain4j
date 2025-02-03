@@ -33,11 +33,14 @@ public class SpanChatModelListener implements ChatModelListener {
 
     private final Tracer tracer;
     private final CostEstimatorService costEstimatorService;
+    private final ChatModelSpanContributor extendedSpanChatModelListener;
 
     @Inject
-    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService) {
+    public SpanChatModelListener(Tracer tracer, CostEstimatorService costEstimatorService,
+            ChatModelSpanContributor chatModelSpanContributor) {
         this.tracer = tracer;
         this.costEstimatorService = costEstimatorService;
+        this.extendedSpanChatModelListener = chatModelSpanContributor;
     }
 
     @Override
@@ -53,6 +56,7 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = requestContext.attributes();
         attributes.put(OTEL_SCOPE_KEY_NAME, scope);
         attributes.put(OTEL_SPAN_KEY_NAME, span);
+        extendedSpanChatModelListener.onRequest(requestContext, span);
     }
 
     @Override
@@ -78,6 +82,7 @@ public class SpanChatModelListener implements ChatModelListener {
                     span.setAttribute("gen_ai.client.estimated_cost", costEstimate.toString());
                 }
             }
+            extendedSpanChatModelListener.onResponse(responseContext, span);
             span.end();
         } else {
             // should never happen
@@ -91,6 +96,7 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = errorContext.attributes();
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
+            extendedSpanChatModelListener.onError(errorContext, span);
             span.recordException(errorContext.error());
         } else {
             // should never happen
