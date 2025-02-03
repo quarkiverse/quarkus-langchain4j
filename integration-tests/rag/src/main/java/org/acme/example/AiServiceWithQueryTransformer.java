@@ -34,7 +34,7 @@ public interface AiServiceWithQueryTransformer {
                         @Override
                         public List<Content> retrieve(Query query) {
                             if (query.text().equals("hello")) {
-                                return Collections.singletonList(new Content("The transformer works!"));
+                                return Collections.singletonList(Content.from("The transformer works!"));
                             } else {
                                 return Collections.emptyList();
                             }

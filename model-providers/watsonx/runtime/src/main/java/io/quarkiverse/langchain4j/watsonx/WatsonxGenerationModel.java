@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx;
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 import static java.util.stream.Collectors.joining;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +22,7 @@ import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -74,8 +76,13 @@ public class WatsonxGenerationModel extends Watsonx
     }
 
     @Override
+    public List<ChatModelListener> listeners() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public ChatRequestParameters defaultRequestParameters() {
-        return null;
+        return ChatRequestParameters.builder().build();
     }
 
     @Override

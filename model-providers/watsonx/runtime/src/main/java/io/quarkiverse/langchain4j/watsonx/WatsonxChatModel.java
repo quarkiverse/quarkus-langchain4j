@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx;
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,7 @@ import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -284,8 +286,13 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
     }
 
     @Override
+    public List<ChatModelListener> listeners() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public ChatRequestParameters defaultRequestParameters() {
-        return null;
+        return ChatRequestParameters.builder().build();
     }
 
     @Override

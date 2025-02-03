@@ -7,9 +7,9 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.exception.IllegalConfigurationException;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class NoModelProvidedTest {

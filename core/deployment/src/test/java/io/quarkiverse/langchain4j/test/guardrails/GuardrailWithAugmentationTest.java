@@ -214,7 +214,7 @@ public class GuardrailWithAugmentationTest {
 
                 @Override
                 public AugmentationResult augment(AugmentationRequest augmentationRequest) {
-                    List<Content> content = List.of(new Content("content1"), new Content("content2"));
+                    List<Content> content = List.of(Content.from("content1"), Content.from("content2"));
                     return new AugmentationResult(dev.langchain4j.data.message.UserMessage.userMessage("augmented"), content);
                 }
             };
