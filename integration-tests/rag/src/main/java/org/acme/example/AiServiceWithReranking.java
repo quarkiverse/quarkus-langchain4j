@@ -29,8 +29,8 @@ public interface AiServiceWithReranking {
             @Override
             public List<Content> retrieve(Query query) {
                 if (query.text().equals("What is the fastest car?")) {
-                    return List.of(new Content("Ferrari goes 350"),
-                            new Content("Bugatti goes 450"));
+                    return List.of(Content.from("Ferrari goes 350"),
+                            Content.from("Bugatti goes 450"));
                 } else {
                     throw new UnsupportedOperationException();
                 }

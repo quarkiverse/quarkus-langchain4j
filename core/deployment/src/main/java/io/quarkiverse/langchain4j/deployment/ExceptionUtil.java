@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
+import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
 import org.jboss.jandex.MethodInfo;
 
-import dev.langchain4j.exception.IllegalConfigurationException;
+import dev.langchain4j.service.IllegalConfigurationException;
 
 class ExceptionUtil {
 

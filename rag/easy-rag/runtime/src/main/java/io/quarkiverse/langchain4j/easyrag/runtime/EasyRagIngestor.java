@@ -83,7 +83,7 @@ public class EasyRagIngestor {
         List<Document> splitDocuments = documentSplitter
                 .splitAll(documents)
                 .stream()
-                .map(split -> new Document(split.text()))
+                .map(split -> Document.document(split.text()))
                 .toList();
 
         EmbeddingStoreIngestor.builder()

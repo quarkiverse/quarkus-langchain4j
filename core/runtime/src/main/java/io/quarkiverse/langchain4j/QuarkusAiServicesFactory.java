@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j;
 
-import static dev.langchain4j.exception.IllegalConfigurationException.illegalConfiguration;
+import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collection;
