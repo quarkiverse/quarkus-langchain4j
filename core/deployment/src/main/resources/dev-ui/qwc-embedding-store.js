@@ -47,10 +47,15 @@ export class QwcEmbeddingStore extends LitElement {
                 <h3>Search for relevant embeddings</h3>
                 <vaadin-text-area id="search-text" label="Search text" required min-length="1"></vaadin-text-area><br/>
                 <vaadin-text-field id="search-limit" label="Limit" value="10" required min-length="1"></vaadin-text-field><br/>
-                <vaadin-button @click=${() => this._findRelevant(
-                        this.shadowRoot.getElementById('search-text').value,
-                        this.shadowRoot.getElementById('search-limit').value
-                )}>Search</vaadin-button><br/>
+                <vaadin-button @click=${() => {
+                    if(this.shadowRoot.getElementById('search-text').validate() &&
+                        this.shadowRoot.getElementById('search-limit').validate()) {
+                        this._findRelevant(
+                            this.shadowRoot.getElementById('search-text').value,
+                            this.shadowRoot.getElementById('search-limit').value);
+                    }
+                }}>Search
+                </vaadin-button><br/>
                 ${this._relevantEmbeddingsOutput}
             `;
     }
