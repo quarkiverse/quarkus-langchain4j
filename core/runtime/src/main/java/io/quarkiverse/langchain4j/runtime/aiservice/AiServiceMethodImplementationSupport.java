@@ -178,15 +178,15 @@ public class AiServiceMethodImplementationSupport {
         boolean hasMethodSpecificTools = methodCreateInfo.getToolClassNames() != null
                 && !methodCreateInfo.getToolClassNames().isEmpty();
         List<ToolSpecification> toolSpecifications = hasMethodSpecificTools ? methodCreateInfo.getToolSpecifications()
-                : context.toolSpecifications;
+                : context.toolService.toolSpecifications();
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
-                : context.toolExecutors;
+                : context.toolService.toolExecutors();
 
-        if (context.toolProvider != null) {
+        if (context.toolService.toolProvider() != null) {
             toolSpecifications = new ArrayList<>();
             toolExecutors = new HashMap<>();
             ToolProviderRequest request = new ToolProviderRequest(memoryId, userMessage);
-            ToolProviderResult result = context.toolProvider.provideTools(request);
+            ToolProviderResult result = context.toolService.toolProvider().provideTools(request);
             for (ToolSpecification specification : result.tools().keySet()) {
                 toolSpecifications.add(specification);
                 toolExecutors.put(specification.name(), result.tools().get(specification));

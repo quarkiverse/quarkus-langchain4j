@@ -2,10 +2,7 @@ package io.quarkiverse.langchain4j;
 
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
@@ -42,10 +39,10 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         }
 
         @Override
-        public AiServices<T> tools(List<Object> objectsWithTools) {
-            context.toolSpecifications = new ArrayList<>();
-            context.toolExecutors = new HashMap<>();
-            ToolsRecorder.populateToolMetadata(objectsWithTools, context.toolSpecifications, context.toolExecutors);
+        public AiServices<T> tools(Collection<Object> objectsWithTools) {
+            context.toolService.tools(objectsWithTools);
+            ToolsRecorder.populateToolMetadata(objectsWithTools, context.toolService.toolSpecifications(),
+                    context.toolService.toolExecutors());
             return this;
         }
 
