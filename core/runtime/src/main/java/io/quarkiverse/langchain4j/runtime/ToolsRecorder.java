@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.runtime;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class ToolsRecorder {
         metadata.clear();
     }
 
-    public static void populateToolMetadata(List<Object> objectsWithTools, List<ToolSpecification> toolSpecifications,
+    public static void populateToolMetadata(Collection<Object> objectsWithTools, List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors) {
         for (Object objectWithTool : objectsWithTools) {
             List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.fromObject(objectWithTool);
