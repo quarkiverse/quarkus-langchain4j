@@ -66,6 +66,11 @@
         <artifactId>quarkus-extension-processor</artifactId>
         <version>${quarkus.extension-processor.version}</version>
       </dependency>
+      <dependency>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-sdk-testing</artifactId>
+          <version>1.46.0</version>
+      </dependency>      
     </dependencies>
   </dependencyManagement>
   <build>

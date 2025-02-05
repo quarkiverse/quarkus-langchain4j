@@ -32,9 +32,8 @@ Once registered, you can inject the _AI Service_ into your application:
 The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory,memory>> objects.
 This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (WebSocket support is expected to improve in the near future).
 For example when using a service in a CLI, it makes sense to have the service be `@ApplicationScoped` and the extension allows this simply if the service is annotated with `@ApplicationScoped`.
-====
 
-== AI method declaration
+=== AI method declaration
 
 Within the interface annotated with `@RegisterAiService`, you model interactions with the LLM using _methods_. These methods accept parameters and are annotated with `@SystemMessage` and `@UserMessage` to define instructions directed to the LLM:
 
@@ -341,7 +340,7 @@ Observability is built into services created via `@RegisterAiService` and is pro
 
 * Metrics are enabled when `quarkus-micrometer` is part of the application
 * Traces are enabled when `quarkus-opentelemetry` is part of the application
-
+  
 === Metrics
 
 Each AI method is automatically timed and the timer data is available using the `langchain4j.aiservices.$interface_name.$method_name` template for the name.
@@ -443,6 +442,32 @@ image::trace.png[width=1000,align="center"]
 In the trace above we can see the parent span which corresponds to the handling the GET HTTP request, but the real
 interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
 The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
+
+==== Custom span data
+if you have the need for custom span data, you can simply add a bean implemtenting `ChatModelSpanContributor`.
+[source,java]
+----
+import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
+import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
+import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import io.opentelemetry.api.trace.Span;
+
+@ApplicationScoped
+public class CustomSpanDataContributor implements ChatModelSpanContributor {
+    public void onRequest(ChatModelRequestContext requestContext, Span currentSpan) {
+        span.addAttribute("example", "request");
+    }
+
+    public void onResponse(ChatModelResponseContext responseContext, Span currentSpan) {
+        span.addAttribute("example", "response");
+    }
+
+    default void onError(ChatModelErrorContext errorContext, Span currentSpan) {
+        span.addAttribute("example", "failure");
+    }
+}
+----
 
 === Auditing
 
