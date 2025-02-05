@@ -28,7 +28,7 @@ public class DocumentCreationExample {
             content.append(columnName).append(": ").append(value).append(", ");
         }
         // The \n is added to the end of the content
-        return new Document(content.append("\n").toString(), Metadata.from(metadata));
+        return Document.from(content.append("\n").toString(), Metadata.from(metadata));
     }
 
 }
