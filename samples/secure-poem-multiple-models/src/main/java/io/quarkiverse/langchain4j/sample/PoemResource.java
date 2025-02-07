@@ -15,7 +15,7 @@ import jakarta.ws.rs.Path;
 public class PoemResource {
 
     static final String USER_MESSAGE = """
-            Write a short 1 paragraph poem about Java programming language.
+            Write a short 1 paragraph poem about a Java programming language feature preferred by the user.
             Set an author name to the model or deployment name which created the poem.
             Please start by greeting the currently logged in user and asking to enjoy reading the poem, address this user by name.""";
 
@@ -61,5 +61,9 @@ public class PoemResource {
             return identity.getPrincipal().getName();
         }
         
+        @Tool("Returns the Java programming language feature preferred by the user")
+        public String getPreferredJavaFeature() {
+            return "record";
+        }
     }
 }
