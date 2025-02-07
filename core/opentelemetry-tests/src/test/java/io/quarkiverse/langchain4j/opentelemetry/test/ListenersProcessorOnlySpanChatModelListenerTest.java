@@ -1,13 +1,10 @@
-package io.quarkiverse.langchain4j.test.listeners;
+package io.quarkiverse.langchain4j.opentelemetry.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.test.QuarkusUnitTest;
 
 class ListenersProcessorOnlySpanChatModelListenerTest
@@ -15,9 +12,7 @@ class ListenersProcessorOnlySpanChatModelListenerTest
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    ListenersProcessorAbstractSpanChatModelListenerTest::appWithInMemorySpanExporter)
-            .setForcedDependencies(
-                    List.of(Dependency.of("io.quarkus", "quarkus-opentelemetry", "3.15.2")));
+                    ListenersProcessorAbstractSpanChatModelListenerTest::appWithInMemorySpanExporter);
 
     @Test
     void shouldHaveSpanChatModelListenerWithoutContributors() {

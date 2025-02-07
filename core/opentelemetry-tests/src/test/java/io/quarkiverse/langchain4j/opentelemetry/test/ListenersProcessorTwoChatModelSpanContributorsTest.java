@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.test.listeners;
+package io.quarkiverse.langchain4j.opentelemetry.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,7 +24,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.internal.data.ExceptionEventData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
-import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.test.QuarkusUnitTest;
 
 class ListenersProcessorTwoChatModelSpanContributorsTest
@@ -36,9 +34,7 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
                     () -> appWithInMemorySpanExporter()
                             .addClasses(
                                     FirstChatModelSpanContributor.class,
-                                    SecondChatModelSpanContributor.class))
-            .setForcedDependencies(
-                    List.of(Dependency.of("io.quarkus", "quarkus-opentelemetry", "3.15.2")));
+                                    SecondChatModelSpanContributor.class));
 
     static BiConsumer<ChatModelRequestContext, Span> onRequest;
     static BiConsumer<ChatModelResponseContext, Span> onResponse;
