@@ -1,8 +1,6 @@
-package io.quarkiverse.langchain4j.test.listeners;
+package io.quarkiverse.langchain4j.opentelemetry.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -16,7 +14,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
-import io.quarkus.maven.dependency.Dependency;
 import io.quarkus.test.QuarkusUnitTest;
 
 class ListenersProcessorSingleChatModelSpanContributorTest
@@ -24,9 +21,7 @@ class ListenersProcessorSingleChatModelSpanContributorTest
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> appWithInMemorySpanExporter().addClasses(TestChatModelSpanContributor.class))
-            .setForcedDependencies(
-                    List.of(Dependency.of("io.quarkus", "quarkus-opentelemetry", "3.15.2")));
+                    () -> appWithInMemorySpanExporter().addClasses(TestChatModelSpanContributor.class));
 
     @Test
     void shouldHaveSpanChatModelListenerWitContributor() {

@@ -112,21 +112,6 @@
             <artifactId>quarkus-test-vertx</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.opentelemetry.instrumentation</groupId>
-            <artifactId>opentelemetry-instrumentation-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>opentelemetry-sdk-testing</artifactId>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
-            <scope>test</scope>
-        </dependency>        
     </dependencies>
     <build>
         <plugins>

@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.test.listeners;
+package io.quarkiverse.langchain4j.opentelemetry.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;

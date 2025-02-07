@@ -14,6 +14,7 @@
         <module>deployment</module>
         <module>runtime</module>
         <module>runtime-spi</module>
+        <module>opentelemetry-tests</module>
     </modules>
     
 </project>
