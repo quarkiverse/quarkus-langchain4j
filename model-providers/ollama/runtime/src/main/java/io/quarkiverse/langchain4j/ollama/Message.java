@@ -1,8 +1,19 @@
 package io.quarkiverse.langchain4j.ollama;
 
 import java.util.List;
+import java.util.Map;
 
-public record Message(Role role, String content, List<ToolCall> toolCalls, List<String> images) {
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public record Message(Role role, String content, List<ToolCall> toolCalls, List<String> images,
+        @JsonIgnore Map<String, Object> additionalFields) {
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalFields() {
+        return additionalFields;
+    }
 
     public static Builder builder() {
         return new Builder();
@@ -13,6 +24,7 @@ public record Message(Role role, String content, List<ToolCall> toolCalls, List<
         private String content;
         private List<ToolCall> toolCalls;
         private List<String> images;
+        private Map<String, Object> additionalFields;
 
         public Builder role(Role role) {
             this.role = role;
@@ -34,8 +46,14 @@ public record Message(Role role, String content, List<ToolCall> toolCalls, List<
             return this;
         }
 
+        @JsonAnySetter
+        public Builder additionalFields(Map<String, Object> additionalFields) {
+            this.additionalFields = additionalFields;
+            return this;
+        }
+
         public Message build() {
-            return new Message(role, content, toolCalls, images);
+            return new Message(role, content, toolCalls, images, additionalFields);
         }
     }
 

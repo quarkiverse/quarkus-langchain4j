@@ -38,7 +38,7 @@ public class ChatMessageTemplateExtension {
                         joiner.add("%s%s".formatted(assistantPrefix, aiMessage.text()));
                 }
                 case USER -> joiner.add("%s%s".formatted(userPrefix, chatMessage.text()));
-                case SYSTEM, TOOL_EXECUTION_RESULT -> {
+                case SYSTEM, TOOL_EXECUTION_RESULT, CUSTOM -> {
                     continue;
                 }
                 default -> {
