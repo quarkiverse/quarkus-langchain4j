@@ -18,6 +18,7 @@
         <module>google/vertex-ai</module>
         <module>google/vertex-ai-gemini</module>
         <module>hugging-face</module>
+        <module>jaxrs-client</module>
         <module>mistral</module>
         <module>ollama</module>
         <module>openai/azure-openai</module>
