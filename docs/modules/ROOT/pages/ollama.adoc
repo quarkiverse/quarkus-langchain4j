@@ -99,56 +99,24 @@ If no other LLM extension is installed, retrieve the embedding model as follows:
 
 == Dynamic Authorization Headers
 
-There are cases where one may need to provide dynamic authorization headers, to be passed to Ollama endpoints
-
-There are two ways to achieve this:
-
-=== Using a ContainerRequestFilter annotated with `@Provider`.
-As the underlying HTTP communication relies on the Quarkus Rest Client, it is possible to apply a filter that will be called in all OpenAI requests and set the headers accordingly.
+There are cases where one may need to provide dynamic authorization headers, to be passed to Ollama endpoints.
+These cases can be covered by implementing the `ModelAuthProvider` interface and making the implementation(s) a CDI bean(s).
 
 [source,java]
 ----
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.ext.Provider;
-import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
-import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
-
-@Provider
-@ApplicationScoped
-public class RequestFilter implements ResteasyReactiveClientRequestFilter {
-
-    @Inject
-    MyAuthorizationService myAuthorizationService;
-
-    @Override
-    public void filter(ResteasyReactiveClientRequestContext requestContext) {
-        /*
-         * All requests will be filtered here, therefore make sure that you make
-         * the necessary checks to avoid putting the Authorization header in
-         * requests that do not need it.
-         */
-        requestContext.getHeaders().putSingle("Authorization", ...);
-    }
-}
-----
-
-=== Using `AuthProvider`
-An even simpler approach consists of implementing the `ModelAuthProvider` interface and provide the implementation of the `getAuthorization` method.
-
-This is useful when you need to provide different authorization headers for different OpenAI models. The `@ModelName` annotation can be used to specify the model name in this scenario.
-
-[source,java]
-----
-import io.quarkiverse.langchain4j.ModelName;
+//import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 @ApplicationScoped
-@ModelName("my-model-name") //you can omit this if you have only one model or if you want to use the default model
+// @ModelName("my-model-name") // if the ModelAuthProvider is going to apply to the default Ollama configuration, leave this uncommented.
 public class TestClass implements ModelAuthProvider {
-    @Inject MyTokenProviderService tokenProviderService;
+    private final MyTokenProviderService tokenProviderService;
+
+    public TestClass(MyTokenProviderService tokenProviderService) {
+        this.tokenProviderService = tokenProviderService;
+    }
 
     @Override
     public String getAuthorization(Input input) {

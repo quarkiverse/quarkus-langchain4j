@@ -36,7 +36,7 @@ public class OllamaClient {
 
             Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider.resolve(configName);
             if (maybeModelAuthProvider.isPresent()) {
-                builder.register(new OllamaRestApi.OllamaRestAPIFilter(maybeModelAuthProvider.get()));
+                builder.register(new OllamaModelAuthProviderFilter(maybeModelAuthProvider.get()));
             }
             Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current().select(TlsConfigurationRegistry.class);
             if (tlsConfigurationRegistry.isResolvable()) {
