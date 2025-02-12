@@ -17,7 +17,7 @@ class OllamaRestApiFilterTest {
     private ModelAuthProvider authProvider;
     private ClientRequestContext context;
     private MultivaluedHashMap<Object, Object> headers;
-    private OllamaRestApi.OllamaRestAPIFilter ollamaRestApiFilter;
+    private OllamaModelAuthProviderFilter ollamaRestApiFilter;
 
     @BeforeEach
     void setUpFilter() {
@@ -27,7 +27,7 @@ class OllamaRestApiFilterTest {
 
         authProvider = mock(ModelAuthProvider.class);
 
-        ollamaRestApiFilter = new OllamaRestApi.OllamaRestAPIFilter(authProvider);
+        ollamaRestApiFilter = new OllamaModelAuthProviderFilter(authProvider);
     }
 
     @Test
