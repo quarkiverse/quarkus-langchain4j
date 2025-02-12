@@ -138,12 +138,12 @@ Alternatively, samples can be loaded from a YAML file using the `@SampleLocation
 - name: Sample1
   parameters:
     - "parameter1"
-  expectedOutput: "expected1"
+  expected-output: "expected1"
   tags: ["tag1"]
 - name: Sample2
   parameters:
     - "parameter2"
-  expectedOutput: "expected2"
+  expected-output: "expected2"
   tags: ["tag1"]
 ----
 
@@ -368,12 +368,12 @@ You can load samples directly from a YAML file using the `@SampleLocation` annot
 - name: Sample1
   parameters:
    - "value1"
-  expectedOutput: "expected1"
+  expected-output: "expected1"
   tags: ["tag1"]
 - name: Sample2
   parameters:
     - "value2"
-  expectedOutput: "expected2"
+  expected-output: "expected2"
   tags: ["tag2"]
 ----
 
