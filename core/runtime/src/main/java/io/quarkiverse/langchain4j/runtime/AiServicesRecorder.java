@@ -14,14 +14,12 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.retriever.Retriever;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -212,11 +210,6 @@ public class AiServicesRecorder {
                                     .getConstructor().newInstance();
                             quarkusAiServices.chatMemoryProvider(supplier.get());
                         }
-                    }
-
-                    if (info.retrieverClassName() != null) {
-                        quarkusAiServices.retriever((Retriever<TextSegment>) creationalContext.getInjectedReference(
-                                Thread.currentThread().getContextClassLoader().loadClass(info.retrieverClassName())));
                     }
 
                     if (info.retrievalAugmentorSupplierClassName() != null) {

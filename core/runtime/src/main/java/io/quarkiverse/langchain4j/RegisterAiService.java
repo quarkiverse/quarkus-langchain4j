@@ -103,15 +103,6 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ChatMemoryProvider>> chatMemoryProviderSupplier() default BeanChatMemoryProviderSupplier.class;
 
     /**
-     * Configures the way to obtain the {@link Retriever} to use (when using RAG).
-     * By default, no retriever is used.
-     *
-     * @deprecated Use retrievalAugmentor instead
-     */
-    @Deprecated(forRemoval = true)
-    Class<? extends Retriever<TextSegment>> retriever() default NoRetriever.class;
-
-    /**
      * Configures the way to obtain the {@link RetrievalAugmentor} to use
      * (when using RAG). The Supplier may or may not be a CDI bean (but most
      * typically it will, so consider adding a bean-defining annotation to

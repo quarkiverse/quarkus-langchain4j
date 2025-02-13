@@ -6,7 +6,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.INPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
@@ -294,15 +293,6 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName retrieverClassDotName = null;
-            AnnotationValue retrieverValue = instance.value("retriever");
-            if (retrieverValue != null) {
-                retrieverClassDotName = retrieverValue.asClass().name();
-                if (NO_RETRIEVER.equals(retrieverClassDotName)) {
-                    retrieverClassDotName = null;
-                }
-            }
-
             boolean customRetrievalAugmentorSupplierClassIsABean = false;
             DotName retrievalAugmentorSupplierClassName = BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
             AnnotationValue retrievalAugmentorSupplierValue = instance.value("retrievalAugmentor");
@@ -321,14 +311,6 @@ public class AiServicesProcessor {
                         validateSupplierAndRegisterForReflection(retrievalAugmentorSupplierClassName, index,
                                 reflectiveClassProducer);
                     }
-                }
-            }
-
-            if (retrieverClassDotName != null && retrievalAugmentorSupplierClassName != null) {
-                if (!retrievalAugmentorSupplierClassName.equals(BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER)) {
-                    throw new IllegalConfigurationException("Both 'retriever' and 'retrievalAugmentor' are set for "
-                            + declarativeAiServiceClassInfo.name().toString()
-                            + ". Only one of them can be set.");
                 }
             }
 
@@ -413,7 +395,6 @@ public class AiServicesProcessor {
                             streamingChatLanguageModelSupplierClassDotName,
                             toolClassInfos,
                             chatMemoryProviderSupplierClassDotName,
-                            retrieverClassDotName,
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             auditServiceSupplierClassName,
@@ -560,10 +541,6 @@ public class AiServicesProcessor {
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
                     : null;
 
-            String retrieverClassName = bi.getRetrieverClassDotName() != null
-                    ? bi.getRetrieverClassDotName().toString()
-                    : null;
-
             String retrievalAugmentorSupplierClassName = bi.getRetrievalAugmentorSupplierClassDotName() != null
                     ? bi.getRetrievalAugmentorSupplierClassDotName().toString()
                     : null;
@@ -642,7 +619,7 @@ public class AiServicesProcessor {
                                     streamingChatLanguageModelSupplierClassName,
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
-                                    chatMemoryProviderSupplierClassName, retrieverClassName,
+                                    chatMemoryProviderSupplierClassName,
                                     retrievalAugmentorSupplierClassName,
                                     auditServiceClassSupplierName,
                                     moderationModelSupplierClassName,
@@ -697,11 +674,6 @@ public class AiServicesProcessor {
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
-            }
-
-            if (retrieverClassName != null) {
-                configurator.addInjectionPoint(ClassType.create(retrieverClassName));
-                needsRetrieverBean = true;
             }
 
             if (LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER.toString()
