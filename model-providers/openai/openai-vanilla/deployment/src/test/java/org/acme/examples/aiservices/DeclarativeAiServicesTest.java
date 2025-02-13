@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,14 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.retriever.Retriever;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -102,16 +107,40 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertSingleRequestMessage(getRequestAsMap(), "Tell me a joke about developers");
     }
 
-    @Singleton
-    public static class DummyRetriever implements Retriever<TextSegment> {
+    public static class DummyRetriever implements RetrievalAugmentor {
 
         @Override
-        public List<TextSegment> findRelevant(String text) {
-            return List.of(TextSegment.from("dummy"));
+        public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+            ChatMessage chatMessage = augmentationRequest.chatMessage();
+            if (chatMessage instanceof dev.langchain4j.data.message.UserMessage userMessage) {
+                Content content = userMessage.contents().get(0);
+                if (content instanceof TextContent textContent) {
+                    return new AugmentationResult(new dev.langchain4j.data.message.UserMessage(
+                            textContent.text() + "\n\nAnswer using the following information:\ndummy"),
+                            Collections.emptyList());
+                }
+
+            }
+            return new AugmentationResult(augmentationRequest.chatMessage(), Collections.emptyList());
+        }
+
+        @Override
+        public dev.langchain4j.data.message.UserMessage augment(dev.langchain4j.data.message.UserMessage userMessage,
+                Metadata metadata) {
+            AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
+            return (dev.langchain4j.data.message.UserMessage) augment(augmentationRequest).chatMessage();
+        }
+
+        public static class Supplier implements java.util.function.Supplier<RetrievalAugmentor> {
+
+            @Override
+            public RetrievalAugmentor get() {
+                return new DummyRetriever();
+            }
         }
     }
 
-    @RegisterAiService(retriever = DummyRetriever.class)
+    @RegisterAiService(retrievalAugmentor = DummyRetriever.Supplier.class)
     interface AssistantWithRetriever {
 
         String chat(String message);

@@ -20,7 +20,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName toolProviderClassDotName;
 
     private final DotName chatMemoryProviderSupplierClassDotName;
-    private final DotName retrieverClassDotName;
     private final DotName retrievalAugmentorSupplierClassDotName;
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
     private final DotName auditServiceClassSupplierDotName;
@@ -39,7 +38,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName streamingChatLanguageModelSupplierClassDotName,
             List<ClassInfo> toolClassInfos,
             DotName chatMemoryProviderSupplierClassDotName,
-            DotName retrieverClassDotName,
             DotName retrievalAugmentorSupplierClassDotName,
             boolean customRetrievalAugmentorSupplierClassIsABean,
             DotName auditServiceClassSupplierDotName,
@@ -57,7 +55,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
         this.toolClassInfos = toolClassInfos;
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
-        this.retrieverClassDotName = retrieverClassDotName;
         this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
         this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
@@ -90,10 +87,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getChatMemoryProviderSupplierClassDotName() {
         return chatMemoryProviderSupplierClassDotName;
-    }
-
-    public DotName getRetrieverClassDotName() {
-        return retrieverClassDotName;
     }
 
     public DotName getRetrievalAugmentorSupplierClassDotName() {
