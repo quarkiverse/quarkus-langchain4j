@@ -33,7 +33,6 @@ import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
-import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
@@ -90,11 +89,6 @@ public class LangChain4jDotNames {
 
     static final DotName NO_RETRIEVAL_AUGMENTOR_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoRetrievalAugmentorSupplier.class);
-
-    static final DotName AUDIT_SERVICE = DotName.createSimple(AuditService.class);
-
-    static final DotName BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER = DotName.createSimple(
-            RegisterAiService.BeanIfExistsAuditServiceSupplier.class);
 
     static final DotName BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsModerationModelSupplier.class);

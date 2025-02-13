@@ -69,8 +69,12 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
-import io.quarkiverse.langchain4j.audit.Audit;
-import io.quarkiverse.langchain4j.audit.AuditService;
+import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
+import io.quarkiverse.langchain4j.audit.InitialMessagesCreatedEvent;
+import io.quarkiverse.langchain4j.audit.LLMInteractionCompleteEvent;
+import io.quarkiverse.langchain4j.audit.LLMInteractionFailureEvent;
+import io.quarkiverse.langchain4j.audit.ResponseFromLLMReceivedEvent;
+import io.quarkiverse.langchain4j.audit.ToolExecutedEvent;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
@@ -79,6 +83,7 @@ import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.quarkus.arc.Arc;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -127,32 +132,27 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
 
-        AuditService auditService = context.auditService;
-        Audit audit = null;
-        if (auditService != null) {
-            audit = auditService.create(new Audit.CreateInfo(createInfo.getInterfaceName(), createInfo.getMethodName(),
-                    methodArgs, createInfo.getMemoryIdParamPosition()));
-        }
+        var auditSourceInfo = new AuditSourceInfoImpl(createInfo, methodArgs);
+        var beanManager = Arc.container().beanManager();
 
         // TODO: add validation
         try {
-            var result = doImplement(createInfo, methodArgs, context, audit);
-            if (audit != null) {
-                audit.onCompletion(result);
-                auditService.complete(audit);
-            }
+            var result = doImplement(createInfo, methodArgs, context, auditSourceInfo);
+
+            beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
+                    .fire(new LLMInteractionCompleteEvent(auditSourceInfo, result));
+
             return result;
         } catch (Exception e) {
-            if (audit != null) {
-                audit.onFailure(e);
-                auditService.complete(audit);
-            }
+            beanManager.getEvent().select(LLMInteractionFailureEvent.class)
+                    .fire(new LLMInteractionFailureEvent(auditSourceInfo, e));
+
             throw e;
         }
     }
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
-            QuarkusAiServiceContext context, Audit audit) {
+            QuarkusAiServiceContext context, AuditSourceInfo auditSourceInfo) {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
@@ -165,13 +165,13 @@ public class AiServiceMethodImplementationSupport {
 
         Type returnType = methodCreateInfo.getReturnType();
         if (TypeUtil.isImage(returnType) || TypeUtil.isResultImage(returnType)) {
-            return doImplementGenerateImage(methodCreateInfo, context, audit, systemMessage, userMessage, memoryId, returnType,
-                    templateVariables);
+            return doImplementGenerateImage(methodCreateInfo, context, systemMessage, userMessage, memoryId, returnType,
+                    templateVariables, auditSourceInfo);
         }
 
-        if (audit != null) {
-            audit.initialMessages(systemMessage, userMessage);
-        }
+        var beanManager = Arc.container().beanManager();
+        beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
+                .fire(new InitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
@@ -341,9 +341,10 @@ public class AiServiceMethodImplementationSupport {
         var response = executeRequest(context, methodCreateInfo, messagesToSend, toolSpecifications);
 
         log.debug("AI response obtained");
-        if (audit != null) {
-            audit.addLLMToApplicationMessage(response);
-        }
+
+        beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
+                .fire(new ResponseFromLLMReceivedEvent(auditSourceInfo, response));
+
         TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
         verifyModerationIfNeeded(moderationFuture);
@@ -374,9 +375,10 @@ public class AiServiceMethodImplementationSupport {
                 ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                         toolExecutionRequest,
                         toolExecutionResult);
-                if (audit != null) {
-                    audit.addApplicationToLLMMessage(toolExecutionResultMessage);
-                }
+
+                beanManager.getEvent().select(ToolExecutedEvent.class)
+                        .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+
                 chatMemory.add(toolExecutionResultMessage);
             }
 
@@ -384,9 +386,8 @@ public class AiServiceMethodImplementationSupport {
             response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
             log.debug("AI response obtained");
 
-            if (audit != null) {
-                audit.addLLMToApplicationMessage(response);
-            }
+            beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
+                    .fire(new ResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
             tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
         }
@@ -467,18 +468,19 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
-            Audit audit, Optional<SystemMessage> systemMessage, UserMessage userMessage,
-            Object memoryId, Type returnType, Map<String, Object> templateVariables) {
+            Optional<SystemMessage> systemMessage, UserMessage userMessage,
+            Object memoryId, Type returnType, Map<String, Object> templateVariables, AuditSourceInfo auditSourceInfo) {
         String imagePrompt;
         if (systemMessage.isPresent()) {
             imagePrompt = systemMessage.get().text() + "\n" + userMessage.singleText();
         } else {
             imagePrompt = userMessage.singleText();
         }
-        if (audit != null) {
-            // TODO: we can't support addLLMToApplicationMessage for now as it is tied to AiMessage
-            audit.initialMessages(systemMessage, userMessage);
-        }
+
+        var beanManager = Arc.container().beanManager();
+
+        beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
+                .fire(new InitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
         // TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
         AugmentationResult augmentationResult = null;
@@ -489,9 +491,9 @@ public class AiServiceMethodImplementationSupport {
                 augmentationResult, templateVariables);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
-        if (audit != null) {
-            audit.onCompletion(imageResponse.content());
-        }
+
+        beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
+                .fire(new LLMInteractionCompleteEvent(auditSourceInfo, imageResponse.content()));
 
         if (TypeUtil.isImage(returnType)) {
             return imageResponse.content();

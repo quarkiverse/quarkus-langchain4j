@@ -12,7 +12,6 @@ public record DeclarativeAiServiceCreateInfo(
         String toolProviderSupplier,
         String chatMemoryProviderSupplierClassName,
         String retrievalAugmentorSupplierClassName,
-        String auditServiceClassSupplierName,
         String moderationModelSupplierClassName,
         String imageModelSupplierClassName,
         String chatMemorySeederClassName,

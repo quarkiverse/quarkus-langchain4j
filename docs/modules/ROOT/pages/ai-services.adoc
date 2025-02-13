@@ -471,13 +471,39 @@ public class CustomSpanDataContributor implements ChatModelSpanContributor {
 
 === Auditing
 
-The extension allows users to audit the process of implementing an AiService by introducing `io.quarkiverse.langchain4j.audit.AuditService` and `io.quarkiverse.langchain4j.audit.Audit`.
-By default, if a bean of type `AuditService` is present in the application, it will be used in order to create an `Audit`, which received various callbacks pertaining to the implementation
-of the AiService method. More information can be found on the javadoc of these two classes.
+The extension allows users to audit the process of implementing an AiService by observing normal CDI events. The following example shows a class that audits all events.
 
-CAUTION: The above-mentioned auditing capabilities are https://github.com/quarkiverse/quarkus-langchain4j/issues/1217[in process of being re-written]. Until that is complete it is advised to not use the auditing features.
+NOTE: These methods do not all need to live in the same class and the name of the class and the methods do not matter. It is only shown this way for demonstration purposes.
 
-=== Working with images
+[source,java]
+----
+@ApplicationScoped
+public class AuditingListener {
+	public void initialMessagesCreated(@Observes InitialMessagesCreatedEvent initialMessagesCreatedEvent) {
+        // Invoked when the original user and system messages have been created
+	}
+
+	public void llmInteractionComplete(@Observes LLMInteractionCompleteEvent llmInteractionCompleteEvent) {
+		// Invoked when the final result of the AiService method has been computed
+	}
+
+	public void llmInteractionFailed(@Observes LLMInteractionFailureEvent llmInteractionFailureEvent) {
+		// Invoked when there was an exception computing the result of the AiService method
+	}
+
+	public void responseFromLLMReceived(@Observes ResponseFromLLMReceivedEvent responseFromLLMReceivedEvent) {
+		// Invoked with a response from an LLM.
+        // It is important to note that this can be invoked multiple times when tools exist.
+	}
+
+	public void toolExecuted(@Observes ToolExecutedEvent toolExecutedEvent) {
+		// Invoked with a tool response from an LLM.
+        // It is important to note that this can be invoked multiple times when tools exist.
+	}
+}
+----
+
+== Working with images
 
 An _AI Service_ can also be used when working with images, both to describe an image and to generate one.
 The following code presents examples of both cases:
