@@ -23,7 +23,6 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.audit.AuditService;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
@@ -35,9 +34,6 @@ import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class AiServicesRecorder {
-    private static final TypeLiteral<Instance<AuditService>> AUDIT_SERVICE_TYPE_LITERAL = new TypeLiteral<>() {
-    };
-
     private static final TypeLiteral<Instance<RetrievalAugmentor>> RETRIEVAL_AUGMENTOR_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
@@ -101,11 +97,12 @@ public class AiServicesRecorder {
         }
     }
 
-    public <T> Function<SyntheticCreationalContext<T>, T> createDeclarativeAiService(DeclarativeAiServiceCreateInfo info) {
+    public Function<SyntheticCreationalContext<QuarkusAiServiceContext>, QuarkusAiServiceContext> createDeclarativeAiService(
+            DeclarativeAiServiceCreateInfo info) {
         return new Function<>() {
             @SuppressWarnings("unchecked")
             @Override
-            public T apply(SyntheticCreationalContext<T> creationalContext) {
+            public QuarkusAiServiceContext apply(SyntheticCreationalContext<QuarkusAiServiceContext> creationalContext) {
                 try {
                     Class<?> serviceClass = Thread.currentThread().getContextClassLoader()
                             .loadClass(info.serviceClassName());
@@ -237,22 +234,6 @@ public class AiServicesRecorder {
                         }
                     }
 
-                    if (info.auditServiceClassSupplierName() != null) {
-                        if (RegisterAiService.BeanIfExistsAuditServiceSupplier.class.getName()
-                                .equals(info.auditServiceClassSupplierName())) {
-                            Instance<AuditService> instance = creationalContext
-                                    .getInjectedReference(AUDIT_SERVICE_TYPE_LITERAL);
-                            if (instance.isResolvable()) {
-                                quarkusAiServices.auditService(instance.get());
-                            }
-                        } else {
-                            Supplier<? extends AuditService> supplier = (Supplier<? extends AuditService>) Thread
-                                    .currentThread().getContextClassLoader().loadClass(info.auditServiceClassSupplierName())
-                                    .getConstructor().newInstance();
-                            quarkusAiServices.auditService(supplier.get());
-                        }
-                    }
-
                     if (info.moderationModelSupplierClassName() != null && info.needsModerationModel()) {
                         if (RegisterAiService.BeanIfExistsModerationModelSupplier.class.getName()
                                 .equals(info.moderationModelSupplierClassName())) {
@@ -302,7 +283,7 @@ public class AiServicesRecorder {
                                 .getConstructor().newInstance());
                     }
 
-                    return (T) aiServiceContext;
+                    return aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
                 } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException

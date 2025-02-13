@@ -22,7 +22,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName chatMemoryProviderSupplierClassDotName;
     private final DotName retrievalAugmentorSupplierClassDotName;
     private final boolean customRetrievalAugmentorSupplierClassIsABean;
-    private final DotName auditServiceClassSupplierDotName;
     private final DotName moderationModelSupplierDotName;
     private final DotName imageModelSupplierDotName;
     private final DotName chatMemorySeederClassDotName;
@@ -40,7 +39,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName chatMemoryProviderSupplierClassDotName,
             DotName retrievalAugmentorSupplierClassDotName,
             boolean customRetrievalAugmentorSupplierClassIsABean,
-            DotName auditServiceClassSupplierDotName,
             DotName moderationModelSupplierDotName,
             DotName imageModelSupplierDotName,
             DotName chatMemorySeederClassDotName,
@@ -57,7 +55,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName;
         this.retrievalAugmentorSupplierClassDotName = retrievalAugmentorSupplierClassDotName;
         this.customRetrievalAugmentorSupplierClassIsABean = customRetrievalAugmentorSupplierClassIsABean;
-        this.auditServiceClassSupplierDotName = auditServiceClassSupplierDotName;
         this.moderationModelSupplierDotName = moderationModelSupplierDotName;
         this.imageModelSupplierDotName = imageModelSupplierDotName;
         this.chatMemorySeederClassDotName = chatMemorySeederClassDotName;
@@ -95,10 +92,6 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isCustomRetrievalAugmentorSupplierClassIsABean() {
         return customRetrievalAugmentorSupplierClassIsABean;
-    }
-
-    public DotName getAuditServiceClassSupplierDotName() {
-        return auditServiceClassSupplierDotName;
     }
 
     public DotName getModerationModelSupplierDotName() {

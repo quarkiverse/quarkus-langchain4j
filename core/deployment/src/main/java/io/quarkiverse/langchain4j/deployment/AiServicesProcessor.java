@@ -314,13 +314,6 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName auditServiceSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER;
-            AnnotationValue auditServiceSupplierValue = instance.value("auditServiceSupplier");
-            if (auditServiceSupplierValue != null) {
-                auditServiceSupplierClassName = auditServiceSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(auditServiceSupplierClassName, index, reflectiveClassProducer);
-            }
-
             DotName moderationModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER;
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
@@ -397,7 +390,6 @@ public class AiServicesProcessor {
                             chatMemoryProviderSupplierClassDotName,
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
-                            auditServiceSupplierClassName,
                             moderationModelSupplierClassName,
                             imageModelSupplierClassName,
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
@@ -500,7 +492,6 @@ public class AiServicesProcessor {
         boolean needsChatMemoryProviderBean = false;
         boolean needsRetrieverBean = false;
         boolean needsRetrievalAugmentorBean = false;
-        boolean needsAuditServiceBean = false;
         boolean needsModerationModelBean = false;
         boolean needsImageModelBean = false;
         boolean needsToolProviderBean = false;
@@ -543,10 +534,6 @@ public class AiServicesProcessor {
 
             String retrievalAugmentorSupplierClassName = bi.getRetrievalAugmentorSupplierClassDotName() != null
                     ? bi.getRetrievalAugmentorSupplierClassDotName().toString()
-                    : null;
-
-            String auditServiceClassSupplierName = bi.getAuditServiceClassSupplierDotName() != null
-                    ? bi.getAuditServiceClassSupplierDotName().toString()
                     : null;
 
             String moderationModelSupplierClassName = (bi.getModerationModelSupplierDotName() != null
@@ -621,7 +608,6 @@ public class AiServicesProcessor {
                                     toolProviderSupplierClassName,
                                     chatMemoryProviderSupplierClassName,
                                     retrievalAugmentorSupplierClassName,
-                                    auditServiceClassSupplierName,
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
                                     chatMemorySeederClassName,
@@ -698,12 +684,6 @@ public class AiServicesProcessor {
                 }
             }
 
-            if (LangChain4jDotNames.BEAN_IF_EXISTS_AUDIT_SERVICE_SUPPLIER.toString().equals(auditServiceClassSupplierName)) {
-                configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                        new Type[] { ClassType.create(LangChain4jDotNames.AUDIT_SERVICE) }, null));
-                needsAuditServiceBean = true;
-            }
-
             if (LangChain4jDotNames.BEAN_IF_EXISTS_MODERATION_MODEL_SUPPLIER.toString()
                     .equals(moderationModelSupplierClassName) && injectModerationModelBean) {
 
@@ -764,9 +744,6 @@ public class AiServicesProcessor {
         }
         if (needsRetrievalAugmentorBean) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.RETRIEVAL_AUGMENTOR));
-        }
-        if (needsAuditServiceBean) {
-            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.AUDIT_SERVICE));
         }
         if (needsModerationModelBean) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(LangChain4jDotNames.MODERATION_MODEL));

@@ -22,7 +22,6 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
-import io.quarkiverse.langchain4j.audit.AuditService;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
@@ -113,15 +112,6 @@ public @interface RegisterAiService {
      * implements {@link RetrievalAugmentor} and use it if one exists.
      */
     Class<? extends Supplier<RetrievalAugmentor>> retrievalAugmentor() default BeanIfExistsRetrievalAugmentorSupplier.class;
-
-    /**
-     * Configures the way to obtain the {@link AuditService} to use.
-     * By default, Quarkus will look for a CDI bean that implements {@link AuditService}, but will fall back to not using
-     * any memory if no such bean exists.
-     * If an arbitrary {@link AuditService} instance is needed, a custom implementation of
-     * {@link Supplier<AuditService>} needs to be provided.
-     */
-    Class<? extends Supplier<AuditService>> auditServiceSupplier() default BeanIfExistsAuditServiceSupplier.class;
 
     /**
      * Configures the way to obtain the {@link ModerationModel} to use.
@@ -231,18 +221,6 @@ public @interface RegisterAiService {
 
         @Override
         public RetrievalAugmentor get() {
-            throw new UnsupportedOperationException("should never be called");
-        }
-    }
-
-    /**
-     * Marker that is used to tell Quarkus to use the {@link AuditService} that the user has configured as a CDI bean.
-     * If no such bean exists, then no audit service will be used.
-     */
-    final class BeanIfExistsAuditServiceSupplier implements Supplier<AuditService> {
-
-        @Override
-        public AuditService get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }
