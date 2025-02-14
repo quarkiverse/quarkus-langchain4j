@@ -46,7 +46,7 @@ public class MultipleEmbeddingModelsTest {
 
     @Test
     void firstNamedModel() {
-        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiEmbeddingModel.class);
+        assertThat(SubclassUtil.unwrap(firstNamedModel)).isInstanceOf(OpenAiEmbeddingModel.class);
     }
 
     @Test
