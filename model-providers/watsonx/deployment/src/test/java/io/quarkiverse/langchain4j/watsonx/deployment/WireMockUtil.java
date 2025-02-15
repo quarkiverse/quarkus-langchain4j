@@ -20,6 +20,8 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 
 public class WireMockUtil {
@@ -247,6 +249,25 @@ public class WireMockUtil {
             @Override
             public void onComplete(Response<AiMessage> response) {
                 streamingResponse.set(response.content());
+            }
+        };
+    }
+
+    public static StreamingChatResponseHandler streamingChatResponseHandler(AtomicReference<ChatResponse> streamingResponse) {
+        return new StreamingChatResponseHandler() {
+
+            @Override
+            public void onPartialResponse(String partialResponse) {
+            }
+
+            @Override
+            public void onCompleteResponse(ChatResponse completeResponse) {
+                streamingResponse.set(completeResponse);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fail(error);
             }
         };
     }

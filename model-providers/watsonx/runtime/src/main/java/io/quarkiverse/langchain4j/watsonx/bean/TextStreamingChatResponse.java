@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record TextStreamingChatResponse(String id, String modelId, List<TextChatResultChoice> choices, Long created,
         TextChatUsage usage) {
 

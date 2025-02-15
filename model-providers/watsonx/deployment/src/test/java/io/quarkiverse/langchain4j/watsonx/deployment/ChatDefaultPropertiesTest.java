@@ -87,6 +87,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(Optional.empty(), runtimeConfig.chatModel().stop());
         assertEquals(1.0, runtimeConfig.chatModel().temperature());
         assertEquals(1.0, runtimeConfig.chatModel().topP());
+        assertEquals(Optional.empty(), runtimeConfig.chatModel().toolChoice());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
     }
 
@@ -101,7 +102,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
@@ -140,7 +141,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(body))

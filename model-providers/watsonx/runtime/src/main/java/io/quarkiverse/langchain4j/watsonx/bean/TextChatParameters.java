@@ -1,13 +1,35 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
+import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
+import static java.util.stream.Collectors.joining;
+
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import io.quarkiverse.langchain4j.watsonx.WatsonxChatRequestParameters;
 
 public class TextChatParameters {
 
     public record TextChatResponseFormat(String type) {
     };
 
+    public record TextChatToolChoiceTool(String type, Function function) {
+        public record Function(String name) {
+        };
+
+        public static TextChatToolChoiceTool of(String name) {
+            return new TextChatToolChoiceTool("function", new Function(name));
+        }
+    };
+
+    private final String toolChoiceOption;
+    private final TextChatToolChoiceTool toolChoice;
     private final Double frequencyPenalty;
+    private final Map<String, Integer> logitBias;
     private final Boolean logprobs;
     private final Integer topLogprobs;
     private final Integer maxTokens;
@@ -21,7 +43,9 @@ public class TextChatParameters {
     private final TextChatResponseFormat responseFormat;
 
     public TextChatParameters(Builder builder) {
+        this.toolChoiceOption = builder.toolChoiceOption;
         this.frequencyPenalty = builder.frequencyPenalty;
+        this.logitBias = builder.logitBias;
         this.logprobs = builder.logprobs;
         this.topLogprobs = builder.topLogprobs;
         this.maxTokens = builder.maxTokens;
@@ -33,14 +57,91 @@ public class TextChatParameters {
         this.seed = builder.seed;
         this.stop = builder.stop;
 
-        if (builder.responseFormat != null)
+        if (builder.toolChoice != null && !builder.toolChoice.isBlank())
+            this.toolChoice = TextChatToolChoiceTool.of(builder.toolChoice);
+        else
+            this.toolChoice = null;
+
+        if (builder.responseFormat != null && builder.responseFormat.equalsIgnoreCase("json_object"))
             this.responseFormat = new TextChatResponseFormat(builder.responseFormat);
         else
             this.responseFormat = null;
     }
 
+    public static TextChatParameters convert(ChatRequestParameters parameters) {
+        Builder builder = new Builder()
+                .frequencyPenalty(parameters.frequencyPenalty())
+                .maxTokens(parameters.maxOutputTokens())
+                .presencePenalty(parameters.presencePenalty())
+                .responseFormat(
+                        parameters.responseFormat() != null && parameters.responseFormat().type().equals(JSON) ? "json_object"
+                                : null)
+                .stop(parameters.stopSequences())
+                .temperature(parameters.temperature())
+                .topP(parameters.topP());
+
+        if (parameters instanceof WatsonxChatRequestParameters watsonxParameters) {
+            builder.logitBias(watsonxParameters.logitBias());
+            builder.logprobs(watsonxParameters.logprobs());
+            builder.n(watsonxParameters.n());
+            builder.seed(watsonxParameters.seed());
+            builder.timeLimit(watsonxParameters.timeLimit() != null ? watsonxParameters.timeLimit().toMillis() : null);
+            builder.topLogprobs(watsonxParameters.topLogprobs());
+
+            List<ToolSpecification> toolSpecifications = parameters.toolSpecifications();
+
+            if (parameters.toolChoice() != null) {
+                switch (parameters.toolChoice()) {
+                    case AUTO -> builder.toolChoiceOption("auto");
+                    case REQUIRED -> {
+                        builder.toolChoiceOption(null);
+                        if (toolSpecifications == null || toolSpecifications.isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "If tool-choice is 'REQUIRED', at least one tool must be specified.");
+                        }
+
+                        builder.toolChoice(toolSpecifications.stream()
+                                .filter(new Predicate<ToolSpecification>() {
+                                    @Override
+                                    public boolean test(ToolSpecification toolSpecification) {
+                                        return toolSpecification.name()
+                                                .equalsIgnoreCase(watsonxParameters.toolChoiceName());
+                                    }
+                                })
+                                .findFirst().map(ToolSpecification::name)
+                                .orElseThrow(new Supplier<IllegalArgumentException>() {
+                                    @Override
+                                    public IllegalArgumentException get() {
+                                        String toolList = toolSpecifications.stream()
+                                                .map(ToolSpecification::name)
+                                                .collect(joining(",", "[", "]"));
+                                        return new IllegalArgumentException(
+                                                "The tool with name '%s' is not available in the list of tools sent to the model. Tool lists: %s"
+                                                        .formatted(watsonxParameters.toolChoiceName(), toolList));
+                                    }
+                                }));
+                    }
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+    public String getToolChoiceOption() {
+        return toolChoiceOption;
+    }
+
+    public TextChatToolChoiceTool getToolChoice() {
+        return toolChoice;
+    }
+
     public static Builder builder() {
         return new Builder();
+    }
+
+    public Map<String, Integer> getLogitBias() {
+        return logitBias;
     }
 
     public Double getFrequencyPenalty() {
@@ -93,7 +194,10 @@ public class TextChatParameters {
 
     public static class Builder {
 
+        private String toolChoiceOption;
+        private String toolChoice;
         private Double frequencyPenalty;
+        private Map<String, Integer> logitBias;
         private Boolean logprobs;
         private Integer topLogprobs;
         private Integer maxTokens;
@@ -106,8 +210,23 @@ public class TextChatParameters {
         private Double topP;
         private Long timeLimit;
 
+        public Builder toolChoiceOption(String toolChoiceOption) {
+            this.toolChoiceOption = toolChoiceOption;
+            return this;
+        }
+
+        public Builder toolChoice(String toolChoice) {
+            this.toolChoice = toolChoice;
+            return this;
+        }
+
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
+            return this;
+        }
+
+        public Builder logitBias(Map<String, Integer> logitBias) {
+            this.logitBias = logitBias;
             return this;
         }
 

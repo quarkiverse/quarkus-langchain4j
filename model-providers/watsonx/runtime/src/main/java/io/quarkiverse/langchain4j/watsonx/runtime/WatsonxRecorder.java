@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.watsonx.runtime;
 
+import static dev.langchain4j.model.chat.request.ToolChoice.REQUIRED;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URL;
@@ -19,6 +20,8 @@ import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.scoring.ScoringModel;
@@ -279,6 +282,23 @@ public class WatsonxRecorder {
             throw new RuntimeException(e);
         }
 
+        ToolChoice toolChoice = null;
+        String toolChoiceName = null;
+        if (chatModelConfig.toolChoice().isPresent() && !chatModelConfig.toolChoice().get().isBlank()) {
+            toolChoice = REQUIRED;
+            toolChoiceName = chatModelConfig.toolChoice().get();
+        }
+
+        ResponseFormat responseFormat = null;
+        if (chatModelConfig.responseFormat().isPresent()) {
+            responseFormat = switch (chatModelConfig.responseFormat().get().toLowerCase()) {
+                case "json_object" -> ResponseFormat.JSON;
+                default -> throw new IllegalArgumentException(
+                        "The value '%s' for the response-format property is not available. Use one of the values: [%s]"
+                                .formatted(chatModelConfig.responseFormat().get(), "json_object"));
+            };
+        }
+
         return WatsonxChatModel.builder()
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
@@ -288,6 +308,8 @@ public class WatsonxRecorder {
                 .spaceId(firstOrDefault(null, watsonConfig.spaceId(), runtimeConfig.defaultConfig().spaceId()))
                 .projectId(firstOrDefault(null, watsonConfig.projectId(), runtimeConfig.defaultConfig().projectId()))
                 .modelId(watsonConfig.chatModel().modelId())
+                .toolChoice(toolChoice)
+                .toolChoiceName(toolChoiceName)
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
                 .logprobs(chatModelConfig.logprobs())
                 .topLogprobs(chatModelConfig.topLogprobs().orElse(null))
@@ -298,7 +320,7 @@ public class WatsonxRecorder {
                 .stop(chatModelConfig.stop().orElse(null))
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
-                .responseFormat(chatModelConfig.responseFormat().orElse(null));
+                .responseFormat(responseFormat);
     }
 
     private WatsonxGenerationModel.Builder generationBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {

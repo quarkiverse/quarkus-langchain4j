@@ -23,6 +23,14 @@ public interface ChatModelConfig {
     String modelId();
 
     /**
+     * Specifies the <code>name</code> of a tool associated with the service.
+     * <p>
+     * Setting this value forces the model to call the specified tool when making a request.
+     * The tool name must match one of the available tools in the service.
+     */
+    Optional<String> toolChoice();
+
+    /**
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's
      * likelihood to repeat the same line
      * verbatim.
@@ -99,7 +107,6 @@ public interface ChatModelConfig {
     Double temperature();
 
     /**
-     *
      * An alternative to sampling with <code>temperature</code>, called nucleus sampling, where the model considers the results
      * of the tokens
      * with <code>top_p</code> probability

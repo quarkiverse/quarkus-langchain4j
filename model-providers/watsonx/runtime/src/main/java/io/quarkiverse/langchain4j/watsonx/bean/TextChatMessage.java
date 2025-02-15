@@ -228,7 +228,9 @@ public sealed interface TextChatMessage
          * @return the created {@link TextChatParameterTool}
          */
         public static TextChatParameterTool of(ToolSpecification toolSpecification) {
-            var toolParams = JsonSchemaElementHelper.toMap(toolSpecification.parameters());
+            var toolParams = toolSpecification.parameters() != null
+                    ? JsonSchemaElementHelper.toMap(toolSpecification.parameters())
+                    : null;
             var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(),
                     toolParams);
             return new TextChatParameterTool("function", parameters);

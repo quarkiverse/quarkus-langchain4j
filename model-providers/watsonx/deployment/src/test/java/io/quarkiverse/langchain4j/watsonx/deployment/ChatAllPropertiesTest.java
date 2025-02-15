@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.util.Date;
@@ -17,13 +18,28 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ToolChoice;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.output.FinishReason;
+import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.watsonx.WatsonxChatRequestParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
@@ -55,7 +71,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.stop", "word1,word2")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.temperature", "1.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-p", "0.5")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "new_format")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "json_object")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "myfunction")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -87,8 +104,12 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .temperature(1.5)
             .timeLimit(60000L)
             .topP(0.5)
-            .responseFormat("new_format")
+            .responseFormat("json_object")
+            .toolChoice("myfunction")
             .build();
+
+    static List<TextChatParameterTool> tools = List
+            .of(TextChatParameterTool.of(ToolSpecification.builder().name("myfunction").build()));
 
     @Test
     void check_config() throws Exception {
@@ -114,7 +135,339 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals(List.of("word1", "word2"), runtimeConfig.chatModel().stop().orElse(null));
         assertEquals(1.5, runtimeConfig.chatModel().temperature());
         assertEquals(0.5, runtimeConfig.chatModel().topP());
-        assertEquals("new_format", runtimeConfig.chatModel().responseFormat().orElse(null));
+        assertEquals("json_object", runtimeConfig.chatModel().responseFormat().orElse(null));
+        assertEquals("myfunction", runtimeConfig.chatModel().toolChoice().orElse(null));
+    }
+
+    @Test
+    void chat_request_test() throws Exception {
+        // Use the chat method without customization:
+        var config = langchain4jWatsonConfig.defaultConfig();
+        String modelId = config.chatModel().modelId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
+
+        var messages = List.<TextChatMessage> of(
+                TextChatMessageSystem.of("You are an helpful assistant"),
+                TextChatMessageUser.of("Hello, how are you?"));
+
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .build();
+
+        List<ChatMessage> chatMessages = List.of(
+                SystemMessage.from("You are an helpful assistant"),
+                UserMessage.from("Hello, how are you?"));
+
+        var response = chatModel.chat(
+                ChatRequest.builder()
+                        .messages(chatMessages)
+                        .parameters(
+                                ChatRequestParameters.builder()
+                                        .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                        .build())
+                        .build());
+
+        ChatResponse expected = new ChatResponse.Builder()
+                .aiMessage(AiMessage.from("AI Response"))
+                .metadata(ChatResponseMetadata.builder()
+                        .id("cmpl-15475d0dea9b4429a55843c77997f8a9")
+                        .modelName("mistralai/mistral-large")
+                        .tokenUsage(new TokenUsage(59, 47))
+                        .finishReason(FinishReason.STOP)
+                        .build())
+                .build();
+
+        assertEquals(expected, response);
+        // ----------------------------------------------
+
+        // Use the chat method with customization:
+        var request = ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(
+                        WatsonxChatRequestParameters.builder()
+                                .modelName("deepseek")
+                                .frequencyPenalty(6.6)
+                                .logprobs(false)
+                                .topLogprobs(1)
+                                .maxOutputTokens(100)
+                                .n(10)
+                                .presencePenalty(6.6)
+                                .responseFormat(ResponseFormat.TEXT)
+                                .seed(1)
+                                .stopSequences("[]")
+                                .temperature(0.0)
+                                .toolChoice(ToolChoice.REQUIRED)
+                                .toolChoiceName("mysupertool")
+                                .toolSpecifications(ToolSpecification.builder().name("mysupertool").build())
+                                .topP(1.0)
+                                .build())
+                .build();
+
+        body = new TextChatRequest("deepseek", spaceId, projectId, messages,
+                List.of(TextChatParameterTool.of(ToolSpecification.builder().name("mysupertool").build())),
+                TextChatParameters.builder()
+                        .frequencyPenalty(6.6)
+                        .logprobs(false)
+                        .topLogprobs(1)
+                        .maxTokens(100)
+                        .n(10)
+                        .presencePenalty(6.6)
+                        .responseFormat(null)
+                        .seed(1)
+                        .stop(List.of("[]"))
+                        .temperature(0.0)
+                        .toolChoiceOption(null)
+                        .toolChoice("mysupertool")
+                        .timeLimit(60000L)
+                        .topP(1.0)
+                        .build());
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .build();
+
+        response = chatModel.chat(request);
+        assertEquals(expected, response);
+        // ----------------------------------------
+
+        // Use the chat method with customization:
+        request = ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(
+                        WatsonxChatRequestParameters.builder()
+                                .modelName("deepseek")
+                                .frequencyPenalty(6.6)
+                                .logprobs(false)
+                                .topLogprobs(1)
+                                .maxOutputTokens(100)
+                                .n(10)
+                                .presencePenalty(6.6)
+                                .responseFormat(ResponseFormat.TEXT)
+                                .seed(1)
+                                .stopSequences("[]")
+                                .temperature(0.0)
+                                .toolChoice(ToolChoice.AUTO)
+                                .toolChoiceName("mysupertool")
+                                .toolSpecifications(ToolSpecification.builder().name("mysupertool").build())
+                                .topP(1.0)
+                                .build())
+                .build();
+
+        body = new TextChatRequest("deepseek", spaceId, projectId, messages,
+                List.of(TextChatParameterTool.of(ToolSpecification.builder().name("mysupertool").build())),
+                TextChatParameters.builder()
+                        .frequencyPenalty(6.6)
+                        .logprobs(false)
+                        .topLogprobs(1)
+                        .maxTokens(100)
+                        .n(10)
+                        .presencePenalty(6.6)
+                        .responseFormat(null)
+                        .seed(1)
+                        .stop(List.of("[]"))
+                        .temperature(0.0)
+                        .toolChoiceOption("auto")
+                        .toolChoice(null)
+                        .timeLimit(60000L)
+                        .topP(1.0)
+                        .build());
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .build();
+
+        response = chatModel.chat(request);
+        assertEquals(expected, response);
+        // ----------------------------------------
+
+        // Use the chat method with unsupported parameter:
+        assertThrows(UnsupportedFeatureException.class, () -> chatModel.chat(ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(WatsonxChatRequestParameters.builder().topK(1).build())
+                .build()));
+        // ----------------------------------------
+    }
+
+    @Test
+    void chat_request_streaming_test() throws Exception {
+        // Use the chat method without customization:
+        var config = langchain4jWatsonConfig.defaultConfig();
+        String modelId = config.chatModel().modelId();
+        String spaceId = config.spaceId().orElse(null);
+        String projectId = config.projectId().orElse(null);
+
+        var messagesToSend = List.<TextChatMessage> of(
+                TextChatMessageSystem.of("You are an helpful assistant"),
+                TextChatMessageUser.of("Hello, how are you?"));
+
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, tools, parameters);
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .build();
+
+        List<ChatMessage> chatMessages = List.of(
+                SystemMessage.from("You are an helpful assistant"),
+                UserMessage.from("Hello, how are you?"));
+
+        var streamingResponse = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat(
+                ChatRequest.builder()
+                        .messages(chatMessages)
+                        .parameters(ChatRequestParameters.builder()
+                                .toolSpecifications(ToolSpecification.builder().name("myfunction").build()).build())
+                        .build(),
+                WireMockUtil.streamingChatResponseHandler(streamingResponse));
+
+        await().atMost(Duration.ofMinutes(1))
+                .pollInterval(Duration.ofSeconds(2))
+                .until(() -> streamingResponse.get() != null);
+
+        ChatResponse expected = new ChatResponse.Builder()
+                .aiMessage(AiMessage.from(" Hello"))
+                .metadata(ChatResponseMetadata.builder()
+                        .id("chat-049e3ff7ff08416fb5c334d05af059da")
+                        .modelName("mistralai/mistral-large")
+                        .tokenUsage(new TokenUsage(88, 36))
+                        .finishReason(FinishReason.STOP)
+                        .build())
+                .build();
+
+        assertEquals(expected, streamingResponse.get());
+        // ----------------------------------------------
+
+        // Use the chat method with customization:
+        var request = ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(
+                        WatsonxChatRequestParameters.builder()
+                                .modelName("deepseek")
+                                .frequencyPenalty(6.6)
+                                .logprobs(false)
+                                .topLogprobs(1)
+                                .maxOutputTokens(100)
+                                .n(10)
+                                .presencePenalty(6.6)
+                                .responseFormat(ResponseFormat.TEXT)
+                                .seed(1)
+                                .stopSequences("[]")
+                                .temperature(0.0)
+                                .toolChoice(ToolChoice.REQUIRED)
+                                .toolChoiceName("mysupertool")
+                                .toolSpecifications(ToolSpecification.builder().name("mysupertool").build())
+                                .topP(1.0)
+                                .build())
+                .build();
+
+        body = new TextChatRequest("deepseek", spaceId, projectId, messagesToSend,
+                List.of(TextChatParameterTool.of(ToolSpecification.builder().name("mysupertool").build())),
+                TextChatParameters.builder()
+                        .frequencyPenalty(6.6)
+                        .logprobs(false)
+                        .topLogprobs(1)
+                        .maxTokens(100)
+                        .n(10)
+                        .presencePenalty(6.6)
+                        .responseFormat(null)
+                        .seed(1)
+                        .stop(List.of("[]"))
+                        .temperature(0.0)
+                        .toolChoiceOption(null)
+                        .toolChoice("mysupertool")
+                        .timeLimit(60000L)
+                        .topP(1.0)
+                        .build());
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .build();
+
+        var streamingResponse2 = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat(request,
+                WireMockUtil.streamingChatResponseHandler(streamingResponse2));
+
+        await().atMost(Duration.ofMinutes(1))
+                .pollInterval(Duration.ofSeconds(2))
+                .until(() -> streamingResponse.get() != null);
+
+        assertEquals(expected, streamingResponse2.get());
+        // ----------------------------------------
+
+        // Use the chat method with customization:
+        request = ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(
+                        WatsonxChatRequestParameters.builder()
+                                .modelName("deepseek")
+                                .frequencyPenalty(6.6)
+                                .logprobs(false)
+                                .topLogprobs(1)
+                                .maxOutputTokens(100)
+                                .n(10)
+                                .presencePenalty(6.6)
+                                .responseFormat(ResponseFormat.TEXT)
+                                .seed(1)
+                                .stopSequences("[]")
+                                .temperature(0.0)
+                                .toolChoice(ToolChoice.AUTO)
+                                .toolChoiceName("mysupertool")
+                                .toolSpecifications(ToolSpecification.builder().name("mysupertool").build())
+                                .topP(1.0)
+                                .build())
+                .build();
+
+        body = new TextChatRequest("deepseek", spaceId, projectId, messagesToSend,
+                List.of(TextChatParameterTool.of(ToolSpecification.builder().name("mysupertool").build())),
+                TextChatParameters.builder()
+                        .frequencyPenalty(6.6)
+                        .logprobs(false)
+                        .topLogprobs(1)
+                        .maxTokens(100)
+                        .n(10)
+                        .presencePenalty(6.6)
+                        .responseFormat(null)
+                        .seed(1)
+                        .stop(List.of("[]"))
+                        .temperature(0.0)
+                        .toolChoiceOption("auto")
+                        .toolChoice(null)
+                        .timeLimit(60000L)
+                        .topP(1.0)
+                        .build());
+
+        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
+                .body(mapper.writeValueAsString(body))
+                .responseMediaType(MediaType.SERVER_SENT_EVENTS)
+                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .build();
+
+        var streamingResponse3 = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat(request,
+                WireMockUtil.streamingChatResponseHandler(streamingResponse3));
+
+        await().atMost(Duration.ofMinutes(1))
+                .pollInterval(Duration.ofSeconds(2))
+                .until(() -> streamingResponse.get() != null);
+
+        assertEquals(expected, streamingResponse3.get());
+        // ----------------------------------------
+
+        // Use the chat method with unsupported parameter:
+        assertThrows(UnsupportedFeatureException.class, () -> streamingChatModel.chat(ChatRequest.builder()
+                .messages(chatMessages)
+                .parameters(WatsonxChatRequestParameters.builder().topK(1).build())
+                .build(),
+                WireMockUtil.streamingChatResponseHandler(streamingResponse3)));
+        // ----------------------------------------
     }
 
     @Test
@@ -128,14 +481,18 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
                 .build();
 
-        assertEquals("AI Response", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
+        assertEquals("AI Response", chatModel.generate(
+                List.of(
+                        dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                        dev.langchain4j.data.message.UserMessage.from("UserMessage")),
+                ToolSpecification.builder().name("myfunction").build())
+                .content().text());
     }
 
     @Test
@@ -166,7 +523,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 TextChatMessageSystem.of("SystemMessage"),
                 TextChatMessageUser.of("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, null, parameters);
+        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, tools, parameters);
 
         mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
@@ -179,7 +536,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
         var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(messages, WireMockUtil.streamingResponseHandler(streamingResponse));
+        streamingChatModel.generate(messages, ToolSpecification.builder().name("myfunction").build(),
+                WireMockUtil.streamingResponseHandler(streamingResponse));
 
         await().atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(2))

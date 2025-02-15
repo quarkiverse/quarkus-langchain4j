@@ -452,6 +452,6 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, null, parameters);
+        return new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
     }
 }

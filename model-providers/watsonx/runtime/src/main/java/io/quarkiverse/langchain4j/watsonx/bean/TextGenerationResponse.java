@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record TextGenerationResponse(List<Result> results) {
+public record TextGenerationResponse(String modelId, List<Result> results) {
     public record Result(
             @JsonProperty("generated_text") String generatedText,
             @JsonProperty("generated_token_count") int generatedTokenCount,
