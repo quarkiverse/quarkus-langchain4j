@@ -44,6 +44,10 @@ public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
 
         @Override
         public String getAuthorization(Input input) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
             return "dummy";
         }
     }
