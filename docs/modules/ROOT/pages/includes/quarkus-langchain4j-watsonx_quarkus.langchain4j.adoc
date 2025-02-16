@@ -382,6 +382,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |`mistralai/mistral-large`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`quarkus.langchain4j.watsonx.chat-model.tool-choice`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the `name` of a tool associated with the service.
+
+Setting this value forces the model to call the specified tool when making a request. The tool name must match one of the available tools in the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx.chat-model.frequency-penalty`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.frequency-penalty+++[]
@@ -1515,6 +1538,29 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`mistralai/mistral-large`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the `name` of a tool associated with the service.
+
+Setting this value forces the model to call the specified tool when making a request. The tool name must match one of the available tools in the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-frequency-penalty[`quarkus.langchain4j.watsonx."model-name".chat-model.frequency-penalty`]##
 ifdef::add-copy-button-to-config-props[]
