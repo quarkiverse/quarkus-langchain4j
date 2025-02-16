@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-websockets-next-parent</artifactId>
-        <version>0.25.0.CR1</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-websockets-next-tests</artifactId>
     <name>Quarkus LangChain4j - WebSockets Next - tests</name>
