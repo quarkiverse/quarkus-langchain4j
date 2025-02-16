@@ -10,6 +10,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
@@ -34,9 +36,15 @@ public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
     StreamingChatLanguageModel streamingChatLanguageModel;
 
     @Test
-    void test() {
+    void testChatLanguageModel() {
         assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(AzureOpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(streamingChatLanguageModel)).isInstanceOf(AzureOpenAiStreamingChatModel.class);
+
+        String response = chatLanguageModel.generate("hello");
+        assertThat(response).isNotBlank();
+
+        LoggedRequest loggedRequest = singleLoggedRequest();
+        assertThat(loggedRequest.getHeader("Authorization")).isEqualTo("Bearer token");
     }
 
     @ApplicationScoped
@@ -44,7 +52,11 @@ public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
 
         @Override
         public String getAuthorization(Input input) {
-            return "dummy";
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+            }
+            return "Bearer token";
         }
     }
 }
