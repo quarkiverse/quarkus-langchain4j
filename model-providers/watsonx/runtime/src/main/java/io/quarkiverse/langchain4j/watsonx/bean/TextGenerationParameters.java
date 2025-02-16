@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.watsonx.bean;
 
 import java.util.List;
 
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationRequestParameters;
+
 public class TextGenerationParameters {
 
     public record LengthPenalty(Double decayFactor, Integer startIndex) {
@@ -35,6 +38,28 @@ public class TextGenerationParameters {
         this.repetitionPenalty = builder.repetitionPenalty;
         this.truncateInputTokens = builder.truncateInputTokens;
         this.includeStopSequence = builder.includeStopSequence;
+    }
+
+    public static TextGenerationParameters convert(ChatRequestParameters parameters) {
+        Builder builder = new Builder()
+                .maxNewTokens(parameters.maxOutputTokens())
+                .stopSequences(parameters.stopSequences())
+                .temperature(parameters.temperature())
+                .topK(parameters.topK())
+                .topP(parameters.topP());
+
+        if (parameters instanceof WatsonxGenerationRequestParameters watsonxParameters) {
+            builder.decodingMethod(watsonxParameters.decodingMethod());
+            builder.includeStopSequence(watsonxParameters.includeStopSequence());
+            builder.lengthPenalty(watsonxParameters.lengthPenalty());
+            builder.minNewTokens(watsonxParameters.minNewTokens());
+            builder.randomSeed(watsonxParameters.randomSeed());
+            builder.repetitionPenalty(watsonxParameters.repetitionPenalty());
+            builder.timeLimit(watsonxParameters.timeLimit() != null ? watsonxParameters.timeLimit().toMillis() : null);
+            builder.truncateInputTokens(watsonxParameters.truncateInputTokens());
+        }
+
+        return builder.build();
     }
 
     public static Builder builder() {

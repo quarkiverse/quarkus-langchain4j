@@ -8,6 +8,5 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameter
 
 public record TextChatRequest(String modelId, String spaceId, String projectId, List<TextChatMessage> messages,
         List<TextChatParameterTool> tools,
-        TextChatParameterTool toolChoice,
         @JsonUnwrapped TextChatParameters parameters) {
 }
