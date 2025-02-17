@@ -7,9 +7,10 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
+import org.jboss.resteasy.reactive.RestQuery;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.jboss.resteasy.reactive.RestQuery;
 
 @Path("gemini/")
 public class GeminiResource {

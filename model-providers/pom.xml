@@ -22,6 +22,7 @@
         <module>openai/openai-vanilla</module>
         <module>openai/testing-internal</module>
 
+        <module>gemini/gemini-common</module>
         <module>gemini/ai-gemini</module>
 
         <module>openshift-ai</module>

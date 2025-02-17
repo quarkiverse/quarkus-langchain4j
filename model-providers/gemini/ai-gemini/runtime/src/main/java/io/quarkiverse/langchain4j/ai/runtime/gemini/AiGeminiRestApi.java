@@ -12,6 +12,8 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;

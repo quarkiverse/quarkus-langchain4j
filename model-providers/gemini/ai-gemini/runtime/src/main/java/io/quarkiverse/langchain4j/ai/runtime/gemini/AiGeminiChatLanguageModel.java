@@ -18,6 +18,12 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.gemini.common.ContentMapper;
+import io.quarkiverse.langchain4j.gemini.common.FinishReasonMapper;
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
+import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponseHandler;
+import io.quarkiverse.langchain4j.gemini.common.GenerationConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class AiGeminiChatLanguageModel implements ChatLanguageModel {

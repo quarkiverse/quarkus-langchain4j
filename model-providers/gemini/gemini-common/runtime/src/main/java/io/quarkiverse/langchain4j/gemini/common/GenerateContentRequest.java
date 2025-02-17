@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini;
+package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.List;
 

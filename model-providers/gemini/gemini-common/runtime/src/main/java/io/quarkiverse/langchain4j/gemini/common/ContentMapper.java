@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini;
+package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,29 +11,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.Content;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.TextContent;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.*;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.GenerateContentRequest.Content.Part;
 
-final class ContentMapper {
+public final class ContentMapper {
 
     private ContentMapper() {
     }
 
-    static GenerateContentRequest map(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
+    public static GenerateContentRequest map(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
             GenerationConfig generationConfig) {
         List<String> systemPrompts = new ArrayList<>();
         List<GenerateContentRequest.Content> contents = new ArrayList<>(messages.size());
 
-        Map<String, GenerateContentRequest.Content> functionCalls = new HashMap<String, GenerateContentRequest.Content>();
+        Map<String, GenerateContentRequest.Content> functionCalls = new HashMap<>();
         Map<String, GenerateContentRequest.Content> functionResponses = new HashMap<String, GenerateContentRequest.Content>();
         for (ChatMessage message : messages) {
             if (message instanceof SystemMessage sm) {
@@ -60,7 +53,8 @@ final class ContentMapper {
                                         argumentsStr,
                                         Map.class);
                                 FunctionCall functionCall = new FunctionCall(name, arguments);
-                                Part part = GenerateContentRequest.Content.Part.ofFunctionCall(functionCall);
+                                GenerateContentRequest.Content.Part part = GenerateContentRequest.Content.Part
+                                        .ofFunctionCall(functionCall);
                                 functionCalls.put(name, new GenerateContentRequest.Content(role, List.of(part)));
                             }
                         } else {
@@ -76,7 +70,8 @@ final class ContentMapper {
                     FunctionResponse functionResponse = new FunctionResponse(toolName,
                             new FunctionResponse.Response(toolName, content));
 
-                    Part part = GenerateContentRequest.Content.Part.ofFunctionResponse(functionResponse);
+                    GenerateContentRequest.Content.Part part = GenerateContentRequest.Content.Part
+                            .ofFunctionResponse(functionResponse);
                     functionResponses.put(toolName, new GenerateContentRequest.Content(role, List.of(part)));
                 } else {
                     throw new IllegalArgumentException(

@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini;
+package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,12 +6,12 @@ import java.util.List;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.model.output.TokenUsage;
 
-final class GenerateContentResponseHandler {
+public final class GenerateContentResponseHandler {
 
     private GenerateContentResponseHandler() {
     }
 
-    static String getText(GenerateContentResponse response) {
+    public static String getText(GenerateContentResponse response) {
         GenerateContentResponse.FinishReason finishReason = getFinishReason(response);
         if (finishReason == GenerateContentResponse.FinishReason.SAFETY) {
             throw new IllegalArgumentException("The response is blocked due to safety reason.");
@@ -28,7 +28,7 @@ final class GenerateContentResponseHandler {
         return text.toString();
     }
 
-    static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
+    public static GenerateContentResponse.FinishReason getFinishReason(GenerateContentResponse response) {
         if (response.candidates().size() != 1) {
             throw new IllegalArgumentException(
                     String.format(
@@ -38,14 +38,14 @@ final class GenerateContentResponseHandler {
         return response.candidates().get(0).finishReason();
     }
 
-    static TokenUsage getTokenUsage(GenerateContentResponse.UsageMetadata usageMetadata) {
+    public static TokenUsage getTokenUsage(GenerateContentResponse.UsageMetadata usageMetadata) {
         return new TokenUsage(
                 usageMetadata.promptTokenCount(),
                 usageMetadata.candidatesTokenCount(),
                 usageMetadata.totalTokenCount());
     }
 
-    static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
+    public static List<ToolExecutionRequest> getToolExecutionRequests(GenerateContentResponse response) {
         List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
         List<ToolExecutionRequest> toolExecutionRequests = new ArrayList<>();
         for (GenerateContentResponse.Candidate.Part part : parts) {
