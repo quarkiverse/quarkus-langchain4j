@@ -19,6 +19,7 @@
     <module>azure-openai</module>
     <module>multiple-providers</module>
     <module>mistralai</module>
+    <module>ai-gemini</module>
     <module>vertex-ai-gemini</module>
     <module>devui</module>
     <module>devui-multiple-embedding-models</module>
