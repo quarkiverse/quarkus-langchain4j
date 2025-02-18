@@ -29,7 +29,7 @@ public class NoAutomaticToolProviderTest {
                     .addClass(MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:${quarkus.http.test-port}/mock-mcp/sse
+                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
                             quarkus.langchain4j.mcp.generate-tool-provider=false
                             """),
                             "application.properties"));
