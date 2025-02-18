@@ -9,6 +9,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.smallrye.mutiny.Uni;
 
 /**
  * Model authentication providers can be used to supply credentials such as access tokens, API keys, and other type of
@@ -26,6 +27,10 @@ public interface ModelAuthProvider {
      *         Returning null will result in no Authorization header being set.
      */
     String getAuthorization(Input input);
+
+    default Uni<String> getAuthorizationAsync(Input input) {
+        return Uni.createFrom().item(getAuthorization(input));
+    }
 
     /*
      * Representation of an HTTP request to the model provider
