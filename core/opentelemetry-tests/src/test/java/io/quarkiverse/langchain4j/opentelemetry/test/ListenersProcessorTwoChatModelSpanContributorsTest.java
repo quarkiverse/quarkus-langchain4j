@@ -22,7 +22,6 @@ import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.sdk.trace.internal.data.ExceptionEventData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -68,7 +67,8 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         var actualSpan = exporter.getFinishedSpanItems().get(0);
         assertThat(actualSpan.getEvents())
                 .hasSize(2)
-                .extracting(ex -> ((ExceptionEventData) ex).getException().getMessage())
+                .extracting("exception")
+                .extracting("message")
                 .contains("--failure-on-request-of-contributor--", "--failure-on-request-of-contributor--");
     }
 
@@ -86,7 +86,8 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         var actualSpan = exporter.getFinishedSpanItems().get(0);
         assertThat(actualSpan.getEvents())
                 .hasSize(2)
-                .extracting(ex -> ((ExceptionEventData) ex).getException().getMessage())
+                .extracting("exception")
+                .extracting("message")
                 .contains(
                         "--failure-on-response-of-contributor--", "--failure-on-response-of-contributor--");
     }
@@ -105,7 +106,8 @@ class ListenersProcessorTwoChatModelSpanContributorsTest
         var actualSpan = exporter.getFinishedSpanItems().get(0);
         assertThat(actualSpan.getEvents())
                 .hasSize(3)
-                .extracting(ex -> ((ExceptionEventData) ex).getException().getMessage())
+                .extracting("exception")
+                .extracting("message")
                 .contains(
                         "--failure-on-error-of-contributor--",
                         "--failure-on-error-of-contributor--",
