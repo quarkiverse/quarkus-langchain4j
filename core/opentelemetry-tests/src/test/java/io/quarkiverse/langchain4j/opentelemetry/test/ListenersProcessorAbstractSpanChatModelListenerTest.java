@@ -25,7 +25,6 @@ import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.sdk.trace.internal.data.ExceptionEventData;
 import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
 import io.quarkiverse.langchain4j.runtime.listeners.SpanChatModelListener;
 import io.quarkus.arc.All;
@@ -87,8 +86,8 @@ abstract class ListenersProcessorAbstractSpanChatModelListenerTest {
         assertThat(actualSpan.getEvents())
                 .hasSize(1)
                 .first()
-                .isInstanceOf(ExceptionEventData.class)
-                .extracting(ex -> ((ExceptionEventData) ex).getException().getMessage())
+                .extracting("exception")
+                .extracting("message")
                 .isEqualTo("--failed--");
         verifyFailedSpan(actualSpan);
     }
