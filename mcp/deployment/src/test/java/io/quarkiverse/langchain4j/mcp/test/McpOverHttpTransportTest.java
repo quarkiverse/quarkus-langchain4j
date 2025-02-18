@@ -46,7 +46,7 @@ public class McpOverHttpTransportTest {
                     .addClass(MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
-                            quarkus.langchain4j.mcp.client1.url=http://localhost:${quarkus.http.test-port}/mock-mcp/sse
+                            quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
                             quarkus.langchain4j.mcp.client1.log-requests=true
                             quarkus.langchain4j.mcp.client1.log-responses=true
                             quarkus.log.category."dev.langchain4j".level=DEBUG
