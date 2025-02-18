@@ -4,6 +4,7 @@ import org.jboss.jandex.DotName;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -31,6 +32,7 @@ import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
@@ -55,6 +57,7 @@ public class LangChain4jDotNames {
     public static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
+    static final DotName PDF_URL = DotName.createSimple(PdfUrl.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
@@ -110,6 +113,7 @@ public class LangChain4jDotNames {
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
+    static final DotName PDF_FILE = DotName.createSimple(PdfFile.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
     static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
 }
