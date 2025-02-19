@@ -7,8 +7,8 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-ai-gemini-parent</artifactId>
-    <name>Quarkus LangChain4j - AI Gemini - Parent</name>
+    <artifactId>quarkus-langchain4j-vertex-ai-gemini-parent</artifactId>
+    <name>Quarkus LangChain4j - Vertex AI Gemini - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

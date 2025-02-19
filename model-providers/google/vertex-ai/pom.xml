@@ -5,10 +5,10 @@
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
         <version>999-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-vertex-ai-gemini-parent</artifactId>
-    <name>Quarkus LangChain4j - Vertex AI Gemini - Parent</name>
+    <artifactId>quarkus-langchain4j-vertex-ai-parent</artifactId>
+    <name>Quarkus LangChain4j - Vertex AI - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
