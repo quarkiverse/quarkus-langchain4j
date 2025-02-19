@@ -14,6 +14,10 @@
         <module>anthropic</module>
         <module>cohere</module>
         <module>hugging-face</module>
+        <module>google/gemini/ai-gemini</module>
+        <module>google/gemini/gemini-common</module>
+        <module>google/vertex-ai</module>
+        <module>google/vertex-ai-gemini</module>
         <module>mistral</module>
         <module>ollama</module>
         <!-- Add another pom -->
@@ -22,12 +26,7 @@
         <module>openai/openai-vanilla</module>
         <module>openai/testing-internal</module>
 
-        <module>gemini/gemini-common</module>
-        <module>gemini/ai-gemini</module>
-
         <module>openshift-ai</module>
-        <module>vertex-ai</module>
-        <module>vertex-ai-gemini</module>
         <module>watsonx</module>
     </modules>
 

@@ -3,35 +3,17 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-vertex-ai-gemini-parent</artifactId>
+        <artifactId>quarkus-langchain4j-ai-gemini-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-vertex-ai-gemini</artifactId>
-    <name>Quarkus LangChain4j - Vertex AI Gemini - Runtime</name>
+    <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
+    <name>Quarkus LangChain4j - AI Gemini - Runtime</name>
     <dependencies>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-gemini-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jackson</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.auth</groupId>
-            <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>1.24.0</version>
         </dependency>
 
         <dependency>
@@ -90,7 +72,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <classesDirectory>${project.basedir}/src/main</classesDirectory>
+                            <classesDirectory>src/main</classesDirectory>
                             <includes>
                                 <include>codestarts/**</include>
                             </includes>
