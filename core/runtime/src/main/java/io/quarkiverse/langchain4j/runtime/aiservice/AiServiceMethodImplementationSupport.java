@@ -175,8 +175,8 @@ public class AiServiceMethodImplementationSupport {
 
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
-        boolean hasMethodSpecificTools = methodCreateInfo.getToolClassNames() != null
-                && !methodCreateInfo.getToolClassNames().isEmpty();
+        boolean hasMethodSpecificTools = methodCreateInfo.getToolClassInfo() != null
+                && !methodCreateInfo.getToolClassInfo().isEmpty();
         List<ToolSpecification> toolSpecifications = hasMethodSpecificTools ? methodCreateInfo.getToolSpecifications()
                 : context.toolService.toolSpecifications();
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()

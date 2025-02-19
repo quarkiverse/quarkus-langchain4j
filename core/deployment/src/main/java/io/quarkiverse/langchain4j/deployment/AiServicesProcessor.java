@@ -942,7 +942,8 @@ public class AiServicesProcessor {
             BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             Capabilities capabilities,
-            List<ToolMethodBuildItem> tools) {
+            List<ToolMethodBuildItem> tools,
+            List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -1116,10 +1117,10 @@ public class AiServicesProcessor {
                                 config.responseSchema(),
                                 allowedPredicates,
                                 ignoredPredicates,
-                                tools);
-                        if (!methodCreateInfo.getToolClassNames().isEmpty()) {
+                                tools, toolQualifierProviderItems);
+                        if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
                             unremovableBeanProducer.produce(UnremovableBeanBuildItem
-                                    .beanClassNames(methodCreateInfo.getToolClassNames().toArray(EMPTY_STRING_ARRAY)));
+                                    .beanClassNames(methodCreateInfo.getToolClassInfo().keySet().toArray(EMPTY_STRING_ARRAY)));
                         }
                         perMethodMetadata.put(methodId, methodCreateInfo);
 
@@ -1249,7 +1250,8 @@ public class AiServicesProcessor {
             boolean addOpenTelemetrySpans, boolean generateResponseSchema,
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
             Collection<Predicate<AnnotationInstance>> ignoredPredicates,
-            List<ToolMethodBuildItem> tools) {
+            List<ToolMethodBuildItem> tools,
+            List<ToolQualifierProvider.BuildItem> toolQualifierProviders) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -1289,7 +1291,9 @@ public class AiServicesProcessor {
         Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
                 addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.SpanInfo> spanInfo = gatherSpanInfo(method, addOpenTelemetrySpans);
-        List<String> methodToolClassNames = gatherMethodToolClassNames(method);
+        Map<String, AnnotationLiteral<?>> methodToolClassInfo = gatherMethodToolInfo(method, index,
+                toolQualifierProviders.stream().map(
+                        ToolQualifierProvider.BuildItem::getProvider).toList());
 
         List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
         List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
@@ -1300,12 +1304,12 @@ public class AiServicesProcessor {
 
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
-                methodToolClassNames);
+                methodToolClassInfo.keySet());
 
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassNames,
+                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassInfo,
                 switchToWorkerThreadForToolExecution, inputGuardrails, outputGuardrails, accumulatorClassName,
                 responseAugmenterClassName);
     }
@@ -1318,7 +1322,7 @@ public class AiServicesProcessor {
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
-            List<String> methodToolClassNames) {
+            Collection<String> methodToolClassNames) {
         List<String> allTools = new ArrayList<>(methodToolClassNames);
         // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
         AnnotationInstance annotation = method.declaringClass().annotation(REGISTER_AI_SERVICES);
@@ -1672,6 +1676,26 @@ public class AiServicesProcessor {
         // TODO: add more
 
         return Optional.of(new AiServiceMethodCreateInfo.SpanInfo(name));
+    }
+
+    private Map<String, AnnotationLiteral<?>> gatherMethodToolInfo(MethodInfo method, IndexView index,
+            List<ToolQualifierProvider> toolQualifierProviders) {
+        Map<String, AnnotationLiteral<?>> result = new HashMap<>();
+        for (String methodToolClassName : gatherMethodToolClassNames(method)) {
+            ClassInfo classInfo = index.getClassByName(methodToolClassName);
+            if (classInfo == null) {
+                result.put(methodToolClassName, null);
+            } else {
+                AnnotationLiteral<?> qualifier = null;
+                for (ToolQualifierProvider toolQualifierProvider : toolQualifierProviders) {
+                    if (toolQualifierProvider.supports(classInfo)) {
+                        qualifier = toolQualifierProvider.qualifier(classInfo);
+                    }
+                }
+                result.put(methodToolClassName, qualifier);
+            }
+        }
+        return result;
     }
 
     private List<String> gatherMethodToolClassNames(MethodInfo method) {

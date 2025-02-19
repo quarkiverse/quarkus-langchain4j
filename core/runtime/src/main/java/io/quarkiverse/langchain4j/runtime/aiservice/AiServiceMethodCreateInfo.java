@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.util.AnnotationLiteral;
+
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -37,7 +39,7 @@ public final class AiServiceMethodCreateInfo {
     private final Optional<MetricsCountedInfo> metricsCountedInfo;
     private final Optional<SpanInfo> spanInfo;
     // support @Toolbox
-    private final List<String> toolClassNames;
+    private final Map<String, AnnotationLiteral<?>> toolClassInfo;
     private final ResponseSchemaInfo responseSchemaInfo;
 
     // support for guardrails
@@ -73,7 +75,7 @@ public final class AiServiceMethodCreateInfo {
             Optional<MetricsCountedInfo> metricsCountedInfo,
             Optional<SpanInfo> spanInfo,
             ResponseSchemaInfo responseSchemaInfo,
-            List<String> toolClassNames,
+            Map<String, AnnotationLiteral<?>> toolClassInfo,
             boolean switchToWorkerThreadForToolExecution,
             List<String> inputGuardrailsClassNames,
             List<String> outputGuardrailsClassNames,
@@ -96,7 +98,7 @@ public final class AiServiceMethodCreateInfo {
         this.metricsCountedInfo = metricsCountedInfo;
         this.spanInfo = spanInfo;
         this.responseSchemaInfo = responseSchemaInfo;
-        this.toolClassNames = toolClassNames;
+        this.toolClassInfo = toolClassInfo;
         this.inputGuardrailsClassNames = inputGuardrailsClassNames;
         this.outputGuardrailsClassNames = outputGuardrailsClassNames;
         this.outputTokenAccumulatorClassName = outputTokenAccumulatorClassName;
@@ -160,8 +162,8 @@ public final class AiServiceMethodCreateInfo {
         return responseSchemaInfo;
     }
 
-    public List<String> getToolClassNames() {
-        return toolClassNames;
+    public Map<String, AnnotationLiteral<?>> getToolClassInfo() {
+        return toolClassInfo;
     }
 
     public List<ToolSpecification> getToolSpecifications() {

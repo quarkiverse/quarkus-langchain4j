@@ -72,17 +72,25 @@ public class AiServicesRecorder {
     }
 
     private static void populateToolMetadata(AiServiceMethodCreateInfo methodCreateInfo) {
-        List<String> methodToolClassNames = methodCreateInfo.getToolClassNames();
-        if ((methodToolClassNames != null) && !methodToolClassNames.isEmpty()) {
+        Map<String, AnnotationLiteral<?>> toolsClassInfo = methodCreateInfo.getToolClassInfo();
+        if ((toolsClassInfo != null) && !toolsClassInfo.isEmpty()) {
             // we need to make sure we populate toolSpecifications and toolExecutors only the first time the method is called
             if (methodCreateInfo.getToolSpecifications().isEmpty()) {
                 synchronized (methodCreateInfo.getToolSpecifications()) {
                     if (methodCreateInfo.getToolSpecifications().isEmpty()) {
                         try {
-                            List<Object> objectWithTools = new ArrayList<>(methodToolClassNames.size());
-                            for (String toolClass : methodToolClassNames) {
-                                Object tool = Arc.container()
-                                        .instance(Thread.currentThread().getContextClassLoader().loadClass(toolClass)).get();
+                            List<Object> objectWithTools = new ArrayList<>(toolsClassInfo.size());
+                            for (var entry : toolsClassInfo.entrySet()) {
+                                AnnotationLiteral<?> qualifier = entry.getValue();
+                                Object tool;
+                                if (qualifier != null) {
+                                    tool = Arc.container().instance(
+                                            Thread.currentThread().getContextClassLoader().loadClass(entry.getKey()),
+                                            qualifier).get();
+                                } else {
+                                    tool = Arc.container().instance(
+                                            Thread.currentThread().getContextClassLoader().loadClass(entry.getKey())).get();
+                                }
                                 objectWithTools.add(tool);
                             }
                             ToolsRecorder.populateToolMetadata(objectWithTools, methodCreateInfo.getToolSpecifications(),
