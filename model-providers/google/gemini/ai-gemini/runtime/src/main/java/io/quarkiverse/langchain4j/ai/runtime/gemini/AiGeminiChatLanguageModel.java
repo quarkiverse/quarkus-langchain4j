@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ai.runtime.gemini;
 
 import static dev.langchain4j.data.message.AiMessage.aiMessage;
+import static dev.langchain4j.internal.Utils.getOrDefault;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,6 +18,10 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ResponseFormatType;
+import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.gemini.common.ContentMapper;
 import io.quarkiverse.langchain4j.gemini.common.FinishReasonMapper;
@@ -24,21 +29,26 @@ import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponseHandler;
 import io.quarkiverse.langchain4j.gemini.common.GenerationConfig;
+import io.quarkiverse.langchain4j.gemini.common.SchemaMapper;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class AiGeminiChatLanguageModel implements ChatLanguageModel {
 
-    private final GenerationConfig generationConfig;
     private final AiGeminiRestApi.ApiMetadata apiMetadata;
     private final AiGeminiRestApi restApi;
 
+    private final Double temperature;
+    private final Integer maxOutputTokens;
+    private final Integer topK;
+    private final Double topP;
+    private final ResponseFormat responseFormat;
+
     private AiGeminiChatLanguageModel(Builder builder) {
-        this.generationConfig = GenerationConfig.builder()
-                .maxOutputTokens(builder.maxOutputTokens)
-                .temperature(builder.temperature)
-                .topK(builder.topK)
-                .topP(builder.topP)
-                .build();
+        this.temperature = builder.temperature;
+        this.maxOutputTokens = builder.maxOutputTokens;
+        this.topK = builder.topK;
+        this.topP = builder.topP;
+        this.responseFormat = builder.responseFormat;
 
         this.apiMetadata = AiGeminiRestApi.ApiMetadata
                 .builder()
@@ -66,6 +76,19 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
 
     @Override
     public dev.langchain4j.model.chat.response.ChatResponse chat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
+        ChatRequestParameters requestParameters = chatRequest.parameters();
+        ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
+        GenerationConfig generationConfig = GenerationConfig.builder()
+                .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
+                .responseMimeType(computeMimeType(effectiveResponseFormat))
+                .responseSchema(effectiveResponseFormat != null
+                        ? SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema())
+                        : null)
+                .stopSequences(requestParameters.stopSequences())
+                .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
+                .topK(getOrDefault(requestParameters.topK(), this.topK))
+                .topP(getOrDefault(requestParameters.topP(), this.topP))
+                .build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig);
 
@@ -73,7 +96,7 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
 
         String text = GenerateContentResponseHandler.getText(response);
         List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler.getToolExecutionRequests(response);
-        AiMessage aiMessage = toolExecutionRequests == null || toolExecutionRequests.isEmpty()
+        AiMessage aiMessage = toolExecutionRequests.isEmpty()
                 ? aiMessage(text)
                 : aiMessage(text, toolExecutionRequests);
         return dev.langchain4j.model.chat.response.ChatResponse.builder()
@@ -81,6 +104,21 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
                 .tokenUsage(GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()))
                 .finishReason(FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response)))
                 .build();
+    }
+
+    private String computeMimeType(ResponseFormat responseFormat) {
+        if (responseFormat == null || ResponseFormatType.TEXT.equals(responseFormat.type())) {
+            return "text/plain";
+        }
+
+        if (ResponseFormatType.JSON.equals(responseFormat.type()) &&
+                responseFormat.jsonSchema() != null &&
+                responseFormat.jsonSchema().rootElement() != null &&
+                responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
+            return "text/x.enum";
+        }
+
+        return "application/json";
     }
 
     @Override
@@ -122,6 +160,7 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
         private Integer maxOutputTokens;
         private Integer topK;
         private Double topP;
+        private ResponseFormat responseFormat;
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
@@ -158,6 +197,11 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
 
         public Builder topP(Double topP) {
             this.topP = topP;
+            return this;
+        }
+
+        public Builder responseFormat(ResponseFormat responseFormat) {
+            this.responseFormat = responseFormat;
             return this;
         }
 

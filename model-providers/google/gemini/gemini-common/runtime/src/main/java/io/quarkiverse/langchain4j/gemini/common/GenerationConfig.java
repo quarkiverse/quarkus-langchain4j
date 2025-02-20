@@ -1,17 +1,25 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
+import java.util.List;
+
 public class GenerationConfig {
 
     private final Double temperature;
     private final Integer maxOutputTokens;
     private final Integer topK;
     private final Double topP;
+    private final String responseMimeType;
+    private final Schema responseSchema;
+    private final List<String> stopSequences;
 
     public GenerationConfig(Builder builder) {
         this.temperature = builder.temperature;
         this.maxOutputTokens = builder.maxOutputTokens;
         this.topK = builder.topK;
         this.topP = builder.topP;
+        this.responseMimeType = builder.responseMimeType;
+        this.responseSchema = builder.responseSchema;
+        this.stopSequences = builder.stopSequences;
     }
 
     public Double getTemperature() {
@@ -30,6 +38,18 @@ public class GenerationConfig {
         return topP;
     }
 
+    public String getResponseMimeType() {
+        return responseMimeType;
+    }
+
+    public Schema getResponseSchema() {
+        return responseSchema;
+    }
+
+    public List<String> getStopSequences() {
+        return stopSequences;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -40,6 +60,9 @@ public class GenerationConfig {
         private Integer maxOutputTokens;
         private Integer topK;
         private Double topP;
+        private String responseMimeType;
+        private Schema responseSchema;
+        private List<String> stopSequences;
 
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
@@ -58,6 +81,21 @@ public class GenerationConfig {
 
         public Builder topP(Double topP) {
             this.topP = topP;
+            return this;
+        }
+
+        public Builder responseMimeType(String responseMimeType) {
+            this.responseMimeType = responseMimeType;
+            return this;
+        }
+
+        public Builder responseSchema(Schema schema) {
+            this.responseSchema = schema;
+            return this;
+        }
+
+        public Builder stopSequences(List<String> stopSequences) {
+            this.stopSequences = stopSequences;
             return this;
         }
 
