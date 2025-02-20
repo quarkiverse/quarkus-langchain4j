@@ -469,6 +469,17 @@ public class CustomSpanDataContributor implements ChatModelSpanContributor {
 }
 ----
 
+==== LangFuse
+
+Traces can be exported to link:https://langfuse.com[LangFuse] simply by making the following configuration in `application.properties`:
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.headers=Authorization=Basic <base64 of public:key>
+quarkus.otel.exporter.otlp.endpoint=https://cloud.langfuse.com/api/public/otel
+quarkus.otel.exporter.otlp.traces.protocol=http/protobuf
+----
+
 === Auditing
 
 The extension allows users to audit the process of implementing an AiService by observing normal CDI events. The following example shows a class that audits all events.
