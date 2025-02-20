@@ -7,18 +7,27 @@ public record GenerateContentRequest(List<Content> contents, SystemInstruction s
 
     public record Content(String role, List<Part> parts) {
 
-        public record Part(String text, FunctionCall functionCall, FunctionResponse functionResponse) {
+        public record Part(String text, FunctionCall functionCall, FunctionResponse functionResponse, FileData fileData,
+                Blob inlineData) {
 
             public static Part ofText(String text) {
-                return new Part(text, null, null);
+                return new Part(text, null, null, null, null);
             }
 
             public static Part ofFunctionCall(FunctionCall functionCall) {
-                return new Part(null, functionCall, null);
+                return new Part(null, functionCall, null, null, null);
             }
 
             public static Part ofFunctionResponse(FunctionResponse functionResponse) {
-                return new Part(null, null, functionResponse);
+                return new Part(null, null, functionResponse, null, null);
+            }
+
+            public static Part ofFileData(FileData fileData) {
+                return new Part(null, null, null, fileData, null);
+            }
+
+            public static Part ofInlineData(Blob inlineData) {
+                return new Part(null, null, null, null, inlineData);
             }
         }
     }

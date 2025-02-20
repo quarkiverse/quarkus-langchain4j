@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,12 +12,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.*;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
+import dev.langchain4j.data.message.PdfFileContent;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.TextContent;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public final class ContentMapper {
+
+    private static final CustomMimeTypesFileTypeDetector mimeTypeDetector = new CustomMimeTypesFileTypeDetector();
 
     private ContentMapper() {
     }
@@ -27,7 +38,7 @@ public final class ContentMapper {
         List<GenerateContentRequest.Content> contents = new ArrayList<>(messages.size());
 
         Map<String, GenerateContentRequest.Content> functionCalls = new HashMap<>();
-        Map<String, GenerateContentRequest.Content> functionResponses = new HashMap<String, GenerateContentRequest.Content>();
+        Map<String, GenerateContentRequest.Content> functionResponses = new HashMap<>();
         for (ChatMessage message : messages) {
             if (message instanceof SystemMessage sm) {
                 systemPrompts.add(sm.text());
@@ -38,6 +49,15 @@ public final class ContentMapper {
                     for (Content userMessageContent : um.contents()) {
                         if (userMessageContent instanceof TextContent tc) {
                             parts.add(GenerateContentRequest.Content.Part.ofText(tc.text()));
+                        } else if (userMessageContent instanceof PdfFileContent fc) {
+                            URI uri = fc.pdfFile().url();
+                            if (uri != null) {
+                                parts.add(GenerateContentRequest.Content.Part
+                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                            } else {
+                                parts.add(GenerateContentRequest.Content.Part
+                                        .ofInlineData(new Blob("application/pdf", fc.pdfFile().base64Data())));
+                            }
                         } else {
                             throw new IllegalArgumentException("The Gemini integration currently only supports text content");
                         }
