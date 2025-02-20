@@ -17,6 +17,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.gemini.common.ContentMapper;
 import io.quarkiverse.langchain4j.gemini.common.FinishReasonMapper;
@@ -126,6 +127,7 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
         private Integer maxOutputTokens;
         private Integer topK;
         private Double topP;
+        private ResponseFormat responseFormat;
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
@@ -172,6 +174,11 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
 
         public Builder topP(Double topP) {
             this.topP = topP;
+            return this;
+        }
+
+        public Builder responseFormat(ResponseFormat responseFormat) {
+            this.responseFormat = responseFormat;
             return this;
         }
 
