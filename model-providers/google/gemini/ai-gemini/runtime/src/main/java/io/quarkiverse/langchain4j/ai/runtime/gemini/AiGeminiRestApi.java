@@ -23,6 +23,10 @@ import io.vertx.core.http.HttpClientResponse;
 @Path("v1beta/models/")
 public interface AiGeminiRestApi {
 
+    @Path("{modelId}:embedContent")
+    @POST
+    EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest, @BeanParam ApiMetadata apiMetadata);
+
     @Path("{modelId}:generateContent")
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);

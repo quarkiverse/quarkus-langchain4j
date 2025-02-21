@@ -8,9 +8,16 @@ import io.smallrye.config.ConfigMapping;
 
 @ConfigRoot(phase = BUILD_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.ai.gemini")
-public interface LangChain4jAiBuildConfig {
+public interface GeminiBuildConfig {
+
     /**
      * Chat model related settings
      */
     ChatModelBuildConfig chatModel();
+
+    /**
+     * Embedding model related settings
+     */
+    LangChain4jAiEmbeddingConfig embeddingModel();
+
 }

@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
@@ -15,6 +17,35 @@ import io.smallrye.config.ConfigValidationException;
 @Recorder
 public class AiGeminiRecorder {
     private static final String DUMMY_KEY = "dummy";
+
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAiGeminiConfig config, String configName) {
+        var aiConfig = correspondingAiConfig(config, configName);
+
+        if (aiConfig.enableIntegration()) {
+            var embeddingModelConfig = aiConfig.embeddingModel();
+            Optional<String> baseUrl = aiConfig.baseUrl();
+
+            String key = aiConfig.apiKey();
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(key)) {
+                throw new ConfigValidationException(createConfigProblems("api-key", configName));
+            }
+
+            var builder = AiGeminiEmbeddingModel.builder()
+                    .baseUrl(baseUrl)
+                    .key(key)
+                    .modelId(embeddingModelConfig.modelId())
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), aiConfig.logResponses()));
+
+            if (embeddingModelConfig.outputDimension().isPresent()) {
+                builder.dimension(embeddingModelConfig.outputDimension().get());
+            }
+
+            return builder::build;
+        } else {
+            return DisabledEmbeddingModel::new;
+        }
+    }
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jAiGeminiConfig config, String configName) {
         var aiConfig = correspondingAiConfig(config, configName);
