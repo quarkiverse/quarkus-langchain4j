@@ -16,7 +16,7 @@ public class MyWeatherResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public String getWeatherAlertsForUtah(@QueryParam ("state") String state) {
+    public String getWeatherAlertsForState(@QueryParam ("state") String state) {
         if (state == null || state.isEmpty()) {
             throw new IllegalArgumentException("State parameter is required");
         }
