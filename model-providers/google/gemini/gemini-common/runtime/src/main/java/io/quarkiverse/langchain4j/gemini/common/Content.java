@@ -9,7 +9,7 @@ public record Content(String role, List<Part> parts) {
     }
 
     public record Part(String text, FunctionCall functionCall, FunctionResponse functionResponse, FileData fileData,
-                       Blob inlineData) {
+            Blob inlineData) {
 
         public static Content.Part ofText(String text) {
             return new Content.Part(text, null, null, null, null);

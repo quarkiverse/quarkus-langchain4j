@@ -1,25 +1,22 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiChatLanguageModel;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiEmbeddingModel;
-import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
-import io.quarkus.arc.ClientProxy;
-import io.quarkus.test.QuarkusUnitTest;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.inject.Inject;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.Arrays;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiEmbeddingModel;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkus.arc.ClientProxy;
+import io.quarkus.test.QuarkusUnitTest;
 
 public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 

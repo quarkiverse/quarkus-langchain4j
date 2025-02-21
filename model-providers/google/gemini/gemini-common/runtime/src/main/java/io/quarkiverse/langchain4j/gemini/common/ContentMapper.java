@@ -36,10 +36,8 @@ public final class ContentMapper {
         List<String> systemPrompts = new ArrayList<>();
         List<Content> contents = new ArrayList<>(messages.size());
 
-
         Map<String, Content> functionCalls = new HashMap<>();
         Map<String, Content> functionResponses = new HashMap<>();
-
 
         for (ChatMessage message : messages) {
             if (message instanceof SystemMessage sm) {
