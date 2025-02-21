@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
@@ -37,7 +37,7 @@ public class OllamaModelAuthProviderTest extends WiremockAware {
 
     @Test
     void blocking() {
-        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatModel.class);
 
         wiremock().register(
                 post(urlEqualTo("/api/chat"))
