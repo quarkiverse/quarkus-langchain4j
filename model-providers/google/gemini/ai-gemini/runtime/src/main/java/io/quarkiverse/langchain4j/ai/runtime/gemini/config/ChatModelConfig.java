@@ -90,7 +90,7 @@ public interface ChatModelConfig {
      * Global timeout for requests to gemini APIs
      */
     @ConfigDocDefault("10s")
-    @WithDefault("${quarkus.langchain4j.vertexai.gemini.timeout}")
+    @WithDefault("${quarkus.langchain4j.ai.gemini.timeout}")
     Optional<Duration> timeout();
 
 }

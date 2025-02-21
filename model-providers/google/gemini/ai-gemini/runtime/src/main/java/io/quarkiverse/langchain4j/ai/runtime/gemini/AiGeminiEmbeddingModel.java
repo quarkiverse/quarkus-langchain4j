@@ -1,13 +1,5 @@
 package io.quarkiverse.langchain4j.ai.runtime.gemini;
 
-import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.gemini.common.Content;
-import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
-import org.jboss.resteasy.reactive.client.api.LoggingScope;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -15,10 +7,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.resteasy.reactive.client.api.LoggingScope;
+
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
+import io.quarkiverse.langchain4j.gemini.common.Content;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+
 public class AiGeminiEmbeddingModel implements EmbeddingModel {
 
     private final AiGeminiRestApi restApi;
     private final AiGeminiRestApi.ApiMetadata apiMetadata;
+
+    private final Integer dimension;
 
     public AiGeminiEmbeddingModel(Builder builder) {
         this.apiMetadata = AiGeminiRestApi.ApiMetadata
@@ -39,6 +42,8 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
                 restApiBuilder.clientLogger(new AiGeminiRestApi.AiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
+
+            this.dimension = builder.dimension;
             restApi = restApiBuilder.build(AiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -56,7 +61,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
         Content content = Content.ofPart(part);
 
         EmbedContentRequest embedContentRequest = new EmbedContentRequest(content,
-                null, null, null);
+                null, null, this.dimension);
 
         EmbedContentResponse embedContentResponse = restApi.embedContent(embedContentRequest, this.apiMetadata);
 
@@ -72,6 +77,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
         private Optional<String> baseUrl = Optional.empty();
         private String modelId;
         private String key;
+        private Integer dimension;
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
@@ -91,6 +97,11 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
+        public Builder dimension(Integer dimension) {
+            this.dimension = dimension;
+            return this;
+        }
+
         public Builder timeout(Duration timeout) {
             this.timeout = timeout;
             return this;
@@ -104,6 +115,10 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
             return this;
+        }
+
+        public AiGeminiEmbeddingModel build() {
+            return new AiGeminiEmbeddingModel(this);
         }
     }
 }
