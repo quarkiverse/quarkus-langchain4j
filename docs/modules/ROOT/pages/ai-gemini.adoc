@@ -33,6 +33,16 @@ quarkus.langchain4j.ai.gemini.api-key=...
 
 TIP: Alternatively, leverage the `QUARKUS_LANGCHAIN4J_AI_GEMINI_API_KEY` environment variable.
 
+=== Embedding Model
+
+You can use the Gemini embedding model too.
+
+[source, java]
+----
+@Inject
+EmbeddingModel embeddingModel;
+----
+
 Several configuration properties are available:
 
 include::includes/quarkus-langchain4j-ai-gemini.adoc[leveloffset=+1,opts=optional]

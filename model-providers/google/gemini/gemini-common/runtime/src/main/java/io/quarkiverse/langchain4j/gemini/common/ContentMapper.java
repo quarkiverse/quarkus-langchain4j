@@ -14,7 +14,6 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
@@ -35,34 +34,35 @@ public final class ContentMapper {
     public static GenerateContentRequest map(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
             GenerationConfig generationConfig) {
         List<String> systemPrompts = new ArrayList<>();
-        List<GenerateContentRequest.Content> contents = new ArrayList<>(messages.size());
+        List<Content> contents = new ArrayList<>(messages.size());
 
-        Map<String, GenerateContentRequest.Content> functionCalls = new HashMap<>();
-        Map<String, GenerateContentRequest.Content> functionResponses = new HashMap<>();
+        Map<String, Content> functionCalls = new HashMap<>();
+        Map<String, Content> functionResponses = new HashMap<>();
+
         for (ChatMessage message : messages) {
             if (message instanceof SystemMessage sm) {
                 systemPrompts.add(sm.text());
             } else {
                 String role = RoleMapper.map(message.type());
                 if (message instanceof UserMessage um) {
-                    List<GenerateContentRequest.Content.Part> parts = new ArrayList<>(um.contents().size());
-                    for (Content userMessageContent : um.contents()) {
+                    List<Content.Part> parts = new ArrayList<>(um.contents().size());
+                    for (dev.langchain4j.data.message.Content userMessageContent : um.contents()) {
                         if (userMessageContent instanceof TextContent tc) {
-                            parts.add(GenerateContentRequest.Content.Part.ofText(tc.text()));
+                            parts.add(Content.Part.ofText(tc.text()));
                         } else if (userMessageContent instanceof PdfFileContent fc) {
                             URI uri = fc.pdfFile().url();
                             if (uri != null) {
-                                parts.add(GenerateContentRequest.Content.Part
+                                parts.add(Content.Part
                                         .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
                             } else {
-                                parts.add(GenerateContentRequest.Content.Part
+                                parts.add(Content.Part
                                         .ofInlineData(new Blob("application/pdf", fc.pdfFile().base64Data())));
                             }
                         } else {
                             throw new IllegalArgumentException("The Gemini integration currently only supports text content");
                         }
                     }
-                    contents.add(new GenerateContentRequest.Content(role, parts));
+                    contents.add(new Content(role, parts));
                 } else if (message instanceof AiMessage am) {
                     try {
                         if (am.hasToolExecutionRequests()) {
@@ -73,13 +73,13 @@ public final class ContentMapper {
                                         argumentsStr,
                                         Map.class);
                                 FunctionCall functionCall = new FunctionCall(name, arguments);
-                                GenerateContentRequest.Content.Part part = GenerateContentRequest.Content.Part
+                                Content.Part part = Content.Part
                                         .ofFunctionCall(functionCall);
-                                functionCalls.put(name, new GenerateContentRequest.Content(role, List.of(part)));
+                                functionCalls.put(name, new Content(role, List.of(part)));
                             }
                         } else {
-                            contents.add(new GenerateContentRequest.Content(role,
-                                    List.of(GenerateContentRequest.Content.Part.ofText(am.text()))));
+                            contents.add(new Content(role,
+                                    List.of(Content.Part.ofText(am.text()))));
                         }
                     } catch (JsonProcessingException e) {
                         throw new IllegalStateException("Unable to perform conversion of tool response", e);
@@ -90,9 +90,9 @@ public final class ContentMapper {
                     FunctionResponse functionResponse = new FunctionResponse(toolName,
                             new FunctionResponse.Response(toolName, content));
 
-                    GenerateContentRequest.Content.Part part = GenerateContentRequest.Content.Part
+                    Content.Part part = Content.Part
                             .ofFunctionResponse(functionResponse);
-                    functionResponses.put(toolName, new GenerateContentRequest.Content(role, List.of(part)));
+                    functionResponses.put(toolName, new Content(role, List.of(part)));
                 } else {
                     throw new IllegalArgumentException(
                             "The Gemini integration currently does not support " + message.type() + " messages");
@@ -100,7 +100,7 @@ public final class ContentMapper {
             }
         }
 
-        for (Map.Entry<String, GenerateContentRequest.Content> entry : functionCalls.entrySet()) {
+        for (Map.Entry<String, Content> entry : functionCalls.entrySet()) {
             contents.add(entry.getValue());
             if (functionResponses.containsKey(entry.getKey())) {
                 contents.add(functionResponses.get(entry.getKey()));
