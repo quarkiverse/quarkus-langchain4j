@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,9 +24,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleDeserializers;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.spi.json.JsonCodecFactory;
+import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateDeserializer;
+import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateTimeDeserializer;
+import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalTimeDeserializer;
 import io.quarkus.arc.Arc;
 
 public class QuarkusJsonCodecFactory implements JsonCodecFactory {
@@ -109,7 +117,8 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                     .copy()
                     .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
                     .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
+                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true)
+                    .registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
         }
     }
@@ -120,7 +129,27 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
                 .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .enable(SerializationFeature.INDENT_OUTPUT)
-                .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
+                .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true)
+                .registerModule(QuarkusLangChain4jModule.INSTANCE);
+
+        private static class QuarkusLangChain4jModule extends SimpleModule {
+
+            private static final QuarkusLangChain4jModule INSTANCE = new QuarkusLangChain4jModule();
+
+            @Override
+            public String getModuleName() {
+                return "QuarkusLangChain4jModule";
+            }
+
+            @Override
+            public void setupModule(SetupContext context) {
+                SimpleDeserializers desers = new SimpleDeserializers();
+                desers.addDeserializer(LocalDate.class, new CustomLocalDateDeserializer());
+                desers.addDeserializer(LocalDateTime.class, new CustomLocalDateTimeDeserializer());
+                desers.addDeserializer(LocalTime.class, new CustomLocalTimeDeserializer());
+                context.addDeserializers(desers);
+            }
+        }
     }
 
 }
