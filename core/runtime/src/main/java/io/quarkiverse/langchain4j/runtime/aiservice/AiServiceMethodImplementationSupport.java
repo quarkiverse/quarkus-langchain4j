@@ -40,10 +40,12 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -624,6 +626,7 @@ public class AiServiceMethodImplementationSupport {
 
         String userName = null;
         ImageContent imageContent = null;
+        PdfFileContent pdfFileContent = null;
         if (userMessageInfo.userNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a build time error
@@ -645,6 +648,26 @@ public class AiServiceMethodImplementationSupport {
             } else {
                 throw new IllegalStateException("Unsupported parameter type '" + imageParamValue.getClass()
                         + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                        + createInfo.getMethodName());
+            }
+        }
+        if (userMessageInfo.pdfParamPosition().isPresent()) {
+            Object pdfParamValue = methodArgs[userMessageInfo.pdfParamPosition().get()];
+            if (pdfParamValue instanceof String s) {
+                pdfFileContent = PdfFileContent.from(s);
+            } else if (pdfParamValue instanceof URI u) {
+                pdfFileContent = PdfFileContent.from(u);
+            } else if (pdfParamValue instanceof URL u) {
+                try {
+                    pdfFileContent = PdfFileContent.from(u.toURI());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (pdfParamValue instanceof PdfFile i) {
+                pdfFileContent = PdfFileContent.from(i);
+            } else {
+                throw new IllegalStateException("Unsupported parameter type '" + pdfParamValue.getClass()
+                        + "' annotated with @PdfUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
                         + createInfo.getMethodName());
             }
         }
@@ -679,7 +702,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
-            return createUserMessage(userName, imageContent, prompt.text());
+            return createUserMessage(userName, imageContent, pdfFileContent, prompt.text());
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
@@ -693,7 +716,7 @@ public class AiServiceMethodImplementationSupport {
 
             String text = toString(argValue);
             return createUserMessage(userName, imageContent,
-                    text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
+                    pdfFileContent, text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
                             : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
@@ -718,19 +741,20 @@ public class AiServiceMethodImplementationSupport {
         return variables;
     }
 
-    private static UserMessage createUserMessage(String name, ImageContent imageContent, String text) {
+    private static UserMessage createUserMessage(String name, ImageContent imageContent, PdfFileContent pdfFileContent,
+            String text) {
+        List<dev.langchain4j.data.message.Content> contents = new ArrayList<>();
+        contents.add(TextContent.from(text));
+        if (imageContent != null) {
+            contents.add(imageContent);
+        }
+        if (pdfFileContent != null) {
+            contents.add(pdfFileContent);
+        }
         if (name == null) {
-            if (imageContent == null) {
-                return userMessage(text);
-            } else {
-                return UserMessage.userMessage(List.of(TextContent.from(text), imageContent));
-            }
+            return UserMessage.userMessage(contents);
         } else {
-            if (imageContent == null) {
-                return userMessage(name, text);
-            } else {
-                return userMessage(name, List.of(TextContent.from(text), imageContent));
-            }
+            return UserMessage.userMessage(name, contents);
         }
     }
 

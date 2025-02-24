@@ -1471,6 +1471,11 @@ public class AiServicesProcessor {
             MethodParameterInfo imageUrlParam = method.parameters().get(imageParamPosition.get());
             validateImageUrlParam(imageUrlParam);
         }
+        Optional<Integer> pdfParamPosition = determinePdfParamPosition(method);
+        if (pdfParamPosition.isPresent()) {
+            MethodParameterInfo pdfUrlParam = method.parameters().get(pdfParamPosition.get());
+            validatePdfUrlParam(pdfUrlParam);
+        }
 
         AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
@@ -1489,7 +1494,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamPosition, imageParamPosition);
+                    userNameParamPosition, imageParamPosition, pdfParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1502,11 +1507,11 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamPosition, imageParamPosition);
+                            userNameParamPosition, imageParamPosition, pdfParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamPosition, imageParamPosition);
+                            userNameParamPosition, imageParamPosition, pdfParamPosition);
                 }
             } else {
                 if (method.parametersCount() == 0) {
@@ -1514,7 +1519,7 @@ public class AiServicesProcessor {
                 }
                 if (method.parametersCount() == 1) {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
-                            imageParamPosition);
+                            imageParamPosition, pdfParamPosition);
                 }
 
                 throw illegalConfigurationForMethod(
@@ -1546,6 +1551,30 @@ public class AiServicesProcessor {
             return;
         }
         throw new IllegalArgumentException("Unhandled @ImageUrl type '" + type.name() + "'");
+    }
+
+    private static Optional<Integer> determinePdfParamPosition(MethodInfo method) {
+        Optional<Integer> result = method.annotations(LangChain4jDotNames.PDF_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (result.isPresent()) {
+            return result;
+        }
+        // we don't need @PdfUrl if the parameter is of type PdfFile
+        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
+                .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    private void validatePdfUrlParam(MethodParameterInfo param) {
+        if (param == null) {
+            throw new IllegalArgumentException("Unhandled @PdfUrl annotation");
+        }
+        Type type = param.type();
+        DotName typeName = type.name();
+        if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
+                || typeName.equals(LangChain4jDotNames.PDF_FILE)) {
+            return;
+        }
+        throw new IllegalArgumentException("Unhandled @PdfUrl type '" + type.name() + "'");
     }
 
     private Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> gatherMetricsTimedInfo(MethodInfo method,

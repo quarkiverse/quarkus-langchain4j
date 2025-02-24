@@ -57,6 +57,38 @@ public class JsonTest {
     }
 
     @Test
+    void readingLocalDateFromConstituentsWorks() {
+        String json = """
+                {
+                    "sampleDate": {
+                        "year": 2023,
+                        "month": 1,
+                        "day": 15
+                    },
+                    "sampleDateTime": {
+                        "date": {
+                            "year": 2023,
+                            "month": 1,
+                            "day": 15
+                        },
+                        "time": {
+                            "hour": 10,
+                            "minute": 20,
+                            "second": 0
+                        }
+                    },
+                    "some_value": "value"
+                }
+                """;
+
+        TestData deserializedData = Json.fromJson(json, TestData.class);
+
+        assertThat(deserializedData.getSampleDate()).isEqualTo(LocalDate.of(2023, 1, 15));
+        assertThat(deserializedData.getSampleDateTime()).isEqualTo(LocalDateTime.of(2023, 1, 15, 10, 20));
+        assertThat(deserializedData.getSomeValue()).isEqualTo("value");
+    }
+
+    @Test
     void toInputStreamWorksForList() throws IOException {
         List<TestObject> testObjects = Arrays.asList(
                 new TestObject("John", LocalDate.of(2021, 8, 17), LocalDateTime.of(2021, 8, 17, 14, 20)),

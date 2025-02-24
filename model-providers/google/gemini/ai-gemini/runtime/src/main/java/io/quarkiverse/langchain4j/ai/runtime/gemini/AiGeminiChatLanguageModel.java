@@ -2,13 +2,16 @@ package io.quarkiverse.langchain4j.ai.runtime.gemini;
 
 import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static dev.langchain4j.internal.Utils.getOrDefault;
+import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -17,6 +20,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -72,6 +76,18 @@ public class AiGeminiChatLanguageModel implements ChatLanguageModel {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Set<Capability> supportedCapabilities() {
+        Set<Capability> capabilities = new HashSet<>();
+        // when response format is not null, it's JSON, either application/json or text/x.enum
+        if (this.responseFormat != null && ResponseFormatType.JSON.equals(this.responseFormat.type())) {
+            capabilities.add(RESPONSE_FORMAT_JSON_SCHEMA);
+        } else if (responseFormat == null) { // when the responseFormat is not set, we default to supporting JSON as Google's models support this
+            capabilities.add(RESPONSE_FORMAT_JSON_SCHEMA);
+        }
+        return capabilities;
     }
 
     @Override
