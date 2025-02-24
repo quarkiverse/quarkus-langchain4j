@@ -47,6 +47,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.input.Prompt;
@@ -431,11 +432,13 @@ public class AiServiceMethodImplementationSupport {
             ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend)
-                .toolSpecifications(toolSpecifications)
-                .responseFormat(
-                        ResponseFormat.builder()
-                                .type(JSON)
-                                .jsonSchema(jsonSchema)
+                .parameters(
+                        ChatRequestParameters.builder()
+                                .toolSpecifications(toolSpecifications)
+                                .responseFormat(ResponseFormat.builder()
+                                        .type(JSON)
+                                        .jsonSchema(jsonSchema)
+                                        .build())
                                 .build())
                 .build();
 
