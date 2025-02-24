@@ -28,6 +28,329 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-enabled[`quarkus.langchain4j.vertexai.chat-model.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the model should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id[`quarkus.langchain4j.vertexai.project-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.project-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the project
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-location[`quarkus.langchain4j.vertexai.location`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+GCP location
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-publisher[`quarkus.langchain4j.vertexai.publisher`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.publisher+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Publisher of model
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_PUBLISHER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PUBLISHER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`google`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-base-url[`quarkus.langchain4j.vertexai.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-enable-integration[`quarkus.langchain4j.vertexai.enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Anthropic provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests[`quarkus.langchain4j.vertexai.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-responses[`quarkus.langchain4j.vertexai.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-model-id[`quarkus.langchain4j.vertexai.chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`chat-bison`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-temperature[`quarkus.langchain4j.vertexai.chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results. A temperature of 0 means that the highest probability tokens are always selected. In this case, responses for a given prompt are mostly deterministic, but a small amount of variation is still possible.
+
+If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`${quarkus.langchain4j.temperature:0.0}`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai.chat-model.max-output-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. A token is approximately four characters. 100 tokens correspond to roughly 60-80 words. Specify a lower value for shorter responses and a higher value for potentially longer responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`1024`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-p[`quarkus.langchain4j.vertexai.chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value. For example, if tokens A, B, and C have a probability of 0.3, 0.2, and 0.1 and the top-P value is 0.5, then the model will select either A or B as the next token by using temperature and excludes C as a candidate.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`0.95`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-k[`quarkus.langchain4j.vertexai.chat-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the three most probable tokens by using temperature.
+
+For each token selection step, the top-K tokens with the highest probabilities are sampled. Then tokens are further filtered based on top-P with the final token selected using temperature sampling.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`40`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-requests[`quarkus.langchain4j.vertexai.chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-responses[`quarkus.langchain4j.vertexai.chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id[`quarkus.langchain4j.vertexai.project-id`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.vertexai.project-id+++[]
@@ -333,6 +656,308 @@ endif::add-copy-button-to-env-var[]
 h|[[quarkus-langchain4j-vertex-ai_section_quarkus-langchain4j-vertexai]] [.section-name.section-level0]##link:#quarkus-langchain4j-vertex-ai_section_quarkus-langchain4j-vertexai[Named model config]##
 h|Type
 h|Default
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-project-id[`quarkus.langchain4j.vertexai."model-name".project-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".project-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the project
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROJECT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROJECT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-location[`quarkus.langchain4j.vertexai."model-name".location`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+GCP location
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dummy`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-publisher[`quarkus.langchain4j.vertexai."model-name".publisher`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".publisher+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Publisher of model
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PUBLISHER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PUBLISHER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`google`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-base-url[`quarkus.langchain4j.vertexai."model-name".base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Meant to be used for testing only in order to override the base URL used by the client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-enable-integration[`quarkus.langchain4j.vertexai."model-name".enable-integration`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".enable-integration+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to enable the integration. Defaults to `true`, which means requests are made to the Anthropic provider. Set to `false` to disable all requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__ENABLE_INTEGRATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__ENABLE_INTEGRATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests[`quarkus.langchain4j.vertexai."model-name".log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-responses[`quarkus.langchain4j.vertexai."model-name".log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Vertex AI client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-model-id[`quarkus.langchain4j.vertexai."model-name".chat-model.model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the model to use
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`chat-bison`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-temperature[`quarkus.langchain4j.vertexai."model-name".chat-model.temperature`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.temperature+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The temperature is used for sampling during response generation, which occurs when topP and topK are applied. Temperature controls the degree of randomness in token selection. Lower temperatures are good for prompts that require a less open-ended or creative response, while higher temperatures can lead to more diverse or creative results. A temperature of 0 means that the highest probability tokens are always selected. In this case, responses for a given prompt are mostly deterministic, but a small amount of variation is still possible.
+
+If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TEMPERATURE+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`${quarkus.langchain4j.temperature:0.0}`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai."model-name".chat-model.max-output-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.max-output-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of tokens that can be generated in the response. A token is approximately four characters. 100 tokens correspond to roughly 60-80 words. Specify a lower value for shorter responses and a higher value for potentially longer responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_MAX_OUTPUT_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`1024`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-p[`quarkus.langchain4j.vertexai."model-name".chat-model.top-p`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.top-p+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-P changes how the model selects tokens for output. Tokens are selected from the most (see top-K) to least probable until the sum of their probabilities equals the top-P value. For example, if tokens A, B, and C have a probability of 0.3, 0.2, and 0.1 and the top-P value is 0.5, then the model will select either A or B as the next token by using temperature and excludes C as a candidate.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TOP_P+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TOP_P+++`
+endif::add-copy-button-to-env-var[]
+--
+|double
+|`0.95`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-k[`quarkus.langchain4j.vertexai."model-name".chat-model.top-k`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.top-k+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Top-K changes how the model selects tokens for output. A top-K of 1 means the next selected token is the most probable among all tokens in the model's vocabulary (also called greedy decoding), while a top-K of 3 means that the next token is selected from among the three most probable tokens by using temperature.
+
+For each token selection step, the top-K tokens with the highest probabilities are sampled. Then tokens are further filtered based on top-P with the final token selected using temperature sampling.
+
+Specify a lower value for less random responses and a higher value for more random responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TOP_K+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_TOP_K+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`40`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-requests[`quarkus.langchain4j.vertexai."model-name".chat-model.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model requests should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-responses[`quarkus.langchain4j.vertexai."model-name".chat-model.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".chat-model.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether chat model responses should be logged
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-project-id[`quarkus.langchain4j.vertexai."model-name".project-id`]##
 ifdef::add-copy-button-to-config-props[]
