@@ -1,7 +1,10 @@
 package io.quarkiverse.langchain4j.runtime.jackson;
 
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
+
+import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -14,6 +17,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
  * Often LLMs return a datetime as a JSON object containing the datetime's constituents
  */
 public class CustomLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+
+    private static final Logger log = Logger.getLogger(CustomLocalDateTimeDeserializer.class);
+
     @Override
     public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         if (p.currentToken() == JsonToken.START_OBJECT) {
@@ -35,7 +41,13 @@ public class CustomLocalDateTimeDeserializer extends JsonDeserializer<LocalDateT
             if (nanoNode != null) {
                 nano = nanoNode.asInt();
             }
-            return LocalDateTime.of(year, month, day, hour, minute, second, nano);
+            try {
+                return LocalDateTime.of(year, month, day, hour, minute, second, nano);
+            } catch (DateTimeException e) {
+                log.debug("Failed to deserialize LocalDateTime", e);
+                // in this case the LLM returned something that makes no sense (like all fields being zero), so best treat it as null
+                return null;
+            }
         } else {
             return LocalDateTimeDeserializer.INSTANCE.deserialize(p, ctxt);
         }
