@@ -9,10 +9,16 @@ import static dev.langchain4j.data.message.ChatMessageDeserializer.messagesFromJ
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.data.message.ChatMessageType.USER;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,11 +26,16 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InterceptorBinding;
+import jakarta.interceptor.InvocationContext;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -525,20 +536,6 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         unwrapped.getClass().getConstructor(QuarkusAiServiceContext.class).getAnnotation(Inject.class);
     }
 
-    @RegisterAiService
-    @Named("namedAssistant")
-    @ApplicationScoped
-    interface NamedAssistant extends AssistantBase {
-
-        String chat(String message);
-    }
-
-    @Test
-    public void test_named_assistant() throws Exception {
-        Object namedAssistant = Arc.container().instance("namedAssistant").get();
-        assertThat(namedAssistant).isInstanceOf(NamedAssistant.class);
-    }
-
     private void doTestImageDescriber(Supplier<String> describerSupplier) throws IOException {
         wiremock().register(post(urlEqualTo("/v1/chat/completions"))
                 .withRequestBody(matchingJsonPath("$.model", equalTo("gpt-4o-mini")))
@@ -600,5 +597,57 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
                 });
             }
         });
+    }
+
+    @RegisterAiService
+    @Named("namedAssistant")
+    @ApplicationScoped
+    interface NamedAssistant extends AssistantBase {
+
+        String chat(String message);
+    }
+
+    @Test
+    public void test_named_assistant() throws Exception {
+        Object namedAssistant = Arc.container().instance("namedAssistant").get();
+        assertThat(namedAssistant).isInstanceOf(NamedAssistant.class);
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ TYPE, METHOD })
+    @Inherited
+    @InterceptorBinding
+    public @interface Canned {
+    }
+
+    @Canned
+    @Interceptor
+    @Priority(Interceptor.Priority.PLATFORM_AFTER + 10)
+    public static class CannedInterceptor {
+
+        @AroundInvoke
+        Object intercept(InvocationContext context) {
+            return "canned";
+        }
+
+    }
+
+    @RegisterAiService
+    interface CannedAssistant {
+
+        @Canned
+        String chat(String message);
+    }
+
+    @Inject
+    CannedAssistant cannedAssistant;
+
+    @Test
+    @ActivateRequestContext
+    public void test_custom_cdi_interceptor() throws IOException {
+        String result = cannedAssistant.chat("Tell me a joke about developers");
+        assertThat(result).isEqualTo("canned");
+
+        assertThat(wiremock().getServeEvents()).hasSize(0);
     }
 }
