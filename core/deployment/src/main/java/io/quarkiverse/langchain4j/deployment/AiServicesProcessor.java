@@ -44,6 +44,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
+import jakarta.interceptor.InterceptorBinding;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
@@ -1130,10 +1131,7 @@ public class AiServicesProcessor {
                             // copy annotations
                             for (AnnotationInstance annotationInstance : methodInfo.declaredAnnotations()) {
                                 // TODO: we need to review this
-                                if (annotationInstance.name().toString()
-                                        .startsWith("org.eclipse.microprofile.faulttolerance")
-                                        || annotationInstance.name().toString()
-                                                .startsWith("io.smallrye.faulttolerance.api")) {
+                                if (shouldCopyAnnotation(annotationInstance, index)) {
                                     mc.addAnnotation(annotationInstance);
                                 }
                             }
@@ -1193,6 +1191,30 @@ public class AiServicesProcessor {
 
         registerJsonSchema(recorderContext);
         recorder.setMetadata(perClassMetadata);
+    }
+
+    private boolean shouldCopyAnnotation(AnnotationInstance annotationInstance, IndexView index) {
+        return hasInterceptorBinding(annotationInstance, index);
+    }
+
+    private boolean hasInterceptorBinding(AnnotationInstance annotationInstance, IndexView index) {
+        DotName annotationDotName = annotationInstance.name();
+        ClassInfo annotationClassInfo = index.getClassByName(annotationDotName);
+        if (annotationClassInfo != null) {
+            return annotationClassInfo.declaredAnnotation(InterceptorBinding.class) != null;
+        } else {
+            // fallback to loading the annotation
+            try {
+                Class<?> annotationClass = Class.forName(annotationDotName.toString(), false,
+                        Thread.currentThread().getContextClassLoader());
+                if (annotationClass.isAnnotationPresent(InterceptorBinding.class)) {
+                    return true;
+                }
+            } catch (ClassNotFoundException ignored) {
+
+            }
+        }
+        return false;
     }
 
     private ResultHandle getFromCDI(MethodCreator mc, String className) {
