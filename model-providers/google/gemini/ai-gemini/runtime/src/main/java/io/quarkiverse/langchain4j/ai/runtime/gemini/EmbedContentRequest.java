@@ -2,7 +2,7 @@ package io.quarkiverse.langchain4j.ai.runtime.gemini;
 
 import io.quarkiverse.langchain4j.gemini.common.Content;
 
-public record EmbedContentRequest(Content content,
+public record EmbedContentRequest(String model, Content content,
         TaskType taskType, String title, Integer outputDimensionality) {
 
     public enum TaskType {

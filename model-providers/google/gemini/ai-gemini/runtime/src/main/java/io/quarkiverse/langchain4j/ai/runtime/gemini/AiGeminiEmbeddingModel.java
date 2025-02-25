@@ -57,11 +57,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
     @Override
     public Response<Embedding> embed(String text) {
 
-        Content.Part part = Content.Part.ofText(text);
-        Content content = Content.ofPart(part);
-
-        EmbedContentRequest embedContentRequest = new EmbedContentRequest(content,
-                null, null, this.dimension);
+        EmbedContentRequest embedContentRequest = getEmbedContentRequest(this.apiMetadata.modelId, text);
 
         EmbedContentResponse embedContentResponse = restApi.embedContent(embedContentRequest, this.apiMetadata);
 
@@ -70,7 +66,28 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
 
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
-        return null;
+        List<EmbedContentRequest> embedContentRequests = textSegments.stream()
+                .map(textSegment -> getEmbedContentRequest(this.apiMetadata.modelId, textSegment.text()))
+                .toList();
+
+        EmbedContentResponses embedContentResponses = restApi.batchEmbedContents(
+                new EmbedContentRequests(embedContentRequests),
+                this.apiMetadata);
+
+        List<Embedding> embeddings = embedContentResponses.embeddings()
+                .stream()
+                .map(embedding -> Embedding.from(embedding.values()))
+                .toList();
+        return Response.from(embeddings);
+    }
+
+    private EmbedContentRequest getEmbedContentRequest(String model, String text) {
+        Content.Part part = Content.Part.ofText(text);
+        Content content = Content.ofPart(part);
+
+        EmbedContentRequest embedContentRequest = new EmbedContentRequest("models/" + model, content,
+                null, null, this.dimension);
+        return embedContentRequest;
     }
 
     public static final class Builder {
