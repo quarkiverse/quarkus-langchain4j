@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-ollama-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>0.25.0.CR3</version>
     </parent>
     <artifactId>quarkus-langchain4j-ollama</artifactId>
     <name>Quarkus LangChain4j - Ollama - Runtime</name>
