@@ -41,13 +41,8 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-core</artifactId>
+            <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
             <version>${quarkus-langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-google-ai-gemini</artifactId>
-            <version>${langchain4j.version}</version>
         </dependency>
     </dependencies>
     <build>
