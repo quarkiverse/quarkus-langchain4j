@@ -1120,8 +1120,10 @@ public class AiServicesProcessor {
                                 ignoredPredicates,
                                 tools, toolQualifierProviderItems);
                         if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
-                            unremovableBeanProducer.produce(UnremovableBeanBuildItem
-                                    .beanClassNames(methodCreateInfo.getToolClassInfo().keySet().toArray(EMPTY_STRING_ARRAY)));
+                            methodCreateInfo.getToolClassInfo().keySet().stream()
+                                    .map(DotName::createSimple)
+                                    .map(UnremovableBeanBuildItem::beanTypes)
+                                    .forEach(unremovableBeanProducer::produce);
                         }
                         perMethodMetadata.put(methodId, methodCreateInfo);
 

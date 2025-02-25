@@ -91,6 +91,9 @@ public class AiServicesRecorder {
                                     tool = Arc.container().instance(
                                             Thread.currentThread().getContextClassLoader().loadClass(entry.getKey())).get();
                                 }
+                                if (tool == null) {
+                                    throw new IllegalStateException("Unknown tool: " + entry.getKey());
+                                }
                                 objectWithTools.add(tool);
                             }
                             ToolsRecorder.populateToolMetadata(objectWithTools, methodCreateInfo.getToolSpecifications(),
@@ -170,7 +173,9 @@ public class AiServicesRecorder {
                                 tool = creationalContext.getInjectedReference(
                                         Thread.currentThread().getContextClassLoader().loadClass(entry.getKey()));
                             }
-
+                            if (tool == null) {
+                                throw new IllegalStateException("Unknown tool: " + entry.getKey());
+                            }
                             tools.add(tool);
                         }
                         quarkusAiServices.tools(tools);
