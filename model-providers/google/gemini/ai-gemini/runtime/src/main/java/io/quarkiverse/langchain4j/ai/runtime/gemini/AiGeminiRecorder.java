@@ -41,6 +41,10 @@ public class AiGeminiRecorder {
                 builder.dimension(embeddingModelConfig.outputDimension().get());
             }
 
+            if (embeddingModelConfig.taskType().isPresent()) {
+                builder.taskType(embeddingModelConfig.taskType().get());
+            }
+
             return builder::build;
         } else {
             return DisabledEmbeddingModel::new;

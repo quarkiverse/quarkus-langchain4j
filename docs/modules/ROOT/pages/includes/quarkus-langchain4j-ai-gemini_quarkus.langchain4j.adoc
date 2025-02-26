@@ -424,6 +424,27 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-task-type[`quarkus.langchain4j.ai.gemini.embedding-model.task-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini.embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-log-requests[`quarkus.langchain4j.ai.gemini.embedding-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai.gemini.embedding-model.log-requests+++[]
@@ -864,6 +885,27 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |int
+|
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-task-type]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-task-type[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.task-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini."model-name".embedding-model.task-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional task type for which the embeddings will be used. Can only be set for models/embedding-001 Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT, SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING, FACT_VERIFICATION
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_MODEL_TASK_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
 |
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-log-requests[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.log-requests`]##
