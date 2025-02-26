@@ -12,13 +12,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.audio.Audio;
+import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
+import dev.langchain4j.data.video.Video;
 import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
@@ -49,6 +55,16 @@ public final class ContentMapper {
                     for (dev.langchain4j.data.message.Content userMessageContent : um.contents()) {
                         if (userMessageContent instanceof TextContent tc) {
                             parts.add(Content.Part.ofText(tc.text()));
+                        } else if (userMessageContent instanceof ImageContent ic) {
+                            Image image = ic.image();
+                            URI uri = image.url();
+                            if (uri != null) {
+                                parts.add(Content.Part
+                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                            } else {
+                                parts.add(Content.Part
+                                        .ofInlineData(new Blob(image.mimeType(), image.base64Data())));
+                            }
                         } else if (userMessageContent instanceof PdfFileContent fc) {
                             URI uri = fc.pdfFile().url();
                             if (uri != null) {
@@ -57,6 +73,26 @@ public final class ContentMapper {
                             } else {
                                 parts.add(Content.Part
                                         .ofInlineData(new Blob("application/pdf", fc.pdfFile().base64Data())));
+                            }
+                        } else if (userMessageContent instanceof VideoContent vc) {
+                            Video video = vc.video();
+                            URI uri = video.url();
+                            if (uri != null) {
+                                parts.add(Content.Part
+                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                            } else {
+                                parts.add(Content.Part
+                                        .ofInlineData(new Blob(video.mimeType(), video.base64Data())));
+                            }
+                        } else if (userMessageContent instanceof AudioContent ac) {
+                            Audio audio = ac.audio();
+                            URI uri = audio.url();
+                            if (uri != null) {
+                                parts.add(Content.Part
+                                        .ofFileData(new FileData(mimeTypeDetector.probeContentType(uri), uri.toString())));
+                            } else {
+                                parts.add(Content.Part
+                                        .ofInlineData(new Blob(audio.mimeType(), audio.base64Data())));
                             }
                         } else {
                             throw new IllegalArgumentException("The Gemini integration currently only supports text content");
