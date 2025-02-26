@@ -3,6 +3,8 @@ package io.quarkiverse.langchain4j.testing.scorer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -12,18 +14,20 @@ import org.junit.jupiter.api.Test;
 class ScorerTest {
 
     private Scorer scorer;
+    private ExecutorService executor;
 
     @AfterEach
     void tearDown() {
-        if (scorer != null) {
-            scorer.close();
+        if (executor != null) {
+            executor.shutdown();
         }
     }
 
     @SuppressWarnings("unchecked")
     @Test
     void evaluateShouldReturnCorrectReport() {
-        scorer = new Scorer(2);
+        executor = Executors.newFixedThreadPool(2);
+        scorer = new Scorer(executor);
 
         EvaluationSample<String> sample1 = new EvaluationSample<>(
                 "Sample1",
@@ -62,7 +66,8 @@ class ScorerTest {
     @SuppressWarnings("unchecked")
     @Test
     void evaluateShouldReturnCorrectlyOrderedReport() {
-        scorer = new Scorer(2);
+        executor = Executors.newFixedThreadPool(2);
+        scorer = new Scorer(executor);
         var sleeps = Stream.of(25l, 0l);
         var samples = new Samples<>(
                 sleeps
@@ -93,7 +98,8 @@ class ScorerTest {
     @Test
     @SuppressWarnings("unchecked")
     void evaluateShouldHandleExceptionsInFunction() {
-        scorer = new Scorer();
+        executor = Executors.newSingleThreadExecutor();
+        scorer = new Scorer(executor);
         EvaluationSample<String> sample = new EvaluationSample<>(
                 "Sample1",
                 new Parameters().add(new Parameter.UnnamedParameter("param1")),
@@ -118,7 +124,8 @@ class ScorerTest {
     @Test
     @SuppressWarnings("unchecked")
     void evaluateShouldHandleMultipleStrategies() {
-        scorer = new Scorer();
+        executor = Executors.newSingleThreadExecutor();
+        scorer = new Scorer(executor);
 
         EvaluationSample<String> sample = new EvaluationSample<>(
                 "Sample1",

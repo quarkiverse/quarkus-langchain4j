@@ -1,31 +1,21 @@
 package io.quarkiverse.langchain4j.testing.scorer;
 
-import java.io.Closeable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import org.jboss.logging.Logger;
 
-public class Scorer implements Closeable {
+public class Scorer {
 
     private static final Logger LOG = Logger.getLogger(Scorer.class);
     private final ExecutorService executor;
 
-    public Scorer(int concurrency) {
-        if (concurrency > 1) {
-            executor = Executors.newFixedThreadPool(concurrency);
-        } else {
-            executor = Executors.newSingleThreadExecutor();
-        }
-    }
-
-    public Scorer() {
-        this(1);
+    public Scorer(ExecutorService executor) {
+        this.executor = executor;
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -72,10 +62,6 @@ public class Scorer implements Closeable {
                 .map(OrderedEvaluationResult::evaluation)
                 .toList();
         return new EvaluationReport<>(orderedEvalutions);
-    }
-
-    public void close() {
-        executor.shutdown();
     }
 
     public record EvaluationResult<T>(
