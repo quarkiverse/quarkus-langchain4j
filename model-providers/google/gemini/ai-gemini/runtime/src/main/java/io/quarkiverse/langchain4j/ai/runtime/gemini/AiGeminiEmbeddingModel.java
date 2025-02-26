@@ -22,6 +22,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
     private final AiGeminiRestApi.ApiMetadata apiMetadata;
 
     private final Integer dimension;
+    private final String taskType;
 
     public AiGeminiEmbeddingModel(Builder builder) {
         this.apiMetadata = AiGeminiRestApi.ApiMetadata
@@ -44,6 +45,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
             }
 
             this.dimension = builder.dimension;
+            this.taskType = builder.taskType;
             restApi = restApiBuilder.build(AiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -85,8 +87,13 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
         Content.Part part = Content.Part.ofText(text);
         Content content = Content.ofPart(part);
 
+        EmbedContentRequest.TaskType embedTaskType = null;
+        if (this.taskType != null) {
+            embedTaskType = EmbedContentRequest.TaskType.valueOf(this.taskType);
+        }
+
         EmbedContentRequest embedContentRequest = new EmbedContentRequest("models/" + model, content,
-                null, null, this.dimension);
+                embedTaskType, null, this.dimension);
         return embedContentRequest;
     }
 
@@ -95,6 +102,7 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
         private String modelId;
         private String key;
         private Integer dimension;
+        private String taskType;
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
@@ -116,6 +124,11 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
 
         public Builder dimension(Integer dimension) {
             this.dimension = dimension;
+            return this;
+        }
+
+        public Builder taskType(String taskType) {
+            this.taskType = taskType;
             return this;
         }
 

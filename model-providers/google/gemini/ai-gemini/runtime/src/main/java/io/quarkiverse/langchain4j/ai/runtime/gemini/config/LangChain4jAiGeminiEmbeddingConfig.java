@@ -25,6 +25,18 @@ public interface LangChain4jAiGeminiEmbeddingConfig {
     Optional<Integer> outputDimension();
 
     /**
+     * Optional task type for which the embeddings will be used.
+     * Can only be set for models/embedding-001
+     *
+     * Possible values: TASK_TYPE_UNSPECIFIED, RETRIEVAL_QUERY, RETRIEVAL_DOCUMENT,
+     * SEMANTIC_SIMILARITY, CLASSIFICATION, CLUSTERING, QUESTION_ANSWERING,
+     * FACT_VERIFICATION
+     *
+     * @see <a href="https://ai.google.dev/api/embeddings#v1beta.TaskType">TaskType</a>
+     */
+    Optional<String> taskType();
+
+    /**
      * Whether chat model requests should be logged
      */
     @ConfigDocDefault("false")
