@@ -68,6 +68,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-weaviate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,0 +1,45 @@
+= Weaviate Store for Retrieval Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+
+When implementing Retrieval Augmented Generation (RAG), a robust document store is crucial. This guide demonstrates how to leverage a https://weaviate.io/[Weaviate] database as the document store.
+
+== Leveraging the Weaviate embedding store
+
+To make use of the Weaviate embedding store, you'll need to include the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-weaviate</artifactId>
+</dependency>
+----
+
+This extension includes a dev service. Therefore, if you're operating in a container environment, a Weaviate instance will automatically start in dev and test mode.
+
+Upon installing the extension, you can use the Weaviate document store with the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithWeaviate.java[]
+----
+
+
+NOTE: When using Weaviate as an embedding store, you don’t need an in-process embedding model. 
+Weaviate can generate embeddings using its built-in modules or delegate to an external provider, such as OpenAI’s embedding API or other compatible models.
+
+To use a remote Weaviate instance, you have to also set the host and port, in which case dev-services
+will not start another instance:
+
+[source, java]
+----
+quarkus.langchain4j.weaviate.host=localhost
+quarkus.langchain4j.weaviate.port=8080
+----
+
+== Configuration Settings
+
+Customize the behavior of the extension by exploring various configuration options:
+
+include::includes/quarkus-langchain4j-weaviate.adoc[leveloffset=+1,opts=optional]

@@ -1,0 +1,12 @@
+name: LangChain4j Weaviate
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides integration of Quarkus LangChain4j with the Weaviate vector database
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+    - weaviate
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+  categories:
+    - "ai"
+  status: "experimental"
