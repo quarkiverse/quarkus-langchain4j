@@ -5,21 +5,16 @@
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
         <version>999-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-embedding-stores-parent</artifactId>
-    <name>Quarkus LangChain4j - Embedding Stores - Parent</name>
+    <artifactId>quarkus-langchain4j-weaviate-parent</artifactId>
+    <name>Quarkus LangChain4j - Weaviate - Parent</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>chroma</module>
-        <module>infinispan</module>
-        <module>milvus</module>
-        <module>neo4j</module>
-        <module>pgvector</module>
-        <module>pinecone</module>
-        <module>qdrant</module>
-        <module>redis</module>
-        <module>weaviate</module>
+        <module>deployment</module>
+        <module>runtime</module>
     </modules>
+
     
 </project>
