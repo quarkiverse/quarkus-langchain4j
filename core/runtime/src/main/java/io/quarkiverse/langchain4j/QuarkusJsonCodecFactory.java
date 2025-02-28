@@ -1,8 +1,5 @@
 package io.quarkiverse.langchain4j;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -98,12 +95,6 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             }
             return original;
         }
-
-        @Override
-        public InputStream toInputStream(Object o, Class<?> type) throws IOException {
-            return new ByteArrayInputStream(ObjectMapperHolder.WRITER.writeValueAsBytes(o));
-        }
-
     }
 
     public static class ObjectMapperHolder {

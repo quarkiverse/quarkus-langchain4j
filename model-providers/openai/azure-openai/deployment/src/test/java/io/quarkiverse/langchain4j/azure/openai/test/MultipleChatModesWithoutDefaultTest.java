@@ -51,7 +51,7 @@ public class MultipleChatModesWithoutDefaultTest extends OpenAiBaseTest {
     @Test
     @ActivateRequestContext
     public void testNamedModel1() throws IOException {
-        String result = chatWithModel1.generate(MESSAGE_CONTENT);
+        String result = chatWithModel1.chat(MESSAGE_CONTENT);
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
@@ -60,7 +60,7 @@ public class MultipleChatModesWithoutDefaultTest extends OpenAiBaseTest {
     @Test
     @ActivateRequestContext
     public void testNamedModel2() throws IOException {
-        String result = chatWithModel2.generate(MESSAGE_CONTENT);
+        String result = chatWithModel2.chat(MESSAGE_CONTENT);
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);

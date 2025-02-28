@@ -19,7 +19,6 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -27,7 +26,7 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.smallrye.mutiny.Context;
 
@@ -62,8 +61,9 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
-            StreamingResponseHandler<AiMessage> handler) {
+    public void doChat(dev.langchain4j.model.chat.request.ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+        List<ChatMessage> messages = chatRequest.messages();
+        List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
         ensureNotEmpty(messages, "messages");
         var tools = (toolSpecifications != null && toolSpecifications.size() > 0) ? toTools(toolSpecifications) : null;
 
@@ -114,7 +114,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
                                     if (!response.message().content().isEmpty()) {
                                         ((List<ChatResponse>) context.get(RESPONSE_CONTEXT)).add(response);
-                                        handler.onNext(response.message().content());
+                                        handler.onPartialResponse(response.message().content());
                                     }
 
                                     if (response.done()) {
@@ -145,7 +145,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                         .map(Message::content)
                                         .collect(Collectors.joining());
                                 AiMessage aiMessage = new AiMessage(stringResponse);
-                                Response<AiMessage> aiMessageResponse = Response.from(aiMessage);
+                                dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
+                                        .builder().aiMessage(aiMessage).build();
 
                                 ChatModelResponse modelListenerPartialResponse = createModelListenerResponse(
                                         null,
@@ -179,7 +180,9 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                 List<ToolExecutionRequest> toolExecutionRequests = context.get(TOOLS_CONTEXT);
 
                                 if (!toolExecutionRequests.isEmpty()) {
-                                    handler.onComplete(Response.from(AiMessage.from(toolExecutionRequests), tokenUsage));
+                                    handler.onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse.builder()
+                                            .aiMessage(AiMessage.from(toolExecutionRequests))
+                                            .tokenUsage(tokenUsage).build());
                                     return;
                                 }
 
@@ -189,7 +192,8 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                         .collect(Collectors.joining());
 
                                 AiMessage aiMessage = new AiMessage(stringResponse);
-                                Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage);
+                                dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
+                                        .builder().aiMessage(aiMessage).tokenUsage(tokenUsage).build();
 
                                 ChatModelResponse modelListenerResponse = createModelListenerResponse(
                                         null,
@@ -207,7 +211,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                     }
                                 });
 
-                                handler.onComplete(aiMessageResponse);
+                                handler.onCompleteResponse(aiMessageResponse);
                             }
                         });
     }
@@ -230,29 +234,18 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
 
     private ChatModelResponse createModelListenerResponse(String responseId,
             String responseModel,
-            Response<AiMessage> response) {
-        if (response == null) {
+            dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse) {
+        if (aiMessageResponse == null) {
             return null;
         }
 
         return ChatModelResponse.builder()
                 .id(responseId)
                 .model(responseModel)
-                .tokenUsage(response.tokenUsage())
-                .finishReason(response.finishReason())
-                .aiMessage(response.content())
+                .tokenUsage(aiMessageResponse.tokenUsage())
+                .finishReason(aiMessageResponse.finishReason())
+                .aiMessage(aiMessageResponse.aiMessage())
                 .build();
-    }
-
-    @Override
-    public void generate(List<ChatMessage> messages, ToolSpecification toolSpecification,
-            StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, List.of(toolSpecification), handler);
-    }
-
-    @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, List.of(), handler);
     }
 
     /**

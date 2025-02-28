@@ -1,7 +1,6 @@
 package org.acme.tools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyList;
 
 import jakarta.inject.Inject;
 
@@ -13,7 +12,8 @@ import org.mockito.Mockito;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -33,10 +33,11 @@ public class ToolsTest {
     void blockingSum() {
         var toolExecution = create("blockingSum");
 
-        Mockito.when(model.generate(anyList(), anyList()))
+        Mockito.when(model.chat(Mockito.any(ChatRequest.class)))
                 .thenReturn(
-                        Response.from(AiMessage.from(toolExecution), new TokenUsage(1)),
-                        Response.from(AiMessage.from("The result is 2"), new TokenUsage(1)));
+                        ChatResponse.builder().aiMessage(AiMessage.from(toolExecution)).tokenUsage(new TokenUsage(1)).build(),
+                        ChatResponse.builder().aiMessage(AiMessage.from("The result is 2")).tokenUsage(new TokenUsage(1))
+                                .build());
 
         assertEquals("The result is 2", aiService.chat("Execute 1 + 1"));
     }
@@ -45,10 +46,11 @@ public class ToolsTest {
     void nonBlockingSum() {
         var toolExecution = create("nonBlockingSum");
 
-        Mockito.when(model.generate(anyList(), anyList()))
+        Mockito.when(model.chat(Mockito.any(ChatRequest.class)))
                 .thenReturn(
-                        Response.from(AiMessage.from(toolExecution), new TokenUsage(1)),
-                        Response.from(AiMessage.from("The result is 2"), new TokenUsage(1)));
+                        ChatResponse.builder().aiMessage(AiMessage.from(toolExecution)).tokenUsage(new TokenUsage(1)).build(),
+                        ChatResponse.builder().aiMessage(AiMessage.from("The result is 2")).tokenUsage(new TokenUsage(1))
+                                .build());
 
         assertEquals("The result is 2", aiService.chat("Execute 1 + 1"));
     }
@@ -57,10 +59,11 @@ public class ToolsTest {
     void virtualThreadSum() {
         var toolExecution = create("virtualSum");
 
-        Mockito.when(model.generate(anyList(), anyList()))
+        Mockito.when(model.chat(Mockito.any(ChatRequest.class)))
                 .thenReturn(
-                        Response.from(AiMessage.from(toolExecution), new TokenUsage(1)),
-                        Response.from(AiMessage.from("The result is 2"), new TokenUsage(1)));
+                        ChatResponse.builder().aiMessage(AiMessage.from(toolExecution)).tokenUsage(new TokenUsage(1)).build(),
+                        ChatResponse.builder().aiMessage(AiMessage.from("The result is 2")).tokenUsage(new TokenUsage(1))
+                                .build());
 
         assertEquals("The result is 2", aiService.chat("Execute 1 + 1"));
     }

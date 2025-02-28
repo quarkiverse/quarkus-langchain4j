@@ -31,7 +31,7 @@ public class AzureOpenAiChatLanguageModelSmokeTest extends OpenAiBaseTest {
 
     @Test
     void test() {
-        String response = chatLanguageModel.generate("hello");
+        String response = chatLanguageModel.chat("hello");
         assertThat(response).isNotBlank();
 
         LoggedRequest loggedRequest = singleLoggedRequest();

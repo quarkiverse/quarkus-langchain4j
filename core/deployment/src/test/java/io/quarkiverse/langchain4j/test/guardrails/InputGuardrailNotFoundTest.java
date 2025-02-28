@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.guardrails;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -15,11 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -77,8 +76,8 @@ public class InputGuardrailNotFoundTest {
     public static class MyChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            return new Response<>(new AiMessage("Hi!"));
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
         }
     }
 

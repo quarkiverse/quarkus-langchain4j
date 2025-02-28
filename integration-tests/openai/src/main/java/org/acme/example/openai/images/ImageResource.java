@@ -7,13 +7,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
 import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.image.ImageModel;
-import dev.langchain4j.model.output.Response;
 
 @Path("image")
 public class ImageResource {
@@ -40,7 +39,7 @@ public class ImageResource {
         UserMessage userMessage = UserMessage.from(
                 TextContent.from("What do you see?"),
                 ImageContent.from("https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png"));
-        Response<AiMessage> response = chatLanguageModel.generate(userMessage);
-        return response.content().text();
+        ChatResponse response = chatLanguageModel.chat(userMessage);
+        return response.aiMessage().text();
     }
 }

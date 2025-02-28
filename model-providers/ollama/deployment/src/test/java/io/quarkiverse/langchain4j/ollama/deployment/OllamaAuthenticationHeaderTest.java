@@ -63,7 +63,7 @@ public class OllamaAuthenticationHeaderTest extends WiremockAware {
                                         }
                                         """)));
 
-        String response = chatLanguageModel.generate("hello");
+        String response = chatLanguageModel.chat("hello");
         assertThat(response).isEqualTo("Nice to meet you");
     }
 

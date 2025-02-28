@@ -3,7 +3,10 @@ package io.quarkiverse.langchain4j;
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 
 import java.util.Collection;
+import java.util.function.Function;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServices;
@@ -42,6 +45,12 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             context.toolService.initTools();
             ToolsRecorder.populateToolMetadata(objectsWithTools, context.toolService.toolSpecifications(),
                     context.toolService.toolExecutors());
+            return this;
+        }
+
+        public AiServices<T> toolHallucinationStrategy(Object toolHallucinationStrategy) {
+            context.toolService.hallucinatedToolNameStrategy(
+                    (Function<ToolExecutionRequest, ToolExecutionResultMessage>) toolHallucinationStrategy);
             return this;
         }
 

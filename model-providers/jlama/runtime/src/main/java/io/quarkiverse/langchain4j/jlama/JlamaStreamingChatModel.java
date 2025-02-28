@@ -17,8 +17,10 @@ import com.github.tjake.jlama.safetensors.prompt.PromptSupport;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.internal.RetryUtils;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
@@ -60,8 +62,8 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        PromptContext promptContext = createPromptContext(messages);
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+        PromptContext promptContext = createPromptContext(chatRequest.messages());
         runOutEventLoop(new Runnable() {
             @Override
             public void run() {
@@ -70,14 +72,17 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
         });
     }
 
-    private void internalGenerate(StreamingResponseHandler<AiMessage> handler, PromptContext promptContext) {
+    private void internalGenerate(StreamingChatResponseHandler handler, PromptContext promptContext) {
         try {
             Generator.Response r = model.generate(id, promptContext, temperature, maxTokens, (token, time) -> {
-                handler.onNext(token);
+                handler.onPartialResponse(token);
             });
 
-            handler.onComplete(Response.from(AiMessage.from(r.responseText), new TokenUsage(r.promptTokens, r.generatedTokens),
-                    toFinishReason(r.finishReason)));
+            handler.onCompleteResponse(ChatResponse.builder()
+                    .aiMessage(AiMessage.from(r.responseText))
+                    .tokenUsage(new TokenUsage(r.promptTokens, r.generatedTokens))
+                    .finishReason(toFinishReason(r.finishReason))
+                    .build());
         } catch (Throwable t) {
             handler.onError(t);
         }

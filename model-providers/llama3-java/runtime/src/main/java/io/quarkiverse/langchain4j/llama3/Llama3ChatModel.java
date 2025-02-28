@@ -14,10 +14,10 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.llama3.copy.ChatFormat;
 import io.quarkiverse.langchain4j.llama3.copy.Llama;
@@ -57,8 +57,8 @@ public class Llama3ChatModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-
+    public ChatResponse doChat(ChatRequest chatRequest) {
+        List<ChatMessage> messages = chatRequest.messages();
         if (logRequests) {
             log.info("Request: " + messages);
         }
@@ -84,8 +84,9 @@ public class Llama3ChatModel implements ChatLanguageModel {
                 options.seed());
         InferenceResponse inferenceResponse = runInference(model, sampler, options, llama3Messages);
 
-        var response = Response.from(aiMessage(inferenceResponse.text()),
-                new TokenUsage(inferenceResponse.promptTokens(), inferenceResponse.responseTokens()));
+        var response = ChatResponse.builder().aiMessage(aiMessage(inferenceResponse.text()))
+                .tokenUsage(new TokenUsage(inferenceResponse.promptTokens(), inferenceResponse.responseTokens()))
+                .build();
 
         if (logResponses) {
             log.info("Response: " + response);

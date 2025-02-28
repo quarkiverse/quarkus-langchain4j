@@ -36,7 +36,7 @@ class AnthropicDisabledLanguageModelSmokeTest extends AnthropicSmokeTest {
                 .isInstanceOf(DisabledChatLanguageModel.class);
 
         assertThatExceptionOfType(ModelDisabledException.class)
-                .isThrownBy(() -> chatModel.generate("Hello, how are you today?"))
+                .isThrownBy(() -> chatModel.chat("Hello, how are you today?"))
                 .withMessage("ChatLanguageModel is disabled");
     }
 
@@ -46,7 +46,7 @@ class AnthropicDisabledLanguageModelSmokeTest extends AnthropicSmokeTest {
                 .isInstanceOf(DisabledStreamingChatLanguageModel.class);
 
         assertThatExceptionOfType(ModelDisabledException.class)
-                .isThrownBy(() -> streamingChatModel.generate("Hello, how are you today?", null))
+                .isThrownBy(() -> streamingChatModel.chat("Hello, how are you today?", null))
                 .withMessage("StreamingChatLanguageModel is disabled");
     }
 }

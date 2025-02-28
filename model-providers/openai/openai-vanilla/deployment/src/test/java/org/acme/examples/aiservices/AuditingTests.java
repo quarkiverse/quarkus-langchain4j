@@ -231,10 +231,10 @@ class AuditingTests extends OpenAiBaseTest {
             handle(responseFromLLMReceivedEvent);
             this.auditSourceInfos.add(responseFromLLMReceivedEvent.sourceInfo());
 
-            if (responseFromLLMReceivedEvent.response().content().text() != null) {
-                this.aiMessageResult = responseFromLLMReceivedEvent.response().content().text();
+            if (responseFromLLMReceivedEvent.response().aiMessage().text() != null) {
+                this.aiMessageResult = responseFromLLMReceivedEvent.response().aiMessage().text();
             } else {
-                this.aiMessageToolExecution = responseFromLLMReceivedEvent.response().content().toolExecutionRequests().get(0)
+                this.aiMessageToolExecution = responseFromLLMReceivedEvent.response().aiMessage().toolExecutionRequests().get(0)
                         .name();
             }
         }

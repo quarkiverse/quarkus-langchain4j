@@ -20,5 +20,6 @@ public record DeclarativeAiServiceCreateInfo(
         String imageModelName,
         boolean needsStreamingChatModel,
         boolean needsModerationModel,
-        boolean needsImageModel) {
+        boolean needsImageModel,
+        String toolHallucinationStrategyClassName) {
 }

@@ -18,14 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -217,18 +217,18 @@ public class InputGuardrailValidationTest {
     public static class MyChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            return new Response<>(new AiMessage("Hi!"));
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
         }
     }
 
     public static class MyStreamingChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-            handler.onNext("Streaming hi");
-            handler.onNext("!");
-            handler.onComplete(Response.from(AiMessage.from("")));
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            handler.onPartialResponse("Streaming hi");
+            handler.onPartialResponse("!");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 

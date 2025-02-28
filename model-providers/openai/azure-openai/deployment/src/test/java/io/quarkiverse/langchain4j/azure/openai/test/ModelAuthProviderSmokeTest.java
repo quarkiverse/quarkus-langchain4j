@@ -40,7 +40,7 @@ public class ModelAuthProviderSmokeTest extends OpenAiBaseTest {
         assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(AzureOpenAiChatModel.class);
         assertThat(ClientProxy.unwrap(streamingChatLanguageModel)).isInstanceOf(AzureOpenAiStreamingChatModel.class);
 
-        String response = chatLanguageModel.generate("hello");
+        String response = chatLanguageModel.chat("hello");
         assertThat(response).isNotBlank();
 
         LoggedRequest loggedRequest = singleLoggedRequest();

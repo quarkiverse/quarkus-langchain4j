@@ -4,16 +4,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class OpenshiftAiChatModel implements ChatLanguageModel {
@@ -42,23 +40,13 @@ public class OpenshiftAiChatModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
 
-        TextGenerationRequest request = new TextGenerationRequest(modelId, messages.get(0).text());
+        TextGenerationRequest request = new TextGenerationRequest(modelId, chatRequest.messages().get(0).text());
 
         TextGenerationResponse textGenerationResponse = client.chat(request);
 
-        return Response.from(AiMessage.from(textGenerationResponse.generatedText()));
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        throw new IllegalArgumentException("Tools are currently not supported for OpenShift AI models");
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        throw new IllegalArgumentException("Tools are currently not supported for OpenShift AI models");
+        return ChatResponse.builder().aiMessage(AiMessage.from(textGenerationResponse.generatedText())).build();
     }
 
     public static final class Builder {

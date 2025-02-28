@@ -32,6 +32,8 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.internal.RetryUtils;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
@@ -80,26 +82,25 @@ public class JlamaChatModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, List.of());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
         if (model.promptSupport().isEmpty()) {
             throw new UnsupportedOperationException("This model does not support chat generation");
         }
 
         if (logRequests) {
-            log.info("Request: " + messages);
+            log.info("Request: " + chatRequest.messages());
         }
 
-        PromptSupport.Builder promptBuilder = promptBuilder(messages);
-        Generator.Response r = model.generate(UUID.randomUUID(), promptContext(promptBuilder, toolSpecifications), temperature,
+        PromptSupport.Builder promptBuilder = promptBuilder(chatRequest.messages());
+        Generator.Response r = model.generate(UUID.randomUUID(), promptContext(promptBuilder, chatRequest.toolSpecifications()),
+                temperature,
                 maxTokens, (token, time) -> {
                 });
-        Response<AiMessage> aiResponse = Response.from(aiMessageForResponse(r),
-                new TokenUsage(r.promptTokens, r.generatedTokens), toFinishReason(r.finishReason));
+        ChatResponse aiResponse = ChatResponse.builder()
+                .aiMessage(aiMessageForResponse(r))
+                .tokenUsage(new TokenUsage(r.promptTokens, r.generatedTokens))
+                .finishReason(toFinishReason(r.finishReason))
+                .build();
 
         if (logResponses) {
             log.info("Response: " + aiResponse);
@@ -166,11 +167,6 @@ public class JlamaChatModel implements ChatLanguageModel {
         }
 
         return AiMessage.from(r.responseText);
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages, List.of(toolSpecification));
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

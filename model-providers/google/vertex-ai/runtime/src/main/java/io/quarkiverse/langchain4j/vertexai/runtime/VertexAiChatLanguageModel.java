@@ -19,7 +19,8 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
@@ -64,18 +65,19 @@ public class VertexAiChatLanguageModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
         PredictRequest predictRequest = new PredictRequest(Collections.singletonList(
-                new PredictRequest.ChatInstance(toContext(messages), toVertexMessages(messages))),
+                new PredictRequest.ChatInstance(toContext(chatRequest.messages()), toVertexMessages(chatRequest.messages()))),
                 parameters);
 
         PredictResponse predictResponse = restApi.predict(predictRequest, apiMetadata);
 
-        return Response.from(
-                AiMessage.from(predictResponse.predictions().get(0).candidates().get(0).content()),
-                new TokenUsage(
+        return ChatResponse.builder()
+                .aiMessage(AiMessage.from(predictResponse.predictions().get(0).candidates().get(0).content()))
+                .tokenUsage(new TokenUsage(
                         predictResponse.metadata().tokenMetadata().inputTokenCount().totalTokens(),
-                        predictResponse.metadata().tokenMetadata().outputTokenCount().totalTokens()));
+                        predictResponse.metadata().tokenMetadata().outputTokenCount().totalTokens()))
+                .build();
     }
 
     private static String toContext(List<ChatMessage> messages) {

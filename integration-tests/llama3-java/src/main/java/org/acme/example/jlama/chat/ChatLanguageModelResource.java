@@ -6,11 +6,10 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 
@@ -28,7 +27,7 @@ public class ChatLanguageModelResource {
     @GET
     @Path("blocking")
     public String blocking() {
-        return chatModel.generate("When was the nobel prize for economics first awarded?");
+        return chatModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -37,10 +36,10 @@ public class ChatLanguageModelResource {
     @Blocking
     public Multi<String> streaming() {
         return Multi.createFrom().emitter(emitter -> {
-            streamingChatModel.generate("When was the nobel prize for economics first awarded?",
-                    new StreamingResponseHandler<>() {
+            streamingChatModel.chat("When was the nobel prize for economics first awarded?",
+                    new StreamingChatResponseHandler() {
                         @Override
-                        public void onNext(String token) {
+                        public void onPartialResponse(String token) {
                             emitter.emit(token);
                         }
 
@@ -50,7 +49,7 @@ public class ChatLanguageModelResource {
                         }
 
                         @Override
-                        public void onComplete(Response<AiMessage> response) {
+                        public void onCompleteResponse(ChatResponse completeResponse) {
                             emitter.complete();
                         }
                     });

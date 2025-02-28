@@ -20,9 +20,9 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -100,13 +100,13 @@ public class InvalidOutputGuardrailAccumulatorTest {
         public StreamingChatLanguageModel get() {
             return new StreamingChatLanguageModel() {
                 @Override
-                public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-                    handler.onNext("Stream");
-                    handler.onNext("ing");
-                    handler.onNext(" ");
-                    handler.onNext("world");
-                    handler.onNext("!");
-                    handler.onComplete(Response.from(AiMessage.from("")));
+                public void chat(List<ChatMessage> messages, StreamingChatResponseHandler handler) {
+                    handler.onPartialResponse("Stream");
+                    handler.onPartialResponse("ing");
+                    handler.onPartialResponse(" ");
+                    handler.onPartialResponse("world");
+                    handler.onPartialResponse("!");
+                    handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
                 }
             };
         }

@@ -4,7 +4,6 @@ import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +24,12 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
@@ -198,27 +199,16 @@ public abstract class GeminiChatLanguageModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
         var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
-                .messages(messages)
-                .toolSpecifications(toolSpecifications)
+                .messages(chatRequest.messages())
+                .toolSpecifications(chatRequest.toolSpecifications())
                 .build());
 
-        return Response.from(
-                chatResponse.aiMessage(),
-                chatResponse.tokenUsage(),
-                chatResponse.finishReason());
-
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, Collections.emptyList());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages,
-                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
+        return ChatResponse.builder()
+                .aiMessage(chatResponse.aiMessage())
+                .tokenUsage(chatResponse.tokenUsage())
+                .finishReason(chatResponse.finishReason())
+                .build();
     }
 }

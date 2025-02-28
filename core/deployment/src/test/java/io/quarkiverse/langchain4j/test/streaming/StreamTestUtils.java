@@ -12,9 +12,10 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -52,10 +53,11 @@ public class StreamTestUtils {
     public static class FakeStreamedChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
             Vertx vertx = Arc.container().select(Vertx.class).get();
             var ctxt = vertx.getOrCreateContext();
 
+            List<ChatMessage> messages = chatRequest.messages();
             if (messages.size() > 1) {
                 var last = (UserMessage) messages.get(messages.size() - 1);
                 if (last.singleText().equalsIgnoreCase("Second message")) {
@@ -64,8 +66,8 @@ public class StreamTestUtils {
                         return;
                     } else {
                         ctxt.runOnContext(x -> {
-                            handler.onNext("OK!");
-                            handler.onComplete(Response.from(AiMessage.from("")));
+                            handler.onPartialResponse("OK!");
+                            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
                         });
                         return;
                     }
@@ -73,12 +75,13 @@ public class StreamTestUtils {
             }
 
             ctxt.runOnContext(x1 -> {
-                handler.onNext("Hi!");
+                handler.onPartialResponse("Hi!");
                 ctxt.runOnContext(x2 -> {
-                    handler.onNext(" ");
+                    handler.onPartialResponse(" ");
                     ctxt.runOnContext(x3 -> {
-                        handler.onNext("World!");
-                        ctxt.runOnContext(x -> handler.onComplete(Response.from(AiMessage.from(""))));
+                        handler.onPartialResponse("World!");
+                        ctxt.runOnContext(
+                                x -> handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build()));
                     });
                 });
             });

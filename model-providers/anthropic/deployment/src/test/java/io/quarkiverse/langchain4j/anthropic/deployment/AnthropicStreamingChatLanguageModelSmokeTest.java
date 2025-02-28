@@ -24,10 +24,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -192,9 +192,9 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                         .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
 
         var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate("Hello, how are you today?", new StreamingResponseHandler<>() {
+        streamingChatModel.chat("Hello, how are you today?", new StreamingChatResponseHandler() {
             @Override
-            public void onNext(String token) {
+            public void onPartialResponse(String token) {
             }
 
             @Override
@@ -203,8 +203,8 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
             }
 
             @Override
-            public void onComplete(Response<AiMessage> response) {
-                streamingResponse.set(response.content());
+            public void onCompleteResponse(ChatResponse response) {
+                streamingResponse.set(response.aiMessage());
             }
         });
 

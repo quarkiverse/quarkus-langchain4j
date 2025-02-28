@@ -17,7 +17,8 @@ import org.mockito.stubbing.Answer;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -38,12 +39,11 @@ public class NaiveRAGTest {
     @BeforeAll
     public static void initializeModel() {
         ChatLanguageModel mock = Mockito.mock(ChatLanguageModel.class);
-        Answer<Object> answer = invocation -> {
-            lastQuery.set(invocation.getArgument(0));
-            return new Response<>(new AiMessage("Mock response"));
+        Answer<ChatResponse> answer = invocation -> {
+            lastQuery.set(((ChatRequest) invocation.getArgument(0)).messages());
+            return ChatResponse.builder().aiMessage(new AiMessage("Mock response")).build();
         };
-        Mockito.when(mock.generate(Mockito.anyList())).thenAnswer(answer);
-        Mockito.when(mock.generate(Mockito.anyList(), Mockito.anyList())).thenAnswer(answer);
+        Mockito.when(mock.chat(Mockito.any(ChatRequest.class))).thenAnswer(answer);
         QuarkusMock.installMockForType(mock, ChatLanguageModel.class);
     }
 

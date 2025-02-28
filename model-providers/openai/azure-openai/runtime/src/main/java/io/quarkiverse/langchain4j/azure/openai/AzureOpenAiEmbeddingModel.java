@@ -12,14 +12,14 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import dev.ai4j.openai4j.OpenAiClient;
-import dev.ai4j.openai4j.embedding.EmbeddingRequest;
-import dev.ai4j.openai4j.embedding.EmbeddingResponse;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.TokenCountEstimator;
+import dev.langchain4j.model.openai.internal.OpenAiClient;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
@@ -66,7 +66,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
             throw new IllegalArgumentException("max-retries must be at least 1");
         }
 
-        this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
+        this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
@@ -75,7 +75,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
                 .writeTimeout(timeout)
                 .proxy(proxy)
                 .logRequests(logRequests)
-                .logResponses(logResponses))
+                .logResponses(logResponses)
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)

@@ -17,6 +17,6 @@ public class ChatLanguageModelResource {
     @GET
     @Path("basic")
     public String basic() {
-        return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");
+        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
     }
 }

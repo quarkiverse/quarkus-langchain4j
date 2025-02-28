@@ -72,9 +72,9 @@ public class OpenAiChatLanguageModelTlsConfigurationTest {
 
     @Test
     void test() {
-        assertThat(defaultChatLanguageModel.generate("hello")).isEqualTo("Hello");
+        assertThat(defaultChatLanguageModel.chat("hello")).isEqualTo("Hello");
 
-        assertThat(clientAChatLanguageModel.generate("hello")).isEqualTo("HelloA");
+        assertThat(clientAChatLanguageModel.chat("hello")).isEqualTo("HelloA");
     }
 
     @ApplicationScoped

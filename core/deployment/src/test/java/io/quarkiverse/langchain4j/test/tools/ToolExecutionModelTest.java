@@ -22,15 +22,15 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
@@ -298,12 +298,13 @@ public class ToolExecutionModelTest {
     public static class MyChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
+        public ChatResponse chat(List<ChatMessage> messages) {
             throw new UnsupportedOperationException("Should not be called");
         }
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            List<ChatMessage> messages = chatRequest.messages();
             if (messages.size() == 1) {
                 // Only the user message, extract the tool id from it
                 String text = ((dev.langchain4j.data.message.UserMessage) messages.get(0)).singleText();
@@ -311,18 +312,18 @@ public class ToolExecutionModelTest {
                 var toolId = segments[0];
                 var content = segments[1];
                 // Only the user message
-                return new Response<>(new AiMessage("cannot be blank", List.of(ToolExecutionRequest.builder()
+                return ChatResponse.builder().aiMessage(new AiMessage("cannot be blank", List.of(ToolExecutionRequest.builder()
                         .id("my-tool-" + toolId)
                         .name(toolId)
                         .arguments("{\"m\":\"" + content + "\"}")
-                        .build())), new TokenUsage(0, 0), FinishReason.TOOL_EXECUTION);
+                        .build()))).tokenUsage(new TokenUsage(0, 0)).finishReason(FinishReason.TOOL_EXECUTION).build();
             } else if (messages.size() == 3) {
                 // user -> tool request -> tool response
                 ToolExecutionResultMessage last = (ToolExecutionResultMessage) Lists.last(messages);
-                return new Response<>(AiMessage.from("response: " + last.text()));
+                return ChatResponse.builder().aiMessage(AiMessage.from("response: " + last.text())).build();
 
             }
-            return new Response<>(new AiMessage("Unexpected"));
+            return ChatResponse.builder().aiMessage(new AiMessage("Unexpected")).build();
         }
     }
 

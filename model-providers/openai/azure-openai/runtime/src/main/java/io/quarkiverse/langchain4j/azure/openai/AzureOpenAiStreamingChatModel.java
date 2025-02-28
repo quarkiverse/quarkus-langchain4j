@@ -8,7 +8,6 @@ import static dev.langchain4j.model.openai.InternalOpenAiHelper.toFunctions;
 import static dev.langchain4j.model.openai.InternalOpenAiHelper.toOpenAiMessages;
 import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.singletonList;
 
 import java.net.Proxy;
 import java.time.Duration;
@@ -21,15 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.jboss.logging.Logger;
 
-import dev.ai4j.openai4j.OpenAiClient;
-import dev.ai4j.openai4j.chat.ChatCompletionChoice;
-import dev.ai4j.openai4j.chat.ChatCompletionRequest;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.chat.ResponseFormat;
-import dev.ai4j.openai4j.chat.ResponseFormatType;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.Tokenizer;
@@ -41,9 +32,17 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.openai.OpenAiStreamingResponseBuilder;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.openai.internal.OpenAiClient;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionChoice;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.chat.Delta;
+import dev.langchain4j.model.openai.internal.chat.ResponseFormat;
+import dev.langchain4j.model.openai.internal.chat.ResponseFormatType;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 /**
@@ -100,7 +99,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         this.listeners = listeners;
         timeout = getOrDefault(timeout, ofSeconds(60));
 
-        this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
+        this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
@@ -109,7 +108,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                 .writeTimeout(timeout)
                 .proxy(proxy)
                 .logRequests(logRequests)
-                .logStreamingResponses(logResponses))
+                .logStreamingResponses(logResponses)
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -128,26 +127,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, null, null, handler);
-    }
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
 
-    @Override
-    public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
-            StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, toolSpecifications, null, handler);
-    }
+        List<ChatMessage> messages = chatRequest.messages();
+        List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
-    @Override
-    public void generate(List<ChatMessage> messages, ToolSpecification toolSpecification,
-            StreamingResponseHandler<AiMessage> handler) {
-        generate(messages, null, toolSpecification, handler);
-    }
-
-    private void generate(List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications,
-            ToolSpecification toolThatMustBeExecuted,
-            StreamingResponseHandler<AiMessage> handler) {
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .stream(true)
                 .messages(toOpenAiMessages(messages))
@@ -160,17 +144,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
 
         Integer inputTokenCount = tokenizer == null ? null : tokenizer.estimateTokenCountInMessages(messages);
 
-        if (toolThatMustBeExecuted != null) {
-            requestBuilder.functions(toFunctions(singletonList(toolThatMustBeExecuted)));
-            requestBuilder.functionCall(toolThatMustBeExecuted.name());
-            if (tokenizer != null) {
-                inputTokenCount += tokenizer.estimateTokenCountInForcefulToolSpecification(toolThatMustBeExecuted);
-            }
-        } else if (!isNullOrEmpty(toolSpecifications)) {
+        if (!isNullOrEmpty(toolSpecifications)) {
             requestBuilder.functions(toFunctions(toolSpecifications));
-            if (tokenizer != null) {
-                inputTokenCount += tokenizer.estimateTokenCountInToolSpecifications(toolSpecifications);
-            }
         }
 
         ChatCompletionRequest request = requestBuilder.build();
@@ -221,10 +196,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
                         }
                     });
 
-                    Response<AiMessage> aiResponse = Response.from(response.aiMessage(),
-                            response.tokenUsage(),
-                            response.finishReason());
-                    handler.onComplete(aiResponse);
+                    handler.onCompleteResponse(response);
                 })
                 .onError((error) -> {
                     ChatResponse response = responseBuilder.build();
@@ -254,7 +226,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     }
 
     private static void handle(ChatCompletionResponse partialResponse,
-            StreamingResponseHandler<AiMessage> handler) {
+            StreamingChatResponseHandler handler) {
         List<ChatCompletionChoice> choices = partialResponse.choices();
         if (choices == null || choices.isEmpty()) {
             return;
@@ -262,7 +234,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         Delta delta = choices.get(0).delta();
         String content = delta.content();
         if (content != null) {
-            handler.onNext(content);
+            handler.onPartialResponse(content);
         }
     }
 

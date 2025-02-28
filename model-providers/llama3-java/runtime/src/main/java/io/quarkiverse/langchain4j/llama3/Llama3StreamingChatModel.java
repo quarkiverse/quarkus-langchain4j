@@ -17,11 +17,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.llama3.copy.ChatFormat;
 import io.quarkiverse.langchain4j.llama3.copy.Llama;
@@ -60,9 +60,9 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
     }
 
     @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         List<ChatFormat.Message> llama3Messages = new ArrayList<>();
-        for (ChatMessage message : messages) {
+        for (ChatMessage message : chatRequest.messages()) {
             llama3Messages.add(toLlama3Message(message));
         }
 
@@ -91,7 +91,7 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
 
     private void runInference(Llama model, Sampler sampler, Llama3.Options options,
             List<ChatFormat.Message> messages,
-            StreamingResponseHandler<AiMessage> handler) {
+            StreamingChatResponseHandler handler) {
         Llama.State state = model.createNewState(BATCH_SIZE);
         ChatFormat chatFormat = new ChatFormat(model.tokenizer());
 
@@ -103,7 +103,7 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
                     if (options.stream()) {
                         if (!model.tokenizer().isSpecialToken(token)) {
                             String text = model.tokenizer().decode(List.of(token));
-                            handler.onNext(text);
+                            handler.onPartialResponse(text);
                         }
                     }
                 });
@@ -111,8 +111,8 @@ public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
             responseTokens.removeLast();
         }
 
-        handler.onComplete(Response.from(aiMessage(model.tokenizer().decode(responseTokens)),
-                new TokenUsage(promptTokens.size(), responseTokens.size())));
+        handler.onCompleteResponse(ChatResponse.builder().aiMessage(aiMessage(model.tokenizer().decode(responseTokens)))
+                .tokenUsage(new TokenUsage(promptTokens.size(), responseTokens.size())).build());
     }
 
     public static Builder builder() {

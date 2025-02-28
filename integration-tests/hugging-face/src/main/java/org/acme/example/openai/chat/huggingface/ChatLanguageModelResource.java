@@ -25,7 +25,7 @@ public class ChatLanguageModelResource {
     @GET
     @Path("basic")
     public String basic() {
-        return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");
+        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -40,7 +40,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = promptTemplate.apply(variables);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @GET
@@ -52,7 +52,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @StructuredPrompt({

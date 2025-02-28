@@ -30,7 +30,7 @@ public class OpenAiChatLanguageModelSmokeTest extends OpenAiBaseTest {
     @Test
     void test() {
         setChatCompletionMessageContent("whatever");
-        String response = chatLanguageModel.generate("hello");
+        String response = chatLanguageModel.chat("hello");
         assertThat(response).isEqualTo("whatever");
 
         LoggedRequest loggedRequest = singleLoggedRequest();

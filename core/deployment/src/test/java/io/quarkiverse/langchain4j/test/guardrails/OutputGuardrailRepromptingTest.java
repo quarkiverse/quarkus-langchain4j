@@ -25,7 +25,8 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -194,15 +195,15 @@ public class OutputGuardrailRepromptingTest {
     public static class MyChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            ChatMessage last = messages.get(messages.size() - 1);
+        public ChatResponse doChat(ChatRequest request) {
+            ChatMessage last = request.messages().get(request.messages().size() - 1);
             if (last instanceof UserMessage && last.text().equals("foo")) {
-                return new Response<>(new AiMessage("Nope"));
+                return ChatResponse.builder().aiMessage(new AiMessage("Nope")).build();
             }
             if (last instanceof UserMessage && last.text().contains("Retry")) {
-                return new Response<>(new AiMessage("Hello"));
+                return ChatResponse.builder().aiMessage(new AiMessage("Hello")).build();
             }
-            throw new IllegalArgumentException("Unexpected message: " + messages);
+            throw new IllegalArgumentException("Unexpected message: " + request.messages());
         }
     }
 
