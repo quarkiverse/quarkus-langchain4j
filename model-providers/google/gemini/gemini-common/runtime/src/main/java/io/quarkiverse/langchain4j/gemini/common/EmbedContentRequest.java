@@ -1,6 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini;
-
-import io.quarkiverse.langchain4j.gemini.common.Content;
+package io.quarkiverse.langchain4j.gemini.common;
 
 /**
  * Request containing the Content for the model to embed.

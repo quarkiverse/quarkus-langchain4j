@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini.config;
+package io.quarkiverse.langchain4j.vertexai.runtime.gemini.config;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -8,7 +8,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public interface LangChain4jAiGeminiEmbeddingConfig {
+public interface LangChain4jVertexAiGeminiEmbeddingConfig {
 
     /**
      * The id of the model to use.
@@ -52,7 +52,7 @@ public interface LangChain4jAiGeminiEmbeddingConfig {
      * Global timeout for requests to gemini APIs
      */
     @ConfigDocDefault("10s")
-    @WithDefault("${quarkus.langchain4j.ai.gemini.timeout}")
+    @WithDefault("${quarkus.langchain4j.vertexai.gemini.timeout}")
     Optional<Duration> timeout();
 
 }

@@ -31,6 +31,10 @@ import com.google.auth.oauth2.GoogleCredentials;
 
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider.Input;
+import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
+import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
+import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
+import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.ChatModelConfig;
@@ -48,6 +52,14 @@ public interface VertxAiGeminiRestApi {
     @Path("{modelId}:generateContent")
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
+
+    @Path("{modelId}:batchEmbedContents")
+    @POST
+    EmbedContentResponses batchEmbedContents(EmbedContentRequests embedContentRequest, @BeanParam ApiMetadata apiMetadata);
+
+    @Path("{modelId}:embedContent")
+    @POST
+    EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest, @BeanParam ApiMetadata apiMetadata);
 
     @ClientObjectMapper
     static ObjectMapper mapper(ObjectMapper defaultObjectMapper) {
