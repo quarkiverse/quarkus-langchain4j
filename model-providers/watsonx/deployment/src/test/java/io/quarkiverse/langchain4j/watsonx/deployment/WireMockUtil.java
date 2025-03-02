@@ -18,11 +18,8 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import dev.langchain4j.model.output.Response;
 
 public class WireMockUtil {
 
@@ -233,24 +230,6 @@ public class WireMockUtil {
 
     public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status, String version) {
         return new WatsonxBuilder(watsonServer, apiURL, status, version);
-    }
-
-    public static StreamingResponseHandler<AiMessage> streamingResponseHandler(AtomicReference<AiMessage> streamingResponse) {
-        return new StreamingResponseHandler<>() {
-            @Override
-            public void onNext(String token) {
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                fail("Streaming failed: %s".formatted(error.getMessage()), error);
-            }
-
-            @Override
-            public void onComplete(Response<AiMessage> response) {
-                streamingResponse.set(response.content());
-            }
-        };
     }
 
     public static StreamingChatResponseHandler streamingChatResponseHandler(AtomicReference<ChatResponse> streamingResponse) {

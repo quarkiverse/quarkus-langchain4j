@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime;
 import static dev.langchain4j.model.chat.request.ToolChoice.REQUIRED;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -186,7 +187,7 @@ public class WatsonxRecorder {
 
             URL url;
             try {
-                url = new URL(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl()));
+                url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -237,7 +238,7 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = new URL(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl()));
+            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -277,7 +278,7 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = new URL(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl()));
+            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -336,7 +337,7 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = new URL(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl()));
+            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

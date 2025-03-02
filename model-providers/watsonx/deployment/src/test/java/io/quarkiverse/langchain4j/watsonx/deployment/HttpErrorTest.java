@@ -59,7 +59,7 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertEquals(500, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
@@ -91,7 +91,7 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertEquals(400, ex.details().statusCode());
         assertNotNull(ex.details().errors());
         assertEquals(1, ex.details().errors().size());
@@ -122,7 +122,7 @@ public class HttpErrorTest extends WireMockAbstract {
                                 """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(400, ex.details().statusCode());
@@ -154,7 +154,7 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(404, ex.details().statusCode());
@@ -185,7 +185,7 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(400, ex.details().statusCode());
@@ -216,7 +216,7 @@ public class HttpErrorTest extends WireMockAbstract {
                         """)
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertNotNull(ex.details());
         assertNotNull(ex.details().trace());
         assertEquals(400, ex.details().statusCode());
@@ -237,7 +237,7 @@ public class HttpErrorTest extends WireMockAbstract {
                 .response("{")
                 .build();
 
-        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.generate("message"));
+        WatsonxException ex = assertThrowsExactly(WatsonxException.class, () -> chatModel.chat("message"));
         assertEquals(500, ex.statusCode());
     }
 
@@ -249,7 +249,7 @@ public class HttpErrorTest extends WireMockAbstract {
                 .build();
 
         ClientWebApplicationException ex = assertThrows(ClientWebApplicationException.class,
-                () -> chatModel.generate("message"));
+                () -> chatModel.chat("message"));
         assertEquals(500, ex.getResponse().getStatus());
         assertTrue(ex.getMessage().contains("HTTP 500 Server Error"));
     }
@@ -270,7 +270,7 @@ public class HttpErrorTest extends WireMockAbstract {
 
         ClientWebApplicationException ex = assertThrowsExactly(
                 ClientWebApplicationException.class,
-                () -> chatModel.generate("message"));
+                () -> chatModel.chat("message"));
         assertEquals(400, ex.getResponse().getStatus());
         assertTrue(ex.getMessage().contains("\"quarkus.langchain4j.watsonx.api-key\" is incorrect"));
     }
@@ -282,7 +282,7 @@ public class HttpErrorTest extends WireMockAbstract {
                 .response("SUPER FATAL ERROR!")
                 .build();
         WebApplicationException ex = assertThrowsExactly(ClientWebApplicationException.class,
-                () -> chatModel.generate("message"));
+                () -> chatModel.chat("message"));
         assertEquals(500, ex.getResponse().getStatus());
         assertTrue(ex.getMessage().contains("SUPER FATAL ERROR!"));
     }
