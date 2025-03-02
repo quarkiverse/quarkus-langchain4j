@@ -158,6 +158,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Stre
         context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
 
         client.streamingChat(request, version)
+                .onFailure(WatsonxUtils::isTokenExpired).retry().atMost(1)
                 .subscribe()
                 .with(context,
                         new Consumer<TextStreamingChatResponse>() {
