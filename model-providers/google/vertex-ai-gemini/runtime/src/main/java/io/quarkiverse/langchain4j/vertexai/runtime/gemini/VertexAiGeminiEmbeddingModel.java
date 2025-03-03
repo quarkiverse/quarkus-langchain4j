@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.ai.runtime.gemini;
+package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,19 +20,21 @@ import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public class AiGeminiEmbeddingModel implements EmbeddingModel {
+public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
 
-    private final AiGeminiRestApi restApi;
-    private final AiGeminiRestApi.ApiMetadata apiMetadata;
+    private final VertxAiGeminiRestApi restApi;
+    private final VertxAiGeminiRestApi.ApiMetadata apiMetadata;
 
     private final Integer dimension;
     private final String taskType;
 
-    public AiGeminiEmbeddingModel(Builder builder) {
-        this.apiMetadata = AiGeminiRestApi.ApiMetadata
+    public VertexAiGeminiEmbeddingModel(Builder builder) {
+        this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
                 .modelId(builder.modelId)
-                .key(builder.key)
+                .location(builder.location)
+                .projectId(builder.projectId)
+                .publisher(builder.publisher)
                 .build();
 
         try {
@@ -44,13 +46,13 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
 
             if (builder.logRequests || builder.logResponses) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                restApiBuilder.clientLogger(new AiGeminiRestApi.AiClientLogger(builder.logRequests,
+                restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
 
             this.dimension = builder.dimension;
             this.taskType = builder.taskType;
-            restApi = restApiBuilder.build(AiGeminiRestApi.class);
+            restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -102,9 +104,12 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
     }
 
     public static final class Builder {
+
         private Optional<String> baseUrl = Optional.empty();
+        private String projectId;
+        private String location;
         private String modelId;
-        private String key;
+        private String publisher;
         private Integer dimension;
         private String taskType;
         private Duration timeout = Duration.ofSeconds(10);
@@ -116,13 +121,23 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
-        public Builder key(String key) {
-            this.key = key;
+        public Builder projectId(String projectId) {
+            this.projectId = projectId;
+            return this;
+        }
+
+        public Builder location(String location) {
+            this.location = location;
             return this;
         }
 
         public Builder modelId(String modelId) {
             this.modelId = modelId;
+            return this;
+        }
+
+        public Builder publisher(String publisher) {
+            this.publisher = publisher;
             return this;
         }
 
@@ -151,8 +166,8 @@ public class AiGeminiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
-        public AiGeminiEmbeddingModel build() {
-            return new AiGeminiEmbeddingModel(this);
+        public VertexAiGeminiEmbeddingModel build() {
+            return new VertexAiGeminiEmbeddingModel(this);
         }
     }
 }

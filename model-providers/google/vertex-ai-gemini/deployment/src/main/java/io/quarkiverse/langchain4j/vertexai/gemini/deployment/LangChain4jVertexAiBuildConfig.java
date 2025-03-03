@@ -12,4 +12,9 @@ public interface LangChain4jVertexAiBuildConfig {
      * Chat model related settings
      */
     ChatModelBuildConfig chatModel();
+
+    /**
+     * Embedding model related settings
+     */
+    LangChain4jVertexAiEmbeddingConfig embeddingModel();
 }

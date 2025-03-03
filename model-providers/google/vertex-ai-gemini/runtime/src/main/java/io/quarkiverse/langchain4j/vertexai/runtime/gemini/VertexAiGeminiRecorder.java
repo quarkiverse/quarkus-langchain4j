@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.runtime.annotations.Recorder;
@@ -15,6 +17,44 @@ import io.smallrye.config.ConfigValidationException;
 @Recorder
 public class VertexAiGeminiRecorder {
     private static final String DUMMY_KEY = "dummy";
+
+    public Supplier<EmbeddingModel> embeddingModel(LangChain4jVertexAiGeminiConfig config, String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+
+        if (vertexAiConfig.enableIntegration()) {
+            var embeddingModelConfig = vertexAiConfig.embeddingModel();
+            Optional<String> baseUrl = vertexAiConfig.baseUrl();
+
+            String location = vertexAiConfig.location();
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(location)) {
+                throw new ConfigValidationException(createConfigProblems("location", configName));
+            }
+            String projectId = vertexAiConfig.projectId();
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(projectId)) {
+                throw new ConfigValidationException(createConfigProblems("project-id", configName));
+            }
+            var builder = VertexAiGeminiEmbeddingModel.builder()
+                    .baseUrl(baseUrl)
+                    .location(location)
+                    .projectId(projectId)
+                    .publisher(vertexAiConfig.publisher())
+                    .modelId(embeddingModelConfig.modelId())
+                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), vertexAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), vertexAiConfig.logResponses()));
+
+            if (embeddingModelConfig.outputDimension().isPresent()) {
+                builder.dimension(embeddingModelConfig.outputDimension().get());
+            }
+
+            if (embeddingModelConfig.taskType().isPresent()) {
+                builder.taskType(embeddingModelConfig.taskType().get());
+            }
+
+            return builder::build;
+        } else {
+            return DisabledEmbeddingModel::new;
+        }
+    }
 
     public Supplier<ChatLanguageModel> chatModel(LangChain4jVertexAiGeminiConfig config, String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(config, configName);

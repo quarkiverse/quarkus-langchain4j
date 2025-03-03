@@ -92,5 +92,10 @@ public interface LangChain4jVertexAiGeminiConfig {
          * Chat model related settings
          */
         ChatModelConfig chatModel();
+
+        /**
+         * Embedding model related settings
+         */
+        LangChain4jVertexAiGeminiEmbeddingConfig embeddingModel();
     }
 }
