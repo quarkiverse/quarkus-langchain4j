@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
 import static dev.langchain4j.data.message.AiMessage.aiMessage;
+import static dev.langchain4j.internal.Utils.getOrDefault;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,7 +18,10 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ResponseFormatType;
+import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.gemini.common.ContentMapper;
 import io.quarkiverse.langchain4j.gemini.common.FinishReasonMapper;
@@ -25,21 +29,25 @@ import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponseHandler;
 import io.quarkiverse.langchain4j.gemini.common.GenerationConfig;
+import io.quarkiverse.langchain4j.gemini.common.SchemaMapper;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
+    private final Double temperature;
+    private final Integer maxOutputTokens;
+    private final Integer topK;
+    private final Double topP;
+    private final ResponseFormat responseFormat;
 
-    private final GenerationConfig generationConfig;
     private final VertxAiGeminiRestApi.ApiMetadata apiMetadata;
     private final VertxAiGeminiRestApi restApi;
 
     private VertexAiGeminiChatLanguageModel(Builder builder) {
-        this.generationConfig = GenerationConfig.builder()
-                .maxOutputTokens(builder.maxOutputTokens)
-                .temperature(builder.temperature)
-                .topK(builder.topK)
-                .topP(builder.topP)
-                .build();
+        this.temperature = builder.temperature;
+        this.maxOutputTokens = builder.maxOutputTokens;
+        this.topK = builder.topK;
+        this.topP = builder.topP;
+        this.responseFormat = builder.responseFormat;
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
@@ -69,6 +77,20 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
 
     @Override
     public dev.langchain4j.model.chat.response.ChatResponse chat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
+        ChatRequestParameters requestParameters = chatRequest.parameters();
+        ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
+        GenerationConfig generationConfig = GenerationConfig.builder()
+                .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
+                .responseMimeType(computeMimeType(effectiveResponseFormat))
+                .responseSchema(effectiveResponseFormat != null
+                        ? SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema())
+                        : null)
+                .stopSequences(requestParameters.stopSequences())
+                .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
+                .topK(getOrDefault(requestParameters.topK(), this.topK))
+                .topP(getOrDefault(requestParameters.topP(), this.topP))
+                .build();
+
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig);
 
@@ -76,7 +98,7 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
 
         String text = GenerateContentResponseHandler.getText(response);
         List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler.getToolExecutionRequests(response);
-        AiMessage aiMessage = toolExecutionRequests == null || toolExecutionRequests.isEmpty()
+        AiMessage aiMessage = toolExecutionRequests.isEmpty()
                 ? aiMessage(text)
                 : aiMessage(text, toolExecutionRequests);
         return dev.langchain4j.model.chat.response.ChatResponse.builder()
@@ -109,6 +131,21 @@ public class VertexAiGeminiChatLanguageModel implements ChatLanguageModel {
     public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
         return generate(messages,
                 toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
+    }
+
+    private String computeMimeType(ResponseFormat responseFormat) {
+        if (responseFormat == null || ResponseFormatType.TEXT.equals(responseFormat.type())) {
+            return "text/plain";
+        }
+
+        if (ResponseFormatType.JSON.equals(responseFormat.type()) &&
+                responseFormat.jsonSchema() != null &&
+                responseFormat.jsonSchema().rootElement() != null &&
+                responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
+            return "text/x.enum";
+        }
+
+        return "application/json";
     }
 
     public static Builder builder() {
