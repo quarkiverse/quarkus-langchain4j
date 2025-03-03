@@ -8,8 +8,12 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
@@ -60,12 +64,15 @@ public class VertexAiGeminiProcessor {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 var configName = selected.getConfigName();
+                var chatModel = recorder.chatModel(config, configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());

@@ -3,20 +3,29 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
+import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class VertexAiGeminiRecorder {
     private static final String DUMMY_KEY = "dummy";
+    private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     public Supplier<EmbeddingModel> embeddingModel(LangChain4jVertexAiGeminiConfig config, String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(config, configName);
@@ -56,7 +65,8 @@ public class VertexAiGeminiRecorder {
         }
     }
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jVertexAiGeminiConfig config, String configName) {
+    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+            LangChain4jVertexAiGeminiConfig config, String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(config, configName);
 
         if (vertexAiConfig.enableIntegration()) {
@@ -96,16 +106,18 @@ public class VertexAiGeminiRecorder {
 
             // TODO: add the rest of the properties
 
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<>() {
+            return new Function<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
                     return new DisabledChatLanguageModel();
                 }
             };

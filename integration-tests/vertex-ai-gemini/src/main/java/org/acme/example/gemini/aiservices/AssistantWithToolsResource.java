@@ -18,14 +18,18 @@ public class AssistantWithToolsResource {
     @Inject
     AddContentTool tool;
 
+    @Inject
+    TestChatModelListener chatModelListener;
+
     public AssistantWithToolsResource(Assistant assistant) {
         this.assistant = assistant;
     }
 
     @GET
     public String get(@RestQuery String message) {
-        String response = assistant.chat(message);// + ";" + tool.getTool1Content();
-        return response;
+        String response = assistant.chat(message);
+
+        return response + ":" + chatModelListener.onRequestCalled + ":" + chatModelListener.onResponseCalled;
     }
 
     @RegisterAiService(tools = AddContentTool.class)
@@ -41,10 +45,6 @@ public class AssistantWithToolsResource {
         @Tool("Duplicate content")
         public String duplicateContent(String content) {
             return content + ":" + content;
-        }
-
-        public String getTool1Content() {
-            return tool1Content;
         }
     }
 }
