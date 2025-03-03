@@ -35,6 +35,10 @@ public class WireMockUtil {
     public static final String URL_WATSONX_EMBEDDING_API = "/ml/v1/text/embeddings?version=%s";
     public static final String URL_WATSONX_TOKENIZER_API = "/ml/v1/text/tokenization?version=%s";
 
+    public static final int PORT_WX_SERVER = 8091;
+    public static final String URL_WX_SERVER = "http://localhost:8091";
+    public static final String URL_WX_AGENT_TOOL_RUN = "/v1-beta/utility_agent_tools/run";
+
     public static final int PORT_IAM_SERVER = 8090;
     public static final String URL_IAM_SERVER = "http://localhost:8090";
     public static final String URL_IAM_GENERATE_TOKEN = "/identity/token";
@@ -214,9 +218,11 @@ public class WireMockUtil {
 
     WireMockServer iamServer;
     WireMockServer watsonServer;
+    WireMockServer wxServer;
 
-    public WireMockUtil(WireMockServer watsonServer, WireMockServer iamServer) {
-        this.watsonServer = watsonServer;
+    public WireMockUtil(WireMockServer watsonxServer, WireMockServer wxServer, WireMockServer iamServer) {
+        this.watsonServer = watsonxServer;
+        this.wxServer = wxServer;
         this.iamServer = iamServer;
     }
 
@@ -226,6 +232,10 @@ public class WireMockUtil {
 
     public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status) {
         return new WatsonxBuilder(watsonServer, apiURL, status);
+    }
+
+    public WatsonxBuilder mockWxBuilder(String apiURL, int status) {
+        return new WatsonxBuilder(wxServer, apiURL, status);
     }
 
     public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status, String version) {
@@ -276,6 +286,11 @@ public class WireMockUtil {
             builder = builder.inScenario("")
                     .whenScenarioStateIs(currentState)
                     .willSetStateTo(nextState);
+            return this;
+        }
+
+        public WatsonxBuilder bodyIgnoreOrder(String body) {
+            builder.withRequestBody(equalToJson(body, true, false));
             return this;
         }
 

@@ -34,6 +34,7 @@ The `base-url` property depends on the region of the provided service instance, 
 * London: https://eu-gb.ml.cloud.ibm.com
 * Tokyo: https://jp-tok.ml.cloud.ibm.com
 * Sydney: https://au-syd.ml.cloud.ibm.com
+* Toronto: https://ca-tor.ml.cloud.ibm.com
 
 [source,properties,subs=attributes+]
 ----
@@ -138,7 +139,7 @@ public interface AiService {
 }
 ----
 
-NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with no separator (an empty string `""`). If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.generation-model.prompt-joiner=<value>`. 
+NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with no separator (an empty string `""`). If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.generation-model.prompt-joiner=<value>`.
 
 ==== All configuration properties
 

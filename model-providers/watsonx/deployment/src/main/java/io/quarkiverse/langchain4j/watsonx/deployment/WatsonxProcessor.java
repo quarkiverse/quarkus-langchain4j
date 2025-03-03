@@ -6,13 +6,16 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
@@ -27,10 +30,13 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.BuiltinServiceBuildItem;
+import io.quarkiverse.langchain4j.watsonx.runtime.BuiltinServiceRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -69,6 +75,52 @@ public class WatsonxProcessor {
 
         if (config.scoringModel().enabled().isEmpty() || config.scoringModel().enabled().get()) {
             scoringProducer.produce(new ScoringModelProviderCandidateBuildItem(PROVIDER));
+        }
+    }
+
+    @BuildStep
+    void discoverBuiltinToolBeans(
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<BuiltinServiceBuildItem> producer) {
+
+        Set<DotName> dotNames = new HashSet<>();
+        beans.getInjectionPoints().stream()
+                .map(ip -> ip.getRequiredType().name())
+                .filter(this::isABuiltinToolClass)
+                .forEach(dotNames::add);
+
+        if (dotNames.isEmpty())
+            return; // Nothing to produce..
+
+        dotNames.stream().map(BuiltinServiceBuildItem::new).forEach(producer::produce);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void generateBuiltinToolBeans(
+            BuiltinServiceRecorder recorder,
+            LangChain4jWatsonxConfig runtimeConfig,
+            List<BuiltinServiceBuildItem> builtinToolClasses,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+
+        for (BuiltinServiceBuildItem builtinToolClass : builtinToolClasses) {
+            var builder = SyntheticBeanBuildItem
+                    .configure(builtinToolClass.getDotName())
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class);
+
+            if (builtinToolClass.getDotName().equals(WatsonxDotNames.GOOGLE_SEARCH_SERVICE))
+                builder.supplier(recorder.googleSearch(runtimeConfig));
+            else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEB_CRAWLER_SERVICE))
+                builder.supplier(recorder.webCrawler(runtimeConfig));
+            else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEATHER_SERVICE))
+                builder.supplier(recorder.weather(runtimeConfig));
+            else
+                throw new RuntimeException("BuiltinServiceClass not recognised");
+
+            beanProducer.produce(builder.done());
         }
     }
 
@@ -178,6 +230,17 @@ public class WatsonxProcessor {
         if (!NamedConfigUtil.isDefault(configName)) {
             builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
+    }
+
+    private boolean isABuiltinToolClass(DotName dotName) {
+        if (dotName.equals(WatsonxDotNames.WEB_CRAWLER_SERVICE))
+            return true;
+        else if (dotName.equals(WatsonxDotNames.GOOGLE_SEARCH_SERVICE))
+            return true;
+        else if (dotName.equals(WatsonxDotNames.WEATHER_SERVICE))
+            return true;
+        else
+            return false;
     }
 
     /**

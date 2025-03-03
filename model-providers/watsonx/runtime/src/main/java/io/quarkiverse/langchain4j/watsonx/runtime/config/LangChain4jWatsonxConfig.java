@@ -33,10 +33,18 @@ public interface LangChain4jWatsonxConfig {
     @WithDefaults
     Map<String, WatsonConfig> namedConfig();
 
+    /**
+     * Configuration for built-in services.
+     */
+    BuiltinServiceConfig builtInService();
+
     @ConfigGroup
     interface WatsonConfig {
         /**
          * Base URL of the watsonx.ai API.
+         * <p>
+         * All available URLs are listed in the IBM Watsonx.ai documentation at the
+         * <a href="https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url">following link</a>.
          */
         Optional<String> baseUrl();
 
@@ -88,8 +96,8 @@ public interface LangChain4jWatsonxConfig {
 
         /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
-         * provider. Set to
-         * {@code false} to disable all requests.
+         * provider. Set to {@code false} to
+         * disable all requests.
          */
         @WithDefault("true")
         Boolean enableIntegration();

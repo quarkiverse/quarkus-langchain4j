@@ -17,6 +17,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfi
 public abstract class WireMockAbstract {
 
     static WireMockServer watsonxServer;
+    static WireMockServer wxServer;
     static WireMockServer iamServer;
     static WireMockUtil mockServers;
     static ObjectMapper mapper;
@@ -31,21 +32,26 @@ public abstract class WireMockAbstract {
         watsonxServer = new WireMockServer(options().port(WireMockUtil.PORT_WATSONX_SERVER));
         watsonxServer.start();
 
+        wxServer = new WireMockServer(options().port(WireMockUtil.PORT_WX_SERVER));
+        wxServer.start();
+
         iamServer = new WireMockServer(options().port(WireMockUtil.PORT_IAM_SERVER));
         iamServer.start();
 
-        mockServers = new WireMockUtil(watsonxServer, iamServer);
+        mockServers = new WireMockUtil(watsonxServer, wxServer, iamServer);
     }
 
     @AfterAll
     static void afterAll() {
         watsonxServer.stop();
+        wxServer.stop();
         iamServer.stop();
     }
 
     @BeforeEach
     void beforeEach() throws Exception {
         watsonxServer.resetAll();
+        wxServer.resetAll();
         iamServer.resetAll();
         handlerBeforeEach();
     }
