@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.scoring.ScoringModel;
@@ -122,8 +122,8 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
                 .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_API)
                 .build();
 
-        assertEquals("AI Response", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
+        assertEquals("AI Response", chatModel.chat(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                dev.langchain4j.data.message.UserMessage.from("UserMessage")).aiMessage().text());
     }
 
     @Test
@@ -226,14 +226,14 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
-        var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(messages, WireMockUtil.streamingResponseHandler(streamingResponse));
+        var streamingResponse = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat(messages, WireMockUtil.streamingChatResponseHandler(streamingResponse));
 
         await().atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertThat(streamingResponse.get().text())
+        assertThat(streamingResponse.get().aiMessage().text())
                 .isNotNull()
                 .isEqualTo(". I'm a beginner");
     }

@@ -129,6 +129,7 @@ public class WatsonxGenerationModel extends Watsonx
         context.put(GENERATED_TOKEN_COUNT_CONTEXT, 0);
 
         client.generationStreaming(request, version)
+                .onFailure(WatsonxUtils::isTokenExpired).retry().atMost(1)
                 .subscribe()
                 .with(context,
                         new Consumer<TextGenerationResponse>() {

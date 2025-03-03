@@ -1,8 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingResponseHandler;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -19,10 +22,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -51,6 +54,11 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
+
+    @Override
+    void handlerBeforeEach() throws Exception {
+        Thread.sleep(cacheTimeout);
+    }
 
     @Inject
     ChatLanguageModel chatModel;
@@ -98,8 +106,8 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
                 });
 
         // --- Test ChatLanguageModel --- //
-        assertDoesNotThrow(() -> chatModel.generate("message"));
-        assertDoesNotThrow(() -> chatModel.generate("message")); // cache.
+        assertDoesNotThrow(() -> chatModel.chat("message"));
+        assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
 
         // --- Test EmbeddingModel --- //
         assertDoesNotThrow(() -> embeddingModel.embed("message")); // cache.
@@ -108,7 +116,7 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
         assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
 
         // --- Test StreamingChatLanguageModel --- //
-        streamingChatModel.generate("message", streamingResponseHandler(new AtomicReference<AiMessage>())); // cache.
+        streamingChatModel.chat("message", streamingChatResponseHandler(new AtomicReference<ChatResponse>())); // cache.
 
         Thread.sleep(cacheTimeout);
     }
@@ -152,7 +160,7 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
                 });
 
         // --- Test ChatLanguageModel --- //
-        assertDoesNotThrow(() -> chatModel.generate("message"));
+        assertDoesNotThrow(() -> chatModel.chat("message"));
 
         Thread.sleep(cacheTimeout);
 
@@ -165,8 +173,11 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
         assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
 
         // --- Test StreamingChatLanguageModel --- //
-        // Thread.sleep(cacheTimeout);
-        // Cannot run due to bug #26253
-        // streamingChatModel.generate("message", streamingResponseHandler(new AtomicReference<AiMessage>()));
+        var streamingResponse = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat("message", streamingChatResponseHandler(streamingResponse));
+        await().atMost(Duration.ofSeconds(6))
+                .pollInterval(Duration.ofSeconds(2))
+                .until(() -> streamingResponse.get() != null);
+        assertNotNull(streamingResponse.get());
     }
 }

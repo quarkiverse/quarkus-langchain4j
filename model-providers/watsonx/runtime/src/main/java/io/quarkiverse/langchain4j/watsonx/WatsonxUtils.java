@@ -19,25 +19,10 @@ public class WatsonxUtils {
         for (int i = 0; i <= maxAttempts; i++) {
 
             try {
-
                 return action.call();
-
             } catch (WatsonxException e) {
 
-                if (e.details() == null || e.details().errors() == null || e.details().errors().size() == 0)
-                    throw e;
-
-                Optional<WatsonxError.Code> optional = Optional.empty();
-                for (WatsonxError.Error error : e.details().errors()) {
-
-                    var c = error.codeToEnum();
-                    if (c.isPresent() && WatsonxError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(c.get())) {
-                        optional = Optional.of(c.get());
-                        break;
-                    }
-                }
-
-                if (!optional.isPresent())
+                if (!isTokenExpired(e))
                     throw e;
 
             } catch (WebApplicationException e) {
@@ -47,6 +32,33 @@ public class WatsonxUtils {
             }
         }
         throw new RuntimeException("Failed after " + maxAttempts + " attempts");
+    }
+
+    public static boolean isTokenExpired(Throwable exception) {
+
+        if (exception instanceof WatsonxException e) {
+
+            if (e.details() == null || e.details().errors() == null || e.details().errors().size() == 0) {
+                return false;
+            }
+
+            Optional<WatsonxError.Code> optional = Optional.empty();
+            for (WatsonxError.Error error : e.details().errors()) {
+
+                var c = error.codeToEnum();
+                if (c.isPresent() && WatsonxError.Code.AUTHENTICATION_TOKEN_EXPIRED.equals(c.get())) {
+                    optional = Optional.of(c.get());
+                    break;
+                }
+            }
+
+            if (optional.isPresent()) {
+                return true;
+            }
+
+        }
+
+        return false;
     }
 
     public static String base64Image(Image image) {

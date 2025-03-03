@@ -487,12 +487,16 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
                 .build();
 
-        assertEquals("AI Response", chatModel.generate(
-                List.of(
+        var request = ChatRequest.builder()
+                .messages(List.of(
                         dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                        dev.langchain4j.data.message.UserMessage.from("UserMessage")),
-                ToolSpecification.builder().name("myfunction").build())
-                .content().text());
+                        dev.langchain4j.data.message.UserMessage.from("UserMessage")))
+                .parameters(
+                        ChatRequestParameters.builder()
+                                .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                .build());
+
+        assertEquals("AI Response", chatModel.chat(request.build()).aiMessage().text());
     }
 
     @Test
@@ -535,15 +539,22 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
-        var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(messages, ToolSpecification.builder().name("myfunction").build(),
-                WireMockUtil.streamingResponseHandler(streamingResponse));
+        var request = ChatRequest.builder()
+                .messages(messages)
+                .parameters(
+                        ChatRequestParameters.builder()
+                                .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                .build())
+                .build();
+
+        var streamingResponse = new AtomicReference<ChatResponse>();
+        streamingChatModel.chat(request, WireMockUtil.streamingChatResponseHandler(streamingResponse));
 
         await().atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertThat(streamingResponse.get().text())
+        assertThat(streamingResponse.get().aiMessage().text())
                 .isNotNull()
                 .isEqualTo(" Hello");
     }

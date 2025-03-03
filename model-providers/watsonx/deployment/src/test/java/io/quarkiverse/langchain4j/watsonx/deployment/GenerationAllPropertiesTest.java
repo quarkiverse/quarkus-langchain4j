@@ -28,7 +28,6 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.exception.UnsupportedFeatureException;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
@@ -431,8 +430,8 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                 .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_API)
                 .build();
 
-        assertEquals("AI Response", chatModel.generate(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage")).content().text());
+        assertEquals("AI Response", chatModel.chat(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
+                dev.langchain4j.data.message.UserMessage.from("UserMessage")).aiMessage().text());
     }
 
     @Test
@@ -533,9 +532,9 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
         var streamingResponse = new AtomicReference<AiMessage>();
-        streamingChatModel.generate(messages, new StreamingResponseHandler<>() {
+        streamingChatModel.chat(messages, new StreamingChatResponseHandler() {
             @Override
-            public void onNext(String token) {
+            public void onPartialResponse(String token) {
             }
 
             @Override
@@ -544,12 +543,12 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             }
 
             @Override
-            public void onComplete(Response<AiMessage> response) {
+            public void onCompleteResponse(ChatResponse response) {
                 assertEquals(FinishReason.LENGTH, response.finishReason());
                 assertEquals(2, response.tokenUsage().inputTokenCount());
                 assertEquals(14, response.tokenUsage().outputTokenCount());
                 assertEquals(16, response.tokenUsage().totalTokenCount());
-                streamingResponse.set(response.content());
+                streamingResponse.set(response.aiMessage());
             }
         });
 

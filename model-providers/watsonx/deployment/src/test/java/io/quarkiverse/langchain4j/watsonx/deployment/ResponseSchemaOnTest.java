@@ -1,10 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -272,9 +274,21 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
                 .build();
 
-        var input = messages.stream()
-                .map(ChatMessage::text)
-                .collect(Collectors.joining("\n"));
+        var input = messages.stream().map(
+                new Function<ChatMessage, String>() {
+                    @Override
+                    public String apply(ChatMessage message) {
+                        return switch (message.type()) {
+                            case AI -> {
+                                AiMessage aiMessage = (AiMessage) message;
+                                yield aiMessage.hasToolExecutionRequests() ? "" : aiMessage.text();
+                            }
+                            case SYSTEM -> ((dev.langchain4j.data.message.SystemMessage) message).text();
+                            case USER -> ((dev.langchain4j.data.message.UserMessage) message).singleText();
+                            case CUSTOM, TOOL_EXECUTION_RESULT -> "";
+                        };
+                    }
+                }).collect(joining("\n"));
 
         return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);
     }

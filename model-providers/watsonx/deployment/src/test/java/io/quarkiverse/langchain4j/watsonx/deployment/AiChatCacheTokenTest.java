@@ -1,8 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingResponseHandler;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -19,9 +22,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.WatsonxBuilder;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiChatCacheTokenTest extends WireMockAbstract {
@@ -55,6 +59,11 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
     @Inject
     StreamingChatLanguageModel streamingChatModel;
 
+    @Override
+    void handlerBeforeEach() throws Exception {
+        Thread.sleep(cacheTimeout);
+    }
+
     @Test
     void try_token_cache() throws InterruptedException {
 
@@ -77,23 +86,25 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
                 Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API,
                         WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API))
                 .forEach(entry -> {
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 200)
-                            .token("3secondstoken")
+
+                    WatsonxBuilder builder = mockServers.mockWatsonxBuilder(entry.getKey(), 200);
+
+                    builder.token("3secondstoken")
                             .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
                             .build();
+
+                    switch (entry.getKey()) {
+                        case WireMockUtil.URL_WATSONX_CHAT_API -> {
+                            assertDoesNotThrow(() -> chatModel.chat("message"));
+                            assertDoesNotThrow(() -> chatModel.chat("message")); // cache
+                        }
+                        case WireMockUtil.URL_WATSONX_CHAT_STREAMING_API ->
+                            assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
+                    }
                 });
-
-        // --- Test ChatLanguageModel --- //
-        assertDoesNotThrow(() -> chatModel.generate("message"));
-        assertDoesNotThrow(() -> chatModel.generate("message")); // cache.
-
-        // --- Test StreamingChatLanguageModel --- //
-        streamingChatModel.generate("message", streamingResponseHandler(new AtomicReference<AiMessage>())); // cache.
-
-        Thread.sleep(cacheTimeout);
     }
 
     @Test
@@ -130,16 +141,24 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
                             .build();
+
+                    switch (entry.getKey()) {
+                        case WireMockUtil.URL_WATSONX_CHAT_API -> assertDoesNotThrow(() -> chatModel.chat("message"));
+                        case WireMockUtil.URL_WATSONX_CHAT_STREAMING_API -> {
+                            var streamingResponse = new AtomicReference<ChatResponse>();
+                            assertDoesNotThrow(() -> streamingChatModel.chat("message",
+                                    WireMockUtil.streamingChatResponseHandler(streamingResponse)));
+                            await().atMost(Duration.ofSeconds(6))
+                                    .pollInterval(Duration.ofSeconds(2))
+                                    .until(() -> streamingResponse.get() != null);
+                            assertNotNull(streamingResponse.get());
+                        }
+                    }
+                    try {
+                        Thread.sleep(cacheTimeout);
+                    } catch (InterruptedException e) {
+                        fail(e);
+                    }
                 });
-
-        // --- Test ChatLanguageModel --- //
-        assertDoesNotThrow(() -> chatModel.generate("message"));
-
-        //Thread.sleep(cacheTimeout);
-
-        // --- Test StreamingChatLanguageModel --- //
-        // Thread.sleep(cacheTimeout);
-        // Cannot run due to bug #26253
-        // streamingChatModel.generate("message", streamingResponseHandler(new AtomicReference<AiMessage>()));
     }
 }
