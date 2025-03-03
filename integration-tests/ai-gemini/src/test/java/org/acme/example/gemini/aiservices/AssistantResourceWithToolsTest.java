@@ -26,6 +26,6 @@ public class AssistantResourceWithToolsTest {
                 .get()
                 .then()
                 .statusCode(200)
-                .body(equalTo("Nice to meet you:Nice to meet you"));
+                .body(equalTo("Nice to meet you:Nice to meet you:true:true"));
     }
 }

@@ -18,6 +18,9 @@ public class AssistantWithToolsResource {
     @Inject
     AddContentTool tool;
 
+    @Inject
+    TestChatModelListener chatModelListener;
+
     public AssistantWithToolsResource(Assistant assistant) {
         this.assistant = assistant;
     }
@@ -25,7 +28,7 @@ public class AssistantWithToolsResource {
     @GET
     public String get(@RestQuery String message) {
         String response = assistant.chat(message);// + ";" + tool.getTool1Content();
-        return response;
+        return response + ":" + chatModelListener.onRequestCalled + ":" + chatModelListener.onResponseCalled;
     }
 
     @RegisterAiService(tools = AddContentTool.class)
