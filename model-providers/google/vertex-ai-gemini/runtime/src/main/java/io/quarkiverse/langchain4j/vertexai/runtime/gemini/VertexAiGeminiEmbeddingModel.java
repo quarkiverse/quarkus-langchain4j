@@ -13,6 +13,7 @@ import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GeminiEmbeddingModel;
+import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
@@ -43,7 +44,7 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
                 restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
-
+            restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
             restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

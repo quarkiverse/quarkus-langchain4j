@@ -1,11 +1,13 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -16,11 +18,12 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiChatLanguageModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
+public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "dummy";
     private static final String CHAT_MODEL_ID = "gemini-1.5-flash";
@@ -29,7 +32,6 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
-            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
 
     @Inject
@@ -41,8 +43,8 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:generateContent?key=%s",
-                                CHAT_MODEL_ID, API_KEY)))
+                        String.format("/v1beta/models/%s:generateContent", CHAT_MODEL_ID)))
+                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -107,4 +109,13 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(requestBody).contains("hello");
     }
 
+    @Singleton
+    public static class DummyAuthProvider implements ModelAuthProvider {
+
+        @Override
+        public String getAuthorization(Input input) {
+            return "Bearer " + API_KEY;
+        }
+
+    }
 }
