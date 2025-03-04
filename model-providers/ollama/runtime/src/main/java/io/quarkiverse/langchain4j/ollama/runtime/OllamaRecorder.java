@@ -3,13 +3,16 @@ package io.quarkiverse.langchain4j.ollama.runtime;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
@@ -17,8 +20,11 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
 import io.quarkiverse.langchain4j.ollama.OllamaEmbeddingModel;
+import io.quarkiverse.langchain4j.ollama.OllamaModelAuthProviderFilter;
 import io.quarkiverse.langchain4j.ollama.OllamaStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ollama.Options;
 import io.quarkiverse.langchain4j.ollama.runtime.config.ChatModelConfig;
@@ -28,6 +34,8 @@ import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRu
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 
 @Recorder
 public class OllamaRecorder {
@@ -47,37 +55,56 @@ public class OllamaRecorder {
         if (ollamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
-            Options.Builder optionsBuilder = Options.builder()
-                    .temperature(chatModelConfig.temperature())
-                    .topK(chatModelConfig.topK())
-                    .topP(chatModelConfig.topP());
-
-            if (chatModelConfig.numPredict().isPresent()) {
-                optionsBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
-            }
-            if (chatModelConfig.stop().isPresent()) {
-                optionsBuilder.stop(chatModelConfig.stop().get());
-            }
-            if (chatModelConfig.seed().isPresent()) {
-                optionsBuilder.seed(chatModelConfig.seed().get());
-            }
-            var builder = OllamaChatLanguageModel.builder()
+            JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+            OllamaChatModel.OllamaChatModelBuilder ollamaChatModelBuilder = OllamaChatModel.builder()
+                    .httpClientBuilder(httpClientBuilder)
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
-                    .tlsConfigurationName(ollamaConfig.tlsConfigurationName().orElse(null))
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
-                    .model(ollamaFixedConfig.chatModel().modelId())
+                    .modelName(ollamaFixedConfig.chatModel().modelId())
                     .format(chatModelConfig.format().orElse(null))
-                    .configName(NamedConfigUtil.isDefault(configName) ? null : configName)
-                    .options(optionsBuilder.build());
+                    .temperature(chatModelConfig.temperature())
+                    .topK(chatModelConfig.topK())
+                    .topP(chatModelConfig.topP());
+            if (chatModelConfig.numPredict().isPresent()) {
+                ollamaChatModelBuilder.numPredict(chatModelConfig.numPredict().getAsInt());
+            }
+            if (chatModelConfig.stop().isPresent()) {
+                ollamaChatModelBuilder.stop(chatModelConfig.stop().get());
+            }
+            if (chatModelConfig.seed().isPresent()) {
+                ollamaChatModelBuilder.seed(chatModelConfig.seed().get());
+            }
+            if (chatModelConfig.format().isEmpty() || !"json".equals(chatModelConfig.format().get())) {
+                ollamaChatModelBuilder.supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+            }
 
             return new Function<>() {
                 @Override
                 public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                    ollamaChatModelBuilder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
-                    return builder.build();
+
+                    // TODO: we should obtain this from the context
+                    Optional<ModelAuthProvider> maybeModelAuthProvider = ModelAuthProvider
+                            .resolve(NamedConfigUtil.isDefault(configName) ? null : configName);
+                    if (maybeModelAuthProvider.isPresent()) {
+                        httpClientBuilder.addClientProvider(new OllamaModelAuthProviderFilter(maybeModelAuthProvider.get()));
+                    }
+
+                    // TODO: we should obtain this from the context
+                    Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
+                            .select(TlsConfigurationRegistry.class);
+                    if (tlsConfigurationRegistry.isResolvable()) {
+                        Optional<TlsConfiguration> maybeTlsConfiguration = TlsConfiguration.from(tlsConfigurationRegistry.get(),
+                                ollamaConfig.tlsConfigurationName());
+                        if (maybeTlsConfiguration.isPresent()) {
+                            httpClientBuilder.tlsConfiguration(maybeTlsConfiguration.get());
+                        }
+                    }
+
+                    return ollamaChatModelBuilder.build();
                 }
             };
         } else {
