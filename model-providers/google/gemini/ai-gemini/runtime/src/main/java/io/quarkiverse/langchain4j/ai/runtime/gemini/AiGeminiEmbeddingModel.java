@@ -8,11 +8,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiChatLanguageModel.Builder;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GeminiEmbeddingModel;
+import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
@@ -40,6 +42,9 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
                 restApiBuilder.clientLogger(new AiGeminiRestApi.AiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
+            if (builder.key == null) {
+                restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
+            }
             restApi = restApiBuilder.build(AiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -61,6 +66,7 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
     }
 
     public static final class Builder {
+        private String configName;
         private Optional<String> baseUrl = Optional.empty();
         private String modelId;
         private String key;
@@ -69,6 +75,11 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;

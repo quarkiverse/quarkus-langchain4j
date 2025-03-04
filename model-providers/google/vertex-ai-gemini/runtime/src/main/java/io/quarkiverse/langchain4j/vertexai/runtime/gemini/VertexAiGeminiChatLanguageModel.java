@@ -15,6 +15,7 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiChatLanguageModel;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
+import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
@@ -46,6 +47,7 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
                 restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
+            restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
             restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

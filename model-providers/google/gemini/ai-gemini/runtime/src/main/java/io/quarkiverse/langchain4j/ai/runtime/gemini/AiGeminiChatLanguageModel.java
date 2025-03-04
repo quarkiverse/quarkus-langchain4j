@@ -15,6 +15,7 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiChatLanguageModel;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
+import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
@@ -44,6 +45,11 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
                 restApiBuilder.clientLogger(new AiGeminiRestApi.AiClientLogger(builder.logRequests,
                         builder.logResponses));
             }
+
+            if (builder.key == null) {
+                restApiBuilder.register(new ModelAuthProviderFilter(builder.modelId));
+            }
+
             restApi = restApiBuilder.build(AiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -62,6 +68,7 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static final class Builder {
 
+        private String configName;
         private Optional<String> baseUrl = Optional.empty();
         private String modelId;
         private String key;
@@ -74,6 +81,11 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
         private Boolean logRequests = false;
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
+
+        public Builder configName(String configName) {
+            this.configName = configName;
+            return this;
+        }
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
