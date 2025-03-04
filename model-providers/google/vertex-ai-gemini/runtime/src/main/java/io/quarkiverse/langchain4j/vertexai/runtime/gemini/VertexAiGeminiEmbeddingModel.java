@@ -3,32 +3,26 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.data.embedding.Embedding;
-import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.gemini.common.Content;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
+import io.quarkiverse.langchain4j.gemini.common.GeminiEmbeddingModel;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
+public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
 
     private final VertxAiGeminiRestApi restApi;
     private final VertxAiGeminiRestApi.ApiMetadata apiMetadata;
 
-    private final Integer dimension;
-    private final String taskType;
-
     public VertexAiGeminiEmbeddingModel(Builder builder) {
+        super(builder.modelId, builder.dimension, builder.taskType);
+
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
                 .modelId(builder.modelId)
@@ -50,57 +44,24 @@ public class VertexAiGeminiEmbeddingModel implements EmbeddingModel {
                         builder.logResponses));
             }
 
-            this.dimension = builder.dimension;
-            this.taskType = builder.taskType;
             restApi = restApiBuilder.build(VertxAiGeminiRestApi.class);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
+    protected EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest) {
+        return restApi.embedContent(embedContentRequest, apiMetadata);
+    }
+
+    @Override
+    protected EmbedContentResponses batchEmbedContents(EmbedContentRequests embedContentRequests) {
+        return restApi.batchEmbedContents(embedContentRequests, apiMetadata);
+    }
+
     public static Builder builder() {
         return new Builder();
-    }
-
-    @Override
-    public Response<Embedding> embed(String text) {
-
-        EmbedContentRequest embedContentRequest = getEmbedContentRequest(this.apiMetadata.modelId, text);
-
-        EmbedContentResponse embedContentResponse = restApi.embedContent(embedContentRequest, this.apiMetadata);
-
-        return Response.from(Embedding.from(embedContentResponse.embedding().values()));
-    }
-
-    @Override
-    public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
-        List<EmbedContentRequest> embedContentRequests = textSegments.stream()
-                .map(textSegment -> getEmbedContentRequest(this.apiMetadata.modelId, textSegment.text()))
-                .toList();
-
-        EmbedContentResponses embedContentResponses = restApi.batchEmbedContents(
-                new EmbedContentRequests(embedContentRequests),
-                this.apiMetadata);
-
-        List<Embedding> embeddings = embedContentResponses.embeddings()
-                .stream()
-                .map(embedding -> Embedding.from(embedding.values()))
-                .toList();
-        return Response.from(embeddings);
-    }
-
-    private EmbedContentRequest getEmbedContentRequest(String model, String text) {
-        Content.Part part = Content.Part.ofText(text);
-        Content content = Content.ofPart(part);
-
-        EmbedContentRequest.TaskType embedTaskType = null;
-        if (this.taskType != null) {
-            embedTaskType = EmbedContentRequest.TaskType.valueOf(this.taskType);
-        }
-
-        EmbedContentRequest embedContentRequest = new EmbedContentRequest("models/" + model, content,
-                embedTaskType, null, this.dimension);
-        return embedContentRequest;
     }
 
     public static final class Builder {
