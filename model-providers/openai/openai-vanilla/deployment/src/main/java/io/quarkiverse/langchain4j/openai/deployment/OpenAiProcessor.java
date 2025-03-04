@@ -35,6 +35,7 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFact
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
+import io.quarkiverse.langchain4j.response.ResponseInterceptorBindingSource;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -96,7 +97,8 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .createWith(recorder.chatModel(config, configName));
+                        .createWith(recorder.chatModel(config, configName))
+                        .injectInterceptionProxy(ResponseInterceptorBindingSource.class);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
@@ -122,7 +124,8 @@ public class OpenAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .createWith(recorder.embeddingModel(config, configName))
+                        .injectInterceptionProxy(ResponseInterceptorBindingSource.class);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -136,7 +139,8 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(config, configName));
+                        .createWith(recorder.moderationModel(config, configName))
+                        .injectInterceptionProxy(ResponseInterceptorBindingSource.class);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -150,7 +154,8 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.imageModel(config, configName));
+                        .createWith(recorder.imageModel(config, configName))
+                        .injectInterceptionProxy(ResponseInterceptorBindingSource.class);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
