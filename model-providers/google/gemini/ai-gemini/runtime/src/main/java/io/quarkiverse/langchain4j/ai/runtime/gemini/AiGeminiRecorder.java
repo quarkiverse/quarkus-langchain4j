@@ -4,7 +4,6 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.Instance;
@@ -16,6 +15,7 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -23,25 +23,25 @@ import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class AiGeminiRecorder {
-    private static final String DUMMY_KEY = "dummy";
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
+    private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jAiGeminiConfig config, String configName) {
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(LangChain4jAiGeminiConfig config,
+            String configName) {
         var aiConfig = correspondingAiConfig(config, configName);
 
         if (aiConfig.enableIntegration()) {
             var embeddingModelConfig = aiConfig.embeddingModel();
             Optional<String> baseUrl = aiConfig.baseUrl();
 
-            String key = aiConfig.apiKey();
-            if (baseUrl.isEmpty() && DUMMY_KEY.equals(key)) {
-                throw new ConfigValidationException(createConfigProblems("api-key", configName));
-            }
+            String apiKey = aiConfig.apiKey().orElse(null);
 
             var builder = AiGeminiEmbeddingModel.builder()
+                    .configName(configName)
                     .baseUrl(baseUrl)
-                    .key(key)
+                    .key(apiKey)
                     .modelId(embeddingModelConfig.modelId())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), aiConfig.logResponses()));
@@ -54,9 +54,22 @@ public class AiGeminiRecorder {
                 builder.taskType(embeddingModelConfig.taskType().get());
             }
 
-            return builder::build;
+            return new Function<>() {
+                @Override
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
+                            configName);
+
+                    return builder.build();
+                }
+            };
         } else {
-            return DisabledEmbeddingModel::new;
+            return new Function<>() {
+                @Override
+                public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
+                    return new DisabledEmbeddingModel();
+                }
+            };
         }
     }
 
@@ -68,13 +81,10 @@ public class AiGeminiRecorder {
             var chatModelConfig = aiConfig.chatModel();
             Optional<String> baseUrl = aiConfig.baseUrl();
 
-            String key = aiConfig.apiKey();
-            if (baseUrl.isEmpty() && DUMMY_KEY.equals(key)) {
-                throw new ConfigValidationException(createConfigProblems("api-key", configName));
-            }
+            String apiKey = aiConfig.apiKey().orElse(null);
             var builder = AiGeminiChatLanguageModel.builder()
                     .baseUrl(baseUrl)
-                    .key(key)
+                    .key(apiKey)
                     .modelId(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
@@ -98,6 +108,9 @@ public class AiGeminiRecorder {
             return new Function<>() {
                 @Override
                 public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
+                            configName);
+
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -112,6 +125,16 @@ public class AiGeminiRecorder {
             };
         }
 
+    }
+
+    private void throwIfApiKeysNotConfigured(String apiKey, boolean authProviderAvailable, String configName) {
+        if (apiKey == null && !authProviderAvailable) {
+            throw new ConfigValidationException(createConfigProblems("api-key", configName));
+        }
+    }
+
+    private static <T> boolean isAuthProviderAvailable(SyntheticCreationalContext<T> context, String configName) {
+        return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
     }
 
     private LangChain4jAiGeminiConfig.AiGeminiConfig correspondingAiConfig(

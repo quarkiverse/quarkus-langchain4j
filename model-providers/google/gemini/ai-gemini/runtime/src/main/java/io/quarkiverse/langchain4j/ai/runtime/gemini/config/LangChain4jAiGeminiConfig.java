@@ -40,8 +40,7 @@ public interface LangChain4jAiGeminiConfig {
         /**
          * The api key
          */
-        @WithDefault("dummy") // TODO: this should be optional but Smallrye Config doesn't like it
-        String apiKey();
+        Optional<String> apiKey();
 
         /**
          * Publisher of model

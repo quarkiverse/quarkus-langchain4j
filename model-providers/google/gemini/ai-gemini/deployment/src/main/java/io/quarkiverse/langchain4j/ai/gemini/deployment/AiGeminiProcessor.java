@@ -73,6 +73,8 @@ public class AiGeminiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
                         .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
@@ -82,14 +84,20 @@ public class AiGeminiProcessor {
 
         for (var selected : selectedEmbedding) {
             if (PROVIDER.equals(selected.getProvider())) {
-                String configName = selected.getConfigName();
+                var configName = selected.getConfigName();
+                var embeddingModel = recorder.embeddingModel(config, configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .createWith(embeddingModel);
+
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

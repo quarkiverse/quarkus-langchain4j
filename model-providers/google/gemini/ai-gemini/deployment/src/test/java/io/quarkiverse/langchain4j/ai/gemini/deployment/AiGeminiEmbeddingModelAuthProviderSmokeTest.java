@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -19,11 +21,12 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiEmbeddingModel;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
+public class AiGeminiEmbeddingModelAuthProviderSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "dummy";
     private static final String EMBED_MODEL_ID = "text-embedding-004";
@@ -32,7 +35,6 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
-            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
 
     @Inject
@@ -42,8 +44,8 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     void testBatch() {
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:batchEmbedContents?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/v1beta/models/%s:batchEmbedContents", EMBED_MODEL_ID)))
+                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -87,8 +89,8 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:embedContent?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/v1beta/models/%s:embedContent", EMBED_MODEL_ID)))
+                        .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -109,5 +111,15 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
         float[] response = embeddingModel.embed("Hello World").content().vector();
         assertThat(response).hasSize(7);
+    }
+
+    @Singleton
+    public static class DummyAuthProvider implements ModelAuthProvider {
+
+        @Override
+        public String getAuthorization(Input input) {
+            return "Bearer " + API_KEY;
+        }
+
     }
 }

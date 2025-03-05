@@ -3,41 +3,26 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.StreamSupport.stream;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.MultivaluedMap;
 
-import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
-import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
-import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.auth.oauth2.GoogleCredentials;
 
-import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.quarkiverse.langchain4j.auth.ModelAuthProvider.Input;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentRequests;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
-import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.ChatModelConfig;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -46,7 +31,6 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
 @Path("v1/projects/{projectId}/locations/{location}/publishers/{publisher}/models")
-@RegisterProvider(VertxAiGeminiRestApi.TokenFilter.class)
 public interface VertxAiGeminiRestApi {
 
     @Path("{modelId}:generateContent")
@@ -119,63 +103,6 @@ public interface VertxAiGeminiRestApi {
             public ApiMetadata build() {
                 return new ApiMetadata(this);
             }
-        }
-    }
-
-    class ApplicationDefaultAuthProvider implements ModelAuthProvider {
-
-        @Override
-        public String getAuthorization(Input input) {
-            try {
-                var credentials = GoogleCredentials.getApplicationDefault();
-                credentials.refreshIfExpired();
-                return "Bearer " + credentials.getAccessToken().getTokenValue();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-    }
-
-    class TokenFilter implements ResteasyReactiveClientRequestFilter {
-
-        private final ExecutorService executorService;
-        private final ModelAuthProvider defaultAuthorizer;
-        private final ModelAuthProvider authorizer;
-
-        @Inject
-        Instance<ChatModelConfig> model;
-
-        public TokenFilter(ManagedExecutor executorService) {
-            this.executorService = executorService;
-            this.defaultAuthorizer = new ApplicationDefaultAuthProvider();
-            this.authorizer = ModelAuthProvider.resolve(
-                    model != null && model.isResolvable() ? model.get().modelId() : null).orElse(null);
-        }
-
-        @Override
-        public void filter(ResteasyReactiveClientRequestContext context) {
-            context.suspend();
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        final Input authInput = new AuthInputImpl(context.getMethod(), context.getUri(), context.getHeaders());
-                        var auth = (authorizer != null ? authorizer : defaultAuthorizer).getAuthorization(authInput);
-                        if (auth != null) {
-                            context.getHeaders().add("Authorization", auth);
-                        }
-                        context.resume();
-                    } catch (Exception e) {
-                        context.resume(e);
-                    }
-                }
-            });
-        }
-
-        private record AuthInputImpl(
-                String method,
-                URI uri,
-                MultivaluedMap<String, Object> headers) implements ModelAuthProvider.Input {
         }
     }
 
