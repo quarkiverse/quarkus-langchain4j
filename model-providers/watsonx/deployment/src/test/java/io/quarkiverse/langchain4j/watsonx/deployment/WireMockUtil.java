@@ -1,22 +1,8 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import jakarta.ws.rs.core.MediaType;
-
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -216,32 +202,6 @@ public class WireMockUtil {
             }
             """;
 
-    WireMockServer iamServer;
-    WireMockServer watsonServer;
-    WireMockServer wxServer;
-
-    public WireMockUtil(WireMockServer watsonxServer, WireMockServer wxServer, WireMockServer iamServer) {
-        this.watsonServer = watsonxServer;
-        this.wxServer = wxServer;
-        this.iamServer = iamServer;
-    }
-
-    public IAMBuilder mockIAMBuilder(int status) {
-        return new IAMBuilder(iamServer, status);
-    }
-
-    public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status) {
-        return new WatsonxBuilder(watsonServer, apiURL, status);
-    }
-
-    public WatsonxBuilder mockWxBuilder(String apiURL, int status) {
-        return new WatsonxBuilder(wxServer, apiURL, status);
-    }
-
-    public WatsonxBuilder mockWatsonxBuilder(String apiURL, int status, String version) {
-        return new WatsonxBuilder(watsonServer, apiURL, status, version);
-    }
-
     public static StreamingChatResponseHandler streamingChatResponseHandler(AtomicReference<ChatResponse> streamingResponse) {
         return new StreamingChatResponseHandler() {
 
@@ -259,134 +219,5 @@ public class WireMockUtil {
                 fail(error);
             }
         };
-    }
-
-    public static class WatsonxBuilder {
-
-        private MappingBuilder builder;
-        private String token = BEARER_TOKEN;
-        private String responseMediaType = MediaType.APPLICATION_JSON;
-        private String response;
-        private int status;
-        private WireMockServer watsonServer;
-
-        protected WatsonxBuilder(WireMockServer watsonServer, String apiURL, int status, String version) {
-            this.watsonServer = watsonServer;
-            this.status = status;
-            this.builder = post(urlEqualTo(apiURL.formatted(version)));
-        }
-
-        protected WatsonxBuilder(WireMockServer watsonServer, String apiURL, int status) {
-            this.watsonServer = watsonServer;
-            this.status = status;
-            this.builder = post(urlEqualTo(apiURL.formatted(VERSION)));
-        }
-
-        public WatsonxBuilder scenario(String currentState, String nextState) {
-            builder = builder.inScenario("")
-                    .whenScenarioStateIs(currentState)
-                    .willSetStateTo(nextState);
-            return this;
-        }
-
-        public WatsonxBuilder bodyIgnoreOrder(String body) {
-            builder.withRequestBody(equalToJson(body, true, false));
-            return this;
-        }
-
-        public WatsonxBuilder body(String body) {
-            builder.withRequestBody(equalToJson(body));
-            return this;
-        }
-
-        public WatsonxBuilder body(StringValuePattern stringValuePattern) {
-            builder.withRequestBody(stringValuePattern);
-            return this;
-        }
-
-        public WatsonxBuilder token(String token) {
-            this.token = token;
-            return this;
-        }
-
-        public WatsonxBuilder responseMediaType(String mediaType) {
-            this.responseMediaType = mediaType;
-            return this;
-        }
-
-        public WatsonxBuilder response(String response) {
-            this.response = response;
-            return this;
-        }
-
-        public StubMapping build() {
-            return watsonServer.stubFor(
-                    builder
-                            .withHeader("Authorization", equalTo("Bearer %s".formatted(token)))
-                            .willReturn(aResponse()
-                                    .withStatus(status)
-                                    .withHeader("Content-Type", responseMediaType)
-                                    .withBody(response)));
-        }
-    }
-
-    public static class IAMBuilder {
-
-        private MappingBuilder builder;
-        private String apikey = API_KEY;
-        private String grantType = GRANT_TYPE;
-        private String responseMediaType = MediaType.APPLICATION_JSON;
-        private String response = "";
-        private int status;
-        private WireMockServer iamServer;
-
-        protected IAMBuilder(WireMockServer iamServer, int status) {
-            this.iamServer = iamServer;
-            this.status = status;
-            this.builder = post(urlEqualTo(WireMockUtil.URL_IAM_GENERATE_TOKEN));
-        }
-
-        public IAMBuilder scenario(String currentState, String nextState) {
-            builder = builder.inScenario("")
-                    .whenScenarioStateIs(currentState)
-                    .willSetStateTo(nextState);
-            return this;
-        }
-
-        public IAMBuilder apikey(String apikey) {
-            this.apikey = apikey;
-            return this;
-        }
-
-        public IAMBuilder grantType(String grantType) {
-            this.grantType = grantType;
-            return this;
-        }
-
-        public IAMBuilder responseMediaType(String mediaType) {
-            this.responseMediaType = mediaType;
-            return this;
-        }
-
-        public IAMBuilder response(String response) {
-            this.response = response;
-            return this;
-        }
-
-        public IAMBuilder response(String token, Date expiration) {
-            this.response = IAM_200_RESPONSE.formatted(token, TimeUnit.MILLISECONDS.toSeconds(expiration.getTime()));
-            return this;
-        }
-
-        public void build() {
-            iamServer.stubFor(
-                    builder.withHeader("Content-Type", equalTo(MediaType.APPLICATION_FORM_URLENCODED))
-                            .withFormParam("apikey", equalTo(apikey))
-                            .withFormParam("grant_type", equalTo(grantType))
-                            .willReturn(aResponse()
-                                    .withStatus(status)
-                                    .withHeader("Content-Type", responseMediaType)
-                                    .withBody(response)));
-        }
     }
 }

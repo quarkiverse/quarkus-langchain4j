@@ -1,5 +1,19 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_CHAT_MODEL;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TOKENIZER_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,15 +49,15 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .response("my_super_token", new Date())
                 .build();
     }
@@ -56,7 +70,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
             .presencePenalty(0.0)
             .temperature(1.0)
             .topP(1.0)
-            .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
+            .timeLimit(DEFAULT_TIME_LIMIT)
             .build();
 
     @Inject
@@ -75,8 +89,8 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(Optional.empty(), runtimeConfig.iam().timeout());
         assertEquals(false, runtimeConfig.logRequests().orElse(false));
         assertEquals(false, runtimeConfig.logResponses().orElse(false));
-        assertEquals(WireMockUtil.VERSION, runtimeConfig.version());
-        assertEquals(WireMockUtil.DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelId());
+        assertEquals(VERSION, runtimeConfig.version());
+        assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelId());
         assertEquals(0, runtimeConfig.chatModel().frequencyPenalty());
         assertEquals(false, runtimeConfig.chatModel().logprobs());
         assertTrue(runtimeConfig.chatModel().topLogprobs().isEmpty());
@@ -106,9 +120,9 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
 
         TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, parameters);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .response(RESPONSE_WATSONX_CHAT_API)
                 .build();
 
         assertEquals("AI Response", chatModel.chat(dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
@@ -124,9 +138,9 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
 
         var body = new TokenizationRequest(modelId, "test", spaceId, projectId);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_TOKENIZER_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_TOKENIZER_API, 200)
                 .body(mapper.writeValueAsString(body))
-                .response(WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
+                .response(RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
 
         assertEquals(11, tokenCountEstimator.estimateTokenCount("test"));
@@ -145,10 +159,10 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
 
         TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, null, parameters);
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
                 .build();
 
         var messages = List.of(
@@ -156,7 +170,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
         var streamingResponse = new AtomicReference<ChatResponse>();
-        streamingChatModel.chat(messages, WireMockUtil.streamingChatResponseHandler(streamingResponse));
+        streamingChatModel.chat(messages, streamingChatResponseHandler(streamingResponse));
 
         await().atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(2))

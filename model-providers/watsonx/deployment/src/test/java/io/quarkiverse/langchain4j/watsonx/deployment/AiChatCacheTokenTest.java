@@ -1,5 +1,14 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -25,7 +34,6 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.WatsonxBuilder;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiChatCacheTokenTest extends WireMockAbstract {
@@ -47,10 +55,10 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
@@ -70,38 +78,37 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
         Date date = Date.from(Instant.now().plusMillis(cacheTimeout));
 
         // First call returns 200.
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario(Scenario.STARTED, "error")
                 .response("3secondstoken", date)
                 .build();
 
         // All other call after 2 seconds they will give an error.
-        mockServers.mockIAMBuilder(401)
+        mockIAMBuilder(401)
                 .scenario("error", Scenario.STARTED)
                 .response("Should never happen")
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API))
+                Map.entry(URL_WATSONX_CHAT_API, RESPONSE_WATSONX_CHAT_API),
+                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API))
                 .forEach(entry -> {
 
-                    WatsonxBuilder builder = mockServers.mockWatsonxBuilder(entry.getKey(), 200);
+                    WatsonxBuilder builder = mockWatsonxBuilder(entry.getKey(), 200);
 
                     builder.token("3secondstoken")
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(URL_WATSONX_CHAT_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
                             .build();
 
                     switch (entry.getKey()) {
-                        case WireMockUtil.URL_WATSONX_CHAT_API -> {
+                        case URL_WATSONX_CHAT_API -> {
                             assertDoesNotThrow(() -> chatModel.chat("message"));
                             assertDoesNotThrow(() -> chatModel.chat("message")); // cache
                         }
-                        case WireMockUtil.URL_WATSONX_CHAT_STREAMING_API ->
+                        case URL_WATSONX_CHAT_STREAMING_API ->
                             assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
                     }
                 });
@@ -111,43 +118,42 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
     void try_token_retry() throws InterruptedException {
 
         // Return an expired token.
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario(Scenario.STARTED, "retry")
                 .response("expired_token", Date.from(Instant.now().minusSeconds(3)))
                 .build();
 
         // Second call (retryOn) returns 200
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario("retry", Scenario.STARTED)
                 .response("my_super_token", Date.from(Instant.now().plusMillis(cacheTimeout)))
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_API, WireMockUtil.RESPONSE_WATSONX_CHAT_API),
-                Map.entry(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API))
+                Map.entry(URL_WATSONX_CHAT_API, RESPONSE_WATSONX_CHAT_API),
+                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API))
                 .forEach(entry -> {
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 401)
+                    mockWatsonxBuilder(entry.getKey(), 401)
                             .token("expired_token")
                             .scenario(Scenario.STARTED, "retry")
                             .response(RESPONSE_401)
                             .build();
 
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 200)
+                    mockWatsonxBuilder(entry.getKey(), 200)
                             .token("my_super_token")
                             .scenario("retry", Scenario.STARTED)
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(URL_WATSONX_CHAT_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
                             .build();
 
                     switch (entry.getKey()) {
-                        case WireMockUtil.URL_WATSONX_CHAT_API -> assertDoesNotThrow(() -> chatModel.chat("message"));
-                        case WireMockUtil.URL_WATSONX_CHAT_STREAMING_API -> {
+                        case URL_WATSONX_CHAT_API -> assertDoesNotThrow(() -> chatModel.chat("message"));
+                        case URL_WATSONX_CHAT_STREAMING_API -> {
                             var streamingResponse = new AtomicReference<ChatResponse>();
                             assertDoesNotThrow(() -> streamingChatModel.chat("message",
-                                    WireMockUtil.streamingChatResponseHandler(streamingResponse)));
+                                    streamingChatResponseHandler(streamingResponse)));
                             await().atMost(Duration.ofSeconds(6))
                                     .pollInterval(Duration.ofSeconds(2))
                                     .until(() -> streamingResponse.get() != null);

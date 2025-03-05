@@ -1,5 +1,12 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Date;
@@ -22,18 +29,18 @@ public class ToolNotFoundTest extends WireMockAbstract {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "mytool")
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .response(BEARER_TOKEN, new Date())
                 .build();
     }
 
@@ -43,8 +50,8 @@ public class ToolNotFoundTest extends WireMockAbstract {
     @Test
     void test() {
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
+                .response(RESPONSE_WATSONX_CHAT_API)
                 .build();
 
         assertThrows(IllegalArgumentException.class,

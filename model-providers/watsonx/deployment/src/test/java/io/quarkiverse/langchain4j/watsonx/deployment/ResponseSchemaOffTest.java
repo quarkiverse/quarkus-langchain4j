@@ -2,6 +2,13 @@ package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -25,19 +32,19 @@ public class ResponseSchemaOffTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .overrideConfigKey("quarkus.langchain4j.response-schema", "false")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .response(BEARER_TOKEN, new Date())
                 .build();
     }
 
@@ -86,9 +93,9 @@ public class ResponseSchemaOffTest extends WireMockAbstract {
                 "The {response_schema} placeholder cannot be used if the property quarkus.langchain4j.response-schema is set to false. Found in: io.quarkiverse.langchain4j.watsonx.deployment.ResponseSchemaOffTest$OnMethodAIService",
                 ex.getMessage());
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(matchingJsonPath("$.input", equalTo("Generate a poem about dog")))
-                .response(WireMockUtil.RESPONSE_WATSONX_GENERATION_API)
+                .response(RESPONSE_WATSONX_GENERATION_API)
                 .build();
 
         assertEquals("AI Response", onMethodAIService.poem1("Generate a poem about {topic}", "dog"));
@@ -96,7 +103,7 @@ public class ResponseSchemaOffTest extends WireMockAbstract {
 
     @Test
     void test_poem_2() {
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(matchingJsonPath("$.input", equalTo("Generate a poem about dog")))
                 .response(POEM_RESPONSE)
                 .build();
@@ -106,7 +113,7 @@ public class ResponseSchemaOffTest extends WireMockAbstract {
 
     @Test
     void test_poem_3() {
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(matchingJsonPath("$.input", equalTo("Generate a poem about dog")))
                 .response(POEM_RESPONSE)
                 .build();
@@ -116,7 +123,7 @@ public class ResponseSchemaOffTest extends WireMockAbstract {
 
     @Test
     void test_poem_4() {
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(matchingJsonPath("$.input", equalTo("SystemMessage\nGenerate a poem about dog")))
                 .response(POEM_RESPONSE)
                 .build();

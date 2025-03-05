@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
@@ -39,9 +40,9 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .response(BEARER_TOKEN, new Date())
                 .build();
     }
 
@@ -72,7 +73,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 "\\\\n\\\\nExplore jobs\\\\n\\\\nStart learning\\\\\\\"}\\\"\"\n" +
                 "}";
 
-        mockServers.mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
                 .body(body)
                 .response(response)
                 .build();
@@ -101,7 +102,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockServers.mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
                 .body(body)
                 .response(response)
                 .build();
@@ -130,7 +131,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockServers.mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
                 .body(body)
                 .response(response)
                 .build();
@@ -159,7 +160,7 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
                 }
                 """;
 
-        mockServers.mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
                 .body(body)
                 .response(response)
                 .build();

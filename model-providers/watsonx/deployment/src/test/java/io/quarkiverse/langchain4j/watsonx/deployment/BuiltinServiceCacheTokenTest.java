@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WX_AGENT_TOOL_RUN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WX_SERVER;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -14,7 +15,6 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -47,8 +47,20 @@ public class BuiltinServiceCacheTokenTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
-    @AfterEach
-    void afterEach() throws Exception {
+    @Override
+    void handlerBeforeEach() throws Exception {
+        // Return an expired token.
+        mockIAMBuilder(200)
+                .scenario(Scenario.STARTED, "retry")
+                .response("expired_token", Date.from(Instant.now().minusSeconds(3)))
+                .build();
+
+        // Second call (retryOn) returns 200
+        mockIAMBuilder(200)
+                .scenario("retry", Scenario.STARTED)
+                .response("my_super_token", Date.from(Instant.now().plusMillis(cacheTimeout)))
+                .build();
+
         Thread.sleep(cacheTimeout);
     }
 
@@ -63,7 +75,6 @@ public class BuiltinServiceCacheTokenTest extends WireMockAbstract {
                     "output": "Current weather in Naples:\\nTemperature: 12.1°C\\nRain: 0mm\\nRelative humidity: 94%\\nWind: 5km/h\\n"
                 }""";
 
-        mockIAMServer();
         mockWXServer(response);
         assertDoesNotThrow(() -> weatherTool.find("naples", null));
     }
@@ -81,7 +92,6 @@ public class BuiltinServiceCacheTokenTest extends WireMockAbstract {
                 "\\\\n\\\\nExplore jobs\\\\n\\\\nStart learning\\\\\\\"}\\\"\"\n" +
                 "}";
 
-        mockIAMServer();
         mockWXServer(response);
         assertDoesNotThrow(() -> webCrawlerTool.process("http://supersite.com"));
     }
@@ -98,33 +108,18 @@ public class BuiltinServiceCacheTokenTest extends WireMockAbstract {
                 }
                 """;
 
-        mockIAMServer();
         mockWXServer(response);
         assertDoesNotThrow(() -> googleSearchTool.search("quarkus", 1));
     }
 
-    private void mockIAMServer() {
-        // Return an expired token.
-        mockServers.mockIAMBuilder(200)
-                .scenario(Scenario.STARTED, "retry")
-                .response("expired_token", Date.from(Instant.now().minusSeconds(3)))
-                .build();
-
-        // Second call (retryOn) returns 200
-        mockServers.mockIAMBuilder(200)
-                .scenario("retry", Scenario.STARTED)
-                .response("my_super_token", Date.from(Instant.now().plusMillis(cacheTimeout)))
-                .build();
-    }
-
     private void mockWXServer(String response) {
-        mockServers.mockWxBuilder(WireMockUtil.URL_WX_AGENT_TOOL_RUN, 401)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 401)
                 .token("expired_token")
                 .scenario(Scenario.STARTED, "retry")
                 .response(RESPONSE_401)
                 .build();
 
-        mockServers.mockWxBuilder(WireMockUtil.URL_WX_AGENT_TOOL_RUN, 200)
+        mockWxBuilder(URL_WX_AGENT_TOOL_RUN, 200)
                 .token("my_super_token")
                 .scenario("retry", Scenario.STARTED)
                 .response(response)
