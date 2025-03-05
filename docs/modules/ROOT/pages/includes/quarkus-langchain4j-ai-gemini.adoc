@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-publisher]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-publisher[`quarkus.langchain4j.ai.gemini.publisher`]##
 ifdef::add-copy-button-to-config-props[]
@@ -531,7 +531,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-publisher]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-publisher[`quarkus.langchain4j.ai.gemini."model-name".publisher`]##
 ifdef::add-copy-button-to-config-props[]
