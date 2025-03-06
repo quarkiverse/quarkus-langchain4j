@@ -3,17 +3,21 @@ package io.quarkiverse.langchain4j.watsonx.runtime;
 import static dev.langchain4j.model.chat.request.ToolChoice.REQUIRED;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import static io.quarkiverse.langchain4j.watsonx.runtime.TokenGenerationCache.getOrCreateTokenGenerator;
+import static java.util.Objects.isNull;
 
 import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
+
+import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.DisabledChatLanguageModel;
@@ -30,12 +34,19 @@ import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxEmbeddingModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxScoringModel;
+import io.quarkiverse.langchain4j.watsonx.client.COSRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxClientLogger;
+import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
+import io.quarkiverse.langchain4j.watsonx.client.filter.BearerTokenHeaderFactory;
+import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Reference;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.GenerationModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.ScoringModelConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.config.TextExtractionConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -82,7 +93,7 @@ public class WatsonxRecorder {
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
             var builder = chatBuilder(runtimeConfig, configName);
@@ -114,7 +125,7 @@ public class WatsonxRecorder {
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
             var builder = generationBuilder(runtimeConfig, configName);
@@ -147,7 +158,7 @@ public class WatsonxRecorder {
             String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
             var builder = generationBuilder(runtimeConfig, configName);
@@ -185,11 +196,12 @@ public class WatsonxRecorder {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
             }
 
-            String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+            String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
 
             URL url;
             try {
-                url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
+                url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
+                        .toURL();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -198,11 +210,12 @@ public class WatsonxRecorder {
             var builder = WatsonxEmbeddingModel.builder()
                     .url(url)
                     .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), watsonConfig.logRequests()))
-                    .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), watsonConfig.logResponses()))
+                    .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), embeddingModelConfig.logRequests()))
+                    .logResponses(
+                            firstOrDefault(watsonConfig.logResponses().orElse(false), embeddingModelConfig.logResponses()))
                     .version(watsonConfig.version())
-                    .spaceId(firstOrDefault(null, watsonConfig.spaceId(), runtimeConfig.defaultConfig().spaceId()))
-                    .projectId(firstOrDefault(null, watsonConfig.projectId(), runtimeConfig.defaultConfig().projectId()))
+                    .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
+                    .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
                     .modelId(embeddingModelConfig.modelId())
                     .truncateInputTokens(embeddingModelConfig.truncateInputTokens().orElse(null));
             var iamBaseUrl = watsonConfig.iam().baseUrl();
@@ -238,11 +251,12 @@ public class WatsonxRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
-        String apiKey = firstOrDefault(null, watsonConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
+            url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
+                    .toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -251,11 +265,11 @@ public class WatsonxRecorder {
         var builder = WatsonxScoringModel.builder()
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(false, rerankModelConfig.logRequests(), watsonConfig.logRequests()))
-                .logResponses(firstOrDefault(false, rerankModelConfig.logResponses(), watsonConfig.logResponses()))
+                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), rerankModelConfig.logRequests()))
+                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), rerankModelConfig.logResponses()))
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(null, watsonConfig.spaceId(), runtimeConfig.defaultConfig().spaceId()))
-                .projectId(firstOrDefault(null, watsonConfig.projectId(), runtimeConfig.defaultConfig().projectId()))
+                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
+                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
                 .modelId(rerankModelConfig.modelId())
                 .truncateInputTokens(rerankModelConfig.truncateInputTokens().orElse(null));
         var iamBaseUrl = watsonConfig.iam().baseUrl();
@@ -267,6 +281,81 @@ public class WatsonxRecorder {
                 return builder
                         .tokenGenerator(getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, duration))
                         .build();
+            }
+        };
+    }
+
+    public Supplier<TextExtraction> textExtraction(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+
+        List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
+        TextExtractionConfig textExtractionConfig = firstOrDefault(runtimeConfig.defaultConfig().textExtraction().orElse(null),
+                watsonConfig.textExtraction());
+
+        if (isNull(textExtractionConfig)) {
+            configProblems.add(createConfigProblem("text-extraction", configName));
+            throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
+        }
+
+        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
+        URL iamBaseUrl = watsonConfig.iam().baseUrl();
+        String granType = watsonConfig.iam().grantType();
+        Duration iamDuration = watsonConfig.iam().timeout().orElse(Duration.ofSeconds(10));
+
+        URL watsonxUrl;
+        Duration watsonxDuration = watsonConfig.timeout().orElse(Duration.ofSeconds(10));
+
+        URL cosUrl;
+        boolean logRequests = watsonConfig.logRequests().orElse(false);
+        boolean logResponses = watsonConfig.logResponses().orElse(false);
+
+        try {
+            cosUrl = URI.create(textExtractionConfig.baseUrl()).toURL();
+            watsonxUrl = URI
+                    .create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
+                    .toURL();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return new Supplier<TextExtraction>() {
+            @Override
+            public TextExtraction get() {
+
+                var tokenGenerator = getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, iamDuration);
+
+                var watsonxClient = QuarkusRestClientBuilder.newBuilder()
+                        .baseUrl(watsonxUrl)
+                        .clientHeadersFactory(new BearerTokenHeaderFactory(tokenGenerator))
+                        .connectTimeout(watsonxDuration.toSeconds(), TimeUnit.SECONDS)
+                        .readTimeout(watsonxDuration.toSeconds(), TimeUnit.SECONDS);
+
+                if (logRequests || logResponses) {
+                    watsonxClient.loggingScope(LoggingScope.REQUEST_RESPONSE);
+                    watsonxClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses));
+                }
+
+                var cosClient = QuarkusRestClientBuilder.newBuilder()
+                        .baseUrl(cosUrl)
+                        .clientHeadersFactory(new BearerTokenHeaderFactory(tokenGenerator))
+                        .connectTimeout(0, TimeUnit.SECONDS)
+                        .readTimeout(0, TimeUnit.SECONDS);
+
+                if (logRequests || logResponses) {
+                    cosClient.loggingScope(LoggingScope.REQUEST_RESPONSE);
+                    cosClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses));
+                }
+
+                return new TextExtraction(
+                        new Reference(textExtractionConfig.documentReference().connection(),
+                                textExtractionConfig.documentReference().bucketName()),
+                        new Reference(textExtractionConfig.resultsReference().connection(),
+                                textExtractionConfig.resultsReference().bucketName()),
+                        firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()),
+                        firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()),
+                        watsonConfig.version(),
+                        cosClient.build(COSRestApi.class),
+                        watsonxClient.build(WatsonxRestApi.class));
             }
         };
     }
@@ -284,7 +373,8 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
+            url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
+                    .toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -309,11 +399,11 @@ public class WatsonxRecorder {
         return WatsonxChatModel.builder()
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), watsonConfig.logRequests()))
-                .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), watsonConfig.logResponses()))
+                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), chatModelConfig.logRequests()))
+                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), chatModelConfig.logResponses()))
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(null, watsonConfig.spaceId(), runtimeConfig.defaultConfig().spaceId()))
-                .projectId(firstOrDefault(null, watsonConfig.projectId(), runtimeConfig.defaultConfig().projectId()))
+                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
+                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
                 .modelId(watsonConfig.chatModel().modelId())
                 .toolChoice(toolChoice)
                 .toolChoiceName(toolChoiceName)
@@ -355,11 +445,11 @@ public class WatsonxRecorder {
         return WatsonxGenerationModel.builder()
                 .url(url)
                 .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(false, generationModelConfig.logRequests(), watsonConfig.logRequests()))
-                .logResponses(firstOrDefault(false, generationModelConfig.logResponses(), watsonConfig.logResponses()))
+                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), generationModelConfig.logRequests()))
+                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), generationModelConfig.logResponses()))
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(null, watsonConfig.spaceId(), runtimeConfig.defaultConfig().spaceId()))
-                .projectId(firstOrDefault(null, watsonConfig.projectId(), runtimeConfig.defaultConfig().projectId()))
+                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
+                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
                 .modelId(watsonConfig.generationModel().modelId())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)
@@ -367,11 +457,11 @@ public class WatsonxRecorder {
                 .maxNewTokens(generationModelConfig.maxNewTokens())
                 .minNewTokens(generationModelConfig.minNewTokens())
                 .temperature(generationModelConfig.temperature())
-                .randomSeed(firstOrDefault(null, generationModelConfig.randomSeed()))
-                .stopSequences(firstOrDefault(null, generationModelConfig.stopSequences()))
-                .topK(firstOrDefault(null, generationModelConfig.topK()))
-                .topP(firstOrDefault(null, generationModelConfig.topP()))
-                .repetitionPenalty(firstOrDefault(null, generationModelConfig.repetitionPenalty()))
+                .randomSeed(generationModelConfig.randomSeed().orElse(null))
+                .stopSequences(generationModelConfig.stopSequences().orElse(null))
+                .topK(generationModelConfig.topK().orElse(null))
+                .topP(generationModelConfig.topP().orElse(null))
+                .repetitionPenalty(generationModelConfig.repetitionPenalty().orElse(null))
                 .truncateInputTokens(generationModelConfig.truncateInputTokens().orElse(null))
                 .includeStopSequence(generationModelConfig.includeStopSequence().orElse(null))
                 .promptJoiner(promptJoiner);

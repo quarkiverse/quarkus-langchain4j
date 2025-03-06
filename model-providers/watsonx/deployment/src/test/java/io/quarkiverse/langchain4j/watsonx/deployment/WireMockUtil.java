@@ -20,14 +20,19 @@ public class WireMockUtil {
     public static final String URL_WATSONX_SCORING_API = "/ml/v1/text/rerank?version=%s";
     public static final String URL_WATSONX_EMBEDDING_API = "/ml/v1/text/embeddings?version=%s";
     public static final String URL_WATSONX_TOKENIZER_API = "/ml/v1/text/tokenization?version=%s";
+    public static final String URL_WATSONX_TEXT_EXTRACTION_START_API = "/ml/v1/text/extractions?version=%s";
+    public static final String URL_WATSONX_TEXT_EXTRACTION_RESULT_API = "/ml/v1/text/extractions/%s?project_id=%s&version=%s";
+
+    public static final int PORT_IAM_SERVER = 8090;
+    public static final String URL_IAM_SERVER = "http://localhost:8090";
+    public static final String URL_IAM_GENERATE_TOKEN = "/identity/token";
 
     public static final int PORT_WX_SERVER = 8091;
     public static final String URL_WX_SERVER = "http://localhost:8091";
     public static final String URL_WX_AGENT_TOOL_RUN = "/v1-beta/utility_agent_tools/run";
 
-    public static final int PORT_IAM_SERVER = 8090;
-    public static final String URL_IAM_SERVER = "http://localhost:8090";
-    public static final String URL_IAM_GENERATE_TOKEN = "/identity/token";
+    public static final int PORT_COS_SERVER = 8092;
+    public static final String URL_COS_SERVER = "http://localhost:8092";
 
     public static final String API_KEY = "my_super_api_key";
     public static final String BEARER_TOKEN = "my_super_token";

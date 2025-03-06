@@ -141,6 +141,132 @@ public interface AiService {
 
 NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with no separator (an empty string `""`). If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.generation-model.prompt-joiner=<value>`.
 
+== Text Extraction
+
+The `TextExtraction` feature enables developers to extract text from high-value business documents stored in IBM Cloud Object Storage. Extracted text can be used for AI processing, key information identification, or further document analysis.
+
+The API supports text extraction from the following file types:
+
+* PDF
+* GIF
+* JPG
+* PNG
+* TIFF
+
+The extracted text can be output in the following formats:
+
+* JSON
+* Markdown
+
+=== Configuration
+
+To enable `TextExtraction` in your application, configure the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.text-extraction.base-url=<base-url>
+quarkus.langchain4j.watsonx.text-extraction.document-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name=<bucket-name>
+quarkus.langchain4j.watsonx.text-extraction.results-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name=<bucket-name>
+----
+
+- **`base-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].  
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.  
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded.  
+- **`results-reference.connection`**: The connection asset ID containing credentials to access the output storage.  
+- **`results-reference.bucket-name`**: The bucket where extracted text documents will be saved as new files.  
+
+The `document reference` properties define the source storage for input and uloaded files, while the `results reference` properties specify where the extracted content is stored. Both can refer to the same bucket or different ones.
+
+NOTE: For more information on how to get the connection parameter for the `document-reference` and `results-reference` you can refer to the documentation at this https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-files.html?context=wx&audience=wdp[link].
+
+=== Using Text Extraction
+
+The `TextExtraction` class provides multiple methods for extracting text from documents. You can either extract text from an existing file in IBM Cloud Object Storage or upload a file and extract its content. To use `TextExtraction`, you need to inject an instance into your application. If multiple configurations are defined, you can specify the appropriate one using the `@ModelName` qualifier.
+
+[source,java]
+----
+@Inject
+TextExtraction textExtraction;
+
+@Inject
+@ModelName("custom")
+TextExtraction customTextExtraction;
+----
+
+You can start the extraction process in two ways. 
+
+First, if the document is already stored in IBM Cloud Object Storage, you can initiate the extraction by using the following method:
+
+[source,java]
+----
+String extractionId = textExtraction.startExtraction("path/to/document.pdf", List.of(Language.ENGLISH));
+----
+
+Alternatively, if you're working with a local file, you can upload it and start the extraction process with:
+
+[source,java]
+----
+File file = new File("path/to/document.pdf");
+String extractionId = textExtraction.uploadAndStartExtraction(file, List.of(Language.ENGLISH));
+----
+
+After starting the extraction, you can check its status by calling:
+
+[source,java]
+----
+TextExtractionResponse response = textExtraction.checkExtractionStatus(extractionId);
+----
+
+If you need to extract and retrieve the text immediately, you have two options.
+
+You can either extract text from an existing file directly:
+
+[source,java]
+----
+String extractedText = textExtraction.extractAndFetch("path/to/document.pdf", List.of(Language.ENGLISH));
+----
+
+Or upload the file and retrieve the extracted text immediately:
+
+[source,java]
+----
+File file = new File("path/to/document.pdf");
+String extractedText = textExtraction.uploadExtractAndFetch(file, List.of(Language.ENGLISH));
+----
+
+
+All extraction methods can also accept an `Options` object as parameter.
+
+The `Options` object allows customization of extraction behavior, including:  
+
+- Whether uploaded files should be deleted after processing.  
+- Whether extracted text files should be removed from the results bucket after retrieval.  
+- Overriding default properties values configured.  
+
+[source,java]
+----
+Options options = 
+    Options.create(List.of(ENGLISH))
+        .removeOutputFile(true)
+        .removeUploadedFile(true);
+
+File file = new File("path/to/document.pdf");
+String extractedText = textExtraction.uploadExtractAndFetch(file, options));
+----
+
+To perform Retrieval-Augmented Generation (RAG) on the extracted files in IBM Cloud Object Storage, you can use the following dependency to interact with the storage as it uses the S3 protocol:
+
+[source,xml]
+----
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-document-loader-amazon-s3</artifactId>
+    <version>...</version>
+</dependency>
+----
+
 ==== All configuration properties
 
 include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]

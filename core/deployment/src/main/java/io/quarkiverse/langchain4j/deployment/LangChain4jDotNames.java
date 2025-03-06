@@ -65,7 +65,7 @@ public class LangChain4jDotNames {
     static final DotName STRUCTURED_PROMPT_PROCESSOR = DotName.createSimple(StructuredPromptProcessor.class);
     static final DotName V = DotName.createSimple(dev.langchain4j.service.V.class);
 
-    static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
+    public static final DotName MODEL_NAME = DotName.createSimple(ModelName.class);
     public static final DotName REGISTER_AI_SERVICES = DotName.createSimple(RegisterAiService.class);
 
     static final DotName BEAN_CHAT_MODEL_SUPPLIER = DotName.createSimple(
