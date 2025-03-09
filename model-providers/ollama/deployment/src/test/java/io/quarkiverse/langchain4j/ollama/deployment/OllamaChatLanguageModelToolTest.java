@@ -25,6 +25,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ollama.*;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -138,7 +139,7 @@ class OllamaChatLanguageModelToolTest extends WiremockAware {
 
     @Test
     void doesFilterHallucinatedExecutionRequest() {
-        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatModel.class);
 
         wiremock().register(
                 post(urlEqualTo("/api/chat"))
@@ -189,7 +190,7 @@ class OllamaChatLanguageModelToolTest extends WiremockAware {
 
     @Test
     void doesProcessRequestWithoutToolUsage() {
-        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(OllamaChatModel.class);
 
         wiremock().register(
                 post(urlEqualTo("/api/chat"))
