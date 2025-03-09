@@ -2,6 +2,12 @@ package io.quarkiverse.langchain4j.deployment;
 
 import java.util.Optional;
 
+import jakarta.inject.Singleton;
+
+import org.jboss.jandex.DotName;
+
+import io.quarkiverse.langchain4j.cost.CostEstimatorResponseListener;
+import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.runtime.listeners.MetricsChatModelListener;
 import io.quarkiverse.langchain4j.runtime.listeners.SpanChatModelListener;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -13,6 +19,20 @@ import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
 import io.quarkus.runtime.metrics.MetricsFactory;
 
 public class ListenersProcessor {
+
+    @BuildStep
+    public void costListener(
+            LangChain4jBuildConfig config,
+            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+        if (config.costListener()) {
+            additionalBeanProducer.produce(
+                    AdditionalBeanBuildItem.builder()
+                            .addBeanClass(CostEstimatorResponseListener.class)
+                            .setDefaultScope(DotName.createSimple(Singleton.class))
+                            .setUnremovable()
+                            .build());
+        }
+    }
 
     @BuildStep
     public void spanListeners(Capabilities capabilities,
