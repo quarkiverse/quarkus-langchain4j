@@ -161,7 +161,7 @@ public class AiServiceMethodImplementationSupport {
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
                 context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
 
-        boolean supportsJsonSchema = supportsJsonSchema(context);
+        boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
         UserMessage userMessage = prepareUserMessage(context, methodCreateInfo, methodArgs, supportsJsonSchema);
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
@@ -341,7 +341,7 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        var response = executeRequest(context, methodCreateInfo, messagesToSend, toolSpecifications);
+        var response = executeRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
 
         log.debug("AI response obtained");
 
@@ -386,7 +386,8 @@ public class AiServiceMethodImplementationSupport {
             }
 
             log.debug("Attempting to obtain AI response");
-            response = context.chatModel.generate(chatMemory.messages(), toolSpecifications);
+            response = context.effectiveChatModel(methodCreateInfo, methodArgs).generate(chatMemory.messages(),
+                    toolSpecifications);
             log.debug("AI response obtained");
 
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
@@ -397,7 +398,9 @@ public class AiServiceMethodImplementationSupport {
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
 
-        response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory, context.chatModel, response,
+        response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory,
+                context.effectiveChatModel(methodCreateInfo, methodArgs),
+                response,
                 toolSpecifications,
                 new OutputGuardrailParams(response.content(), chatMemory, augmentationResult, userMessageTemplate,
                         Collections.unmodifiableMap(templateVariables)));
@@ -467,9 +470,11 @@ public class AiServiceMethodImplementationSupport {
                 : executeRequest(messagesToSend, chatModel, toolSpecifications);
     }
 
-    static Response<AiMessage> executeRequest(QuarkusAiServiceContext context, AiServiceMethodCreateInfo methodCreateInfo,
+    static Response<AiMessage> executeRequest(QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications) {
-        return executeRequest(methodCreateInfo, messagesToSend, context.chatModel, toolSpecifications);
+        return executeRequest(methodCreateInfo, messagesToSend, context.effectiveChatModel(methodCreateInfo, methodArgs),
+                toolSpecifications);
     }
 
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
@@ -574,11 +579,12 @@ public class AiServiceMethodImplementationSupport {
         return (chatModel != null) && chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
     }
 
-    private static boolean supportsJsonSchema(AiServiceContext context) {
-        return supportsJsonSchema(context.chatModel);
+    private static boolean supportsJsonSchema(QuarkusAiServiceContext context, AiServiceMethodCreateInfo methodCreateInfo,
+            Object[] methodArgs) {
+        return supportsJsonSchema(context.effectiveChatModel(methodCreateInfo, methodArgs));
     }
 
-    private static Future<Moderation> triggerModerationIfNeeded(AiServiceContext context,
+    private static Future<Moderation> triggerModerationIfNeeded(QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo createInfo,
             List<ChatMessage> messages) {
         Future<Moderation> moderationFuture = null;
