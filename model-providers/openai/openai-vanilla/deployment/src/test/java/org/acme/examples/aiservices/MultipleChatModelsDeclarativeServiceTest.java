@@ -1,6 +1,7 @@
 package org.acme.examples.aiservices;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -60,6 +63,12 @@ public class MultipleChatModelsDeclarativeServiceTest extends OpenAiBaseTest {
         String chat(String userMessage);
     }
 
+    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+    interface ChatWithRuntimeSelection {
+
+        String chat(@UserMessage String userMessage, @ModelName String model);
+    }
+
     @Inject
     ChatWithDefaultModel chatWithDefaultModel;
 
@@ -68,6 +77,9 @@ public class MultipleChatModelsDeclarativeServiceTest extends OpenAiBaseTest {
 
     @Inject
     ChatWithModel2 chatWithModel2;
+
+    @Inject
+    ChatWithRuntimeSelection chatWithRuntimeSelection;
 
     @Test
     @ActivateRequestContext
@@ -94,6 +106,36 @@ public class MultipleChatModelsDeclarativeServiceTest extends OpenAiBaseTest {
         assertThat(result).isNotBlank();
 
         assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+    }
+
+    @Test
+    @ActivateRequestContext
+    public void testRuntimeSelection() throws IOException {
+        String result = chatWithRuntimeSelection.chat(MESSAGE_CONTENT, null);
+        assertThat(result).isNotBlank();
+        assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+        assertThat(singleLoggedRequest().header("Authorization").firstValue()).isEqualTo("Bearer defaultKey");
+
+        setup();
+
+        result = chatWithRuntimeSelection.chat(MESSAGE_CONTENT, "model1");
+        assertThat(result).isNotBlank();
+        assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+        assertThat(singleLoggedRequest().header("Authorization").firstValue()).isEqualTo("Bearer key1");
+
+        setup();
+
+        result = chatWithRuntimeSelection.chat(MESSAGE_CONTENT, "model2");
+        assertThat(result).isNotBlank();
+        assertSingleRequestMessage(getRequestAsMap(), MESSAGE_CONTENT);
+        assertThat(singleLoggedRequest().header("Authorization").firstValue()).isEqualTo("Bearer key2");
+
+        setup();
+
+        assertThatThrownBy(() -> {
+            chatWithRuntimeSelection.chat(MESSAGE_CONTENT, "dummy");
+        });
+        assertThat(wiremock().getServeEvents()).hasSize(0);
     }
 
 }

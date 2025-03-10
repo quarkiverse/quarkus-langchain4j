@@ -72,6 +72,8 @@ public @interface RegisterAiService {
      * If set, it uses the model configured by name. For example if this is set to {@code somename}
      * an example configuration value for that named model could be:
      * {@code quarkus.langchain4j.somename.openai.chat-model.model-name=gpt-4-turbo-preview}
+     * <p>
+     * If the model needs to be selected at runtime, then {@link ModelName} can be used as a method parameter of an AiService.
      */
     String modelName() default "<default>";
 
