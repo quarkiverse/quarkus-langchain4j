@@ -1607,7 +1607,7 @@ public class AiServicesProcessor {
             return Optional.empty();
         }
 
-        String name = METRICS_DEFAULT_NAME;
+        String name = METRICS_DEFAULT_NAME + ".timed";
         List<String> tags = defaultMetricsTags(method);
 
         AnnotationInstance timedInstance = method.annotation(MICROMETER_TIMED);
@@ -1666,7 +1666,7 @@ public class AiServicesProcessor {
             return Optional.empty();
         }
 
-        String name = METRICS_DEFAULT_NAME;
+        String name = METRICS_DEFAULT_NAME + ".counted";
         List<String> tags = defaultMetricsTags(method);
 
         AnnotationInstance timedInstance = method.annotation(MICROMETER_COUNTED);

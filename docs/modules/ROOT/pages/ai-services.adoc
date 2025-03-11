@@ -343,7 +343,8 @@ Observability is built into services created via `@RegisterAiService` and is pro
   
 === Metrics
 
-Each AI method is automatically timed and the timer data is available using the `langchain4j.aiservices.$interface_name.$method_name` template for the name.
+Each AI method is automatically timed and the timer data is available using the `langchain4j.aiservices.timed` metric with the appropriate tags.
+A counter is also available using the `langchain4j.aiservices.counted` metric.
 
 For example, if the AI service looks like:
 
@@ -362,17 +363,17 @@ and one chooses to use `quarkus-micrometer-registry-prometheus`, then the metric
 
 [source]
 ----
-# TYPE langchain4j_aiservices counter
-# HELP langchain4j_aiservices
-langchain4j_aiservices_total{aiservice="MyAiService",exception="none",method="writeAPoem",result="success"} 5.0
+# HELP langchain4j_aiservices_timed_seconds
+# TYPE langchain4j_aiservices_timed_seconds summary
+langchain4j_aiservices_timed_seconds_count{aiservice="PoemAiService",method="writeAPoem",} 1.0
+langchain4j_aiservices_timed_seconds_sum{aiservice="PoemAiService",method="writeAPoem",} 4.241446681
+# HELP langchain4j_aiservices_timed_seconds_max
+# TYPE langchain4j_aiservices_timed_seconds_max gauge
+langchain4j_aiservices_timed_seconds_max{aiservice="PoemAiService",method="writeAPoem",} 4.241446681
 
-# TYPE langchain4j_aiservices_seconds_max gauge
-# HELP langchain4j_aiservices_seconds_max
-langchain4j_aiservices_seconds_max{aiservice="MyAiService",method="writeAPoem"} 7.725769221
-# TYPE langchain4j_aiservices_seconds summary
-# HELP langchain4j_aiservices_seconds
-langchain4j_aiservices_seconds_count{aiservice="MyAiService",method="writeAPoem"} 5.0
-langchain4j_aiservices_seconds_sum{aiservice="MyAiService",method="writeAPoem"} 30.229575906
+# HELP langchain4j_aiservices_counted_total
+# TYPE langchain4j_aiservices_counted_total counter
+langchain4j_aiservices_counted_total{aiservice="PoemAiService",exception="none",method="writeAPoem",result="success",} 1.0
 ----
 
 === Tracing

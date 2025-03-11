@@ -43,13 +43,20 @@ class AssistantResourceWithMetricsTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
 
-        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
-                .tag("method", "chat").timers(), 1);
-        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
-                .tag("method", "chat")
-                .tag("result", "success")
-                .tag("exception", "none")
-                .counters(), 1);
+        waitForMeters(
+                registry.find("langchain4j.aiservices.timed")
+                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
+                        .tag("method", "chat")
+                        .timers(),
+                1);
+        waitForMeters(
+                registry.find("langchain4j.aiservices.counted")
+                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant1")
+                        .tag("method", "chat")
+                        .tag("result", "success")
+                        .tag("exception", "none")
+                        .counters(),
+                1);
     }
 
     @Test
@@ -61,12 +68,21 @@ class AssistantResourceWithMetricsTest {
                 .statusCode(200)
                 .body(containsString("MockGPT"));
 
-        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
-                .tag("method", "chat").tag("key", "value").timers(), 1);
-        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
-                .tag("method", "chat")
-                .tag("result", "success")
-                .tag("exception", "none").counters(), 1);
+        waitForMeters(
+                registry.find("langchain4j.aiservices.timed")
+                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
+                        .tag("method", "chat")
+                        .tag("key", "value")
+                        .timers(),
+                1);
+        waitForMeters(
+                registry.find("langchain4j.aiservices.counted")
+                        .tag("aiservice", "AssistantResourceWithMetrics$Assistant2")
+                        .tag("method", "chat")
+                        .tag("result", "success")
+                        .tag("exception", "none")
+                        .counters(),
+                1);
     }
 
     @Test
@@ -92,10 +108,12 @@ class AssistantResourceWithMetricsTest {
                 .then()
                 .statusCode(500);
 
-        waitForMeters(registry.find("langchain4j.aiservices").tag("aiservice", "AssistantResourceWithMetrics$Assistant3")
-                .tag("method", "chat")
-                .tag("result", "failure")
-                .tag("exception", "TemplateException").counters(), 1);
+        waitForMeters(
+                registry.find("langchain4j.aiservices.counted").tag("aiservice", "AssistantResourceWithMetrics$Assistant3")
+                        .tag("method", "chat")
+                        .tag("result", "failure")
+                        .tag("exception", "TemplateException").counters(),
+                1);
     }
 
     public <T> void waitForMeters(Collection<T> collection, int count) throws InterruptedException {
