@@ -1309,7 +1309,8 @@ public class AiServicesProcessor {
                     "The %s placeholder cannot be used if the property quarkus.langchain4j.response-schema is set to false. Found in: %s"
                             .formatted(ResponseSchemaUtil.placeholder(), method.declaringClass()));
 
-        Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamName(method);
+        Optional<Integer> memoryIdParamPosition = gatherMemoryIdParamPosition(method);
+        Optional<Integer> overrideChatModelParamPosition = gatherOverrideChatModelParameterPosition(method);
         Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> metricsTimedInfo = gatherMetricsTimedInfo(method,
                 addMicrometerMetrics);
         Optional<AiServiceMethodCreateInfo.MetricsCountedInfo> metricsCountedInfo = gatherMetricsCountedInfo(method,
@@ -1333,9 +1334,9 @@ public class AiServicesProcessor {
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
-                metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo, methodToolClassInfo,
-                switchToWorkerThreadForToolExecution, inputGuardrails, outputGuardrails, accumulatorClassName,
-                responseAugmenterClassName);
+                overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
+                methodToolClassInfo, switchToWorkerThreadForToolExecution, inputGuardrails, outputGuardrails,
+                accumulatorClassName, responseAugmenterClassName);
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
@@ -1479,10 +1480,23 @@ public class AiServicesProcessor {
         return Optional.empty();
     }
 
-    private Optional<Integer> gatherMemoryIdParamName(MethodInfo method) {
+    private Optional<Integer> gatherMemoryIdParamPosition(MethodInfo method) {
         return method.annotations(LangChain4jDotNames.MEMORY_ID).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
                 .map(METHOD_PARAMETER_POSITION_FUNCTION)
                 .findFirst();
+    }
+
+    private Optional<Integer> gatherOverrideChatModelParameterPosition(MethodInfo method) {
+        var result = method.annotations(LangChain4jDotNames.MODEL_NAME).stream().filter(IS_METHOD_PARAMETER_ANNOTATION)
+                .map(METHOD_PARAMETER_POSITION_FUNCTION)
+                .findFirst();
+        if (result.isPresent()) {
+            if (!DotNames.STRING.equals(method.parameterTypes().get(result.get()).name())) {
+                throw illegalConfigurationForMethod("Method parameters annotated with @ModelName can only be of type 'String'",
+                        method);
+            }
+        }
+        return result;
     }
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
