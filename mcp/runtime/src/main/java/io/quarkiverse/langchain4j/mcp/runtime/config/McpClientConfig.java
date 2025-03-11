@@ -16,6 +16,7 @@ public interface McpClientConfig {
     /**
      * Transport type
      */
+    @WithDefault("stdio")
     McpTransportType transportType();
 
     /**
