@@ -40,7 +40,7 @@
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.27.3</assertj.version>
     <wiremock.version>3.12.1</wiremock.version>
-    <sundrio.version>0.200.0</sundrio.version>
+    <sundrio.version>0.200.3</sundrio.version>
     <quarkus-wiremock.version>1.4.1</quarkus-wiremock.version>
     <quarkus-neo4j.version>5.2.0</quarkus-neo4j.version>
     <jlama.version>0.8.4</jlama.version>
