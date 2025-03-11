@@ -30,7 +30,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TRANSPORT_TYPE++
 endif::add-copy-button-to-env-var[]
 --
 a|`stdio`, `http`
-|required icon:exclamation-circle[title=Configuration property is required]
+|`stdio`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`quarkus.langchain4j.mcp."client-name".url`]##
 ifdef::add-copy-button-to-config-props[]
