@@ -1,5 +1,17 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_EMBEDDING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TOKENIZER_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -48,10 +60,10 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
@@ -78,27 +90,26 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
         Date date = Date.from(Instant.now().plusMillis(cacheTimeout));
 
         // First call returns 200.
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario(Scenario.STARTED, "error")
                 .response("3secondstoken", date)
                 .build();
 
         // All other call after 2 seconds they will give an error.
-        mockServers.mockIAMBuilder(401)
+        mockIAMBuilder(401)
                 .scenario("error", Scenario.STARTED)
                 .response("Should never happen")
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
-                Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
+                Map.entry(URL_WATSONX_GENERATION_API, RESPONSE_WATSONX_GENERATION_API),
+                Map.entry(URL_WATSONX_EMBEDDING_API, RESPONSE_WATSONX_EMBEDDING_API),
+                Map.entry(URL_WATSONX_GENERATION_STREAMING_API, RESPONSE_WATSONX_GENERATION_STREAMING_API),
+                Map.entry(URL_WATSONX_TOKENIZER_API, RESPONSE_WATSONX_TOKENIZER_API))
                 .forEach(entry -> {
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 200)
+                    mockWatsonxBuilder(entry.getKey(), 200)
                             .token("3secondstoken")
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(URL_WATSONX_GENERATION_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
@@ -125,34 +136,33 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
     void try_token_retry() throws InterruptedException {
 
         // Return an expired token.
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario(Scenario.STARTED, "retry")
                 .response("expired_token", Date.from(Instant.now().minusSeconds(3)))
                 .build();
 
         // Second call (retryOn) returns 200
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .scenario("retry", Scenario.STARTED)
                 .response("my_super_token", Date.from(Instant.now().plusMillis(cacheTimeout)))
                 .build();
 
         Stream.of(
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_API, WireMockUtil.RESPONSE_WATSONX_GENERATION_API),
-                Map.entry(WireMockUtil.URL_WATSONX_EMBEDDING_API, WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API,
-                        WireMockUtil.RESPONSE_WATSONX_GENERATION_STREAMING_API),
-                Map.entry(WireMockUtil.URL_WATSONX_TOKENIZER_API, WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API))
+                Map.entry(URL_WATSONX_GENERATION_API, RESPONSE_WATSONX_GENERATION_API),
+                Map.entry(URL_WATSONX_EMBEDDING_API, RESPONSE_WATSONX_EMBEDDING_API),
+                Map.entry(URL_WATSONX_GENERATION_STREAMING_API, RESPONSE_WATSONX_GENERATION_STREAMING_API),
+                Map.entry(URL_WATSONX_TOKENIZER_API, RESPONSE_WATSONX_TOKENIZER_API))
                 .forEach(entry -> {
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 401)
+                    mockWatsonxBuilder(entry.getKey(), 401)
                             .token("expired_token")
                             .scenario(Scenario.STARTED, "retry")
                             .response(RESPONSE_401)
                             .build();
 
-                    mockServers.mockWatsonxBuilder(entry.getKey(), 200)
+                    mockWatsonxBuilder(entry.getKey(), 200)
                             .token("my_super_token")
                             .scenario("retry", Scenario.STARTED)
-                            .responseMediaType(entry.getKey().equals(WireMockUtil.URL_WATSONX_GENERATION_STREAMING_API)
+                            .responseMediaType(entry.getKey().equals(URL_WATSONX_GENERATION_STREAMING_API)
                                     ? MediaType.SERVER_SENT_EVENTS
                                     : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())

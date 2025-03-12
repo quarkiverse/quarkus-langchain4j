@@ -38,7 +38,7 @@ public record TextExtractionRequest(String spaceId, String projectId, TextExtrac
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record TextExtractionSteps(TextExtractionStepOcr ocr, TextExtractionStepTablesProcessing tablesProcessing) {
         public static TextExtractionSteps of(List<String> languages, boolean tableProcessing) {
-            var obj = tableProcessing ? new TextExtractionStepTablesProcessing(true) : null;
+            var obj = new TextExtractionStepTablesProcessing(tableProcessing);
             return new TextExtractionSteps(new TextExtractionStepOcr(languages), obj);
         }
     }

@@ -1,5 +1,12 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,10 +37,10 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .overrideConfigKey("quarkus.langchain4j.response-schema", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
@@ -72,9 +79,9 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .response(BEARER_TOKEN, new Date())
                 .build();
     }
 
@@ -162,7 +169,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from("You are a poet"),
                 dev.langchain4j.data.message.UserMessage.from("Generate a poem about dog"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -177,7 +184,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from("You are a poet"),
                 dev.langchain4j.data.message.UserMessage.from("Generate a poem about dog".concat(SCHEMA)));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -192,7 +199,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from(SCHEMA.concat(" You are a poet")),
                 dev.langchain4j.data.message.UserMessage.from("user", "Generate a poem about dog ".concat(SCHEMA)));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -207,7 +214,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from(SCHEMA.concat(" You are a poet")),
                 dev.langchain4j.data.message.UserMessage.from("Generate a poem about dog"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -221,7 +228,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
         List<ChatMessage> messages = List.of(
                 dev.langchain4j.data.message.UserMessage.from(SCHEMA.concat(" Generate a poem about dog")));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -237,7 +244,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
         List<ChatMessage> messages = List.of(
                 dev.langchain4j.data.message.UserMessage.from(SCHEMA.concat("Generate a poem about dog")));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -252,7 +259,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 dev.langchain4j.data.message.SystemMessage.from(SCHEMA.concat(" You are a poet")),
                 dev.langchain4j.data.message.UserMessage.from("Generate a poem about dog"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 200)
                 .body(mapper.writeValueAsString(from(messages)))
                 .response(RESPONSE)
                 .build();
@@ -271,7 +278,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 .temperature(config.generationModel().temperature())
                 .minNewTokens(config.generationModel().minNewTokens())
                 .maxNewTokens(config.generationModel().maxNewTokens())
-                .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
+                .timeLimit(DEFAULT_TIME_LIMIT)
                 .build();
 
         var input = messages.stream().map(

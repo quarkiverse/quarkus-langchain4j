@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -28,15 +29,24 @@ public interface LangChain4jWatsonxConfig {
     /**
      * Named model config.
      */
+    @ConfigDocSection
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
     Map<String, WatsonConfig> namedConfig();
 
+    /**
+     * Configuration for built-in services.
+     */
+    BuiltinServiceConfig builtInService();
+
     @ConfigGroup
     interface WatsonConfig {
         /**
          * Base URL of the watsonx.ai API.
+         * <p>
+         * All available URLs are listed in the IBM Watsonx.ai documentation at the
+         * <a href="https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url">following link</a>.
          */
         Optional<String> baseUrl();
 
@@ -88,8 +98,8 @@ public interface LangChain4jWatsonxConfig {
 
         /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
-         * provider. Set to
-         * {@code false} to disable all requests.
+         * provider. Set to {@code false} to
+         * disable all requests.
          */
         @WithDefault("true")
         Boolean enableIntegration();
@@ -98,6 +108,13 @@ public interface LangChain4jWatsonxConfig {
          * IAM authentication related settings.
          */
         IAMConfig iam();
+
+        /**
+         * Cloud Object Storage related settings.
+         * <p>
+         * This configuration is only required when using the {@code TextExtraction} class.
+         */
+        Optional<TextExtractionConfig> textExtraction();
 
         /**
          * Chat model related settings.

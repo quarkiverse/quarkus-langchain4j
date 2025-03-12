@@ -1,5 +1,11 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_GENERATION_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,10 +32,10 @@ public class HttpErrorTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
@@ -39,11 +45,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void not_registered_error() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 500)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 500)
                 .responseMediaType(MediaType.APPLICATION_JSON)
                 .response("""
                         {
@@ -70,11 +76,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_400_model_no_support_for_function() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 404)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 404)
                 .responseMediaType(MediaType.APPLICATION_JSON)
                 .response("""
                         {
@@ -101,11 +107,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_400_json_type_error() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 400)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 400)
                 .response(
                         """
                                 {
@@ -134,11 +140,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_404_model_not_supported() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 400)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 400)
                 .response("""
                         {
                             "errors": [
@@ -166,11 +172,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_400_json_validation_error() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 400)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 400)
                 .response("""
                         {
                             "errors": [
@@ -197,11 +203,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_400_invalid_request_entity() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 400)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 400)
                 .response("""
                         {
                             "errors": [
@@ -229,11 +235,11 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_500() {
 
-        mockServers.mockIAMBuilder(200)
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+        mockIAMBuilder(200)
+                .response(BEARER_TOKEN, new Date())
                 .build();
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_GENERATION_API, 500)
+        mockWatsonxBuilder(URL_WATSONX_GENERATION_API, 500)
                 .response("{")
                 .build();
 
@@ -244,7 +250,7 @@ public class HttpErrorTest extends WireMockAbstract {
     @Test
     void error_500_iam_generic() {
 
-        mockServers.mockIAMBuilder(500)
+        mockIAMBuilder(500)
                 .response("{")
                 .build();
 
@@ -256,7 +262,7 @@ public class HttpErrorTest extends WireMockAbstract {
 
     @Test
     void error_400_iam_server() {
-        mockServers.mockIAMBuilder(400)
+        mockIAMBuilder(400)
                 .response("""
                         {
                             "errorCode": "BXNIM0415E",
@@ -277,7 +283,7 @@ public class HttpErrorTest extends WireMockAbstract {
 
     @Test
     void error_500_iam_server() {
-        mockServers.mockIAMBuilder(500)
+        mockIAMBuilder(500)
                 .responseMediaType(MediaType.TEXT_PLAIN)
                 .response("SUPER FATAL ERROR!")
                 .build();

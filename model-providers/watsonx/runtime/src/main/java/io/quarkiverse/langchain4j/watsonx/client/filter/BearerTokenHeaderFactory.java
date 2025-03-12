@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 
-import io.quarkiverse.langchain4j.watsonx.WatsonxTokenGenerator;
+import io.quarkiverse.langchain4j.watsonx.runtime.TokenGenerator;
 import io.quarkus.rest.client.reactive.ReactiveClientHeadersFactory;
 import io.smallrye.mutiny.Uni;
 
@@ -13,9 +13,9 @@ import io.smallrye.mutiny.Uni;
  */
 public class BearerTokenHeaderFactory extends ReactiveClientHeadersFactory {
 
-    private final WatsonxTokenGenerator tokenGenerator;
+    private final TokenGenerator tokenGenerator;
 
-    public BearerTokenHeaderFactory(WatsonxTokenGenerator tokenGenerator) {
+    public BearerTokenHeaderFactory(TokenGenerator tokenGenerator) {
         this.tokenGenerator = tokenGenerator;
     }
 

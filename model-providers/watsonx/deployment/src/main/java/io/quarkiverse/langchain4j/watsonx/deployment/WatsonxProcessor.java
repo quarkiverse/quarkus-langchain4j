@@ -5,14 +5,19 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDIN
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.TEXT_EXTRACTION;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
@@ -20,6 +25,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
@@ -27,10 +33,14 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.BuiltinServiceBuildItem;
+import io.quarkiverse.langchain4j.watsonx.deployment.items.TextExtractionClassBuildItem;
+import io.quarkiverse.langchain4j.watsonx.runtime.BuiltinServiceRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -38,6 +48,7 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
@@ -73,13 +84,107 @@ public class WatsonxProcessor {
     }
 
     @BuildStep
+    void discoverBuiltinToolBeans(
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<BuiltinServiceBuildItem> producer) {
+
+        Set<DotName> dotNames = new HashSet<>();
+        beans.getInjectionPoints().stream()
+                .map(ip -> ip.getRequiredType().name())
+                .filter(this::isABuiltinToolClass)
+                .forEach(dotNames::add);
+
+        if (dotNames.isEmpty())
+            return; // Nothing to produce..
+
+        dotNames.stream().map(BuiltinServiceBuildItem::new).forEach(producer::produce);
+    }
+
+    @BuildStep
+    void discoverTextExtractionBeans(
+            CombinedIndexBuildItem indexBuildItem,
+            BeanDiscoveryFinishedBuildItem beans,
+            BuildProducer<TextExtractionClassBuildItem> producer) {
+
+        Set<String> qualifiers = beans.getInjectionPoints().stream()
+                .filter(injectionPoint -> injectionPoint.getRequiredType().name().equals(WatsonxDotNames.TEXT_EXTRACTION))
+                .map(injectionPoint -> {
+                    AnnotationInstance modelName = injectionPoint.getRequiredQualifier(LangChain4jDotNames.MODEL_NAME);
+                    if (modelName != null) {
+                        String value = modelName.value().asString();
+                        if ((value != null) && !value.isEmpty()) {
+                            return value;
+                        }
+                    }
+                    if (modelName == null && injectionPoint.isProgrammaticLookup()) {
+                        return null;
+                    }
+                    return NamedConfigUtil.DEFAULT_NAME;
+                }).collect(Collectors.toSet());
+
+        qualifiers.stream()
+                .map(TextExtractionClassBuildItem::new)
+                .forEach(producer::produce);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    void generateBuiltinToolBeans(
+            BuiltinServiceRecorder recorder,
+            LangChain4jWatsonxConfig runtimeConfig,
+            List<BuiltinServiceBuildItem> builtinToolClasses,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+
+        for (BuiltinServiceBuildItem builtinToolClass : builtinToolClasses) {
+            var builder = SyntheticBeanBuildItem
+                    .configure(builtinToolClass.getDotName())
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class);
+
+            if (builtinToolClass.getDotName().equals(WatsonxDotNames.GOOGLE_SEARCH_SERVICE))
+                builder.supplier(recorder.googleSearch(runtimeConfig));
+            else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEB_CRAWLER_SERVICE))
+                builder.supplier(recorder.webCrawler(runtimeConfig));
+            else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEATHER_SERVICE))
+                builder.supplier(recorder.weather(runtimeConfig));
+            else
+                throw new RuntimeException("BuiltinServiceClass not recognised");
+
+            beanProducer.produce(builder.done());
+        }
+    }
+
+    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(WatsonxRecorder recorder, LangChain4jWatsonxConfig runtimeConfig,
             LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedScoringModelProviderBuildItem> selectedScoring,
+            List<TextExtractionClassBuildItem> selectedTextExtraction,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+
+        for (var selected : selectedTextExtraction) {
+
+            String configName = selected.getQualifier();
+
+            var textExtraction = selectedTextExtraction.stream()
+                    .filter(value -> value.getQualifier().equals(configName))
+                    .findFirst();
+
+            if (textExtraction.isPresent()) {
+                var textExtractionBuilder = SyntheticBeanBuildItem
+                        .configure(TEXT_EXTRACTION)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.textExtraction(runtimeConfig, configName));
+                addQualifierIfNecessary(textExtractionBuilder, configName);
+                beanProducer.produce(textExtractionBuilder.done());
+            }
+        }
 
         for (var selected : selectedChatItem) {
 
@@ -180,10 +285,22 @@ public class WatsonxProcessor {
         }
     }
 
+    private boolean isABuiltinToolClass(DotName dotName) {
+        if (dotName.equals(WatsonxDotNames.WEB_CRAWLER_SERVICE))
+            return true;
+        else if (dotName.equals(WatsonxDotNames.GOOGLE_SEARCH_SERVICE))
+            return true;
+        else if (dotName.equals(WatsonxDotNames.WEATHER_SERVICE))
+            return true;
+        else
+            return false;
+    }
+
     /**
      * When both {@code rest-client-jackson} and {@code rest-client-jsonb} are present on the classpath we need to make sure
-     * that Jackson is used. This is not a proper solution as it affects all clients, but it's better than the having the
-     * reader/writers be selected at random.
+     * that Jackson is used. This is
+     * not a proper solution as it affects all clients, but it's better than the having the reader/writers be selected at
+     * random.
      */
     @BuildStep
     public void deprioritizeJsonb(Capabilities capabilities,

@@ -1,5 +1,15 @@
 package io.quarkiverse.langchain4j.watsonx.deployment;
 
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.DEFAULT_TIME_LIMIT;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -52,17 +62,17 @@ public class AiChatServiceTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", WireMockUtil.URL_WATSONX_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", WireMockUtil.URL_IAM_SERVER)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", WireMockUtil.API_KEY)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", WireMockUtil.PROJECT_ID)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.base-url", URL_WATSONX_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, Calculator.class));
 
     @Override
     void handlerBeforeEach() {
-        mockServers.mockIAMBuilder(200)
+        mockIAMBuilder(200)
                 .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
-                .response(WireMockUtil.BEARER_TOKEN, new Date())
+                .response(BEARER_TOKEN, new Date())
                 .build();
     }
 
@@ -131,9 +141,9 @@ public class AiChatServiceTest extends WireMockAbstract {
                 TextChatMessageSystem.of("This is a systemMessage"),
                 TextChatMessageUser.of("This is a userMessage Hello"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_API)
+                .response(RESPONSE_WATSONX_CHAT_API)
                 .build();
 
         assertEquals("AI Response", aiService.chat("Hello"));
@@ -172,7 +182,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                     }
                 }""";
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
                 .response(RESPONSE)
                 .build();
@@ -193,7 +203,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                 TextChatMessageSystem.of("This is a systemMessage"),
                 TextChatMessageUser.of("Execute the sum of 1 + 1"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
                 .scenario(Scenario.STARTED, "TOOL_CALL")
                 .response(
@@ -237,7 +247,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                                 new TextChatFunctionCall("sum", "{\"first\":1, \"second\":1}")))),
                 TextChatMessageTool.of("2", "chatcmpl-tool-3f621ce6ad9240da963d661215621711"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
                 .scenario("TOOL_CALL", "AI_RESPONSE")
                 .response("""
@@ -291,10 +301,10 @@ public class AiChatServiceTest extends WireMockAbstract {
                 TextChatMessageSystem.of("This is a systemMessage"),
                 TextChatMessageUser.of("This is a userMessage Hello"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(messages, null)))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
                 .build();
 
         var result = aiService.streaming("Hello").collect().asList().await().indefinitely();
@@ -308,7 +318,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                 TextChatMessageSystem.of("This is a systemMessage"),
                 TextChatMessageUser.of("Execute the sum of 1 + 1"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(STARTED, tools)))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
                 .scenario(Scenario.STARTED, "TOOL_CALL")
@@ -383,7 +393,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                                 new TextChatFunctionCall("sum", "{\"first\": 1, \"second\": 1}")))),
                 TextChatMessageTool.of("2", "chatcmpl-tool-7cf5dfd7c52441e59a7585243b22a86a"));
 
-        mockServers.mockWatsonxBuilder(WireMockUtil.URL_WATSONX_CHAT_STREAMING_API, 200)
+        mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200)
                 .body(mapper.writeValueAsString(generateChatRequest(TOOL_CALL, tools)))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
                 .scenario("TOOL_CALL", "AI_RESPONSE")
@@ -449,7 +459,7 @@ public class AiChatServiceTest extends WireMockAbstract {
                 .presencePenalty(0.0)
                 .temperature(1.0)
                 .topP(1.0)
-                .timeLimit(WireMockUtil.DEFAULT_TIME_LIMIT)
+                .timeLimit(DEFAULT_TIME_LIMIT)
                 .build();
 
         return new TextChatRequest(modelId, spaceId, projectId, messages, tools, parameters);
