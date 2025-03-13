@@ -14,7 +14,7 @@ public interface ImageToPlantUMLService {
 
     @SystemMessage("You are a PlantUML expert. You reverse engineer images into PlantUML code")
     @UserMessage("""
-            Create PlantUML code that descirbes the diagram in the image as close as possible. 
+            Create PlantUML code that describes the diagram in the image as close as possible.
             The diagram should accurately display:
             - component
             - connections
@@ -23,7 +23,7 @@ public interface ImageToPlantUMLService {
             - notes
             - text
             Use OCR if needed to read text.
-            Respond with just plantuml code, without enclosing it in bakcticks etc.
+            Respond with just plantuml code, without enclosing it in backticks etc.
             """)
     @OutputGuardrails(PlantUMLValidator.class)
     String convert(Image image);
