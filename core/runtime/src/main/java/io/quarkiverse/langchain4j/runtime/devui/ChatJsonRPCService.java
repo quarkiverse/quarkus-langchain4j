@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.enterprise.inject.Any;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -104,7 +105,8 @@ public class ChatJsonRPCService {
                     Object objectWithTool = null;
                     try {
                         objectWithTool = Arc.container().select(
-                                Thread.currentThread().getContextClassLoader().loadClass(entry.getKey())).get();
+                                Thread.currentThread().getContextClassLoader().loadClass(entry.getKey()),
+                                new Any.Literal()).get();
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
