@@ -267,6 +267,48 @@ endif::add-copy-button-to-env-var[]
 |int
 |`3`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt[`quarkus.langchain4j.tracing.include-prompt`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-prompt+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the prompt is included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_PROMPT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_PROMPT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion[`quarkus.langchain4j.tracing.include-completion`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-completion+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, the completion is included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_COMPLETION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_COMPLETION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 h|[[quarkus-langchain4j-core_section_quarkus-langchain4j]] [.section-name.section-level0]##link:#quarkus-langchain4j-core_section_quarkus-langchain4j[Default model config]##
 h|Type
 h|Default

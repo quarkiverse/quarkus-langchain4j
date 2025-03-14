@@ -110,6 +110,8 @@ endif::add-copy-button-to-config-props[]
 --
 Base URL of the watsonx.ai API.
 
+All available URLs are listed in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[following link].
+
 
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BASE_URL+++[]
@@ -355,6 +357,153 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`urn:ibm:params:oauth:grant-type:apikey`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-base-url[`quarkus.langchain4j.watsonx.text-extraction.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the Cloud Object Storage API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-connection[`quarkus.langchain4j.watsonx.text-extraction.document-reference.connection`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.document-reference.connection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the connection asset that contains the credentials required to access the data.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_DOCUMENT_REFERENCE_CONNECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_DOCUMENT_REFERENCE_CONNECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-document-reference-bucket-name[`quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default bucket for uploading/extracting documents.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_DOCUMENT_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_DOCUMENT_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-connection[`quarkus.langchain4j.watsonx.text-extraction.results-reference.connection`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.results-reference.connection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the connection asset that contains the credentials required to access the data.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_RESULTS_REFERENCE_CONNECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_RESULTS_REFERENCE_CONNECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-results-reference-bucket-name[`quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default bucket for uploading/extracting documents.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_RESULTS_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_RESULTS_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-requests[`quarkus.langchain4j.watsonx.text-extraction.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Cloud Object Storage client should log requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-text-extraction-log-responses[`quarkus.langchain4j.watsonx.text-extraction.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.text-extraction.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Cloud Object Storage client should log responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TEXT_EXTRACTION_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id[`quarkus.langchain4j.watsonx.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1257,6 +1406,176 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-base-url[`quarkus.langchain4j.watsonx.built-in-service.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL for the built-in service.
+
+All available URLs are listed in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[following link].
+
+*Note:* If empty, the URL is automatically calculated based on the `watsonx.base-url` value.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-api-key]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-api-key[`quarkus.langchain4j.watsonx.built-in-service.api-key`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.api-key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+IBM Cloud API key.
+
+If empty, the api key inherits the value from the `watsonx.api-key` property.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_API_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_API_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-timeout]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-timeout[`quarkus.langchain4j.watsonx.built-in-service.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for built-in tools APIs.
+
+If empty, the api key inherits the value from the `watsonx.timeout` property.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-watsonx_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`10s`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-requests[`quarkus.langchain4j.watsonx.built-in-service.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the built-in rest client should log requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-responses[`quarkus.langchain4j.watsonx.built-in-service.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the built-in rest client should log responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-google-search-max-results]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-google-search-max-results[`quarkus.langchain4j.watsonx.built-in-service.google-search.max-results`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.built-in-service.google-search.max-results+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of search results.
+
+*Possible values:* `1 < value < 20`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_GOOGLE_SEARCH_MAX_RESULTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_GOOGLE_SEARCH_MAX_RESULTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`10`
+
+h|[[quarkus-langchain4j-watsonx_section_quarkus-langchain4j-watsonx]] [.section-name.section-level0]##link:#quarkus-langchain4j-watsonx_section_quarkus-langchain4j-watsonx[Named model config]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode[`quarkus.langchain4j.watsonx."model-name".mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the mode of interaction with the LLM model.
+
+This property allows you to choose between two modes of operation:
+
+ - *chat*: prompts are automatically enriched with the specific tags defined by the model
+ - *generation*: prompts require manual specification of tags
+
+
+
+*Allowable values:* `++[++chat, generation++]++`
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`chat`
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-base-url[`quarkus.langchain4j.watsonx."model-name".base-url`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".base-url+++[]
@@ -1266,6 +1585,8 @@ endif::add-copy-button-to-config-props[]
 [.description]
 --
 Base URL of the watsonx.ai API.
+
+All available URLs are listed in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[following link].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1512,6 +1833,153 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`urn:ibm:params:oauth:grant-type:apikey`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-base-url]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-base-url[`quarkus.langchain4j.watsonx."model-name".text-extraction.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Base URL of the Cloud Object Storage API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-connection[`quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.connection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the connection asset that contains the credentials required to access the data.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_DOCUMENT_REFERENCE_CONNECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_DOCUMENT_REFERENCE_CONNECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-document-reference-bucket-name[`quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.bucket-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.document-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default bucket for uploading/extracting documents.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_DOCUMENT_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_DOCUMENT_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-connection[`quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.connection`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.connection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The id of the connection asset that contains the credentials required to access the data.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_RESULTS_REFERENCE_CONNECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_RESULTS_REFERENCE_CONNECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-results-reference-bucket-name[`quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.bucket-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.results-reference.bucket-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default bucket for uploading/extracting documents.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_RESULTS_REFERENCE_BUCKET_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_RESULTS_REFERENCE_BUCKET_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-requests[`quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Cloud Object Storage client should log requests.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-text-extraction-log-responses[`quarkus.langchain4j.watsonx."model-name".text-extraction.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".text-extraction.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Cloud Object Storage client should log responses.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TEXT_EXTRACTION_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id[`quarkus.langchain4j.watsonx."model-name".chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2413,40 +2881,6 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`false`
-
-h|[[quarkus-langchain4j-watsonx_section_quarkus-langchain4j-watsonx]] [.section-name.section-level0]##link:#quarkus-langchain4j-watsonx_section_quarkus-langchain4j-watsonx[Named model config]##
-h|Type
-h|Default
-
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-mode[`quarkus.langchain4j.watsonx."model-name".mode`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".mode+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Specifies the mode of interaction with the LLM model.
-
-This property allows you to choose between two modes of operation:
-
- - *chat*: prompts are automatically enriched with the specific tags defined by the model
- - *generation*: prompts require manual specification of tags
-
-
-
-*Allowable values:* `++[++chat, generation++]++`
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__MODE+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__MODE+++`
-endif::add-copy-button-to-env-var[]
---
-|string
-|`chat`
 
 
 |===
