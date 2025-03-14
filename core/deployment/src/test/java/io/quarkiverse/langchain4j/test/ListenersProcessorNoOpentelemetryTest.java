@@ -32,6 +32,6 @@ class ListenersProcessorNoOpentelemetryTest {
     @Test
     void shouldNotHaveSpanChatModelListenerWhenNoOtel() {
         assertThat(spanChatModelListeners).isEmpty();
-        assertThat(chatModelSpanContributors).isEmpty();
+        assertThat(chatModelSpanContributors).hasSize(2); // the prompt and completion ones are always active
     }
 }
