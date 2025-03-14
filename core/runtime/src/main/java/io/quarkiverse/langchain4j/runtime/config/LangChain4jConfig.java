@@ -41,4 +41,9 @@ public interface LangChain4jConfig {
      * Guardrails configuration
      */
     GuardrailsConfig guardrails();
+
+    /**
+     * Tracing related configuration
+     */
+    TracingConfig tracing();
 }
