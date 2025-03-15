@@ -59,6 +59,7 @@ import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -253,46 +254,7 @@ public class AiServicesProcessor {
                             index,
                             reflectiveClassProducer));
 
-            String chatModelName = NamedConfigUtil.DEFAULT_NAME;
-            if (chatLanguageModelSupplierClassDotName == null && streamingChatLanguageModelSupplierClassDotName == null) {
-                AnnotationValue modelNameValue = instance.value("modelName");
-                if (modelNameValue != null) {
-                    String modelNameValueStr = modelNameValue.asString();
-                    if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
-                        chatModelName = modelNameValueStr;
-                    }
-                }
-                chatModelNames.add(chatModelName);
-            }
-
-            List<ClassInfo> toolClassInfos = Collections.emptyList();
-            AnnotationValue toolsInstance = instance.value("tools");
-            if (toolsInstance != null) {
-                toolClassInfos = Arrays.stream(toolsInstance.asClassArray()).map(t -> {
-                    var ci = index.getClassByName(t.name());
-                    if (ci == null) {
-                        throw new IllegalArgumentException("Cannot find class " + t.name()
-                                + " in index. Please make sure it's a valid CDI bean known to Quarkus");
-                    }
-                    return ci;
-                })
-                        .toList();
-            }
-
-            // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
-            DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
-            AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
-            if (chatMemoryProviderSupplierValue != null) {
-                chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
-                if (chatMemoryProviderSupplierClassDotName.equals(
-                        LangChain4jDotNames.NO_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                    chatMemoryProviderSupplierClassDotName = null;
-                } else if (!chatMemoryProviderSupplierClassDotName
-                        .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                    validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
-                            reflectiveClassProducer);
-                }
-            }
+            String chatModelName = chatModelName(instance, chatLanguageModelSupplierClassDotName, streamingChatLanguageModelSupplierClassDotName, chatModelNames);
 
             boolean customRetrievalAugmentorSupplierClassIsABean = false;
             DotName retrievalAugmentorSupplierClassName = BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
@@ -335,13 +297,6 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
-            AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
-            if (imageModelSupplierValue != null) {
-                imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
-            }
-
             // determine if the AiService returns an image
             for (MethodInfo method : declarativeAiServiceClassInfo.methods()) {
                 Type returnType = method.returnType();
@@ -368,38 +323,27 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName cdiScope = BuiltinScope.REQUEST.getInfo().getDotName();
-            Optional<AnnotationInstance> scopeAnnotation = customScopes.getScope(declarativeAiServiceClassInfo.annotations());
-            if (scopeAnnotation.isPresent()) {
-                cdiScope = scopeAnnotation.get().name();
-            }
-
             String imageModelName = chatModelName; // TODO: should we have a separate setting for this?
-
-            AnnotationInstance namedAnno = declarativeAiServiceClassInfo.annotation(NAMED);
-            Optional<String> beanName = Optional.empty();
-            if (namedAnno != null) {
-                beanName = Optional.ofNullable(namedAnno.value().asString());
-            }
 
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
                             streamingChatLanguageModelSupplierClassDotName,
-                            toolClassInfos,
-                            chatMemoryProviderSupplierClassDotName,
+                            tools(instance, index),
+                            chatMemoryProviderSupplierClassDotName(reflectiveClassProducer, instance, index),
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             moderationModelSupplierClassName,
-                            imageModelSupplierClassName,
+                            imageModelSupplierClassName(reflectiveClassProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
-                            cdiScope,
+                            cdiScope(customScopes, declarativeAiServiceClassInfo),
                             chatModelName,
                             moderationModelName,
                             imageModelName,
                             toolProviderClassName,
-                            beanName));
+                            beanName(declarativeAiServiceClassInfo),
+                            toolHallucinationStrategy(instance)));
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
 
@@ -414,6 +358,90 @@ public class AiServicesProcessor {
         for (String imageModelName : imageModelNames) {
             requestImageModelBeanProducer.produce(new RequestImageModelBeanBuildItem(imageModelName));
         }
+    }
+
+    private static @NotNull String chatModelName(AnnotationInstance instance, DotName chatLanguageModelSupplierClassDotName, DotName streamingChatLanguageModelSupplierClassDotName, Set<String> chatModelNames) {
+        String chatModelName = NamedConfigUtil.DEFAULT_NAME;
+        if (chatLanguageModelSupplierClassDotName == null && streamingChatLanguageModelSupplierClassDotName == null) {
+            AnnotationValue modelNameValue = instance.value("modelName");
+            if (modelNameValue != null) {
+                String modelNameValueStr = modelNameValue.asString();
+                if ((modelNameValueStr != null) && !modelNameValueStr.isEmpty()) {
+                    chatModelName = modelNameValueStr;
+                }
+            }
+            chatModelNames.add(chatModelName);
+        }
+        return chatModelName;
+    }
+
+    private static @NotNull Optional<String> beanName(ClassInfo declarativeAiServiceClassInfo) {
+        AnnotationInstance namedAnno = declarativeAiServiceClassInfo.annotation(NAMED);
+        Optional<String> beanName = Optional.empty();
+        if (namedAnno != null) {
+            beanName = Optional.ofNullable(namedAnno.value().asString());
+        }
+        return beanName;
+    }
+
+    private static DotName cdiScope(CustomScopeAnnotationsBuildItem customScopes, ClassInfo declarativeAiServiceClassInfo) {
+        DotName cdiScope = BuiltinScope.REQUEST.getInfo().getDotName();
+        Optional<AnnotationInstance> scopeAnnotation = customScopes.getScope(declarativeAiServiceClassInfo.annotations());
+        if (scopeAnnotation.isPresent()) {
+            cdiScope = scopeAnnotation.get().name();
+        }
+        return cdiScope;
+    }
+
+    private DotName imageModelSupplierClassName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer, AnnotationInstance instance, IndexView index) {
+        DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
+        AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
+        if (imageModelSupplierValue != null) {
+            imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
+            validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
+        }
+        return imageModelSupplierClassName;
+    }
+
+    private DotName chatMemoryProviderSupplierClassDotName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer, AnnotationInstance instance, IndexView index) {
+        // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
+        DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
+        AnnotationValue chatMemoryProviderSupplierValue = instance.value("chatMemoryProviderSupplier");
+        if (chatMemoryProviderSupplierValue != null) {
+            chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierValue.asClass().name();
+            if (chatMemoryProviderSupplierClassDotName.equals(
+                    LangChain4jDotNames.NO_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                chatMemoryProviderSupplierClassDotName = null;
+            } else if (!chatMemoryProviderSupplierClassDotName
+                    .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
+                validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
+                        reflectiveClassProducer);
+            }
+        }
+        return chatMemoryProviderSupplierClassDotName;
+    }
+
+    private static List<ClassInfo> tools(AnnotationInstance instance, IndexView index) {
+        AnnotationValue toolsInstance = instance.value("tools");
+        if (toolsInstance != null) {
+            return Arrays.stream(toolsInstance.asClassArray()).map(t -> {
+                var ci = index.getClassByName(t.name());
+                if (ci == null) {
+                    throw new IllegalArgumentException("Cannot find class " + t.name()
+                            + " in index. Please make sure it's a valid CDI bean known to Quarkus");
+                }
+                return ci;
+            }).toList();
+        }
+        return Collections.emptyList();
+    }
+
+    private static DotName toolHallucinationStrategy(AnnotationInstance instance) {
+        AnnotationValue toolHallucinationStrategyInstance = instance.value("toolHallucinationStrategy");
+        if (toolHallucinationStrategyInstance != null) {
+            return toolHallucinationStrategyInstance.asClass().name();
+        }
+        return null;
     }
 
     private DotName getSupplierDotName(
@@ -498,6 +526,7 @@ public class AiServicesProcessor {
         boolean needsToolProviderBean = false;
         Set<DotName> allToolNames = new HashSet<>();
         Set<DotName> allToolProviders = new HashSet<>();
+        Set<DotName> allToolHallucinationStrategies = new HashSet<>();
 
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
@@ -528,6 +557,12 @@ public class AiServicesProcessor {
             String toolProviderSupplierClassName = (bi.getToolProviderClassDotName() != null
                     ? bi.getToolProviderClassDotName().toString()
                     : null);
+
+            String toolHallucinationStrategyClassName = null;
+            if (bi.getToolHallucinationStrategyClassDotName() != null) {
+                toolHallucinationStrategyClassName = bi.getToolHallucinationStrategyClassDotName().toString();
+                allToolHallucinationStrategies.add(bi.getToolHallucinationStrategyClassDotName());
+            }
 
             String chatMemoryProviderSupplierClassName = bi.getChatMemoryProviderSupplierClassDotName() != null
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
@@ -617,7 +652,8 @@ public class AiServicesProcessor {
                                     bi.getImageModelName(),
                                     injectStreamingChatModelBean,
                                     injectModerationModelBean,
-                                    injectImageModel)))
+                                    injectImageModel,
+                                    toolHallucinationStrategyClassName)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -658,6 +694,10 @@ public class AiServicesProcessor {
                 allToolNames.add(dotName);
             }
 
+            if (bi.getToolHallucinationStrategyClassDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getToolHallucinationStrategyClassDotName()));
+            }
+
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ClassType.create(LangChain4jDotNames.CHAT_MEMORY_PROVIDER));
                 needsChatMemoryProviderBean = true;
@@ -668,7 +708,7 @@ public class AiServicesProcessor {
                 // Use a CDI bean of type `RetrievalAugmentor` if one exists, otherwise
                 // don't use an augmentor.
                 configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                        new Type[] { ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR) }, null));
+                        new Type[]{ClassType.create(LangChain4jDotNames.RETRIEVAL_AUGMENTOR)}, null));
                 needsRetrievalAugmentorBean = true;
             } else {
                 if (retrievalAugmentorSupplierClassName != null) {
@@ -714,7 +754,7 @@ public class AiServicesProcessor {
             if (RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
                     .equals(toolProviderSupplierClassName)) {
                 configurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                        new Type[] { ClassType.create(LangChain4jDotNames.TOOL_PROVIDER) }, null));
+                        new Type[]{ClassType.create(LangChain4jDotNames.TOOL_PROVIDER)}, null));
                 needsToolProviderBean = true;
             } else if (!RegisterAiService.NoToolProviderSupplier.class.getName()
                     .equals(toolProviderSupplierClassName) && toolProviderSupplierClassName != null) {
@@ -725,7 +765,7 @@ public class AiServicesProcessor {
 
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                            new Type[] { ClassType.create(OutputGuardrail.class) }, null))
+                            new Type[]{ClassType.create(OutputGuardrail.class)}, null))
                     .done();
 
             syntheticBeanProducer.produce(configurator.done());
@@ -760,6 +800,9 @@ public class AiServicesProcessor {
         }
         if (!allToolNames.isEmpty()) {
             unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolNames));
+        }
+        if (!allToolHallucinationStrategies.isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(allToolHallucinationStrategies));
         }
     }
 

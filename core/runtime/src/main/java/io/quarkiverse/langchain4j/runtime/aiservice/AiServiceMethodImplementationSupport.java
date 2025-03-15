@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.spi.BeanManager;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
@@ -370,17 +371,10 @@ public class AiServiceMethodImplementationSupport {
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                if (toolExecutor == null) {
-                    throw runtime("Tool executor %s not found", toolExecutionRequest.name());
-                }
-                String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-                log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                        toolExecutionRequest,
-                        toolExecutionResult);
 
-                beanManager.getEvent().select(ToolExecutedEvent.class)
-                        .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+                ToolExecutionResultMessage toolExecutionResultMessage = toolExecutor == null ?
+                        context.toolService.applyToolHallucinationStrategy(toolExecutionRequest) :
+                        executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, memoryId, beanManager);
 
                 chatMemory.add(toolExecutionResultMessage);
             }
@@ -431,6 +425,17 @@ public class AiServiceMethodImplementationSupport {
 
         return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(response, returnType),
                 methodCreateInfo, responseAugmenterParam);
+    }
+
+    private static ToolExecutionResultMessage executeTool(AuditSourceInfo auditSourceInfo, ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, Object memoryId, BeanManager beanManager) {
+        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
+        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                toolExecutionRequest,
+                toolExecutionResult);
+        beanManager.getEvent().select(ToolExecutedEvent.class)
+                .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+        return toolExecutionResultMessage;
     }
 
     private static Response<AiMessage> executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,

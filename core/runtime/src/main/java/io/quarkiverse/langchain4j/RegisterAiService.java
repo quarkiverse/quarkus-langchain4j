@@ -6,8 +6,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -81,6 +84,11 @@ public @interface RegisterAiService {
      * Tool classes to use. All tools are expected to be CDI beans.
      */
     Class<?>[] tools() default {};
+
+    /**
+     * Strategy to be used when the AI service hallucinates the tool name.
+     */
+    Class<? extends Function<ToolExecutionRequest, ToolExecutionResultMessage>> toolHallucinationStrategy() default BeanIfExistsToolHallucinationStrategy.class;
 
     /**
      * Configures the way to obtain the {@link ChatMemoryProvider}.
@@ -259,6 +267,18 @@ public @interface RegisterAiService {
 
         @Override
         public ToolProvider get() {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the ToolHallucinationStrategy that the user has configured as a CDI bean.
+     * If no such bean exists, then the default LangChain4j strategy will be used.
+     */
+    final class BeanIfExistsToolHallucinationStrategy implements Function<ToolExecutionRequest, ToolExecutionResultMessage> {
+
+        @Override
+        public ToolExecutionResultMessage apply(ToolExecutionRequest toolExecutionRequest) {
             throw new UnsupportedOperationException("should never be called");
         }
     }
