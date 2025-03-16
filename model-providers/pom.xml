@@ -20,6 +20,7 @@
         <module>google/vertex-ai-gemini</module>
         <module>mistral</module>
         <module>ollama</module>
+        <module>bedrock</module>
         <!-- Add another pom -->
         <module>openai/azure-openai</module>
         <module>openai/openai-common</module>
