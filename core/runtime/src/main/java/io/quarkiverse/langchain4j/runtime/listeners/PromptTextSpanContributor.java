@@ -28,7 +28,7 @@ public class PromptTextSpanContributor implements ChatModelSpanContributor {
         if (!includePrompt) {
             return;
         }
-        currentSpan.setAttribute("gen_ai.content.prompt", requestContext.chatRequest().messages().stream().map(
+        currentSpan.setAttribute("gen_ai.prompt", requestContext.chatRequest().messages().stream().map(
                 ChatMessage::text).collect(
                         Collectors.joining("\n")));
     }
