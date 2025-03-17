@@ -4,7 +4,7 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import dev.langchain4j.model.bedrock.BedrockAnthropicStreamingChatModel;
@@ -18,13 +18,16 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.Recorder;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.retries.api.RetryStrategy;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
@@ -40,35 +43,44 @@ public class BedrockRecorder {
             var paramBuilder = ChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());
 
-            modelConfig.temperature().ifPresent(paramBuilder::temperature);
-            modelConfig.topP().ifPresent(paramBuilder::topP);
-            modelConfig.topK().ifPresent(paramBuilder::topK);
-            modelConfig.stopSequences().ifPresent(paramBuilder::stopSequences);
+            if (modelConfig.temperature().isPresent()) {
+                paramBuilder.temperature(modelConfig.temperature().getAsDouble());
+            }
+
+            if (modelConfig.topP().isPresent()) {
+                paramBuilder.topP(modelConfig.topP().getAsDouble());
+            }
+
+            if (modelConfig.topK().isPresent()) {
+                paramBuilder.topK(modelConfig.topK().getAsInt());
+            }
+
+            if (modelConfig.stopSequences().isPresent()) {
+                paramBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+            }
 
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
-            modelConfig.client().region().map(Region::of).ifPresent(clientBuilder::region);
-            modelConfig.client().endpointOverride().map(URI::create).ifPresent(clientBuilder::endpointOverride);
-            modelConfig.client().credentialsProvider().map(this::getCredentialsProvider)
-                    .ifPresent(clientBuilder::credentialsProvider);
-
-            clientBuilder.overrideConfiguration(b -> configureClient(
-                    new AwsClientConfigProvider(
-                            b,
-                            modelConfig.client().maxRetries(),
-                            firstOrDefault(Duration.ofSeconds(10), modelConfig.client().timeout(), config.timeout()),
-                            firstOrDefault(false, modelConfig.client().logRequests(), config.logRequests()),
-                            firstOrDefault(false, modelConfig.client().logResponses(), config.logResponses()),
-                            firstOrDefault(false, modelConfig.client().logBody(), config.logBody()))));
+            configureClient(clientBuilder, config, modelConfig.client());
 
             var builder = BedrockChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("us.amazon.nova-lite-v1:0"))
                     .client(clientBuilder.build())
                     .defaultRequestParameters(paramBuilder.build());
 
-            return builder::build;
+            return new Supplier<ChatLanguageModel>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return builder.build();
+                }
+            };
         } else {
-            return DisabledChatLanguageModel::new;
+            return new Supplier<ChatLanguageModel>() {
+                @Override
+                public ChatLanguageModel get() {
+                    return new DisabledChatLanguageModel();
+                }
+            };
         }
     }
 
@@ -97,19 +109,7 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeAsyncClient.builder(); //NOSONAR creds can be specified later
 
-            clientBuilder.overrideConfiguration(b -> configureClient(
-                    new AwsClientConfigProvider(
-                            b,
-                            modelConfig.client().maxRetries(),
-                            firstOrDefault(Duration.ofSeconds(10), modelConfig.client().timeout(), config.timeout()),
-                            firstOrDefault(false, modelConfig.client().logRequests(), config.logRequests()),
-                            firstOrDefault(false, modelConfig.client().logResponses(), config.logResponses()),
-                            firstOrDefault(false, modelConfig.client().logBody(), config.logBody()))));
-
-            modelConfig.client().region().map(Region::of).ifPresent(clientBuilder::region);
-            modelConfig.client().endpointOverride().map(URI::create).ifPresent(clientBuilder::endpointOverride);
-            modelConfig.client().credentialsProvider().map(this::getCredentialsProvider)
-                    .ifPresent(clientBuilder::credentialsProvider);
+            configureClient(clientBuilder, config, modelConfig.client());
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
@@ -121,20 +121,46 @@ public class BedrockRecorder {
                         .asyncClient(clientBuilder.build())
                         .maxTokens(modelConfig.maxTokens());
 
-                modelConfig.temperature().ifPresent(builder::temperature);
-                modelConfig.topP().ifPresent(d -> builder.topP((float) d));
-                modelConfig.topK().ifPresent(builder::topK);
-                modelConfig.stopSequences().map(s -> s.toArray(new String[0])).ifPresent(builder::stopSequences);
+                if (modelConfig.temperature().isPresent()) {
+                    builder.temperature((float) modelConfig.temperature().getAsDouble());
+                }
 
-                supplier = builder::build;
+                if (modelConfig.topP().isPresent()) {
+                    builder.topP((float) modelConfig.topP().getAsDouble());
+                }
+
+                if (modelConfig.topK().isPresent()) {
+                    builder.topK(modelConfig.topK().getAsInt());
+                }
+
+                if (modelConfig.stopSequences().isPresent()) {
+                    builder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+                }
+
+                supplier = new Supplier<StreamingChatLanguageModel>() {
+                    @Override
+                    public StreamingChatLanguageModel get() {
+                        return builder.build();
+                    }
+                };
             } else {
                 var client = clientBuilder.build();
-                supplier = () -> new BedrockConverseStreamingChatModel(client, modelId, modelConfig);
+                supplier = new Supplier<StreamingChatLanguageModel>() {
+                    @Override
+                    public StreamingChatLanguageModel get() {
+                        return new BedrockConverseStreamingChatModel(client, modelId, modelConfig);
+                    }
+                };
             }
 
             return supplier;
         } else {
-            return DisabledStreamingChatLanguageModel::new;
+            return new Supplier<StreamingChatLanguageModel>() {
+                @Override
+                public StreamingChatLanguageModel get() {
+                    return new DisabledStreamingChatLanguageModel();
+                }
+            };
         }
     }
 
@@ -147,19 +173,7 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
-            clientBuilder.overrideConfiguration(b -> configureClient(
-                    new AwsClientConfigProvider(
-                            b,
-                            modelConfig.client().maxRetries(),
-                            firstOrDefault(Duration.ofSeconds(10), modelConfig.client().timeout(), config.timeout()),
-                            firstOrDefault(false, modelConfig.client().logRequests(), config.logRequests()),
-                            firstOrDefault(false, modelConfig.client().logResponses(), config.logResponses()),
-                            firstOrDefault(false, modelConfig.client().logBody(), config.logBody()))));
-
-            modelConfig.client().region().map(Region::of).ifPresent(clientBuilder::region);
-            modelConfig.client().endpointOverride().map(URI::create).ifPresent(clientBuilder::endpointOverride);
-            modelConfig.client().credentialsProvider().map(this::getCredentialsProvider)
-                    .ifPresent(clientBuilder::credentialsProvider);
+            configureClient(clientBuilder, config, modelConfig.client());
 
             var modelId = modelConfig.modelId();
 
@@ -169,24 +183,49 @@ public class BedrockRecorder {
                         .model(modelId)
                         .client(clientBuilder.build());
 
-                modelConfig.cohere().inputType().ifPresent(builder::inputType);
-                modelConfig.cohere().truncate().ifPresent(builder::truncate);
+                if (modelConfig.cohere().inputType().isPresent()) {
+                    builder.inputType(modelConfig.cohere().inputType().get());
+                }
 
-                supplier = builder::build;
+                if (modelConfig.cohere().truncate().isPresent()) {
+                    builder.truncate(modelConfig.cohere().truncate().get());
+                }
+
+                supplier = new Supplier<EmbeddingModel>() {
+                    @Override
+                    public EmbeddingModel get() {
+                        return builder.build();
+                    }
+                };
             } else {
                 var builder = BedrockTitanEmbeddingModel.builder()
                         .model(modelId)
                         .client(clientBuilder.build());
 
-                modelConfig.titan().dimensions().ifPresent(builder::dimensions);
-                modelConfig.titan().normalize().ifPresent(builder::normalize);
+                if (modelConfig.titan().dimensions().isPresent()) {
+                    builder.dimensions(modelConfig.titan().dimensions().getAsInt());
+                }
 
-                supplier = builder::build;
+                if (modelConfig.titan().normalize().isPresent()) {
+                    builder.normalize(modelConfig.titan().normalize().get());
+                }
+
+                supplier = new Supplier<EmbeddingModel>() {
+                    @Override
+                    public EmbeddingModel get() {
+                        return builder.build();
+                    }
+                };
             }
 
             return supplier;
         } else {
-            return DisabledEmbeddingModel::new;
+            return new Supplier<EmbeddingModel>() {
+                @Override
+                public EmbeddingModel get() {
+                    return new DisabledEmbeddingModel();
+                }
+            };
         }
     }
 
@@ -201,24 +240,47 @@ public class BedrockRecorder {
         return config;
     }
 
-    private void configureClient(final AwsClientConfigProvider configProvider) {
-        var builder = configProvider.builder();
-        builder.retryStrategy(r -> configProvider.maxRetries().ifPresent(r::maxAttempts));
-        builder.apiCallTimeout(configProvider.timeout());
-        var logRequest = configProvider.logRequests();
-        var logResponse = configProvider.logResponses();
-        if (logRequest || logResponse) {
-            builder.addExecutionInterceptor(
-                    new AwsLoggingInterceptor(logRequest, logResponse, configProvider.logBody()));
-        }
-    }
+    private void configureClient(
+            final AwsClientBuilder<?, ?> awsClientBuilder,
+            final LangChain4jBedrockConfig.BedrockConfig config,
+            final AwsClientConfig clientConfig) {
+        var overrideConfig = new Consumer<ClientOverrideConfiguration.Builder>() {
+            @Override
+            public void accept(final ClientOverrideConfiguration.Builder builder) {
+                builder.retryStrategy(new Consumer<RetryStrategy.Builder<?, ?>>() {
+                    @Override
+                    public void accept(final RetryStrategy.Builder<?, ?> retryStrategyBuilder) {
+                        var maxRetries = clientConfig.maxRetries();
 
-    private record AwsClientConfigProvider(
-            ClientOverrideConfiguration.Builder builder,
-            Optional<Integer> maxRetries,
-            Duration timeout,
-            boolean logRequests,
-            boolean logResponses,
-            boolean logBody) {
+                        if (maxRetries.isPresent()) {
+                            retryStrategyBuilder.maxAttempts(maxRetries.get());
+                        }
+                    }
+                });
+
+                builder.apiCallTimeout(firstOrDefault(Duration.ofSeconds(10), clientConfig.timeout(), config.timeout()));
+                var logRequest = firstOrDefault(false, clientConfig.logRequests(), config.logRequests());
+                var logResponse = firstOrDefault(false, clientConfig.logResponses(), config.logResponses());
+                if (logRequest || logResponse) {
+                    builder.addExecutionInterceptor(
+                            new AwsLoggingInterceptor(logRequest, logResponse,
+                                    firstOrDefault(false, clientConfig.logBody(), config.logBody())));
+                }
+            }
+        };
+
+        awsClientBuilder.overrideConfiguration(overrideConfig);
+
+        if (clientConfig.region().isPresent()) {
+            awsClientBuilder.region(Region.of(clientConfig.region().get()));
+        }
+
+        if (clientConfig.endpointOverride().isPresent()) {
+            awsClientBuilder.endpointOverride(URI.create(clientConfig.endpointOverride().get()));
+        }
+
+        if (clientConfig.credentialsProvider().isPresent()) {
+            awsClientBuilder.credentialsProvider(getCredentialsProvider(clientConfig.credentialsProvider().get()));
+        }
     }
 }

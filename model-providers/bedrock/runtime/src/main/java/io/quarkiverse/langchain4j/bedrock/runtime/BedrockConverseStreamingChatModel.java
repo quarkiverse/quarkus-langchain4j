@@ -2,6 +2,8 @@ package io.quarkiverse.langchain4j.bedrock.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -24,7 +26,9 @@ import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlockDeltaEvent;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamMetadataEvent;
+import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamResponseHandler;
+import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfiguration;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 import software.amazon.awssdk.services.bedrockruntime.model.MessageStopEvent;
 import software.amazon.awssdk.services.bedrockruntime.model.StopReason;
@@ -75,52 +79,79 @@ public class BedrockConverseStreamingChatModel implements StreamingChatLanguageM
 
         var responseHandler = ConverseStreamResponseHandler.builder()
                 .subscriber(ConverseStreamResponseHandler.Visitor.builder()
-                        .onMessageStop(context::setStopReason)
-                        .onMetadata(context::updateTokenUsage)
-                        .onContentBlockDelta(context::handleChunk)
+                        .onMessageStop(context.setStopReason())
+                        .onMetadata(context.updateTokenUsage())
+                        .onContentBlockDelta(context.handleChunk())
                         .build())
-                .onComplete(context::handleCompletion)
-                .onError(handler::onError)
+                .onComplete(context.handleCompletion())
+                .onError(new Consumer<Throwable>() {
+                    @Override
+                    public void accept(final Throwable throwable) {
+                        handler.onError(throwable);
+                    }
+                })
                 .build();
 
-        client.converseStream(request -> request
-                .modelId(modelId)
-                .messages(toBedrockMessages(chatRequest))
-                .inferenceConfig(c -> {
-                    c.maxTokens(config.maxTokens());
-                    config.temperature().ifPresent(d -> c.temperature((float) d));
-                    config.topP().ifPresent(d -> c.topP((float) d));
-                }), responseHandler);
+        client.converseStream(new Consumer<ConverseStreamRequest.Builder>() {
+            @Override
+            public void accept(final ConverseStreamRequest.Builder request) {
+                request
+                        .modelId(modelId)
+                        .messages(toBedrockMessages(chatRequest))
+                        .inferenceConfig(createInferenceConfig());
+            }
+        }, responseHandler);
+    }
+
+    private Consumer<InferenceConfiguration.Builder> createInferenceConfig() {
+        return new Consumer<InferenceConfiguration.Builder>() {
+            @Override
+            public void accept(final InferenceConfiguration.Builder builder) {
+
+                builder.maxTokens(config.maxTokens());
+                if (config.temperature().isPresent()) {
+                    builder.temperature((float) config.temperature().getAsDouble());
+                }
+
+                if (config.topP().isPresent()) {
+                    builder.topP((float) config.topP().getAsDouble());
+                }
+            }
+        };
     }
 
     private List<Message> toBedrockMessages(final ChatRequest chatRequest) {
-        return chatRequest.messages().stream().map(this::messageTransformer).toList();
+        return chatRequest.messages().stream().map(this.messageTransformer()).toList();
     }
 
-    private Message messageTransformer(ChatMessage chatMessage) {
+    private Function<ChatMessage, Message> messageTransformer() {
+        return new Function<ChatMessage, Message>() {
+            @Override
+            public Message apply(final ChatMessage chatMessage) {
+                String msg;
+                ConversationRole role;
+                if (chatMessage instanceof SystemMessage sm) {
+                    msg = sm.text();
+                    role = ConversationRole.ASSISTANT;
+                } else if (chatMessage instanceof UserMessage um) {
+                    msg = um.singleText();
+                    role = ConversationRole.USER;
+                } else if (chatMessage instanceof AiMessage aim) {
+                    msg = aim.text();
+                    role = ConversationRole.USER;
+                } else if (chatMessage instanceof ToolExecutionResultMessage term) {
+                    msg = term.text();
+                    role = ConversationRole.ASSISTANT;
+                } else if (chatMessage instanceof CustomMessage cm) {
+                    msg = cm.text();
+                    role = ConversationRole.USER;
+                } else {
+                    throw new IllegalArgumentException(chatMessage == null ? "null" : chatMessage.getClass().getName());
+                }
 
-        String msg;
-        ConversationRole role;
-        if (chatMessage instanceof SystemMessage sm) {
-            msg = sm.text();
-            role = ConversationRole.ASSISTANT;
-        } else if (chatMessage instanceof UserMessage um) {
-            msg = um.singleText();
-            role = ConversationRole.USER;
-        } else if (chatMessage instanceof AiMessage aim) {
-            msg = aim.text();
-            role = ConversationRole.USER;
-        } else if (chatMessage instanceof ToolExecutionResultMessage term) {
-            msg = term.text();
-            role = ConversationRole.ASSISTANT;
-        } else if (chatMessage instanceof CustomMessage cm) {
-            msg = cm.text();
-            role = ConversationRole.USER;
-        } else {
-            throw new IllegalArgumentException(chatMessage == null ? "null" : chatMessage.getClass().getName());
-        }
-
-        return Message.builder().content(ContentBlock.fromText(msg)).role(role).build();
+                return Message.builder().content(ContentBlock.fromText(msg)).role(role).build();
+            }
+        };
     }
 
     private class StreamContext {
@@ -133,42 +164,73 @@ public class BedrockConverseStreamingChatModel implements StreamingChatLanguageM
             this.handler = handler;
         }
 
-        public void setStopReason(MessageStopEvent messageStopEvent) {
-            stopReason = mapFinishReason(messageStopEvent.stopReason());
+        public Consumer<MessageStopEvent> setStopReason() {
+            return new Consumer<MessageStopEvent>() {
+                @Override
+                public void accept(final MessageStopEvent messageStopEvent) {
+                    stopReason = mapFinishReason(messageStopEvent.stopReason());
+                }
+            };
         }
 
-        public void updateTokenUsage(ConverseStreamMetadataEvent metadataEvent) {
-            final var usage = metadataEvent.usage();
-            tokenUsage = tokenUsage.add(new TokenUsage(usage.inputTokens(), usage.outputTokens(), usage.totalTokens()));
+        public Consumer<ConverseStreamMetadataEvent> updateTokenUsage() {
+            return new Consumer<ConverseStreamMetadataEvent>() {
+                @Override
+                public void accept(final ConverseStreamMetadataEvent metadataEvent) {
+                    final var usage = metadataEvent.usage();
+                    tokenUsage = tokenUsage.add(
+                            new TokenUsage(usage.inputTokens(), usage.outputTokens(), usage.totalTokens()));
+                }
+            };
         }
 
-        public void handleChunk(ContentBlockDeltaEvent chunk) {
-            var responseText = chunk.delta().text();
-            finalCompletion.append(responseText);
-            handler.onPartialResponse(responseText);
+        public Consumer<ContentBlockDeltaEvent> handleChunk() {
+            return new Consumer<ContentBlockDeltaEvent>() {
+                @Override
+                public void accept(final ContentBlockDeltaEvent chunk) {
+                    var responseText = chunk.delta().text();
+                    finalCompletion.append(responseText);
+                    handler.onPartialResponse(responseText);
+                }
+            };
         }
 
-        public void handleCompletion() {
-            final var metadata = ChatResponseMetadata.builder().modelName(modelId).tokenUsage(tokenUsage)
-                    .finishReason(stopReason)
-                    .build();
+        public Runnable handleCompletion() {
+            return new Runnable() {
+                @Override
+                public void run() {
+                    final var metadata = ChatResponseMetadata.builder().modelName(modelId).tokenUsage(tokenUsage)
+                            .finishReason(stopReason)
+                            .build();
 
-            var response = ChatResponse.builder()
-                    .aiMessage(new AiMessage(finalCompletion.toString()))
-                    .metadata(metadata)
-                    .build();
+                    var response = ChatResponse.builder()
+                            .aiMessage(new AiMessage(finalCompletion.toString()))
+                            .metadata(metadata)
+                            .build();
 
-            handler.onCompleteResponse(response);
+                    handler.onCompleteResponse(response);
+                }
+            };
         }
 
         private FinishReason mapFinishReason(final StopReason stopReason) {
-            return switch (stopReason) {
-                case END_TURN, STOP_SEQUENCE, GUARDRAIL_INTERVENED -> FinishReason.STOP;
-                case TOOL_USE -> FinishReason.TOOL_EXECUTION;
-                case MAX_TOKENS -> FinishReason.LENGTH;
-                case CONTENT_FILTERED -> FinishReason.CONTENT_FILTER;
-                case UNKNOWN_TO_SDK_VERSION -> FinishReason.OTHER;
-            };
+            if (stopReason == null) {
+                return FinishReason.OTHER;
+            }
+            switch (stopReason) {
+                case END_TURN:
+                case STOP_SEQUENCE:
+                case GUARDRAIL_INTERVENED:
+                    return FinishReason.STOP;
+                case TOOL_USE:
+                    return FinishReason.TOOL_EXECUTION;
+                case MAX_TOKENS:
+                    return FinishReason.LENGTH;
+                case CONTENT_FILTERED:
+                    return FinishReason.CONTENT_FILTER;
+                default:
+                    return FinishReason.OTHER;
+            }
         }
     }
 }
