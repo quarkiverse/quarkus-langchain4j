@@ -56,4 +56,12 @@ public interface McpClientConfig {
      */
     @WithDefault("60s")
     Duration toolExecutionTimeout();
+
+    /**
+     * Timeout for resource-related operations (retrieving a list of resources as well as
+     * the actual contents of resources).
+     */
+    @WithDefault("60s")
+    Duration resourcesTimeout();
+
 }
