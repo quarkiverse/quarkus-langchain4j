@@ -22,9 +22,11 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.AugmentationRequest;
@@ -184,17 +186,17 @@ public class ChatJsonRPCService {
                 // invoke tools if applicable
                 Response<AiMessage> modelResponse;
                 if (toolSpecifications.isEmpty()) {
-                    streamingModel.generate(memory.messages(), new StreamingResponseHandler<AiMessage>() {
+                    streamingModel.chat(memory.messages(), new StreamingChatResponseHandler() {
                         @Override
-                        public void onComplete(Response<AiMessage> response) {
-                            memory.add(response.content());
-                            String message = response.content().text();
+                        public void onCompleteResponse(ChatResponse response) {
+                            memory.add(response.aiMessage());
+                            String message = response.aiMessage().text();
                             em.emit(new JsonObject().put("message", message));
                             em.complete();
                         }
 
                         @Override
-                        public void onNext(String token) {
+                        public void onPartialResponse(String token) {
                             em.emit(new JsonObject().put("token", token));
                         }
 
@@ -242,10 +244,9 @@ public class ChatJsonRPCService {
 
             boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
 
-            Response<AiMessage> modelResponse;
             if (toolSpecifications.isEmpty()) {
-                modelResponse = model.generate(memory.messages());
-                memory.add(modelResponse.content());
+                ChatResponse modelResponse = model.chat(memory.messages());
+                memory.add(modelResponse.aiMessage());
             } else {
                 executeWithTools(memory);
             }
@@ -268,7 +269,8 @@ public class ChatJsonRPCService {
     // FIXME: this was basically copied from `dev.langchain4j.service.DefaultAiServices`,
     // maybe it could be extracted into a reusable piece of code
     private Response<AiMessage> executeWithTools(ChatMemory memory) {
-        Response<AiMessage> response = model.generate(memory.messages(), toolSpecifications);
+        ChatResponse response = model
+                .chat(ChatRequest.builder().messages(memory.messages()).toolSpecifications(toolSpecifications).build());
         int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 20;
         int executionsLeft = MAX_SEQUENTIAL_TOOL_EXECUTIONS;
         while (true) {
@@ -276,7 +278,7 @@ public class ChatJsonRPCService {
                 throw new RuntimeException(
                         "Something is wrong, exceeded " + MAX_SEQUENTIAL_TOOL_EXECUTIONS + " sequential tool executions");
             }
-            AiMessage aiMessage = response.content();
+            AiMessage aiMessage = response.aiMessage();
             memory.add(aiMessage);
             if (!aiMessage.hasToolExecutionRequests()) {
                 break;
@@ -289,9 +291,10 @@ public class ChatJsonRPCService {
                         toolExecutionResult);
                 memory.add(toolExecutionResultMessage);
             }
-            response = model.generate(memory.messages(), toolSpecifications);
+            response = model
+                    .chat(ChatRequest.builder().messages(memory.messages()).toolSpecifications(toolSpecifications).build());
         }
-        return Response.from(response.content(), new TokenUsage(), response.finishReason());
+        return Response.from(response.aiMessage(), new TokenUsage(), response.finishReason());
     }
 
     private void executeWithToolsAndStreaming(ChatMemory memory,
@@ -303,12 +306,14 @@ public class ChatJsonRPCService {
                     "Something is wrong, exceeded " + MAX_SEQUENTIAL_TOOL_EXECUTIONS + " sequential tool executions");
         }
         int finalToolExecutionsLeft = toolExecutionsLeft;
-        streamingModel.get().generate(memory.messages(), toolSpecifications, new StreamingResponseHandler<AiMessage>() {
+        ChatRequest chatRequest = ChatRequest.builder().messages(memory.messages()).toolSpecifications(toolSpecifications)
+                .build();
+        streamingModel.get().chat(chatRequest, new StreamingChatResponseHandler() {
             @Override
-            public void onComplete(Response<AiMessage> response) {
+            public void onCompleteResponse(ChatResponse response) {
                 // run on a worker thread because the tool might be blocking
                 Infrastructure.getDefaultExecutor().execute(() -> {
-                    AiMessage aiMessage = response.content();
+                    AiMessage aiMessage = response.aiMessage();
                     memory.add(aiMessage);
                     if (!aiMessage.hasToolExecutionRequests()) {
                         em.emit(new JsonObject().put("message", aiMessage.text()));
@@ -339,7 +344,7 @@ public class ChatJsonRPCService {
             }
 
             @Override
-            public void onNext(String token) {
+            public void onPartialResponse(String token) {
                 em.emit(new JsonObject().put("token", token));
             }
 

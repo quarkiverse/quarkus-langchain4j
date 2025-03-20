@@ -20,7 +20,7 @@ public record OutputGuardrailResult(Result result, String successfulText, Object
     }
 
     private OutputGuardrailResult(String successfulText) {
-        this(Result.SUCCESS_WITH_RESULT, successfulText, null, Collections.emptyList());
+        this(Result.SUCCESS_WITH_RESULT, successfulText, successfulText, Collections.emptyList());
     }
 
     private OutputGuardrailResult(String successfulText, Object successfulResult) {

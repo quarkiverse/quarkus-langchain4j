@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -15,11 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
@@ -77,8 +76,11 @@ public class InputGuardrailRewritingTest {
     public static class EchoChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            return new Response<>(new AiMessage(((dev.langchain4j.data.message.UserMessage) messages.get(0)).singleText()));
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder()
+                    .aiMessage(
+                            new AiMessage(((dev.langchain4j.data.message.UserMessage) request.messages().get(0)).singleText()))
+                    .build();
         }
     }
 

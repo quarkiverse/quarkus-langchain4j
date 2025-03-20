@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.response;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,9 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
@@ -77,8 +76,8 @@ public class ResponseAugmenterUsingPojoTest {
     public static class PersonChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            return new Response<>(new AiMessage("{\"name\":\"John\"}"));
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder().aiMessage(new AiMessage("{\"name\":\"John\"}")).build();
         }
     }
 

@@ -15,6 +15,8 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+
 import dev.langchain4j.model.openai.spi.OpenAiChatModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiEmbeddingModelBuilderFactory;
 import dev.langchain4j.model.openai.spi.OpenAiModerationModelBuilderFactory;
@@ -43,6 +45,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 
 public class OpenAiProcessor {
@@ -170,7 +173,8 @@ public class OpenAiProcessor {
     }
 
     @BuildStep
-    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
         serviceProviderProducer
                 .produce(new ServiceProviderBuildItem(OpenAiChatModelBuilderFactory.class.getName(),
                         QuarkusOpenAiChatModelBuilderFactory.class.getName()));
@@ -183,5 +187,7 @@ public class OpenAiProcessor {
         serviceProviderProducer
                 .produce(new ServiceProviderBuildItem(OpenAiStreamingChatModelBuilderFactory.class.getName(),
                         QuarkusOpenAiStreamingChatModelBuilderFactory.class.getName()));
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
     }
 }

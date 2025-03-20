@@ -6,22 +6,21 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.huggingface.client.HuggingFaceClient;
 import dev.langchain4j.model.huggingface.client.Options;
 import dev.langchain4j.model.huggingface.client.Parameters;
 import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
 import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
-import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 
 /**
@@ -75,7 +74,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
+    public ChatResponse doChat(ChatRequest chatRequest) {
 
         Parameters.Builder builder = Parameters.builder()
                 .temperature(temperature)
@@ -90,7 +89,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
         Parameters parameters = builder
                 .build();
         TextGenerationRequest request = TextGenerationRequest.builder()
-                .inputs(messages.stream()
+                .inputs(chatRequest.messages().stream()
                         .map(ChatMessage::text)
                         .collect(joining("\n")))
                 .parameters(parameters)
@@ -101,17 +100,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
 
         TextGenerationResponse textGenerationResponse = client.chat(request);
 
-        return Response.from(AiMessage.from(textGenerationResponse.getGeneratedText()));
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        throw new IllegalArgumentException("Tools are currently not supported for HuggingFace models");
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        throw new IllegalArgumentException("Tools are currently not supported for HuggingFace models");
+        return ChatResponse.builder().aiMessage(AiMessage.from(textGenerationResponse.getGeneratedText())).build();
     }
 
     public static final class Builder {

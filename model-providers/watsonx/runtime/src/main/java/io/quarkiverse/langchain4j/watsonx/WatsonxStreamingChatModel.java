@@ -3,11 +3,14 @@ package io.quarkiverse.langchain4j.watsonx;
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 import static java.util.stream.Collectors.joining;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -15,7 +18,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -24,20 +27,21 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.StreamingToolFetcher;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultChoice;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
+import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
+import io.smallrye.mutiny.Context;
 
-public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, TokenCountEstimator {
+public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatLanguageModel, TokenCountEstimator {
 
     private static final String ID_CONTEXT = "ID";
     private static final String MODEL_ID_CONTEXT = "MODEL_ID";
@@ -49,7 +53,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Toke
 
     private final WatsonxChatRequestParameters defaultRequestParameters;
 
-    public WatsonxChatModel(Builder builder) {
+    public WatsonxStreamingChatModel(Builder builder) {
         super(builder);
 
         //
@@ -76,8 +80,7 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Toke
     }
 
     @Override
-    public ChatResponse doChat(ChatRequest chatRequest) {
-
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         String modelId = chatRequest.parameters().modelName();
         ChatRequestParameters parameters = chatRequest.parameters();
         List<ToolSpecification> toolSpecifications = chatRequest.parameters().toolSpecifications();
@@ -92,39 +95,132 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Toke
 
         TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, messages, tools,
                 TextChatParameters.convert(parameters));
-        TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
-            @Override
-            public TextChatResponse call() throws Exception {
-                return client.chat(request, version);
-            }
-        });
+        Context context = Context.empty();
+        context.put(TOOLS_CONTEXT, new ArrayList<StreamingToolFetcher>());
+        context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
 
-        TextChatResultChoice choice = response.choices().get(0);
-        TextChatResultMessage message = choice.message();
-        TextChatUsage usage = response.usage();
+        client.streamingChat(request, version)
+                .onFailure(WatsonxUtils::isTokenExpired).retry().atMost(1)
+                .subscribe()
+                .with(context,
+                        new Consumer<TextStreamingChatResponse>() {
+                            @Override
+                            public void accept(TextStreamingChatResponse chunk) {
+                                try {
 
-        AiMessage aiMessage;
-        if (message.toolCalls() != null && message.toolCalls().size() > 0) {
-            aiMessage = AiMessage.from(message.toolCalls().stream().map(TextChatToolCall::convert).toList());
-        } else {
-            aiMessage = AiMessage.from(message.content().trim());
-        }
+                                    // Last message get the "usage" values
+                                    if (chunk.choices().size() == 0) {
+                                        context.put(USAGE_CONTEXT, chunk.usage());
+                                        return;
+                                    }
 
-        var finishReason = toFinishReason(choice.finishReason());
-        var tokenUsage = new TokenUsage(
-                usage.promptTokens(),
-                usage.completionTokens(),
-                usage.totalTokens());
+                                    var message = chunk.choices().get(0);
 
-        return ChatResponse.builder()
-                .aiMessage(aiMessage)
-                .metadata(ChatResponseMetadata.builder()
-                        .id(response.id())
-                        .modelName(response.modelId())
-                        .tokenUsage(tokenUsage)
-                        .finishReason(finishReason)
-                        .build())
-                .build();
+                                    if (!context.contains(ID_CONTEXT) && chunk.id() != null) {
+                                        context.put(ID_CONTEXT, chunk.id());
+                                    }
+
+                                    if (!context.contains(MODEL_ID_CONTEXT) && chunk.modelId() != null) {
+                                        context.put(MODEL_ID_CONTEXT, chunk.modelId());
+                                    }
+
+                                    if (message.finishReason() != null) {
+                                        context.put(FINISH_REASON_CONTEXT, message.finishReason());
+                                    }
+
+                                    if (message.delta().role() != null) {
+                                        context.put(ROLE_CONTEXT, message.delta().role());
+                                    }
+
+                                    if (message.delta().toolCalls() != null) {
+
+                                        StreamingToolFetcher toolFetcher;
+
+                                        // During streaming there is only one element in the tool_calls,
+                                        // but the "index" field can be used to understand how many tools need to be executed.
+                                        var deltaTool = message.delta().toolCalls().get(0);
+                                        var index = deltaTool.index();
+
+                                        List<StreamingToolFetcher> tools = context.get(TOOLS_CONTEXT);
+
+                                        // Check if there is an incomplete version of the TextChatToolCall object.
+                                        if ((index + 1) > tools.size()) {
+                                            // First occurrence of the object, create it.
+                                            toolFetcher = new StreamingToolFetcher(index);
+                                            tools.add(toolFetcher);
+                                        } else {
+                                            // Incomplete version is present, complete it.
+                                            toolFetcher = tools.get(index);
+                                        }
+
+                                        toolFetcher.setId(deltaTool.id());
+                                        toolFetcher.setType(deltaTool.type());
+
+                                        if (deltaTool.function() != null) {
+                                            toolFetcher.setName(deltaTool.function().name());
+                                            toolFetcher.appendArguments(deltaTool.function().arguments());
+                                        }
+                                    }
+
+                                    if (message.delta().content() != null) {
+
+                                        StringBuilder stringBuilder = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                        String token = message.delta().content();
+
+                                        if (token.isEmpty())
+                                            return;
+
+                                        stringBuilder.append(token);
+                                        handler.onPartialResponse(token);
+                                    }
+
+                                } catch (Exception e) {
+                                    handler.onError(e);
+                                }
+                            }
+                        },
+                        new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable error) {
+                                handler.onError(error);
+                            }
+                        },
+                        new Runnable() {
+                            @Override
+                            public void run() {
+
+                                String id = context.get(ID_CONTEXT);
+                                String modelId = context.get(MODEL_ID_CONTEXT);
+                                String finishReason = context.get(FINISH_REASON_CONTEXT);
+                                TextStreamingChatResponse.TextChatUsage textChatUsage = context.get(USAGE_CONTEXT);
+                                TokenUsage tokenUsage = textChatUsage.toTokenUsage();
+
+                                var chatResponse = ChatResponse.builder()
+                                        .metadata(ChatResponseMetadata.builder()
+                                                .id(id)
+                                                .modelName(modelId)
+                                                .tokenUsage(tokenUsage)
+                                                .finishReason(toFinishReason(finishReason))
+                                                .build());
+
+                                if (finishReason.equals("tool_calls")) {
+
+                                    List<StreamingToolFetcher> tools = context.get(TOOLS_CONTEXT);
+                                    List<ToolExecutionRequest> toolExecutionRequests = tools.stream()
+                                            .map(StreamingToolFetcher::build).map(TextChatToolCall::convert).toList();
+
+                                    handler.onCompleteResponse(
+                                            chatResponse.aiMessage(AiMessage.from(toolExecutionRequests)).build());
+
+                                } else {
+
+                                    StringBuilder message = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                    AiMessage aiMessage = AiMessage.from(message.toString());
+
+                                    handler.onCompleteResponse(chatResponse.aiMessage(aiMessage).build());
+                                }
+                            }
+                        });
     }
 
     @Override
@@ -268,8 +364,8 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Toke
             return this;
         }
 
-        public WatsonxChatModel build() {
-            return new WatsonxChatModel(this);
+        public WatsonxStreamingChatModel build() {
+            return new WatsonxStreamingChatModel(this);
         }
     }
 }

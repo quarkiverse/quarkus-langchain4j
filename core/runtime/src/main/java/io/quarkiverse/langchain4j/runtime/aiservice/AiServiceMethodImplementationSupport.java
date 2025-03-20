@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import static dev.langchain4j.data.message.UserMessage.userMessage;
 import static dev.langchain4j.internal.Exceptions.runtime;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
@@ -31,6 +30,8 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.spi.BeanManager;
+
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
@@ -52,6 +53,7 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -341,7 +343,7 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        var response = executeRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
+        ChatResponse response = executeRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
 
         log.debug("AI response obtained");
 
@@ -360,7 +362,7 @@ public class AiServiceMethodImplementationSupport {
                 throw runtime("Something is wrong, exceeded %s sequential tool executions", maxSequentialToolExecutions);
             }
 
-            AiMessage aiMessage = response.content();
+            AiMessage aiMessage = response.aiMessage();
             chatMemory.add(aiMessage);
 
             if (!aiMessage.hasToolExecutionRequests()) {
@@ -370,24 +372,20 @@ public class AiServiceMethodImplementationSupport {
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
-                if (toolExecutor == null) {
-                    throw runtime("Tool executor %s not found", toolExecutionRequest.name());
-                }
-                String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-                log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                        toolExecutionRequest,
-                        toolExecutionResult);
 
-                beanManager.getEvent().select(ToolExecutedEvent.class)
-                        .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+                ToolExecutionResultMessage toolExecutionResultMessage = toolExecutor == null
+                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
+                        : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, memoryId, beanManager);
 
                 chatMemory.add(toolExecutionResultMessage);
             }
 
             log.debug("Attempting to obtain AI response");
-            response = context.effectiveChatModel(methodCreateInfo, methodArgs).generate(chatMemory.messages(),
-                    toolSpecifications);
+            ChatRequest chatRequest = ChatRequest.builder()
+                    .messages(chatMemory.messages())
+                    .toolSpecifications(toolSpecifications)
+                    .build();
+            response = context.effectiveChatModel(methodCreateInfo, methodArgs).chat(chatRequest);
             log.debug("AI response obtained");
 
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
@@ -398,27 +396,33 @@ public class AiServiceMethodImplementationSupport {
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
 
-        response = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory,
+        var guardrailResponse = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory,
                 context.effectiveChatModel(methodCreateInfo, methodArgs),
                 response,
                 toolSpecifications,
-                new OutputGuardrailParams(response.content(), chatMemory, augmentationResult, userMessageTemplate,
+                new OutputGuardrailParams(response.aiMessage(), chatMemory, augmentationResult, userMessageTemplate,
                         Collections.unmodifiableMap(templateVariables)));
+
+        response = guardrailResponse.response();
 
         // everything worked as expected so let's commit the messages
         chatMemory.commit();
 
-        Object guardrailResult = response.metadata().get(OutputGuardrailResult.class.getName());
-        if (guardrailResult != null && TypeUtil.isTypeOf(returnType, guardrailResult.getClass())) {
-            return guardrailResult;
-        }
-
-        response = Response.from(response.content(), tokenUsageAccumulator, response.finishReason(), response.metadata());
-
         var responseAugmenterParam = new ResponseAugmenterParams(userMessage, chatMemory, augmentationResult,
                 userMessageTemplate, templateVariables);
+
+        Object guardrailResult = guardrailResponse.getRewrittenResult();
+        if (guardrailResult != null && TypeUtil.isTypeOf(returnType, guardrailResult.getClass())) {
+            return ResponseAugmenterSupport.invoke(guardrailResult, methodCreateInfo, responseAugmenterParam);
+        }
+
+        response = ChatResponse.builder()
+                .aiMessage(response.aiMessage())
+                .metadata(response.metadata())
+                .build();
+
         if (TypeUtil.isResult(returnType)) {
-            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(response,
+            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()),
                     TypeUtil.resultTypeParam((ParameterizedType) returnType));
             parsedResponse = ResponseAugmenterSupport.invoke(parsedResponse, methodCreateInfo, responseAugmenterParam);
             return Result.builder()
@@ -429,11 +433,23 @@ public class AiServiceMethodImplementationSupport {
                     .build();
         }
 
-        return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(response, returnType),
+        return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()), returnType),
                 methodCreateInfo, responseAugmenterParam);
     }
 
-    private static Response<AiMessage> executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
+    private static ToolExecutionResultMessage executeTool(AuditSourceInfo auditSourceInfo,
+            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, Object memoryId, BeanManager beanManager) {
+        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
+        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
+                toolExecutionRequest,
+                toolExecutionResult);
+        beanManager.getEvent().select(ToolExecutedEvent.class)
+                .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+        return toolExecutionResultMessage;
+    }
+
+    private static ChatResponse executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
             ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend)
@@ -447,21 +463,20 @@ public class AiServiceMethodImplementationSupport {
                                 .build())
                 .build();
 
-        var response = chatModel.chat(chatRequest);
-
-        return new Response<>(
-                response.aiMessage(),
-                response.tokenUsage(),
-                response.finishReason());
+        return chatModel.chat(chatRequest);
     }
 
-    private static Response<AiMessage> executeRequest(List<ChatMessage> messagesToSend, ChatLanguageModel chatModel,
+    private static ChatResponse executeRequest(List<ChatMessage> messagesToSend, ChatLanguageModel chatModel,
             List<ToolSpecification> toolSpecifications) {
-        return (toolSpecifications == null) ? chatModel.generate(messagesToSend)
-                : chatModel.generate(messagesToSend, toolSpecifications);
+        var chatRequest = ChatRequest.builder()
+                .messages(messagesToSend);
+        if (toolSpecifications != null) {
+            chatRequest.toolSpecifications(toolSpecifications);
+        }
+        return chatModel.chat(chatRequest.build());
     }
 
-    static Response<AiMessage> executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
+    static ChatResponse executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
             ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
         var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
                 : Optional.<JsonSchema> empty();
@@ -470,7 +485,7 @@ public class AiServiceMethodImplementationSupport {
                 : executeRequest(messagesToSend, chatModel, toolSpecifications);
     }
 
-    static Response<AiMessage> executeRequest(QuarkusAiServiceContext context,
+    static ChatResponse executeRequest(QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications) {
         return executeRequest(methodCreateInfo, messagesToSend, context.effectiveChatModel(methodCreateInfo, methodArgs),
@@ -886,8 +901,8 @@ public class AiServiceMethodImplementationSupport {
                     toolsExecutors, contents, context, memoryId, ctxt, switchToWorkerThreadForToolExecution,
                     isCallerRunningOnWorkerThread);
             TokenStream tokenStream = stream
-                    .onNext(processor::onNext)
-                    .onComplete(message -> processor.onComplete())
+                    .onPartialResponse(processor::onNext)
+                    .onCompleteResponse(message -> processor.onComplete())
                     .onError(processor::onError);
             // This is equivalent to "run subscription on worker thread"
             if (switchToWorkerThreadForToolExecution && Context.isOnEventLoopThread()) {

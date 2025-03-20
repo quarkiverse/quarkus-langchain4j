@@ -55,7 +55,7 @@ public class AiJudgeStrategy implements EvaluationStrategy<String> {
         String prompt = this.prompt
                 .replace("{response}", output)
                 .replace("{expected_output}", expectedOutput);
-        var verdict = model.generate(prompt);
+        var verdict = model.chat(prompt);
         return Boolean.parseBoolean(verdict.trim());
     }
 }

@@ -9,7 +9,6 @@ import static dev.langchain4j.model.openai.InternalOpenAiHelper.toFunctions;
 import static dev.langchain4j.model.openai.InternalOpenAiHelper.toOpenAiMessages;
 import static dev.langchain4j.model.openai.InternalOpenAiHelper.tokenUsageFrom;
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.singletonList;
 
 import java.net.Proxy;
 import java.time.Duration;
@@ -21,13 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 
-import dev.ai4j.openai4j.OpenAiClient;
-import dev.ai4j.openai4j.chat.ChatCompletionRequest;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import dev.ai4j.openai4j.chat.ResponseFormat;
-import dev.ai4j.openai4j.chat.ResponseFormatType;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -38,7 +31,13 @@ import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.openai.internal.OpenAiClient;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.chat.ResponseFormat;
+import dev.langchain4j.model.openai.internal.chat.ResponseFormatType;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 /**
@@ -96,7 +95,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
-        this.client = ((QuarkusOpenAiClient.Builder) OpenAiClient.builder()
+        this.client = QuarkusOpenAiClient.builder()
                 .baseUrl(ensureNotBlank(endpoint, "endpoint"))
                 .apiVersion(apiVersion)
                 .callTimeout(timeout)
@@ -105,7 +104,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .writeTimeout(timeout)
                 .proxy(proxy)
                 .logRequests(logRequests)
-                .logResponses(logResponses))
+                .logResponses(logResponses)
                 .userAgent(Consts.DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -129,23 +128,10 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, null, null);
-    }
+    public ChatResponse doChat(ChatRequest chatRequest) {
+        List<ChatMessage> messages = chatRequest.messages();
+        List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        return generate(messages, toolSpecifications, null);
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages, singletonList(toolSpecification), toolSpecification);
-    }
-
-    private Response<AiMessage> generate(List<ChatMessage> messages,
-            List<ToolSpecification> toolSpecifications,
-            ToolSpecification toolThatMustBeExecuted) {
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .messages(toOpenAiMessages(messages))
                 .temperature(temperature)
@@ -157,9 +143,6 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
             requestBuilder.functions(toFunctions(toolSpecifications));
-        }
-        if (toolThatMustBeExecuted != null) {
-            requestBuilder.functionCall(toolThatMustBeExecuted.name());
         }
 
         ChatCompletionRequest request = requestBuilder.build();
@@ -179,10 +162,10 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
             ChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(),
                     maxRetries);
 
-            Response<AiMessage> response = Response.from(
-                    aiMessageFrom(chatCompletionResponse),
-                    tokenUsageFrom(chatCompletionResponse.usage()),
-                    finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason()));
+            ChatResponse response = ChatResponse.builder()
+                    .aiMessage(aiMessageFrom(chatCompletionResponse))
+                    .tokenUsage(tokenUsageFrom(chatCompletionResponse.usage()))
+                    .finishReason(finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason())).build();
 
             ChatModelResponse modelListenerResponse = createModelListenerResponse(
                     chatCompletionResponse.id(),
@@ -241,7 +224,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
     private ChatModelResponse createModelListenerResponse(String responseId,
             String responseModel,
-            Response<AiMessage> response) {
+            ChatResponse response) {
         if (response == null) {
             return null;
         }
@@ -251,7 +234,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                 .model(responseModel)
                 .tokenUsage(response.tokenUsage())
                 .finishReason(response.finishReason())
-                .aiMessage(response.content())
+                .aiMessage(response.aiMessage())
                 .build();
     }
 

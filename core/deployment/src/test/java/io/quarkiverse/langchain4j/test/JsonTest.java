@@ -2,15 +2,11 @@ package io.quarkiverse.langchain4j.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -136,12 +132,8 @@ public class JsonTest {
                 "\"dateTime\" : \"2021-08-16T13:19:00\"" +
                 "} ]";
 
-        InputStream inputStream = Json.toInputStream(testObjects, List.class);
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-            String resultJson = bufferedReader.lines().collect(Collectors.joining());
-
-            assertThat(resultJson).isEqualTo(expectedJson);
-        }
+        String resultJson = Json.toJson(testObjects);
+        assertThat(resultJson).isEqualToIgnoringWhitespace(expectedJson);
     }
 
     @Test

@@ -4,7 +4,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,29 +21,26 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
-import org.jboss.resteasy.reactive.common.NotImplementedYet;
 
-import dev.ai4j.openai4j.AsyncResponseHandling;
-import dev.ai4j.openai4j.ErrorHandling;
-import dev.ai4j.openai4j.OpenAiClient;
-import dev.ai4j.openai4j.ResponseHandle;
-import dev.ai4j.openai4j.StreamingCompletionHandling;
-import dev.ai4j.openai4j.StreamingResponseHandling;
-import dev.ai4j.openai4j.SyncOrAsync;
-import dev.ai4j.openai4j.SyncOrAsyncOrStreaming;
-import dev.ai4j.openai4j.chat.ChatCompletionRequest;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.completion.CompletionRequest;
-import dev.ai4j.openai4j.completion.CompletionResponse;
-import dev.ai4j.openai4j.embedding.EmbeddingRequest;
-import dev.ai4j.openai4j.embedding.EmbeddingResponse;
-import dev.ai4j.openai4j.image.GenerateImagesRequest;
-import dev.ai4j.openai4j.image.GenerateImagesResponse;
-import dev.ai4j.openai4j.moderation.ModerationRequest;
-import dev.ai4j.openai4j.moderation.ModerationResponse;
-import dev.ai4j.openai4j.moderation.ModerationResult;
-import dev.ai4j.openai4j.spi.OpenAiClientBuilderFactory;
+import dev.langchain4j.model.openai.internal.AsyncResponseHandling;
+import dev.langchain4j.model.openai.internal.ErrorHandling;
+import dev.langchain4j.model.openai.internal.OpenAiClient;
+import dev.langchain4j.model.openai.internal.ResponseHandle;
+import dev.langchain4j.model.openai.internal.StreamingCompletionHandling;
+import dev.langchain4j.model.openai.internal.StreamingResponseHandling;
+import dev.langchain4j.model.openai.internal.SyncOrAsync;
+import dev.langchain4j.model.openai.internal.SyncOrAsyncOrStreaming;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
+import dev.langchain4j.model.openai.internal.completion.CompletionResponse;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
+import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
+import dev.langchain4j.model.openai.internal.image.GenerateImagesResponse;
+import dev.langchain4j.model.openai.internal.moderation.ModerationRequest;
+import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
+import dev.langchain4j.model.openai.internal.spi.OpenAiClientBuilderFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -82,7 +79,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
     private QuarkusOpenAiClient(Builder builder) {
         this.azureApiKey = builder.azureApiKey;
-        this.openaiApiKey = builder.openAiApiKey;
+        this.openaiApiKey = builder.openAiApiKey != null ? builder.openAiApiKey : builder.apiKey;
         this.apiVersion = builder.apiVersion;
         this.organizationId = builder.organizationId;
         this.azureAdToken = builder.azureAdToken;
@@ -93,8 +90,8 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                 try {
                     QuarkusRestClientBuilder restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                             .baseUri(new URI(builder.baseUrl))
-                            .connectTimeout(builder.connectTimeout.toSeconds(), TimeUnit.SECONDS)
-                            .readTimeout(builder.readTimeout.toSeconds(), TimeUnit.SECONDS);
+                            .connectTimeout(builder.getConnectTimeout().toSeconds(), TimeUnit.SECONDS)
+                            .readTimeout(builder.getReadTimeout().toSeconds(), TimeUnit.SECONDS);
                     boolean logResponses = builder.logResponses || builder.logStreamingResponses;
                     if (builder.logRequests || logResponses) {
                         restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
@@ -196,11 +193,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     }
 
     @Override
-    public SyncOrAsyncOrStreaming<String> completion(String prompt) {
-        throw new NotImplementedYet();
-    }
-
-    @Override
     public SyncOrAsyncOrStreaming<ChatCompletionResponse> chatCompletion(ChatCompletionRequest request) {
         return new SyncOrAsyncOrStreaming<>() {
             @Override
@@ -255,83 +247,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     }
 
     @Override
-    public SyncOrAsyncOrStreaming<String> chatCompletion(String userMessage) {
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .addUserMessage(userMessage)
-                .build();
-
-        return new SyncOrAsyncOrStreaming<>() {
-            @Override
-            public String execute() {
-                return restApi
-                        .blockingChatCompletion(request,
-                                OpenAiRestApi.ApiMetadata.builder()
-                                        .azureApiKey(azureApiKey)
-                                        .azureAdToken(azureAdToken)
-                                        .openAiApiKey(openaiApiKey)
-                                        .apiVersion(apiVersion)
-                                        .organizationId(organizationId)
-                                        .build())
-                        .content();
-            }
-
-            @Override
-            public AsyncResponseHandling onResponse(Consumer<String> responseHandler) {
-                return new AsyncResponseHandlingImpl<>(
-                        new Supplier<>() {
-                            @Override
-                            public Uni<String> get() {
-                                return restApi
-                                        .createChatCompletion(
-                                                ChatCompletionRequest.builder().from(request).stream(null).build(),
-                                                OpenAiRestApi.ApiMetadata.builder()
-                                                        .azureApiKey(azureApiKey)
-                                                        .openAiApiKey(openaiApiKey)
-                                                        .apiVersion(apiVersion)
-                                                        .organizationId(organizationId)
-                                                        .build())
-                                        .map(ChatCompletionResponse::content);
-                            }
-                        },
-                        responseHandler);
-            }
-
-            @Override
-            public StreamingResponseHandling onPartialResponse(
-                    Consumer<String> partialResponseHandler) {
-                return new StreamingResponseHandlingImpl<>(
-                        new Supplier<>() {
-                            @Override
-                            public Multi<String> get() {
-                                return restApi
-                                        .streamingChatCompletion(
-                                                ChatCompletionRequest.builder().from(request).stream(true).build(),
-                                                OpenAiRestApi.ApiMetadata.builder()
-                                                        .azureApiKey(azureApiKey)
-                                                        .openAiApiKey(openaiApiKey)
-                                                        .apiVersion(apiVersion)
-                                                        .organizationId(organizationId)
-                                                        .build())
-                                        .filter(r -> {
-                                            if (r.choices() != null) {
-                                                if (r.choices().size() == 1) {
-                                                    Delta delta = r.choices().get(0).delta();
-                                                    if (delta != null) {
-                                                        return delta.content() != null;
-                                                    }
-                                                }
-                                            }
-                                            return false;
-                                        })
-                                        .map(r -> r.choices().get(0).delta().content())
-                                        .filter(Objects::nonNull);
-                            }
-                        }, partialResponseHandler);
-            }
-        };
-    }
-
-    @Override
     public SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request) {
         return new SyncOrAsync<>() {
             @Override
@@ -359,46 +274,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                                                 .apiVersion(apiVersion)
                                                 .organizationId(organizationId)
                                                 .build());
-                            }
-                        },
-                        responseHandler);
-            }
-        };
-    }
-
-    @Override
-    public SyncOrAsync<List<Float>> embedding(String input) {
-        EmbeddingRequest request = EmbeddingRequest.builder()
-                .input(input)
-                .build();
-        return new SyncOrAsync<>() {
-            @Override
-            public List<Float> execute() {
-                return restApi.blockingEmbedding(request,
-                        OpenAiRestApi.ApiMetadata.builder()
-                                .azureApiKey(azureApiKey)
-                                .azureAdToken(azureAdToken)
-                                .openAiApiKey(openaiApiKey)
-                                .apiVersion(apiVersion)
-                                .organizationId(organizationId)
-                                .build())
-                        .embedding();
-            }
-
-            @Override
-            public AsyncResponseHandling onResponse(Consumer<List<Float>> responseHandler) {
-                return new AsyncResponseHandlingImpl<>(
-                        new Supplier<>() {
-                            @Override
-                            public Uni<List<Float>> get() {
-                                return restApi.embedding(request,
-                                        OpenAiRestApi.ApiMetadata.builder()
-                                                .azureApiKey(azureApiKey)
-                                                .openAiApiKey(openaiApiKey)
-                                                .apiVersion(apiVersion)
-                                                .organizationId(organizationId)
-                                                .build())
-                                        .map(EmbeddingResponse::embedding);
                             }
                         },
                         responseHandler);
@@ -442,47 +317,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
     }
 
     @Override
-    public SyncOrAsync<ModerationResult> moderation(String input) {
-        ModerationRequest request = ModerationRequest.builder()
-                .input(input)
-                .build();
-
-        return new SyncOrAsync<>() {
-            @Override
-            public ModerationResult execute() {
-                return restApi.blockingModeration(request,
-                        OpenAiRestApi.ApiMetadata.builder()
-                                .azureApiKey(azureApiKey)
-                                .azureAdToken(azureAdToken)
-                                .openAiApiKey(openaiApiKey)
-                                .apiVersion(apiVersion)
-                                .organizationId(organizationId)
-                                .build())
-                        .results().get(0);
-            }
-
-            @Override
-            public AsyncResponseHandling onResponse(Consumer<ModerationResult> responseHandler) {
-                return new AsyncResponseHandlingImpl<>(
-                        new Supplier<>() {
-                            @Override
-                            public Uni<ModerationResult> get() {
-                                return restApi.moderation(request,
-                                        OpenAiRestApi.ApiMetadata.builder()
-                                                .azureApiKey(azureApiKey)
-                                                .openAiApiKey(openaiApiKey)
-                                                .apiVersion(apiVersion)
-                                                .organizationId(organizationId)
-                                                .build())
-                                        .map(r -> r.results().get(0));
-                            }
-                        },
-                        responseHandler);
-            }
-        };
-    }
-
-    @Override
     public SyncOrAsync<GenerateImagesResponse> imagesGeneration(GenerateImagesRequest generateImagesRequest) {
         return new SyncOrAsync<GenerateImagesResponse>() {
             @Override
@@ -517,11 +351,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         };
     }
 
-    @Override
-    public void shutdown() {
-
-    }
-
     public static class QuarkusOpenAiClientBuilderFactory implements OpenAiClientBuilderFactory {
 
         @Override
@@ -539,6 +368,23 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         private String azureAdToken;
         private String configName;
         private String tlsConfigurationName;
+
+        private String openAiApiKey;
+        private String azureApiKey;
+        private Duration callTimeout = Duration.ofSeconds(60);
+        private Duration writeTimeout = Duration.ofSeconds(60);
+        private String apiVersion;
+
+        public Proxy proxy;
+        public boolean logStreamingResponses;
+
+        public Duration getConnectTimeout() {
+            return connectTimeout == null ? Duration.ofSeconds(60) : connectTimeout;
+        }
+
+        public Duration getReadTimeout() {
+            return readTimeout == null ? Duration.ofSeconds(60) : readTimeout;
+        }
 
         public Builder tlsConfigurationName(String tlsConfigurationName) {
             this.tlsConfigurationName = tlsConfigurationName;
@@ -560,21 +406,55 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             return this;
         }
 
-        @Override
         public Builder openAiApiKey(String openAiApiKey) {
             this.openAiApiKey = openAiApiKey;
             return this;
         }
 
-        @Override
         public Builder azureApiKey(String azureApiKey) {
             this.azureApiKey = azureApiKey;
+            return this;
+        }
+
+        public Builder logStreamingResponses(boolean logStreamingResponses) {
+            this.logStreamingResponses = logStreamingResponses;
             return this;
         }
 
         @Override
         public QuarkusOpenAiClient build() {
             return new QuarkusOpenAiClient(this);
+        }
+
+        public Builder callTimeout(Duration callTimeout) {
+            if (callTimeout == null) {
+                throw new IllegalArgumentException("callTimeout cannot be null");
+            }
+            this.callTimeout = callTimeout;
+            return this;
+        }
+
+        public Builder writeTimeout(Duration writeTimeout) {
+            if (writeTimeout == null) {
+                throw new IllegalArgumentException("writeTimeout cannot be null");
+            }
+            this.writeTimeout = writeTimeout;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public Builder proxy(Proxy.Type type, String ip, int port) {
+            this.proxy = new Proxy(type, new InetSocketAddress(ip, port));
+            return this;
         }
 
         @Override

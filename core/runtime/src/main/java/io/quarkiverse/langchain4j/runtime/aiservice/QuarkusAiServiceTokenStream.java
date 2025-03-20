@@ -51,9 +51,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private Consumer<ChatResponse> completeResponseHandler;
 
     private int onPartialResponseInvoked;
-    private int onNextInvoked;
     private int onCompleteResponseInvoked;
-    private int onCompleteInvoked;
     private int onRetrievedInvoked;
     private int onErrorInvoked;
     private int ignoreErrorsInvoked;
@@ -86,13 +84,6 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     }
 
     @Override
-    public TokenStream onNext(Consumer<String> tokenHandler) {
-        this.partialResponseHandler = tokenHandler;
-        this.onNextInvoked++;
-        return this;
-    }
-
-    @Override
     public TokenStream onRetrieved(Consumer<List<Content>> contentsHandler) {
         this.contentsHandler = contentsHandler;
         this.onRetrievedInvoked++;
@@ -110,13 +101,6 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     public TokenStream onCompleteResponse(Consumer<ChatResponse> completionHandler) {
         this.completeResponseHandler = completionHandler;
         this.onCompleteResponseInvoked++;
-        return this;
-    }
-
-    @Override
-    public TokenStream onComplete(Consumer<Response<AiMessage>> completionHandler) {
-        this.completionHandler = completionHandler;
-        this.onCompleteInvoked++;
         return this;
     }
 
@@ -173,12 +157,12 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     }
 
     private void validateConfiguration() {
-        if (onPartialResponseInvoked + onNextInvoked != 1) {
+        if (onPartialResponseInvoked != 1) {
             throw new IllegalConfigurationException("One of [onPartialResponse, onNext] " +
                     "must be invoked on TokenStream exactly 1 time");
         }
 
-        if (onCompleteResponseInvoked + onCompleteInvoked > 1) {
+        if (onCompleteResponseInvoked > 1) {
             throw new IllegalConfigurationException("One of [onCompleteResponse, onComplete] " +
                     "can be invoked on TokenStream at most 1 time");
         }

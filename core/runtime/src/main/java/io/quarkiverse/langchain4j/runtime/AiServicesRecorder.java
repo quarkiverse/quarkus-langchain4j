@@ -181,6 +181,17 @@ public class AiServicesRecorder {
                         quarkusAiServices.tools(tools);
                     }
 
+                    if (info.toolHallucinationStrategyClassName() != null) {
+                        Object toolHallucinationStrategy = creationalContext.getInjectedReference(
+                                Thread.currentThread().getContextClassLoader()
+                                        .loadClass(info.toolHallucinationStrategyClassName()));
+                        if (toolHallucinationStrategy == null) {
+                            throw new IllegalStateException(
+                                    "Unknown tool hallucination strategy: " + info.toolHallucinationStrategyClassName());
+                        }
+                        quarkusAiServices.toolHallucinationStrategy(toolHallucinationStrategy);
+                    }
+
                     // if no explicit tools are provided, check if we should use a tool provider
                     if (info.toolProviderSupplier() != null) {
                         if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()

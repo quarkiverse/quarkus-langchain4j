@@ -15,7 +15,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -39,10 +41,13 @@ public class StreamingChatLanguageModelSupplierTest {
     public static class MyModelSupplier implements Supplier<StreamingChatLanguageModel> {
         @Override
         public StreamingChatLanguageModel get() {
-            return (messages, handler) -> {
-                handler.onNext("4");
-                handler.onNext("2");
-                handler.onComplete(new Response<>(new AiMessage("")));
+            return new StreamingChatLanguageModel() {
+                @Override
+                public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+                    handler.onPartialResponse("4");
+                    handler.onPartialResponse("2");
+                    handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
+                }
             };
         }
     }

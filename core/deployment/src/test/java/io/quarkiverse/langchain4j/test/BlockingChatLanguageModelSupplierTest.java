@@ -15,7 +15,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -36,9 +37,15 @@ public class BlockingChatLanguageModelSupplierTest {
     }
 
     public static class MyModelSupplier implements Supplier<ChatLanguageModel> {
+
         @Override
         public ChatLanguageModel get() {
-            return (messages) -> new Response<>(new AiMessage("42"));
+            return new ChatLanguageModel() {
+                @Override
+                public ChatResponse doChat(ChatRequest chatRequest) {
+                    return ChatResponse.builder().aiMessage(new AiMessage("42")).build();
+                }
+            };
         }
     }
 

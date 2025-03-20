@@ -2,9 +2,9 @@ package org.acme.example.openai;
 
 import java.util.Collections;
 
-import dev.ai4j.openai4j.chat.ChatCompletionRequest;
-import dev.ai4j.openai4j.completion.CompletionRequest;
-import dev.ai4j.openai4j.embedding.EmbeddingRequest;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
+import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 
 public class MessageUtil {
 

@@ -22,12 +22,12 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import dev.ai4j.openai4j.SyncOrAsync;
-import dev.ai4j.openai4j.image.GenerateImagesRequest;
-import dev.ai4j.openai4j.image.GenerateImagesResponse;
-import dev.ai4j.openai4j.image.ImageData;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.openai.internal.SyncOrAsync;
+import dev.langchain4j.model.openai.internal.image.GenerateImagesRequest;
+import dev.langchain4j.model.openai.internal.image.GenerateImagesResponse;
+import dev.langchain4j.model.openai.internal.image.ImageData;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
@@ -132,7 +132,7 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .responseFormat(responseFormat);
 
         if (DALL_E_2.equals(modelName)) {
-            builder.model(dev.ai4j.openai4j.image.ImageModel.DALL_E_2);
+            builder.model(DALL_E_2);
         }
         if (user.isPresent()) {
             builder.user(user.get());
@@ -264,7 +264,7 @@ public class AzureOpenAiImageModel implements ImageModel {
     }
 
     /**
-     * Copied from {@code dev.ai4j.openai4j.FilePersistor}
+     * Copied from {@code dev.langchain4j.model.openai.internal.FilePersistor}
      */
     private static class FilePersistor {
         static Path persistFromUri(URI uri, Path destinationFolder) {

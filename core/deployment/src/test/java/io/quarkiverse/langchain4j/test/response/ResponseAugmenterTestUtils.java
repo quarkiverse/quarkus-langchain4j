@@ -1,18 +1,17 @@
 package io.quarkiverse.langchain4j.test.response;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
@@ -31,8 +30,8 @@ public class ResponseAugmenterTestUtils {
     public static class FakeChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            return new Response<>(new AiMessage("Hi!"));
+        public ChatResponse doChat(ChatRequest request) {
+            return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
         }
     }
 
@@ -59,11 +58,11 @@ public class ResponseAugmenterTestUtils {
     public static class FakeStreamedChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-            handler.onNext("Hi!");
-            handler.onNext(" ");
-            handler.onNext("World!");
-            handler.onComplete(Response.from(AiMessage.from("")));
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            handler.onPartialResponse("Hi!");
+            handler.onPartialResponse(" ");
+            handler.onPartialResponse("World!");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 

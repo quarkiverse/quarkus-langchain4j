@@ -29,13 +29,13 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.ai4j.openai4j.chat.AssistantMessage;
-import dev.ai4j.openai4j.chat.ChatCompletionChoice;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
-import dev.ai4j.openai4j.chat.Delta;
-import dev.ai4j.openai4j.completion.CompletionChoice;
-import dev.ai4j.openai4j.completion.CompletionResponse;
-import dev.ai4j.openai4j.embedding.EmbeddingResponse;
+import dev.langchain4j.model.openai.internal.chat.AssistantMessage;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionChoice;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.chat.Delta;
+import dev.langchain4j.model.openai.internal.completion.CompletionChoice;
+import dev.langchain4j.model.openai.internal.completion.CompletionResponse;
+import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;

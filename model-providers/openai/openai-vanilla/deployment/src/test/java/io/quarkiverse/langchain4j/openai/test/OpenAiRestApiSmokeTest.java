@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.ai4j.openai4j.OpenAiHttpException;
-import dev.ai4j.openai4j.chat.ChatCompletionRequest;
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.langchain4j.exception.HttpException;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import io.quarkiverse.langchain4j.openai.common.OpenAiApiException;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
@@ -96,7 +96,7 @@ public class OpenAiRestApiSmokeTest extends OpenAiBaseTest {
         assertThatThrownBy(() -> restApi.blockingChatCompletion(ChatCompletionRequest.builder().build(),
                 OpenAiRestApi.ApiMetadata.builder().openAiApiKey(TOKEN).build()))
                 .isInstanceOf(
-                        OpenAiHttpException.class)
+                        HttpException.class)
                 .hasMessage("This is a dummy error message");
 
         wiremock().verifyThat(

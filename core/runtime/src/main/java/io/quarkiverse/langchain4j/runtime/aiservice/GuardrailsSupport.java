@@ -13,13 +13,11 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.spi.CDI;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.rag.AugmentationResult;
 import io.quarkiverse.langchain4j.guardrails.Guardrail;
 import io.quarkiverse.langchain4j.guardrails.GuardrailParams;
@@ -58,10 +56,10 @@ public class GuardrailsSupport {
         return userMessage;
     }
 
-    public static Response<AiMessage> invokeOutputGuardrails(AiServiceMethodCreateInfo methodCreateInfo,
+    public static OutputGuardrailResponse invokeOutputGuardrails(AiServiceMethodCreateInfo methodCreateInfo,
             ChatMemory chatMemory,
             ChatLanguageModel chatModel,
-            Response<AiMessage> response,
+            ChatResponse response,
             List<ToolSpecification> toolSpecifications,
             OutputGuardrailParams output) {
         int attempt = 0;
@@ -78,27 +76,27 @@ public class GuardrailsSupport {
                 throw new GuardrailException(e.getMessage(), e);
             }
 
-            if (!result.isSuccess()) {
-                if (!result.isRetry()) {
-                    throw new GuardrailException(result.toString(), result.getFirstFailureException());
-                } else {
-                    // Retry
-                    if (result.getReprompt() != null) {
-                        // Retry with reprompting
-                        chatMemory.add(userMessage(result.getReprompt()));
-                    }
-
-                    response = AiServiceMethodImplementationSupport.executeRequest(methodCreateInfo, chatMemory.messages(),
-                            chatModel, toolSpecifications);
-                    chatMemory.add(response.content());
-                }
-
-                attempt++;
-                output = new OutputGuardrailParams(response.content(), output.memory(),
-                        output.augmentationResult(), output.userMessageTemplate(), output.variables());
-            } else {
+            if (result.isSuccess()) {
                 break;
             }
+
+            if (result.isRetry()) {
+                // Retry
+                if (result.getReprompt() != null) {
+                    // Retry with reprompting
+                    chatMemory.add(userMessage(result.getReprompt()));
+                }
+
+                response = AiServiceMethodImplementationSupport.executeRequest(methodCreateInfo, chatMemory.messages(),
+                        chatModel, toolSpecifications);
+                chatMemory.add(response.aiMessage());
+            } else {
+                throw new GuardrailException(result.toString(), result.getFirstFailureException());
+            }
+
+            attempt++;
+            output = new OutputGuardrailParams(response.aiMessage(), output.memory(),
+                    output.augmentationResult(), output.userMessageTemplate(), output.variables());
         }
 
         if (attempt == max) {
@@ -113,22 +111,18 @@ public class GuardrailsSupport {
                             + System.lineSeparator() + failureMessages);
         }
 
-        if (result.hasRewrittenResult()) {
-            response = rewriteResponse(response, result);
-        }
-
-        return response;
+        return new OutputGuardrailResponse(response, result);
     }
 
-    public static Response<AiMessage> rewriteResponse(Response<AiMessage> response, OutputGuardrailResult result) {
-        List<ToolExecutionRequest> tools = response.content().toolExecutionRequests();
-        AiMessage content = tools != null && !tools.isEmpty() ? new AiMessage(result.successfulText(), tools)
-                : new AiMessage(result.successfulText());
-        Map<String, Object> metadata = response.metadata();
-        if (result.successfulResult() != null) {
-            metadata.put(OutputGuardrailResult.class.getName(), result.successfulResult());
+    public record OutputGuardrailResponse(ChatResponse response, OutputGuardrailResult result) {
+
+        public boolean hasRewrittenResult() {
+            return result != null && result.hasRewrittenResult();
         }
-        return new Response<>(content, response.tokenUsage(), response.finishReason(), metadata);
+
+        public Object getRewrittenResult() {
+            return hasRewrittenResult() ? result.successfulResult() : null;
+        }
     }
 
     @SuppressWarnings("unchecked")

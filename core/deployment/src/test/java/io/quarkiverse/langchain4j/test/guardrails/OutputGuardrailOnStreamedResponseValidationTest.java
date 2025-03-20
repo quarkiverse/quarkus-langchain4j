@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.test.guardrails;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -18,12 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -304,11 +303,11 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
     public static class MyStreamedChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-            handler.onNext("Hi!");
-            handler.onNext(" ");
-            handler.onNext("World!");
-            handler.onComplete(Response.from(AiMessage.from("")));
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            handler.onPartialResponse("Hi!");
+            handler.onPartialResponse(" ");
+            handler.onPartialResponse("World!");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 

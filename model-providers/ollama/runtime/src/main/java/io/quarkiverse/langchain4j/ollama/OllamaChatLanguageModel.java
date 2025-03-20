@@ -62,7 +62,7 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
     }
 
     @Override
-    public dev.langchain4j.model.chat.response.ChatResponse chat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
+    public dev.langchain4j.model.chat.response.ChatResponse doChat(dev.langchain4j.model.chat.request.ChatRequest chatRequest) {
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
         ResponseFormat responseFormat = chatRequest.responseFormat();
@@ -142,27 +142,6 @@ public class OllamaChatLanguageModel implements ChatLanguageModel {
 
             throw e;
         }
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
-        var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
-                .messages(messages)
-                .toolSpecifications(toolSpecifications)
-                .build());
-
-        return Response.from(chatResponse.aiMessage());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
-        return generate(messages, Collections.emptyList());
-    }
-
-    @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
-        return generate(messages,
-                toolSpecification != null ? Collections.singletonList(toolSpecification) : Collections.emptyList());
     }
 
     @Override

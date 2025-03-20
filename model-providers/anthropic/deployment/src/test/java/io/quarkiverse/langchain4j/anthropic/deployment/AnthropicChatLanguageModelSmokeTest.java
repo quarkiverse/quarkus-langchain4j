@@ -67,7 +67,7 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                                         }
                                         """)));
 
-        var response = chatModel.generate("Hello, how are you today?");
+        var response = chatModel.chat("Hello, how are you today?");
         assertThat(response)
                 .isNotNull()
                 .isEqualTo(

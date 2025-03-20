@@ -23,17 +23,17 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
@@ -374,34 +374,30 @@ public class ToolExecutionModelWithStreamingAndRequestScopePropagationTest {
     public static class MyChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
-                StreamingResponseHandler<AiMessage> handler) {
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            List<ChatMessage> messages = chatRequest.messages();
             if (messages.size() == 1) {
                 // Only the user message, extract the tool id from it
                 String text = ((dev.langchain4j.data.message.UserMessage) messages.get(0)).singleText();
                 // Only the user message
-                handler.onComplete(new Response<>(new AiMessage("cannot be blank", List.of(ToolExecutionRequest.builder()
-                        .id("my-tool-" + text)
-                        .name(text)
-                        .arguments("{}")
-                        .build())), new TokenUsage(0, 0), FinishReason.TOOL_EXECUTION));
+                handler.onCompleteResponse(ChatResponse.builder()
+                        .aiMessage(new AiMessage("cannot be blank", List.of(ToolExecutionRequest.builder()
+                                .id("my-tool-" + text)
+                                .name(text)
+                                .arguments("{}")
+                                .build())))
+                        .tokenUsage(new TokenUsage(0, 0)).finishReason(FinishReason.TOOL_EXECUTION).build());
             } else if (messages.size() == 3) {
                 // user -> tool request -> tool response
                 ToolExecutionResultMessage last = (ToolExecutionResultMessage) Lists.last(messages);
-                handler.onNext("response: ");
-                handler.onNext(last.text());
-                handler.onComplete(new Response<>(new AiMessage(""), new TokenUsage(0, 0), FinishReason.STOP));
-
+                handler.onPartialResponse("response: ");
+                handler.onPartialResponse(last.text());
+                handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).tokenUsage(new TokenUsage(0, 0))
+                        .finishReason(FinishReason.STOP).build());
             } else {
                 handler.onError(new RuntimeException("Invalid number of messages"));
             }
         }
-
     }
 
     public static class MyMemoryProviderSupplier implements Supplier<ChatMemoryProvider> {

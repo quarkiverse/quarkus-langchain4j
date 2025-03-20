@@ -10,15 +10,14 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
-import dev.langchain4j.model.output.Response;
 import io.smallrye.mutiny.Multi;
 
 @Path("chat")
@@ -36,7 +35,7 @@ public class ChatLanguageModelResource {
     @GET
     @Path("basic")
     public String basic() {
-        return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");
+        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -45,12 +44,12 @@ public class ChatLanguageModelResource {
     public Multi<String> streaming() {
         return Multi.createFrom().emitter(
                 emitter -> {
-                    streamingChatLanguageModel.generate(
+                    streamingChatLanguageModel.chat(
                             "Write a short 1 paragraph funny poem about Java Applets",
-                            new StreamingResponseHandler<>() {
+                            new StreamingChatResponseHandler() {
 
                                 @Override
-                                public void onNext(String token) {
+                                public void onPartialResponse(String token) {
                                     emitter.emit(token);
                                 }
 
@@ -60,7 +59,7 @@ public class ChatLanguageModelResource {
                                 }
 
                                 @Override
-                                public void onComplete(Response<AiMessage> response) {
+                                public void onCompleteResponse(ChatResponse completeResponse) {
                                     emitter.complete();
                                 }
                             });
@@ -79,7 +78,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = promptTemplate.apply(variables);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @GET
@@ -91,7 +90,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @StructuredPrompt({

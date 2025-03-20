@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.ai4j.openai4j.chat.ChatCompletionResponse;
+import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
 import io.quarkus.test.QuarkusUnitTest;
 

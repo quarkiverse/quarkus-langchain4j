@@ -16,14 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -172,20 +172,20 @@ public class GuardrailWithAugmentationTest {
     public static class MyChatModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
-            assertThat(messages.get(messages.size() - 1).text()).isEqualTo("augmented");
-            return new Response<>(new AiMessage("Hi!"));
+        public ChatResponse doChat(ChatRequest chatRequest) {
+            assertThat(chatRequest.messages().get(chatRequest.messages().size() - 1).text()).isEqualTo("augmented");
+            return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
         }
     }
 
     public static class MyStreamingChatModel implements StreamingChatLanguageModel {
 
         @Override
-        public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
-            assertThat(messages.get(messages.size() - 1).text()).isEqualTo("augmented");
-            handler.onNext("Streaming hi");
-            handler.onNext("!");
-            handler.onComplete(Response.from(AiMessage.from("")));
+        public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
+            assertThat(chatRequest.messages().get(chatRequest.messages().size() - 1).text()).isEqualTo("augmented");
+            handler.onPartialResponse("Streaming hi");
+            handler.onPartialResponse("!");
+            handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
         }
     }
 

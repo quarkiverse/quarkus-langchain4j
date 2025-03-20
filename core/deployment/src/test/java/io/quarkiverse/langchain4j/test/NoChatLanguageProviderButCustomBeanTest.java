@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.test;
 
-import java.util.List;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -11,10 +9,9 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class NoChatLanguageProviderButCustomBeanTest {
@@ -35,7 +32,7 @@ public class NoChatLanguageProviderButCustomBeanTest {
     public static class CustomChatLanguageModel implements ChatLanguageModel {
 
         @Override
-        public Response<AiMessage> generate(List<ChatMessage> messages) {
+        public ChatResponse doChat(ChatRequest request) {
             return null;
         }
     }

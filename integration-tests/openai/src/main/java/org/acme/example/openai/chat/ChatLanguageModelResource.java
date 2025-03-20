@@ -20,16 +20,16 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.openai.OpenAiTokenizer;
-import dev.langchain4j.model.output.Response;
 import io.smallrye.mutiny.Multi;
 
 @Path("chat")
@@ -47,7 +47,7 @@ public class ChatLanguageModelResource {
     @GET
     @Path("blocking")
     public String blocking() {
-        return chatLanguageModel.generate("When was the nobel prize for economics first awarded?");
+        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -56,11 +56,11 @@ public class ChatLanguageModelResource {
     public Multi<String> streaming() {
         return Multi.createFrom().emitter(
                 emitter -> {
-                    streamingChatLanguageModel.generate(
+                    streamingChatLanguageModel.chat(
                             "Write a short 1 paragraph funny poem about Java Applets",
-                            new StreamingResponseHandler<>() {
+                            new StreamingChatResponseHandler() {
                                 @Override
-                                public void onNext(String token) {
+                                public void onPartialResponse(String token) {
                                     emitter.emit(token);
                                 }
 
@@ -70,7 +70,7 @@ public class ChatLanguageModelResource {
                                 }
 
                                 @Override
-                                public void onComplete(Response<AiMessage> response) {
+                                public void onCompleteResponse(ChatResponse completeResponse) {
                                     emitter.complete();
                                 }
                             });
@@ -89,7 +89,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = promptTemplate.apply(variables);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @GET
@@ -112,17 +112,17 @@ public class ChatLanguageModelResource {
 
         AtomicReference<CompletableFuture<AiMessage>> futureRef = new AtomicReference<>(new CompletableFuture<>());
 
-        StreamingResponseHandler<AiMessage> handler = new StreamingResponseHandler<>() {
+        StreamingChatResponseHandler handler = new StreamingChatResponseHandler() {
 
             @Override
-            public void onNext(String token) {
+            public void onPartialResponse(String token) {
                 sb.append(token);
             }
 
             @Override
-            public void onComplete(Response<AiMessage> response) {
-                if (response != null) {
-                    futureRef.get().complete(response.content());
+            public void onCompleteResponse(ChatResponse completeResponse) {
+                if (completeResponse != null) {
+                    futureRef.get().complete(completeResponse.aiMessage());
                 } else {
                     futureRef.get().complete(null);
                 }
@@ -134,7 +134,7 @@ public class ChatLanguageModelResource {
             }
         };
 
-        streamingChatLanguageModel.generate(chatMemory.messages(), handler);
+        streamingChatLanguageModel.chat(chatMemory.messages(), handler);
         AiMessage firstAiMessage = futureRef.get().get(60, TimeUnit.SECONDS);
         chatMemory.add(firstAiMessage);
 
@@ -148,7 +148,7 @@ public class ChatLanguageModelResource {
                 .append("\n[LLM]: ");
 
         futureRef.set(new CompletableFuture<>());
-        streamingChatLanguageModel.generate(chatMemory.messages(), handler);
+        streamingChatLanguageModel.chat(chatMemory.messages(), handler);
         futureRef.get().get(60, TimeUnit.SECONDS);
         return sb.toString();
     }
@@ -162,7 +162,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
 
-        return chatLanguageModel.generate(prompt.text());
+        return chatLanguageModel.chat(prompt.text());
     }
 
     @StructuredPrompt("""

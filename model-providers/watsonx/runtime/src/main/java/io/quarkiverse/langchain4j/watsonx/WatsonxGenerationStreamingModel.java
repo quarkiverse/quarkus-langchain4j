@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -15,13 +16,14 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters;
@@ -30,9 +32,10 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
+import io.smallrye.mutiny.Context;
 
-public class WatsonxGenerationModel extends Watsonx
-        implements ChatLanguageModel, TokenCountEstimator {
+public class WatsonxGenerationStreamingModel extends Watsonx
+        implements StreamingChatLanguageModel, TokenCountEstimator {
 
     private static final String INPUT_TOKEN_COUNT_CONTEXT = "INPUT_TOKEN_COUNT";
     private static final String GENERATED_TOKEN_COUNT_CONTEXT = "GENERATED_TOKEN_COUNT";
@@ -43,7 +46,7 @@ public class WatsonxGenerationModel extends Watsonx
     private final WatsonxGenerationRequestParameters defaultRequestParameters;
     private final String promptJoiner;
 
-    public WatsonxGenerationModel(Builder builder) {
+    public WatsonxGenerationStreamingModel(Builder builder) {
         super(builder);
 
         LengthPenalty lengthPenalty = null;
@@ -74,37 +77,98 @@ public class WatsonxGenerationModel extends Watsonx
     }
 
     @Override
-    public ChatResponse doChat(ChatRequest chatRequest) {
-
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
         String modelId = chatRequest.parameters().modelName();
         ChatRequestParameters parameters = chatRequest.parameters();
 
         validate(parameters);
 
-        TextGenerationResponse response = retryOn(new Callable<TextGenerationResponse>() {
-            @Override
-            public TextGenerationResponse call() throws Exception {
-                TextGenerationRequest request = new TextGenerationRequest(modelId, spaceId, projectId,
-                        toInput(chatRequest.messages()), TextGenerationParameters.convert(parameters));
-                return client.generation(request, version);
-            }
-        });
+        TextGenerationRequest request = new TextGenerationRequest(modelId, spaceId, projectId, toInput(chatRequest.messages()),
+                TextGenerationParameters.convert(parameters));
 
-        Result result = response.results().get(0);
+        Context context = Context.empty();
+        context.put(COMPLETE_MESSAGE_CONTEXT, new StringBuilder());
+        context.put(INPUT_TOKEN_COUNT_CONTEXT, 0);
+        context.put(GENERATED_TOKEN_COUNT_CONTEXT, 0);
 
-        var finishReason = toFinishReason(result.stopReason());
-        var tokenUsage = new TokenUsage(
-                result.inputTokenCount(),
-                result.generatedTokenCount());
+        client.generationStreaming(request, version)
+                .onFailure(WatsonxUtils::isTokenExpired).retry().atMost(1)
+                .subscribe()
+                .with(context,
+                        new Consumer<TextGenerationResponse>() {
+                            @Override
+                            public void accept(TextGenerationResponse response) {
+                                try {
 
-        return ChatResponse.builder()
-                .aiMessage(AiMessage.from(result.generatedText()))
-                .metadata(ChatResponseMetadata.builder()
-                        .modelName(response.modelId())
-                        .tokenUsage(tokenUsage)
-                        .finishReason(finishReason)
-                        .build())
-                .build();
+                                    if (response == null || response.results() == null || response.results().isEmpty())
+                                        return;
+
+                                    StringBuilder stringBuilder = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                    Result chunk = response.results().get(0);
+
+                                    if (!context.contains(MODEL_ID_CONTEXT) && response.modelId() != null) {
+                                        context.put(MODEL_ID_CONTEXT, response.modelId());
+                                    }
+
+                                    if (!chunk.stopReason().equals("not_finished")) {
+                                        context.put(FINISH_REASON_CONTEXT, chunk.stopReason());
+                                    }
+
+                                    int inputTokenCount = context.get(INPUT_TOKEN_COUNT_CONTEXT);
+                                    context.put(INPUT_TOKEN_COUNT_CONTEXT, inputTokenCount + chunk.inputTokenCount());
+
+                                    int generatedTokenCount = context.get(GENERATED_TOKEN_COUNT_CONTEXT);
+                                    context.put(GENERATED_TOKEN_COUNT_CONTEXT,
+                                            generatedTokenCount + chunk.generatedTokenCount());
+
+                                    stringBuilder.append(chunk.generatedText());
+                                    handler.onPartialResponse(chunk.generatedText());
+
+                                } catch (Exception e) {
+                                    handler.onError(e);
+                                }
+                            }
+                        },
+                        new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable error) {
+                                handler.onError(error);
+                            }
+                        },
+                        new Runnable() {
+                            @Override
+                            public void run() {
+
+                                StringBuilder response = context.get(COMPLETE_MESSAGE_CONTEXT);
+                                FinishReason finishReason = context.contains(FINISH_REASON_CONTEXT)
+                                        ? toFinishReason(context.get(FINISH_REASON_CONTEXT))
+                                        : null;
+                                int inputTokenCount = context.contains(INPUT_TOKEN_COUNT_CONTEXT)
+                                        ? context.get(INPUT_TOKEN_COUNT_CONTEXT)
+                                        : 0;
+                                int outputTokenCount = context.contains(GENERATED_TOKEN_COUNT_CONTEXT)
+                                        ? context.get(GENERATED_TOKEN_COUNT_CONTEXT)
+                                        : 0;
+                                String modelId = context.contains(MODEL_ID_CONTEXT)
+                                        ? context.get(MODEL_ID_CONTEXT)
+                                        : null;
+
+                                AiMessage aiMessage = AiMessage.from(response.toString());
+                                TokenUsage tokenUsage = new TokenUsage(inputTokenCount, outputTokenCount);
+
+                                ChatResponse chatResponse = ChatResponse.builder()
+                                        .aiMessage(aiMessage)
+                                        .metadata(ChatResponseMetadata.builder()
+                                                .modelName(modelId)
+                                                .tokenUsage(tokenUsage)
+                                                .finishReason(finishReason)
+                                                .build())
+                                        .build();
+
+                                handler.onCompleteResponse(chatResponse);
+                            }
+                        });
+
     }
 
     @Override
@@ -279,8 +343,8 @@ public class WatsonxGenerationModel extends Watsonx
             return this;
         }
 
-        public WatsonxGenerationModel build() {
-            return new WatsonxGenerationModel(this);
+        public WatsonxGenerationStreamingModel build() {
+            return new WatsonxGenerationStreamingModel(this);
         }
     }
 }
