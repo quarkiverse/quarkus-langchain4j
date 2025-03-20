@@ -9,11 +9,11 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
-import io.quarkiverse.langchain4j.ollama.OllamaChatLanguageModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxGenerationModel;
@@ -84,7 +84,7 @@ public class MultipleChatProvidersTest {
 
     @Test
     void fifthNamedModel() {
-        assertThat(ClientProxy.unwrap(fifthNamedModel)).isInstanceOf(OllamaChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(fifthNamedModel)).isInstanceOf(OllamaChatModel.class);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class MultipleChatProvidersTest {
 
     @Test
     void ninthNamedModel() {
-        assertThat(ClientProxy.unwrap(ninthNamedModel)).isInstanceOf(OllamaChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(ninthNamedModel)).isInstanceOf(OllamaChatModel.class);
     }
 
     @Test

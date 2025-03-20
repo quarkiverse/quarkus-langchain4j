@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.ModelName;
 /**
  * Model authentication providers can be used to supply credentials such as access tokens, API keys, and other type of
  * credentials.
- *
+ * <p>
  * Providers which support a specific named model only must be annotated with a {@link ModelName} annotation.
  */
 public interface ModelAuthProvider {
