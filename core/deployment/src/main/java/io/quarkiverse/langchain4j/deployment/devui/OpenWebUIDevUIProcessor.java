@@ -38,12 +38,15 @@ import io.quarkus.devui.spi.buildtime.BuildTimeActionBuildItem;
 public final class OpenWebUIDevUIProcessor {
     private static final String CONTAINER_NAME_PREFIX = "quarkus-open-webui-";
 
+    @BuildStep
+    JsonRPCProvidersBuildItem jsonRpcProviders() {
+        return new JsonRPCProvidersBuildItem(OpenWebUIJsonRPCService.class);
+    }
+
     @BuildStep(onlyIf = IsDevelopment.class)
     void registerOpenWebUiCard(
             BuildProducer<BuildTimeActionBuildItem> buildTimeActionProducer,
-            BuildProducer<JsonRPCProvidersBuildItem> jsonRPCProviders,
             CuratedApplicationShutdownBuildItem closeBuildItem) {
-        jsonRPCProviders.produce(new JsonRPCProvidersBuildItem(OpenWebUIJsonRPCService.class));
 
         closeBuildItem.addCloseTask(() -> {
             stopOpenWebUI();

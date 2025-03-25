@@ -29,7 +29,7 @@ public class OpenAiDevUIProcessor {
         return card;
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> rpcProviders,
             LangChain4jOpenAiBuildConfig config) {
         if (config.imageModel().enabled().orElse(true)) {
