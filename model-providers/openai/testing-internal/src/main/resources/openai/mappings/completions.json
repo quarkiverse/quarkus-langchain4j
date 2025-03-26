@@ -42,6 +42,64 @@
         }
       },
       "postServeActions": [ ]
+    }  ,
+    {
+      "request": {
+        "urlPath": "/v1/images/generations",
+        "method": "POST",
+        "headers": {
+          "Accept": {
+            "equalTo": "application/json",
+            "caseInsensitive": true
+          },
+          "Content-Type": {
+            "equalTo": "application/json",
+            "caseInsensitive": true
+          },
+          "Authorization": {
+            "matches": "Bearer .+"
+          }
+        },
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": {
+              "expression": "$.model",
+              "matches": ".+"
+            }
+          },
+          {
+            "matchesJsonPath": {
+              "expression": "$.prompt",
+              "matches": ".+"
+            }
+          },
+          {
+            "matchesJsonPath": "$[?(@.n == 1)]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.size == '1024x1024')]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.quality == 'standard')]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.style == 'vivid')]"
+          },
+          {
+            "matchesJsonPath": "$[?(@.response_format == 'url')]"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "body": "{\n  \"created\": 1708633271,\n  \"data\": [\n    {\n      \"revised_prompt\": \"Some revised prompt.\",\n      \"url\": \"https://somewhere.com/someImage.png\"\n    }\n   ]\n  }\n",
+        "headers": {
+          "Content-Type": "application/json",
+          "openai-organization": "my-org-1234",
+          "openai-version": "2020-10-01",
+          "openai-processing-ms": "15000"
+        }
+      }
     }
   ]
 }
