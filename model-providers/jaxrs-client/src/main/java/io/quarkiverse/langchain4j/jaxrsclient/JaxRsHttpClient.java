@@ -85,6 +85,12 @@ public class JaxRsHttpClient implements HttpClient {
                 public boolean isTrustAll() {
                     return tlsConfiguration.isTrustAll();
                 }
+
+                // TODO: when we bump to the next LTS, this needs to be implemented properly
+                //for the time being it exists only to make the module compile against the SNAPSHOT version of Quarkus
+                public String getName() {
+                    throw new IllegalStateException("this should not be called");
+                }
             });
         }
         delegate = clientBuilder.build();
