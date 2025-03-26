@@ -34,7 +34,7 @@ public class WebSearchRetrievalAugmentor implements Supplier<RetrievalAugmentor>
     public RetrievalAugmentor get() {
         return DefaultRetrievalAugmentor.builder()
                 .queryTransformer((question) -> {
-                    String query = chatModel.generate("Transform the user's question into a suitable query for the " +
+                    String query = chatModel.chat("Transform the user's question into a suitable query for the " +
                             "Tavily search engine. The query should yield the results relevant to answering the user's question." +
                             "User's question: " + question.text());
                     return Collections.singleton(Query.from(query));
