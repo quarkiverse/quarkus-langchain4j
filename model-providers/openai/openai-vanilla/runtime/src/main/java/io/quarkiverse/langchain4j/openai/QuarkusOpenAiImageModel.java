@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.openai;
 
 import static dev.langchain4j.internal.RetryUtils.withRetry;
-import static dev.langchain4j.model.openai.OpenAiModelName.DALL_E_2;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,14 +118,12 @@ public class QuarkusOpenAiImageModel implements ImageModel {
         var builder = GenerateImagesRequest
                 .builder()
                 .prompt(prompt)
+                .model(modelName)
                 .size(size)
                 .quality(quality)
                 .style(style)
                 .responseFormat(responseFormat);
 
-        if (DALL_E_2.equals(modelName)) {
-            builder.model(DALL_E_2);
-        }
         if (user.isPresent()) {
             builder.user(user.get());
         }
