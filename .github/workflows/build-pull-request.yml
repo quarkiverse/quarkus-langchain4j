@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 17, 21, 23 ]
+        java: [ 17, 21, 24 ]
         module: ${{fromJson(needs.quick-build.outputs.all_modules)}}
     name: JVM tests - ${{ matrix.module }} - Java ${{ matrix.java }}
     runs-on: ubuntu-latest
