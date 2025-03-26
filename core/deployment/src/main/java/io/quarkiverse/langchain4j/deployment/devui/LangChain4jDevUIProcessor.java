@@ -122,7 +122,7 @@ public class LangChain4jDevUIProcessor {
                 .icon("font-awesome-solid:comments"));
     }
 
-    @BuildStep(onlyIf = IsDevelopment.class)
+    @BuildStep
     void jsonRpcProviders(BuildProducer<JsonRPCProvidersBuildItem> producers,
             List<InProcessEmbeddingBuildItem> inProcessEmbeddingModelBuildItems,
             List<EmbeddingModelProviderCandidateBuildItem> embeddingModelCandidateBuildItems,
