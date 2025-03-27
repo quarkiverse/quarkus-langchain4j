@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
-import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkiverse.langchain4j.mcp.McpClientName;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**

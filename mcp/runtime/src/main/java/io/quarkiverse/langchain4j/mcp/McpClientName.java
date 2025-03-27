@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.mcp.runtime;
+package io.quarkiverse.langchain4j.mcp;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 

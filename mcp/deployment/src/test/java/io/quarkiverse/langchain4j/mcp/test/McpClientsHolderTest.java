@@ -2,9 +2,8 @@ package io.quarkiverse.langchain4j.mcp.test;
 
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.McpClients;
-import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkiverse.langchain4j.mcp.McpClientName;
 import io.quarkus.test.QuarkusUnitTest;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
