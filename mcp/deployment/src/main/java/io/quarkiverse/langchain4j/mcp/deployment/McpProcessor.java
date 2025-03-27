@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.quarkiverse.langchain4j.mcp.McpClients;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -15,6 +14,7 @@ import org.jboss.jandex.DotName;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.McpClientName;
+import io.quarkiverse.langchain4j.mcp.McpClients;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpConfiguration;

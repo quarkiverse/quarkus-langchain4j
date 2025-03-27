@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
-import io.quarkiverse.langchain4j.mcp.McpClientName;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.mcp.client.logging.McpLogMessage;
 import dev.langchain4j.mcp.client.logging.McpLogMessageHandler;
+import io.quarkiverse.langchain4j.mcp.McpClientName;
 import io.quarkus.arc.Arc;
 
 public class QuarkusDefaultMcpLogHandler implements McpLogMessageHandler {

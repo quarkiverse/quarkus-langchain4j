@@ -1,8 +1,8 @@
 package io.quarkiverse.langchain4j.mcp;
 
-import dev.langchain4j.mcp.client.McpClient;
-
 import java.util.Map;
+
+import dev.langchain4j.mcp.client.McpClient;
 
 /**
  * Provides access to all MCP clients that are known from the Quarkus configuration model.

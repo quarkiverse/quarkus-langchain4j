@@ -1,16 +1,18 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
-import dev.langchain4j.mcp.client.McpClient;
-import io.quarkiverse.langchain4j.mcp.McpClients;
-import io.quarkiverse.langchain4j.mcp.McpClientName;
-import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import dev.langchain4j.mcp.client.McpClient;
+import io.quarkiverse.langchain4j.mcp.McpClientName;
+import io.quarkiverse.langchain4j.mcp.McpClients;
+import io.quarkus.test.QuarkusUnitTest;
 
 /**
  * Test the McpClients holder, which is a CDI bean that provides
@@ -25,7 +27,7 @@ public class McpClientsHolderTest {
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
-                            
+
                             quarkus.langchain4j.mcp.client2.transport-type=http
                             quarkus.langchain4j.mcp.client2.url=http://localhost:8081/mock-mcp/sse
                             """),
