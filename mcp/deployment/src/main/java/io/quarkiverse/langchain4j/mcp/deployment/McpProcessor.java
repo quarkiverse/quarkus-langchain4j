@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.quarkiverse.langchain4j.mcp.McpClients;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -28,6 +29,7 @@ public class McpProcessor {
     private static final DotName MCP_CLIENT = DotName.createSimple(McpClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
+    private static final DotName MCP_CLIENTS = DotName.createSimple(McpClients.class);
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
@@ -70,6 +72,20 @@ public class McpProcessor {
                 }
                 beanProducer.produce(configurator.done());
             }
+
+            // generate the `McpClients` bean that provides access to all configured MCP clients
+            SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
+                    .configure(MCP_CLIENTS)
+                    .addType(ClassType.create(MCP_CLIENTS))
+                    .setRuntimeInit()
+                    .defaultBean()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .createWith(recorder.mcpClientsHolderFunction(mcpConfiguration.clients().keySet()));
+            for (AnnotationInstance qualifier : qualifiers) {
+                configurator.addInjectionPoint(ClassType.create(MCP_CLIENT), qualifier);
+            }
+            beanProducer.produce(configurator.done());
         }
     }
 }

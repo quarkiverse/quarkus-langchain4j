@@ -1,8 +1,6 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -12,6 +10,7 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.mcp.McpClients;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
@@ -73,6 +72,22 @@ public class McpRecorder {
                 return new McpToolProvider.Builder()
                         .mcpClients(clients)
                         .build();
+            }
+
+        };
+    }
+
+    public Function<SyntheticCreationalContext<McpClients>, McpClients> mcpClientsHolderFunction(
+            Set<String> mcpClientNames) {
+        return new Function<>() {
+            @Override
+            public McpClients apply(SyntheticCreationalContext<McpClients> context) {
+                Map<String, McpClient> clients = new HashMap<>();
+                for (String mcpClientName : mcpClientNames) {
+                    McpClientName.Literal qualifier = McpClientName.Literal.of(mcpClientName);
+                    clients.put(mcpClientName, context.getInjectedReference(McpClient.class, qualifier));
+                }
+                return new McpClients(clients);
             }
 
         };
