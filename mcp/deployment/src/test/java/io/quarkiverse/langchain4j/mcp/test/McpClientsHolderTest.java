@@ -1,27 +1,24 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.McpClientName;
+import io.quarkiverse.langchain4j.mcp.McpClients;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Verify that when some MCP clients are configured, but
- * quarkus.langchain4j.mcp.generate-tool-provider=false, then no tool
- * provider will be generated out of the box.
+ * Test the McpClients holder, which is a CDI bean that provides
+ * references to all configured MCP clients.
  */
-public class NoAutomaticToolProviderTest {
+public class McpClientsHolderTest {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -30,21 +27,27 @@ public class NoAutomaticToolProviderTest {
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
-                            quarkus.langchain4j.mcp.generate-tool-provider=false
+
+                            quarkus.langchain4j.mcp.client2.transport-type=http
+                            quarkus.langchain4j.mcp.client2.url=http://localhost:8081/mock-mcp/sse
                             """),
                             "application.properties"));
 
     @Inject
     @McpClientName("client1")
-    Instance<McpClient> clientCDIInstance;
+    McpClient client1;
 
     @Inject
-    Instance<ToolProvider> toolProviderCDIInstance;
+    @McpClientName("client2")
+    McpClient client2;
+
+    @Inject
+    McpClients mcpClients;
 
     @Test
     public void test() {
-        assertThat(clientCDIInstance.isResolvable()).isTrue();
-        assertThat(toolProviderCDIInstance.isResolvable()).isFalse();
+        Assertions.assertEquals(2, mcpClients.listAll().size());
+        Assertions.assertEquals(client1, mcpClients.get("client1"));
+        Assertions.assertEquals(client2, mcpClients.get("client2"));
     }
-
 }
