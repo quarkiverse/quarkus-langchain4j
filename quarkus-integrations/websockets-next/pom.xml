@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Quarkus LangChain4j Websockets Next works with 3.9.0 or higher -->
-        <quarkus.version>3.15.2</quarkus.version>
+        <quarkus.version>3.15.4</quarkus.version>
     </properties>
 
     <modules>
