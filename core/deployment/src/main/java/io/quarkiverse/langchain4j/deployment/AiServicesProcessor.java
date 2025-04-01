@@ -207,7 +207,7 @@ public class AiServicesProcessor {
         if (!returnTypesToRegister.isEmpty()) {
             reflectiveClassProducer.produce(ReflectiveClassBuildItem
                     .builder(returnTypesToRegister.stream().map(DotName::toString).toArray(String[]::new))
-                    .constructors(false)
+                    .constructors().fields().methods()
                     .build());
         }
 
