@@ -11,13 +11,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public interface McpClientConfig {
-
-    /**
-     * Transport type
-     */
-    @WithDefault("stdio")
-    McpTransportType transportType();
+public interface McpClientRuntimeConfig {
 
     /**
      * The URL of the SSE endpoint. This only applies to MCP clients using the HTTP transport.
