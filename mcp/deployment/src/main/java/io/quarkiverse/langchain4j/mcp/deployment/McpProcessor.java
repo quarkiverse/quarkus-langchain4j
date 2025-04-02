@@ -15,8 +15,9 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientConfig;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpConfiguration;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -31,13 +32,14 @@ public class McpProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    public void registerMcpClients(McpConfiguration mcpConfiguration,
+    public void registerMcpClients(McpBuildTimeConfiguration mcpBuildTimeConfiguration,
+            McpRuntimeConfiguration mcpRuntimeConfiguration,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             McpRecorder recorder) {
-        if (mcpConfiguration.clients() != null && !mcpConfiguration.clients().isEmpty()) {
+        if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
             // generate MCP clients
             List<AnnotationInstance> qualifiers = new ArrayList<>();
-            for (Map.Entry<String, McpClientConfig> client : mcpConfiguration.clients()
+            for (Map.Entry<String, McpClientBuildTimeConfig> client : mcpBuildTimeConfiguration.clients()
                     .entrySet()) {
                 AnnotationInstance qualifier = AnnotationInstance.builder(MCP_CLIENT_NAME)
                         .add("value", client.getKey())
@@ -51,12 +53,13 @@ public class McpProcessor {
                         .unremovable()
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.mcpClientSupplier(client.getKey(), mcpConfiguration))
+                        .supplier(
+                                recorder.mcpClientSupplier(client.getKey(), mcpBuildTimeConfiguration, mcpRuntimeConfiguration))
                         .done());
             }
             // generate a tool provider if configured to do so
-            if (mcpConfiguration.generateToolProvider().orElse(true)) {
-                Set<String> mcpClientNames = mcpConfiguration.clients().keySet();
+            if (mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
+                Set<String> mcpClientNames = mcpBuildTimeConfiguration.clients().keySet();
                 SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                         .configure(TOOL_PROVIDER)
                         .addType(ClassType.create(TOOL_PROVIDER))
