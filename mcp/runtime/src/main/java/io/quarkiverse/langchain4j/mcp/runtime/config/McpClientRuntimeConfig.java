@@ -58,4 +58,10 @@ public interface McpClientRuntimeConfig {
     @WithDefault("60s")
     Duration resourcesTimeout();
 
+    /**
+     * The named model to use in order to judge whether the descriptions of the tools provided by the MCP server
+     * are malicious. If they are, a warning will be printed and the tool will never be used.
+     */
+    Optional<String> toolValidationModelName();
+
 }
