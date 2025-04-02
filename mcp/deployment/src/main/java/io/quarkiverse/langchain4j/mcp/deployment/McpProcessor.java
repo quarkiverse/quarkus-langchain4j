@@ -10,9 +10,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
@@ -48,12 +52,14 @@ public class McpProcessor {
                 beanProducer.produce(SyntheticBeanBuildItem
                         .configure(MCP_CLIENT)
                         .addQualifier(qualifier)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(ChatLanguageModel.class) }, null))
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
-                        .supplier(
+                        .createWith(
                                 recorder.mcpClientSupplier(client.getKey(), mcpBuildTimeConfiguration, mcpRuntimeConfiguration))
                         .done());
             }
