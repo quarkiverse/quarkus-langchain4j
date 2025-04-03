@@ -1,0 +1,282 @@
+= Observability
+
+Observability is built into services created via `@RegisterAiService` and is provided in the following form:
+
+* Metrics are enabled when `quarkus-micrometer` is part of the application
+* Traces are enabled when `quarkus-opentelemetry` is part of the application
+  
+== Metrics
+
+Each AI method is automatically timed and the timer data is available using the `langchain4j.aiservices.timed` metric with the appropriate tags.
+A counter is also available using the `langchain4j.aiservices.counted` metric.
+
+For example, if the AI service looks like:
+
+[source,java]
+----
+@RegisterAiService
+public interface PoemAiService {
+
+    @SystemMessage("You are a professional poet")
+    @UserMessage("Write a poem about {topic}. The poem should be {lines} lines long")
+    String writeAPoem(String topic, int lines);
+}
+----
+
+and one chooses to use `quarkus-micrometer-registry-prometheus`, then the metrics could be:
+
+[source]
+----
+# HELP langchain4j_aiservices_timed_seconds
+# TYPE langchain4j_aiservices_timed_seconds summary
+langchain4j_aiservices_timed_seconds_count{aiservice="PoemAiService",method="writeAPoem",} 1.0
+langchain4j_aiservices_timed_seconds_sum{aiservice="PoemAiService",method="writeAPoem",} 4.241446681
+# HELP langchain4j_aiservices_timed_seconds_max
+# TYPE langchain4j_aiservices_timed_seconds_max gauge
+langchain4j_aiservices_timed_seconds_max{aiservice="PoemAiService",method="writeAPoem",} 4.241446681
+
+# HELP langchain4j_aiservices_counted_total
+# TYPE langchain4j_aiservices_counted_total counter
+langchain4j_aiservices_counted_total{aiservice="PoemAiService",exception="none",method="writeAPoem",result="success",} 1.0
+----
+
+== Tracing
+
+Each AI method creates its own span using the `langchain4j.aiservices.$interface_name.$method_name` template for the name.
+Furthermore, tool invocations also create a span using `langchain4j.tools.$tool_name` template for the name.
+
+
+For example, if the AI service looks like:
+
+[source,java]
+----
+@RegisterAiService(tools = EmailService.class)
+public interface PoemAiService {
+
+    @SystemMessage("You are a professional poet")
+    @UserMessage("Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.")
+    String writeAPoem(String topic, int lines);
+
+}
+----
+
+a tool that looks like:
+
+[source,java]
+----
+@ApplicationScoped
+public class EmailService {
+
+    @Inject
+    Mailer mailer;
+
+    @Tool("send the given content by email")
+    public void sendAnEmail(String content) {
+        Log.info("Sending an email: " + content);
+        mailer.send(Mail.withText("sendMeALetter@quarkus.io", "A poem for you", content));
+    }
+
+}
+----
+
+and invocation of the AI service that looks like:
+
+[source,java]
+----
+@Path("/email-me-a-poem")
+public class EmailMeAPoemResource {
+
+    private final MyAiService service;
+
+    public EmailMeAPoemResource(MyAiService service) {
+        this.service = service;
+    }
+
+    @GET
+    public String emailMeAPoem() {
+        return service.writeAPoem("Quarkus", 4);
+    }
+
+}
+----
+
+then an example trace is:
+
+image::trace.png[width=1000,align="center"]
+
+In the trace above we can see the parent span which corresponds to the handling the GET HTTP request, but the real
+interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
+The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
+
+==== Custom span data
+if you have the need for custom span data, you can simply add a bean implemtenting `ChatModelSpanContributor`.
+[source,java]
+----
+import io.quarkiverse.langchain4j.runtime.listeners.ChatModelSpanContributor;
+import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
+import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import io.opentelemetry.api.trace.Span;
+
+@ApplicationScoped
+public class CustomSpanDataContributor implements ChatModelSpanContributor {
+    public void onRequest(ChatModelRequestContext requestContext, Span currentSpan) {
+        span.addAttribute("example", "request");
+    }
+
+    public void onResponse(ChatModelResponseContext responseContext, Span currentSpan) {
+        span.addAttribute("example", "response");
+    }
+
+    default void onError(ChatModelErrorContext errorContext, Span currentSpan) {
+        span.addAttribute("example", "failure");
+    }
+}
+----
+
+=== Langfuse
+
+Here is an example on sending traces to https://langfuse.com/[Langfuse's] OpenTelemetry endpoint.
+
+==== Step 1: Enable OpenTelemetry in Quarkus LangChain4j
+
+*Add Quarkus OpenTelemetry Dependency* (Maven):
+
+For Maven, add the following to your `pom.xml` (Gradle users can include equivalent coordinates in Gradle):
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-opentelemetry</artifactId>
+</dependency>
+----
+
+*Configure OpenTelemetry exporter* (`application.properties`):
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.traces.protocol=http/protobuf
+----
+
+With these configurations and dependencies in place, your Quarkus application is ready to produce OpenTelemetry traces. Quarkus LangChain4j internal calls (e.g. when you invoke a chat model) will be recorded as spans.
+
+Each span will carry attributes like `gen_ai.operation.name`, `gen_ai.system` (the provider, e.g. "openai"), model names, token usage, etc.
+In order to enable events for the prompt and response content you need to activate the langchain4j prompt tracing.
+
+*Configure Langchain4j prompt tracing* (`application.properties`):
+
+[source,properties]
+----
+quarkus.langchain4j.tracing.include-prompt=true
+quarkus.langchain4j.tracing.include-completion=true
+----
+
+==== Step 2: Configure Langfuse
+
+Now that your Quarkus application is emitting OpenTelemetry trace data, the next step is to direct that data to Langfuse.
+
+Langfuse will act as the "backend" for OpenTelemetry in this setup. You can also use other OpenTelemetry backends such as Jaeger/Zipkin/OTel-Collector.
+
+*Langfuse Setup*
+
+* Sign up for https://cloud.langfuse.com/[Langfuse Cloud] or https://langfuse.com/self-hosting[self-hosted Langfuse].
+* Set the OTLP endpoint (e.g. `https://cloud.langfuse.com/api/public/otel`) and API keys.
+
+Configure these via environment variables:
+
+[source,bash]
+----
+QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: set this to the Langfuse OTLP URL (e.g. https://cloud.langfuse.com/api/public/otel).
+QUARKUS_OTEL_EXPORTER_OTLP_HEADERS: set this to Authorization=Basic <base64 public:secret>.
+----
+
+Alternatively, making the following configuration in `application.properties`:
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.headers=Authorization=Basic <base64 of public:key>
+quarkus.otel.exporter.otlp.endpoint=https://cloud.langfuse.com/api/public/otel
+----
+
+[NOTE]
+====
+You can find more on authentication via Basic Auth https://langfuse.com/docs/opentelemetry/get-started[here].
+====
+
+==== Step 3: Run a Test AI Operation
+
+Start your Quarkus application. Trigger an AI operation that Quarkus LangChain4j handles – for example, call a service or controller that uses a `ChatModel` to generate a completion.
+
+*Note*: A complete example can be found https://github.com/langfuse/langfuse-examples/tree/main/applications/quarkus-langchain4j-demo[here]
+
+[source,java]
+----
+@RegisterAiService(tools = EmailService.class)
+public interface MyAiService {
+
+    /**
+     * Ask the LLM to create a poem about the given topic.
+     *
+     * @param topic the topic of the poem
+     * @param lines the number of line of the poem
+     * @return the poem
+     */
+    @SystemMessage("You are a professional poet")
+    @UserMessage("""
+            Write a single poem about {topic}. The poem should be {lines} lines long and your response should only include the poem itself, nothing else.
+            Then send this poem by email. Your response should include the poem.
+            """)
+    String writeAPoem(String topic, int lines);
+
+}
+
+@Singleton
+public class Startup {
+
+    public void writeAPoem(@Observes StartupEvent event, MyAiService service) {
+        System.out.println(service.writeAPoem("LangFuse", 4));
+    }
+}
+----
+
+==== Troubleshooting
+
+*No Traces:*
+
+* Check the logs of the application for potential clues
+* Check https://langfuse.com/self-hosting/troubleshooting#missing-events-after-post-apipublicingestion[Troubleshooting] page
+
+== Auditing
+
+The extension allows users to audit the process of implementing an AiService by observing normal CDI events. The following example shows a class that audits all events.
+
+NOTE: These methods do not all need to live in the same class and the name of the class and the methods do not matter. It is only shown this way for demonstration purposes.
+
+[source,java]
+----
+@ApplicationScoped
+public class AuditingListener {
+	public void initialMessagesCreated(@Observes InitialMessagesCreatedEvent initialMessagesCreatedEvent) {
+        // Invoked when the original user and system messages have been created
+	}
+
+	public void llmInteractionComplete(@Observes LLMInteractionCompleteEvent llmInteractionCompleteEvent) {
+		// Invoked when the final result of the AiService method has been computed
+	}
+
+	public void llmInteractionFailed(@Observes LLMInteractionFailureEvent llmInteractionFailureEvent) {
+		// Invoked when there was an exception computing the result of the AiService method
+	}
+
+	public void responseFromLLMReceived(@Observes ResponseFromLLMReceivedEvent responseFromLLMReceivedEvent) {
+		// Invoked with a response from an LLM.
+        // It is important to note that this can be invoked multiple times when tools exist.
+	}
+
+	public void toolExecuted(@Observes ToolExecutedEvent toolExecutedEvent) {
+		// Invoked with a tool response from an LLM.
+        // It is important to note that this can be invoked multiple times when tools exist.
+	}
+}
+----
