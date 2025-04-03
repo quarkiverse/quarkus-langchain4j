@@ -8,8 +8,10 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -23,6 +25,9 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class McpProcessor {
 
@@ -75,4 +80,25 @@ public class McpProcessor {
             }
         }
     }
+
+    @BuildStep
+    public void indexMcpClientDependency(BuildProducer<IndexDependencyBuildItem> index) {
+        // this is needed for the 'reflectionRegistrations' build step to work
+        index.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-mcp"));
+    }
+
+    @BuildStep
+    public void reflectionRegistrations(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
+            CombinedIndexBuildItem indexBuildItem) {
+        // register everything in the dev.langchain4j.mcp.client.protocol package
+        String PROTOCOL_PACKAGE_PATTERN = "dev\\.langchain4j\\.mcp\\.client\\.protocol\\..+";
+        IndexView index = indexBuildItem.getIndex();
+        for (ClassInfo clazz : index.getKnownClasses()) {
+            if (clazz.name().toString().matches(PROTOCOL_PACKAGE_PATTERN)) {
+                reflectiveClass
+                        .produce(ReflectiveClassBuildItem.builder(clazz.name().toString()).fields(true).methods(true).build());
+            }
+        }
+    }
+
 }
