@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -186,8 +187,8 @@ public class InputGuardrailValidationTest {
                 assertThat(params.userMessage().singleText()).isEqualTo("foo");
             }
             if (params.memory().messages().size() == 2) {
-                assertThat(params.memory().messages().get(0).text()).isEqualTo("foo");
-                assertThat(params.memory().messages().get(1).text()).isEqualTo("Hi!");
+                assertThat(chatMessageToText(params.memory().messages().get(0))).isEqualTo("foo");
+                assertThat(chatMessageToText(params.memory().messages().get(1))).isEqualTo("Hi!");
                 assertThat(params.userMessage().singleText()).isEqualTo("bar");
             }
             return success();

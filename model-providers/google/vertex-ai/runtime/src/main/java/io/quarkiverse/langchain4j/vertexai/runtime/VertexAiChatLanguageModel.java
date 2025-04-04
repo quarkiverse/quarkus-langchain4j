@@ -22,6 +22,7 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public class VertexAiChatLanguageModel implements ChatLanguageModel {
@@ -83,14 +84,15 @@ public class VertexAiChatLanguageModel implements ChatLanguageModel {
     private static String toContext(List<ChatMessage> messages) {
         return messages.stream()
                 .filter(chatMessage -> chatMessage.type() == SYSTEM)
-                .map(ChatMessage::text)
+                .map(LangChain4jUtil::chatMessageToText)
                 .collect(joining("\n"));
     }
 
     private List<PredictRequest.Message> toVertexMessages(List<ChatMessage> messages) {
         return messages.stream()
                 .filter(chatMessage -> chatMessage.type() == USER || chatMessage.type() == AI)
-                .map(chatMessage -> new PredictRequest.Message(chatMessage.type().name(), chatMessage.text()))
+                .map(chatMessage -> new PredictRequest.Message(chatMessage.type().name(),
+                        LangChain4jUtil.chatMessageToText(chatMessage)))
                 .collect(toList());
     }
 

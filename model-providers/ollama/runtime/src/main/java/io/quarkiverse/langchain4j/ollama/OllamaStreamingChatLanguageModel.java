@@ -19,13 +19,14 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.smallrye.mutiny.Context;
@@ -81,9 +82,11 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
         context.put(RESPONSE_CONTEXT, new ArrayList<ChatResponse>());
         context.put(TOOLS_CONTEXT, new ArrayList<ToolExecutionRequest>());
 
-        ChatModelRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
+        dev.langchain4j.model.chat.request.ChatRequest modelListenerRequest = createModelListenerRequest(request, messages,
+                toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
+        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
+                attributes);
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -139,24 +142,10 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                         new Consumer<>() {
                             @Override
                             public void accept(Throwable error) {
-                                List<ChatResponse> chatResponses = context.get(RESPONSE_CONTEXT);
-                                String stringResponse = chatResponses.stream()
-                                        .map(ChatResponse::message)
-                                        .map(Message::content)
-                                        .collect(Collectors.joining());
-                                AiMessage aiMessage = new AiMessage(stringResponse);
-                                dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
-                                        .builder().aiMessage(aiMessage).build();
-
-                                ChatModelResponse modelListenerPartialResponse = createModelListenerResponse(
-                                        null,
-                                        context.get(MODEL_ID),
-                                        aiMessageResponse);
-
                                 ChatModelErrorContext errorContext = new ChatModelErrorContext(
                                         error,
                                         modelListenerRequest,
-                                        modelListenerPartialResponse,
+                                        ModelProvider.OTHER,
                                         attributes);
 
                                 listeners.forEach(listener -> {
@@ -195,13 +184,14 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                                 dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse = dev.langchain4j.model.chat.response.ChatResponse
                                         .builder().aiMessage(aiMessage).tokenUsage(tokenUsage).build();
 
-                                ChatModelResponse modelListenerResponse = createModelListenerResponse(
+                                dev.langchain4j.model.chat.response.ChatResponse modelListenerResponse = createModelListenerResponse(
                                         null,
                                         context.get(MODEL_ID),
                                         aiMessageResponse);
                                 ChatModelResponseContext responseContext = new ChatModelResponseContext(
                                         modelListenerResponse,
                                         modelListenerRequest,
+                                        ModelProvider.OTHER,
                                         attributes);
                                 listeners.forEach(listener -> {
                                     try {
@@ -216,35 +206,36 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageMo
                         });
     }
 
-    private ChatModelRequest createModelListenerRequest(ChatRequest request,
+    private dev.langchain4j.model.chat.request.ChatRequest createModelListenerRequest(ChatRequest request,
             List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications) {
         Options options = request.options();
-        var builder = ChatModelRequest.builder()
-                .model(request.model())
-                .messages(messages)
+        var requestParameters = ChatRequestParameters.builder()
+                .modelName(request.model())
                 .toolSpecifications(toolSpecifications);
         if (options != null) {
-            builder.temperature(options.temperature())
+            requestParameters.temperature(options.temperature())
                     .topP(options.topP())
-                    .maxTokens(options.numPredict());
+                    .maxOutputTokens(options.numPredict());
         }
+        var builder = dev.langchain4j.model.chat.request.ChatRequest.builder()
+                .messages(messages)
+                .parameters(requestParameters.build());
         return builder.build();
     }
 
-    private ChatModelResponse createModelListenerResponse(String responseId,
+    private dev.langchain4j.model.chat.response.ChatResponse createModelListenerResponse(String responseId,
             String responseModel,
             dev.langchain4j.model.chat.response.ChatResponse aiMessageResponse) {
         if (aiMessageResponse == null) {
             return null;
         }
 
-        return ChatModelResponse.builder()
-                .id(responseId)
-                .model(responseModel)
-                .tokenUsage(aiMessageResponse.tokenUsage())
+        return dev.langchain4j.model.chat.response.ChatResponse.builder()
                 .finishReason(aiMessageResponse.finishReason())
                 .aiMessage(aiMessageResponse.aiMessage())
+                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
+                        .tokenUsage(aiMessageResponse.tokenUsage()).build())
                 .build();
     }
 

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.template;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -37,7 +39,7 @@ public class ChatMessageTemplateExtension {
                     if (!aiMessage.hasToolExecutionRequests())
                         joiner.add("%s%s".formatted(assistantPrefix, aiMessage.text()));
                 }
-                case USER -> joiner.add("%s%s".formatted(userPrefix, chatMessage.text()));
+                case USER -> joiner.add("%s%s".formatted(userPrefix, chatMessageToText(chatMessage)));
                 case SYSTEM, TOOL_EXECUTION_RESULT, CUSTOM -> {
                     continue;
                 }

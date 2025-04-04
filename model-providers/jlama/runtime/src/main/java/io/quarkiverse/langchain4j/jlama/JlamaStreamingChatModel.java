@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.jlama;
 
 import static io.quarkiverse.langchain4j.jlama.JlamaModel.toFinishReason;
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static io.quarkiverse.langchain4j.runtime.VertxUtil.runOutEventLoop;
 
 import java.nio.file.Path;
@@ -96,9 +97,9 @@ public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
         PromptSupport.Builder promptBuilder = model.promptSupport().get().builder();
         for (ChatMessage message : messages) {
             switch (message.type()) {
-                case SYSTEM -> promptBuilder.addSystemMessage(message.text());
-                case USER -> promptBuilder.addUserMessage(message.text());
-                case AI -> promptBuilder.addAssistantMessage(message.text());
+                case SYSTEM -> promptBuilder.addSystemMessage(chatMessageToText(message));
+                case USER -> promptBuilder.addUserMessage(chatMessageToText(message));
+                case AI -> promptBuilder.addAssistantMessage(chatMessageToText(message));
                 default -> throw new IllegalArgumentException("Unsupported message type: " + message.type());
             }
         }

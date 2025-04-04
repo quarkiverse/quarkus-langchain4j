@@ -7,7 +7,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODEL_NA
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MODERATION_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
 import java.util.HashSet;
 import java.util.List;
@@ -144,8 +143,6 @@ public class BeansProcessor {
                 requestedModerationModels.add(modelName);
             } else if (IMAGE_MODEL.equals(requiredName)) {
                 requestedImageModels.add(modelName);
-            } else if (TOKEN_COUNT_ESTIMATOR.equals(requiredName)) {
-                tokenCountEstimators.add(modelName);
             }
         }
         for (

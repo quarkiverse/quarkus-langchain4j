@@ -6,7 +6,6 @@ import java.util.function.Function;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.CustomMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -112,9 +111,6 @@ public class BedrockConverseStreamingChatModel implements StreamingChatLanguageM
                 } else if (chatMessage instanceof ToolExecutionResultMessage term) {
                     msg = term.text();
                     role = ConversationRole.ASSISTANT;
-                } else if (chatMessage instanceof CustomMessage cm) {
-                    msg = cm.text();
-                    role = ConversationRole.USER;
                 } else {
                     throw new IllegalArgumentException(chatMessage == null ? "null" : chatMessage.getClass().getName());
                 }

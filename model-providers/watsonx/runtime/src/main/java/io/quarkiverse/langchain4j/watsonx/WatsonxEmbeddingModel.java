@@ -11,15 +11,13 @@ import java.util.stream.Collectors;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingResponse.Result;
-import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 
-public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, TokenCountEstimator {
+public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel {
 
     private final EmbeddingParameters parameters;
     private static final int MAX_SIZE = 1000;
@@ -62,21 +60,6 @@ public class WatsonxEmbeddingModel extends Watsonx implements EmbeddingModel, To
         }
 
         return Response.from(result);
-    }
-
-    @Override
-    public int estimateTokenCount(String text) {
-
-        if (Objects.isNull(text) || text.isEmpty())
-            return 0;
-
-        var request = new TokenizationRequest(modelId, text, spaceId, projectId);
-        return retryOn(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return client.tokenization(request, version).result().tokenCount();
-            }
-        });
     }
 
     public static Builder builder() {

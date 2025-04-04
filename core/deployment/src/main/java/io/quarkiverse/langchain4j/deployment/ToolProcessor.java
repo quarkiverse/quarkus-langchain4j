@@ -244,7 +244,7 @@ public class ToolProcessor {
 
                     builder.parameters(
                             JsonObjectSchema.builder()
-                                    .properties(properties)
+                                    .addProperties(properties)
                                     .required(required)
                                     .build());
 

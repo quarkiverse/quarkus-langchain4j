@@ -16,6 +16,11 @@
             <artifactId>quarkus-langchain4j-testing-internal</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

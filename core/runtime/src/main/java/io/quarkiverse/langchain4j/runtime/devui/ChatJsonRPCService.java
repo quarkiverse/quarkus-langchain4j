@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.devui;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -175,16 +177,15 @@ public class ChatJsonRPCService {
                     AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
                     ChatMessage augmentedMessage = retrievalAugmentor.augment(augmentationRequest).chatMessage();
                     memory.add(augmentedMessage);
-                    em.emit(new JsonObject().put("augmentedMessage", augmentedMessage.text()));
+                    em.emit(new JsonObject().put("augmentedMessage", chatMessageToText(augmentedMessage)));
                 } else {
                     memory.add(new UserMessage(message));
                 }
 
                 StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
-                boolean hasToolProvider = setToolsViaProviderIfAvailable(memory, userMessage);
+                setToolsViaProviderIfAvailable(memory, userMessage);
 
                 // invoke tools if applicable
-                Response<AiMessage> modelResponse;
                 if (toolSpecifications.isEmpty()) {
                     streamingModel.chat(memory.messages(), new StreamingChatResponseHandler() {
                         @Override

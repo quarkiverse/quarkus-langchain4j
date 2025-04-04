@@ -11,6 +11,7 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkus.arc.All;
 import io.quarkus.arc.Arc;
@@ -87,7 +88,7 @@ public class EmbeddingStoreJsonRPCService {
             // FIXME: this doesn't allow any kind of escaping the `=` or `,` characters; do we need that?
             String[] keyValue = metadataField.split("=");
             if (keyValue.length == 2) {
-                metadataObject.add(keyValue[0].trim(), keyValue[1].trim());
+                metadataObject.put(keyValue[0].trim(), keyValue[1].trim());
             }
         }
         return metadataObject;
@@ -99,17 +100,19 @@ public class EmbeddingStoreJsonRPCService {
         verifyEmbeddingModelAndStore();
         int limitInt = Integer.parseInt(limit);
         JsonArray result = new JsonArray();
-        for (EmbeddingMatch<TextSegment> match : embeddingStore.findRelevant(embeddingModel.embed(text).content(), limitInt)) {
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(embeddingModel.embed(text).content()).maxResults(limitInt)
+                .build();
+        for (EmbeddingMatch<TextSegment> match : embeddingStore.search(request).matches()) {
             JsonObject matchJson = new JsonObject();
             matchJson.put("embeddingId", match.embeddingId());
             matchJson.put("score", match.score());
             matchJson.put("embedded", match.embedded() != null ? match.embedded().text() : null);
             JsonArray metadata = new JsonArray();
             if (match.embedded() != null && match.embedded().metadata() != null) {
-                for (String key : match.embedded().metadata().asMap().keySet()) {
+                for (String key : match.embedded().metadata().toMap().keySet()) {
                     JsonObject metadataEntry = new JsonObject();
                     metadataEntry.put("key", key);
-                    metadataEntry.put("value", match.embedded().metadata().get(key));
+                    metadataEntry.put("value", match.embedded().metadata().getString(key));
                     metadata.add(metadataEntry);
                 }
             }

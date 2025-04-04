@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.azure.openai;
 
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
-import static dev.langchain4j.model.openai.OpenAiModelName.DALL_E_2;
 import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 
 import java.io.IOException;
@@ -131,9 +130,6 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .style(style)
                 .responseFormat(responseFormat);
 
-        if (DALL_E_2.equals(modelName)) {
-            builder.model(DALL_E_2);
-        }
         if (user.isPresent()) {
             builder.user(user.get());
         }

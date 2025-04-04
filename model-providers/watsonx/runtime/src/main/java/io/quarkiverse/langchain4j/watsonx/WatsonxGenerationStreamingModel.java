@@ -1,12 +1,10 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
 import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -17,7 +15,6 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -31,11 +28,10 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationParameters.LengthPe
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
-import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.smallrye.mutiny.Context;
 
 public class WatsonxGenerationStreamingModel extends Watsonx
-        implements StreamingChatLanguageModel, TokenCountEstimator {
+        implements StreamingChatLanguageModel {
 
     private static final String INPUT_TOKEN_COUNT_CONTEXT = "INPUT_TOKEN_COUNT";
     private static final String GENERATED_TOKEN_COUNT_CONTEXT = "GENERATED_TOKEN_COUNT";
@@ -169,19 +165,6 @@ public class WatsonxGenerationStreamingModel extends Watsonx
                             }
                         });
 
-    }
-
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-        var input = toInput(messages);
-        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
-
-        return retryOn(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return client.tokenization(request, version).result().tokenCount();
-            }
-        });
     }
 
     public static Builder builder() {

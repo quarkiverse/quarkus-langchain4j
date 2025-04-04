@@ -85,6 +85,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     }
 
     @Override
+    public void checkHealth() {
+        // no transport-specific checks right now
+    }
+
+    @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
         return execute(operation, operation.getId()).subscribeAsCompletionStage();
     }

@@ -11,7 +11,6 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -22,6 +21,7 @@ import dev.langchain4j.model.huggingface.client.TextGenerationRequest;
 import dev.langchain4j.model.huggingface.client.TextGenerationResponse;
 import dev.langchain4j.model.huggingface.spi.HuggingFaceClientFactory;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 
 /**
  * This is a Quarkus specific version of the HuggingFace model.
@@ -90,7 +90,7 @@ public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
                 .build();
         TextGenerationRequest request = TextGenerationRequest.builder()
                 .inputs(chatRequest.messages().stream()
-                        .map(ChatMessage::text)
+                        .map(LangChain4jUtil::chatMessageToText)
                         .collect(joining("\n")))
                 .parameters(parameters)
                 .options(Options.builder()

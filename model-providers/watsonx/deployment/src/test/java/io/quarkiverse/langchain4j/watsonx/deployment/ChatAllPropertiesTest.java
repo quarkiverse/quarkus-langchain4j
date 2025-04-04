@@ -38,7 +38,6 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -102,9 +101,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
 
     @Inject
     StreamingChatLanguageModel streamingChatModel;
-
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
 
     static TextChatParameters parameters = TextChatParameters.builder()
             .frequencyPenalty(2.0)
@@ -528,8 +524,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .body(mapper.writeValueAsString(body))
                 .response(RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
-
-        assertEquals(11, tokenCountEstimator.estimateTokenCount("test"));
     }
 
     @Test

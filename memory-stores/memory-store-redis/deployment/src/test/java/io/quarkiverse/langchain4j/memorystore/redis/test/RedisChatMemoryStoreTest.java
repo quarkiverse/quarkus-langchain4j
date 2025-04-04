@@ -26,6 +26,7 @@ import io.quarkiverse.langchain4j.ChatMemoryRemover;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.memorystore.RedisChatMemoryStore;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.test.QuarkusUnitTest;
@@ -82,7 +83,7 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemoryStore.getMessages(FIRST_MEMORY_ID)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         resetRequests();
@@ -100,7 +101,7 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemoryStore.getMessages(SECOND_MEMORY_ID)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         resetRequests();
@@ -122,7 +123,7 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemoryStore.getMessages(FIRST_MEMORY_ID)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser),
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
@@ -145,7 +146,7 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemoryStore.getMessages(SECOND_MEMORY_ID)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
 

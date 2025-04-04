@@ -45,7 +45,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -124,9 +123,6 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
 
     @Inject
     ScoringModel scoringModel;
-
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
 
     static TextGenerationParameters parameters = TextGenerationParameters.builder()
             .minNewTokens(10)
@@ -523,8 +519,6 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                 .body(mapper.writeValueAsString(body))
                 .response(RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
-
-        assertEquals(11, tokenCountEstimator.estimateTokenCount("test"));
     }
 
     @Test

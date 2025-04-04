@@ -1,5 +1,7 @@
 package org.acme.example.openai;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -51,7 +53,7 @@ public class NaiveRAGTest {
     public void testWithSpecifiedAugmentor() {
         serviceWithSpecifiedRetrievalAugmentor.chat("When was Charlie born?");
         List<ChatMessage> query = lastQuery.get();
-        Assertions.assertTrue(query.get(0).text().contains("Charlie was born in 2018."));
+        Assertions.assertTrue(chatMessageToText(query.get(0)).contains("Charlie was born in 2018."));
     }
 
     @Test
@@ -59,14 +61,14 @@ public class NaiveRAGTest {
         serviceWithNoRetrievalAugmentor.chat("When was Charlie born?");
         List<ChatMessage> query = lastQuery.get();
         // No RAG should be used, so nothing from the embedding store
-        Assertions.assertFalse(query.get(0).text().contains("Charlie was born in 2018."));
+        Assertions.assertFalse(chatMessageToText(query.get(0)).contains("Charlie was born in 2018."));
     }
 
     @Test
     public void testWithAutoDiscoveredAugmentor() {
         serviceWithAutoDiscoveredRetrievalAugmentor.chat("When was Charlie born?");
         List<ChatMessage> query = lastQuery.get();
-        Assertions.assertTrue(query.get(0).text().contains("Charlie was born in 2018."));
+        Assertions.assertTrue(chatMessageToText(query.get(0)).contains("Charlie was born in 2018."));
     }
 
 }

@@ -57,13 +57,13 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
@@ -133,13 +133,6 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
             }
             return new AugmentationResult(augmentationRequest.chatMessage(), Collections.emptyList());
-        }
-
-        @Override
-        public dev.langchain4j.data.message.UserMessage augment(dev.langchain4j.data.message.UserMessage userMessage,
-                Metadata metadata) {
-            AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
-            return (dev.langchain4j.data.message.UserMessage) augment(augmentationRequest).chatMessage();
         }
 
         public static class Supplier implements java.util.function.Supplier<RetrievalAugmentor> {
@@ -402,7 +395,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
@@ -420,7 +413,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
@@ -442,7 +435,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser),
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
@@ -466,7 +459,7 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
     }

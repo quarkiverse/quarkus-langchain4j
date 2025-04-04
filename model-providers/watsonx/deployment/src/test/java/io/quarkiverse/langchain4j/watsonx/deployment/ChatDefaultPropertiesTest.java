@@ -35,7 +35,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
@@ -78,9 +77,6 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
 
     @Inject
     StreamingChatLanguageModel streamingChatModel;
-
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
 
     @Test
     void check_config() throws Exception {
@@ -142,8 +138,6 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
                 .body(mapper.writeValueAsString(body))
                 .response(RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
-
-        assertEquals(11, tokenCountEstimator.estimateTokenCount("test"));
     }
 
     @Test

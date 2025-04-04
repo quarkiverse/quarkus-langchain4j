@@ -20,7 +20,7 @@ public class JsonObjectSchemaObjectSubstitution
     public JsonObjectSchema deserialize(Serialized obj) {
         return JsonObjectSchema.builder()
                 .description(obj.description)
-                .properties(obj.properties)
+                .addProperties(obj.properties)
                 .required(obj.required)
                 .additionalProperties(obj.additionalProperties)
                 .definitions(obj.definitions)

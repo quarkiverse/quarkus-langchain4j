@@ -7,7 +7,7 @@ import jakarta.enterprise.inject.Default;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.SessionConfig;
 
-import dev.langchain4j.store.embedding.neo4j.Neo4jEmbeddingStore;
+import dev.langchain4j.community.store.embedding.neo4j.Neo4jEmbeddingStore;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -19,7 +19,7 @@ public class Neo4jEmbeddingStoreRecorder {
         return new Function<>() {
             @Override
             public Neo4jEmbeddingStore apply(SyntheticCreationalContext<Neo4jEmbeddingStore> context) {
-                Neo4jEmbeddingStore.Neo4jEmbeddingStoreBuilder builder = Neo4jEmbeddingStore.builder();
+                var builder = Neo4jEmbeddingStore.builder();
                 Driver driver = context.getInjectedReference(Driver.class, new Default.Literal());
                 builder.driver(driver);
                 builder.dimension(config.dimension());

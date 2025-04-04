@@ -13,7 +13,7 @@ public class UpsertVector {
 
     private final String id;
     private final float[] values;
-    private final Map<String, String> metadata;
+    private final Map<String, Object> metadata;
 
     public UpsertVector(Builder builder) {
         this.id = builder.id;
@@ -29,7 +29,7 @@ public class UpsertVector {
         return values;
     }
 
-    public Map<String, String> getMetadata() {
+    public Map<String, Object> getMetadata() {
         return metadata;
     }
 
@@ -37,7 +37,7 @@ public class UpsertVector {
 
         private String id = null;
         private float[] value = null;
-        private Map<String, String> metadata = new HashMap<>();
+        private Map<String, Object> metadata = new HashMap<>();
 
         public Builder id(String id) {
             this.id = id;
@@ -56,7 +56,7 @@ public class UpsertVector {
             return this;
         }
 
-        public Builder metadata(Map<String, String> map) {
+        public Builder metadata(Map<String, Object> map) {
             if (map != null) {
                 this.metadata.putAll(map);
             }

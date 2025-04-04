@@ -15,9 +15,9 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.rag.query.Metadata;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class EasyRagWithExplicitAugmentorTest {
@@ -33,7 +33,7 @@ public class EasyRagWithExplicitAugmentorTest {
     @ApplicationScoped
     public static class ExplicitRetrievalAugmentor implements RetrievalAugmentor {
         @Override
-        public UserMessage augment(UserMessage userMessage, Metadata metadata) {
+        public AugmentationResult augment(AugmentationRequest augmentationRequest) {
             return null;
         }
     }

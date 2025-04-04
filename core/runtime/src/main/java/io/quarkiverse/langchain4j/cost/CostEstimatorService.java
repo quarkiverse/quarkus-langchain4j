@@ -26,7 +26,7 @@ public class CostEstimatorService {
     }
 
     public Cost estimate(ChatModelResponseContext response) {
-        TokenUsage tokenUsage = response.response().tokenUsage();
+        TokenUsage tokenUsage = response.chatResponse().tokenUsage();
         CostEstimator.CostContext costContext = new MyCostContext(tokenUsage, response);
 
         for (CostEstimator costEstimator : costEstimators) {
@@ -57,7 +57,7 @@ public class CostEstimatorService {
 
         @Override
         public String model() {
-            return response.request().model();
+            return response.chatRequest().parameters().modelName();
         }
     }
 }

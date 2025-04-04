@@ -10,12 +10,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 
+import dev.langchain4j.community.store.embedding.neo4j.Neo4jEmbeddingStore;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
-import dev.langchain4j.store.embedding.neo4j.Neo4jEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class Neo4jEmbeddingStoreTest extends EmbeddingStoreIT {

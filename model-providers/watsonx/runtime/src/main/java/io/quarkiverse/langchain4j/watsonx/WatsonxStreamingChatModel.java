@@ -1,25 +1,16 @@
 package io.quarkiverse.langchain4j.watsonx;
 
-import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
-import static java.util.stream.Collectors.joining;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -36,12 +27,10 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameter
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
-import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.smallrye.mutiny.Context;
 
-public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatLanguageModel, TokenCountEstimator {
+public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatLanguageModel {
 
     private static final String ID_CONTEXT = "ID";
     private static final String MODEL_ID_CONTEXT = "MODEL_ID";
@@ -221,34 +210,6 @@ public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatL
                                 }
                             }
                         });
-    }
-
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-
-        var input = messages.stream().map(new Function<ChatMessage, String>() {
-            @Override
-            public String apply(ChatMessage message) {
-                return switch (message.type()) {
-                    case AI -> {
-                        AiMessage aiMessage = (AiMessage) message;
-                        yield aiMessage.hasToolExecutionRequests() ? "" : aiMessage.text();
-                    }
-                    case SYSTEM -> ((SystemMessage) message).text();
-                    case USER -> ((UserMessage) message).singleText();
-                    case CUSTOM, TOOL_EXECUTION_RESULT -> "";
-                };
-            }
-        }).collect(joining(" "));
-
-        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
-
-        return retryOn(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return client.tokenization(request, version).result().tokenCount();
-            }
-        });
     }
 
     @Override

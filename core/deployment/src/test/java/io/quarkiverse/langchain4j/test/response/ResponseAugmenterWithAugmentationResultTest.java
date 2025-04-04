@@ -18,7 +18,6 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
-import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
@@ -86,13 +85,6 @@ public class ResponseAugmenterWithAugmentationResultTest {
         @Override
         public RetrievalAugmentor get() {
             return new RetrievalAugmentor() {
-                @Override
-                public dev.langchain4j.data.message.UserMessage augment(dev.langchain4j.data.message.UserMessage userMessage,
-                        Metadata metadata) {
-                    AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
-                    return (dev.langchain4j.data.message.UserMessage) augment(augmentationRequest).chatMessage();
-                }
-
                 @Override
                 public AugmentationResult augment(AugmentationRequest augmentationRequest) {
                     List<Content> content = List.of(Content.from("content1"), Content.from("content2"));

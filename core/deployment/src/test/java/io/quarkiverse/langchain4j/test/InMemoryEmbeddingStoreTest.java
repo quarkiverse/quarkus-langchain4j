@@ -25,6 +25,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.store.embedding.CosineSimilarity;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.RelevanceScore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
@@ -59,7 +60,8 @@ class InMemoryEmbeddingStoreTest {
         String id = embeddingStore.add(embedding);
         assertThat(id).isNotNull();
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(1);
 
         EmbeddingMatch<TextSegment> match = relevant.get(0);
@@ -79,7 +81,8 @@ class InMemoryEmbeddingStoreTest {
 
         embeddingStore.add(id, embedding);
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(1);
 
         EmbeddingMatch<TextSegment> match = relevant.get(0);
@@ -100,7 +103,8 @@ class InMemoryEmbeddingStoreTest {
         String id = embeddingStore.add(embedding, segment);
         assertThat(id).isNotNull();
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(1);
 
         EmbeddingMatch<TextSegment> match = relevant.get(0);
@@ -121,7 +125,8 @@ class InMemoryEmbeddingStoreTest {
         String id = embeddingStore.add(embedding, segment);
         assertThat(id).isNotNull();
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(embedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(embedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(1);
 
         EmbeddingMatch<TextSegment> match = relevant.get(0);
@@ -142,7 +147,8 @@ class InMemoryEmbeddingStoreTest {
         List<String> ids = embeddingStore.addAll(asList(firstEmbedding, secondEmbedding));
         assertThat(ids).hasSize(2);
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(firstEmbedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(2);
 
         EmbeddingMatch<TextSegment> firstMatch = relevant.get(0);
@@ -173,7 +179,8 @@ class InMemoryEmbeddingStoreTest {
                 asList(firstSegment, secondSegment));
         assertThat(ids).hasSize(2);
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(firstEmbedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(2);
 
         EmbeddingMatch<TextSegment> firstMatch = relevant.get(0);
@@ -202,7 +209,8 @@ class InMemoryEmbeddingStoreTest {
         Embedding secondEmbedding = embeddingModel.embed(randomUUID()).content();
         embeddingStore.add(secondId, secondEmbedding);
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(firstEmbedding, 10);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(2);
         EmbeddingMatch<TextSegment> firstMatch = relevant.get(0);
         assertThat(firstMatch.score()).isCloseTo(1, withPercentage(1));
@@ -211,26 +219,23 @@ class InMemoryEmbeddingStoreTest {
         assertThat(secondMatch.score()).isBetween(0d, 1d);
         assertThat(secondMatch.embeddingId()).isEqualTo(secondId);
 
-        List<EmbeddingMatch<TextSegment>> relevant2 = embeddingStore.findRelevant(
-                firstEmbedding,
-                10,
-                secondMatch.score() - 0.01);
+        var request2 = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10)
+                .minScore(secondMatch.score() - 0.01).build();
+        List<EmbeddingMatch<TextSegment>> relevant2 = embeddingStore.search(request2).matches();
         assertThat(relevant2).hasSize(2);
         assertThat(relevant2.get(0).embeddingId()).isEqualTo(firstId);
         assertThat(relevant2.get(1).embeddingId()).isEqualTo(secondId);
 
-        List<EmbeddingMatch<TextSegment>> relevant3 = embeddingStore.findRelevant(
-                firstEmbedding,
-                10,
-                secondMatch.score());
+        var request3 = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10)
+                .minScore(secondMatch.score()).build();
+        List<EmbeddingMatch<TextSegment>> relevant3 = embeddingStore.search(request3).matches();
         assertThat(relevant3).hasSize(2);
         assertThat(relevant3.get(0).embeddingId()).isEqualTo(firstId);
         assertThat(relevant3.get(1).embeddingId()).isEqualTo(secondId);
 
-        List<EmbeddingMatch<TextSegment>> relevant4 = embeddingStore.findRelevant(
-                firstEmbedding,
-                10,
-                secondMatch.score() + 0.01);
+        var request4 = EmbeddingSearchRequest.builder().queryEmbedding(firstEmbedding).maxResults(10)
+                .minScore(secondMatch.score() + 0.01).build();
+        List<EmbeddingMatch<TextSegment>> relevant4 = embeddingStore.search(request4).matches();
         assertThat(relevant4).hasSize(1);
         assertThat(relevant4.get(0).embeddingId()).isEqualTo(firstId);
     }
@@ -247,7 +252,8 @@ class InMemoryEmbeddingStoreTest {
 
         Embedding referenceEmbedding = embeddingModel.embed("hi").content();
 
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(referenceEmbedding, 1);
+        var request = EmbeddingSearchRequest.builder().queryEmbedding(referenceEmbedding).maxResults(1).build();
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.search(request).matches();
         assertThat(relevant).hasSize(1);
 
         EmbeddingMatch<TextSegment> match = relevant.get(0);

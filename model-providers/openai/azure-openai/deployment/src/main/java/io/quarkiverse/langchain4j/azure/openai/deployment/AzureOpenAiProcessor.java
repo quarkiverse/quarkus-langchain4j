@@ -4,7 +4,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MOD
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.IMAGE_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 
 import java.util.List;
 
@@ -88,19 +87,6 @@ public class AzureOpenAiProcessor {
                         .createWith(chatModel);
                 addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
-
-                var tokenCountBuilder = SyntheticBeanBuildItem
-                        .configure(TOKEN_COUNT_ESTIMATOR)
-                        .setRuntimeInit()
-                        .defaultBean()
-                        .scope(ApplicationScoped.class)
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
-                        .createWith(chatModel);
-                addQualifierIfNecessary(tokenCountBuilder, configName);
-                beanProducer.produce(tokenCountBuilder.done());
 
                 var streamingChatModel = recorder.streamingChatModel(config, configName);
                 var streamingBuilder = SyntheticBeanBuildItem

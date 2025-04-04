@@ -4,7 +4,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MOD
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SCORING_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOKEN_COUNT_ESTIMATOR;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WatsonxDotNames.TEXT_EXTRACTION;
 
 import java.util.HashSet;
@@ -222,18 +221,6 @@ public class WatsonxProcessor {
 
             addQualifierIfNecessary(chatBuilder, configName);
             beanProducer.produce(chatBuilder.done());
-
-            var tokenizerBuilder = SyntheticBeanBuildItem
-                    .configure(TOKEN_COUNT_ESTIMATOR)
-                    .setRuntimeInit()
-                    .defaultBean()
-                    .scope(ApplicationScoped.class)
-                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                            new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                    .createWith(chatLanguageModel);
-
-            addQualifierIfNecessary(tokenizerBuilder, configName);
-            beanProducer.produce(tokenizerBuilder.done());
 
             var streamingBuilder = SyntheticBeanBuildItem
                     .configure(STREAMING_CHAT_MODEL)

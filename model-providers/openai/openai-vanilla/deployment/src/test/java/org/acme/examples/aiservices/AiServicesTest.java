@@ -57,6 +57,7 @@ import dev.langchain4j.service.V;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiServicesTest extends OpenAiBaseTest {
@@ -622,7 +623,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
@@ -644,7 +645,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstUserMessage), tuple(AI, firstAiMessage), tuple(USER, secondUserMessage),
                         tuple(AI, secondAiMessage));
     }
@@ -693,7 +694,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(3)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(SYSTEM, systemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
@@ -716,7 +717,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(5)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(SYSTEM, systemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage),
                         tuple(USER, secondUserMessage),
                         tuple(AI, secondAiMessage));
@@ -750,7 +751,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(3)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(SYSTEM, firstSystemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage));
 
         /* **** Second request **** */
@@ -774,7 +775,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(chatMemory.messages()).hasSize(5)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(SYSTEM, secondSystemMessage), tuple(USER, firstUserMessage), tuple(AI, firstAiMessage),
                         tuple(USER, secondUserMessage), tuple(AI, secondAiMessage));
     }
@@ -835,7 +836,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
@@ -853,7 +854,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
@@ -875,7 +876,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(firstMemoryId)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser),
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
@@ -898,7 +899,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(secondMemoryId)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
     }
