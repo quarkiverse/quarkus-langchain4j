@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import io.quarkiverse.langchain4j.ModelName;
-import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -30,12 +29,12 @@ public class MultipleModerationProvidersTest {
 
     @Test
     void defaultModel() {
-        assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiModerationModel.class);
+        assertThat(SubclassUtil.unwrap(defaultModel)).isInstanceOf(OpenAiModerationModel.class);
     }
 
     @Test
     void firstNamedModel() {
-        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiModerationModel.class);
+        assertThat(SubclassUtil.unwrap(firstNamedModel)).isInstanceOf(OpenAiModerationModel.class);
     }
 
     @Test
