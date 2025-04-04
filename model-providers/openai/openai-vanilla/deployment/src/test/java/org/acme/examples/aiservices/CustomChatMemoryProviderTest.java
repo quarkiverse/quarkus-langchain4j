@@ -27,6 +27,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
@@ -92,7 +93,7 @@ public class CustomChatMemoryProviderTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(FIRST_MEMORY_ID)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser));
 
         /* **** First request for user 2 **** */
@@ -111,7 +112,7 @@ public class CustomChatMemoryProviderTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(SECOND_MEMORY_ID)).hasSize(2)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser));
 
         /* **** Second request for user 1 **** */
@@ -134,7 +135,7 @@ public class CustomChatMemoryProviderTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(FIRST_MEMORY_ID)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromFirstUser), tuple(AI, firstAiResponseToFirstUser),
                         tuple(USER, secondsMessageFromFirstUser), tuple(AI, secondAiMessageToFirstUser));
 
@@ -158,7 +159,7 @@ public class CustomChatMemoryProviderTest extends OpenAiBaseTest {
 
         // assert chat memory
         assertThat(store.getMessages(SECOND_MEMORY_ID)).hasSize(4)
-                .extracting(ChatMessage::type, ChatMessage::text)
+                .extracting(ChatMessage::type, LangChain4jUtil::chatMessageToText)
                 .containsExactly(tuple(USER, firstMessageFromSecondUser), tuple(AI, firstAiResponseToSecondUser),
                         tuple(USER, secondsMessageFromSecondUser), tuple(AI, secondAiMessageToSecondUser));
 

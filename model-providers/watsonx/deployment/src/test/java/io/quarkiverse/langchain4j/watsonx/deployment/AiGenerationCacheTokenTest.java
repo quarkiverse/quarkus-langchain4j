@@ -36,7 +36,6 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkus.test.QuarkusUnitTest;
@@ -81,9 +80,6 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
     @Inject
     EmbeddingModel embeddingModel;
 
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
-
     @Test
     void try_token_cache() throws InterruptedException {
 
@@ -122,9 +118,6 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
 
         // --- Test EmbeddingModel --- //
         assertDoesNotThrow(() -> embeddingModel.embed("message")); // cache.
-
-        // --- Test TokenCountEstimator --- //
-        assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
 
         // --- Test StreamingChatLanguageModel --- //
         streamingChatModel.chat("message", streamingChatResponseHandler(new AtomicReference<ChatResponse>())); // cache.
@@ -178,9 +171,6 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
         assertDoesNotThrow(() -> embeddingModel.embed("message"));
 
         Thread.sleep(cacheTimeout);
-
-        // --- Test TokenCountEstimator --- //
-        assertDoesNotThrow(() -> tokenCountEstimator.estimateTokenCount("message"));
 
         // --- Test StreamingChatLanguageModel --- //
         var streamingResponse = new AtomicReference<ChatResponse>();

@@ -8,7 +8,6 @@ import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -17,7 +16,7 @@ import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.model.scoring.ScoringModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.retriever.Retriever;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Moderate;
@@ -46,7 +45,6 @@ public class LangChain4jDotNames {
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
-    public static final DotName TOKEN_COUNT_ESTIMATOR = DotName.createSimple(TokenCountEstimator.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
@@ -82,7 +80,7 @@ public class LangChain4jDotNames {
     static final DotName NO_CHAT_MEMORY_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.NoChatMemoryProviderSupplier.class);
 
-    static final DotName RETRIEVER = DotName.createSimple(Retriever.class);
+    static final DotName RETRIEVER = DotName.createSimple(ContentRetriever.class);
     static final DotName NO_RETRIEVER = DotName.createSimple(
             RegisterAiService.NoRetriever.class);
 

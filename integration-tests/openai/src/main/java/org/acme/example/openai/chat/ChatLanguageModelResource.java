@@ -1,7 +1,7 @@
 package org.acme.example.openai.chat;
 
 import static dev.langchain4j.data.message.UserMessage.userMessage;
-import static dev.langchain4j.model.openai.OpenAiModelName.GPT_3_5_TURBO;
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +96,7 @@ public class ChatLanguageModelResource {
     @Path("memory")
     public String memory() throws Exception {
 
-        Tokenizer tokenizer = new OpenAiTokenizer(GPT_3_5_TURBO);
+        Tokenizer tokenizer = new OpenAiTokenizer("gpt-3.5-turbo");
         ChatMemory chatMemory = TokenWindowChatMemory.withMaxTokens(1000, tokenizer);
 
         StringBuffer sb = new StringBuffer();
@@ -107,7 +107,7 @@ public class ChatLanguageModelResource {
         chatMemory.add(userMessage1);
 
         sb.append("[User]: ")
-                .append(userMessage1.text())
+                .append(chatMessageToText(userMessage1))
                 .append("\n[LLM]: ");
 
         AtomicReference<CompletableFuture<AiMessage>> futureRef = new AtomicReference<>(new CompletableFuture<>());
@@ -144,7 +144,7 @@ public class ChatLanguageModelResource {
         chatMemory.add(userMessage2);
 
         sb.append("\n\n[User]: ")
-                .append(userMessage2.text())
+                .append(chatMessageToText(userMessage2))
                 .append("\n[LLM]: ");
 
         futureRef.set(new CompletableFuture<>());

@@ -16,7 +16,6 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.TokenCountEstimator;
 import dev.langchain4j.model.openai.internal.OpenAiClient;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingResponse;
@@ -41,7 +40,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  * <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/reference">More information</a>
  * <p>
  */
-public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEstimator {
+public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
 
     private static final int BATCH_SIZE = 16;
 
@@ -128,11 +127,6 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel, TokenCountEsti
         return Response.from(
                 embeddings,
                 new TokenUsage(inputTokenCount));
-    }
-
-    @Override
-    public int estimateTokenCount(String text) {
-        return tokenizer.estimateTokenCountInText(text);
     }
 
     public static Builder builder() {

@@ -50,7 +50,8 @@ public class ChatMessagePojo {
                 break;
             case USER:
                 json.type = MessageType.USER;
-                json.message = ((UserMessage) message).text();
+                UserMessage userMessage = (UserMessage) message;
+                json.message = userMessage.hasSingleText() ? userMessage.singleText() : null;
                 break;
             case AI:
                 AiMessage aiMessage = (AiMessage) message;

@@ -259,7 +259,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private void addToMemory(ChatMessage chatMessage) {
         if (context.hasChatMemory()) {
-            context.chatMemory(memoryId).add(chatMessage);
+            context.chatMemoryService.getChatMemory(memoryId).add(chatMessage);
         } else {
             temporaryMemory.add(chatMessage);
         }
@@ -267,7 +267,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private List<ChatMessage> messagesToSend(Object memoryId) {
         return context.hasChatMemory()
-                ? context.chatMemory(memoryId).messages()
+                ? context.chatMemoryService.getChatMemory(memoryId).messages()
                 : temporaryMemory;
     }
 

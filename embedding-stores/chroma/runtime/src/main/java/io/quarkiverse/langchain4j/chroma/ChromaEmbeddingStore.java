@@ -27,6 +27,8 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.runtime.AddEmbeddingsRequest;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaCollectionsRestApi;
@@ -198,7 +200,7 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
                         ? null
                         : textSegments.stream()
                                 .map(TextSegment::metadata)
-                                .map(Metadata::asMap)
+                                .map(Metadata::toMap)
                                 .collect(toList()))
                 .documents(textSegments == null
                         ? null
@@ -211,16 +213,16 @@ public class ChromaEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     @Override
-    public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding referenceEmbedding, int maxResults, double minScore) {
-        QueryRequest queryRequest = new QueryRequest(referenceEmbedding.vectorAsList(), maxResults);
+    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
+        QueryRequest queryRequest = new QueryRequest(request.queryEmbedding().vectorAsList(), request.maxResults());
 
         QueryResponse queryResponse = chromaClient.queryCollection(collectionId.get(), queryRequest);
 
         List<EmbeddingMatch<TextSegment>> matches = toEmbeddingMatches(queryResponse);
 
-        return matches.stream()
-                .filter(match -> match.score() >= minScore)
-                .collect(toList());
+        return new EmbeddingSearchResult<>(matches.stream()
+                .filter(match -> match.score() >= request.minScore())
+                .collect(toList()));
     }
 
     // FIXME: we need to know the dimension to be able to construct a query that retrieves

@@ -22,6 +22,8 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanSchema;
 import io.quarkiverse.langchain4j.infinispan.runtime.LangchainInfinispanItem;
@@ -110,12 +112,12 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
             Embedding embedding = embeddings.get(i);
             TextSegment textSegment = embedded == null ? null : embedded.get(i);
             if (textSegment != null) {
-                Map<String, String> map = textSegment.metadata().asMap();
+                Map<String, Object> map = textSegment.metadata().toMap();
                 final List<String> metadataKeys = new ArrayList<>(map.size());
                 final List<String> metadataValues = new ArrayList<>(map.size());
                 map.entrySet().forEach(e -> {
                     metadataKeys.add(e.getKey());
-                    metadataValues.add(e.getValue());
+                    metadataValues.add(e.getValue() != null ? e.getValue().toString() : null);
                 });
                 elements.put(id,
                         new LangchainInfinispanItem(id, embedding.vector(), textSegment.text(), metadataKeys, metadataValues));
@@ -128,22 +130,22 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     @Override
-    public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding referenceEmbedding, int maxResults,
-            double minScore) {
+    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
         Query<Object[]> query = remoteCache.query("select i, score(i) from " + "LangchainItem"
                 + schema.getDimension().toString()
-                + " i where i.floatVector <-> " + Arrays.toString(referenceEmbedding.vector()) + "~" + schema.getDistance());
-        List<Object[]> hits = query.maxResults(maxResults).list();
+                + " i where i.floatVector <-> " + Arrays.toString(request.queryEmbedding().vector()) + "~"
+                + schema.getDistance());
+        List<Object[]> hits = query.maxResults(request.maxResults()).list();
 
-        return hits.stream().map(obj -> {
+        return new EmbeddingSearchResult<>(hits.stream().map(obj -> {
             LangchainInfinispanItem item = (LangchainInfinispanItem) obj[0];
             Float score = (Float) obj[1];
-            if (score.doubleValue() < minScore) {
+            if (score.doubleValue() < request.minScore()) {
                 return null;
             }
             TextSegment embedded = null;
             if (item.getText() != null) {
-                Map<String, String> map = new HashMap<>();
+                Map<String, Object> map = new HashMap<>();
                 List<String> metadataKeys = item.getMetadataKeys();
                 List<String> metadataValues = item.getMetadataValues();
                 for (int i = 0; i < metadataKeys.size(); i++) {
@@ -153,7 +155,7 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
             }
             Embedding embedding = new Embedding(item.getFloatVector());
             return new EmbeddingMatch<>(score.doubleValue(), item.getId(), embedding, embedded);
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
     public void deleteAll() {

@@ -21,6 +21,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRetrievalAugmentor;
@@ -74,11 +75,13 @@ public class EasyRagTest {
         EmbeddingModel embeddingModel = CDI.current().select(EmbeddingModel.class).get();
         EmbeddingStore embeddingStore = CDI.current().select(EmbeddingStore.class).get();
         Embedding question = embeddingModel.embed("When was Charlie born?").content();
-        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(question, 1);
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore
+                .search(EmbeddingSearchRequest.builder().queryEmbedding(question).maxResults(1).build()).matches();
         assertTrue(matches.get(0).embedded().text().contains("2005"));
 
         question = embeddingModel.embed("When was David born?").content();
-        matches = embeddingStore.findRelevant(question, 1);
+        matches = embeddingStore.search(EmbeddingSearchRequest.builder().queryEmbedding(question).maxResults(1).build())
+                .matches();
         assertTrue(matches.get(0).embedded().text().contains("2003"));
     }
 

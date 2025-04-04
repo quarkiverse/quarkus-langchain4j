@@ -67,6 +67,7 @@ import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
+import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.output.ServiceOutputParser;
@@ -159,9 +160,10 @@ public class AiServiceMethodImplementationSupport {
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             QuarkusAiServiceContext context, AuditSourceInfo auditSourceInfo) {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
-        Object memoryId = memoryId(methodCreateInfo, methodArgs, context.chatMemoryProvider != null);
+        Object memoryId = memoryId(methodCreateInfo, methodArgs, context.hasChatMemory());
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
-                context.hasChatMemory() ? context.chatMemory(memoryId).messages() : Collections.emptyList());
+                context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId).messages()
+                        : Collections.emptyList());
 
         boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
@@ -203,7 +205,7 @@ public class AiServiceMethodImplementationSupport {
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
-                    ? context.chatMemory(memoryId).messages()
+                    ? context.chatMemoryService.getChatMemory(memoryId).messages()
                     : null;
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
@@ -227,7 +229,7 @@ public class AiServiceMethodImplementationSupport {
                             public Flow.Publisher<?> apply(AugmentationResult ar) {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
 
-                                ChatMemory memory = context.chatMemory(memoryId);
+                                ChatMemory memory = context.chatMemoryService.getChatMemory(memoryId);
                                 UserMessage guardrailsMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo,
                                         (UserMessage) augmentedUserMessage,
                                         memory, ar, templateVariables);
@@ -245,7 +247,8 @@ public class AiServiceMethodImplementationSupport {
                                     boolean needsMemorySeed) {
                                 return context.hasChatMemory()
                                         ? createMessagesToSendForExistingMemory(systemMessage, augmentedUserMessage,
-                                                context.chatMemory(memoryId), needsMemorySeed, context, methodCreateInfo)
+                                                context.chatMemoryService.getChatMemory(memoryId), needsMemorySeed, context,
+                                                methodCreateInfo)
                                         : createMessagesToSendForNoMemory(systemMessage, augmentedUserMessage,
                                                 needsMemorySeed, context, methodCreateInfo);
                             }
@@ -254,7 +257,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         userMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
-                context.hasChatMemory() ? context.chatMemory(memoryId) : null,
+                context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
                 augmentationResult, templateVariables);
 
         CommittableChatMemory chatMemory;
@@ -262,7 +265,7 @@ public class AiServiceMethodImplementationSupport {
 
         if (context.hasChatMemory()) {
             // we want to defer saving the new messages because the service could fail and be retried
-            chatMemory = new DefaultCommittableChatMemory(context.chatMemory(memoryId));
+            chatMemory = new DefaultCommittableChatMemory(context.chatMemoryService.getChatMemory(memoryId));
             messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, chatMemory, needsMemorySeed,
                     context, methodCreateInfo);
         } else {
@@ -274,8 +277,15 @@ public class AiServiceMethodImplementationSupport {
         if (TypeUtil.isTokenStream(returnType)) {
             // TODO Indicate the output guardrails cannot be used when using token stream.
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            return new AiServiceTokenStream(messagesToSend, toolSpecifications, toolExecutors,
-                    (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId);
+            var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
+                    .messages(messagesToSend)
+                    .toolSpecifications(toolSpecifications)
+                    .toolExecutors(toolExecutors)
+                    .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
+                    .context(context)
+                    .memoryId(memoryId)
+                    .build();
+            return new AiServiceTokenStream(aiServiceTokenStreamParams);
         }
 
         var actualAugmentationResult = augmentationResult;
@@ -512,7 +522,7 @@ public class AiServiceMethodImplementationSupport {
 
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
         GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
-                context.hasChatMemory() ? context.chatMemory(memoryId) : null,
+                context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
                 augmentationResult, templateVariables);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
@@ -543,7 +553,7 @@ public class AiServiceMethodImplementationSupport {
             return false;
         }
 
-        ChatMemory chatMemory = context.chatMemory(memoryId);
+        ChatMemory chatMemory = context.chatMemoryService.getChatMemory(memoryId);
         // if the chat memory is not empty, so we don't seed it
         return chatMemory.messages().isEmpty();
     }

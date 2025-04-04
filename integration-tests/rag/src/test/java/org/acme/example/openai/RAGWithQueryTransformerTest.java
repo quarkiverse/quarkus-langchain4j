@@ -1,5 +1,7 @@
 package org.acme.example.openai;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -46,7 +48,7 @@ public class RAGWithQueryTransformerTest {
     @Test
     public void test() {
         service.chat("HELLO");
-        String query = lastQuery.get().get(0).text();
+        String query = chatMessageToText(lastQuery.get().get(0));
         Assertions.assertTrue(query.contains("The transformer works!"), query);
     }
 

@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.ollama;
 import static dev.langchain4j.data.message.ChatMessageType.TOOL_EXECUTION_RESULT;
 import static dev.langchain4j.data.message.ContentType.IMAGE;
 import static dev.langchain4j.data.message.ContentType.TEXT;
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -111,7 +112,7 @@ final class MessageMapper {
         if (message instanceof ToolExecutionResultMessage) {
             return Message.builder()
                     .role(toOllamaRole(TOOL_EXECUTION_RESULT))
-                    .content(message.text())
+                    .content(chatMessageToText(message))
                     .build();
         }
 
@@ -123,7 +124,7 @@ final class MessageMapper {
 
         return Message.builder()
                 .role(toOllamaRole(message.type()))
-                .content(message.text())
+                .content(chatMessageToText(message))
                 .build();
     }
 

@@ -22,17 +22,17 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.openai.internal.OpenAiClient;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
@@ -59,7 +59,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  * Please note, that currently, only API Key authentication is supported by this class,
  * second authentication option will be supported later.
  */
-public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstimator {
+public class AzureOpenAiChatModel implements ChatLanguageModel {
 
     private static final Logger log = Logger.getLogger(AzureOpenAiChatModel.class);
 
@@ -147,9 +147,10 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
 
         ChatCompletionRequest request = requestBuilder.build();
 
-        ChatModelRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
+        ChatRequest modelListenerRequest = createModelListenerRequest(request, messages, toolSpecifications);
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
+        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
+                attributes);
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -167,13 +168,14 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
                     .tokenUsage(tokenUsageFrom(chatCompletionResponse.usage()))
                     .finishReason(finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason())).build();
 
-            ChatModelResponse modelListenerResponse = createModelListenerResponse(
+            ChatResponse modelListenerResponse = createModelListenerResponse(
                     chatCompletionResponse.id(),
                     chatCompletionResponse.model(),
                     response);
             ChatModelResponseContext responseContext = new ChatModelResponseContext(
                     modelListenerResponse,
                     modelListenerRequest,
+                    ModelProvider.OTHER,
                     attributes);
             listeners.forEach(listener -> {
                 try {
@@ -204,37 +206,32 @@ public class AzureOpenAiChatModel implements ChatLanguageModel, TokenCountEstima
         }
     }
 
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-        return tokenizer.estimateTokenCountInMessages(messages);
-    }
-
-    private ChatModelRequest createModelListenerRequest(ChatCompletionRequest request,
+    private ChatRequest createModelListenerRequest(ChatCompletionRequest request,
             List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications) {
-        return ChatModelRequest.builder()
-                .model(request.model())
-                .temperature(request.temperature())
-                .topP(request.topP())
-                .maxTokens(request.maxTokens())
+        return ChatRequest.builder()
                 .messages(messages)
                 .toolSpecifications(toolSpecifications)
+                .parameters(ChatRequestParameters.builder()
+                        .modelName(request.model())
+                        .temperature(request.temperature())
+                        .topP(request.topP())
+                        .maxOutputTokens(request.maxTokens())
+                        .build())
                 .build();
     }
 
-    private ChatModelResponse createModelListenerResponse(String responseId,
+    private ChatResponse createModelListenerResponse(String responseId,
             String responseModel,
             ChatResponse response) {
         if (response == null) {
             return null;
         }
 
-        return ChatModelResponse.builder()
-                .id(responseId)
-                .model(responseModel)
-                .tokenUsage(response.tokenUsage())
-                .finishReason(response.finishReason())
+        return ChatResponse.builder()
                 .aiMessage(response.aiMessage())
+                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
+                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
     }
 

@@ -16,13 +16,12 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -30,6 +29,7 @@ import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
@@ -86,10 +86,11 @@ public abstract class GeminiChatLanguageModel implements ChatLanguageModel {
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig);
 
-        ChatModelRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
+        ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
                 chatRequest.toolSpecifications());
         Map<Object, Object> attributes = new ConcurrentHashMap<>();
-        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, attributes);
+        ChatModelRequestContext requestContext = new ChatModelRequestContext(modelListenerRequest, ModelProvider.OTHER,
+                attributes);
         listeners.forEach(listener -> {
             try {
                 listener.onRequest(requestContext);
@@ -112,13 +113,14 @@ public abstract class GeminiChatLanguageModel implements ChatLanguageModel {
             final FinishReason finishReason = FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
             final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage);
 
-            ChatModelResponse modelListenerResponse = createModelListenerResponse(
+            ChatResponse modelListenerResponse = createModelListenerResponse(
                     null,
                     modelId,
                     aiMessageResponse);
             ChatModelResponseContext responseContext = new ChatModelResponseContext(
                     modelListenerResponse,
                     modelListenerRequest,
+                    ModelProvider.OTHER,
                     attributes);
             listeners.forEach(listener -> {
                 try {
@@ -154,32 +156,33 @@ public abstract class GeminiChatLanguageModel implements ChatLanguageModel {
 
     protected abstract GenerateContentResponse generateContext(GenerateContentRequest request);
 
-    private ChatModelRequest createModelListenerRequest(GenerateContentRequest request,
+    private ChatRequest createModelListenerRequest(GenerateContentRequest request,
             List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications) {
-        var builder = ChatModelRequest.builder()
-                .model(modelId)
+        var builder = ChatRequest.builder()
                 .messages(messages)
-                .toolSpecifications(toolSpecifications)
-                .temperature(temperature)
-                .topP(topP)
-                .maxTokens(maxOutputTokens);
+                .parameters(ChatRequestParameters.builder()
+                        .modelName(modelId)
+                        .toolSpecifications(toolSpecifications)
+                        .temperature(temperature)
+                        .topP(topP)
+                        .maxOutputTokens(maxOutputTokens)
+                        .build());
         return builder.build();
     }
 
-    private ChatModelResponse createModelListenerResponse(String responseId,
+    private ChatResponse createModelListenerResponse(String responseId,
             String responseModel,
             Response<AiMessage> response) {
         if (response == null) {
             return null;
         }
 
-        return ChatModelResponse.builder()
-                .id(responseId)
-                .model(responseModel)
-                .tokenUsage(response.tokenUsage())
-                .finishReason(response.finishReason())
+        return ChatResponse.builder()
                 .aiMessage(response.content())
+                .finishReason(response.finishReason())
+                .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
+                        .tokenUsage(response.tokenUsage()).build())
                 .build();
     }
 

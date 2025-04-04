@@ -4,13 +4,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.logging.Logger;
 
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Counter;
@@ -75,11 +74,11 @@ public class MetricsChatModelListener implements ChatModelListener {
     public void onResponse(ChatModelResponseContext responseContext) {
         final long endTime = Clock.SYSTEM.monotonicTime();
 
-        ChatModelRequest request = responseContext.request();
-        ChatModelResponse response = responseContext.response();
-        Tags tags = Tags.of("gen_ai.request.model", request.model());
-        if (response.model() != null) {
-            tags = tags.and("gen_ai.response.model", response.model());
+        ChatRequest request = responseContext.chatRequest();
+        ChatResponse response = responseContext.chatResponse();
+        Tags tags = Tags.of("gen_ai.request.model", request.parameters().modelName());
+        if (response.metadata().modelName() != null) {
+            tags = tags.and("gen_ai.response.model", response.metadata().modelName());
         }
         if (ContextLocals.duplicatedContextActive()) {
             String aiServiceClassName = ContextLocals.get(AiServiceConstants.AI_SERVICE_CLASS_NAME);
@@ -107,23 +106,16 @@ public class MetricsChatModelListener implements ChatModelListener {
             return;
         }
 
-        AiMessage aiMessage = errorContext.partialResponse().aiMessage();
-        if (aiMessage == null) {
-            return;
-        }
+        Tags tags = Tags.of("gen_ai.request.model", errorContext.chatRequest().parameters().modelName());
 
-        Tags tags = Tags.of("gen_ai.request.model", errorContext.request().model());
-        if (errorContext.partialResponse().model() != null) {
-            tags = tags.and("gen_ai.response.model", errorContext.partialResponse().model());
-        }
-        if (aiMessage.text() != null) {
-            tags = tags.and("error.type", aiMessage.text());
+        if (errorContext.error() != null) {
+            tags = tags.and("error.type", errorContext.error().getMessage());
         }
         duration.withTags(tags).record(endTime - startTime, TimeUnit.NANOSECONDS);
     }
 
     private void recordTokenUsage(ChatModelResponseContext responseContext, Tags tags) {
-        TokenUsage tokenUsage = responseContext.response().tokenUsage();
+        TokenUsage tokenUsage = responseContext.chatResponse().tokenUsage();
         if (tokenUsage == null) {
             return;
         }

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.openshiftai;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -42,7 +44,7 @@ public class OpenshiftAiChatModel implements ChatLanguageModel {
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
 
-        TextGenerationRequest request = new TextGenerationRequest(modelId, chatRequest.messages().get(0).text());
+        TextGenerationRequest request = new TextGenerationRequest(modelId, chatMessageToText(chatRequest.messages().get(0)));
 
         TextGenerationResponse textGenerationResponse = client.chat(request);
 

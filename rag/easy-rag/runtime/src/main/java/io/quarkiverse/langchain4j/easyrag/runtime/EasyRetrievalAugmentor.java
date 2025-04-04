@@ -1,11 +1,11 @@
 package io.quarkiverse.langchain4j.easyrag.runtime;
 
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
-import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 
 /**
@@ -29,7 +29,7 @@ public class EasyRetrievalAugmentor implements RetrievalAugmentor {
     }
 
     @Override
-    public UserMessage augment(UserMessage userMessage, Metadata metadata) {
-        return delegate.augment(userMessage, metadata);
+    public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+        return delegate.augment(augmentationRequest);
     }
 }

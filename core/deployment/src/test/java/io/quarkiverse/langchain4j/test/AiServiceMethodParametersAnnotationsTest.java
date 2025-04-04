@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.test;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -84,7 +85,8 @@ public class AiServiceMethodParametersAnnotationsTest {
             return new ChatLanguageModel() {
                 @Override
                 public ChatResponse doChat(ChatRequest chatRequest) {
-                    return ChatResponse.builder().aiMessage(new AiMessage(chatRequest.messages().get(0).text())).build();
+                    return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))
+                            .build();
                 }
             };
         }

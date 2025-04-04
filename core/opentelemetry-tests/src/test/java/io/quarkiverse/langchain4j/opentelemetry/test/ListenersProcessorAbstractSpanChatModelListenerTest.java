@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
@@ -108,16 +109,16 @@ abstract class ListenersProcessorAbstractSpanChatModelListenerTest {
             ChatModelResponseContext responseContext,
             ChatModelErrorContext errorContext) {
         static MockedContexts create() {
-            var attributes = new HashMap();
+            var attributes = new HashMap<>();
             var request = ChatRequest.builder().messages(List.of(UserMessage.from("--test-message--")))
                     .parameters(DefaultChatRequestParameters.builder().modelName("--mock-model-name--").temperature(0.0)
                             .topP(0.0).build())
                     .build();
             var response = ChatResponse.builder().aiMessage(AiMessage.from("--test-response--")).build();
-            var requestCtx = new ChatModelRequestContext(request, attributes);
-            var responseContext = new ChatModelResponseContext(response, request, attributes);
+            var requestCtx = new ChatModelRequestContext(request, ModelProvider.OTHER, attributes);
+            var responseContext = new ChatModelResponseContext(response, request, ModelProvider.OTHER, attributes);
             var errorCtx = new ChatModelErrorContext(
-                    new RuntimeException("--failed--"), request, attributes);
+                    new RuntimeException("--failed--"), request, ModelProvider.OTHER, attributes);
             return new MockedContexts(requestCtx, responseContext, errorCtx);
         }
     }

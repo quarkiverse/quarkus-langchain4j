@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
@@ -40,14 +39,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     }
 
     private void clearChatMemory() {
-        if (chatMemories != null) {
-            chatMemories.forEach(new BiConsumer<>() {
-                @Override
-                public void accept(Object memoryId, ChatMemory chatMemory) {
-                    chatMemory.clear();
-                }
-            });
-            chatMemories = null;
+        if (hasChatMemory()) {
+            chatMemoryService.clearAll();
         }
     }
 
@@ -57,11 +50,11 @@ public class QuarkusAiServiceContext extends AiServiceContext {
      * via {@link io.quarkiverse.langchain4j.ChatMemoryRemover}
      */
     public void removeChatMemoryIds(Object... ids) {
-        if (chatMemories == null) {
+        if (!hasChatMemory()) {
             return;
         }
         for (Object id : ids) {
-            ChatMemory chatMemory = chatMemories.remove(id);
+            ChatMemory chatMemory = chatMemoryService.evictChatMemory(id);
             if (chatMemory != null) {
                 chatMemory.clear();
             }

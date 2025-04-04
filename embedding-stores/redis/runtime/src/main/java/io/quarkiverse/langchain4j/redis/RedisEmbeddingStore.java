@@ -160,18 +160,6 @@ public class RedisEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     @Override
-    public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding referenceEmbedding, int maxResults,
-            double minScore) {
-        EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
-                .queryEmbedding(referenceEmbedding)
-                .maxResults(maxResults)
-                .minScore(minScore)
-                .build();
-        return search(request).matches();
-
-    }
-
-    @Override
     public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
         String preFilterQuery = new RedisFilterMapper().map(request.filter());
         String queryTemplate = "%s=>[ KNN %d @%s $BLOB AS %s ]";

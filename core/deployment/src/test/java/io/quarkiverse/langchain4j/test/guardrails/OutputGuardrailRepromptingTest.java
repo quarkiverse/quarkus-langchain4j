@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -143,7 +144,7 @@ public class OutputGuardrailRepromptingTest {
                 assertThat(((AiMessage) last).text()).isEqualTo("Hello");
                 assertThat(params.responseFromLLM().text()).isEqualTo("Hello");
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
-                assertThat(beforeLast.text()).isEqualTo("Retry");
+                assertThat(chatMessageToText(beforeLast)).isEqualTo("Retry");
 
                 return reprompt("Retry", "Retry");
             }
@@ -181,7 +182,7 @@ public class OutputGuardrailRepromptingTest {
                 assertThat(last).isInstanceOf(AiMessage.class);
                 assertThat(((AiMessage) last).text()).isEqualTo("Hello");
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
-                assertThat(beforeLast.text()).isEqualTo("Retry Once");
+                assertThat(chatMessageToText(beforeLast)).isEqualTo("Retry Once");
                 return reprompt("Retry", "Retry Twice");
             }
             return reprompt("Retry", "Retry Again");
@@ -197,10 +198,10 @@ public class OutputGuardrailRepromptingTest {
         @Override
         public ChatResponse doChat(ChatRequest request) {
             ChatMessage last = request.messages().get(request.messages().size() - 1);
-            if (last instanceof UserMessage && last.text().equals("foo")) {
+            if (last instanceof UserMessage && chatMessageToText(last).equals("foo")) {
                 return ChatResponse.builder().aiMessage(new AiMessage("Nope")).build();
             }
-            if (last instanceof UserMessage && last.text().contains("Retry")) {
+            if (last instanceof UserMessage && chatMessageToText(last).contains("Retry")) {
                 return ChatResponse.builder().aiMessage(new AiMessage("Hello")).build();
             }
             throw new IllegalArgumentException("Unexpected message: " + request.messages());

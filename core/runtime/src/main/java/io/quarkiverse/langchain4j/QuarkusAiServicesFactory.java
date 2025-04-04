@@ -42,7 +42,6 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
         @Override
         public AiServices<T> tools(Collection<Object> objectsWithTools) {
-            context.toolService.initTools();
             ToolsRecorder.populateToolMetadata(objectsWithTools, context.toolService.toolSpecifications(),
                     context.toolService.toolExecutors());
             return this;

@@ -1,5 +1,7 @@
 package org.acme.example.openai;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,7 +64,7 @@ public class RAGWithReRankingTest {
     @Test
     public void test() {
         service.chat("What is the fastest car?");
-        String query = lastQuery.get().get(0).text();
+        String query = chatMessageToText(lastQuery.get().get(0));
         Assertions.assertTrue(query.contains("Bugatti goes 450"), query);
         Assertions.assertFalse(query.contains("Ferrari goes 350"), query);
     }

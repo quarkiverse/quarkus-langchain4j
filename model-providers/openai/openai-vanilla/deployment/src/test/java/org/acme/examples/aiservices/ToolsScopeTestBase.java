@@ -12,6 +12,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
@@ -119,10 +120,16 @@ public abstract class ToolsScopeTestBase extends OpenAiBaseTest {
 
         public MyApp(MyTool tool, @ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
             this.tool = tool;
+
+            ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
+                    .id(memoryId)
+                    .maxMessages(10)
+                    .build();
+
             this.ai = AiServices.builder(MyService.class)
                     .chatLanguageModel(createChatModel(wiremockPort))
                     .tools(tool)
-                    .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                    .chatMemoryProvider(chatMemoryProvider)
                     .build();
         }
 

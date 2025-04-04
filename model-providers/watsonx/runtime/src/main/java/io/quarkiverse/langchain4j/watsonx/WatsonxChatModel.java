@@ -1,22 +1,16 @@
 package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
-import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -35,9 +29,8 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultChoice;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
-import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 
-public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, TokenCountEstimator {
+public class WatsonxChatModel extends Watsonx implements ChatLanguageModel {
 
     private static final String ID_CONTEXT = "ID";
     private static final String MODEL_ID_CONTEXT = "MODEL_ID";
@@ -125,34 +118,6 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel, Toke
                         .finishReason(finishReason)
                         .build())
                 .build();
-    }
-
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-
-        var input = messages.stream().map(new Function<ChatMessage, String>() {
-            @Override
-            public String apply(ChatMessage message) {
-                return switch (message.type()) {
-                    case AI -> {
-                        AiMessage aiMessage = (AiMessage) message;
-                        yield aiMessage.hasToolExecutionRequests() ? "" : aiMessage.text();
-                    }
-                    case SYSTEM -> ((SystemMessage) message).text();
-                    case USER -> ((UserMessage) message).singleText();
-                    case CUSTOM, TOOL_EXECUTION_RESULT -> "";
-                };
-            }
-        }).collect(joining(" "));
-
-        var request = new TokenizationRequest(modelId, input, spaceId, projectId);
-
-        return retryOn(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return client.tokenization(request, version).result().tokenCount();
-            }
-        });
     }
 
     @Override

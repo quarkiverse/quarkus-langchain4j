@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -20,7 +19,9 @@ import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
-import dev.langchain4j.retriever.Retriever;
+import dev.langchain4j.rag.content.Content;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
+import dev.langchain4j.rag.query.Query;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
@@ -31,7 +32,7 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
  * using the class as a CDI bean.
  * Under the hood LangChain4j's {@link AiServices#builder(Class)} is called
  * while also providing the builder with the proper {@link ChatLanguageModel} bean (mandatory), {@code tools} bean (optional),
- * {@link ChatMemoryProvider} and {@link Retriever} beans (which by default are configured if such beans exist).
+ * {@link ChatMemoryProvider} and {@link ContentRetriever} beans (which by default are configured if such beans exist).
  * <p>
  * NOTE: The resulting CDI bean is {@link jakarta.enterprise.context.RequestScoped} by default. If you need to change the scope,
  * simply annotate the class with a CDI scope.
@@ -192,10 +193,10 @@ public @interface RegisterAiService {
     /**
      * Marker class to indicate that no retriever should be used
      */
-    final class NoRetriever implements Retriever<TextSegment> {
+    final class NoRetriever implements ContentRetriever {
 
         @Override
-        public List<TextSegment> findRelevant(String text) {
+        public List<Content> retrieve(Query query) {
             throw new UnsupportedOperationException("should never be called");
         }
     }

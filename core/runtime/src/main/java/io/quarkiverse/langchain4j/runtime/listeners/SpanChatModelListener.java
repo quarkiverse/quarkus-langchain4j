@@ -9,10 +9,10 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.listener.ChatModelRequest;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponse;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -47,11 +47,11 @@ public class SpanChatModelListener implements ChatModelListener {
 
     @Override
     public void onRequest(ChatModelRequestContext requestContext) {
-        ChatModelRequest request = requestContext.request();
-        Span span = tracer.spanBuilder("completion " + request.model())
-                .setAttribute("gen_ai.request.model", request.model())
-                .setAttribute("gen_ai.request.temperature", request.temperature())
-                .setAttribute("gen_ai.request.top_p", request.topP())
+        ChatRequest request = requestContext.chatRequest();
+        Span span = tracer.spanBuilder("completion " + request.parameters().modelName())
+                .setAttribute("gen_ai.request.model", request.parameters().modelName())
+                .setAttribute("gen_ai.request.temperature", request.parameters().temperature())
+                .setAttribute("gen_ai.request.top_p", request.parameters().topP())
                 .startSpan();
         Scope scope = span.makeCurrent();
 
@@ -66,10 +66,10 @@ public class SpanChatModelListener implements ChatModelListener {
         var attributes = responseContext.attributes();
         Span span = (Span) attributes.get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
-            ChatModelResponse response = responseContext.response();
-            span.setAttribute("gen_ai.response.id", response.id());
-            if (response.model() != null) {
-                span.setAttribute("gen_ai.response.model", response.model());
+            ChatResponse response = responseContext.chatResponse();
+            span.setAttribute("gen_ai.response.id", response.metadata().id());
+            if (response.metadata().modelName() != null) {
+                span.setAttribute("gen_ai.response.model", response.metadata().modelName());
             }
             if (response.finishReason() != null) {
                 span.setAttribute("gen_ai.response.finish_reasons", response.finishReason().toString());

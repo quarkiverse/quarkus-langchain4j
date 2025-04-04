@@ -23,6 +23,8 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.RelevanceScore;
 import io.quarkiverse.langchain4j.pinecone.runtime.CreateIndexPodSpec;
@@ -156,11 +158,12 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     @Override
-    public List<EmbeddingMatch<TextSegment>> findRelevant(Embedding embedding, int maxResults, double minScore) {
+    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
         indexExists.get();
-        QueryRequest request = new QueryRequest(namespace, (long) maxResults, true, true, embedding.vector());
-        QueryResponse response = vectorOperations.query(request);
-        return response
+        QueryRequest queryRequest = new QueryRequest(namespace, (long) request.maxResults(), true, true,
+                request.queryEmbedding().vector());
+        QueryResponse response = vectorOperations.query(queryRequest);
+        return new EmbeddingSearchResult<>(response
                 .getMatches().stream().map(match -> {
                     String text = match.getMetadata() != null &&
                             match.getMetadata().get(textFieldName) != null
@@ -174,8 +177,8 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
                                     text,
                                     new Metadata(mapWithoutKey(match.getMetadata(), textFieldName))) : null);
                 })
-                .filter(match -> match.score() >= minScore)
-                .collect(toList());
+                .filter(match -> match.score() >= request.minScore())
+                .collect(toList()));
     }
 
     public PineconeVectorOperationsApi getUnderlyingClient() {
@@ -202,7 +205,7 @@ public class PineconeEmbeddingStore implements EmbeddingStore<TextSegment> {
                     .id(ids.get(i))
                     .value(embeddings.get(i).vector())
                     .metadata(textFieldName, textSegments == null ? null : textSegments.get(i).text())
-                    .metadata(textSegments != null ? textSegments.get(i).metadata().asMap() : null)
+                    .metadata(textSegments != null ? textSegments.get(i).metadata().toMap() : null)
                     .build();
             vectorList.add(vector);
         }

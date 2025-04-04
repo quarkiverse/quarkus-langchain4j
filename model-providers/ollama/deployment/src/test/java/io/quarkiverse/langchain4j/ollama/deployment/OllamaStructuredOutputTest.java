@@ -70,11 +70,9 @@ public class OllamaStructuredOutputTest extends WiremockAware {
                                                 "type": "string"
                                             }
                                         },
-                                        "required": [
-                                        "firstname",
-                                        "lastname"
-                                        ]
-                                    }
+                                        "required": [ ]
+                                    },
+                                    "tools" : [ ]
                                 }
                                 """))
                         .willReturn(aResponse()

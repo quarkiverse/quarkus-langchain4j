@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
+import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -28,7 +29,6 @@ import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
-import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -173,7 +173,7 @@ public class GuardrailWithAugmentationTest {
 
         @Override
         public ChatResponse doChat(ChatRequest chatRequest) {
-            assertThat(chatRequest.messages().get(chatRequest.messages().size() - 1).text()).isEqualTo("augmented");
+            assertThat(chatMessageToText(chatRequest.messages().get(chatRequest.messages().size() - 1))).isEqualTo("augmented");
             return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
         }
     }
@@ -182,7 +182,7 @@ public class GuardrailWithAugmentationTest {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-            assertThat(chatRequest.messages().get(chatRequest.messages().size() - 1).text()).isEqualTo("augmented");
+            assertThat(chatMessageToText(chatRequest.messages().get(chatRequest.messages().size() - 1))).isEqualTo("augmented");
             handler.onPartialResponse("Streaming hi");
             handler.onPartialResponse("!");
             handler.onCompleteResponse(ChatResponse.builder().aiMessage(new AiMessage("")).build());
@@ -205,13 +205,6 @@ public class GuardrailWithAugmentationTest {
         @Override
         public RetrievalAugmentor get() {
             return new RetrievalAugmentor() {
-                @Override
-                public dev.langchain4j.data.message.UserMessage augment(dev.langchain4j.data.message.UserMessage userMessage,
-                        Metadata metadata) {
-                    AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
-                    return (dev.langchain4j.data.message.UserMessage) augment(augmentationRequest).chatMessage();
-                }
-
                 @Override
                 public AugmentationResult augment(AugmentationRequest augmentationRequest) {
                     List<Content> content = List.of(Content.from("content1"), Content.from("content2"));

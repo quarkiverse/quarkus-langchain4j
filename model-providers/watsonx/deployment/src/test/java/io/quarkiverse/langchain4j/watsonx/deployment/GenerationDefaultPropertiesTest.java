@@ -44,7 +44,6 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.chat.TokenCountEstimator;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
@@ -93,9 +92,6 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
 
     @Inject
     ScoringModel scoringModel;
-
-    @Inject
-    TokenCountEstimator tokenCountEstimator;
 
     @Test
     void check_config() throws Exception {
@@ -222,8 +218,6 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
                 .body(mapper.writeValueAsString(body))
                 .response(RESPONSE_WATSONX_TOKENIZER_API.formatted(modelId))
                 .build();
-
-        assertEquals(11, tokenCountEstimator.estimateTokenCount("test"));
     }
 
     @Test

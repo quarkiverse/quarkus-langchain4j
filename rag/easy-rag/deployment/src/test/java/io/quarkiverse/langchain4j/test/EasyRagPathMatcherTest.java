@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -50,7 +51,8 @@ public class EasyRagPathMatcherTest {
 
     @Test
     public void verifyPathMatchingOnlyPdf() {
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(DUMMY_EMBEDDING, 3);
+        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore
+                .search(EmbeddingSearchRequest.builder().queryEmbedding(DUMMY_EMBEDDING).maxResults(3).build()).matches();
         assertEquals(1, relevant.size());
         assertTrue(relevant.get(0).embedded().text().contains("Charlie"));
     }
