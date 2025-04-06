@@ -33,10 +33,10 @@ class BedrockAntrophicStreamingChatModelTest extends BedrockTestBase {
                     .addClass(TestCredentialsProvider.class)
                     .addClass(BedrockStreamHelper.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "anthropic.claude-v2")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.region", "eu-central-1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.endpoint-override",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
                     "http://localhost:%d".formatted(WM_PORT))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.credentials-provider",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.credentials-provider",
                     "TestCredentialsProvider")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-responses", "true");

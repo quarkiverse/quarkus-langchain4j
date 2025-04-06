@@ -18,6 +18,7 @@ import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandida
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -66,6 +67,7 @@ public class BedrockProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             LangChain4jBedrockConfig config,
+            LangChain4jConfig rootConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -76,7 +78,7 @@ public class BedrockProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .supplier(recorder.chatModel(config, configName, rootConfig));
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -86,7 +88,7 @@ public class BedrockProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, configName));
+                        .supplier(recorder.streamingChatModel(config, configName, rootConfig));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -101,7 +103,7 @@ public class BedrockProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .supplier(recorder.embeddingModel(config, configName, rootConfig));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

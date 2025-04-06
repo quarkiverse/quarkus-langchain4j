@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.bedrock.runtime;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -11,14 +10,12 @@ import dev.langchain4j.data.message.CustomMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.ChatModelConfig;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
@@ -44,33 +41,6 @@ public class BedrockConverseStreamingChatModel implements StreamingChatLanguageM
         this.client = client;
         this.modelId = modelId;
         this.config = config;
-    }
-
-    @Override
-    public void generate(String userMessage, StreamingResponseHandler<AiMessage> handler) {
-        List<ChatMessage> messages = new ArrayList<>();
-        messages.add(new UserMessage(userMessage));
-        generate(messages, handler);
-    }
-
-    @Override
-    public void generate(final List<ChatMessage> messages, final StreamingResponseHandler<AiMessage> handler) {
-        chat(messages, new StreamingChatResponseHandler() {
-            @Override
-            public void onPartialResponse(final String partialResponse) {
-                handler.onNext(partialResponse);
-            }
-
-            @Override
-            public void onCompleteResponse(final ChatResponse completeResponse) {
-                handler.onComplete(Response.from(completeResponse.aiMessage()));
-            }
-
-            @Override
-            public void onError(final Throwable error) {
-                handler.onError(error);
-            }
-        });
     }
 
     @Override

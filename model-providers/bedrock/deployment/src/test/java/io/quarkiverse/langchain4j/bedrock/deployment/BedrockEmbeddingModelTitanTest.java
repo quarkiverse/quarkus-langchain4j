@@ -34,10 +34,10 @@ class BedrockEmbeddingModelTitanTest extends BedrockTestBase {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.model-id", "amazon.titan-embed-text-v1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.client.region", "eu-central-1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.client.endpoint-override",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.aws.region", "eu-central-1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.aws.endpoint-override",
                     "http://localhost:%d".formatted(WM_PORT))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.client.credentials-provider",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.embedding-model.aws.credentials-provider",
                     "TestCredentialsProvider")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-responses", "true")

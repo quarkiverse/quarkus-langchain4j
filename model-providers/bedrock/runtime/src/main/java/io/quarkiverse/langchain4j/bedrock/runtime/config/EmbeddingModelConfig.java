@@ -3,11 +3,12 @@ package io.quarkiverse.langchain4j.bedrock.runtime.config;
 import java.util.Optional;
 import java.util.OptionalInt;
 
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public interface EmbeddingModelConfig {
+public interface EmbeddingModelConfig extends AwsClientConfig {
 
     /**
      * Model name to use
@@ -54,7 +55,31 @@ public interface EmbeddingModelConfig {
     BedrockCohereConfig cohere();
 
     /**
-     * Aws client configuration
+     * Whether embedding model requests should be logged
      */
-    AwsClientConfig client();
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether embedding model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logResponses();
+
+    /**
+     * Whether embedding model body in request and response should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logBody();
+
+    /**
+     * Aws sdk related configurations for embedding models
+     */
+    AwsConfig aws();
+
+    /**
+     * Http client related configurations for chat models
+     */
+    HttpClientConfig client();
+
 }

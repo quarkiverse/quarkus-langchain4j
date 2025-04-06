@@ -10,7 +10,7 @@ import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
 @ConfigGroup
-public interface ChatModelConfig {
+public interface ChatModelConfig extends AwsClientConfig {
 
     /**
      * Model id to use. See <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html">Models
@@ -50,7 +50,6 @@ public interface ChatModelConfig {
      * Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower
      * value (e.g. 10) will be more conservative
      */
-    @ConfigDocDefault("40")
     OptionalInt topK();
 
     /**
@@ -59,8 +58,31 @@ public interface ChatModelConfig {
     Optional<List<String>> stopSequences();
 
     /**
-     * Aws client configuration
+     * Whether chat model requests should be logged
      */
-    AwsClientConfig client();
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequests();
+
+    /**
+     * Whether chat model responses should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logResponses();
+
+    /**
+     * Whether chat model body in request and response should be logged
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logBody();
+
+    /**
+     * Aws sdk related configurations for chat models
+     */
+    AwsConfig aws();
+
+    /**
+     * Http client related configurations for chat models
+     */
+    HttpClientConfig client();
 
 }

@@ -28,13 +28,14 @@ class BedrockChatModelTest extends BedrockTestBase {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "amazon.titan-text-express-v1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.region", "eu-central-1")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.endpoint-override",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
                     "http://localhost:%d".formatted(WM_PORT))
-            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.client.credentials-provider",
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.credentials-provider",
                     "TestCredentialsProvider")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-responses", "true")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-body", "true")
             .overrideRuntimeConfigKey("quarkus.log.category.\"io.quarkiverse.langchain4j.bedrock\".level", "DEBUG");
 
     @Inject

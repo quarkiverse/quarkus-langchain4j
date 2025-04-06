@@ -2,7 +2,6 @@ package io.quarkiverse.langchain4j.bedrock.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,11 +36,11 @@ public interface LangChain4jBedrockConfig {
     interface BedrockConfig {
 
         /**
-         * Timeout for Bedrock calls
+         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to Bedrock.
+         * Set to {@code false} to disable all requests.
          */
-        @ConfigDocDefault("10s")
-        @WithDefault("${quarkus.langchain4j.timeout}")
-        Optional<Duration> timeout();
+        @WithDefault("true")
+        boolean enableIntegration();
 
         /**
          * Whether the Bedrock client should log requests
@@ -60,26 +59,27 @@ public interface LangChain4jBedrockConfig {
         /**
          * Whether chat model body in request and response should be logged
          */
-        @ConfigDocDefault("false")
+        @WithDefault("false")
         Optional<Boolean> logBody();
 
         /**
-         * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the OpenAI
-         * provider.
-         * Set to {@code false} to disable all requests.
+         * Aws sdk related configurations
          */
-        @WithDefault("true")
-        boolean enableIntegration();
+        AwsConfig aws();
 
         /**
-         * Chat model related settings
+         * Http client related configurations
+         */
+        HttpClientConfig client();
+
+        /**
+         * Chat model related configurations
          */
         ChatModelConfig chatModel();
 
         /**
-         * Embedding model related settings
+         * Embedding model related configurations
          */
         EmbeddingModelConfig embeddingModel();
     }
-
 }

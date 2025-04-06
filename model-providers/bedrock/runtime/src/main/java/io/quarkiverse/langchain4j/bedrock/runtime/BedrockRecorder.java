@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -21,6 +22,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.Recorder;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -34,7 +36,8 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 @Recorder
 public class BedrockRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jBedrockConfig runtimeConfig, String configName) {
+    public Supplier<ChatLanguageModel> chatModel(LangChain4jBedrockConfig runtimeConfig, String configName,
+            final LangChain4jConfig rootConfig) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
 
         if (config.enableIntegration()) {
@@ -59,9 +62,11 @@ public class BedrockRecorder {
                 paramBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
             }
 
-            var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
+            var clientBuilder = BedrockRuntimeClient.builder();
 
-            configureClient(clientBuilder, config, modelConfig.client());
+            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootConfig));
+
+            configureClient(clientBuilder, modelConfig, config);
 
             var builder = BedrockChatModel.builder()
                     .modelId(modelConfig.modelId().orElse("us.amazon.nova-lite-v1:0"))
@@ -101,15 +106,17 @@ public class BedrockRecorder {
     }
 
     public Supplier<StreamingChatLanguageModel> streamingChatModel(final LangChain4jBedrockConfig runtimeConfig,
-            final String configName) {
+            final String configName, final LangChain4jConfig rootConfig) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
 
         if (config.enableIntegration()) {
             var modelConfig = config.chatModel();
 
-            var clientBuilder = BedrockRuntimeAsyncClient.builder(); //NOSONAR creds can be specified later
+            var clientBuilder = BedrockRuntimeAsyncClient.builder();
 
-            configureClient(clientBuilder, config, modelConfig.client());
+            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(), rootConfig));
+
+            configureClient(clientBuilder, modelConfig, config);
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
@@ -165,7 +172,7 @@ public class BedrockRecorder {
     }
 
     public Supplier<EmbeddingModel> embeddingModel(final LangChain4jBedrockConfig runtimeConfig,
-            final String configName) {
+            final String configName, final LangChain4jConfig rootConfig) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
 
         if (config.enableIntegration()) {
@@ -173,7 +180,9 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
-            configureClient(clientBuilder, config, modelConfig.client());
+            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootConfig));
+
+            configureClient(clientBuilder, modelConfig, config);
 
             var modelId = modelConfig.modelId();
 
@@ -242,45 +251,48 @@ public class BedrockRecorder {
 
     private void configureClient(
             final AwsClientBuilder<?, ?> awsClientBuilder,
-            final LangChain4jBedrockConfig.BedrockConfig config,
-            final AwsClientConfig clientConfig) {
+            final AwsClientConfig modelConfig,
+            final LangChain4jBedrockConfig.BedrockConfig bedrockConfig) {
         var overrideConfig = new Consumer<ClientOverrideConfiguration.Builder>() {
             @Override
             public void accept(final ClientOverrideConfiguration.Builder builder) {
                 builder.retryStrategy(new Consumer<RetryStrategy.Builder<?, ?>>() {
                     @Override
                     public void accept(final RetryStrategy.Builder<?, ?> retryStrategyBuilder) {
-                        var maxRetries = clientConfig.maxRetries();
-
-                        if (maxRetries.isPresent()) {
-                            retryStrategyBuilder.maxAttempts(maxRetries.get());
-                        }
+                        var maxRetries = firstOrDefault(3, modelConfig.aws().maxRetries(), bedrockConfig.aws().maxRetries());
+                        retryStrategyBuilder.maxAttempts(maxRetries);
                     }
                 });
 
-                builder.apiCallTimeout(firstOrDefault(Duration.ofSeconds(10), clientConfig.timeout(), config.timeout()));
-                var logRequest = firstOrDefault(false, clientConfig.logRequests(), config.logRequests());
-                var logResponse = firstOrDefault(false, clientConfig.logResponses(), config.logResponses());
+                builder.apiCallTimeout(firstOrDefault(Duration.ofSeconds(10),
+                        modelConfig.aws().apiCallTimeout(), bedrockConfig.aws().apiCallTimeout()));
+                var logRequest = firstOrDefault(false, modelConfig.logRequests(), bedrockConfig.logRequests());
+                var logResponse = firstOrDefault(false, modelConfig.logResponses(), bedrockConfig.logResponses());
                 if (logRequest || logResponse) {
                     builder.addExecutionInterceptor(
                             new AwsLoggingInterceptor(logRequest, logResponse,
-                                    firstOrDefault(false, clientConfig.logBody(), config.logBody())));
+                                    firstOrDefault(false, modelConfig.logBody(), bedrockConfig.logBody())));
                 }
             }
         };
 
         awsClientBuilder.overrideConfiguration(overrideConfig);
 
-        if (clientConfig.region().isPresent()) {
-            awsClientBuilder.region(Region.of(clientConfig.region().get()));
+        var region = Optional.ofNullable(firstOrDefault(null, modelConfig.aws().region(), bedrockConfig.aws().region()));
+        if (region.isPresent()) {
+            awsClientBuilder.region(Region.of(region.get()));
         }
 
-        if (clientConfig.endpointOverride().isPresent()) {
-            awsClientBuilder.endpointOverride(URI.create(clientConfig.endpointOverride().get()));
+        var endpointOverride = Optional
+                .ofNullable(firstOrDefault(null, modelConfig.aws().endpointOverride(), bedrockConfig.aws().endpointOverride()));
+        if (endpointOverride.isPresent()) {
+            awsClientBuilder.endpointOverride(URI.create(endpointOverride.get()));
         }
 
-        if (clientConfig.credentialsProvider().isPresent()) {
-            awsClientBuilder.credentialsProvider(getCredentialsProvider(clientConfig.credentialsProvider().get()));
+        var credentialsProvider = Optional.ofNullable(
+                firstOrDefault(null, modelConfig.aws().credentialsProvider(), bedrockConfig.aws().credentialsProvider()));
+        if (credentialsProvider.isPresent()) {
+            awsClientBuilder.credentialsProvider(getCredentialsProvider(credentialsProvider.get()));
         }
     }
 }
