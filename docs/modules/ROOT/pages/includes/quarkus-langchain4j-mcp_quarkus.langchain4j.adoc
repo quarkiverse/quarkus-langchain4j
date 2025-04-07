@@ -7,6 +7,27 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`quarkus.langchain4j.mcp.generate-tool-provider`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.generate-tool-provider+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the MCP extension should automatically generate a ToolProvider that is wired up to all the configured MCP clients. The default is true if at least one MCP client is configured, false otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default
@@ -32,7 +53,7 @@ endif::add-copy-button-to-env-var[]
 a|`stdio`, `http`
 |`stdio`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`quarkus.langchain4j.mcp."client-name".url`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-url[`quarkus.langchain4j.mcp."client-name".url`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".url+++[]
 endif::add-copy-button-to-config-props[]
@@ -53,7 +74,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command[`quarkus.langchain4j.mcp."client-name".command`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-command[`quarkus.langchain4j.mcp."client-name".command`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".command+++[]
 endif::add-copy-button-to-config-props[]
@@ -74,7 +95,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var[`quarkus.langchain4j.mcp."client-name".environment."env-var"`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-environment-env-var[`quarkus.langchain4j.mcp."client-name".environment."env-var"`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".environment."env-var"+++[]
 endif::add-copy-button-to-config-props[]
@@ -95,7 +116,7 @@ endif::add-copy-button-to-env-var[]
 |Map<String,String>
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests[`quarkus.langchain4j.mcp."client-name".log-requests`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-requests[`quarkus.langchain4j.mcp."client-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".log-requests+++[]
 endif::add-copy-button-to-config-props[]
@@ -116,7 +137,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses[`quarkus.langchain4j.mcp."client-name".log-responses`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-log-responses[`quarkus.langchain4j.mcp."client-name".log-responses`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".log-responses+++[]
 endif::add-copy-button-to-config-props[]
@@ -137,7 +158,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`quarkus.langchain4j.mcp."client-name".tool-execution-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`quarkus.langchain4j.mcp."client-name".tool-execution-timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".tool-execution-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -158,7 +179,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`60S`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`quarkus.langchain4j.mcp."client-name".resources-timeout`]##
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`quarkus.langchain4j.mcp."client-name".resources-timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".resources-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -179,27 +200,6 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`60S`
 
-
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`quarkus.langchain4j.mcp.generate-tool-provider`]##
-ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.mcp.generate-tool-provider+++[]
-endif::add-copy-button-to-config-props[]
-
-
-[.description]
---
-Whether the MCP extension should automatically generate a ToolProvider that is wired up to all the configured MCP clients. The default is true if at least one MCP client is configured, false otherwise.
-
-
-ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++[]
-endif::add-copy-button-to-env-var[]
-ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_GENERATE_TOOL_PROVIDER+++`
-endif::add-copy-button-to-env-var[]
---
-|boolean
-|`true`
 
 |===
 
