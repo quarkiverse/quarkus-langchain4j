@@ -12,6 +12,7 @@
 
     <modules>
         <module>anthropic</module>
+        <module>bedrock</module>
         <module>cohere</module>
         <module>google/gemini/ai-gemini</module>
         <module>google/gemini/gemini-common</module>
