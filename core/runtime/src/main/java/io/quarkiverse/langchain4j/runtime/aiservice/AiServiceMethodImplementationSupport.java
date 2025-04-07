@@ -190,8 +190,8 @@ public class AiServiceMethodImplementationSupport {
                 : context.toolService.toolExecutors();
 
         if (context.toolService.toolProvider() != null) {
-            toolSpecifications = new ArrayList<>();
-            toolExecutors = new HashMap<>();
+            toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
+            toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
             ToolProviderRequest request = new ToolProviderRequest(memoryId, userMessage);
             ToolProviderResult result = context.toolService.toolProvider().provideTools(request);
             for (ToolSpecification specification : result.tools().keySet()) {
