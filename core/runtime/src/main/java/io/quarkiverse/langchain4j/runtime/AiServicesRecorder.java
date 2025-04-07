@@ -197,11 +197,6 @@ public class AiServicesRecorder {
                         if (!RegisterAiService.BeanIfExistsToolProviderSupplier.class.getName()
                                 .equals(info.toolProviderSupplier())) {
                             // specific provider
-                            if (hasExplicitTools) {
-                                // if the service has both explicit tools and a specific tool provider,
-                                // this is an error
-                                throw new IllegalStateException("Cannot use a tool provider when explicit tools are provided");
-                            }
                             Class<?> toolProviderClass = Thread.currentThread().getContextClassLoader()
                                     .loadClass(info.toolProviderSupplier());
                             Supplier<? extends ToolProvider> toolProvider = (Supplier<? extends ToolProvider>) creationalContext
