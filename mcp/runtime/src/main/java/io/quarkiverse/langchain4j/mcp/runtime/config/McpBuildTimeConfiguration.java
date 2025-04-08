@@ -31,4 +31,12 @@ public interface McpBuildTimeConfiguration {
     @ConfigDocDefault("true")
     Optional<Boolean> generateToolProvider();
 
+    /**
+     * File containing the MCP servers configuration in the Claude Desktop format.
+     * This configuration can only be used to configure {@code stdio} transport type MCP servers.
+     * <p>
+     * This file is read at <strong>build time</strong> which means that which MCP servers the client will use,
+     * is determined at build time. However, specific configuration of each MCP server can be overridden at runtime.
+     */
+    Optional<String> configFile();
 }

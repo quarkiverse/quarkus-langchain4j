@@ -1,7 +1,9 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -12,47 +14,54 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.service.tool.ToolProvider;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
+import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientRuntimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 @Recorder
 public class McpRecorder {
 
-    public Supplier<McpClient> mcpClientSupplier(String key, McpBuildTimeConfiguration buildTimeConfiguration,
-            McpRuntimeConfiguration mcpRuntimeConfiguration) {
+    public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
+
+    private final RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration;
+
+    public McpRecorder(RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration) {
+        this.mcpRuntimeConfiguration = mcpRuntimeConfiguration;
+    }
+
+    public void claudeConfigContents(Map<String, LocalLaunchParams> contents) {
+        McpRecorder.claudeConfigContents = contents;
+    }
+
+    public Supplier<McpClient> mcpClientSupplier(String key, McpTransportType mcpTransportType) {
         return new Supplier<McpClient>() {
             @Override
             public McpClient get() {
-                McpTransport transport = null;
-                McpClientBuildTimeConfig buildTimeConfig = buildTimeConfiguration.clients().get(key);
-                McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.clients().get(key);
-                switch (buildTimeConfig.transportType()) {
-                    case STDIO:
+                McpTransport transport;
+                McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.getValue().clients().get(key);
+                transport = switch (mcpTransportType) {
+                    case STDIO -> {
                         List<String> command = runtimeConfig.command().orElseThrow(() -> new ConfigurationException(
                                 "MCP client configuration named " + key + " is missing the 'command' property"));
-                        transport = new StdioMcpTransport.Builder()
+                        yield new StdioMcpTransport.Builder()
                                 .command(command)
                                 .logEvents(runtimeConfig.logResponses().orElse(false))
                                 .environment(runtimeConfig.environment())
                                 .build();
-                        break;
-                    case HTTP:
-                        transport = new QuarkusHttpMcpTransport.Builder()
-                                .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
-                                        "MCP client configuration named " + key + " is missing the 'url' property")))
-                                .logRequests(runtimeConfig.logRequests().orElse(false))
-                                .logResponses(runtimeConfig.logResponses().orElse(false))
-                                .build();
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unknown transport type: " + buildTimeConfig.transportType());
-                }
+                    }
+                    case HTTP -> new QuarkusHttpMcpTransport.Builder()
+                            .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
+                                    "MCP client configuration named " + key + " is missing the 'url' property")))
+                            .logRequests(runtimeConfig.logRequests().orElse(false))
+                            .logResponses(runtimeConfig.logResponses().orElse(false))
+                            .build();
+                };
                 return new DefaultMcpClient.Builder()
                         .transport(transport)
                         .toolExecutionTimeout(runtimeConfig.toolExecutionTimeout())
