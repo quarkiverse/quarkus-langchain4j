@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse</groupId>
     <artifactId>quarkiverse-parent</artifactId>
-    <version>19</version>
+    <version>20</version>
   </parent>
   <groupId>io.quarkiverse.langchain4j</groupId>
   <artifactId>quarkus-langchain4j-parent</artifactId>
