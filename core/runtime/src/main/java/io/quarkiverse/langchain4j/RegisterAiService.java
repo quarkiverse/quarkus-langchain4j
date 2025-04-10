@@ -133,7 +133,7 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ModerationModel>> moderationModelSupplier() default BeanIfExistsModerationModelSupplier.class;
 
     /**
-     * Configures a toolProviderSupplier. Either a toolProviderSupplier or "normal" tools can be used, but not both
+     * Configures a toolProviderSupplier. It is possible to use together toolProviderSupplier and "normal" tools.
      */
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
 

@@ -13,12 +13,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.ToolBox;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
  *
  */
-public class ExplicitToolsAndProviderSupplierTest {
+public class ExplicitToolBoxAndProviderSupplierTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -30,9 +31,10 @@ public class ExplicitToolsAndProviderSupplierTest {
                             MyCustomToolProvider.class,
                             ToolsClass.class));
 
-    @RegisterAiService(toolProviderSupplier = MyCustomToolProviderSupplier.class, tools = ToolsClass.class, chatLanguageModelSupplier = TestAiSupplier.class)
+    @RegisterAiService(toolProviderSupplier = MyCustomToolProviderSupplier.class, chatLanguageModelSupplier = TestAiSupplier.class)
     interface ServiceWithToolClash {
 
+        @ToolBox(ToolsClass.class)
         String chat(@UserMessage String msg, @MemoryId Object id);
 
     }
