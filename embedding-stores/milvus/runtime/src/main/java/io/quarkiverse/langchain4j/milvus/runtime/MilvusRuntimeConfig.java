@@ -70,10 +70,22 @@ public interface MilvusRuntimeConfig {
     Optional<Integer> dimension();
 
     /**
-     * TODO
+     * Name of the field that contains the ID of the vector.
      */
     @WithDefault("id")
     String primaryField();
+
+    /**
+     * Name of the field that contains the text from which the vector was calculated.
+     */
+    @WithDefault("text")
+    String textField();
+
+    /**
+     * Name of the field that contains JSON metadata associated with the text.
+     */
+    @WithDefault("metadata")
+    String metadataField();
 
     /**
      * Name of the field to store the vector in.
