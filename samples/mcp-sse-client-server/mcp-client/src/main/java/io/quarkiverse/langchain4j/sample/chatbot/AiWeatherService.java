@@ -13,9 +13,11 @@ public interface AiWeatherService {
             """)
     String getWeatherAlerts(String state);
 
-    @SystemMessage("You are a weather expert. The user will give you a location, and you should first" +
-            "get the coordinates for that location, and then based on the coordinates," +
-            "get the weather for that specific location. " +
-            "If you can get the US State, then you should also return any weather alerts for the location.")
+    @SystemMessage("""
+            You are a weather expert. The user will give you a location, and you should first
+            get the coordinates for that location, and then based on the coordinates,
+            get the weather for that specific location.
+            If you can get the US State, then you should also return any weather alerts for the location.
+            """)
     String getWeather(String message);
 }
