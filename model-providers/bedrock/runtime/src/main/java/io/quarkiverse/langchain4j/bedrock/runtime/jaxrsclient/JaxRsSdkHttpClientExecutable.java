@@ -9,7 +9,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.core.Response;
 
-import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
+import org.jboss.resteasy.reactive.ClientWebApplicationException;
 
 import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.http.ContentStreamProvider;
@@ -44,7 +44,7 @@ public class JaxRsSdkHttpClientExecutable implements ExecutableHttpRequest {
         }
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            throw new WebClientApplicationException(response.getStatus(), response.getStatusInfo().getReasonPhrase());
+            throw new ClientWebApplicationException(response.getStatus());
         }
 
         return createSdkResponse(response);

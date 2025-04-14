@@ -28,6 +28,29 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-config-file[`quarkus.langchain4j.mcp.config-file`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.config-file+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+File containing the MCP servers configuration in the Claude Desktop format. This configuration can only be used to configure `stdio` transport type MCP servers.
+
+This file is read at *build time* which means that which MCP servers the client will use, is determined at build time. However, specific configuration of each MCP server can be overridden at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_CONFIG_FILE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_CONFIG_FILE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default
