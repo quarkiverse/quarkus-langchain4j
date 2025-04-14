@@ -330,7 +330,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-TODO
+Name of the field that contains the ID of the vector.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -342,6 +342,48 @@ endif::add-copy-button-to-env-var[]
 --
 |string
 |`id`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-text-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-text-field[`quarkus.langchain4j.milvus.text-field`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.text-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field that contains the text from which the vector was calculated.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_TEXT_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_TEXT_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`text`
+
+a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metadata-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-metadata-field[`quarkus.langchain4j.milvus.metadata-field`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.milvus.metadata-field+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of the field that contains JSON metadata associated with the text.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MILVUS_METADATA_FIELD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_METADATA_FIELD+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`metadata`
 
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-vector-field]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-vector-field[`quarkus.langchain4j.milvus.vector-field`]##
 ifdef::add-copy-button-to-config-props[]
