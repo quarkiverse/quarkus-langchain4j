@@ -246,6 +246,12 @@ public class DefaultJaxRsSdkClientBuilder implements JaxRsSdkClientBuilder {
                 public boolean isTrustAll() {
                     return tlsConfig.isTrustAll();
                 }
+
+                // TODO: when we bump to the next LTS, this needs to be implemented properly
+                //for the time being it exists only to make the module compile against the SNAPSHOT version of Quarkus
+                public Optional<String> getName() {
+                    throw new IllegalStateException("this should not be called");
+                }
             });
         } else {
             configureTLSFromProperties(builder);
