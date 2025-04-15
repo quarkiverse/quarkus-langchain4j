@@ -20,7 +20,7 @@ public class McpHealthCheckTest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClass(MockHttpMcpServer.class)
+                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(
                             new StringAsset(
                                     """
