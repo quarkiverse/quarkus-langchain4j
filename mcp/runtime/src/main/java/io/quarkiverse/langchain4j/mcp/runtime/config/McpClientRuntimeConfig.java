@@ -58,4 +58,11 @@ public interface McpClientRuntimeConfig {
     @WithDefault("60s")
     Duration resourcesTimeout();
 
+    /**
+     * Timeout for pinging the MCP server process to check if it's still alive. If a ping times out,
+     * the client's health check will start failing.
+     */
+    @WithDefault("10s")
+    Duration pingTimeout();
+
 }

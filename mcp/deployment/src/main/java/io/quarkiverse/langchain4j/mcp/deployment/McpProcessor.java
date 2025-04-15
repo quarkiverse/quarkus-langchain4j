@@ -37,6 +37,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class McpProcessor {
@@ -108,6 +109,7 @@ public class McpProcessor {
             McpRuntimeConfiguration mcpRuntimeConfiguration,
             Optional<McpConfigFileContentsBuildItem> maybeMcpConfigFileContents,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
+            BuildProducer<HealthBuildItem> healthBuildItems,
             McpRecorder recorder) {
         Map<String, McpTransportType> clients = new HashMap<>();
         if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
@@ -152,6 +154,11 @@ public class McpProcessor {
                     configurator.addInjectionPoint(ClassType.create(MCP_CLIENT), qualifier);
                 }
                 beanProducer.produce(configurator.done());
+            }
+            // generate a health check
+            if (mcpBuildTimeConfiguration.mpHealthEnabled()) {
+                healthBuildItems.produce(new HealthBuildItem("io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck",
+                        true));
             }
         }
     }

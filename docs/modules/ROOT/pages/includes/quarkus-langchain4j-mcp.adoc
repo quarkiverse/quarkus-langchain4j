@@ -51,6 +51,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-health-enabled[`quarkus.langchain4j.mcp.health.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.health.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the MCP extension should automatically register a health check for configured MCP clients. The default is true if at least one MCP client is configured, false otherwise.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_HEALTH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_HEALTH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default
@@ -222,6 +243,27 @@ endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`60S`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout[`quarkus.langchain4j.mcp."client-name".ping-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".ping-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for pinging the MCP server process to check if it's still alive. If a ping times out, the client's health check will start failing.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__PING_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__PING_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`10S`
 
 
 |===

@@ -19,6 +19,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.sse.Sse;
 import jakarta.ws.rs.sse.SseEventSink;
 
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,6 +33,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class MockHttpMcpServer {
 
     private final AtomicLong ID_GENERATOR = new AtomicLong(new Random().nextLong(1000, 5000));
+
+    private static Logger logger = Logger.getLogger(MockHttpMcpServer.class);
+
+    private volatile boolean shouldRespondToPing = true;
 
     // key = operation ID of the ping
     // value = future that will be completed when the ping response for that ID is received
@@ -159,6 +164,17 @@ public class MockHttpMcpServer {
                 } else {
                     return Response.serverError().entity("Unknown operation").build();
                 }
+            } else if (method.equals("ping")) {
+                if (shouldRespondToPing) {
+                    ObjectNode result = buildPongMessage(operationId);
+                    sink.send(sse.newEventBuilder()
+                            .name("message")
+                            .data(result)
+                            .build());
+                } else {
+                    logger.info("Ignoring ping request");
+                }
+                return Response.accepted().build();
             }
         } else {
             // if 'method' is null, the message is probably a ping response
@@ -171,6 +187,14 @@ public class MockHttpMcpServer {
             }
         }
         return Response.accepted().build();
+    }
+
+    private ObjectNode buildPongMessage(String operationId) {
+        ObjectNode pong = objectMapper.createObjectNode();
+        pong.put("jsonrpc", "2.0");
+        pong.put("id", operationId);
+        pong.put("result", objectMapper.createObjectNode());
+        return pong;
     }
 
     private void executeLoggingOperation(JsonNode message, String operationId) {
@@ -276,6 +300,10 @@ public class MockHttpMcpServer {
                 .build());
         pendingPings.put(id, new CompletableFuture<>());
         return id;
+    }
+
+    void stopRespondingToPings() {
+        shouldRespondToPing = false;
     }
 
 }
