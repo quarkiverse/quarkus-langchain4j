@@ -9,6 +9,8 @@ import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
@@ -39,4 +41,12 @@ public interface McpBuildTimeConfiguration {
      * is determined at build time. However, specific configuration of each MCP server can be overridden at runtime.
      */
     Optional<String> configFile();
+
+    /**
+     * Whether the MCP extension should automatically register a health check for configured MCP clients.
+     * The default is true if at least one MCP client is configured, false otherwise.
+     */
+    @WithName("health.enabled")
+    @WithDefault("true")
+    boolean mpHealthEnabled();
 }

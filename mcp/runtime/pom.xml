@@ -22,6 +22,11 @@
             <artifactId>langchain4j-mcp</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
             <version>${project.version}</version>
