@@ -391,11 +391,19 @@ public class AiServiceMethodImplementationSupport {
             }
 
             log.debug("Attempting to obtain AI response");
-            ChatRequest chatRequest = ChatRequest.builder()
-                    .messages(chatMemory.messages())
-                    .toolSpecifications(toolSpecifications)
-                    .build();
-            response = context.effectiveChatModel(methodCreateInfo, methodArgs).chat(chatRequest);
+            ChatLanguageModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
+            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(chatMemory.messages());
+            if (supportsJsonSchema(effectiveChatModel)) {
+                Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
+                if (jsonSchema.isPresent()) {
+                    chatRequestBuilder.parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema.get()));
+                } else {
+                    chatRequestBuilder.toolSpecifications(toolSpecifications);
+                }
+            } else {
+                chatRequestBuilder.toolSpecifications(toolSpecifications);
+            }
+            response = effectiveChatModel.chat(chatRequestBuilder.build());
             log.debug("AI response obtained");
 
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
@@ -463,14 +471,7 @@ public class AiServiceMethodImplementationSupport {
             ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend)
-                .parameters(
-                        ChatRequestParameters.builder()
-                                .toolSpecifications(toolSpecifications)
-                                .responseFormat(ResponseFormat.builder()
-                                        .type(JSON)
-                                        .jsonSchema(jsonSchema)
-                                        .build())
-                                .build())
+                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema))
                 .build();
 
         return chatModel.chat(chatRequest);
@@ -598,6 +599,14 @@ public class AiServiceMethodImplementationSupport {
         }
         result.add(userMessage);
         return result;
+    }
+
+    private static ChatRequestParameters constructStructuredResponseParams(
+            List<ToolSpecification> toolSpecifications, JsonSchema jsonSchema) {
+        return ChatRequestParameters.builder()
+                .toolSpecifications(toolSpecifications)
+                .responseFormat(ResponseFormat.builder().type(JSON).jsonSchema(jsonSchema).build())
+                .build();
     }
 
     private static boolean supportsJsonSchema(ChatLanguageModel chatModel) {
