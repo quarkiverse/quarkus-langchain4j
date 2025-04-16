@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
@@ -60,7 +61,7 @@ public class McpOverHttpTransportTest {
 
     @Test
     public void toolProviderShouldBeMcpBased() {
-        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(McpToolProvider.class);
+        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(QuarkusMcpToolProvider.class);
     }
 
     @Test

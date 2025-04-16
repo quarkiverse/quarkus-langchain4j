@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.mcp.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
@@ -50,7 +51,7 @@ public class McpClientAndToolProviderCDITest {
 
         ToolProvider provider = toolProviderCDIInstance.get();
         assertThat(provider).isNotNull();
-        assertThat(ClientProxy.unwrap(provider)).isInstanceOf(McpToolProvider.class);
+        assertThat(ClientProxy.unwrap(provider)).isInstanceOf(QuarkusMcpToolProvider.class);
     }
 
 }
