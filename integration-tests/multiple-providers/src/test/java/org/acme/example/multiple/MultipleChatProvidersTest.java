@@ -64,12 +64,12 @@ public class MultipleChatProvidersTest {
 
     @Test
     void defaultModel() {
-        assertThat(ClientProxy.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
+        assertThat(SubclassUtil.unwrap(defaultModel)).isInstanceOf(OpenAiChatModel.class);
     }
 
     @Test
     void firstNamedModel() {
-        assertThat(ClientProxy.unwrap(firstNamedModel)).isInstanceOf(OpenAiChatModel.class);
+        assertThat(SubclassUtil.unwrap(firstNamedModel)).isInstanceOf(OpenAiChatModel.class);
     }
 
     @Test
