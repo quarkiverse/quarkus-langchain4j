@@ -6,6 +6,7 @@ import static java.util.Objects.isNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -272,6 +273,10 @@ public sealed interface TextChatMessage
         }
 
         public TextChatToolCall build() {
+            // Watsonx doesn't return "id" if the option tool-choice is set to REQUIRED.
+            if (isNull(id)) {
+                this.id = UUID.randomUUID().toString();
+            }
             return new TextChatToolCall(index, id, type, new TextChatFunctionCall(name, arguments.toString()));
         }
     }

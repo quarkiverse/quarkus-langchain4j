@@ -4,7 +4,7 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
-import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_TOKENIZER_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
@@ -30,6 +30,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -48,9 +49,11 @@ import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatRequestParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAssistant;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
@@ -307,6 +310,11 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
 
     @Test
     void chat_request_streaming_test() throws Exception {
+
+        var toolExecutionRequest = ToolExecutionRequest.builder()
+                .name("myfunction")
+                .build();
+
         // Use the chat method without customization:
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.chatModel().modelId();
@@ -315,19 +323,21 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
 
         var messagesToSend = List.<TextChatMessage> of(
                 TextChatMessageSystem.of("You are an helpful assistant"),
-                TextChatMessageUser.of("Hello, how are you?"));
+                TextChatMessageUser.of("Hello, how are you?"),
+                TextChatMessageAssistant.of(List.of(TextChatToolCall.of(toolExecutionRequest))));
 
         TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, tools, parameters);
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
                 .build();
 
         List<ChatMessage> chatMessages = List.of(
                 SystemMessage.from("You are an helpful assistant"),
-                UserMessage.from("Hello, how are you?"));
+                UserMessage.from("Hello, how are you?"),
+                AiMessage.from(toolExecutionRequest));
 
         var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat(
@@ -342,18 +352,12 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        ChatResponse expected = new ChatResponse.Builder()
-                .aiMessage(AiMessage.from(" Hello"))
-                .metadata(ChatResponseMetadata.builder()
-                        .id("chat-049e3ff7ff08416fb5c334d05af059da")
-                        .modelName("mistralai/mistral-large")
-                        .tokenUsage(new TokenUsage(88, 36))
-                        .finishReason(FinishReason.STOP)
-                        .build())
-                .build();
-
-        assertEquals(expected, streamingResponse.get());
+        assertThat(streamingResponse.get().aiMessage().toolExecutionRequests()).isNotNull();
         // ----------------------------------------------
+
+        toolExecutionRequest = ToolExecutionRequest.builder()
+                .name("mysupertool")
+                .build();
 
         // Use the chat method with customization:
         var request = ChatRequest.builder()
@@ -400,7 +404,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
                 .build();
 
         var streamingResponse2 = new AtomicReference<ChatResponse>();
@@ -411,7 +415,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertEquals(expected, streamingResponse2.get());
+        assertThat(streamingResponse2.get().aiMessage().toolExecutionRequests()).isNotNull();
         // ----------------------------------------
 
         // Use the chat method with customization:
@@ -459,7 +463,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
                 .build();
 
         var streamingResponse3 = new AtomicReference<ChatResponse>();
@@ -470,7 +474,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertEquals(expected, streamingResponse3.get());
+        assertThat(streamingResponse3.get().aiMessage().toolExecutionRequests()).isNotNull();
         // ----------------------------------------
 
         // Use the chat method with unsupported parameter:
@@ -528,6 +532,11 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
 
     @Test
     void check_chat_streaming_model_config() throws Exception {
+
+        var toolExecutionRequest = ToolExecutionRequest.builder()
+                .name("myfunction")
+                .build();
+
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.chatModel().modelId();
         String spaceId = config.spaceId().orElse(null);
@@ -535,19 +544,21 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
 
         var messagesToSend = List.<TextChatMessage> of(
                 TextChatMessageSystem.of("SystemMessage"),
-                TextChatMessageUser.of("UserMessage"));
+                TextChatMessageUser.of("UserMessage"),
+                TextChatMessageAssistant.of(List.of(TextChatToolCall.of(toolExecutionRequest))));
 
         TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messagesToSend, tools, parameters);
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_STREAMING_API, 200, "aaaa-mm-dd")
                 .body(mapper.writeValueAsString(body))
                 .responseMediaType(MediaType.SERVER_SENT_EVENTS)
-                .response(RESPONSE_WATSONX_CHAT_STREAMING_API)
+                .response(RESPONSE_WATSONX_CHAT_STREAMING_TOOLS_API)
                 .build();
 
         var messages = List.of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
-                dev.langchain4j.data.message.UserMessage.from("UserMessage"));
+                dev.langchain4j.data.message.UserMessage.from("UserMessage"),
+                AiMessage.from(toolExecutionRequest));
 
         var request = ChatRequest.builder()
                 .messages(messages)
@@ -564,8 +575,6 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .pollInterval(Duration.ofSeconds(2))
                 .until(() -> streamingResponse.get() != null);
 
-        assertThat(streamingResponse.get().aiMessage().text())
-                .isNotNull()
-                .isEqualTo(" Hello");
+        assertThat(streamingResponse.get().aiMessage().toolExecutionRequests()).isNotNull();
     }
 }

@@ -26,8 +26,8 @@ public class TextChatParameters {
         }
     };
 
-    private final String toolChoiceOption;
-    private final TextChatToolChoiceTool toolChoice;
+    private String toolChoiceOption;
+    private TextChatToolChoiceTool toolChoice;
     private final Double frequencyPenalty;
     private final Map<String, Integer> logitBias;
     private final Boolean logprobs;
@@ -126,6 +126,11 @@ public class TextChatParameters {
         }
 
         return builder.build();
+    }
+
+    public void cleanToolChoice() {
+        this.toolChoiceOption = null;
+        this.toolChoice = null;
     }
 
     public String getToolChoiceOption() {
