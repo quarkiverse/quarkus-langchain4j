@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
+import static java.util.Objects.nonNull;
 
 import java.util.List;
 import java.util.Set;
@@ -8,6 +9,8 @@ import java.util.concurrent.Callable;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -83,8 +86,29 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel {
                 ? toolSpecifications.stream().map(TextChatParameterTool::of).toList()
                 : null;
 
-        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, messages, tools,
-                TextChatParameters.convert(parameters));
+        TextChatParameters textChatParameters = TextChatParameters.convert(parameters);
+
+        if (nonNull(parameters.toolChoice()) && parameters.toolChoice().equals(ToolChoice.REQUIRED) && messages.size() > 0) {
+            // This code is needed to avoid a infinite-loop when using the AiService
+            // in combination with the tool-choice option.
+            // If the tool-choice option is not removed after calling the tool,
+            // the model may continuously reselect the same tool in subsequent responses,
+            // even though the tool has already been invoked. This leads to an infinite loop
+            // where the assistant keeps generating tool calls without progressing the conversation.
+            // By explicitly removing the tool-choice field after the tool has been executed,
+            // we allow the assistant to resume normal message generation and provide a response
+            // based on the tool output instead of redundantly triggering it again.
+
+            int LAST_MESSAGE = chatRequest.messages().size() - 1;
+            ChatMessage lastMessage = chatRequest.messages().get(LAST_MESSAGE);
+            if (lastMessage instanceof ToolExecutionResultMessage) {
+                tools = null;
+                textChatParameters.cleanToolChoice();
+            }
+        }
+
+        TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, messages, tools, textChatParameters);
+
         TextChatResponse response = retryOn(new Callable<TextChatResponse>() {
             @Override
             public TextChatResponse call() throws Exception {
