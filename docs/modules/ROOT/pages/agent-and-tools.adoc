@@ -69,6 +69,8 @@ public class EmailService {
 IMPORTANT: A CDI bean can host multiple methods annotated with `@Tool`.
 However, ensure each method name is unique among all declared tools.
 
+NOTE: Tool method parameters must follow the `snake_case` naming convention.
+
 == Providing Tool Access
 
 In the xref:ai-services.adoc[AI Service], you can specify the tools accessible to the agent. By default, **no tools** are available. Hence, ensure to define the list of tools you wish to make accessible:
