@@ -41,7 +41,7 @@
     <assertj.version>3.27.3</assertj.version>
     <sundrio.version>0.200.3</sundrio.version>
     <quarkus-wiremock.version>1.4.1</quarkus-wiremock.version>
-    <wiremock.version>3.12.1</wiremock.version>
+    <wiremock.version>3.13.0</wiremock.version>
     <quarkus-neo4j.version>5.3.0</quarkus-neo4j.version>
     <jlama.version>0.8.4</jlama.version>
     <google-auth-library-oauth2-http.version>1.33.1</google-auth-library-oauth2-http.version>
