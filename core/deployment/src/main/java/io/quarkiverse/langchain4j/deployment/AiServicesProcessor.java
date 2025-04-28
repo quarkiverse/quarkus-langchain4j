@@ -64,6 +64,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
@@ -213,6 +215,13 @@ public class AiServicesProcessor {
 
         serviceProviderProducer.produce(new ServiceProviderBuildItem(DefaultMemoryIdProvider.class.getName(),
                 RequestScopeStateDefaultMemoryIdProvider.class.getName()));
+
+        // needed because various LLMs use these, so let's be proactive
+        // there isn't one great place to put this, so this is probably as good as any
+        reflectiveClassProducer.produce(
+                ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).constructors().build());
+        reflectiveClassProducer.produce(
+                ReflectiveClassBuildItem.builder(PropertyNamingStrategies.LowerCamelCaseStrategy.class).constructors().build());
     }
 
     @BuildStep
