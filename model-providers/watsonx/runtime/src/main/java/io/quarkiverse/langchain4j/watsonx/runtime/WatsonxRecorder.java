@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.watsonx.runtime;
 
-import static dev.langchain4j.model.chat.request.ToolChoice.REQUIRED;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import static io.quarkiverse.langchain4j.watsonx.runtime.TokenGenerationCache.getOrCreateTokenGenerator;
 import static java.util.Objects.isNull;
@@ -189,6 +188,7 @@ public class WatsonxRecorder {
     }
 
     public Supplier<EmbeddingModel> embeddingModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         if (watsonConfig.enableIntegration()) {
@@ -198,26 +198,33 @@ public class WatsonxRecorder {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
             }
 
-            String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
+            String apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonConfig.apiKey());
 
             URL url;
             try {
-                url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
-                        .toURL();
+                url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
             EmbeddingModelConfig embeddingModelConfig = watsonConfig.embeddingModel();
+
+            var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+            var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), embeddingModelConfig.logRequests(),
+                    watsonConfig.logRequests());
+            var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), embeddingModelConfig.logResponses(),
+                    watsonConfig.logResponses());
+            var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+            var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
+
             var builder = WatsonxEmbeddingModel.builder()
                     .url(url)
-                    .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                    .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), embeddingModelConfig.logRequests()))
-                    .logResponses(
-                            firstOrDefault(watsonConfig.logResponses().orElse(false), embeddingModelConfig.logResponses()))
+                    .timeout(timeout)
+                    .logRequests(logRequests)
+                    .logResponses(logResponses)
                     .version(watsonConfig.version())
-                    .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                    .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                    .spaceId(spaceId)
+                    .projectId(projectId)
                     .modelId(embeddingModelConfig.modelId())
                     .truncateInputTokens(embeddingModelConfig.truncateInputTokens().orElse(null));
             var iamBaseUrl = watsonConfig.iam().baseUrl();
@@ -245,6 +252,7 @@ public class WatsonxRecorder {
     }
 
     public Supplier<ScoringModel> scoringModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         var configProblems = checkConfigurations(runtimeConfig, configName);
@@ -253,25 +261,33 @@ public class WatsonxRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
-        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
+        String apiKey = firstOrDefault(defaultConfig.apiKey().orElse(null), watsonConfig.apiKey());
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
-                    .toURL();
+            url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         ScoringModelConfig rerankModelConfig = watsonConfig.scoringModel();
+
+        var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+        var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), rerankModelConfig.logRequests(),
+                watsonConfig.logRequests());
+        var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), rerankModelConfig.logResponses(),
+                watsonConfig.logResponses());
+        var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+        var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
+
         var builder = WatsonxScoringModel.builder()
                 .url(url)
-                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), rerankModelConfig.logRequests()))
-                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), rerankModelConfig.logResponses()))
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                .spaceId(spaceId)
+                .projectId(projectId)
                 .modelId(rerankModelConfig.modelId())
                 .truncateInputTokens(rerankModelConfig.truncateInputTokens().orElse(null));
         var iamBaseUrl = watsonConfig.iam().baseUrl();
@@ -363,6 +379,7 @@ public class WatsonxRecorder {
     }
 
     private WatsonxChatModel.Builder chatBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         var configProblems = checkConfigurations(runtimeConfig, configName);
@@ -375,17 +392,9 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
-                    .toURL();
+            url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-
-        ToolChoice toolChoice = null;
-        String toolChoiceName = null;
-        if (chatModelConfig.toolChoice().isPresent() && !chatModelConfig.toolChoice().get().isBlank()) {
-            toolChoice = REQUIRED;
-            toolChoiceName = chatModelConfig.toolChoice().get();
         }
 
         ResponseFormat responseFormat = null;
@@ -397,15 +406,26 @@ public class WatsonxRecorder {
                                 .formatted(chatModelConfig.responseFormat().get(), "json_object"));
             };
         }
+
+        String toolChoiceName = chatModelConfig.toolChoiceName().orElse(null);
+        ToolChoice toolChoice = toolChoiceName != null ? ToolChoice.REQUIRED : chatModelConfig.toolChoice().orElse(null);
+
+        var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+        var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), chatModelConfig.logRequests(),
+                watsonConfig.logRequests());
+        var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), chatModelConfig.logResponses(),
+                watsonConfig.logResponses());
+        var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+        var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
         return WatsonxChatModel.builder()
                 .url(url)
-                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), chatModelConfig.logRequests()))
-                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), chatModelConfig.logResponses()))
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                .spaceId(spaceId)
+                .projectId(projectId)
                 .modelId(watsonConfig.chatModel().modelId())
                 .toolChoice(toolChoice)
                 .toolChoiceName(toolChoiceName)
@@ -422,7 +442,9 @@ public class WatsonxRecorder {
                 .responseFormat(responseFormat);
     }
 
-    private WatsonxStreamingChatModel.Builder streamingChatBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+    private WatsonxStreamingChatModel.Builder streamingChatBuilder(LangChain4jWatsonxConfig runtimeConfig,
+            String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         var configProblems = checkConfigurations(runtimeConfig, configName);
@@ -435,17 +457,9 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
-                    .toURL();
+            url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-
-        ToolChoice toolChoice = null;
-        String toolChoiceName = null;
-        if (chatModelConfig.toolChoice().isPresent() && !chatModelConfig.toolChoice().get().isBlank()) {
-            toolChoice = REQUIRED;
-            toolChoiceName = chatModelConfig.toolChoice().get();
         }
 
         ResponseFormat responseFormat = null;
@@ -458,14 +472,25 @@ public class WatsonxRecorder {
             };
         }
 
+        String toolChoiceName = chatModelConfig.toolChoiceName().orElse(null);
+        ToolChoice toolChoice = toolChoiceName != null ? ToolChoice.REQUIRED : chatModelConfig.toolChoice().orElse(null);
+
+        var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+        var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), chatModelConfig.logRequests(),
+                watsonConfig.logRequests());
+        var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), chatModelConfig.logResponses(),
+                watsonConfig.logResponses());
+        var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+        var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
+
         return WatsonxStreamingChatModel.builder()
                 .url(url)
-                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), chatModelConfig.logRequests()))
-                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), chatModelConfig.logResponses()))
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                .spaceId(spaceId)
+                .projectId(projectId)
                 .modelId(watsonConfig.chatModel().modelId())
                 .toolChoice(toolChoice)
                 .toolChoiceName(toolChoiceName)
@@ -482,7 +507,9 @@ public class WatsonxRecorder {
                 .responseFormat(responseFormat);
     }
 
-    private WatsonxGenerationModel.Builder generationBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {
+    private WatsonxGenerationModel.Builder generationBuilder(LangChain4jWatsonxConfig runtimeConfig,
+            String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         var configProblems = checkConfigurations(runtimeConfig, configName);
@@ -495,7 +522,7 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
+            url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -504,14 +531,22 @@ public class WatsonxRecorder {
         Integer startIndex = generationModelConfig.lengthPenalty().startIndex().orElse(null);
         String promptJoiner = generationModelConfig.promptJoiner();
 
+        var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+        var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), generationModelConfig.logRequests(),
+                watsonConfig.logRequests());
+        var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), generationModelConfig.logResponses(),
+                watsonConfig.logResponses());
+        var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+        var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
+
         return WatsonxGenerationModel.builder()
                 .url(url)
-                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), generationModelConfig.logRequests()))
-                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), generationModelConfig.logResponses()))
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                .spaceId(spaceId)
+                .projectId(projectId)
                 .modelId(watsonConfig.generationModel().modelId())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)
@@ -531,6 +566,7 @@ public class WatsonxRecorder {
 
     private WatsonxGenerationStreamingModel.Builder generationStreamingBuilder(LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
 
         var configProblems = checkConfigurations(runtimeConfig, configName);
@@ -543,7 +579,7 @@ public class WatsonxRecorder {
 
         URL url;
         try {
-            url = URI.create(firstOrDefault(null, watsonConfig.baseUrl(), runtimeConfig.defaultConfig().baseUrl())).toURL();
+            url = URI.create(firstOrDefault(defaultConfig.baseUrl().orElse(null), watsonConfig.baseUrl())).toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -552,14 +588,22 @@ public class WatsonxRecorder {
         Integer startIndex = generationModelConfig.lengthPenalty().startIndex().orElse(null);
         String promptJoiner = generationModelConfig.promptJoiner();
 
+        var timeout = firstOrDefault(Duration.ofSeconds(10), watsonConfig.timeout(), defaultConfig.timeout());
+        var logRequests = firstOrDefault(defaultConfig.logRequests().orElse(false), generationModelConfig.logRequests(),
+                watsonConfig.logRequests());
+        var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), generationModelConfig.logResponses(),
+                watsonConfig.logResponses());
+        var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
+        var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
+
         return WatsonxGenerationStreamingModel.builder()
                 .url(url)
-                .timeout(watsonConfig.timeout().orElse(Duration.ofSeconds(10)))
-                .logRequests(firstOrDefault(watsonConfig.logRequests().orElse(false), generationModelConfig.logRequests()))
-                .logResponses(firstOrDefault(watsonConfig.logResponses().orElse(false), generationModelConfig.logResponses()))
+                .timeout(timeout)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
                 .version(watsonConfig.version())
-                .spaceId(firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()))
-                .projectId(firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()))
+                .spaceId(spaceId)
+                .projectId(projectId)
                 .modelId(watsonConfig.generationModel().modelId())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)

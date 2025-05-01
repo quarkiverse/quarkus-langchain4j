@@ -45,7 +45,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfi
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.common.annotation.Blocking;
 
-public class ToolChoiceTest extends WireMockAbstract {
+public class ToolChoiceNameTest extends WireMockAbstract {
 
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -53,7 +53,7 @@ public class ToolChoiceTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "required")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice-name", "sum")
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, Calculator.class));
 
@@ -185,7 +185,7 @@ public class ToolChoiceTest extends WireMockAbstract {
     }
 
     private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTool> tools,
-            boolean toolChoiceOptionIsRequired) {
+            boolean withToolChoice) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
         String modelId = chatModelConfig.modelId();
@@ -202,8 +202,8 @@ public class ToolChoiceTest extends WireMockAbstract {
                 .topP(1.0)
                 .timeLimit(DEFAULT_TIME_LIMIT);
 
-        if (toolChoiceOptionIsRequired)
-            builder.toolChoiceOption("required");
+        if (withToolChoice)
+            builder.toolChoice("sum");
 
         return new TextChatRequest(modelId, spaceId, projectId, messages, tools, builder.build());
     }

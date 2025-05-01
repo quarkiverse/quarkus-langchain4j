@@ -22,13 +22,14 @@ public interface ScoringModelConfig {
     String modelId();
 
     /**
-     * Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being
-     * longer
-     * than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of
-     * the
-     * input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this
-     * value
-     * for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+     * Specifies the maximum number of input tokens accepted. This helps to avoid requests failing due to input exceeding the
+     * configured token limits.
+     * <p>
+     * If the input exceeds the specified token limit, the text will be truncated from the end (right side), ensuring that the
+     * start of the input remains
+     * intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's
+     * maximum sequence length), the
+     * request will fail if the total number of tokens exceeds the maximum limit.
      */
     Optional<Integer> truncateInputTokens();
 

@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.watsonx.runtime.config;
 import java.util.List;
 import java.util.Optional;
 
+import dev.langchain4j.model.chat.request.ToolChoice;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -11,39 +12,55 @@ import io.smallrye.config.WithDefault;
 public interface ChatModelConfig {
 
     /**
-     * The model to use for the chat completion.
+     * Specifies the model to use for the chat completion.
      * <p>
-     * All available models are listed in the IBM Watsonx.ai documentation at the <a href="
-     * https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided">following
+     * A list of all available models is provided in the IBM watsonx.ai documentation at the
+     * <a href="https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided">this
      * link</a>.
      * <p>
-     * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
+     * To use a model, locate the <code>API model ID</code> column in the table and copy the corresponding model ID.
      */
-    @WithDefault("mistralai/mistral-large")
+    @WithDefault("meta-llama/llama-4-maverick-17b-128e-instruct-fp8")
     String modelId();
 
     /**
-     * Specifies the <code>name</code> of a tool associated with the service.
+     * Specifies how the model should choose which tool to call during a request.
      * <p>
-     * Setting this value forces the model to call the specified tool when making a request.
-     * The tool name must match one of the available tools in the service.
+     * This value can be:
+     * <ul>
+     * <li><b>auto</b>: The model decides whether and which tool to call automatically.</li>
+     * <li><b>required</b>: The model must call one of the available tools.</li>
+     * </ul>
+     * <p>
+     * If {@code toolChoiceName} is set, this value is ignored.
+     * <p>
+     * Setting this value influences the tool-calling behavior of the model when no specific tool is required.
      */
-    Optional<String> toolChoice();
+    Optional<ToolChoice> toolChoice();
 
     /**
-     * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's
-     * likelihood to repeat the same line
-     * verbatim.
+     * Specifies the name of a specific tool that the model must call.
      * <p>
-     * <strong>Possible values:</strong> <code>-2 < value < 2</code>
+     * This value takes precedence over {@code toolChoice}. When set, the model will be forced to call the specified tool. The
+     * name must exactly match one
+     * of the available tools defined for the service.
+     */
+    Optional<String> toolChoiceName();
+
+    /**
+     * Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of
+     * the model repeating the
+     * same lines verbatim.
+     * <p>
+     * <strong>Possible values:</strong> <code>-2 &lt; value &lt; 2</code>
      */
     @WithDefault("0")
     Double frequencyPenalty();
 
     /**
-     * Whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output
-     * token returned in the
-     * content of message.
+     * Specifies whether to return the log probabilities of the output tokens.
+     * <p>
+     * If set to {@code true}, the response will include the log probability of each output token in the content of the message.
      */
     @WithDefault("false")
     Boolean logprobs();
@@ -58,24 +75,23 @@ public interface ChatModelConfig {
     Optional<Integer> topLogprobs();
 
     /**
-     * The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated
-     * tokens is limited by the
-     * model's context length.
+     * Specifies the maximum number of tokens that can be generated in the chat completion.
+     * <p>
+     * The total number of tokens — including both input and output — must not exceed the model's context length.
      */
     @WithDefault("1024")
     Integer maxTokens();
 
     /**
-     * How many chat completion choices to generate for each input message. Note that you will be charged based on the number of
-     * generated tokens across
-     * all of the choices. Keep n as <code>1</code> to minimize costs
+     * Specifies how many chat completion choices to generate for each input message.
      */
     @WithDefault("1")
     Integer n();
 
     /**
-     * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to
-     * talk about new topics.
+     * Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model
+     * to introduce new topics
+     * rather than repeat itself.
      * <p>
      * <strong>Possible values:</strong> <code>-2 < value < 2</code>
      */
@@ -88,19 +104,25 @@ public interface ChatModelConfig {
     Optional<Integer> seed();
 
     /**
-     * Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of
-     * the output. Stop sequences
-     * encountered prior to the minimum number of tokens being generated will be ignored.
+     * Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are
+     * encountered in the output.
+     * <p>
+     * This allows control over where the model should end its response. If a stop sequence is encountered before the minimum
+     * number of tokens has been
+     * generated, it will be ignored.
      * <p>
      * <strong>Possible values:</strong> <code>0 ≤ number of items ≤ 4</code>
      */
     Optional<List<String>> stop();
 
     /**
-     * What sampling temperature to use. Higher values like <code>0.8</code> will make the output more random, while lower
-     * values like <code>0.2</code>
-     * will make it more focused and deterministic.
+     * Specifies the sampling temperature to use in the generation process.
      * <p>
+     * Higher values (e.g. <code>0.8</code>) make the output more random and diverse, while lower values (e.g. <code>0.2</code>)
+     * make the output more
+     * focused and deterministic.
+     * <p>
+     *
      * <strong>Possible values:</strong> <code>0 < value < 2</code>
      */
     @WithDefault("${quarkus.langchain4j.temperature:1.0}")
@@ -108,9 +130,9 @@ public interface ChatModelConfig {
 
     /**
      * An alternative to sampling with <code>temperature</code>, called nucleus sampling, where the model considers the results
-     * of the tokens
-     * with <code>top_p</code> probability
-     * mass. So <code>0.1</code> means only the tokens comprising the top 10% probability mass are considered.
+     * of the tokens with
+     * <code>top_p</code> probability mass. So <code>0.1</code> means only the tokens comprising the top 10% probability mass
+     * are considered.
      * <p>
      * <strong>Possible values:</strong> <code>0 < value < 1</code>
      */
@@ -128,13 +150,11 @@ public interface ChatModelConfig {
      * Whether chat model requests should be logged.
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.watsonx.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether chat model responses should be logged.
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.watsonx.log-responses}")
     Optional<Boolean> logResponses();
 }

@@ -35,14 +35,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
 
 public class WatsonxChatModel extends Watsonx implements ChatLanguageModel {
 
-    private static final String ID_CONTEXT = "ID";
-    private static final String MODEL_ID_CONTEXT = "MODEL_ID";
-    private static final String USAGE_CONTEXT = "USAGE";
-    private static final String FINISH_REASON_CONTEXT = "FINISH_REASON";
-    private static final String ROLE_CONTEXT = "ROLE";
-    private static final String TOOLS_CONTEXT = "TOOLS";
-    private static final String COMPLETE_MESSAGE_CONTEXT = "COMPLETE_MESSAGE";
-
     private final WatsonxChatRequestParameters defaultRequestParameters;
 
     public WatsonxChatModel(Builder builder) {
@@ -88,7 +80,8 @@ public class WatsonxChatModel extends Watsonx implements ChatLanguageModel {
 
         TextChatParameters textChatParameters = TextChatParameters.convert(parameters);
 
-        if (nonNull(parameters.toolChoice()) && parameters.toolChoice().equals(ToolChoice.REQUIRED) && messages.size() > 0) {
+        if (nonNull(parameters.toolChoice()) && parameters.toolChoice().equals(ToolChoice.REQUIRED)
+                && messages.size() > 0) {
             // This code is needed to avoid a infinite-loop when using the AiService
             // in combination with the tool-choice option.
             // If the tool-choice option is not removed after calling the tool,

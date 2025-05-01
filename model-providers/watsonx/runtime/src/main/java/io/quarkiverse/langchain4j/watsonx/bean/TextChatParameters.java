@@ -90,36 +90,43 @@ public class TextChatParameters {
 
             List<ToolSpecification> toolSpecifications = parameters.toolSpecifications();
 
-            if (parameters.toolChoice() != null) {
+            if (watsonxParameters.toolChoiceName() != null && !watsonxParameters.toolChoiceName().isBlank()) {
+
+                if (toolSpecifications == null || toolSpecifications.isEmpty())
+                    throw new IllegalArgumentException(
+                            "If tool-choice-name is set, at least one tool must be specified.");
+
+                builder.toolChoiceOption(null);
+                builder.toolChoice(toolSpecifications.stream()
+                        .filter(new Predicate<ToolSpecification>() {
+                            @Override
+                            public boolean test(ToolSpecification toolSpecification) {
+                                return toolSpecification.name()
+                                        .equalsIgnoreCase(watsonxParameters.toolChoiceName());
+                            }
+                        })
+                        .findFirst().map(ToolSpecification::name)
+                        .orElseThrow(new Supplier<IllegalArgumentException>() {
+                            @Override
+                            public IllegalArgumentException get() {
+                                String toolList = toolSpecifications.stream()
+                                        .map(ToolSpecification::name)
+                                        .collect(joining(",", "[", "]"));
+                                return new IllegalArgumentException(
+                                        "The tool with name '%s' is not available in the list of tools sent to the model. Tool lists: %s"
+                                                .formatted(watsonxParameters.toolChoiceName(), toolList));
+                            }
+                        }));
+            } else if (parameters.toolChoice() != null) {
                 switch (parameters.toolChoice()) {
                     case AUTO -> builder.toolChoiceOption("auto");
                     case REQUIRED -> {
-                        builder.toolChoiceOption(null);
-                        if (toolSpecifications == null || toolSpecifications.isEmpty()) {
+
+                        if (toolSpecifications == null || toolSpecifications.isEmpty())
                             throw new IllegalArgumentException(
                                     "If tool-choice is 'REQUIRED', at least one tool must be specified.");
-                        }
 
-                        builder.toolChoice(toolSpecifications.stream()
-                                .filter(new Predicate<ToolSpecification>() {
-                                    @Override
-                                    public boolean test(ToolSpecification toolSpecification) {
-                                        return toolSpecification.name()
-                                                .equalsIgnoreCase(watsonxParameters.toolChoiceName());
-                                    }
-                                })
-                                .findFirst().map(ToolSpecification::name)
-                                .orElseThrow(new Supplier<IllegalArgumentException>() {
-                                    @Override
-                                    public IllegalArgumentException get() {
-                                        String toolList = toolSpecifications.stream()
-                                                .map(ToolSpecification::name)
-                                                .collect(joining(",", "[", "]"));
-                                        return new IllegalArgumentException(
-                                                "The tool with name '%s' is not available in the list of tools sent to the model. Tool lists: %s"
-                                                        .formatted(watsonxParameters.toolChoiceName(), toolList));
-                                    }
-                                }));
+                        builder.toolChoiceOption("required");
                     }
                 }
             }
