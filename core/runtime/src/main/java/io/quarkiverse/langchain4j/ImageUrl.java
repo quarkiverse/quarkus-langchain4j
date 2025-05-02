@@ -26,11 +26,12 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * There can be at most one instance of {@code PdfUrl} per method and the supported types are the following:
+ * There can be at most one instance of {@code ImageUrl} per method and the supported types are the following:
  * <ul>
  * <li>String</li>
  * <li>URL</li>
  * <li>URI</li>
+ * <li>dev.langchain4j.data.image.Image</li>
  * </ul>
  *
  */
