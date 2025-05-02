@@ -334,13 +334,20 @@ public class AiServicesProcessor {
 
             String imageModelName = chatModelName; // TODO: should we have a separate setting for this?
 
+            List<ClassInfo> tools = tools(instance, index);
+            DotName chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName(reflectiveClassProducer,
+                    instance, index);
+            if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null) {
+                throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
+                        + declarativeAiServiceClassInfo.name() + "'");
+            }
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
                             chatLanguageModelSupplierClassDotName,
                             streamingChatLanguageModelSupplierClassDotName,
-                            tools(instance, index),
-                            chatMemoryProviderSupplierClassDotName(reflectiveClassProducer, instance, index),
+                            tools,
+                            chatMemoryProviderSupplierClassDotName,
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             moderationModelSupplierClassName,
@@ -1114,9 +1121,10 @@ public class AiServicesProcessor {
                     classCreatorBuilder.interfaces(AutoCloseable.class);
                 }
                 try (ClassCreator classCreator = classCreatorBuilder.build()) {
+                    DeclarativeAiServiceBuildItem matchingBI = null;
                     if (isRegisteredService) {
                         // we need to make this a bean, so we need to add the proper scope annotation
-                        DeclarativeAiServiceBuildItem matchingBI = declarativeAiServiceItems.stream()
+                        matchingBI = declarativeAiServiceItems.stream()
                                 .filter(bi -> bi.getServiceClassInfo().equals(iface))
                                 .findFirst().orElseThrow(() -> new IllegalStateException(
                                         "Unable to determine the CDI scope of " + iface));
@@ -1175,6 +1183,11 @@ public class AiServicesProcessor {
                                 ignoredPredicates,
                                 tools, toolQualifierProviderItems);
                         if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
+                            if ((matchingBI != null)
+                                    && matchingBI.getChatMemoryProviderSupplierClassDotName() == null) {
+                                throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
+                                        + matchingBI.getServiceClassInfo().name() + "'");
+                            }
                             methodCreateInfo.getToolClassInfo().keySet().stream()
                                     .map(DotName::createSimple)
                                     .map(UnremovableBeanBuildItem::beanTypes)
