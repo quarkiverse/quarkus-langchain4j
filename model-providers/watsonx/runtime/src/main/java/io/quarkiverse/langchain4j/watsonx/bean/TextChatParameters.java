@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatRequestParameters;
 
 public class TextChatParameters {
@@ -90,7 +92,9 @@ public class TextChatParameters {
 
             List<ToolSpecification> toolSpecifications = parameters.toolSpecifications();
 
-            if (watsonxParameters.toolChoiceName() != null && !watsonxParameters.toolChoiceName().isBlank()) {
+            if ((isNull(parameters.toolChoice()) || parameters.toolChoice().equals(ToolChoice.REQUIRED))
+                    && watsonxParameters.toolChoiceName() != null
+                    && !watsonxParameters.toolChoiceName().isBlank()) {
 
                 if (toolSpecifications == null || toolSpecifications.isEmpty())
                     throw new IllegalArgumentException(

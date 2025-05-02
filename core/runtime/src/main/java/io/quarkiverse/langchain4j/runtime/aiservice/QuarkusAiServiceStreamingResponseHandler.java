@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import static dev.langchain4j.internal.Utils.copyIfNotNull;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
+import static java.util.Objects.nonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,9 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -31,9 +35,9 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
 
 /**
- * A {@link StreamingResponseHandler} implementation for Quarkus.
- * The main difference with the upstream implementation is the thread switch when receiving the `completion` event
- * when there is tool execution requests.
+ * A {@link StreamingResponseHandler} implementation for Quarkus. The main difference with the upstream implementation is the
+ * thread switch when
+ * receiving the `completion` event when there is tool execution requests.
  */
 public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatResponseHandler {
 
@@ -192,9 +196,24 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
                     }
 
+                    DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
+                    parametersBuilder.toolSpecifications(toolSpecifications);
+
+                    if (nonNull(context.streamingChatModel.defaultRequestParameters())) {
+                        var toolChoice = context.streamingChatModel.defaultRequestParameters().toolChoice();
+                        if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
+                            // This code is needed to avoid a infinite-loop when using the AiService
+                            // in combination with the tool-choice option set to REQUIRED.
+                            // If the tool-choice option is not set to AUTO after calling the tool,
+                            // the model may continuously reselect the same tool in subsequent responses,
+                            // even though the tool has already been invoked.
+                            parametersBuilder.toolChoice(ToolChoice.AUTO);
+                        }
+                    }
+
                     ChatRequest chatRequest = ChatRequest.builder()
                             .messages(messagesToSend(memoryId))
-                            .toolSpecifications(toolSpecifications)
+                            .parameters(parametersBuilder.build())
                             .build();
                     QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
                             context,
