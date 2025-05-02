@@ -32,6 +32,10 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
 
         try {
             String baseUrl = builder.baseUrl.orElse("https://generativelanguage.googleapis.com");
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+            baseUrl += builder.apiVersion;
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
@@ -68,6 +72,7 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
     public static final class Builder {
         private String configName;
         private Optional<String> baseUrl = Optional.empty();
+        private String apiVersion;
         private String modelId;
         private String key;
         private Integer dimension;
@@ -78,6 +83,11 @@ public class AiGeminiEmbeddingModel extends GeminiEmbeddingModel {
 
         public Builder configName(String configName) {
             this.configName = configName;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
             return this;
         }
 

@@ -44,6 +44,7 @@ public class VertexAiGeminiRecorder {
             }
             var builder = VertexAiGeminiEmbeddingModel.builder()
                     .baseUrl(baseUrl)
+                    .apiVersion(vertexAiConfig.apiVersion())
                     .location(location)
                     .projectId(projectId)
                     .publisher(vertexAiConfig.publisher())
@@ -83,6 +84,7 @@ public class VertexAiGeminiRecorder {
             }
             var builder = VertexAiGeminiChatLanguageModel.builder()
                     .baseUrl(baseUrl)
+                    .apiVersion(vertexAiConfig.apiVersion())
                     .location(location)
                     .projectId(projectId)
                     .publisher(vertexAiConfig.publisher())
