@@ -86,7 +86,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.temperature", "1.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.top-p", "0.5")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.response-format", "json_object")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "myfunction")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "required")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice-name", "myfunction")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-service.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.built-in-service.log-responses", "true")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
@@ -149,7 +150,8 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
         assertEquals(1.5, runtimeConfig.chatModel().temperature());
         assertEquals(0.5, runtimeConfig.chatModel().topP());
         assertEquals("json_object", runtimeConfig.chatModel().responseFormat().orElse(null));
-        assertEquals("myfunction", runtimeConfig.chatModel().toolChoice().orElse(null));
+        assertEquals(ToolChoice.REQUIRED, runtimeConfig.chatModel().toolChoice().orElse(null));
+        assertEquals("myfunction", runtimeConfig.chatModel().toolChoiceName().orElse(null));
         assertEquals(true, langchain4jWatsonConfig.builtInService().logRequests().orElse(false));
         assertEquals(true, langchain4jWatsonConfig.builtInService().logResponses().orElse(false));
     }

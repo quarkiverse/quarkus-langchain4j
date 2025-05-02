@@ -42,11 +42,12 @@ public interface LangChain4jWatsonxConfig {
 
     @ConfigGroup
     interface WatsonConfig {
+
         /**
-         * Base URL of the watsonx.ai API.
+         * Specifies the base URL of the watsonx.ai API.
          * <p>
-         * All available URLs are listed in the IBM Watsonx.ai documentation at the
-         * <a href="https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url">following link</a>.
+         * A list of all available URLs is provided in the IBM Watsonx.ai documentation at the
+         * <a href="https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url">this link</a>.
          */
         Optional<String> baseUrl();
 
@@ -65,7 +66,7 @@ public interface LangChain4jWatsonxConfig {
         /**
          * The version date for the API of the form YYYY-MM-DD.
          */
-        @WithDefault("2024-03-14")
+        @WithDefault("2025-04-23")
         String version();
 
         /**

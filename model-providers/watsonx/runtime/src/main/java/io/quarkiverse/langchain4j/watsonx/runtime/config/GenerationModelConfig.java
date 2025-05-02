@@ -19,7 +19,7 @@ public interface GenerationModelConfig {
      * <p>
      * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
-    @WithDefault("mistralai/mistral-large")
+    @WithDefault("meta-llama/llama-4-maverick-17b-128e-instruct-fp8")
     String modelId();
 
     /**
@@ -145,14 +145,12 @@ public interface GenerationModelConfig {
      * Whether chat model requests should be logged.
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.watsonx.log-requests}")
     Optional<Boolean> logRequests();
 
     /**
      * Whether chat model responses should be logged.
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.watsonx.log-responses}")
     Optional<Boolean> logResponses();
 
     /**

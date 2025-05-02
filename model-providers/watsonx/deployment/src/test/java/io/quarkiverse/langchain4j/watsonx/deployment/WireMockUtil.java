@@ -38,9 +38,9 @@ public class WireMockUtil {
     public static final String BEARER_TOKEN = "my_super_token";
     public static final String PROJECT_ID = "123123321321";
     public static final String GRANT_TYPE = "urn:ibm:params:oauth:grant-type:apikey";
-    public static final String VERSION = "2024-03-14";
-    public static final String DEFAULT_CHAT_MODEL = "mistralai/mistral-large";
-    public static final String DEFAULT_EMBEDDING_MODEL = "ibm/slate-125m-english-rtrvr";
+    public static final String VERSION = "2025-04-23";
+    public static final String DEFAULT_CHAT_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct-fp8";
+    public static final String DEFAULT_EMBEDDING_MODEL = "ibm/granite-embedding-278m-multilingual";
     public static final String DEFAULT_SCORING_MODEL = "cross-encoder/ms-marco-minilm-l-12-v2";
     public static final String IAM_200_RESPONSE = """
             {

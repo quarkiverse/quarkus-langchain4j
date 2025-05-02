@@ -18,14 +18,12 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class ToolNotFoundTest extends WireMockAbstract {
+public class ToolChoiceToolNotFoundTest extends WireMockAbstract {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -33,7 +31,7 @@ public class ToolNotFoundTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "mytool")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.chat-model.tool-choice", "required")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Override
@@ -57,17 +55,5 @@ public class ToolNotFoundTest extends WireMockAbstract {
         assertThrows(IllegalArgumentException.class,
                 () -> model.chat(ChatRequest.builder().messages(UserMessage.from("test")).build()),
                 "If tool-choice is 'REQUIRED', at least one tool must be specified.");
-
-        assertThrows(IllegalArgumentException.class,
-                () -> model.chat(ChatRequest
-                        .builder()
-                        .messages(UserMessage.from("test"))
-                        .parameters(
-                                ChatRequestParameters.builder()
-                                        .toolSpecifications(ToolSpecification.builder().name("sum").build())
-                                        .build())
-                        .build()),
-                "The tool with name 'mytool' is not available in the list of tools sent to the model. Tool lists: [sum]");
     }
-
 }
