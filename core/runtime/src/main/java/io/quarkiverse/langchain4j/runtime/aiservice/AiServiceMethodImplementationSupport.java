@@ -7,6 +7,7 @@ import static dev.langchain4j.model.output.TokenUsage.sum;
 import static dev.langchain4j.service.AiServices.removeToolMessages;
 import static dev.langchain4j.service.AiServices.verifyModerationIfNeeded;
 import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseSchema;
+import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -51,7 +52,9 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
+import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
@@ -369,7 +372,8 @@ public class AiServiceMethodImplementationSupport {
         while (true) {
 
             if (executionsLeft-- == 0) {
-                throw runtime("Something is wrong, exceeded %s sequential tool executions", maxSequentialToolExecutions);
+                throw runtime("Something is wrong, exceeded %s sequential tool executions",
+                        maxSequentialToolExecutions);
             }
 
             AiMessage aiMessage = response.aiMessage();
@@ -393,17 +397,31 @@ public class AiServiceMethodImplementationSupport {
             log.debug("Attempting to obtain AI response");
             ChatLanguageModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
             ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(chatMemory.messages());
+            DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
                 Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
                 if (jsonSchema.isPresent()) {
-                    chatRequestBuilder.parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema.get()));
+                    parametersBuilder = constructStructuredResponseParams(toolSpecifications, jsonSchema.get());
                 } else {
-                    chatRequestBuilder.toolSpecifications(toolSpecifications);
+                    parametersBuilder.toolSpecifications(toolSpecifications);
                 }
             } else {
-                chatRequestBuilder.toolSpecifications(toolSpecifications);
+                parametersBuilder.toolSpecifications(toolSpecifications);
             }
-            response = effectiveChatModel.chat(chatRequestBuilder.build());
+
+            if (nonNull(context.chatModel.defaultRequestParameters())) {
+                var toolChoice = context.chatModel.defaultRequestParameters().toolChoice();
+                if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
+                    // This code is needed to avoid a infinite-loop when using the AiService
+                    // in combination with the tool-choice option set to REQUIRED.
+                    // If the tool-choice option is not set to AUTO after calling the tool,
+                    // the model may continuously reselect the same tool in subsequent responses,
+                    // even though the tool has already been invoked.
+                    parametersBuilder.toolChoice(ToolChoice.AUTO);
+                }
+            }
+
+            response = effectiveChatModel.chat(chatRequestBuilder.parameters(parametersBuilder.build()).build());
             log.debug("AI response obtained");
 
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
@@ -451,12 +469,14 @@ public class AiServiceMethodImplementationSupport {
                     .build();
         }
 
-        return ResponseAugmenterSupport.invoke(SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()), returnType),
+        return ResponseAugmenterSupport.invoke(
+                SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()), returnType),
                 methodCreateInfo, responseAugmenterParam);
     }
 
     private static ToolExecutionResultMessage executeTool(AuditSourceInfo auditSourceInfo,
-            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, Object memoryId, BeanManager beanManager) {
+            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, Object memoryId,
+            BeanManager beanManager) {
         String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
         log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
@@ -471,7 +491,7 @@ public class AiServiceMethodImplementationSupport {
             ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend)
-                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema))
+                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
                 .build();
 
         return chatModel.chat(chatRequest);
@@ -499,11 +519,13 @@ public class AiServiceMethodImplementationSupport {
     static ChatResponse executeRequest(QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications) {
-        return executeRequest(methodCreateInfo, messagesToSend, context.effectiveChatModel(methodCreateInfo, methodArgs),
+        return executeRequest(methodCreateInfo, messagesToSend,
+                context.effectiveChatModel(methodCreateInfo, methodArgs),
                 toolSpecifications);
     }
 
-    private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo, QuarkusAiServiceContext context,
+    private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo,
+            QuarkusAiServiceContext context,
             Optional<SystemMessage> systemMessage, UserMessage userMessage,
             Object memoryId, Type returnType, Map<String, Object> templateVariables, AuditSourceInfo auditSourceInfo) {
         String imagePrompt;
@@ -518,7 +540,8 @@ public class AiServiceMethodImplementationSupport {
         beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
                 .fire(new InitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
-        // TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an image?
+        // TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an
+        // image?
         AugmentationResult augmentationResult = null;
 
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
@@ -601,19 +624,19 @@ public class AiServiceMethodImplementationSupport {
         return result;
     }
 
-    private static ChatRequestParameters constructStructuredResponseParams(
+    private static DefaultChatRequestParameters.Builder<?> constructStructuredResponseParams(
             List<ToolSpecification> toolSpecifications, JsonSchema jsonSchema) {
         return ChatRequestParameters.builder()
                 .toolSpecifications(toolSpecifications)
-                .responseFormat(ResponseFormat.builder().type(JSON).jsonSchema(jsonSchema).build())
-                .build();
+                .responseFormat(ResponseFormat.builder().type(JSON).jsonSchema(jsonSchema).build());
     }
 
     private static boolean supportsJsonSchema(ChatLanguageModel chatModel) {
         return (chatModel != null) && chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
     }
 
-    private static boolean supportsJsonSchema(QuarkusAiServiceContext context, AiServiceMethodCreateInfo methodCreateInfo,
+    private static boolean supportsJsonSchema(QuarkusAiServiceContext context,
+            AiServiceMethodCreateInfo methodCreateInfo,
             Object[] methodArgs) {
         return supportsJsonSchema(context.effectiveChatModel(methodCreateInfo, methodArgs));
     }
@@ -642,7 +665,8 @@ public class AiServiceMethodImplementationSupport {
         return moderationFuture;
     }
 
-    private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+    private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo,
+            Object[] methodArgs,
             List<ChatMessage> previousChatMessages) {
         if (createInfo.getSystemMessageInfo().isEmpty()) {
             return Optional.empty();
@@ -654,7 +678,8 @@ public class AiServiceMethodImplementationSupport {
             templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
         }
 
-        templateParams.put(ResponseSchemaUtil.templateParam(), createInfo.getResponseSchemaInfo().outputFormatInstructions());
+        templateParams.put(ResponseSchemaUtil.templateParam(),
+                createInfo.getResponseSchemaInfo().outputFormatInstructions());
         templateParams.put("chat_memory", previousChatMessages);
         Prompt prompt = PromptTemplate.from(systemMessageInfo.text().get()).apply(templateParams);
         return Optional.of(prompt.toSystemMessage());
@@ -733,7 +758,8 @@ public class AiServiceMethodImplementationSupport {
 
             if (createInfo.getResponseSchemaInfo().enabled()) {
                 // No response schema placeholder found in the @SystemMessage and @UserMessage, concat it to the UserMessage.
-                if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema && !supportsJsonSchema) {
+                if (!createInfo.getResponseSchemaInfo().isInSystemMessage() && !hasResponseSchema
+                        && !supportsJsonSchema) {
                     templateText = templateText.concat(ResponseSchemaUtil.placeholder());
                 }
 
@@ -759,8 +785,9 @@ public class AiServiceMethodImplementationSupport {
                     pdfFileContent, text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
                             : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
-            throw new IllegalStateException("Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
-                    + "'. Please contact the maintainers");
+            throw new IllegalStateException(
+                    "Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
+                            + "'. Please contact the maintainers");
         }
     }
 
@@ -809,7 +836,8 @@ public class AiServiceMethodImplementationSupport {
         return value;
     }
 
-    private static Object memoryId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs, boolean hasChatMemoryProvider) {
+    private static Object memoryId(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+            boolean hasChatMemoryProvider) {
         if (createInfo.getMemoryIdParamPosition().isPresent()) {
             return methodArgs[createInfo.getMemoryIdParamPosition().get()];
         }
@@ -854,7 +882,8 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static int getMaxSequentialToolExecutions() {
-        return ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
+        return ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
                 .orElse(
                         DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
     }

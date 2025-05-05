@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
@@ -92,31 +90,8 @@ public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatL
         Context context = Context.empty();
 
         if (nonNull(parameters.toolChoice()) && parameters.toolChoice().equals(ToolChoice.REQUIRED)) {
-            // This code is needed to avoid a infinite-loop when using the AiService
-            // in combination with the tool-choice option.
-            // If the tool-choice option is not removed after calling the tool,
-            // the model may continuously reselect the same tool in subsequent responses,
-            // even though the tool has already been invoked. This leads to an infinite loop
-            // where the assistant keeps generating tool calls without progressing the
-            // conversation.
-            // By explicitly removing the tool-choice field after the tool has been
-            // executed,
-            // we allow the assistant to resume normal message generation and provide a
-            // response
-            // based on the tool output instead of redundantly triggering it again.
-
             // Watsonx doesn't return "tool_calls" when the tool-choice is set to REQUIRED.
             context.put(FINISH_REASON_CONTEXT, "tool_calls");
-
-            if (messages.size() > 1) {
-                int LAST_MESSAGE = chatRequest.messages().size() - 1;
-                ChatMessage lastMessage = chatRequest.messages().get(LAST_MESSAGE);
-                if (lastMessage instanceof ToolExecutionResultMessage) {
-                    tools = null;
-                    textChatParameters.cleanToolChoice();
-                    context.delete(FINISH_REASON_CONTEXT);
-                }
-            }
         }
 
         TextChatRequest request = new TextChatRequest(modelId, spaceId, projectId, messages, tools, textChatParameters);

@@ -41,9 +41,8 @@ public interface ChatModelConfig {
     /**
      * Specifies the name of a specific tool that the model must call.
      * <p>
-     * This value takes precedence over {@code toolChoice}. When set, the model will be forced to call the specified tool. The
-     * name must exactly match one
-     * of the available tools defined for the service.
+     * When set, the model will be forced to call the specified tool. The
+     * name must exactly match one of the available tools defined for the service.
      */
     Optional<String> toolChoiceName();
 
