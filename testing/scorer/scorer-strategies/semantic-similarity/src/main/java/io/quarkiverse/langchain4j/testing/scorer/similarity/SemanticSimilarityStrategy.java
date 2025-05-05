@@ -15,6 +15,38 @@ public class SemanticSimilarityStrategy implements EvaluationStrategy<String> {
     private final EmbeddingModel model;
     private final double minSimilarity;
 
+    private static final boolean BGE_SMALL_EN_V_15_EMBEDDING_MODEL_EXISTS;
+
+    static {
+        boolean bgeSmallEnV15EmbeddingModelExists;
+        try {
+            Class.forName("dev.langchain4j.model.embedding.onnx.bgesmallenv15.BgeSmallEnV15EmbeddingModel", false,
+                    Thread.currentThread()
+                            .getContextClassLoader());
+            bgeSmallEnV15EmbeddingModelExists = true;
+        } catch (ClassNotFoundException e) {
+            bgeSmallEnV15EmbeddingModelExists = false;
+        }
+        BGE_SMALL_EN_V_15_EMBEDDING_MODEL_EXISTS = bgeSmallEnV15EmbeddingModelExists;
+    }
+
+    /**
+     * Create a new instance of `SemanticSimilarityStrategy` using the default model (`BgeSmallEnV15`) and a default minimum
+     * similarity.
+     */
+    public SemanticSimilarityStrategy() {
+        this(0.9);
+    }
+
+    /**
+     * Create a new instance of `SemanticSimilarityStrategy` using the default model and a custom minimum similarity.
+     *
+     * @param minSimilarity the minimum similarity required to consider the output correct.
+     */
+    public SemanticSimilarityStrategy(double minSimilarity) {
+        this(loadBgeSmallEnV15EmbeddingModel(), minSimilarity);
+    }
+
     /**
      * Create a new instance of `SemanticSimilarityStrategy`.
      *
@@ -26,21 +58,12 @@ public class SemanticSimilarityStrategy implements EvaluationStrategy<String> {
         this.minSimilarity = minSimilarity;
     }
 
-    /**
-     * Create a new instance of `SemanticSimilarityStrategy` using the default model (`BgeSmallEnV15`) and a default minimum
-     * similarity.
-     */
-    public SemanticSimilarityStrategy() {
-        this(new BgeSmallEnV15EmbeddingModel(), 0.9);
-    }
-
-    /**
-     * Create a new instance of `SemanticSimilarityStrategy` using the default model and a custom minimum similarity.
-     *
-     * @param minSimilarity the minimum similarity required to consider the output correct.
-     */
-    public SemanticSimilarityStrategy(double minSimilarity) {
-        this(new BgeSmallEnV15EmbeddingModel(), minSimilarity);
+    private static EmbeddingModel loadBgeSmallEnV15EmbeddingModel() {
+        if (!BGE_SMALL_EN_V_15_EMBEDDING_MODEL_EXISTS) {
+            throw new IllegalStateException(
+                    "BgSmallEnV15EmbeddingModel is not part of the classpath. Please add the 'dev.langchain4j:langchain4j-embeddings-bge-small-en-v15' dependency to the classpath");
+        }
+        return new BgeSmallEnV15EmbeddingModel();
     }
 
     /**
