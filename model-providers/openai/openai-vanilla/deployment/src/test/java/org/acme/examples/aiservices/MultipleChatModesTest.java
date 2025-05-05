@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -44,15 +44,15 @@ public class MultipleChatModesTest extends OpenAiBaseTest {
     }
 
     @Inject
-    ChatLanguageModel chatWithDefaultModel;
+    ChatModel chatWithDefaultModel;
 
     @Inject
     @ModelName("model1")
-    ChatLanguageModel chatWithModel1;
+    ChatModel chatWithModel1;
 
     @Inject
     @ModelName("model2")
-    ChatLanguageModel chatWithModel2;
+    ChatModel chatWithModel2;
 
     @Test
     @ActivateRequestContext

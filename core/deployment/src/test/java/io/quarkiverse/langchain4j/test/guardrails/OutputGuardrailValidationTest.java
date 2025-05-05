@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
@@ -198,15 +198,15 @@ public class OutputGuardrailValidationTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class MyChatModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             return new MyChatModel();
         }
     }
 
-    public static class MyChatModel implements ChatLanguageModel {
+    public static class MyChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {

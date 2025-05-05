@@ -28,8 +28,8 @@ import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
-import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 // TODO: this could use a lot of refactoring
@@ -160,7 +160,7 @@ final class MessageMapper {
         if (parameters == null) {
             return Tool.Function.Parameters.empty();
         }
-        return Tool.Function.Parameters.objectType(JsonSchemaElementHelper.toMap(parameters.properties()),
+        return Tool.Function.Parameters.objectType(JsonSchemaElementUtils.toMap(parameters.properties()),
                 parameters.required());
     }
 

@@ -31,8 +31,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -62,10 +62,10 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Override
     void handlerBeforeEach() throws Exception {

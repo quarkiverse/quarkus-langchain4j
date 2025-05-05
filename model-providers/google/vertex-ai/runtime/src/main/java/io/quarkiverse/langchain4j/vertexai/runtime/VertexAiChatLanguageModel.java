@@ -18,14 +18,14 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public class VertexAiChatLanguageModel implements ChatLanguageModel {
+public class VertexAiChatLanguageModel implements ChatModel {
 
     private final Parameters parameters;
     private final VertxAiRestApi.ApiMetadata apiMetadata;

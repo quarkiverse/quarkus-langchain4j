@@ -2,10 +2,10 @@ package io.quarkiverse.langchain4j.jlama.runtime;
 
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.jlama.JlamaChatModel;
@@ -20,7 +20,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class JlamaAiRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jJlamaConfig runtimeConfig,
+    public Supplier<ChatModel> chatModel(LangChain4jJlamaConfig runtimeConfig,
             LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
             String configName) {
         LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
@@ -43,21 +43,21 @@ public class JlamaAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jJlamaConfig runtimeConfig,
+    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jJlamaConfig runtimeConfig,
             LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
             String configName) {
         LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
@@ -75,15 +75,15 @@ public class JlamaAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

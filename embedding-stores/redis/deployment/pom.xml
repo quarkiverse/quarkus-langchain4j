@@ -37,7 +37,7 @@
             <classifier>tests</classifier>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${langchain4j.version}</version>
+            <version>${langchain4j-tests.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

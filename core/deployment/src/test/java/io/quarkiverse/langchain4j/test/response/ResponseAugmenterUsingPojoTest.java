@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.UserMessage;
@@ -65,15 +65,15 @@ public class ResponseAugmenterUsingPojoTest {
 
     }
 
-    public static class PersonChatModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class PersonChatModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             return new PersonChatModel();
         }
     }
 
-    public static class PersonChatModel implements ChatLanguageModel {
+    public static class PersonChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {

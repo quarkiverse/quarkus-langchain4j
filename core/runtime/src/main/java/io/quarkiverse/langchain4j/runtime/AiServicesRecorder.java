@@ -15,8 +15,8 @@ import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -126,33 +126,33 @@ public class AiServicesRecorder {
                     if (info.languageModelSupplierClassName() != null
                             || info.streamingChatLanguageModelSupplierClassName() != null) {
                         if (info.languageModelSupplierClassName() != null) {
-                            Supplier<? extends ChatLanguageModel> supplier = createSupplier(
+                            Supplier<? extends ChatModel> supplier = createSupplier(
                                     info.languageModelSupplierClassName());
-                            quarkusAiServices.chatLanguageModel(supplier.get());
+                            quarkusAiServices.chatModel(supplier.get());
                         }
                         if (info.streamingChatLanguageModelSupplierClassName() != null) {
-                            Supplier<? extends StreamingChatLanguageModel> supplier = createSupplier(
+                            Supplier<? extends StreamingChatModel> supplier = createSupplier(
                                     info.streamingChatLanguageModelSupplierClassName());
-                            quarkusAiServices.streamingChatLanguageModel(supplier.get());
+                            quarkusAiServices.streamingChatModel(supplier.get());
                         }
                     } else {
                         if (NamedConfigUtil.isDefault(info.chatModelName())) {
                             quarkusAiServices
-                                    .chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class));
+                                    .chatModel(creationalContext.getInjectedReference(ChatModel.class));
                             if (info.needsStreamingChatModel()) {
                                 quarkusAiServices
-                                        .streamingChatLanguageModel(
-                                                creationalContext.getInjectedReference(StreamingChatLanguageModel.class));
+                                        .streamingChatModel(
+                                                creationalContext.getInjectedReference(StreamingChatModel.class));
                             }
 
                         } else {
 
-                            quarkusAiServices.chatLanguageModel(creationalContext.getInjectedReference(ChatLanguageModel.class,
+                            quarkusAiServices.chatModel(creationalContext.getInjectedReference(ChatModel.class,
                                     ModelName.Literal.of(info.chatModelName())));
 
                             if (info.needsStreamingChatModel()) {
-                                quarkusAiServices.streamingChatLanguageModel(
-                                        creationalContext.getInjectedReference(StreamingChatLanguageModel.class,
+                                quarkusAiServices.streamingChatModel(
+                                        creationalContext.getInjectedReference(StreamingChatModel.class,
                                                 ModelName.Literal.of(info.chatModelName())));
                             }
                         }

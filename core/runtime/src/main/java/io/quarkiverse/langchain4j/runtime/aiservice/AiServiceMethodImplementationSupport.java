@@ -49,7 +49,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
@@ -396,7 +396,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             log.debug("Attempting to obtain AI response");
-            ChatLanguageModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
+            ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
             ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(chatMemory.messages());
             DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
@@ -459,7 +459,7 @@ public class AiServiceMethodImplementationSupport {
                 .build();
 
         if (TypeUtil.isResult(returnType)) {
-            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()),
+            var parsedResponse = SERVICE_OUTPUT_PARSER.parse(ChatResponse.builder().aiMessage(response.aiMessage()).build(),
                     TypeUtil.resultTypeParam((ParameterizedType) returnType));
             parsedResponse = ResponseAugmenterSupport.invoke(parsedResponse, methodCreateInfo, responseAugmenterParam);
             return Result.builder()
@@ -471,7 +471,7 @@ public class AiServiceMethodImplementationSupport {
         }
 
         return ResponseAugmenterSupport.invoke(
-                SERVICE_OUTPUT_PARSER.parse(new Response<>(response.aiMessage()), returnType),
+                SERVICE_OUTPUT_PARSER.parse(ChatResponse.builder().aiMessage(response.aiMessage()).build(), returnType),
                 methodCreateInfo, responseAugmenterParam);
     }
 
@@ -489,7 +489,7 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static ChatResponse executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
-            ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
+            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend)
                 .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
@@ -498,7 +498,7 @@ public class AiServiceMethodImplementationSupport {
         return chatModel.chat(chatRequest);
     }
 
-    private static ChatResponse executeRequest(List<ChatMessage> messagesToSend, ChatLanguageModel chatModel,
+    private static ChatResponse executeRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
             List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
                 .messages(messagesToSend);
@@ -509,7 +509,7 @@ public class AiServiceMethodImplementationSupport {
     }
 
     static ChatResponse executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
-            ChatLanguageModel chatModel, List<ToolSpecification> toolSpecifications) {
+            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
         var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
                 : Optional.<JsonSchema> empty();
 
@@ -632,7 +632,7 @@ public class AiServiceMethodImplementationSupport {
                 .responseFormat(ResponseFormat.builder().type(JSON).jsonSchema(jsonSchema).build());
     }
 
-    private static boolean supportsJsonSchema(ChatLanguageModel chatModel) {
+    private static boolean supportsJsonSchema(ChatModel chatModel) {
         return (chatModel != null) && chatModel.supportedCapabilities().contains(RESPONSE_FORMAT_JSON_SCHEMA);
     }
 

@@ -18,7 +18,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageAssistant;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageTool;
@@ -120,7 +120,7 @@ public sealed interface TextChatMessage
         /**
          * Creates a {@link TextChatMessageUser} from a {@link UserMessage}.
          *
-         * @param systemMessage the user message to convert
+         * @param userMessage the user message to convert
          * @return the created {@link TextChatMessageUser}
          */
         public static TextChatMessageUser of(UserMessage userMessage) {
@@ -145,7 +145,7 @@ public sealed interface TextChatMessage
                                         "url", base64,
                                         "detail", imageContent.detailLevel().name().toLowerCase())));
                     }
-                    case AUDIO, PDF, TEXT_FILE, VIDEO ->
+                    case AUDIO, PDF, VIDEO ->
                         throw new UnsupportedOperationException("Unimplemented case: " + content.type());
                 }
             }
@@ -230,7 +230,7 @@ public sealed interface TextChatMessage
          */
         public static TextChatParameterTool of(ToolSpecification toolSpecification) {
             var toolParams = toolSpecification.parameters() != null
-                    ? JsonSchemaElementHelper.toMap(toolSpecification.parameters())
+                    ? JsonSchemaElementUtils.toMap(toolSpecification.parameters())
                     : null;
             var parameters = new TextChatParameterFunction(toolSpecification.name(), toolSpecification.description(),
                     toolParams);

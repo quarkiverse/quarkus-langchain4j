@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkus.arc.ClientProxy;
@@ -41,7 +41,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Test
     void streaming() {

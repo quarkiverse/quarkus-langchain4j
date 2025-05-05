@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -28,7 +28,7 @@ import io.quarkiverse.langchain4j.llama3.copy.Llama;
 import io.quarkiverse.langchain4j.llama3.copy.Llama3;
 import io.quarkiverse.langchain4j.llama3.copy.Sampler;
 
-public class Llama3StreamingChatModel implements StreamingChatLanguageModel {
+public class Llama3StreamingChatModel implements StreamingChatModel {
 
     private static final Logger log = LoggerFactory.getLogger(Llama3StreamingChatModel.class);
     private final Path modelPath;

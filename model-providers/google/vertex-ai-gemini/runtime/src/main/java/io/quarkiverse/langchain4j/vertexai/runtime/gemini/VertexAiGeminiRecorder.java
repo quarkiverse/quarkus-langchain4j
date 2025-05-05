@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -65,7 +65,7 @@ public class VertexAiGeminiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
             LangChain4jVertexAiGeminiConfig config, String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(config, configName);
 
@@ -108,7 +108,7 @@ public class VertexAiGeminiRecorder {
 
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -117,8 +117,8 @@ public class VertexAiGeminiRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
                 }
             };
         }

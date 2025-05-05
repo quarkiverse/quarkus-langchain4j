@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
@@ -25,7 +25,7 @@ public class OpenAiChatLanguageModelSmokeTest extends OpenAiBaseTest {
                     WiremockAware.wiremockUrlForConfig("/v1"));
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Test
     void test() {

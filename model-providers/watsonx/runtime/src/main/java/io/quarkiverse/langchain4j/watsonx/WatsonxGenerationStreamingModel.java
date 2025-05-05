@@ -14,7 +14,7 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -31,7 +31,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 import io.smallrye.mutiny.Context;
 
 public class WatsonxGenerationStreamingModel extends Watsonx
-        implements StreamingChatLanguageModel {
+        implements StreamingChatModel {
 
     private static final String INPUT_TOKEN_COUNT_CONTEXT = "INPUT_TOKEN_COUNT";
     private static final String GENERATED_TOKEN_COUNT_CONTEXT = "GENERATED_TOKEN_COUNT";

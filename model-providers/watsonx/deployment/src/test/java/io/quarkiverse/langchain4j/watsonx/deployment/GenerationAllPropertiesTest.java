@@ -43,8 +43,8 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.exception.UnsupportedFeatureException;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.response.ChatResponse;
@@ -113,10 +113,10 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     }
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Inject
     EmbeddingModel embeddingModel;
@@ -224,7 +224,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                                 .decodingMethod("nogreedy")
                                 .lengthPenalty(new LengthPenalty(0.0, 1))
                                 .randomSeed(1)
-                                .stopSequences(List.of("[]"))
+                                .stopSequences(List.of("\n", "\n\n"))
                                 .temperature(1.0)
                                 .timeLimit(Duration.ofSeconds(1))
                                 .topK(10)
@@ -243,7 +243,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
                         .decodingMethod("nogreedy")
                         .lengthPenalty(new LengthPenalty(0.0, 1))
                         .randomSeed(1)
-                        .stopSequences(List.of("[]"))
+                        .stopSequences(List.of("\n", "\n\n"))
                         .temperature(1.0)
                         .timeLimit(1000L)
                         .topK(10)

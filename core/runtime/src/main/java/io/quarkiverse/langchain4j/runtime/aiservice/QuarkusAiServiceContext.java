@@ -8,7 +8,7 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.ModelName;
@@ -61,7 +61,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         }
     }
 
-    public ChatLanguageModel effectiveChatModel(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+    public ChatModel effectiveChatModel(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
         if (createInfo.getOverrideChatModelParamPosition().isPresent()) {
             // we have verified at build time that this is of type String
             return effectiveChatModel((String) methodArgs[createInfo.getOverrideChatModelParamPosition().get()]);
@@ -69,18 +69,18 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         return chatModel;
     }
 
-    private ChatLanguageModel effectiveChatModel(String modelName) {
+    private ChatModel effectiveChatModel(String modelName) {
         if (modelName == null) {
             // happens when @ModelName parameter exists but the caller passed null
             return chatModel;
         }
-        InstanceHandle<ChatLanguageModel> instance = Arc.container().instance(ChatLanguageModel.class,
+        InstanceHandle<ChatModel> instance = Arc.container().instance(ChatModel.class,
                 ModelName.Literal.of(modelName));
         if (instance.isAvailable()) {
             return instance.get();
         }
         Set<String> availableNames = new HashSet<>();
-        for (Instance.Handle<ChatLanguageModel> handle : Arc.container().select(ChatLanguageModel.class, Any.Literal.INSTANCE)
+        for (Instance.Handle<ChatModel> handle : Arc.container().select(ChatModel.class, Any.Literal.INSTANCE)
                 .handles()) {
             Set<Annotation> qualifiers = handle.getBean().getQualifiers();
             for (Annotation qualifier : qualifiers) {
@@ -90,8 +90,8 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 }
             }
         }
-        throw new IllegalStateException("No configured ChatLanguageModel named '" + modelName
-                + "' was found. The application has made available the following named ChatLanguageModel instances: "
+        throw new IllegalStateException("No configured ChatModel named '" + modelName
+                + "' was found. The application has made available the following named ChatModel instances: "
                 + String.join(", ", availableNames));
     }
 }

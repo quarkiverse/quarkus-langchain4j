@@ -20,6 +20,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
+import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
@@ -38,7 +39,7 @@ public class McpRecorder {
         McpRecorder.claudeConfigContents = contents;
     }
 
-    public Supplier<McpClient> mcpClientSupplier(String key, McpTransportType mcpTransportType) {
+    public Supplier<McpClient> mcpClientSupplier(String key, McpTransportType mcpTransportType, ShutdownContext shutdown) {
         return new Supplier<McpClient>() {
             @Override
             public McpClient get() {
@@ -61,7 +62,7 @@ public class McpRecorder {
                             .logResponses(runtimeConfig.logResponses().orElse(false))
                             .build();
                 };
-                return new DefaultMcpClient.Builder()
+                DefaultMcpClient client = new DefaultMcpClient.Builder()
                         .transport(transport)
                         .toolExecutionTimeout(runtimeConfig.toolExecutionTimeout())
                         .resourcesTimeout(runtimeConfig.resourcesTimeout())
@@ -69,6 +70,8 @@ public class McpRecorder {
                         // TODO: it should be possible to choose a log handler class via configuration
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .build();
+                shutdown.addShutdownTask(client::close);
+                return client;
             }
         };
     }

@@ -7,8 +7,8 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
@@ -34,12 +34,12 @@ class DisabledModelsWatsonRecorderTest {
         assertThat(recorder
                 .generationModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledChatModel.class);
 
         assertThat(
                 recorder.generationStreamingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledStreamingChatModel.class);
 
         assertThat(recorder.embeddingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()

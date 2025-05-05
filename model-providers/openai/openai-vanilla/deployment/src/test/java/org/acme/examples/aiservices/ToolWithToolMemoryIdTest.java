@@ -63,7 +63,7 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
         public App(Tool tool, @ConfigProperty(name = "quarkus.wiremock.devservices.port") Integer wiremockPort) {
             this.tool = tool;
             this.ai = AiServices.builder(Service.class)
-                    .chatLanguageModel(createChatModel(wiremockPort))
+                    .chatModel(createChatModel(wiremockPort))
                     .tools(tool)
                     .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                     .build();

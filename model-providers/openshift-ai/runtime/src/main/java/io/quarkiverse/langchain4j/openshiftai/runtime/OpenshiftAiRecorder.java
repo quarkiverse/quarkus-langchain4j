@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
@@ -24,7 +24,7 @@ public class OpenshiftAiRecorder {
     private static final String DUMMY_MODEL_ID = "dummy";
     public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jOpenshiftAiConfig runtimeConfig, String configName) {
+    public Supplier<ChatModel> chatModel(LangChain4jOpenshiftAiConfig runtimeConfig, String configName) {
         LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(runtimeConfig,
                 configName);
 
@@ -56,15 +56,15 @@ public class OpenshiftAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }

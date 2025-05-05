@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
@@ -35,7 +35,7 @@ public class OllamaChatLanguageModelModelNameTest extends WiremockAware {
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-responses", "true");
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Test
     void blocking() {

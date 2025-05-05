@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -292,15 +292,15 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             return new MyStreamedChatModel();
         }
     }
 
-    public static class MyStreamedChatModel implements StreamingChatLanguageModel {
+    public static class MyStreamedChatModel implements StreamingChatModel {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

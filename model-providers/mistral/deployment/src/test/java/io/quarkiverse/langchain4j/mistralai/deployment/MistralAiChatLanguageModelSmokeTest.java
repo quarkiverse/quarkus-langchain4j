@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
@@ -35,7 +35,7 @@ class MistralAiChatLanguageModelSmokeTest extends WiremockAware {
                     WiremockAware.wiremockUrlForConfig("/v1"));
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Test
     void test() {

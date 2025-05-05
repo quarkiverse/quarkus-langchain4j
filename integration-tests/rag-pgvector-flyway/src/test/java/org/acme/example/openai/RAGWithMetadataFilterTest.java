@@ -16,7 +16,7 @@ import org.mockito.stubbing.Answer;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.test.junit.QuarkusMock;
@@ -33,13 +33,13 @@ public class RAGWithMetadataFilterTest {
 
     @BeforeAll
     public static void initializeModel() {
-        ChatLanguageModel mock = Mockito.mock(ChatLanguageModel.class);
+        ChatModel mock = Mockito.mock(ChatModel.class);
         Answer<ChatResponse> answer = invocation -> {
             lastQuery.set(((ChatRequest) invocation.getArgument(0)).messages());
             return ChatResponse.builder().aiMessage(new AiMessage("Mock response")).build();
         };
         Mockito.when(mock.chat(Mockito.any(ChatRequest.class))).thenAnswer(answer);
-        QuarkusMock.installMockForType(mock, ChatLanguageModel.class);
+        QuarkusMock.installMockForType(mock, ChatModel.class);
     }
 
     @Test

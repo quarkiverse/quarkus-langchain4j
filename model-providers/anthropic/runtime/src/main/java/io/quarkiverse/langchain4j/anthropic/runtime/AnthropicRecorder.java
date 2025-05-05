@@ -7,10 +7,10 @@ import java.util.function.Supplier;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.annotations.Recorder;
@@ -20,7 +20,7 @@ import io.smallrye.config.ConfigValidationException;
 public class AnthropicRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String configName) {
+    public Supplier<ChatModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String configName) {
         var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
 
         if (anthropicConfig.enableIntegration()) {
@@ -57,21 +57,21 @@ public class AnthropicRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jAnthropicConfig runtimeConfig,
+    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jAnthropicConfig runtimeConfig,
             String configName) {
         var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
 
@@ -108,15 +108,15 @@ public class AnthropicRecorder {
 
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

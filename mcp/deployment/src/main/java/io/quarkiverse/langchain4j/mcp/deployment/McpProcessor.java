@@ -36,6 +36,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 
@@ -110,6 +111,7 @@ public class McpProcessor {
             Optional<McpConfigFileContentsBuildItem> maybeMcpConfigFileContents,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             BuildProducer<HealthBuildItem> healthBuildItems,
+            ShutdownContextBuildItem shutdown,
             McpRecorder recorder) {
         Map<String, McpTransportType> clients = new HashMap<>();
         if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
@@ -137,7 +139,7 @@ public class McpProcessor {
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
                         .supplier(
-                                recorder.mcpClientSupplier(client, transportType))
+                                recorder.mcpClientSupplier(client, transportType, shutdown))
                         .done());
             });
             // generate a tool provider if configured to do so

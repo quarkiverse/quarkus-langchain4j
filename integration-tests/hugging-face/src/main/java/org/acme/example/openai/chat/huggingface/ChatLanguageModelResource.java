@@ -7,7 +7,7 @@ import java.util.Map;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -16,16 +16,16 @@ import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 @Path("chat")
 public class ChatLanguageModelResource {
 
-    private final ChatLanguageModel chatLanguageModel;
+    private final ChatModel chatModel;
 
-    public ChatLanguageModelResource(ChatLanguageModel chatLanguageModel) {
-        this.chatLanguageModel = chatLanguageModel;
+    public ChatLanguageModelResource(ChatModel chatModel) {
+        this.chatModel = chatModel;
     }
 
     @GET
     @Path("basic")
     public String basic() {
-        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
+        return chatModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -40,7 +40,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = promptTemplate.apply(variables);
 
-        return chatLanguageModel.chat(prompt.text());
+        return chatModel.chat(prompt.text());
     }
 
     @GET
@@ -52,7 +52,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
 
-        return chatLanguageModel.chat(prompt.text());
+        return chatModel.chat(prompt.text());
     }
 
     @StructuredPrompt({

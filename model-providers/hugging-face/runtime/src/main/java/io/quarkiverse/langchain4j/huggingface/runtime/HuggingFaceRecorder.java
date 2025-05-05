@@ -6,8 +6,8 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.huggingface.QuarkusHuggingFaceChatModel;
@@ -25,7 +25,7 @@ public class HuggingFaceRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
+    public Supplier<ChatModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
         LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
                 configName);
 
@@ -61,15 +61,15 @@ public class HuggingFaceRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }

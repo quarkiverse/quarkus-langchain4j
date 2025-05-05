@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.testing.scorer.judge;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.testing.scorer.EvaluationSample;
 import io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy;
 
@@ -10,7 +10,7 @@ import io.quarkiverse.langchain4j.testing.scorer.EvaluationStrategy;
  */
 public class AiJudgeStrategy implements EvaluationStrategy<String> {
 
-    private final ChatLanguageModel model;
+    private final ChatModel model;
     private final String prompt;
 
     /**
@@ -20,7 +20,7 @@ public class AiJudgeStrategy implements EvaluationStrategy<String> {
      * @param prompt the prompt to use to evaluate the response.
      *        The prompt should contain the placeholders `{response}` and `{expected_output}`.
      */
-    public AiJudgeStrategy(ChatLanguageModel model, String prompt) {
+    public AiJudgeStrategy(ChatModel model, String prompt) {
         this.model = model;
         this.prompt = prompt;
     }
@@ -30,7 +30,7 @@ public class AiJudgeStrategy implements EvaluationStrategy<String> {
      *
      * @param model the LLM model (chat model) to use as a judge.
      */
-    public AiJudgeStrategy(ChatLanguageModel model) {
+    public AiJudgeStrategy(ChatModel model) {
         this(model, """
                 You are an AI evaluating a response and the expected output.
                 You need to evaluate whether the model response is correct or not.

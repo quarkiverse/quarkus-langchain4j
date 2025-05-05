@@ -20,7 +20,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
@@ -34,7 +34,7 @@ import io.smallrye.mutiny.Context;
 /**
  * Use to have streaming feature on models used trough Ollama.
  */
-public class OllamaStreamingChatLanguageModel implements StreamingChatLanguageModel {
+public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
     private static final Logger log = Logger.getLogger(OllamaStreamingChatLanguageModel.class);
 

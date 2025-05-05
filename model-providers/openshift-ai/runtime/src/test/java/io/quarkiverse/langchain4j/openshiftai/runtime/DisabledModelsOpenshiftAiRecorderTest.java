@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig.OpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -29,6 +29,6 @@ class DisabledModelsOpenshiftAiRecorderTest {
     void disabledChatModel() {
         assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledChatModel.class);
     }
 }

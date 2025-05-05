@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -52,7 +52,7 @@ public class AzureOpenAiRecorder {
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
             LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
 
@@ -83,7 +83,7 @@ public class AzureOpenAiRecorder {
 
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
 
@@ -95,14 +95,14 @@ public class AzureOpenAiRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
             LangChain4jAzureOpenAiConfig runtimeConfig,
             String configName) {
         LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
@@ -133,7 +133,7 @@ public class AzureOpenAiRecorder {
 
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
@@ -144,8 +144,8 @@ public class AzureOpenAiRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

@@ -25,7 +25,7 @@ import jakarta.inject.Qualifier;
  * <pre>
  *     &#64Inject
  *     &#ModelName("somename")
- *     ChatLanguageModel model;
+ *     ChatModel model;
  * </pre>
  *
  * For the case of {@link RegisterAiService}, instead of using this annotation, users should set the {@code modelName} property

@@ -28,7 +28,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
@@ -45,7 +45,7 @@ public class AiEmbeddingTest extends WireMockAbstract {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    ChatLanguageModel model;
+    ChatModel model;
 
     @Inject
     EmbeddingModel embeddingModel;

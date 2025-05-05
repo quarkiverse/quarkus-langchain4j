@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig.OllamaConfig;
@@ -32,7 +32,7 @@ class DisabledModelsOllamaRecorderTest {
     void disabledChatModel() {
         assertThat(recorder.chatModel(config, fixedConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledChatModel.class);
     }
 
     @Test

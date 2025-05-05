@@ -2,10 +2,10 @@ package io.quarkiverse.langchain4j.llama3.runtime;
 
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.llama3.Llama3ChatModel;
 import io.quarkiverse.langchain4j.llama3.Llama3StreamingChatModel;
 import io.quarkiverse.langchain4j.llama3.runtime.config.ChatModelConfig;
@@ -17,7 +17,7 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class Llama3Recorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
+    public Supplier<ChatModel> chatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
             LangChain4jLlama3FixedRuntimeConfig fixedRuntimeConfig,
             String configName) {
         LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(runtimeConfig, configName);
@@ -43,21 +43,21 @@ public class Llama3Recorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
+    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
             LangChain4jLlama3FixedRuntimeConfig fixedRuntimeConfig,
             String configName) {
         LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(runtimeConfig, configName);
@@ -83,15 +83,15 @@ public class Llama3Recorder {
 
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

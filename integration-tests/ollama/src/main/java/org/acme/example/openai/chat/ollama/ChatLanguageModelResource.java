@@ -10,8 +10,8 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.input.Prompt;
@@ -23,19 +23,19 @@ import io.smallrye.mutiny.Multi;
 @Path("chat")
 public class ChatLanguageModelResource {
 
-    private final ChatLanguageModel chatLanguageModel;
-    private final StreamingChatLanguageModel streamingChatLanguageModel;
+    private final ChatModel chatModel;
+    private final StreamingChatModel streamingChatModel;
 
-    public ChatLanguageModelResource(ChatLanguageModel chatLanguageModel,
-            StreamingChatLanguageModel streamingChatLanguageModel) {
-        this.chatLanguageModel = chatLanguageModel;
-        this.streamingChatLanguageModel = streamingChatLanguageModel;
+    public ChatLanguageModelResource(ChatModel chatModel,
+            StreamingChatModel streamingChatModel) {
+        this.chatModel = chatModel;
+        this.streamingChatModel = streamingChatModel;
     }
 
     @GET
     @Path("basic")
     public String basic() {
-        return chatLanguageModel.chat("When was the nobel prize for economics first awarded?");
+        return chatModel.chat("When was the nobel prize for economics first awarded?");
     }
 
     @GET
@@ -44,7 +44,7 @@ public class ChatLanguageModelResource {
     public Multi<String> streaming() {
         return Multi.createFrom().emitter(
                 emitter -> {
-                    streamingChatLanguageModel.chat(
+                    streamingChatModel.chat(
                             "Write a short 1 paragraph funny poem about Java Applets",
                             new StreamingChatResponseHandler() {
 
@@ -78,7 +78,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = promptTemplate.apply(variables);
 
-        return chatLanguageModel.chat(prompt.text());
+        return chatModel.chat(prompt.text());
     }
 
     @GET
@@ -90,7 +90,7 @@ public class ChatLanguageModelResource {
 
         Prompt prompt = StructuredPromptProcessor.toPrompt(createRecipePrompt);
 
-        return chatLanguageModel.chat(prompt.text());
+        return chatModel.chat(prompt.text());
     }
 
     @StructuredPrompt({

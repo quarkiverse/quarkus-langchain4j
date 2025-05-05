@@ -27,7 +27,8 @@ public class AiMessageDeserializer extends StdDeserializer<AiMessage> {
             List<ToolExecutionRequest> toolExecutionRequests = ctxt.readValue(toolExecutionsRequestsParser,
                     ctxt.getTypeFactory().constructCollectionType(ArrayList.class,
                             ToolExecutionRequest.class));
-            return new AiMessage(toolExecutionRequests);
+            return node.has("text") ? new AiMessage(node.get("text").asText(), toolExecutionRequests)
+                    : new AiMessage(toolExecutionRequests);
         } else {
             return new AiMessage(node.get("text").asText());
         }

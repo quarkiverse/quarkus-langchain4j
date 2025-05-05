@@ -127,7 +127,7 @@ public abstract class ToolsScopeTestBase extends OpenAiBaseTest {
                     .build();
 
             this.ai = AiServices.builder(MyService.class)
-                    .chatLanguageModel(createChatModel(wiremockPort))
+                    .chatModel(createChatModel(wiremockPort))
                     .tools(tool)
                     .chatMemoryProvider(chatMemoryProvider)
                     .build();

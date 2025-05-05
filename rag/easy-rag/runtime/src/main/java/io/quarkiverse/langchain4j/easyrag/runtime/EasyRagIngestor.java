@@ -15,7 +15,7 @@ import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.onnx.HuggingFaceTokenizer;
+import dev.langchain4j.model.embedding.onnx.HuggingFaceTokenCountEstimator;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
@@ -78,7 +78,7 @@ public class EasyRagIngestor {
                 : FileSystemDocumentLoader.loadDocuments(config.path(), pathMatcher);
 
         DocumentSplitter documentSplitter = DocumentSplitters.recursive(config.maxSegmentSize(),
-                config.maxOverlapSize(), new HuggingFaceTokenizer());
+                config.maxOverlapSize(), new HuggingFaceTokenCountEstimator());
 
         List<Document> splitDocuments = documentSplitter
                 .splitAll(documents)

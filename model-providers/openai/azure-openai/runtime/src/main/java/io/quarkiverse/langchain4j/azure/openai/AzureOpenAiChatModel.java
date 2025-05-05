@@ -3,11 +3,11 @@ package io.quarkiverse.langchain4j.azure.openai;
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.aiMessageFrom;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.finishReasonFrom;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.toFunctions;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.toOpenAiMessages;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.tokenUsageFrom;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.aiMessageFrom;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.finishReasonFrom;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toOpenAiMessages;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.tokenUsageFrom;
 import static java.time.Duration.ofSeconds;
 
 import java.net.Proxy;
@@ -23,8 +23,8 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
-import dev.langchain4j.model.Tokenizer;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
@@ -59,7 +59,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  * Please note, that currently, only API Key authentication is supported by this class,
  * second authentication option will be supported later.
  */
-public class AzureOpenAiChatModel implements ChatLanguageModel {
+public class AzureOpenAiChatModel implements ChatModel {
 
     private static final Logger log = Logger.getLogger(AzureOpenAiChatModel.class);
 
@@ -70,7 +70,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel {
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final Integer maxRetries;
-    private final Tokenizer tokenizer;
+    private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
 
@@ -78,7 +78,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel {
             String apiVersion,
             String apiKey,
             String adToken,
-            Tokenizer tokenizer,
+            TokenCountEstimator tokenizer,
             Double temperature,
             Double topP,
             Integer maxTokens,
@@ -245,7 +245,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel {
         private String apiVersion;
         private String apiKey;
         private String adToken;
-        private Tokenizer tokenizer;
+        private TokenCountEstimator tokenizer;
         private Double temperature;
         private Double topP;
         private Integer maxTokens;
@@ -304,7 +304,7 @@ public class AzureOpenAiChatModel implements ChatLanguageModel {
             return this;
         }
 
-        public Builder tokenizer(Tokenizer tokenizer) {
+        public Builder tokenizer(TokenCountEstimator tokenizer) {
             this.tokenizer = tokenizer;
             return this;
         }
