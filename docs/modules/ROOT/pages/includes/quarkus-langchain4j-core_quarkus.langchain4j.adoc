@@ -19,7 +19,7 @@ Configure the type of `ChatMemory` that will be used by default by the default `
 
 The extension provides a default bean that configures `ChatMemoryProvider` for use with AI services registered with `RegisterAiService`. This bean depends uses the `quarkus.langchain4j.chat-memory` configuration to set things up while also depending on the presence of a bean of type `ChatMemoryStore` (for which the extension also provides a default in the form of `InMemoryChatMemoryStore`).
 
-If `token-window` is used, then the application must also provide a bean of type `Tokenizer`.
+If `token-window` is used, then the application must also provide a bean of type `TokenCountEstimator`.
 
 Users can choose to provide their own `ChatMemoryStore` bean or even their own `ChatMemoryProvider` bean if full control over the details is needed.
 

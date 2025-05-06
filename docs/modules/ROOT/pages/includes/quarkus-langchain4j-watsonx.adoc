@@ -108,9 +108,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Base URL of the watsonx.ai API.
+Specifies the base URL of the watsonx.ai API.
 
-All available URLs are listed in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[following link].
+A list of all available URLs is provided in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[this link].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -184,7 +184,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`2024-03-14`
+|`2025-04-23`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-space-id[`quarkus.langchain4j.watsonx.space-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -513,12 +513,11 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The model to use for the chat completion.
+Specifies the model to use for the chat completion.
 
-All available models are listed in the IBM Watsonx.ai documentation at the link:
-https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[following link].
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
 
-To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -529,7 +528,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`mistralai/mistral-large`
+|`meta-llama/llama-4-maverick-17b-128e-instruct-fp8`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice[`quarkus.langchain4j.watsonx.chat-model.tool-choice`]##
 ifdef::add-copy-button-to-config-props[]
@@ -539,9 +538,18 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Specifies the `name` of a tool associated with the service.
+Specifies how the model should choose which tool to call during a request.
 
-Setting this value forces the model to call the specified tool when making a request. The tool name must match one of the available tools in the service.
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -549,6 +557,29 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CH
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx.chat-model.tool-choice-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -562,7 +593,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
 
 *Possible values:* `-2 < value < 2`
 
@@ -585,7 +616,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output token returned in the content of message.
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -629,7 +662,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length.
+Specifies the maximum number of tokens that can be generated in the chat completion.
+
+The total number of tokens — including both input and output — must not exceed the model's context length.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -650,7 +685,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-How many chat completion choices to generate for each input message. Note that you will be charged based on the number of generated tokens across all of the choices. Keep n as `1` to minimize costs
+Specifies how many chat completion choices to generate for each input message.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -671,7 +706,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
 
 *Possible values:* `-2 < value < 2`
 
@@ -715,7 +750,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored.
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
 
 *Possible values:* `0 ≤ number of items ≤ 4`
 
@@ -738,7 +775,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-What sampling temperature to use. Higher values like `0.8` will make the output more random, while lower values like `0.2` will make it more focused and deterministic.
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
 
 *Possible values:* `0 < value < 2`
 
@@ -865,7 +904,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_GENERATION_MODEL_MODEL_ID+
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`mistralai/mistral-large`
+|`meta-llama/llama-4-maverick-17b-128e-instruct-fp8`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-generation-model-decoding-method[`quarkus.langchain4j.watsonx.generation-model.decoding-method`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1236,12 +1275,11 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the model to be used.
+Specifies the ID of the model to be used.
 
-All available models are listed in the IBM Watsonx.ai documentation at the link:
-https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[following link].
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
 
-To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1252,7 +1290,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`ibm/slate-125m-english-rtrvr`
+|`ibm/granite-embedding-278m-multilingual`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-truncate-input-tokens[`quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1262,7 +1300,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+Specifies the maximum number of input tokens accepted. This can be used to prevent requests from failing due to input exceeding the configured token limits.
+
+If the input exceeds the specified token limit, the input will be truncated from the end (right side), ensuring that the start of the input remains intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's maximum sequence length), the request will fail if the total number of tokens exceeds the maximum limit.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1351,7 +1391,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+Specifies the maximum number of input tokens accepted. This helps to avoid requests failing due to input exceeding the configured token limits.
+
+If the input exceeds the specified token limit, the text will be truncated from the end (right side), ensuring that the start of the input remains intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's maximum sequence length), the request will fail if the total number of tokens exceeds the maximum limit.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1584,9 +1626,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Base URL of the watsonx.ai API.
+Specifies the base URL of the watsonx.ai API.
 
-All available URLs are listed in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[following link].
+A list of all available URLs is provided in the IBM Watsonx.ai documentation at the link:https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url[this link].
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1660,7 +1702,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`2024-03-14`
+|`2025-04-23`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-space-id[`quarkus.langchain4j.watsonx."model-name".space-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1989,12 +2031,11 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The model to use for the chat completion.
+Specifies the model to use for the chat completion.
 
-All available models are listed in the IBM Watsonx.ai documentation at the link:
-https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[following link].
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx#ibm-provided[this link].
 
-To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2005,7 +2046,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MO
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`mistralai/mistral-large`
+|`meta-llama/llama-4-maverick-17b-128e-instruct-fp8`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2015,9 +2056,18 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Specifies the `name` of a tool associated with the service.
+Specifies how the model should choose which tool to call during a request.
 
-Setting this value forces the model to call the specified tool when making a request. The tool name must match one of the available tools in the service.
+This value can be:
+
+ - *auto*: The model decides whether and which tool to call automatically.
+ - *required*: The model must call one of the available tools.
+
+
+
+If `toolChoiceName` is set, this value is ignored.
+
+Setting this value influences the tool-calling behavior of the model when no specific tool is required.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2025,6 +2075,29 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__M
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`auto`, `required`
+|
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the name of a specific tool that the model must call.
+
+When set, the model will be forced to call the specified tool. The name must exactly match one of the available tools defined for the service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -2038,7 +2111,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+Positive values penalize new tokens based on their existing frequency in the generated text, reducing the likelihood of the model repeating the same lines verbatim.
 
 *Possible values:* `-2 < value < 2`
 
@@ -2061,7 +2134,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output token returned in the content of message.
+Specifies whether to return the log probabilities of the output tokens.
+
+If set to `true`, the response will include the log probability of each output token in the content of the message.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2105,7 +2180,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length.
+Specifies the maximum number of tokens that can be generated in the chat completion.
+
+The total number of tokens — including both input and output — must not exceed the model's context length.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2126,7 +2203,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-How many chat completion choices to generate for each input message. Note that you will be charged based on the number of generated tokens across all of the choices. Keep n as `1` to minimize costs
+Specifies how many chat completion choices to generate for each input message.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2147,7 +2224,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+Applies a penalty to new tokens based on whether they already appear in the generated text so far, encouraging the model to introduce new topics rather than repeat itself.
 
 *Possible values:* `-2 < value < 2`
 
@@ -2191,7 +2268,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Stop sequences are one or more strings which will cause the text generation to stop if/when they are produced as part of the output. Stop sequences encountered prior to the minimum number of tokens being generated will be ignored.
+Defines one or more stop sequences that will cause the model to stop generating further tokens if any of them are encountered in the output.
+
+This allows control over where the model should end its response. If a stop sequence is encountered before the minimum number of tokens has been generated, it will be ignored.
 
 *Possible values:* `0 ≤ number of items ≤ 4`
 
@@ -2214,7 +2293,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-What sampling temperature to use. Higher values like `0.8` will make the output more random, while lower values like `0.2` will make it more focused and deterministic.
+Specifies the sampling temperature to use in the generation process.
+
+Higher values (e.g. `0.8`) make the output more random and diverse, while lower values (e.g. `0.2`) make the output more focused and deterministic.
 
 *Possible values:* `0 < value < 2`
 
@@ -2341,7 +2422,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__GENERATION_MO
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`mistralai/mistral-large`
+|`meta-llama/llama-4-maverick-17b-128e-instruct-fp8`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-decoding-method]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-generation-model-decoding-method[`quarkus.langchain4j.watsonx."model-name".generation-model.decoding-method`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2712,12 +2793,11 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the model to be used.
+Specifies the ID of the model to be used.
 
-All available models are listed in the IBM Watsonx.ai documentation at the link:
-https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[following link].
+A list of all available models is provided in the IBM watsonx.ai documentation at the link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#ibm-provided[this link].
 
-To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
+To use a model, locate the `API model ID` column in the table and copy the corresponding model ID.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2728,7 +2808,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`ibm/slate-125m-english-rtrvr`
+|`ibm/granite-embedding-278m-multilingual`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-truncate-input-tokens]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-truncate-input-tokens[`quarkus.langchain4j.watsonx."model-name".embedding-model.truncate-input-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2738,7 +2818,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+Specifies the maximum number of input tokens accepted. This can be used to prevent requests from failing due to input exceeding the configured token limits.
+
+If the input exceeds the specified token limit, the input will be truncated from the end (right side), ensuring that the start of the input remains intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's maximum sequence length), the request will fail if the total number of tokens exceeds the maximum limit.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2827,7 +2909,9 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Represents the maximum number of input tokens accepted. This can be used to avoid requests failing due to input being longer than configured limits. If the text is truncated, then it truncates the end of the input (on the right), so the start of the input will remain the same. If this value exceeds the maximum sequence length (refer to the documentation to find this value for the model) then the call will fail if the total number of tokens exceeds the maximum sequence length.
+Specifies the maximum number of input tokens accepted. This helps to avoid requests failing due to input exceeding the configured token limits.
+
+If the input exceeds the specified token limit, the text will be truncated from the end (right side), ensuring that the start of the input remains intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's maximum sequence length), the request will fail if the total number of tokens exceeds the maximum limit.
 
 
 ifdef::add-copy-button-to-env-var[]
