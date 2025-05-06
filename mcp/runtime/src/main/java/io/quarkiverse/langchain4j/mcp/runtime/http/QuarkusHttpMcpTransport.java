@@ -21,6 +21,7 @@ import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Uni;
 
@@ -38,6 +39,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private volatile String postUrl;
     private volatile McpPostEndpoint postEndpoint;
     private volatile McpOperationHandler operationHandler;
+    private volatile McpClientAuthProvider mcpClientAuthProvider;
 
     private volatile Runnable onFailure;
     private volatile boolean closed;
@@ -55,6 +57,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                 .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                 .loggingScope(LoggingScope.ALL)
                 .register(new JacksonBasicMessageBodyReader(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER));
+
+        this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
+        if (mcpClientAuthProvider != null) {
+            clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
+        }
         if (logRequests || logResponses) {
             clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             clientBuilder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -71,10 +78,14 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                 .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                 .register(new JacksonBasicMessageBodyReader(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER));
+        if (mcpClientAuthProvider != null) {
+            builder.register(new McpClientAuthFilter(mcpClientAuthProvider));
+        }
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
         }
+
         postEndpoint = builder
                 .build(McpPostEndpoint.class);
     }
@@ -175,6 +186,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     public static class Builder {
 
         private String sseUrl;
+        private String mcpClientName;
         private Duration timeout;
         private boolean logRequests = false;
         private boolean logResponses = false;
@@ -185,6 +197,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
          */
         public QuarkusHttpMcpTransport.Builder sseUrl(String sseUrl) {
             this.sseUrl = sseUrl;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder mcpClientName(String mcpClientName) {
+            this.mcpClientName = mcpClientName;
             return this;
         }
 

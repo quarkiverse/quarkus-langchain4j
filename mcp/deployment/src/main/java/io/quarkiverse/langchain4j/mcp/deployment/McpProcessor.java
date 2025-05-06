@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
@@ -31,6 +32,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -187,6 +189,11 @@ public class McpProcessor {
                         .produce(ReflectiveClassBuildItem.builder(clazz.name().toString()).fields(true).methods(true).build());
             }
         }
+    }
+
+    @BuildStep
+    public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
     }
 
 }

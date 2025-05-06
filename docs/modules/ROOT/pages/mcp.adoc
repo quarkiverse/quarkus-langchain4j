@@ -41,7 +41,7 @@ it is required to annotate it with `@McpToolBox`. This annotation allows to spec
 MCP servers that the AI service can use. For example to enable a method to use the `github` MCP
 server configured above and only that one it is necessary to annotate it with:
 
-[source,properties]
+[source,java]
 ----
 @McpToolBox("github")
 String useGithub(@UserMessage String userMessage);
@@ -49,6 +49,46 @@ String useGithub(@UserMessage String userMessage);
 
 If the `@McpToolBox` is used without any name then the method will automatically use all the MCP
 servers available.
+
+== Authorization
+
+MCP servers that use the "Streamable HTTP" or HTTP/SSE transport may require MCP client authorization.
+
+In such cases, MCP clients must submit access tokens or API keys as bearer access tokens using an HTTP Authorization header, for example: `Authorization: Bearer <access token>`.
+
+You can register a custom `io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider` to load tokens or API keys from the database or other sources, for example:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
+
+@ApplicationScoped
+public static class TestMcpAuthProvider implements McpClientAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) { <1>
+        String token = getToken(input);
+        return "Bearer " + token;
+    }
+    private String getToken(Input input) {
+        // ...
+    }
+}
+----
+<1> Represents current HTTP request URI, method and headers
+
+When your Quarkus LangChain4j AI service application that uses MCP client requires an OpenId Connect or OAuth2 authorization code flow login, for example, with Google or GitHub, MCP client can propagate the acquired access token to access the MCP server on the authenticated user's behalf.
+
+All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-mcp-auth-provider` dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-oidc-mcp-auth-provider</artifactId>
+</dependency>
+----
 
 == Logging
 
