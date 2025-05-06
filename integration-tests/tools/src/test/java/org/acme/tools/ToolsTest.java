@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
@@ -27,7 +27,7 @@ public class ToolsTest {
     AiService aiService;
 
     @InjectMock
-    ChatLanguageModel model;
+    ChatModel model;
 
     @Test
     void blockingSum() {

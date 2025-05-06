@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.ModelDisabledException;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -25,28 +25,28 @@ class AnthropicDisabledLanguageModelSmokeTest extends AnthropicSmokeTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.enable-integration", "false");
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Test
     void blocking() {
         assertThat(ClientProxy.unwrap(chatModel))
-                .isInstanceOf(DisabledChatLanguageModel.class);
+                .isInstanceOf(DisabledChatModel.class);
 
         assertThatExceptionOfType(ModelDisabledException.class)
                 .isThrownBy(() -> chatModel.chat("Hello, how are you today?"))
-                .withMessage("ChatLanguageModel is disabled");
+                .withMessage("ChatModel is disabled");
     }
 
     @Test
     void streaming() {
         assertThat(ClientProxy.unwrap(streamingChatModel))
-                .isInstanceOf(DisabledStreamingChatLanguageModel.class);
+                .isInstanceOf(DisabledStreamingChatModel.class);
 
         assertThatExceptionOfType(ModelDisabledException.class)
                 .isThrownBy(() -> streamingChatModel.chat("Hello, how are you today?", null))
-                .withMessage("StreamingChatLanguageModel is disabled");
+                .withMessage("StreamingChatModel is disabled");
     }
 }

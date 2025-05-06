@@ -4,7 +4,7 @@ import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.Tokenizer;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -24,7 +24,7 @@ public interface ChatMemoryBuildConfig {
      * configuration to set things up while also depending on the presence of a bean of type {@link ChatMemoryStore} (for which
      * the extension also provides a default in the form of {@link InMemoryChatMemoryStore}).
      * <p>
-     * If {@code token-window} is used, then the application must also provide a bean of type {@link Tokenizer}.
+     * If {@code token-window} is used, then the application must also provide a bean of type {@link TokenCountEstimator}.
      * <p>
      * Users can choose to provide their own {@link ChatMemoryStore} bean or even their own {@link ChatMemoryProvider} bean
      * if full control over the details is needed.

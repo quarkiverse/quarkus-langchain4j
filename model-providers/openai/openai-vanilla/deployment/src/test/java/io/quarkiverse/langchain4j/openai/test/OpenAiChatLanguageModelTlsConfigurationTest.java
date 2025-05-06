@@ -14,7 +14,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -65,10 +65,10 @@ public class OpenAiChatLanguageModelTlsConfigurationTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.clientA.base-url", "https://localhost:8445/sA");
 
     @Inject
-    ChatLanguageModel defaultChatLanguageModel;
+    ChatModel defaultChatLanguageModel;
 
     @ModelName("clientA")
-    ChatLanguageModel clientAChatLanguageModel;
+    ChatModel clientAChatLanguageModel;
 
     @Test
     void test() {

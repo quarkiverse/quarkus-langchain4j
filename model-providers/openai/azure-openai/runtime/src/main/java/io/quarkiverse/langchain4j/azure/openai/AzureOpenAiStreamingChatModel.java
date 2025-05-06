@@ -4,8 +4,8 @@ import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.Utils.isNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.toFunctions;
-import static dev.langchain4j.model.openai.InternalOpenAiHelper.toOpenAiMessages;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toOpenAiMessages;
 import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 import static java.time.Duration.ofSeconds;
 
@@ -24,8 +24,8 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.StreamingResponseHandler;
-import dev.langchain4j.model.Tokenizer;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
@@ -65,7 +65,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
  * Please note, that currently, only API Key authentication is supported by this class,
  * second authentication option will be supported later.
  */
-public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel {
+public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
     private static final Logger log = Logger.getLogger(AzureOpenAiStreamingChatModel.class);
 
@@ -75,7 +75,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
     private final Integer maxTokens;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
-    private final Tokenizer tokenizer;
+    private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
 
@@ -83,7 +83,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             String apiVersion,
             String apiKey,
             String adToken,
-            Tokenizer tokenizer,
+            TokenCountEstimator tokenizer,
             Double temperature,
             Double topP,
             Integer maxTokens,
@@ -280,7 +280,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
         private String apiVersion;
         private String apiKey;
         private String adToken;
-        private Tokenizer tokenizer;
+        private TokenCountEstimator tokenizer;
         private Double temperature;
         private Double topP;
         private Integer maxTokens;
@@ -333,7 +333,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatLanguageModel
             return this;
         }
 
-        public Builder tokenizer(Tokenizer tokenizer) {
+        public Builder tokenizer(TokenCountEstimator tokenizer) {
             this.tokenizer = tokenizer;
             return this;
         }

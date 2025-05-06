@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ollama.*;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -44,7 +44,7 @@ class OllamaChatLanguageModelToolTest extends WiremockAware {
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-responses", "true");
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Inject
     Bot bot;

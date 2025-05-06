@@ -5,8 +5,8 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.config.LangChain4jVertexAiConfig;
 import io.quarkus.runtime.annotations.Recorder;
@@ -16,7 +16,7 @@ import io.smallrye.config.ConfigValidationException;
 public class VertexAiRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jVertexAiConfig config, String configName) {
+    public Supplier<ChatModel> chatModel(LangChain4jVertexAiConfig config, String configName) {
         var vertexAiConfig = correspondingVertexAiConfig(config, configName);
 
         if (vertexAiConfig.enableIntegration()) {
@@ -48,15 +48,15 @@ public class VertexAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }

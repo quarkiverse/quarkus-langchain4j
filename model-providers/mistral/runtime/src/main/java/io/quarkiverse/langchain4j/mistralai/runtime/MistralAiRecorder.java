@@ -7,10 +7,10 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
@@ -30,7 +30,7 @@ import io.smallrye.config.ConfigValidationException;
 @Recorder
 public class MistralAiRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
+    public Supplier<ChatModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
                 configName);
 
@@ -69,21 +69,21 @@ public class MistralAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(LangChain4jMistralAiConfig runtimeConfig,
+    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jMistralAiConfig runtimeConfig,
             String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
                 configName);
@@ -123,15 +123,15 @@ public class MistralAiRecorder {
 
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
+                public StreamingChatModel get() {
                     return builder.build();
                 }
             };
         } else {
             return new Supplier<>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

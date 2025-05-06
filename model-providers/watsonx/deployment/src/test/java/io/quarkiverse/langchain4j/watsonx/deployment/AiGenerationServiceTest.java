@@ -11,6 +11,7 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WAT
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Date;
+import java.util.List;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -96,6 +97,7 @@ public class AiGenerationServiceTest extends WireMockAbstract {
                 .minNewTokens(chatModelConfig.minNewTokens())
                 .maxNewTokens(chatModelConfig.maxNewTokens())
                 .timeLimit(DEFAULT_TIME_LIMIT)
+                .stopSequences(List.of())
                 .build();
 
         return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);

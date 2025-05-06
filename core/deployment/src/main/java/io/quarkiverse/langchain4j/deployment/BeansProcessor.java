@@ -21,7 +21,7 @@ import org.jboss.jandex.DotName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
@@ -119,7 +119,7 @@ public class BeansProcessor {
         final String dot = ".";
 
         // bean types for models
-        final String chatModelBeanType = "ChatLanguageModel or StreamingChatLanguageModel";
+        final String chatModelBeanType = "ChatModel or StreamingChatModel";
         final String embeddingModelBeanType = "EmbeddingModel";
         final String scoringModelBeanType = "ScoringModel";
         final String moderationModelBeanType = "ModerationModel";
@@ -188,7 +188,7 @@ public class BeansProcessor {
 
                 String provider = selectProvider(
                         chatCandidateItems,
-                        beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                        beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class),
                         userSelectedProvider,
                         chatModelBeanType,
                         configNamespace);
@@ -324,7 +324,7 @@ public class BeansProcessor {
 
         // There can be configured models for which we found no injection points.
         // While we cannot perform full validation of those, we can still add them as beans.
-        // This enabled injection such as @Inject @Any Instance<ChatLanguageModel>
+        // This enabled injection such as @Inject @Any Instance<ChatModel>
 
         // process default configuration
         LangChain4jBuildConfig.BaseConfig defaultConfig = buildConfig.defaultConfig();
@@ -332,7 +332,7 @@ public class BeansProcessor {
             Optional<String> userSelectedProvider = defaultConfig.chatModel().provider();
             String provider = selectProvider(
                     chatCandidateItems,
-                    beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                    beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class),
                     userSelectedProvider,
                     chatModelBeanType,
                     chatModelConfigNamespace);
@@ -404,7 +404,7 @@ public class BeansProcessor {
                 String configNamespace = entry.getKey() + dot + chatModelConfigNamespace;
                 String provider = selectProvider(
                         chatCandidateItems,
-                        beanDiscoveryFinished.beanStream().withBeanType(ChatLanguageModel.class),
+                        beanDiscoveryFinished.beanStream().withBeanType(ChatModel.class),
                         userSelectedProvider,
                         chatModelBeanType,
                         configNamespace);

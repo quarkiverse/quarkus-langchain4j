@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.ModelDisabledException;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkus.test.QuarkusUnitTest;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -26,10 +26,10 @@ class BedrockChatModelDisabledTest extends BedrockTestBase {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.enable-integration", "false");
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Test
     void should_disable_chat_model() {

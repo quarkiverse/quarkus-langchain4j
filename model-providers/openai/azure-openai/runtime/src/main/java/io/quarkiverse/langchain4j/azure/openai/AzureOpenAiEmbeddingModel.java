@@ -14,7 +14,7 @@ import java.util.List;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.model.Tokenizer;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.internal.OpenAiClient;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
@@ -46,13 +46,13 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
 
     private final OpenAiClient client;
     private final Integer maxRetries;
-    private final Tokenizer tokenizer;
+    private final TokenCountEstimator tokenizer;
 
     public AzureOpenAiEmbeddingModel(String endpoint,
             String apiVersion,
             String apiKey,
             String adToken,
-            Tokenizer tokenizer,
+            TokenCountEstimator tokenizer,
             Duration timeout,
             Integer maxRetries,
             Proxy proxy,
@@ -138,7 +138,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
         private String endpoint;
         private String apiVersion;
         private String apiKey;
-        private Tokenizer tokenizer;
+        private TokenCountEstimator tokenizer;
         private Duration timeout;
         private Integer maxRetries;
         private Proxy proxy;
@@ -186,7 +186,7 @@ public class AzureOpenAiEmbeddingModel implements EmbeddingModel {
             return this;
         }
 
-        public Builder tokenizer(Tokenizer tokenizer) {
+        public Builder tokenizer(TokenCountEstimator tokenizer) {
             this.tokenizer = tokenizer;
             return this;
         }

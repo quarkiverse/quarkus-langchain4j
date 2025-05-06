@@ -12,7 +12,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -32,7 +32,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextStreamingChatResponse;
 import io.smallrye.mutiny.Context;
 
-public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatLanguageModel {
+public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatModel {
 
     private static final String ID_CONTEXT = "ID";
     private static final String MODEL_ID_CONTEXT = "MODEL_ID";

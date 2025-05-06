@@ -55,7 +55,8 @@ public class OllamaTextOutputTest extends WiremockAware {
                                                 "temperature": 0.8,
                                                 "top_k": 40,
                                                 "top_p": 0.9
-                                            }
+                                            },
+                                            "tools" : [ ]
                                         }"""))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")

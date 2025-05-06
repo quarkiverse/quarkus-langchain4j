@@ -44,7 +44,7 @@ public class WebSearchRetrievalAugmentor implements Supplier<RetrievalAugmentor>
     WebSearchEngine webSearchEngine;
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Override
     public RetrievalAugmentor get() {

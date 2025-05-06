@@ -26,8 +26,8 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.video.Video;
 import dev.langchain4j.internal.CustomMimeTypesFileTypeDetector;
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
-import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 
 public final class ContentMapper {
@@ -173,7 +173,7 @@ public final class ContentMapper {
         if (parameters == null) {
             return FunctionDeclaration.Parameters.empty();
         }
-        return FunctionDeclaration.Parameters.objectType(JsonSchemaElementHelper.toMap(parameters.properties()),
+        return FunctionDeclaration.Parameters.objectType(JsonSchemaElementUtils.toMap(parameters.properties()),
                 parameters.required());
     }
 }

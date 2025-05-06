@@ -34,8 +34,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkus.test.QuarkusUnitTest;
@@ -72,10 +72,10 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
     }
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Inject
     EmbeddingModel embeddingModel;
@@ -112,14 +112,14 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
                             .build();
                 });
 
-        // --- Test ChatLanguageModel --- //
+        // --- Test ChatModel --- //
         assertDoesNotThrow(() -> chatModel.chat("message"));
         assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
 
         // --- Test EmbeddingModel --- //
         assertDoesNotThrow(() -> embeddingModel.embed("message")); // cache.
 
-        // --- Test StreamingChatLanguageModel --- //
+        // --- Test StreamingChatModel --- //
         streamingChatModel.chat("message", streamingChatResponseHandler(new AtomicReference<ChatResponse>())); // cache.
 
         Thread.sleep(cacheTimeout);
@@ -162,7 +162,7 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
                             .build();
                 });
 
-        // --- Test ChatLanguageModel --- //
+        // --- Test ChatModel --- //
         assertDoesNotThrow(() -> chatModel.chat("message"));
 
         Thread.sleep(cacheTimeout);
@@ -172,7 +172,7 @@ public class AiGenerationCacheTokenTest extends WireMockAbstract {
 
         Thread.sleep(cacheTimeout);
 
-        // --- Test StreamingChatLanguageModel --- //
+        // --- Test StreamingChatModel --- //
         var streamingResponse = new AtomicReference<ChatResponse>();
         streamingChatModel.chat("message", streamingChatResponseHandler(streamingResponse));
         await().atMost(Duration.ofSeconds(6))

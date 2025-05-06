@@ -18,14 +18,14 @@ import com.github.tjake.jlama.safetensors.prompt.PromptSupport;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.internal.RetryUtils;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
-public class JlamaStreamingChatModel implements StreamingChatLanguageModel {
+public class JlamaStreamingChatModel implements StreamingChatModel {
     private final AbstractModel model;
     private final Float temperature;
     private final Integer maxTokens;

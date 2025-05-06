@@ -6,8 +6,8 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.image.DisabledImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
@@ -33,14 +33,14 @@ class DisabledModelsOpenAiRecorderTest {
     void disabledChatModel() {
         assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledChatModel.class);
     }
 
     @Test
     void disabledStreamingChatModel() {
         assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
-                .isExactlyInstanceOf(DisabledStreamingChatLanguageModel.class);
+                .isExactlyInstanceOf(DisabledStreamingChatModel.class);
     }
 
     @Test

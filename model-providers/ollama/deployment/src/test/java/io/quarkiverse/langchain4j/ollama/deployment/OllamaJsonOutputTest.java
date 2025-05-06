@@ -64,7 +64,8 @@ public class OllamaJsonOutputTest extends WiremockAware {
                                                 "top_p": 0.9
                                             },
                                             "format": "json",
-                                            "stream": false
+                                            "stream": false,
+                                            "tools" : [ ]
                                         }"""))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")

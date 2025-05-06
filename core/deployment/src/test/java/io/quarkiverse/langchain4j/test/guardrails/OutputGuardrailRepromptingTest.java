@@ -25,7 +25,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
@@ -93,10 +93,10 @@ public class OutputGuardrailRepromptingTest {
         String fail(@MemoryId String mem, @dev.langchain4j.service.UserMessage String message);
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class MyChatModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             return new MyChatModel();
         }
     }
@@ -193,7 +193,7 @@ public class OutputGuardrailRepromptingTest {
         }
     }
 
-    public static class MyChatModel implements ChatLanguageModel {
+    public static class MyChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {

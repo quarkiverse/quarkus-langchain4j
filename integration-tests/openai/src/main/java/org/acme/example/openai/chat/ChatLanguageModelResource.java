@@ -20,26 +20,26 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
-import dev.langchain4j.model.Tokenizer;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
-import dev.langchain4j.model.openai.OpenAiTokenizer;
+import dev.langchain4j.model.openai.OpenAiTokenCountEstimator;
 import io.smallrye.mutiny.Multi;
 
 @Path("chat")
 public class ChatLanguageModelResource {
 
-    private final ChatLanguageModel chatLanguageModel;
-    private final StreamingChatLanguageModel streamingChatLanguageModel;
+    private final ChatModel chatLanguageModel;
+    private final StreamingChatModel streamingChatLanguageModel;
 
-    public ChatLanguageModelResource(ChatLanguageModel chatLanguageModel,
-            StreamingChatLanguageModel streamingChatLanguageModel) {
+    public ChatLanguageModelResource(ChatModel chatLanguageModel,
+            StreamingChatModel streamingChatLanguageModel) {
         this.chatLanguageModel = chatLanguageModel;
         this.streamingChatLanguageModel = streamingChatLanguageModel;
     }
@@ -96,7 +96,7 @@ public class ChatLanguageModelResource {
     @Path("memory")
     public String memory() throws Exception {
 
-        Tokenizer tokenizer = new OpenAiTokenizer("gpt-3.5-turbo");
+        TokenCountEstimator tokenizer = new OpenAiTokenCountEstimator("gpt-3.5-turbo");
         ChatMemory chatMemory = TokenWindowChatMemory.withMaxTokens(1000, tokenizer);
 
         StringBuffer sb = new StringBuffer();

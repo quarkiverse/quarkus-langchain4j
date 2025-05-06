@@ -11,12 +11,12 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
-public class OpenshiftAiChatModel implements ChatLanguageModel {
+public class OpenshiftAiChatModel implements ChatModel {
     public static final String TLS_TRUST_ALL = "quarkus.tls.trust-all";
     private final String modelId;
     private final OpenshiftAiRestApi client;

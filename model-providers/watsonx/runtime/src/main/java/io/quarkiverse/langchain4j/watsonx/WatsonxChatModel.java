@@ -10,7 +10,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.exception.UnsupportedFeatureException;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
@@ -30,7 +30,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultCh
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatResultMessage;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatResponse.TextChatUsage;
 
-public class WatsonxChatModel extends Watsonx implements ChatLanguageModel {
+public class WatsonxChatModel extends Watsonx implements ChatModel {
 
     private final WatsonxChatRequestParameters defaultRequestParameters;
 

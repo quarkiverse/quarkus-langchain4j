@@ -15,7 +15,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.TokenUsage;
@@ -24,7 +24,7 @@ import io.quarkiverse.langchain4j.llama3.copy.Llama;
 import io.quarkiverse.langchain4j.llama3.copy.Llama3;
 import io.quarkiverse.langchain4j.llama3.copy.Sampler;
 
-public class Llama3ChatModel implements ChatLanguageModel {
+public class Llama3ChatModel implements ChatModel {
 
     private static final Logger log = Logger.getLogger(Llama3ChatModel.class);
 

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -43,7 +43,7 @@ public class ToolChoiceToolNotFoundTest extends WireMockAbstract {
     }
 
     @Inject
-    ChatLanguageModel model;
+    ChatModel model;
 
     @Test
     void test() {

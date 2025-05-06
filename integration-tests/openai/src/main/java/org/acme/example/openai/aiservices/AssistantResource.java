@@ -6,7 +6,7 @@ import jakarta.ws.rs.Path;
 
 import org.jboss.resteasy.reactive.RestQuery;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 
 @Path("assistant")
@@ -14,8 +14,8 @@ public class AssistantResource {
 
     private final Assistant assistant;
 
-    public AssistantResource(ChatLanguageModel chatLanguageModel) {
-        this.assistant = AiServices.create(Assistant.class, chatLanguageModel);
+    public AssistantResource(ChatModel chatModel) {
+        this.assistant = AiServices.create(Assistant.class, chatModel);
     }
 
     @GET

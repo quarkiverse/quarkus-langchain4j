@@ -11,7 +11,7 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.huggingface.client.HuggingFaceClient;
@@ -29,7 +29,7 @@ import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
  * TODO: remove this in the future when the stock {@link dev.langchain4j.model.huggingface.HuggingFaceChatModel}
  * has been updated to fit our needs (i.e. allowing {@code returnFullText} to be null and making {code accessToken} optional)
  */
-public class QuarkusHuggingFaceChatModel implements ChatLanguageModel {
+public class QuarkusHuggingFaceChatModel implements ChatModel {
 
     public static final QuarkusHuggingFaceClientFactory CLIENT_FACTORY = new QuarkusHuggingFaceClientFactory();
     private final HuggingFaceClient client;

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -32,7 +32,7 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.anthropic.base-url", "http://localhost:%d".formatted(WIREMOCK_PORT));
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Test
     void blocking() {
@@ -95,7 +95,8 @@ class AnthropicChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                   "system" : [ ],
                   "max_tokens" : 1024,
                   "stream" : false,
-                  "top_k" : 40
+                  "top_k" : 40,
+                  "tools" : [ ]
                 }""";
 
         assertThat(new String(loggedRequest.getBody()))

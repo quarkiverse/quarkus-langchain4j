@@ -14,8 +14,8 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -54,7 +54,7 @@ public @interface RegisterAiService {
      * {@code quarkus-langchain4j-azure-openai} or
      * {@code quarkus-langchain4j-hugging-face}
      */
-    Class<? extends Supplier<StreamingChatLanguageModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
+    Class<? extends Supplier<StreamingChatModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
 
     /**
      * Configures the way to obtain the {@link ChatLanguageModel} to use.
@@ -63,7 +63,7 @@ public @interface RegisterAiService {
      * {@code quarkus-langchain4j-azure-openai} or
      * {@code quarkus-langchain4j-hugging-face}
      */
-    Class<? extends Supplier<ChatLanguageModel>> chatLanguageModelSupplier() default BeanChatLanguageModelSupplier.class;
+    Class<? extends Supplier<ChatModel>> chatLanguageModelSupplier() default BeanChatLanguageModelSupplier.class;
 
     /**
      * When {@code chatLanguageModelSupplier} is set to {@code BeanChatLanguageModelSupplier.class} (which is the default)
@@ -143,10 +143,10 @@ public @interface RegisterAiService {
      * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
-    final class BeanChatLanguageModelSupplier implements Supplier<ChatLanguageModel> {
+    final class BeanChatLanguageModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }
@@ -156,10 +156,10 @@ public @interface RegisterAiService {
      * by * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
-    final class BeanStreamingChatLanguageModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    final class BeanStreamingChatLanguageModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             throw new UnsupportedOperationException("should never be called");
         }
     }

@@ -24,8 +24,8 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -58,8 +58,8 @@ import io.vertx.core.json.JsonObject;
 public class ChatJsonRPCService {
 
     public static final int MAX_SEQUENTIAL_TOOL_EXECUTIONS = 20;
-    private final ChatLanguageModel model;
-    private final Optional<StreamingChatLanguageModel> streamingModel;
+    private final ChatModel model;
+    private final Optional<StreamingChatModel> streamingModel;
 
     private final ChatMemoryProvider memoryProvider;
 
@@ -72,8 +72,8 @@ public class ChatJsonRPCService {
     private final Map<String, ToolExecutor> toolExecutors;
     private final ToolProvider toolProvider;
 
-    public ChatJsonRPCService(@All List<ChatLanguageModel> models, // don't use ChatLanguageModel model because it results in the default model not being configured
-            @All List<StreamingChatLanguageModel> streamingModels,
+    public ChatJsonRPCService(@All List<ChatModel> models, // don't use ChatModel model because it results in the default model not being configured
+            @All List<StreamingChatModel> streamingModels,
             @All List<Supplier<RetrievalAugmentor>> retrievalAugmentorSuppliers,
             @All List<RetrievalAugmentor> retrievalAugmentors,
             ChatMemoryProvider memoryProvider,
@@ -182,7 +182,7 @@ public class ChatJsonRPCService {
                     memory.add(new UserMessage(message));
                 }
 
-                StreamingChatLanguageModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
+                StreamingChatModel streamingModel = this.streamingModel.orElseThrow(IllegalStateException::new);
                 setToolsViaProviderIfAvailable(memory, userMessage);
 
                 // invoke tools if applicable

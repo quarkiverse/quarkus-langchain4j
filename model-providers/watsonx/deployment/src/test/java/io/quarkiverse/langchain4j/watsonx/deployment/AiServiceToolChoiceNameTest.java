@@ -271,6 +271,7 @@ public class AiServiceToolChoiceNameTest extends WireMockAbstract {
                 .presencePenalty(0.0)
                 .temperature(1.0)
                 .topP(1.0)
+                .stop(List.of())
                 .timeLimit(DEFAULT_TIME_LIMIT);
 
         if (withToolChoice)

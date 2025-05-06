@@ -20,7 +20,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
@@ -94,11 +94,11 @@ public class OutputGuardrailAccumulatorNotFoundTest {
         }
     }
 
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
-            return new StreamingChatLanguageModel() {
+        public StreamingChatModel get() {
+            return new StreamingChatModel() {
                 @Override
                 public void chat(List<ChatMessage> messages, StreamingChatResponseHandler handler) {
                     handler.onPartialResponse("Stream");

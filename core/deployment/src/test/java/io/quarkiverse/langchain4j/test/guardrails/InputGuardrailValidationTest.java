@@ -22,8 +22,8 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -199,23 +199,23 @@ public class InputGuardrailValidationTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class MyChatModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             return new MyChatModel();
         }
     }
 
-    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class MyStreamingChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             return new MyStreamingChatModel();
         }
     }
 
-    public static class MyChatModel implements ChatLanguageModel {
+    public static class MyChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {
@@ -223,7 +223,7 @@ public class InputGuardrailValidationTest {
         }
     }
 
-    public static class MyStreamingChatModel implements StreamingChatLanguageModel {
+    public static class MyStreamingChatModel implements StreamingChatModel {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

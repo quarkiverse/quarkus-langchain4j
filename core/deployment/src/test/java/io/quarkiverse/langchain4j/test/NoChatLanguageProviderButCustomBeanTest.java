@@ -9,7 +9,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import io.quarkus.test.QuarkusUnitTest;
@@ -21,7 +21,7 @@ public class NoChatLanguageProviderButCustomBeanTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Test
     void test() {
@@ -29,7 +29,7 @@ public class NoChatLanguageProviderButCustomBeanTest {
     }
 
     @Singleton
-    public static class CustomChatLanguageModel implements ChatLanguageModel {
+    public static class CustomChatLanguageModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {

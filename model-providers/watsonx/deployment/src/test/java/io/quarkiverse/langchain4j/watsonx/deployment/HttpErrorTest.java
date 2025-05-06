@@ -24,7 +24,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -40,7 +40,7 @@ public class HttpErrorTest extends WireMockAbstract {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Test
     void not_registered_error() {

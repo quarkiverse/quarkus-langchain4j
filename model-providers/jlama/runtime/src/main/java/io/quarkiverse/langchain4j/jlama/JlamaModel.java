@@ -14,8 +14,8 @@ import com.github.tjake.jlama.safetensors.prompt.Function;
 import com.github.tjake.jlama.safetensors.prompt.Tool;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
-import dev.langchain4j.model.chat.request.json.JsonSchemaElementHelper;
 import dev.langchain4j.model.output.FinishReason;
 
 /**
@@ -129,7 +129,7 @@ public class JlamaModel {
 
         if (toolSpecification.parameters() != null) {
             for (Map.Entry<String, JsonSchemaElement> p : toolSpecification.parameters().properties().entrySet()) {
-                builder.addParameter(p.getKey(), JsonSchemaElementHelper.toMap(p.getValue()),
+                builder.addParameter(p.getKey(), JsonSchemaElementUtils.toMap(p.getValue()),
                         toolSpecification.parameters().required().contains(p.getKey()));
             }
         }

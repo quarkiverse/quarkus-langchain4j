@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -73,7 +73,7 @@ public class AiGeminiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
             LangChain4jAiGeminiConfig config, String configName) {
         var aiConfig = correspondingAiConfig(config, configName);
 
@@ -107,7 +107,7 @@ public class AiGeminiRecorder {
 
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
                             configName);
 
@@ -119,8 +119,8 @@ public class AiGeminiRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
                 }
             };
         }

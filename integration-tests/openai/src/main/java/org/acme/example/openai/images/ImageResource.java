@@ -10,7 +10,7 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.image.ImageModel;
 
@@ -18,9 +18,9 @@ import dev.langchain4j.model.image.ImageModel;
 public class ImageResource {
 
     private final ImageModel imageModel;
-    private final ChatLanguageModel chatLanguageModel;
+    private final ChatModel chatLanguageModel;
 
-    public ImageResource(ImageModel model, ChatLanguageModel chatLanguageModel) {
+    public ImageResource(ImageModel model, ChatModel chatLanguageModel) {
         this.imageModel = model;
         this.chatLanguageModel = chatLanguageModel;
     }

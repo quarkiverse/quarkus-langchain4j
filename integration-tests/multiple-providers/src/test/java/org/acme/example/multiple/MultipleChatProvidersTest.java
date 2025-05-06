@@ -8,7 +8,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import io.quarkiverse.langchain4j.ModelName;
@@ -24,43 +24,43 @@ import io.quarkus.test.junit.QuarkusTest;
 public class MultipleChatProvidersTest {
 
     @Inject
-    ChatLanguageModel defaultModel;
+    ChatModel defaultModel;
 
     @Inject
     @ModelName("c1")
-    ChatLanguageModel firstNamedModel;
+    ChatModel firstNamedModel;
 
     @Inject
     @ModelName("c2")
-    ChatLanguageModel secondNamedModel;
+    ChatModel secondNamedModel;
 
     @Inject
     @ModelName("c3")
-    ChatLanguageModel thirdNamedModel;
+    ChatModel thirdNamedModel;
 
     @Inject
     @ModelName("c5")
-    ChatLanguageModel fifthNamedModel;
+    ChatModel fifthNamedModel;
 
     @Inject
     @ModelName("c6")
-    ChatLanguageModel sixthNamedModel;
+    ChatModel sixthNamedModel;
 
     @Inject
     @ModelName("c7")
-    ChatLanguageModel seventhNamedModel;
+    ChatModel seventhNamedModel;
 
     @Inject
     @ModelName("c8")
-    ChatLanguageModel eighthNamedModel;
+    ChatModel eighthNamedModel;
 
     @Inject
     @ModelName("c9")
-    ChatLanguageModel ninthNamedModel;
+    ChatModel ninthNamedModel;
 
     @Inject
     @Any
-    Instance<ChatLanguageModel> anyModel;
+    Instance<ChatModel> anyModel;
 
     @Test
     void defaultModel() {

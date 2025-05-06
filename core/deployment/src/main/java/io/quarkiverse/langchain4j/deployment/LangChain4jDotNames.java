@@ -6,8 +6,8 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
@@ -39,8 +39,8 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 
 public class LangChain4jDotNames {
-    public static final DotName CHAT_MODEL = DotName.createSimple(ChatLanguageModel.class);
-    public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatLanguageModel.class);
+    public static final DotName CHAT_MODEL = DotName.createSimple(ChatModel.class);
+    public static final DotName STREAMING_CHAT_MODEL = DotName.createSimple(StreamingChatModel.class);
     public static final DotName SCORING_MODEL = DotName.createSimple(ScoringModel.class);
     public static final DotName EMBEDDING_MODEL = DotName.createSimple(EmbeddingModel.class);
     public static final DotName MODERATION_MODEL = DotName.createSimple(ModerationModel.class);

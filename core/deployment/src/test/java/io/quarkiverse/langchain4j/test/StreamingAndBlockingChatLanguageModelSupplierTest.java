@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -46,10 +46,10 @@ public class StreamingAndBlockingChatLanguageModelSupplierTest {
         }
     }
 
-    public static class MyModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class MyModelSupplier implements Supplier<ChatModel> {
         @Override
-        public ChatLanguageModel get() {
-            return new ChatLanguageModel() {
+        public ChatModel get() {
+            return new ChatModel() {
                 @Override
                 public ChatResponse doChat(ChatRequest request) {
                     return ChatResponse.builder().aiMessage(new AiMessage("42")).build();
@@ -58,10 +58,10 @@ public class StreamingAndBlockingChatLanguageModelSupplierTest {
         }
     }
 
-    public static class MyStreamingModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class MyStreamingModelSupplier implements Supplier<StreamingChatModel> {
         @Override
-        public StreamingChatLanguageModel get() {
-            return new StreamingChatLanguageModel() {
+        public StreamingChatModel get() {
+            return new StreamingChatModel() {
                 @Override
                 public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
                     handler.onPartialResponse("4");

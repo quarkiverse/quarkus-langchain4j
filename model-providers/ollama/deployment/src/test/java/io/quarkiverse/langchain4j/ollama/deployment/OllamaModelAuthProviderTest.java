@@ -15,7 +15,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
@@ -33,7 +33,7 @@ public class OllamaModelAuthProviderTest extends WiremockAware {
             .overrideRuntimeConfigKey("quarkus.langchain4j.ollama.log-responses", "true");
 
     @Inject
-    ChatLanguageModel chatLanguageModel;
+    ChatModel chatLanguageModel;
 
     @Test
     void blocking() {

@@ -100,11 +100,10 @@ class ChatMessageSerializerTest {
                 systemMessage("Hello from system"),
                 userMessage("Hello from user"),
                 userMessage("Klaus", "Hello from Klaus"),
-                aiMessage("Hello from AI"),
-                aiMessage(ToolExecutionRequest.builder()
+                aiMessage("Hello from AI", List.of(ToolExecutionRequest.builder()
                         .name("calculator")
                         .arguments("{}")
-                        .build()),
+                        .build())),
                 toolExecutionResultMessage("12345", "calculator", "4"));
 
         String json = ChatMessageSerializer.messagesToJson(messages);
@@ -112,8 +111,8 @@ class ChatMessageSerializerTest {
                 "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
                 "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
                 "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
-                "{\"text\":\"Hello from AI\",\"type\":\"AI\"}," +
-                "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"type\":\"AI\"}," +
+                "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"text\":\"Hello from AI\",\"type\":\"AI\"},"
+                +
                 "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +
                 "]");
 

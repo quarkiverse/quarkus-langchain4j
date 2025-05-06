@@ -279,6 +279,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
                 .minNewTokens(config.generationModel().minNewTokens())
                 .maxNewTokens(config.generationModel().maxNewTokens())
                 .timeLimit(DEFAULT_TIME_LIMIT)
+                .stopSequences(List.of())
                 .build();
 
         var input = messages.stream().map(

@@ -7,8 +7,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -19,15 +19,15 @@ import io.smallrye.mutiny.Multi;
 
 public class ResponseAugmenterTestUtils {
 
-    public static class FakeChatModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class FakeChatModelSupplier implements Supplier<ChatModel> {
 
         @Override
-        public ChatLanguageModel get() {
+        public ChatModel get() {
             return new FakeChatModel();
         }
     }
 
-    public static class FakeChatModel implements ChatLanguageModel {
+    public static class FakeChatModel implements ChatModel {
 
         @Override
         public ChatResponse doChat(ChatRequest request) {
@@ -47,15 +47,15 @@ public class ResponseAugmenterTestUtils {
         }
     }
 
-    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             return new FakeStreamedChatModel();
         }
     }
 
-    public static class FakeStreamedChatModel implements StreamingChatLanguageModel {
+    public static class FakeStreamedChatModel implements StreamingChatModel {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

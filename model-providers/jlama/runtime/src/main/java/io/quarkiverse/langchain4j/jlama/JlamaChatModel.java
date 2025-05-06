@@ -31,13 +31,13 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.internal.RetryUtils;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 
-public class JlamaChatModel implements ChatLanguageModel {
+public class JlamaChatModel implements ChatModel {
 
     private static final Logger log = Logger.getLogger(JlamaChatModel.class);
 

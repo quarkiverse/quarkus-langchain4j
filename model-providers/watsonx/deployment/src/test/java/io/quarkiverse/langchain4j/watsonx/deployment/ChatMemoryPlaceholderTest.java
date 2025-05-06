@@ -308,6 +308,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
                 .minNewTokens(chatModelConfig.minNewTokens())
                 .maxNewTokens(chatModelConfig.maxNewTokens())
                 .timeLimit(DEFAULT_TIME_LIMIT)
+                .stopSequences(List.of())
                 .build();
 
         return new TextGenerationRequest(modelId, spaceId, projectId, input, parameters);

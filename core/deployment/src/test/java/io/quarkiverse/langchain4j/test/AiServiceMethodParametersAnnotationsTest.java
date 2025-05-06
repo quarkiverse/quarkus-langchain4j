@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
@@ -79,10 +79,10 @@ public class AiServiceMethodParametersAnnotationsTest {
         };
     }
 
-    public static class MirrorModelSupplier implements Supplier<ChatLanguageModel> {
+    public static class MirrorModelSupplier implements Supplier<ChatModel> {
         @Override
-        public ChatLanguageModel get() {
-            return new ChatLanguageModel() {
+        public ChatModel get() {
+            return new ChatModel() {
                 @Override
                 public ChatResponse doChat(ChatRequest chatRequest) {
                     return ChatResponse.builder().aiMessage(new AiMessage(chatMessageToText(chatRequest.messages().get(0))))

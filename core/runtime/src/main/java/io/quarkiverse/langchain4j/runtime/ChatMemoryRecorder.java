@@ -6,7 +6,7 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.memory.chat.TokenWindowChatMemory;
-import dev.langchain4j.model.Tokenizer;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
@@ -40,7 +40,7 @@ public class ChatMemoryRecorder {
             @Override
             public ChatMemoryProvider apply(SyntheticCreationalContext<ChatMemoryProvider> context) {
                 ChatMemoryStore chatMemoryStore = context.getInjectedReference(ChatMemoryStore.class);
-                Tokenizer tokenizer = context.getInjectedReference(Tokenizer.class);
+                TokenCountEstimator tokenizer = context.getInjectedReference(TokenCountEstimator.class);
                 int maxTokens = config.tokenWindow().maxTokens();
                 return new ChatMemoryProvider() {
                     @Override

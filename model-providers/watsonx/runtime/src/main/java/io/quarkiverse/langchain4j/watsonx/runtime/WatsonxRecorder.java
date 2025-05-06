@@ -18,10 +18,10 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ToolChoice;
@@ -58,7 +58,7 @@ public class WatsonxRecorder {
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> chatModel(
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
             LangChain4jWatsonxConfig runtimeConfig, String configName) {
 
         LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
@@ -71,7 +71,7 @@ public class WatsonxRecorder {
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return builder
                             .tokenGenerator(getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, duration))
                             .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
@@ -82,14 +82,14 @@ public class WatsonxRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
                 }
             };
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> streamingChatModel(
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
             LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
@@ -103,7 +103,7 @@ public class WatsonxRecorder {
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     return builder
                             .tokenGenerator(getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, duration))
                             .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
@@ -114,14 +114,14 @@ public class WatsonxRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatLanguageModel>, ChatLanguageModel> generationModel(
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> generationModel(
             LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
@@ -135,7 +135,7 @@ public class WatsonxRecorder {
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     return builder
                             .tokenGenerator(getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, duration))
                             .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
@@ -146,15 +146,15 @@ public class WatsonxRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public ChatLanguageModel apply(SyntheticCreationalContext<ChatLanguageModel> context) {
-                    return new DisabledChatLanguageModel();
+                public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
+                    return new DisabledChatModel();
                 }
 
             };
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatLanguageModel>, StreamingChatLanguageModel> generationStreamingModel(
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> generationStreamingModel(
             LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
@@ -168,7 +168,7 @@ public class WatsonxRecorder {
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     return builder
                             .tokenGenerator(getOrCreateTokenGenerator(apiKey, iamBaseUrl, granType, duration))
                             .listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream().toList())
@@ -179,8 +179,8 @@ public class WatsonxRecorder {
         } else {
             return new Function<>() {
                 @Override
-                public StreamingChatLanguageModel apply(SyntheticCreationalContext<StreamingChatLanguageModel> context) {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
                 }
 
             };

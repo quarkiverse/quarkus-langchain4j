@@ -12,10 +12,10 @@ import dev.langchain4j.model.bedrock.BedrockAnthropicStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockChatModel;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledChatLanguageModel;
-import dev.langchain4j.model.chat.DisabledStreamingChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -36,7 +36,7 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 @Recorder
 public class BedrockRecorder {
 
-    public Supplier<ChatLanguageModel> chatModel(LangChain4jBedrockConfig runtimeConfig, String configName,
+    public Supplier<ChatModel> chatModel(LangChain4jBedrockConfig runtimeConfig, String configName,
             final LangChain4jConfig rootConfig) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
 
@@ -73,17 +73,17 @@ public class BedrockRecorder {
                     .client(clientBuilder.build())
                     .defaultRequestParameters(paramBuilder.build());
 
-            return new Supplier<ChatLanguageModel>() {
+            return new Supplier<ChatModel>() {
                 @Override
-                public ChatLanguageModel get() {
+                public ChatModel get() {
                     return builder.build();
                 }
             };
         } else {
-            return new Supplier<ChatLanguageModel>() {
+            return new Supplier<ChatModel>() {
                 @Override
-                public ChatLanguageModel get() {
-                    return new DisabledChatLanguageModel();
+                public ChatModel get() {
+                    return new DisabledChatModel();
                 }
             };
         }
@@ -105,7 +105,7 @@ public class BedrockRecorder {
                         cp.getClass().getName()));
     }
 
-    public Supplier<StreamingChatLanguageModel> streamingChatModel(final LangChain4jBedrockConfig runtimeConfig,
+    public Supplier<StreamingChatModel> streamingChatModel(final LangChain4jBedrockConfig runtimeConfig,
             final String configName, final LangChain4jConfig rootConfig) {
         LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
 
@@ -120,7 +120,7 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
-            Supplier<StreamingChatLanguageModel> supplier;
+            Supplier<StreamingChatModel> supplier;
             if (modelId.startsWith("anthropic")) {
 
                 var builder = BedrockAnthropicStreamingChatModel.builder()
@@ -144,17 +144,17 @@ public class BedrockRecorder {
                     builder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
                 }
 
-                supplier = new Supplier<StreamingChatLanguageModel>() {
+                supplier = new Supplier<StreamingChatModel>() {
                     @Override
-                    public StreamingChatLanguageModel get() {
+                    public StreamingChatModel get() {
                         return builder.build();
                     }
                 };
             } else {
                 var client = clientBuilder.build();
-                supplier = new Supplier<StreamingChatLanguageModel>() {
+                supplier = new Supplier<StreamingChatModel>() {
                     @Override
-                    public StreamingChatLanguageModel get() {
+                    public StreamingChatModel get() {
                         return new BedrockConverseStreamingChatModel(client, modelId, modelConfig);
                     }
                 };
@@ -162,10 +162,10 @@ public class BedrockRecorder {
 
             return supplier;
         } else {
-            return new Supplier<StreamingChatLanguageModel>() {
+            return new Supplier<StreamingChatModel>() {
                 @Override
-                public StreamingChatLanguageModel get() {
-                    return new DisabledStreamingChatLanguageModel();
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

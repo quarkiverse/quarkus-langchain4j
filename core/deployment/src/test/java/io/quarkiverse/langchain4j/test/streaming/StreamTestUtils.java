@@ -12,7 +12,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -42,15 +42,15 @@ public class StreamTestUtils {
         }
     }
 
-    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class FakeStreamedChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             return new FakeStreamedChatModel();
         }
     }
 
-    public static class FakeStreamedChatModel implements StreamingChatLanguageModel {
+    public static class FakeStreamedChatModel implements StreamingChatModel {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

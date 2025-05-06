@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.bedrock.BedrockChatModel;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -39,7 +39,7 @@ class BedrockChatModelTest extends BedrockTestBase {
             .overrideRuntimeConfigKey("quarkus.log.category.\"io.quarkiverse.langchain4j.bedrock\".level", "DEBUG");
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Test
     void should_create_bedrock_model() {

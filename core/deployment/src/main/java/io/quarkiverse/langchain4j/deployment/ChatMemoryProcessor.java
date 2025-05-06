@@ -7,7 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.jandex.ClassType;
 
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.model.Tokenizer;
+import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.runtime.ChatMemoryRecorder;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryConfig;
@@ -40,7 +40,7 @@ public class ChatMemoryProcessor {
         if (buildConfig.type() == ChatMemoryBuildConfig.Type.MESSAGE_WINDOW) {
             fun = recorder.messageWindow(runtimeConfig);
         } else if (buildConfig.type() == ChatMemoryBuildConfig.Type.TOKEN_WINDOW) {
-            configurator.addInjectionPoint(ClassType.create(Tokenizer.class));
+            configurator.addInjectionPoint(ClassType.create(TokenCountEstimator.class));
             fun = recorder.tokenWindow(runtimeConfig);
         } else {
             throw new IllegalStateException(

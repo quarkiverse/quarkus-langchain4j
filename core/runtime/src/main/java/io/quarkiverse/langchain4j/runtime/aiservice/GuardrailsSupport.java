@@ -16,7 +16,7 @@ import jakarta.enterprise.inject.spi.CDI;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.rag.AugmentationResult;
 import io.quarkiverse.langchain4j.guardrails.Guardrail;
@@ -58,7 +58,7 @@ public class GuardrailsSupport {
 
     public static OutputGuardrailResponse invokeOutputGuardrails(AiServiceMethodCreateInfo methodCreateInfo,
             ChatMemory chatMemory,
-            ChatLanguageModel chatModel,
+            ChatModel chatModel,
             ChatResponse response,
             List<ToolSpecification> toolSpecifications,
             OutputGuardrailParams output) {

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.bedrock.BedrockAnthropicStreamingChatModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -42,7 +42,7 @@ class BedrockAntrophicStreamingChatModelTest extends BedrockTestBase {
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.log-responses", "true");
 
     @Inject
-    StreamingChatLanguageModel streamingChatModel;
+    StreamingChatModel streamingChatModel;
 
     @Test
     void should_create_bedrock_model() {

@@ -28,7 +28,7 @@ import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -362,15 +362,15 @@ public class ToolExecutionModelWithStreamingTest {
         }
     }
 
-    public static class MyChatModelSupplier implements Supplier<StreamingChatLanguageModel> {
+    public static class MyChatModelSupplier implements Supplier<StreamingChatModel> {
 
         @Override
-        public StreamingChatLanguageModel get() {
+        public StreamingChatModel get() {
             return new MyChatModel();
         }
     }
 
-    public static class MyChatModel implements StreamingChatLanguageModel {
+    public static class MyChatModel implements StreamingChatModel {
 
         @Override
         public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {

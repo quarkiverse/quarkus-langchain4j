@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
@@ -18,11 +18,11 @@ public class MultipleTokenCountEstimatorProvidersTest {
 
     @Inject
     @ModelName("c2")
-    ChatLanguageModel azureChat;
+    ChatModel azureChat;
 
     @Inject
     @ModelName("c7")
-    ChatLanguageModel watsonxChat;
+    ChatModel watsonxChat;
 
     @Test
     void azureOpenAiTest() {

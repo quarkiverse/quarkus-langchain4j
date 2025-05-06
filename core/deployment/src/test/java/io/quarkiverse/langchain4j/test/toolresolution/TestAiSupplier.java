@@ -2,11 +2,11 @@ package io.quarkiverse.langchain4j.test.toolresolution;
 
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 
-public class TestAiSupplier implements Supplier<ChatLanguageModel> {
+public class TestAiSupplier implements Supplier<ChatModel> {
     @Override
-    public ChatLanguageModel get() {
+    public ChatModel get() {
         return new TestAiModel();
     }
 }

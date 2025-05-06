@@ -529,7 +529,7 @@ public class AiServicesTest extends OpenAiBaseTest {
                                         }
                                                                                 """)));
         ChatWithModeration chatWithModeration = AiServices.builder(ChatWithModeration.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .moderationModel(createModerationModel())
                 .build();
 
@@ -583,7 +583,7 @@ public class AiServicesTest extends OpenAiBaseTest {
                                         }
                                                                                 """)));
         ChatWithModeration chatWithModeration = AiServices.builder(ChatWithModeration.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .moderationModel(createModerationModel())
                 .build();
 
@@ -606,7 +606,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     void should_keep_chat_memory() throws IOException {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemory(chatMemory)
                 .build();
 
@@ -654,7 +654,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     void should_not_keep_memory_on_failed_call() {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemory(chatMemory)
                 .build();
 
@@ -670,7 +670,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     void should_keep_chat_memory_and_not_duplicate_system_message() throws IOException {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemory(chatMemory)
                 .build();
 
@@ -727,7 +727,7 @@ public class AiServicesTest extends OpenAiBaseTest {
     void should_keep_chat_memory_and_add_new_system_message() throws IOException {
         MessageWindowChatMemory chatMemory = createChatMemory();
         ChatWithMemory chatWithMemory = AiServices.builder(ChatWithMemory.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemory(chatMemory)
                 .build();
 
@@ -819,7 +819,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         int secondMemoryId = 2;
 
         ChatWithSeparateMemoryForEachUser chatWithMemory = AiServices.builder(ChatWithSeparateMemoryForEachUser.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemoryProvider(chatMemoryProvider)
                 .build();
 
@@ -931,7 +931,7 @@ public class AiServicesTest extends OpenAiBaseTest {
         assertThat(tokenUsage.totalTokenCount())
                 .isEqualTo(tokenUsage.inputTokenCount() + tokenUsage.outputTokenCount());
 
-        assertThat(result.sources()).isNull();
+        assertThat(result.sources()).isEmpty();
 
         assertSingleRequestMessage(getRequestAsMap(), "What is the capital of Germany?");
     }
@@ -1054,7 +1054,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
         AtomicReference<WireMock> wiremockRef = new AtomicReference<>(wiremock());
         Assistant assistant = AiServices.builder(Assistant.class)
-                .chatLanguageModel(createChatModel())
+                .chatModel(createChatModel())
                 .chatMemory(createChatMemory())
                 .tools(new Calculator(() -> wiremockRef.get().setSingleScenarioState(scenario, secondState)))
                 .build();

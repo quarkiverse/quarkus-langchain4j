@@ -7,7 +7,7 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkus.test.QuarkusUnitTest;
@@ -20,7 +20,7 @@ public class NoModelProvidedTest {
 
     @Test
     public void test() {
-        assertThatThrownBy(() -> AiServices.create(Assistant.class, (ChatLanguageModel) null)).isInstanceOf(
+        assertThatThrownBy(() -> AiServices.create(Assistant.class, (ChatModel) null)).isInstanceOf(
                 IllegalConfigurationException.class);
     }
 

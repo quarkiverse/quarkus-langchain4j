@@ -6,8 +6,8 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.smallrye.mutiny.Multi;
@@ -15,10 +15,10 @@ import io.smallrye.mutiny.Multi;
 @Path("chat")
 public class ChatLanguageModelResource {
 
-    private final ChatLanguageModel chatModel;
-    private final StreamingChatLanguageModel streamingChatModel;
+    private final ChatModel chatModel;
+    private final StreamingChatModel streamingChatModel;
 
-    public ChatLanguageModelResource(ChatLanguageModel chatModel, StreamingChatLanguageModel streamingChatModel) {
+    public ChatLanguageModelResource(ChatModel chatModel, StreamingChatModel streamingChatModel) {
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;
     }
