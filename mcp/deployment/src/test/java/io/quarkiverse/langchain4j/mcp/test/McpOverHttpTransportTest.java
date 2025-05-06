@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.logging.McpLogLevel;
 import dev.langchain4j.mcp.client.logging.McpLogMessage;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
@@ -30,6 +29,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -43,7 +43,7 @@ public class McpOverHttpTransportTest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClass(MockHttpMcpServer.class)
+                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
@@ -60,7 +60,7 @@ public class McpOverHttpTransportTest {
 
     @Test
     public void toolProviderShouldBeMcpBased() {
-        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(McpToolProvider.class);
+        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(QuarkusMcpToolProvider.class);
     }
 
     @Test

@@ -11,11 +11,11 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -24,7 +24,7 @@ public class McpClientAndToolProviderCDITest {
     @RegisterExtension
     static QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClass(MockHttpMcpServer.class)
+                    .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpServer.class)
                     .addAsResource(new StringAsset("""
                             quarkus.langchain4j.mcp.client1.transport-type=http
                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
@@ -50,7 +50,7 @@ public class McpClientAndToolProviderCDITest {
 
         ToolProvider provider = toolProviderCDIInstance.get();
         assertThat(provider).isNotNull();
-        assertThat(ClientProxy.unwrap(provider)).isInstanceOf(McpToolProvider.class);
+        assertThat(ClientProxy.unwrap(provider)).isInstanceOf(QuarkusMcpToolProvider.class);
     }
 
 }

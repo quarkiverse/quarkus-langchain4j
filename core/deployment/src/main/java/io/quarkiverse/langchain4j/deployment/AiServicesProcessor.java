@@ -1388,6 +1388,8 @@ public class AiServicesProcessor {
                 toolQualifierProviders.stream().map(
                         ToolQualifierProvider.BuildItem::getProvider).toList());
 
+        List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
+
         List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
         List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
 
@@ -1403,8 +1405,8 @@ public class AiServicesProcessor {
                 userMessageInfo, memoryIdParamPosition, requiresModeration,
                 returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
-                methodToolClassInfo, switchToWorkerThreadForToolExecution, inputGuardrails, outputGuardrails,
-                accumulatorClassName, responseAugmenterClassName);
+                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution, inputGuardrails,
+                outputGuardrails, accumulatorClassName, responseAugmenterClassName);
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {
@@ -1850,6 +1852,26 @@ public class AiServicesProcessor {
         }
 
         return Arrays.stream(toolClasses).map(t -> t.name().toString()).collect(Collectors.toList());
+    }
+
+    private List<String> gatherMethodMcpClientNames(MethodInfo method) {
+        // Using the class name to keep the McpToolBox annotation in the mcp module
+        AnnotationInstance mcpToolBoxInstance = method.declaredAnnotation("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
+        if (mcpToolBoxInstance == null) {
+            return null;
+        }
+
+        AnnotationValue mcpToolBoxValue = mcpToolBoxInstance.value();
+        if (mcpToolBoxValue == null) {
+            return Collections.emptyList();
+        }
+
+        String[] mcpClientNames = mcpToolBoxValue.asStringArray();
+        if (mcpClientNames.length == 0) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.asList(mcpClientNames);
     }
 
     private DotName determineChatMemorySeeder(ClassInfo iface, ClassOutput classOutput) {
