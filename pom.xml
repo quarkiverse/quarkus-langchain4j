@@ -18,6 +18,7 @@
     <module>memory-stores</module>
     <module>model-auth-providers</module>
     <module>model-providers</module>
+    <module>mcp-auth-providers</module>
     <module>quarkus-integrations</module>
     <module>rag</module>
     <module>tools</module>
