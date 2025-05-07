@@ -1,6 +1,6 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;
@@ -28,7 +28,7 @@ public class WebSearchRetrievalAugmentor implements Supplier<RetrievalAugmentor>
     WebSearchEngine webSearchEngine;
 
     @Inject
-    ChatLanguageModel chatModel;
+    ChatModel chatModel;
 
     @Override
     public RetrievalAugmentor get() {

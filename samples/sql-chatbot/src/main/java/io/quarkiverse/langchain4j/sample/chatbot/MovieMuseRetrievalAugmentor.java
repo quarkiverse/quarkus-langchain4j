@@ -1,11 +1,11 @@
 package io.quarkiverse.langchain4j.sample.chatbot;
 
+import dev.langchain4j.model.chat.ChatModel;
 import java.util.function.Supplier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
@@ -14,7 +14,7 @@ import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 public class MovieMuseRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
 
     @Inject
-    ChatLanguageModel model;
+    ChatModel model;
 
     @Inject
     MovieDatabaseContentRetriever contentRetriever;
