@@ -32,5 +32,5 @@ Because it lost its bearings!
 ```
 
 Explanation:  The code contains a simple picocli command-line application.
-The application injects the ChatLanguageModel provided by the Quarkus Langchain4j
+The application injects the ChatModel provided by the Quarkus Langchain4j
 extension and just request a joke by using `tell me a joke` as a prompt.
