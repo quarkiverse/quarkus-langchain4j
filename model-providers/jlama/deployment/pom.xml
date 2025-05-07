@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-jlama-parent</artifactId>
-        <version>0.27.0.CR2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-jlama-deployment</artifactId>
     <name>Quarkus LangChain4j - Jlama - Deployment</name>
