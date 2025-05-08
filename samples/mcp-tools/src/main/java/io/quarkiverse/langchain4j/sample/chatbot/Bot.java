@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.sample.chatbot;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import jakarta.enterprise.context.SessionScoped;
 
 @RegisterAiService//(toolProviderSupplier = FilesystemToolProvider.class)
@@ -23,5 +24,6 @@ public interface Bot {
             information about it on https://modelcontextprotocol.io/.
             """
     )
+    @McpToolBox
     String chat(@UserMessage String question);
 }

@@ -35,6 +35,21 @@ MCP server. The server will be started automatically as a subprocess using the p
 environment variables that will be passed to the subprocess. With this configuration, any
 AI Service that does not declare a specific tool provider will be wired to this one.
 
+With this generated tool provider, by default an AI Service won't use any of the tools provided
+by any of the configured MCP servers. To enable a method of an AI service to use the MCP servers
+it is required to annotate it with `@McpToolBox`. This annotation allows to specify the list of
+MCP servers that the AI service can use. For example to enable a method to use the `github` MCP
+server configured above and only that one it is necessary to annotate it with:
+
+[source,properties]
+----
+@McpToolBox("github")
+String useGithub(@UserMessage String userMessage);
+----
+
+If the `@McpToolBox` is used without any name then the method will automatically use all the MCP
+servers available.
+
 == Logging
 
 For declaratively defined MCP clients, Quarkus overrides the default handler

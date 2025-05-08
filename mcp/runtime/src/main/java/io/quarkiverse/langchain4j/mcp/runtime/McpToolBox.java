@@ -10,8 +10,11 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 
 /**
  * When used on a method of an AiService annotated with {@link RegisterAiService}, the method will use the tools
- * provided by the MCP servers named in {@code value}. If no name is provided than the method will automatically
+ * provided by the MCP servers named in {@code value}. If no name is provided then the method will automatically
  * use all the MCP servers available.
+ * </p>
+ * By default, the {@link RegisterAiService} won't use any tools provided by the configured MCP servers, so it is
+ * mandatory to add this annotation on methods that needs to use them.
  * </p>
  * Note that the filtering of the named MCP servers is possible only if the MCP extension is allowed to automatically
  * generate a {@link ToolProvider} that is wired up to all the configured MCP clients,
