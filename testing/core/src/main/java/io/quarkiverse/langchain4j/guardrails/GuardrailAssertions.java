@@ -9,7 +9,23 @@ import org.assertj.core.api.Assertions;
  * </p>
  */
 public class GuardrailAssertions extends Assertions {
+    /**
+     * Returns an {@link OutputGuardrailResultAssert} for assertions on an {@link OutputGuardrailResult}
+     *
+     * @param actual The actual {@link OutputGuardrailResult}
+     * @return The {@link OutputGuardrailResultAssert}
+     */
     public static OutputGuardrailResultAssert assertThat(OutputGuardrailResult actual) {
         return OutputGuardrailResultAssert.assertThat(actual);
+    }
+
+    /**
+     * Returns an {@link InputGuardrailResultAssert} for assertions on an {@link InputGuardrailResult}
+     *
+     * @param actual The actual {@link InputGuardrailResult}
+     * @return The {@link InputGuardrailResultAssert}
+     */
+    public static InputGuardrailResultAssert assertThat(InputGuardrailResult actual) {
+        return InputGuardrailResultAssert.assertThat(actual);
     }
 }
