@@ -30,7 +30,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
-@Path("v1/projects/{projectId}/locations/{location}/publishers/{publisher}/models")
+@Path("projects/{projectId}/locations/{location}/publishers/{publisher}/models")
 public interface VertxAiGeminiRestApi {
 
     @Path("{modelId}:generateContent")
