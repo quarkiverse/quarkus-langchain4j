@@ -41,7 +41,7 @@ public interface Langchain4jCohereConfig {
         /**
          * Base URL of the Cohere API.
          */
-        @WithDefault("https://api.cohere.ai/")
+        @WithDefault("https://api.cohere.com/")
         String baseUrl();
 
         /**
