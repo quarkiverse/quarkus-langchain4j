@@ -13,7 +13,7 @@ When using RAG, a scoring model can be used to rerank the top-k documents retrie
 Quarkus-langchain4j currently supports scoring through `Cohere`. Configure a scoring model:
 ----
 quarkus.langchain4j.cohere.api-key=YOUR_COHERE_API_KEY
-quarkus.langchain4j.cohere.scoring-model.model-id=MODEL_ID
+quarkus.langchain4j.cohere.scoring-model.model-name=MODEL_ID
 ----
 
 NOTE: Currently supported model IDs can be found at https://docs.cohere.com/docs/models#rerank-beta.
