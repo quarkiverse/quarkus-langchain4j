@@ -6,6 +6,7 @@ import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
 import io.quarkiverse.langchain4j.RegisterAiService
 import jakarta.enterprise.context.SessionScoped
+import kotlinx.serialization.Serializable
 
 @RegisterAiService // no need to declare a retrieval augmentor here, it is automatically generated and discovered
 @SessionScoped
@@ -25,5 +26,5 @@ interface Bot {
             Do NOT include any explanatory text.
             """
     )
-    fun chat(@UserMessage question: String): String
+    fun chat(@UserMessage question: String): Answer
 }

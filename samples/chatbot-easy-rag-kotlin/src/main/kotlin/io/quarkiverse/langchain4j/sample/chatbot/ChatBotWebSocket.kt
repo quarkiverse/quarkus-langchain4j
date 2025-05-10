@@ -8,10 +8,16 @@ import io.quarkus.websockets.next.WebSocket
 @Suppress("unused")
 class ChatBotWebSocket(private val bot: Bot) {
     @OnOpen
-    fun onOpen(): String = "Hello, I'm Bob, how can I help you?"
+    fun onOpen(): Answer = Answer(
+        message = "Hello, I'm Bob, how can I help you?",
+        links = listOf(
+            Link("https://www.example.com/", "Help(example.com)")
+        )
+    )
 
     @OnTextMessage
-    fun onMessage(message: String): String {
+    fun onMessage(message: String): Answer {
         return bot.chat(message)
     }
 }
+

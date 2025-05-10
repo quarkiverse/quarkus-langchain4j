@@ -18,7 +18,7 @@ export class DemoTitle extends LitElement {
         padding: 1em;
         background: var(--main-bg-color);
       }
-      
+
       .explanation {
         margin-left: auto;
         margin-right: auto;
@@ -26,11 +26,11 @@ export class DemoTitle extends LitElement {
         text-align: justify;
         font-size: 20px;
       }
-      
+
       .explanation img {
         max-width: 60%;
         display: block;
-        float:left;
+        float: left;
         margin-right: 2em;
         margin-top: 1em;
       }
@@ -42,15 +42,15 @@ export class DemoTitle extends LitElement {
                 <h1>Bank Buddy</h1>
             </div>
             <div class="explanation">
-                This demo shows how to build a chat bot powered by GPT 3.5 and retrieval augmented generation.
+                This demo shows how to build a chat bot powered by GPT 4.1 and retrieval augmented generation.
                 The description of the different accounts is ingested into a Redis database and relevant information
                 is sent to the LLM before answering the user.
             </div>
-            
+
             <div class="explanation">
-                <img src="images/chatbot-architecture.png"/>
+                <img alt="" src="images/chatbot-architecture.png"/>
             </div>
-            
+
             <div class="explanation">
                 <ol>
                     <li>The user send a question to the application.</li>

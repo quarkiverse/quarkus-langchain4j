@@ -22,9 +22,18 @@ export class DemoChat extends LitElement {
     socket.onmessage = function (event) {
       chatBot.hideAllLoading();
       // Render markdown from event.data
-      const renderedMarkdown = markdown.renderInline(event.data);
+      const response = JSON.parse(event.data);
+      let markdownMessage = markdown.renderInline(response.message);
+      if (response.links) {
+        markdownMessage += `<ul>`;
+        response.links.forEach(link => {
+          markdownMessage += `<li><a href="${link.url}" target="_blank">${link.title}</a></li>`;
+        });
+        markdownMessage += `</ul>`;
+      }
+
       chatBot.sendMessage(null, {
-        message: renderedMarkdown,
+        message: markdownMessage,
         right: false,
         sender: {name: 'Bob', id: '007'}
       });
