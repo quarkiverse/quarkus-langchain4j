@@ -60,6 +60,7 @@ public class McpRecorder {
                                     "MCP client configuration named " + key + " is missing the 'url' property")))
                             .logRequests(runtimeConfig.logRequests().orElse(false))
                             .logResponses(runtimeConfig.logResponses().orElse(false))
+                            .mcpClientName(key)
                             .build();
                 };
                 DefaultMcpClient client = new DefaultMcpClient.Builder()

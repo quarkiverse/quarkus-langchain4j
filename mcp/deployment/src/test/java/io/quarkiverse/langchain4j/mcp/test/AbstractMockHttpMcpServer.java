@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -30,7 +31,7 @@ public abstract class AbstractMockHttpMcpServer {
 
     private final AtomicLong ID_GENERATOR = new AtomicLong(new Random().nextLong(1000, 5000));
 
-    private static Logger logger = Logger.getLogger(MockHttpMcpServer.class);
+    private static Logger logger = Logger.getLogger(AbstractMockHttpMcpServer.class);
 
     private volatile boolean shouldRespondToPing = true;
 
@@ -49,7 +50,16 @@ public abstract class AbstractMockHttpMcpServer {
     @Path("/sse")
     @Produces(MediaType.SERVER_SENT_EVENTS)
     @RestStreamElementType(MediaType.TEXT_PLAIN)
-    public void sse(@Context SseEventSink sink, @Context Sse sse) {
+    public void sse(@Context SseEventSink sink, @Context Sse sse,
+            @HeaderParam("Authorization") String authorization) {
+        if (!verifyAuthorization(authorization)) {
+            sink.send(sse.newEventBuilder()
+                    .id("id")
+                    .name("endpoint")
+                    .data(authorization)
+                    .build());
+            return;
+        }
         this.sink = sink;
         this.sse = sse;
         sink.send(sse.newEventBuilder()
@@ -65,7 +75,10 @@ public abstract class AbstractMockHttpMcpServer {
     @Path("/post")
     @Consumes(MediaType.APPLICATION_JSON)
     @POST
-    public Response post(JsonNode message) {
+    public Response post(@HeaderParam("Authorization") String authorization, JsonNode message) {
+        if (!verifyAuthorization(authorization)) {
+            return Response.status(401).build();
+        }
         if (message.get("method") != null) {
             String method = message.get("method").asText();
             if (method.equals("notifications/cancelled")) {
@@ -238,5 +251,9 @@ public abstract class AbstractMockHttpMcpServer {
 
     void stopRespondingToPings() {
         shouldRespondToPing = false;
+    }
+
+    protected boolean verifyAuthorization(String authorization) {
+        return true;
     }
 }
