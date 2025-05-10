@@ -42,7 +42,8 @@ export class DemoChat extends LitElement {
     chatBot.addEventListener("sent", function (e) {
       if (e.detail.message.right === true) {
         // User message
-        socket.send(e.detail.message.message);
+        const userMessage = e.detail.message.message.replace(/^<p>(.*)<\/p>$/, '$1');
+        socket.send(userMessage);
         chatBot.sendMessage("", {
           right: false,
           sender: {name: 'Bob', id: '007'},

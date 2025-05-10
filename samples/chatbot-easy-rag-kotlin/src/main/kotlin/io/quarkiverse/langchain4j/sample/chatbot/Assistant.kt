@@ -1,15 +1,20 @@
 @file:Suppress("CdiManagedBeanInconsistencyInspection")
+
 package io.quarkiverse.langchain4j.sample.chatbot
 
+import dev.langchain4j.service.MemoryId
 import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
 import io.quarkiverse.langchain4j.RegisterAiService
+import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.SessionScoped
 
-@RegisterAiService // no need to declare a retrieval augmentor here, it is automatically generated and discovered
+@RegisterAiService(
+) // no need to declare a retrieval augmentor here, it is automatically generated and discovered
 @SessionScoped
 @Suppress("kotlin:S6517")
-interface Bot {
+@ApplicationScoped
+interface Assistant {
     @SystemMessage(
         """
             You are an AI named Bob answering questions about financial products.
@@ -25,5 +30,22 @@ interface Bot {
             Do NOT include any explanatory text.
             """
     )
-    fun chat(@UserMessage question: String): Answer
+    fun chat(
+        @MemoryId memoryId: ChatMemoryId,
+        @UserMessage question: String
+    ): Answer
+
+    @Suppress("unused")
+    fun fallback(
+        @MemoryId memoryId: ChatMemoryId,
+        @UserMessage question: String
+    ): Answer = Answer(
+        message = """
+            You have asked: \"$question\".
+            I'm sorry, I can't help you with that question.
+            Try again later.""".trimIndent(),
+        links = listOf(
+            Link("https://www.example.com/support", "Contact support(example.com)")
+        )
+    )
 }
