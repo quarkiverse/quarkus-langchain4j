@@ -11,9 +11,10 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>chatbot</module>
+        <module>chatbot-easy-rag-kotlin</module>
         <module>chatbot-easy-rag</module>
         <module>chatbot-web-search</module>
+        <module>chatbot</module>
         <module>cli-translator</module>
         <module>email-a-poem</module>
         <module>fraud-detection</module>
@@ -40,5 +41,5 @@
 
         </plugins>
     </build>
-    
+
 </project>
