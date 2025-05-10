@@ -1,15 +1,14 @@
 @file:Suppress("CdiManagedBeanInconsistencyInspection")
-
 package io.quarkiverse.langchain4j.sample.chatbot
 
 import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
 import io.quarkiverse.langchain4j.RegisterAiService
 import jakarta.enterprise.context.SessionScoped
-import kotlinx.serialization.Serializable
 
 @RegisterAiService // no need to declare a retrieval augmentor here, it is automatically generated and discovered
 @SessionScoped
+@Suppress("kotlin:S6517")
 interface Bot {
     @SystemMessage(
         """

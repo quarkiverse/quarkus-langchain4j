@@ -11,7 +11,7 @@ class ChatBotWebSocket(private val bot: Bot) {
     fun onOpen(): Answer = Answer(
         message = "Hello, I'm Bob, how can I help you?",
         links = listOf(
-            Link("https://www.example.com/", "Help(example.com)")
+            Link("https://www.example.com/help", "Help(example.com)")
         )
     )
 
