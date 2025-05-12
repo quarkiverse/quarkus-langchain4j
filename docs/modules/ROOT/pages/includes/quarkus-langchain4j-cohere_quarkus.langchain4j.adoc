@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://api.cohere.ai/`
+|`https://api.cohere.com/`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key[`quarkus.langchain4j.cohere.api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -219,7 +219,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://api.cohere.ai/`
+|`https://api.cohere.com/`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key[`quarkus.langchain4j.cohere."model-name".api-key`]##
 ifdef::add-copy-button-to-config-props[]

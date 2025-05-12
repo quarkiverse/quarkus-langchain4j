@@ -1,11 +1,13 @@
 package io.quarkiverse.langchain4j.sample.chatbot
 
 import dev.langchain4j.service.ModerationException
+import io.quarkus.logging.Log
 import io.quarkus.virtual.threads.VirtualThreads
 import jakarta.enterprise.context.ApplicationScoped
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.eclipse.microprofile.reactive.messaging.Channel
 import org.eclipse.microprofile.reactive.messaging.Emitter
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import java.util.concurrent.ExecutorService
 
@@ -15,11 +17,11 @@ import java.util.concurrent.ExecutorService
 class AssistantService(
     private val assistant: Assistant,
     @Channel("questions")
-    private val questions: Emitter<Question>,
+    private val questionsEmitter: Emitter<Question>,
     @VirtualThreads
-    private val executorService: ExecutorService
+    executorService: ExecutorService
 ) {
-    val logger = getLogger(AssistantService::class.java)
+    private val logger: Logger = getLogger(AssistantService::class.java)
     private val dispatcher = executorService.asCoroutineDispatcher()
 
     @Suppress("TooGenericExceptionCaught")
@@ -27,8 +29,8 @@ class AssistantService(
         memoryId: ChatMemoryId,
         question: String,
     ): Answer = try {
-        logger.info("Processing question: $question")
-        questions.send(question)
+        Log.info("Processing question: $question")
+        questionsEmitter.send(question)
         assistant.chatAsync(memoryId, question, dispatcher, logger)
     } catch (e: ModerationException) {
         handleModerationException(e)
