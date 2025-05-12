@@ -29,7 +29,10 @@ val fallbackAnswer = Answer(
 )
 
 val greeting = Answer(
-    message = "Hello, I'm Bob, how can I help you?",
+    message = """
+        Hello, I'm your AI assistant and I can make mistakes.
+        How can I help you today?
+        """,
     links = listOf(
         Link("https://www.example.com/help", "Help(example.com)")
     )

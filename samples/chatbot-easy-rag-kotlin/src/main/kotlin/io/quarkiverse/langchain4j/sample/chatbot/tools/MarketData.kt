@@ -2,17 +2,16 @@ package io.quarkiverse.langchain4j.sample.chatbot.tools
 
 import dev.langchain4j.agent.tool.Tool
 import io.quarkus.logging.Log
-import io.quarkus.qute.CacheSectionHelper
 import jakarta.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
-class StockPrices() {
+class MarketData {
 
     data class StockPrice(val symbol: String, val price: Double)
 
     private val symbols = listOf("AAPL", "GOOG", "MSFT")
 
-    @Tool("returns current stock prices")
+    @Tool("returns current stock prices", name = "marketData")
     fun stockPrices(): List<StockPrice> {
         for (symbol in symbols) {
             Log.info("Getting stock price for $symbol")
