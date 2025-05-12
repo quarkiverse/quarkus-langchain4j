@@ -278,5 +278,15 @@ public class AuditingListener {
 		// Invoked with a tool response from an LLM.
         // It is important to note that this can be invoked multiple times when tools exist.
 	}
+
+    public void inputGuardrailExecuted(@Observes InputGuardrailExecutedEvent inputGuardrailExecutedEvent) {
+        // Invoked after an InputGuardrail is invoked
+        // Could be invoked multiple times in a single LLM invocation
+    }
+
+    public void outputGuardrailExecuted(@Observes OutputGuardrailExecutedEvent outputGuardrailExecutedEvent) {
+        // Invoked after an OutputGuardrail is invoked
+        // Could be invoked multiple times in a single LLM invocation
+    }
 }
 ----
