@@ -84,11 +84,6 @@ import io.quarkiverse.langchain4j.audit.LLMInteractionCompleteEvent;
 import io.quarkiverse.langchain4j.audit.LLMInteractionFailureEvent;
 import io.quarkiverse.langchain4j.audit.ResponseFromLLMReceivedEvent;
 import io.quarkiverse.langchain4j.audit.ToolExecutedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultInitialMessagesCreatedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionCompleteEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionFailureEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultResponseFromLLMReceivedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultToolExecutedEvent;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
@@ -154,12 +149,12 @@ public class AiServiceMethodImplementationSupport {
             var result = doImplement(createInfo, methodArgs, context, auditSourceInfo);
 
             beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
-                    .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, result));
+                    .fire(new LLMInteractionCompleteEvent(auditSourceInfo, result));
 
             return result;
         } catch (Exception e) {
             beanManager.getEvent().select(LLMInteractionFailureEvent.class)
-                    .fire(new DefaultLLMInteractionFailureEvent(auditSourceInfo, e));
+                    .fire(new LLMInteractionFailureEvent(auditSourceInfo, e));
 
             throw e;
         }
@@ -186,7 +181,7 @@ public class AiServiceMethodImplementationSupport {
 
         var beanManager = Arc.container().beanManager();
         beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
-                .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
+                .fire(new InitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
         boolean needsMemorySeed = needsMemorySeed(context, memoryId); // we need to know figure this out before we add the system and user message
 
@@ -241,7 +236,7 @@ public class AiServiceMethodImplementationSupport {
                                 ChatMemory memory = context.chatMemoryService.getChatMemory(memoryId);
                                 UserMessage guardrailsMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo,
                                         (UserMessage) augmentedUserMessage,
-                                        memory, ar, templateVariables, beanManager, auditSourceInfo);
+                                        memory, ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(guardrailsMessage, needsMemorySeed);
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
@@ -267,7 +262,7 @@ public class AiServiceMethodImplementationSupport {
 
         userMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
-                augmentationResult, templateVariables, beanManager, auditSourceInfo);
+                augmentationResult, templateVariables);
 
         CommittableChatMemory chatMemory;
         List<ChatMessage> messagesToSend;
@@ -321,8 +316,7 @@ public class AiServiceMethodImplementationSupport {
                             result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
                                     new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult,
                                             methodCreateInfo.getUserMessageTemplate(),
-                                            Collections.unmodifiableMap(templateVariables)),
-                                    beanManager, auditSourceInfo);
+                                            Collections.unmodifiableMap(templateVariables)));
                         } catch (Exception e) {
                             throw new GuardrailException(e.getMessage(), e);
                         }
@@ -368,7 +362,7 @@ public class AiServiceMethodImplementationSupport {
         log.debug("AI response obtained");
 
         beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
-                .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
+                .fire(new ResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
         TokenUsage tokenUsageAccumulator = response.tokenUsage();
 
@@ -432,7 +426,7 @@ public class AiServiceMethodImplementationSupport {
             log.debug("AI response obtained");
 
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
-                    .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
+                    .fire(new ResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
             tokenUsageAccumulator = sum(tokenUsageAccumulator, response.tokenUsage());
         }
@@ -444,8 +438,7 @@ public class AiServiceMethodImplementationSupport {
                 response,
                 toolSpecifications,
                 new OutputGuardrailParams(response.aiMessage(), chatMemory, augmentationResult, userMessageTemplate,
-                        Collections.unmodifiableMap(templateVariables)),
-                beanManager, auditSourceInfo);
+                        Collections.unmodifiableMap(templateVariables)));
 
         response = guardrailResponse.response();
 
@@ -491,7 +484,7 @@ public class AiServiceMethodImplementationSupport {
                 toolExecutionRequest,
                 toolExecutionResult);
         beanManager.getEvent().select(ToolExecutedEvent.class)
-                .fire(new DefaultToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
+                .fire(new ToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
         return toolExecutionResultMessage;
     }
 
@@ -546,7 +539,7 @@ public class AiServiceMethodImplementationSupport {
         var beanManager = Arc.container().beanManager();
 
         beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
-                .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
+                .fire(new InitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
         // TODO: does it make sense to use the retrievalAugmentor here? What good would be for us telling the LLM to use this or that information to create an
         // image?
@@ -555,12 +548,12 @@ public class AiServiceMethodImplementationSupport {
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
         GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
                 context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
-                augmentationResult, templateVariables, beanManager, auditSourceInfo);
+                augmentationResult, templateVariables);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
 
         beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
-                .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, imageResponse.content()));
+                .fire(new LLMInteractionCompleteEvent(auditSourceInfo, imageResponse.content()));
 
         if (TypeUtil.isImage(returnType)) {
             return imageResponse.content();

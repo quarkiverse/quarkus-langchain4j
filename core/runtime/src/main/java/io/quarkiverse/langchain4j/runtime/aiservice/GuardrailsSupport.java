@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -20,11 +19,6 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.rag.AugmentationResult;
-import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
-import io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent;
-import io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultInputGuardrailExecutedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultOutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.guardrails.Guardrail;
 import io.quarkiverse.langchain4j.guardrails.GuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
@@ -40,8 +34,7 @@ import io.smallrye.mutiny.Multi;
 public class GuardrailsSupport {
 
     public static UserMessage invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
-            ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables,
-            BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
+            ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
         InputGuardrailResult result;
         try {
 
@@ -49,8 +42,7 @@ public class GuardrailsSupport {
 
             result = invokeInputGuardRails(methodCreateInfo,
                     new InputGuardrailParams(userMessage, chatMemory, augmentationResult, userMessageTemplate,
-                            Collections.unmodifiableMap(templateVariables)),
-                    beanManager, auditSourceInfo);
+                            Collections.unmodifiableMap(templateVariables)));
         } catch (Exception e) {
             throw new GuardrailException(e.getMessage(), e);
         }
@@ -69,7 +61,7 @@ public class GuardrailsSupport {
             ChatModel chatModel,
             ChatResponse response,
             List<ToolSpecification> toolSpecifications,
-            OutputGuardrailParams output, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
+            OutputGuardrailParams output) {
         int attempt = 0;
         int max = methodCreateInfo.getGuardrailsMaxRetry();
         if (max <= 0) {
@@ -79,7 +71,7 @@ public class GuardrailsSupport {
         OutputGuardrailResult result = null;
         while (attempt < max) {
             try {
-                result = invokeOutputGuardRails(methodCreateInfo, output, beanManager, auditSourceInfo);
+                result = invokeOutputGuardRails(methodCreateInfo, output);
             } catch (Exception e) {
                 throw new GuardrailException(e.getMessage(), e);
             }
@@ -135,7 +127,7 @@ public class GuardrailsSupport {
 
     @SuppressWarnings("unchecked")
     private static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
-            OutputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
+            OutputGuardrailParams params) {
         if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
             return OutputGuardrailResult.success();
         }
@@ -157,13 +149,12 @@ public class GuardrailsSupport {
             }
         }
 
-        return guardrailResult(params, (List) classes, OutputGuardrailResult.success(), OutputGuardrailResult::failure,
-                beanManager, auditSourceInfo);
+        return guardrailResult(params, (List) classes, OutputGuardrailResult.success(), OutputGuardrailResult::failure);
     }
 
     @SuppressWarnings("unchecked")
     private static InputGuardrailResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
-            InputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
+            InputGuardrailParams params) {
         if (methodCreateInfo.getInputGuardrailsClassNames().isEmpty()) {
             return InputGuardrailResult.success();
         }
@@ -185,28 +176,14 @@ public class GuardrailsSupport {
             }
         }
 
-        return guardrailResult(params, (List) classes, InputGuardrailResult.success(), InputGuardrailResult::failure,
-                beanManager, auditSourceInfo);
+        return guardrailResult(params, (List) classes, InputGuardrailResult.success(), InputGuardrailResult::failure);
     }
 
     private static <GR extends GuardrailResult> GR guardrailResult(GuardrailParams params,
             List<Class<? extends Guardrail>> classes, GR accumulatedResults,
-            Function<List<? extends GuardrailResult.Failure>, GR> producer, BeanManager beanManager,
-            AuditSourceInfo auditSourceInfo) {
+            Function<List<? extends GuardrailResult.Failure>, GR> producer) {
         for (Class<? extends Guardrail> bean : classes) {
-            var guardrail = CDI.current().select(bean).get();
-            GR result = (GR) guardrail.validate(params).validatedBy(bean);
-
-            if (guardrail instanceof InputGuardrail) {
-                beanManager.getEvent().select(InputGuardrailExecutedEvent.class)
-                        .fire(new DefaultInputGuardrailExecutedEvent(auditSourceInfo, (InputGuardrailParams) params,
-                                (InputGuardrailResult) result, (Class<InputGuardrail>) guardrail.getClass()));
-            } else if (guardrail instanceof OutputGuardrail) {
-                beanManager.getEvent().select(OutputGuardrailExecutedEvent.class)
-                        .fire(new DefaultOutputGuardrailExecutedEvent(auditSourceInfo, (OutputGuardrailParams) params,
-                                (OutputGuardrailResult) result, (Class<OutputGuardrail>) guardrail.getClass()));
-            }
-
+            GR result = (GR) CDI.current().select(bean).get().validate(params).validatedBy(bean);
             if (result.isFatal()) {
                 return accumulatedResults.hasRewrittenResult() ? (GR) result.blockRetry() : result;
             }
@@ -265,8 +242,8 @@ public class GuardrailsSupport {
     }
 
     public static OutputGuardrailResult invokeOutputGuardrailsForStream(AiServiceMethodCreateInfo methodCreateInfo,
-            OutputGuardrailParams outputGuardrailParams, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams, beanManager, auditSourceInfo);
+            OutputGuardrailParams outputGuardrailParams) {
+        return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams);
     }
 
     static class GuardrailRetryException extends RuntimeException {

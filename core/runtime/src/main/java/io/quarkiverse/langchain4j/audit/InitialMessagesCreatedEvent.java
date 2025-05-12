@@ -8,15 +8,6 @@ import dev.langchain4j.data.message.UserMessage;
 /**
  * Invoked when the original user and system messages have been created
  */
-public interface InitialMessagesCreatedEvent extends LLMInteractionEvent {
-
-    /**
-     * @return the optional system message
-     */
-    Optional<SystemMessage> systemMessage();
-
-    /**
-     * @return the user message
-     */
-    UserMessage userMessage();
+public record InitialMessagesCreatedEvent(AuditSourceInfo sourceInfo, Optional<SystemMessage> systemMessage,
+        UserMessage userMessage) implements LLMInteractionEvent {
 }

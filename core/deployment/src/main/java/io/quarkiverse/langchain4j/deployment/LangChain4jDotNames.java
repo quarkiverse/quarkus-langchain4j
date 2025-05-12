@@ -3,7 +3,6 @@ package io.quarkiverse.langchain4j.deployment;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.data.image.Image;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -54,7 +53,6 @@ public class LangChain4jDotNames {
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
     public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);
     public static final DotName USER_MESSAGE = DotName.createSimple(UserMessage.class);
-    public static final DotName AI_MESSAGE = DotName.createSimple(AiMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
     static final DotName PDF_URL = DotName.createSimple(PdfUrl.class);
