@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
@@ -159,7 +160,7 @@ public class McpProcessor {
             }
             // generate a health check
             if (mcpBuildTimeConfiguration.mpHealthEnabled()) {
-                healthBuildItems.produce(new HealthBuildItem("io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck",
+                healthBuildItems.produce(new HealthBuildItem(McpClientHealthCheck.class.getName(),
                         true));
             }
         }
