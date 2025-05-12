@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 
 import org.eclipse.microprofile.health.HealthCheck;
@@ -17,11 +16,10 @@ import io.quarkus.arc.Arc;
 import io.quarkus.arc.InjectableBean;
 import io.quarkus.arc.InstanceHandle;
 
-@ApplicationScoped
 @Readiness
 public class McpClientHealthCheck implements HealthCheck {
 
-    private Map<String, McpClient> clientMap;
+    private final Map<String, McpClient> clientMap;
 
     public McpClientHealthCheck() {
         clientMap = getClientMap();
