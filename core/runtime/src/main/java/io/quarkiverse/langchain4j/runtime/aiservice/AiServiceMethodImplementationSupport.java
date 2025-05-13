@@ -169,9 +169,7 @@ public class AiServiceMethodImplementationSupport {
             QuarkusAiServiceContext context, AuditSourceInfo auditSourceInfo) {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object memoryId = memoryId(methodCreateInfo, methodArgs, context.hasChatMemory());
-        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs,
-                context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId).messages()
-                        : Collections.emptyList());
+        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId);
 
         boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
@@ -675,9 +673,14 @@ public class AiServiceMethodImplementationSupport {
 
     private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo,
             Object[] methodArgs,
-            List<ChatMessage> previousChatMessages) {
+            QuarkusAiServiceContext context,
+            Object memoryId) {
+        List<ChatMessage> previousChatMessages = context.hasChatMemory()
+                ? context.chatMemoryService.getOrCreateChatMemory(memoryId).messages()
+                : Collections.emptyList();
+
         if (createInfo.getSystemMessageInfo().isEmpty()) {
-            return Optional.empty();
+            return context.systemMessageProvider.apply(memoryId).map(SystemMessage::new);
         }
         AiServiceMethodCreateInfo.TemplateInfo systemMessageInfo = createInfo.getSystemMessageInfo().get();
         Map<String, Object> templateParams = new HashMap<>();
