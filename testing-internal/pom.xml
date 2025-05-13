@@ -21,6 +21,7 @@
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -65,7 +65,8 @@ public class OllamaCustomMessageTest extends WiremockAware {
                                             "options": {
                                                 "temperature": 0.8,
                                                 "top_k": 40,
-                                                "top_p": 0.9
+                                                "top_p": 0.9,
+                                                "stop" : [ ]
                                             },
                                             "stream": false,
                                             "tools" : [ ]
