@@ -31,6 +31,8 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -113,6 +115,7 @@ public class McpProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             BuildProducer<HealthBuildItem> healthBuildItems,
             ShutdownContextBuildItem shutdown,
+            Capabilities capabilities,
             McpRecorder recorder) {
         Map<String, McpTransportType> clients = new HashMap<>();
         if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
@@ -159,7 +162,7 @@ public class McpProcessor {
                 beanProducer.produce(configurator.done());
             }
             // generate a health check
-            if (mcpBuildTimeConfiguration.mpHealthEnabled()) {
+            if (mcpBuildTimeConfiguration.mpHealthEnabled() && capabilities.isPresent(Capability.SMALLRYE_HEALTH)) {
                 healthBuildItems.produce(new HealthBuildItem(McpClientHealthCheck.class.getName(),
                         true));
             }
