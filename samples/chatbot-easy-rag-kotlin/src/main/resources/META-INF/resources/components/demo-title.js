@@ -22,7 +22,7 @@ export class DemoTitle extends LitElement {
       .explanation {
         margin-left: auto;
         margin-right: auto;
-        width: 50%;
+        width: 90%;
         text-align: justify;
         font-size: 20px;
       }
