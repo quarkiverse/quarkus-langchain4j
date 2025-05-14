@@ -26,9 +26,7 @@
         body {
             margin: 0;
             width: 100%;
-            height: 100vh;
             font-family: 'Red Hat Text', sans-serif;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -44,6 +42,11 @@
             --chatbot-send-button-color: var(--main-highlight-text-color);
             --chatbot-container-width: 90vw;
             --chatbot-container-height: 90vh;
+        }
+
+        chat-bot::part(chat-bubble) {
+          font-size: 1.4em;
+          font-weight: bold;
         }
 
         .middle {
