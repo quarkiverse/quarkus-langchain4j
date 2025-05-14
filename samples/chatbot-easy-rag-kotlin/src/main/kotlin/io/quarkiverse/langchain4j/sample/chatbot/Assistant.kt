@@ -8,15 +8,19 @@ import dev.langchain4j.service.ModerationException
 import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
 import io.quarkiverse.langchain4j.RegisterAiService
-import io.quarkiverse.langchain4j.sample.chatbot.sentiment.Sentiment
-import io.quarkiverse.langchain4j.sample.chatbot.tools.StockPrices
+import io.quarkiverse.langchain4j.sample.chatbot.tools.CurrentTime
+import io.quarkiverse.langchain4j.sample.chatbot.tools.CustomerCallbackScheduler
+import io.quarkiverse.langchain4j.sample.chatbot.tools.MarketData
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.SessionScoped
 import org.eclipse.microprofile.faulttolerance.Fallback
 
-
 @RegisterAiService(
-    tools = [StockPrices::class],
+    tools = [
+        MarketData::class,
+        CurrentTime::class,
+        CustomerCallbackScheduler::class
+    ],
     // no need to declare a retrieval augmentor here, it is automatically generated and discovered
 )
 @SessionScoped
@@ -24,18 +28,28 @@ import org.eclipse.microprofile.faulttolerance.Fallback
 @ApplicationScoped
 interface Assistant {
 
-    @UserMessage("Analyze sentiment of {{it}}")
-    fun analyzeSentiment(text: Question): Sentiment
-
     @SystemMessage(
         """
             You are an AI named Bob answering questions about financial products.
+            First, greet the customer and ask how can you help.
+            You may use only information from the documents and tools you have been provided.
             Your response must be polite, use the same language as the question, and be relevant to the question.
-
-            When you don't know, respond that you don't know the answer and the bank will contact the customer directly.
             Make responses concise and to the point. Optimize for readability.
 
-            Answer in English unless you are asked on another language.
+            When you don't know, respond that you don't know the answer
+            and offer link to the bank website and offer to organize a call
+            with a financial advisor.
+
+            When organizing a call, first, understand the ultimate customer problem.
+            If you don't have required information to schedule a call - ask customer to provide it.
+            The callback should be scheduled within 5 business days.
+            Always get current date and time from tool.
+            Use time format HH:mm, for example 13:00.
+            Never schedule a callback for a date in the past.
+            Get explicit confirmation from the customer before scheduling a call.
+            Double check that all the necessary information is provided.
+            If the customer does not want a callback, never schedule it.
+
             Answer only raw Markdown. Highlight numbers and important clauses.
             Do NOT emit any HTML tags.
             Do NOT wrap your answer in code fences or any other container.

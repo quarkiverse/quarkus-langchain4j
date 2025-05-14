@@ -10,8 +10,15 @@ import jakarta.enterprise.context.SessionScoped
 @Suppress("unused")
 @SessionScoped
 class ChatBotWebSocket(private val assistantService: AssistantService) {
+
     @OnOpen
-    fun onOpen(connection: WebSocketConnection): Answer = greeting
+    suspend fun onOpen(connection: WebSocketConnection): Answer {
+        return assistantService.askQuestion(
+            memoryId = connection.id(),
+            question = "[new customer joined]"
+        )
+            .copy(links = greeting.links)
+    }
 
     @OnTextMessage
     suspend fun onMessage(
@@ -20,7 +27,8 @@ class ChatBotWebSocket(private val assistantService: AssistantService) {
     ): Answer {
         return assistantService.askQuestion(
             memoryId = connection.id(),
-            question = message)
+            question = message
+        )
     }
 }
 

@@ -11,7 +11,7 @@ suspend fun Assistant.chatAsync(
 ): Answer {
     val assistant = this
     return withContext(dispatcher) {
-        logger.info("${Thread.currentThread().name} -  Processing question: $question")
+        logger.debug("${Thread.currentThread().name} -  Processing question: $question")
         assistant.chat(memoryId, question)
     }
 }

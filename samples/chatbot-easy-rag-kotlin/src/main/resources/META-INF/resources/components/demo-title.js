@@ -42,22 +42,24 @@ export class DemoTitle extends LitElement {
                 <h1>Financial Assistant</h1>
             </div>
             <div class="explanation">
-                This demo shows how to build a chat bot powered by LLM and retrieval-augmented generation (RAG).
-                The application uses the Easy RAG extension to retrieve information about financial products from provided
-                documents stored in a catalog directory.
-                The description of the different accounts is ingested into a Redis database, and relevant information
-                is sent to the LLM before answering the user. It also provides stock price information for selected companies.
+              This demo showcases a chat bot powered by Large Language Models (LLM) and Retrieval-Augmented Generation (RAG).
+              The application leverages the Easy RAG extension to retrieve information about financial products from documents
+              stored in a catalog directory.
+              Financial account descriptions are ingested into a Redis database, and the system sends relevant information
+              to the LLM before generating responses. The bot also provides stock price information for selected companies.
 
-                Here are some examples of questions that you can ask:
+              <h4>Try these sample questions:</h4>
                 <ul>
-                  <li>"What is the minimum opening deposit for the standard savings account?" — The Agent is aware
-                    of characteristics of financial products</li>
-                  <li>"What is the current stock price of GOOG?" — The Agent uses Tools to retrieve the data,
-                    but in this example it generates random numbers.</li>
+                  <li>"What is the minimum opening deposit for the standard savings account?" — The Agent provides information
+                    about specific financial product features.</li>
+                  <li>"What is the current stock price of GOOG?" — The Agent uses Tools to retrieve data
+                    (note: in this demo, it generates random numbers).</li>
+                  <li>"I have tons of money. Can you give me financial advice?" — The Agent will recommend appropriate financial
+                    products or help schedule a consultation for personalized financial advice.</li>
                   <li>"I am not happy to use your products" will trigger negative sentiment detection.
-                    You may have a look at <a href="http://localhost:8080/q/dev-ui/io.quarkiverse.mailpit.quarkus-mailpit/mailpit-ui" target="_blank">Mailpit UI</a>
-                    afterwards to find the email about it.</li>
-                  <li>"You are so stupid!" will trigger moderation</li>
+                    You can check the <a href="http://localhost:8080/q/dev-ui/io.quarkiverse.mailpit.quarkus-mailpit/mailpit-ui" target="_blank">Mailpit UI</a>
+                    afterward to see the email notification.</li>
+                  <li>"You are so stupid!" will trigger the moderation system.</li>
                 </ul>
             </div>
 

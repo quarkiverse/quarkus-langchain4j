@@ -8,9 +8,14 @@ For more information about Easy RAG, refer to the file
 ## Running the example
 
 A prerequisite to running this example is to provide your OpenAI API key.
-
-```
+        
+You may either set the environment variable:
+```shell
 export QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>
+```
+or create an `.env` file in the root of the project with the following content:
+```dotenv
+QUARKUS_LANGCHAIN4J_OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 Then, simply run the project in Dev mode:
