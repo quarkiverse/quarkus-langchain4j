@@ -3,30 +3,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-parent</artifactId>
+        <artifactId>quarkus-langchain4j-samples-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-samples-parent</artifactId>
-    <name>Quarkus LangChain4j - Samples - Parent</name>
+    <artifactId>quarkus-langchain4j-samples-secure-mcp-sse-client-server-parent</artifactId>
+    <name>Quarkus LangChain4j - Samples - Secure MCP SSE Client Server Parent</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>chatbot-easy-rag-kotlin</module>
-        <module>chatbot-easy-rag</module>
-        <module>chatbot-web-search</module>
-        <module>chatbot</module>
-        <module>cli-translator</module>
-        <module>email-a-poem</module>
-        <module>fraud-detection</module>
-        <module>mcp-tools</module>
-        <module>mcp-sse-client-server</module>
-        <module>secure-mcp-sse-client-server</module>
-        <module>review-triage</module>
-        <module>secure-fraud-detection</module>
-        <module>secure-poem-multiple-models</module>
-        <module>secure-sql-chatbot</module>
-        <module>sql-chatbot</module>
-        <module>weather-agent</module>
+        <module>secure-mcp-client</module>
+        <module>secure-mcp-server</module>
     </modules>
 
     <build>
@@ -43,5 +29,5 @@
 
         </plugins>
     </build>
-
+    
 </project>
