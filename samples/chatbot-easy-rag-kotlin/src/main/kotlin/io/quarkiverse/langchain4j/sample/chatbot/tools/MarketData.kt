@@ -1,21 +1,54 @@
 package io.quarkiverse.langchain4j.sample.chatbot.tools
 
+import dev.langchain4j.agent.tool.P
 import dev.langchain4j.agent.tool.Tool
 import io.quarkus.logging.Log
 import jakarta.enterprise.context.ApplicationScoped
+import java.math.BigDecimal
 
+typealias Symbol = String
+
+@Suppress("unused", "MagicNumber")
 @ApplicationScoped
 class MarketData {
 
-    data class StockPrice(val symbol: String, val price: Double)
+    data class StockPrice(val symbol: Symbol, val price: BigDecimal)
 
-    private val symbols = listOf("AAPL", "GOOG", "MSFT")
+    private val stockPrices: Map<Symbol, StockPrice>
 
-    @Tool("returns current stock prices", name = "marketData")
-    fun stockPrices(): List<StockPrice> {
-        for (symbol in symbols) {
-            Log.info("Getting stock price for $symbol")
-        }
-        return symbols.map { StockPrice(it, Math.random() * 100) }
+    private val symbols = listOf(
+        "AAPL",
+        "AMZN",
+        "GOOG",
+        "MSFT",
+    )
+
+    init {
+        stockPrices =
+            symbols.associateWith { symbol ->
+                StockPrice(
+                    symbol,
+                    // Generate a random price between 50 and 300
+                    BigDecimal((50_00..300_00).random()).movePointLeft(2)
+                )
+            }
+    }
+
+    @Tool("returns supported stock symbols", name = "stockSymbols")
+    fun stockSymbols(): List<Symbol> = symbols
+
+    @Tool("returns current stock prices", name = "stockPrices")
+    fun stockPrices(
+        @P("list of stock symbols to query or empty list to query all symbols")
+        symbols: List<Symbol> = emptyList()
+    ): List<StockPrice> = if (symbols.isEmpty()) {
+        Log.debug("Received stock prices request for all symbols")
+        stockPrices.values.toList()
+    } else {
+        Log.debug("Received stock prices request for symbols: $symbols")
+        symbols
+            .map { it.uppercase() }
+            .mapNotNull { stockPrices[it] }
+            .toList()
     }
 }

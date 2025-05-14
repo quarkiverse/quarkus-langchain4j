@@ -15,13 +15,7 @@ class CustomerCallbackScheduler(
     private val mailer: Mailer,
 ) {
     @Tool(
-        """
-            Schedules a callback call for a customer
-            when all the necessary information is provided:
-            customer name, phone number, customer problem, convenient time to call back.
-
-            Returns true if the scheduling was successful, false otherwise
-            """,
+        "Schedules a callback call for a customer. Returns true on success",
         name = "scheduleCallback"
     )
     @RunOnVirtualThread

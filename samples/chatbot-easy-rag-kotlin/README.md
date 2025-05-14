@@ -1,4 +1,4 @@
-# Financial Assistant Chatbot with Easy RAG
+# Financial Assistant Chatbot with Easy RAG and Kotlin
 
 This example demonstrates how to create a financial assistant chatbot with Retrieval Augmented Generation (RAG) using
 `quarkus-langchain4j` and Kotlin, specifically utilizing the Easy RAG extension.
