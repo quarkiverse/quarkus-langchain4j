@@ -15,7 +15,7 @@ class ChatBotWebSocket(private val assistantService: AssistantService) {
     suspend fun onOpen(connection: WebSocketConnection): Answer {
         return assistantService.askQuestion(
             memoryId = connection.id(),
-            question = "[new customer joined]"
+            question = "[start]"
         )
             .copy(links = greeting.links)
     }

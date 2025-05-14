@@ -50,11 +50,12 @@ export class DemoTitle extends LitElement {
 
               <h4>Try these sample questions:</h4>
                 <ul>
-                  <li>"What is the minimum opening deposit for the standard savings account?" — The Agent provides information
-                    about specific financial product features.</li>
+                  <li>"What is the minimum opening deposit for the saving account?", "Suggest wealth management plan"
+                    — The Agent provides information about specific financial product features.</li>
+                  <li>"What date and time is it in Tokyo now?" — The Agent uses Tools to retrieve current time</li>
                   <li>"What is the current stock price of GOOG?" — The Agent uses Tools to retrieve data
                     (note: in this demo, it generates random numbers).</li>
-                  <li>"I have tons of money. Can you give me financial advice?" — The Agent will recommend appropriate financial
+                  <li>"I have a bunch of money. Got any financial advice?" — The Agent will recommend appropriate financial
                     products or help schedule a consultation for personalized financial advice.</li>
                   <li>"I am not happy to use your products" will trigger negative sentiment detection.
                     You can check the <a href="http://localhost:8080/q/dev-ui/io.quarkiverse.mailpit.quarkus-mailpit/mailpit-ui" target="_blank">Mailpit UI</a>

@@ -4,12 +4,13 @@ import dev.langchain4j.agent.tool.Tool
 import jakarta.enterprise.context.ApplicationScoped
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @ApplicationScoped
 @OptIn(ExperimentalTime::class)
-class CurrentTime {
+class CurrentTime(
+    private val clock: Clock = Clock.System
+) {
 
-    @Tool("returns current time", name = "time")
-    fun currentTimeNow(): Instant = Clock.System.now()
+    @Tool("returns current date and time", name = "currentDateTime")
+    fun currentDateTime(): String = "${clock.now()}"
 }
