@@ -1,3 +1,3 @@
 :project-version: 0.27.0.CR2
-:langchain4j-version: 1.0.0-beta4
+:langchain4j-version: 1.0.0
 :examples-dir: ./../examples/
