@@ -61,7 +61,8 @@ public class OllamaJsonOutputTest extends WiremockAware {
                                             "options": {
                                                 "temperature": 0.8,
                                                 "top_k": 40,
-                                                "top_p": 0.9
+                                                "top_p": 0.9,
+                                                "stop" : [ ]
                                             },
                                             "format": "json",
                                             "stream": false,

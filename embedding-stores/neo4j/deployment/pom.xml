@@ -21,7 +21,7 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-community-neo4j</artifactId>
-            <version>${langchain4j.version}</version>
+            <version>${langchain4j-beta.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
@@ -39,7 +39,7 @@
             <classifier>tests</classifier>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${langchain4j-tests.version}</version>
+            <version>${langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
