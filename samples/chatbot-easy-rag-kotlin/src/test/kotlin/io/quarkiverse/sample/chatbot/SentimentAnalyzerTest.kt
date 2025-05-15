@@ -8,8 +8,11 @@ import io.quarkus.test.junit.QuarkusTestProfile
 import io.quarkus.test.junit.TestProfile
 import jakarta.inject.Inject
 import kotlinx.coroutines.test.runTest
+import me.escoffier.loom.loomunit.LoomUnitExtension
+import me.escoffier.loom.loomunit.ShouldNotPin
 import me.kpavlov.aimocks.openai.MockOpenai
 import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
@@ -17,6 +20,8 @@ private val mockOpenai = MockOpenai(verbose = true)
 
 @QuarkusTest
 @TestProfile(SentimentAnalyzerTest.TestProfile::class)
+@ExtendWith(LoomUnitExtension::class)
+@ShouldNotPin
 class SentimentAnalyzerTest{
 
     @Inject
@@ -26,7 +31,8 @@ class SentimentAnalyzerTest{
         override fun getConfigOverrides(): Map<String, String> {
             return mapOf(
                 "quarkus.langchain4j.openai.base-url" to mockOpenai.baseUrl(),
-                "quarkus.langchain4j.easy-rag.ingestion-strategy" to "OFF"
+                "quarkus.langchain4j.easy-rag.ingestion-strategy" to "OFF",
+                "app.sentiment-analyzer.model-name" to "mega-cool-gpt-1000"
             )
         }
     }
@@ -46,7 +52,7 @@ class SentimentAnalyzerTest{
         expectedSentiment: Sentiment
     ) = runTest {
         mockOpenai.completion {
-            model = "gpt-4.1-nano"
+            model = "mega-cool-gpt-1000"
             systemMessageContains("Analyze sentiment of given user message.")
             userMessageContains("Answer with $reply")
         } responds {

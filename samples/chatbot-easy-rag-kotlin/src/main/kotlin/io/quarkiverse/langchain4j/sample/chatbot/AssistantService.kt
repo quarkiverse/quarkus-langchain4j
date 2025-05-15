@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.sample.chatbot
 
-import dev.langchain4j.service.ModerationException
-import io.quarkus.logging.Log
+import dev.langchain4j.internal.Markers.SENSITIVE
 import io.quarkus.virtual.threads.VirtualThreads
 import jakarta.enterprise.context.ApplicationScoped
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -10,7 +9,6 @@ import org.eclipse.microprofile.reactive.messaging.Emitter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
 import java.util.concurrent.ExecutorService
-
 
 @Suppress("CdiInjectionPointsInspection")
 @ApplicationScoped
@@ -29,11 +27,11 @@ class AssistantService(
         memoryId: ChatMemoryId,
         question: String,
     ): Answer = try {
-        Log.info("Processing question: $question")
+        logger.info(SENSITIVE, "Processing question: {}", question)
         questionsEmitter.send(question)
         assistant.chatAsync(memoryId, question, dispatcher, logger)
     } catch (e: Exception) {
-        logger.error("Error while processing question: $question", e)
+        logger.error(SENSITIVE, "Error while processing question: {}", question, e)
         fallbackAnswer
     }
 

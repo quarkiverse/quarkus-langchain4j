@@ -2,11 +2,13 @@ package io.quarkiverse.langchain4j.sample.chatbot.tools
 
 import dev.langchain4j.agent.tool.P
 import dev.langchain4j.agent.tool.Tool
-import io.quarkus.logging.Log
 import jakarta.enterprise.context.ApplicationScoped
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 
 typealias Symbol = String
+
+private val logger = LoggerFactory.getLogger(MarketData::class.java)
 
 @Suppress("unused", "MagicNumber")
 @ApplicationScoped
@@ -42,10 +44,10 @@ class MarketData {
         @P("list of stock symbols to query or empty list to query all symbols")
         symbols: List<Symbol> = emptyList()
     ): List<StockPrice> = if (symbols.isEmpty()) {
-        Log.debug("Received stock prices request for all symbols")
+        logger.debug("Received stock prices request for all symbols")
         stockPrices.values.toList()
     } else {
-        Log.debug("Received stock prices request for symbols: $symbols")
+        logger.debug("Received stock prices request for symbols: {}", symbols)
         symbols
             .map { it.uppercase() }
             .mapNotNull { stockPrices[it] }

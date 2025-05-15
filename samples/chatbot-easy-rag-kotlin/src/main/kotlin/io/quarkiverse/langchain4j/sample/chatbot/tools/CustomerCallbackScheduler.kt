@@ -2,12 +2,13 @@ package io.quarkiverse.langchain4j.sample.chatbot.tools
 
 import dev.langchain4j.agent.tool.P
 import dev.langchain4j.agent.tool.Tool
-import io.quarkus.logging.Log
 import io.quarkus.mailer.Mail
 import io.quarkus.mailer.Mailer
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.enterprise.context.ApplicationScoped
+import org.slf4j.LoggerFactory
 
+private val logger = LoggerFactory.getLogger(CustomerCallbackScheduler::class.java)
 private val PHONE_NUMBER_REGEX = Regex("^\\+[1-9]\\d{1,14}\$")
 
 @ApplicationScoped
@@ -57,7 +58,7 @@ class CustomerCallbackScheduler(
             )
             true
         } catch (e: Exception) {
-            Log.warn("Error while scheduling callback", e)
+            logger.warn("Error while scheduling callback", e)
             false
         }
 
