@@ -28,6 +28,10 @@ val fallbackAnswer = Answer(
     )
 )
 
+val errorAnswer = Answer(
+    message = "Sorry, I couldn't process yor request. Please, try again later.",
+)
+
 val greeting = Answer(
     message = """
         Hello, I'm your AI assistant and I can make mistakes.
