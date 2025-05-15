@@ -78,7 +78,7 @@ public class ToolsRecorder {
             }
             return Collections.emptyList();
         } catch (ClassNotFoundException e) {
-            log.error(e);
+            Log.error(e);
             return Collections.emptyList();
         }
     }

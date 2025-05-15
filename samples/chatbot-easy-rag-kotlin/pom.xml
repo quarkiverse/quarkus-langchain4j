@@ -27,6 +27,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-bom</artifactId>
+        <version>${kotlin.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
         <version>${quarkus.platform.version}</version>
@@ -331,6 +338,25 @@
           <url>https://repo.mvnpm.org/maven2</url>
         </repository>
       </repositories>
+    </profile>
+    <profile>
+      <id>macos</id>
+      <activation>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-resolver-dns-native-macos</artifactId>
+          <scope>runtime</scope>
+        </dependency><dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-kqueue</artifactId>
+        <scope>runtime</scope>
+      </dependency>
+      </dependencies>
     </profile>
   </profiles>
 
