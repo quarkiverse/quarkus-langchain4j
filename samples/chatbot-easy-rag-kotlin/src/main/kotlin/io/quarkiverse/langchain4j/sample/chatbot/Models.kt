@@ -11,7 +11,8 @@ data class Link(
     @Description("Link URL")
     val url: String,
     @Description("Link Title")
-    val title: String)
+    val title: String
+)
 
 @Serializable
 data class Answer(
@@ -28,12 +29,19 @@ val fallbackAnswer = Answer(
     )
 )
 
+val errorAnswer = Answer(
+    message = "Oops! Something went wrong. Please try again in a moment.",
+)
+
 val greeting = Answer(
     message = """
-        Hello, I'm your AI assistant and I can make mistakes.
-        How can I help you today?
-        """,
+        Hi, I’m your AI assistant. I’ll do my best to help—but I might make mistakes.
+        What can I help you with today?
+        """.trimIndent(),
     links = listOf(
-        Link("https://www.example.com/help", "Help(example.com)")
+        Link(
+            title = "AI Assistant Terms and Conditions",
+            url = "https://www.horizonfinancial.example/legal/ai"
+        ),
     )
 )

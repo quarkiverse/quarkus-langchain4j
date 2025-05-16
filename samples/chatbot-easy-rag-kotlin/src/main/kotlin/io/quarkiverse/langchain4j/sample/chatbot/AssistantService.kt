@@ -1,16 +1,12 @@
 package io.quarkiverse.langchain4j.sample.chatbot
 
-import dev.langchain4j.service.ModerationException
 import io.quarkus.logging.Log
 import io.quarkus.virtual.threads.VirtualThreads
 import jakarta.enterprise.context.ApplicationScoped
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.eclipse.microprofile.reactive.messaging.Channel
 import org.eclipse.microprofile.reactive.messaging.Emitter
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory.getLogger
 import java.util.concurrent.ExecutorService
-
 
 @Suppress("CdiInjectionPointsInspection")
 @ApplicationScoped
@@ -21,7 +17,6 @@ class AssistantService(
     @VirtualThreads
     executorService: ExecutorService
 ) {
-    private val logger: Logger = getLogger(AssistantService::class.java)
     private val dispatcher = executorService.asCoroutineDispatcher()
 
     @Suppress("TooGenericExceptionCaught")
@@ -29,11 +24,11 @@ class AssistantService(
         memoryId: ChatMemoryId,
         question: String,
     ): Answer = try {
-        Log.info("Processing question: $question")
+        Log.info( "Processing question: $question")
         questionsEmitter.send(question)
-        assistant.chatAsync(memoryId, question, dispatcher, logger)
+        assistant.chatAsync(memoryId, question, dispatcher)
     } catch (e: Exception) {
-        logger.error("Error while processing question: $question", e)
+        Log.error("Error while processing question: {}", arrayOf(question), e)
         fallbackAnswer
     }
 

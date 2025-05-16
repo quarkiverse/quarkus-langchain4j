@@ -35,14 +35,15 @@ interface Assistant {
     @Moderate
     @Timeout(value = 60, unit = ChronoUnit.SECONDS)
     @Fallback(fallbackMethod = "chatFallback")
+    @UserMessage("User said: ```{{question}}```")
     fun chat(
         @MemoryId memoryId: ChatMemoryId,
-        @UserMessage question: Question
+        question: Question
     ): Answer
 
     fun chatFallback(
         @MemoryId memoryId: ChatMemoryId,
-        @UserMessage question: Question,
+        question: Question,
         cause: ModerationException
     ): Answer = Answer(
         message = """
@@ -56,7 +57,7 @@ interface Assistant {
 
     fun chatFallback(
         @MemoryId memoryId: ChatMemoryId,
-        @UserMessage question: Question,
+        question: Question,
         exception: Exception
     ): Answer {
         Log.warn("Error while processing question", exception)
