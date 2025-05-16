@@ -19,7 +19,7 @@ public class PoemResource {
             Please start by greeting the currently logged in user by name and asking to enjoy reading the poem.""";
 
     @RegisterAiService
-    public interface GeminiPoemService {
+    public interface PoemService {
         @UserMessage(USER_MESSAGE)
         @McpToolBox("user-name")
         String writePoem();
@@ -27,10 +27,10 @@ public class PoemResource {
     
     
     @Inject
-    GeminiPoemService aiGemini;
+    PoemService poemService;
 
     @GET
-    public String getPoemGemini() {
-        return aiGemini.writePoem();
+    public String getPoem() {
+        return poemService.writePoem();
     }
 }

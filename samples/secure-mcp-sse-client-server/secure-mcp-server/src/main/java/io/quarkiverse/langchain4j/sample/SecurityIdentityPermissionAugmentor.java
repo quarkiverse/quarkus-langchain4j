@@ -11,7 +11,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class SecurityIdentityRoleAugmentor implements SecurityIdentityAugmentor {
+public class SecurityIdentityPermissionAugmentor implements SecurityIdentityAugmentor {
 
     @WithSession
     @Override
