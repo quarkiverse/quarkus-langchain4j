@@ -27,6 +27,7 @@
         <module>secure-sql-chatbot</module>
         <module>sql-chatbot</module>
         <module>weather-agent</module>
+        <module>react-chatbot</module>
     </modules>
 
     <build>
