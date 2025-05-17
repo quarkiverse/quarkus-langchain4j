@@ -12,6 +12,7 @@
   <properties>
     <compiler-plugin.version>3.13.0</compiler-plugin.version>
     <java.version>17</java.version>
+    <skipITs>true</skipITs>
     <kotlin.version>2.1.21</kotlin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -19,9 +20,9 @@
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.version>3.22.2</quarkus.platform.version>
     <kotest.version>5.9.1</kotest.version>
-    <skipITs>true</skipITs>
-    <surefire-plugin.version>3.5.3</surefire-plugin.version>
+    <kotlinx-datetime.version>0.6.2</kotlinx-datetime.version>
     <quarkus-langchain4j.version>1.0.0.CR1</quarkus-langchain4j.version>
+    <surefire-plugin.version>3.5.3</surefire-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -78,6 +79,10 @@
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
+      <artifactId>quarkus-langchain4j-mcp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-memory-store-redis</artifactId>
     </dependency>
     <dependency>
@@ -108,6 +113,11 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-messaging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-datetime-jvm</artifactId>
+      <version>${kotlinx-datetime.version}</version>
     </dependency>
 
     <!-- UI -->
@@ -351,11 +361,12 @@
           <groupId>io.netty</groupId>
           <artifactId>netty-resolver-dns-native-macos</artifactId>
           <scope>runtime</scope>
-        </dependency><dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-transport-native-kqueue</artifactId>
-        <scope>runtime</scope>
-      </dependency>
+        </dependency>
+        <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-transport-native-kqueue</artifactId>
+          <scope>runtime</scope>
+        </dependency>
       </dependencies>
     </profile>
   </profiles>

@@ -7,6 +7,8 @@ import io.quarkus.websockets.next.OnTextMessage
 import io.quarkus.websockets.next.WebSocket
 import io.quarkus.websockets.next.WebSocketConnection
 import jakarta.enterprise.context.SessionScoped
+import kotlinx.datetime.FixedOffsetTimeZone
+import kotlinx.datetime.UtcOffset
 import kotlinx.serialization.Serializable
 
 @WebSocket(path = "/chatbot")
@@ -23,10 +25,16 @@ class ChatBotWebSocket(private val assistantService: AssistantService) {
     suspend fun onMessage(
         request: Request,
         connection: WebSocketConnection
-    ): Answer = assistantService.askQuestion(
-        memoryId = request.sessionId,
-        question = request.message
-    )
+    ): Answer {
+        val userTimezone = FixedOffsetTimeZone(offset = UtcOffset(minutes = -request.timezoneOffset))
+        val userInfo = mapOf("timeZone" to userTimezone.id)
+
+        return assistantService.askQuestion(
+            memoryId = request.sessionId,
+            question = request.message,
+            userInfo = userInfo,
+        )
+    }
 
     @OnError
     fun onError(connection: WebSocketConnection, error: Throwable): Answer {
@@ -35,6 +43,6 @@ class ChatBotWebSocket(private val assistantService: AssistantService) {
     }
 
     @Serializable
-    data class Request(val message: String, val sessionId: String)
+    data class Request(val message: String, val sessionId: String, val timezoneOffset: Int)
 }
 

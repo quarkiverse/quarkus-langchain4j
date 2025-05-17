@@ -1,4 +1,9 @@
-@file:Suppress("CdiManagedBeanInconsistencyInspection")
+@file:Suppress(
+    "CdiManagedBeanInconsistencyInspection",
+    "unused",
+    "kotlin:S6517",
+    "CdiUnproxyableBeanTypesInspection"
+)
 
 package io.quarkiverse.langchain4j.sample.chatbot
 
@@ -7,68 +12,36 @@ import dev.langchain4j.service.Moderate
 import dev.langchain4j.service.ModerationException
 import dev.langchain4j.service.SystemMessage
 import dev.langchain4j.service.UserMessage
+import dev.langchain4j.service.V
 import io.quarkiverse.langchain4j.RegisterAiService
-import io.quarkiverse.langchain4j.sample.chatbot.tools.CurrentTime
 import io.quarkiverse.langchain4j.sample.chatbot.tools.CustomerCallbackScheduler
 import io.quarkiverse.langchain4j.sample.chatbot.tools.MarketData
-import io.quarkus.logging.Log
+import io.quarkiverse.langchain4j.sample.chatbot.tools.McpToolProviderSupplier
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.context.SessionScoped
-import org.eclipse.microprofile.faulttolerance.Fallback
 import org.eclipse.microprofile.faulttolerance.Timeout
 import java.time.temporal.ChronoUnit
 
 @RegisterAiService(
+    toolProviderSupplier = McpToolProviderSupplier::class,
     tools = [
         MarketData::class,
-        CurrentTime::class,
         CustomerCallbackScheduler::class
     ],
     // no need to declare a retrieval augmentor here, it is automatically generated and discovered
 )
 @SessionScoped
-@Suppress("unused", "kotlin:S6517")
 @ApplicationScoped
 interface Assistant {
 
     @SystemMessage(fromResource = "/prompts/assistant-system-prompt.md")
     @Moderate
+    @Throws(ModerationException::class)
     @Timeout(value = 60, unit = ChronoUnit.SECONDS)
-    @Fallback(fallbackMethod = "chatFallback")
-    @UserMessage("User said: ```{{question}}```")
+    @UserMessage("User said: ```{{question}}```. User info: {{userInfo}}.")
     fun chat(
         @MemoryId memoryId: ChatMemoryId,
-        question: Question
+        question: Question,
+        @V("userInfo") userInfo: Map<String, Any>,
     ): Answer
-
-    fun chatFallback(
-        @MemoryId memoryId: ChatMemoryId,
-        question: Question,
-        cause: ModerationException
-    ): Answer = Answer(
-        message = """
-                    Sorry, your message couldn't be processed due to content guidelines.
-                    If you believe this is a mistake, please contact support.
-                    """.trimIndent(),
-        links = listOf(
-            Link("https://www.example.com/support", "Contact support(example.com)")
-        )
-    )
-
-    fun chatFallback(
-        @MemoryId memoryId: ChatMemoryId,
-        question: Question,
-        exception: Exception
-    ): Answer {
-        Log.warn("Error while processing question", exception)
-        return Answer(
-            message = """
-                    You have asked: \"$question\".
-                    I'm sorry, I can't help you with that question.
-                    Try again later.""".trimIndent(),
-            links = listOf(
-                Link("https://www.example.com/support", "Contact support(example.com)")
-            )
-        )
-    }
 }
