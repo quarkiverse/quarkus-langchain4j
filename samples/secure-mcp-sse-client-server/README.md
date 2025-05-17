@@ -18,8 +18,8 @@ try to replace `quarkus.oidc.credentials.secret=${github.client.secret}` propert
 with the following two properties instead:
 
 ```properties
-%quarkus.oidc.credentials.client-secret.method=post
-%quarkus.oidc.credentials.client-secret.value=${github.client.secret}
+quarkus.oidc.credentials.client-secret.method=post
+quarkus.oidc.credentials.client-secret.value=${github.client.secret}
 ```
 
 # AI Gemini API key
