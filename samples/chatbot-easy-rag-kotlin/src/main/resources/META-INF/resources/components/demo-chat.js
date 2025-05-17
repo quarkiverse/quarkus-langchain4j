@@ -3,6 +3,7 @@ import MarkdownIt from 'markdown-it';
 
 export class DemoChat extends LitElement {
   #sessionId;
+  #timezoneOffset;
 
   constructor() {
     super();
@@ -14,6 +15,7 @@ export class DemoChat extends LitElement {
       typographer: true,
     });
     this.#ensureSessionId();
+    this.#timezoneOffset = new Date().getTimezoneOffset();
   }
 
   #ensureSessionId() {
@@ -85,7 +87,8 @@ export class DemoChat extends LitElement {
         // Create a message object that includes the session ID
         const messagePayload = {
           message: userMessage,
-          sessionId: this.#sessionId
+          sessionId: this.#sessionId,
+          timezoneOffset: this.#timezoneOffset
         };
 
         // Send the message as JSON
