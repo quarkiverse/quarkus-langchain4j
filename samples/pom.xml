@@ -17,6 +17,7 @@
         <module>chatbot</module>
         <module>cli-translator</module>
         <module>email-a-poem</module>
+        <module>email-a-poem-kotlin</module>
         <module>fraud-detection</module>
         <module>mcp-tools</module>
         <module>mcp-sse-client-server</module>
