@@ -1,0 +1,9 @@
+POST http://localhost:8080/react/
+
+Who is the current pope?
+
+###
+
+POST http://localhost:8080/react/
+
+What did the critic mean about Expedition 33? Tell me what PC Gamer and IGN magazines think.
