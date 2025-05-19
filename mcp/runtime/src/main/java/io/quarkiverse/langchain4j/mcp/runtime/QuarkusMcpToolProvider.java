@@ -37,7 +37,10 @@ public class QuarkusMcpToolProvider extends McpToolProvider {
 
         @Override
         public boolean test(McpClient mcpClient, ToolSpecification tool) {
-            return keys.isEmpty() || keys.stream().anyMatch(name -> name.equals(mcpClient.key()));
+            // keys == null means no McpToolBox annotation, so no MCP clients, whereas
+            // keys.size() == 0 means all MCP clients
+            return keys != null
+                    && (keys.isEmpty() || keys.stream().anyMatch(name -> name.equals(mcpClient.key())));
         }
     }
 }
