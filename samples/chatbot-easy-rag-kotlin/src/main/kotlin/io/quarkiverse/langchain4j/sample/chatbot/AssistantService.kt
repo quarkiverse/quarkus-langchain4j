@@ -9,7 +9,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel
 import org.eclipse.microprofile.reactive.messaging.Emitter
 import java.util.concurrent.ExecutorService
 
-@Suppress("CdiInjectionPointsInspection")
+@Suppress("CdiInjectionPointsInspection", "TooGenericExceptionCaught")
 @ApplicationScoped
 class AssistantService(
     private val assistant: Assistant,
@@ -20,7 +20,6 @@ class AssistantService(
 ) {
     private val dispatcher = executorService.asCoroutineDispatcher()
 
-    @Suppress("TooGenericExceptionCaught")
     suspend fun askQuestion(
         memoryId: ChatMemoryId,
         question: Question,
