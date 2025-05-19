@@ -76,3 +76,5 @@ with
             <version>${quarkus-langchain4j.version}</version>
         </dependency>
 ```
+
+See [Links Page](LINKS.md).
