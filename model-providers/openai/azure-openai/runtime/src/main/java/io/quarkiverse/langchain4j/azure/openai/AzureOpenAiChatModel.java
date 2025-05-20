@@ -211,12 +211,12 @@ public class AzureOpenAiChatModel implements ChatModel {
             List<ToolSpecification> toolSpecifications) {
         return ChatRequest.builder()
                 .messages(messages)
-                .toolSpecifications(toolSpecifications)
                 .parameters(ChatRequestParameters.builder()
                         .modelName(request.model())
                         .temperature(request.temperature())
                         .topP(request.topP())
                         .maxOutputTokens(request.maxTokens())
+                        .toolSpecifications(toolSpecifications)
                         .build())
                 .build();
     }
