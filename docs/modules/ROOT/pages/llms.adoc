@@ -28,3 +28,54 @@ Please check the specific documentation for the LLM you are using to see what fe
 - xref:watsonx.adoc[IBM watsonx.ai]
 - xref:mistral.adoc[Mistral AI]
 
+== Access to LLMs
+
+To access LLMs that are hosted in the cloud, AI Services must submit API keys or access tokens as bearer access tokens using an HTTP Authorization header, for example: `Authorization: Bearer <API key>`.
+
+API key is the main token type that can be used to access remote LLMs and you can configure it for every supported model that must be accessed with an API key, for example:
+
+[source,properties]
+----
+# Access OpenAI with API key
+quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
+
+# Access AI Gemini with API key
+quarkus.langchain4j.ai.gemini.api-key=${AI_GEMINI_API_KEY}
+----
+
+Model providers such as Google AI Gemini, Google Vertex Gemini and Azure OpenAI can also accept access tokens instead of API keys.
+
+You can register a custom `io.quarkiverse.langchain4j.auth.ModelAuthProvider` to load tokens or API keys from the database or other sources, for example:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+
+@ApplicationScoped
+public static class AzureOpenAiAuthProvider implements ModelAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) { <1>
+        String token = getToken(input);
+        return "Bearer " + token;
+    }
+    private String getToken(Input input) {
+        // ...
+    }
+}
+----
+<1> Represents current HTTP request URI, method and headers
+
+When your Quarkus LangChain4j AI service application that uses one of the model provides that can accept access tokens requires an OpenId Connect or OAuth2 authorization code flow login, for example, with Google or Azure, these model providers can propagate the acquired access token to access LLM on the authenticated user's behalf.
+
+All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-model-auth-provider` dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-oidc-model-auth-provider</artifactId>
+</dependency>
+----
+
