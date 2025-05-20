@@ -31,6 +31,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
@@ -44,6 +45,12 @@ public class MistralAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    public IndexDependencyBuildItem indexMistralaiDependency() {
+        // needed for Jackson support in native
+        return new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-mistral-ai");
     }
 
     @BuildStep
