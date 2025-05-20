@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.sample;
 
-import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.oidc.UserInfo;
 import io.quarkus.oidc.runtime.OidcUtils;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -9,17 +8,29 @@ import io.quarkus.security.identity.SecurityIdentityAugmentor;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class SecurityIdentityPermissionAugmentor implements SecurityIdentityAugmentor {
 
-    @WithSession
+    @Inject 
+    HibernateBlockingAugmentor hibernateBlockingAugmentor;
+
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
-        QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);
-        UserInfo userInfo = identity.getAttribute(OidcUtils.USER_INFO_ATTRIBUTE); 
-        return Identity.findByName(userInfo.getName())
-            		.invoke(id -> builder.addPermissionAsString(id.permission))
-            		.map(v -> builder.build());
+        return context.runBlocking(() -> hibernateBlockingAugmentor.augment(identity));
+    }
+
+    @ApplicationScoped
+    static class HibernateBlockingAugmentor {
+
+        @ActivateRequestContext
+        public SecurityIdentity augment(SecurityIdentity securityIdentity) {
+            QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(securityIdentity);
+            UserInfo userInfo = securityIdentity.getAttribute(OidcUtils.USER_INFO_ATTRIBUTE); 
+            Identity identity = Identity.findByName(userInfo.getName());
+            return builder.addPermissionAsString(identity.permission).build();
+        }
     }
 }
