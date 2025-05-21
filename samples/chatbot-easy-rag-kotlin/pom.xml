@@ -13,6 +13,7 @@
     <java.version>17</java.version>
     <skipITs>true</skipITs>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+    <kotlin.compiler.release>${java.version}</kotlin.compiler.release>
     <kotlin.version>2.1.21</kotlin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

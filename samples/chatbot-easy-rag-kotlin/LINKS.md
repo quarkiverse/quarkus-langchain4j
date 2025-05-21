@@ -3,8 +3,9 @@
 [AI Assistant with Quarkus-LangChain4j and Kotlin (this demo)](https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-easy-rag-kotlin)
 
 - [Quarkus](https://quarkus.io/) - A Kubernetes Native Java stack tailored for OpenJDK HotSpot and GraalVM, crafted from the best of breed Java libraries and standards.
+- [Using Kotlin with Quarkus](https://quarkus.io/guides/kotlin)
 - [Quarkus LangChain4j Extension](https://github.com/quarkiverse/quarkus-langchain4j) 
-- [Quarkus MCP Extension](https://github.com/quarkiverse/quarkus-langchain4j)
+- [Quarkus MCP Server Extension](https://github.com/quarkiverse/quarkus-mcp-server)
 - [LangChain4J](https://docs.langchain4j.dev/) [GitHub](https://github.com/langchain4j/langchain4j/) 
   - [AI Services](https://docs.langchain4j.dev/tutorials/ai-services)
   - [RAG](https://docs.langchain4j.dev/tutorials/rag)
