@@ -6,14 +6,12 @@ import io.quarkus.websockets.next.OnOpen
 import io.quarkus.websockets.next.OnTextMessage
 import io.quarkus.websockets.next.WebSocket
 import io.quarkus.websockets.next.WebSocketConnection
-import jakarta.enterprise.context.SessionScoped
 import kotlinx.datetime.FixedOffsetTimeZone
 import kotlinx.datetime.UtcOffset
 import kotlinx.serialization.Serializable
 
 @WebSocket(path = "/chatbot")
 @Suppress("unused")
-@SessionScoped
 class ChatBotWebSocket(private val assistantService: AssistantService) {
 
     @OnOpen
@@ -43,6 +41,10 @@ class ChatBotWebSocket(private val assistantService: AssistantService) {
     }
 
     @Serializable
-    data class Request(val message: String, val sessionId: String, val timezoneOffset: Int)
+    data class Request(
+        val message: String,
+        val sessionId: String,
+        val timezoneOffset: Int
+    )
 }
 

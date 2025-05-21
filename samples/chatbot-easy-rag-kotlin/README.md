@@ -1,5 +1,15 @@
 # Financial Assistant Chatbot with Easy RAG and Kotlin
 
+This demo showcases a chatbot built with [Quarkus-LangChain4j](https://docs.quarkiverse.io/quarkus-langchain4j/dev/) and [Kotlin](https://kotlinlang.org/),
+powered by Large Language Models and [_Retrieval-Augmented Generation (RAG)_](https://en.wikipedia.org/wiki/Retrieval-augmented_generation).
+
+The application uses WebSocket for real-time communication,
+[Easy RAG](https://docs.quarkiverse.io/quarkus-langchain4j/dev/easy-rag.html) with [Redis store](https://docs.quarkiverse.io/quarkus-langchain4j/dev/redis-store.html) for document retrieval,
+and integrates with local and [_Model Control Protocol (MCP)_](https://modelcontextprotocol.io)
+[Tools](https://docs.quarkiverse.io/quarkus-langchain4j/dev/agent-and-tools.html).
+[Moderation](https://docs.quarkiverse.io/quarkus-langchain4j/dev/ai-services.html#_moderation) is handled in parallel to ensure responsive and safe interactions.
+Sentiment analysis is performed asynchronously, demonstrating integrating external business processes.
+
 This example demonstrates how to create a financial assistant chatbot with Retrieval Augmented Generation (RAG) using
 `quarkus-langchain4j` and Kotlin, specifically utilizing the Easy RAG extension.
 For more information about Easy RAG, refer to the file 
