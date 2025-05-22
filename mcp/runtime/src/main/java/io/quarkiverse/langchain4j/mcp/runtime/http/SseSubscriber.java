@@ -11,13 +11,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
-import dev.langchain4j.mcp.client.transport.http.SseEventListener;
 
 public class SseSubscriber implements Consumer<SseEvent<String>> {
 
     private final McpOperationHandler operationHandler;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger log = Logger.getLogger(SseEventListener.class);
+    private static final Logger log = Logger.getLogger(SseSubscriber.class);
     private final boolean logEvents;
     // this will contain the POST url for sending commands to the server
     private final CompletableFuture<String> initializationFinished;
