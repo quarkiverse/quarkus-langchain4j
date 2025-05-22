@@ -33,13 +33,12 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private final Duration timeout;
     private final boolean logResponses;
     private final boolean logRequests;
-    private SseSubscriber mcpSseEventListener;
 
     // this is obtained from the server after initializing the SSE channel
     private volatile String postUrl;
     private volatile McpPostEndpoint postEndpoint;
     private volatile McpOperationHandler operationHandler;
-    private volatile McpClientAuthProvider mcpClientAuthProvider;
+    private final McpClientAuthProvider mcpClientAuthProvider;
 
     private volatile Runnable onFailure;
     private volatile boolean closed;
@@ -72,7 +71,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     @Override
     public void start(McpOperationHandler messageHandler) {
         this.operationHandler = messageHandler;
-        mcpSseEventListener = startSseChannel(logResponses);
+        startSseChannel(logResponses);
         QuarkusRestClientBuilder builder = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(URI.create(postUrl))
                 .connectTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
@@ -145,7 +144,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         return statusCode >= 200 && statusCode < 300;
     }
 
-    private SseSubscriber startSseChannel(boolean logResponses) {
+    private void startSseChannel(boolean logResponses) {
         CompletableFuture<String> initializationFinished = new CompletableFuture<>();
         SseSubscriber listener = new SseSubscriber(operationHandler, logResponses, initializationFinished);
         sseEndpoint.get().subscribe().with(listener, throwable -> {
@@ -167,7 +166,6 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return listener;
     }
 
     private String buildAbsolutePostUrl(String relativePostUrl) {
