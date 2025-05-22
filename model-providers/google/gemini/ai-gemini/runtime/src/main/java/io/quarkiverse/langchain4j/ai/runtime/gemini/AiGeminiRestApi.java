@@ -27,7 +27,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 
-@Path("v1beta/models/")
+@Path("models/")
 public interface AiGeminiRestApi {
 
     @Path("{modelId}:batchEmbedContents")
