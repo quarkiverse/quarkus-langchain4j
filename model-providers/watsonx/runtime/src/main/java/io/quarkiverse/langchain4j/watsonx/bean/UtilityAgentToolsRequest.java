@@ -9,10 +9,13 @@ import dev.langchain4j.Experimental;
 
 @Experimental
 public record UtilityAgentToolsRequest(ToolName toolName, UtilityAgentToolInput input, Map<String, Object> config) {
-    public sealed interface UtilityAgentToolInput permits StringInput, WebCrawlerInput, WeatherInput {
+    public sealed interface UtilityAgentToolInput permits StringInput, GoogleSearchInput, WebCrawlerInput, WeatherInput {
     }
 
     public record StringInput(@JsonValue String input) implements UtilityAgentToolInput {
+    }
+
+    public record GoogleSearchInput(String q) implements UtilityAgentToolInput {
     }
 
     public record WebCrawlerInput(String url) implements UtilityAgentToolInput {

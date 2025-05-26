@@ -117,7 +117,9 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
         String body = """
                 {
                   "tool_name": "GoogleSearch",
-                  "input": "What was the weather in Toronto on January 13th 2025?",
+                  "input": {
+                    "q": "What was the weather in Toronto on January 13th 2025?"
+                  },
                   "config": {
                     "maxResults": 10
                   }
@@ -146,7 +148,9 @@ public class BuiltinServiceInjectTest extends WireMockAbstract {
         String body = """
                 {
                   "tool_name": "GoogleSearch",
-                  "input": "What was the weather in Toronto on January 13th 2025?",
+                  "input": {
+                    "q": "What was the weather in Toronto on January 13th 2025?"
+                  },
                   "config": {
                     "maxResults": 3
                   }
