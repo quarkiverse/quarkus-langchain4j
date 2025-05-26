@@ -478,6 +478,49 @@ public class AiServicesTest extends OpenAiBaseTest {
                         new MessageContent("user", text + "\nYou must put every item on a separate line.")));
     }
 
+    interface SummarizerWithoutUserMessage {
+
+        @SystemMessage("""
+                Summarize every message from user in {{n}} bullet points. Provide only bullet points.
+
+                The message is:
+
+                {{message}}
+                """)
+        List<String> summarize(String message, int n);
+    }
+
+    @Test
+    void test_with_system_message_and_no_user_message() throws IOException {
+        setChatCompletionMessageContent(
+                "- AI is a branch of computer science\\n- AI aims to create machines that mimic human intelligence\\n- AI can perform tasks like recognizing patterns, making decisions, and predictions");
+        SummarizerWithoutUserMessage summarizer = AiServices.create(SummarizerWithoutUserMessage.class, createChatModel());
+
+        String text = "AI, or artificial intelligence, is a branch of computer science that aims to create " +
+                "machines that mimic human intelligence. This can range from simple tasks such as recognizing " +
+                "patterns or speech to more complex tasks like making decisions or predictions.";
+
+        List<String> bulletPoints = summarizer.summarize(text, 3);
+
+        assertThat(bulletPoints).hasSize(3).satisfies(list -> {
+            assertThat(list.get(0)).contains("branch");
+            assertThat(list.get(2)).contains("predictions");
+        });
+
+        assertMultipleRequestMessage(getRequestAsMap(),
+                List.of(
+                        new MessageContent("system",
+                                """
+                                        Summarize every message from user in 3 bullet points. Provide only bullet points.
+
+                                        The message is:
+
+                                        AI, or artificial intelligence, is a branch of computer science that aims to create machines that mimic human intelligence. This can range from simple tasks such as recognizing patterns or speech to more complex tasks like making decisions or predictions.
+                                        """),
+                        new MessageContent("user",
+                                "Continue output. DO NOT look at this line. ONLY look at the content before this line and system instruction.")));
+    }
+
     interface ChatWithModeration {
 
         @Moderate
