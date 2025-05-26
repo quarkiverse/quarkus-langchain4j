@@ -134,6 +134,7 @@ import io.quarkus.gizmo.Gizmo;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.qute.Expression;
 import io.quarkus.runtime.metrics.MetricsFactory;
 import io.smallrye.mutiny.Multi;
 
@@ -1360,7 +1361,8 @@ public class AiServicesProcessor {
 
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates, ignoredPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
-        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams);
+        AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
+                systemMessageInfo);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
@@ -1570,7 +1572,8 @@ public class AiServicesProcessor {
     }
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
-            List<TemplateParameterInfo> templateParams) {
+            List<TemplateParameterInfo> templateParams,
+            Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo) {
 
         Optional<Integer> userNameParamPosition = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
@@ -1622,17 +1625,34 @@ public class AiServicesProcessor {
                             userNameParamPosition, imageParamPosition, pdfParamPosition);
                 }
             } else {
-                if (method.parametersCount() == 0) {
-                    throw illegalConfigurationForMethod("Method should have at least one argument", method);
+                int numOfMethodParamsUsedInSystemMessage = 0;
+                if (systemMessageInfo.isPresent() && systemMessageInfo.get().text().isPresent()) {
+                    Set<String> templateParamNames = TemplateUtil.parts(systemMessageInfo.get().text().get()).stream()
+                            .flatMap(l -> l.stream().map(
+                                    Expression.Part::getName))
+                            .collect(Collectors.toSet());
+                    for (MethodParameterInfo parameter : method.parameters()) {
+                        if (templateParamNames.contains(parameter.name())) {
+                            numOfMethodParamsUsedInSystemMessage++;
+                        }
+                    }
                 }
-                if (method.parametersCount() == 1) {
-                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
-                            imageParamPosition, pdfParamPosition);
+                if (numOfMethodParamsUsedInSystemMessage != method.parametersCount()) {
+                    if (method.parametersCount() == 0) {
+                        throw illegalConfigurationForMethod("Method should have at least one argument", method);
+                    }
+                    if (method.parametersCount() == 1) {
+                        return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
+                                imageParamPosition, pdfParamPosition);
+                    }
+                    throw illegalConfigurationForMethod(
+                            "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
+                            method);
+                } else {
+                    // all method parameters are present in the system message, so there is no user message
+                    return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty(),
+                            Optional.empty(), Optional.empty());
                 }
-
-                throw illegalConfigurationForMethod(
-                        "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
-                        method);
             }
         }
     }

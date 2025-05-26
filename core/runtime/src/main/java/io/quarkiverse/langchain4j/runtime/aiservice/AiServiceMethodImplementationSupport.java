@@ -796,9 +796,8 @@ public class AiServiceMethodImplementationSupport {
                     pdfFileContent, text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
                             : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
-            throw new IllegalStateException(
-                    "Unable to construct UserMessage for class '" + context.aiServiceClass.getName()
-                            + "'. Please contact the maintainers");
+            // create a user message that instructs the model to ignore it's content
+            return EmptyUserMessage.INSTANCE;
         }
     }
 
