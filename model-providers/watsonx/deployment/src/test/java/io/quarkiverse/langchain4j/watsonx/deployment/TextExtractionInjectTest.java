@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.GET;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.PUT;
-import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionType.ASSEMBLY_MD;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.MD;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
@@ -20,7 +20,6 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WAT
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_RESULT_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_START_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION;
-import static io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Language.ENGLISH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
@@ -37,9 +36,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionDataReference;
-import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionSteps;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionParameters;
 import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction;
-import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Options;
+import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Parameters;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class TextExtractionInjectTest extends WireMockAbstract {
@@ -126,15 +125,15 @@ public class TextExtractionInjectTest extends WireMockAbstract {
         var request = TextExtractionRequest.builder()
                 .documentReference(documentReference)
                 .resultsReference(resultsReference)
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_MD)
+                .parameters(new TextExtractionParameters(List.of(MD), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
 
-        var options = Options.create(List.of(ENGLISH))
+        var options = Parameters.builder()
                 .removeOutputFile(true)
-                .removeUploadedFile(true);
+                .removeUploadedFile(true)
+                .build();
 
         mockServers(request, "document-bucket-name", "results-bucket-name", true, true);
 
@@ -162,15 +161,15 @@ public class TextExtractionInjectTest extends WireMockAbstract {
         var request = TextExtractionRequest.builder()
                 .documentReference(documentReference)
                 .resultsReference(resultsReference)
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_MD)
+                .parameters(new TextExtractionParameters(List.of(MD), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
 
-        var options = Options.create(List.of(ENGLISH))
+        var options = Parameters.builder()
                 .removeOutputFile(true)
-                .removeUploadedFile(true);
+                .removeUploadedFile(true)
+                .build();
 
         mockServers(request, "custom-document-bucket-name", "custom-results-bucket-name", true, true);
 

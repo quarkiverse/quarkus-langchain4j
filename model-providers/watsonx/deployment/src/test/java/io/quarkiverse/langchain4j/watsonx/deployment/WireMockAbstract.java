@@ -23,11 +23,9 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PORT_WA
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PORT_WX_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_GENERATE_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION;
-import static java.util.Objects.nonNull;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -375,16 +373,6 @@ public abstract class WireMockAbstract {
         }
 
         public TextExtractionBuilder failResponse(TextExtractionRequest request, String id) {
-            String ocr = "";
-            if (nonNull(request.steps().ocr())) {
-                String array = request.steps().ocr().languagesList().stream()
-                        .map(language -> "\"%s\"".formatted(language))
-                        .collect(Collectors.joining(",", "[", "]"));
-                ocr = """
-                        "ocr": {
-                          "languages_list": %s
-                        },""".formatted(array);
-            }
             super.response("""
                     {
                           "metadata": {
@@ -412,12 +400,6 @@ public abstract class WireMockAbstract {
                                 "file_name": "%s"
                               }
                             },
-                            "steps": {
-                              %s
-                              "tables_processing": {
-                                "enabled": %s
-                              }
-                            },
                             "results": {
                                 "error": {
                                     "code": "file_download_error",
@@ -433,23 +415,11 @@ public abstract class WireMockAbstract {
                     request.documentReference().connection().id(),
                     request.documentReference().location().fileName(),
                     request.resultsReference().connection().id(),
-                    request.resultsReference().location().fileName(),
-                    ocr,
-                    request.steps().tablesProcessing().enabled()));
+                    request.resultsReference().location().fileName()));
             return this;
         }
 
         public TextExtractionBuilder response(TextExtractionRequest request, String id, String status) {
-            String ocr = "";
-            if (nonNull(request.steps().ocr())) {
-                String array = request.steps().ocr().languagesList().stream()
-                        .map(language -> "\"%s\"".formatted(language))
-                        .collect(Collectors.joining(",", "[", "]"));
-                ocr = """
-                        "ocr": {
-                          "languages_list": %s
-                        },""".formatted(array);
-            }
             super.response("""
                     {
                       "metadata": {
@@ -479,12 +449,6 @@ public abstract class WireMockAbstract {
                             "bucket": "%s"
                           }
                         },
-                        "steps": {
-                          %s
-                          "tables_processing": {
-                            "enabled": %s
-                          }
-                        },
                         "results": {
                           "status": "%s",
                           "number_pages_processed": 1,
@@ -501,8 +465,6 @@ public abstract class WireMockAbstract {
                     request.resultsReference().connection().id(),
                     request.resultsReference().location().fileName(),
                     request.resultsReference().location().bucket(),
-                    ocr,
-                    request.steps().tablesProcessing().enabled(),
                     status));
             return this;
         }

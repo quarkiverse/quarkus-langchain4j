@@ -10,8 +10,11 @@ import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.GET;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.PUT;
-import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionType.ASSEMBLY_JSON;
-import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionType.ASSEMBLY_MD;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.HTML;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.JSON;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.MD;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.PAGE_IMAGES;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.PLAIN_TEXT;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.GRANT_TYPE;
@@ -22,8 +25,6 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WAT
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_RESULT_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_TEXT_EXTRACTION_START_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION;
-import static io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Language.ENGLISH;
-import static io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Language.ITALIAN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -54,8 +56,11 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import io.quarkiverse.langchain4j.watsonx.bean.CosError;
 import io.quarkiverse.langchain4j.watsonx.bean.CosError.Code;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.EmbeddedImages;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Mode;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.OCR;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionDataReference;
-import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionSteps;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionParameters;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse.Status;
 import io.quarkiverse.langchain4j.watsonx.bean.WatsonxError;
@@ -66,8 +71,7 @@ import io.quarkiverse.langchain4j.watsonx.exception.COSException;
 import io.quarkiverse.langchain4j.watsonx.exception.TextExtractionException;
 import io.quarkiverse.langchain4j.watsonx.exception.WatsonxException;
 import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction;
-import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Language;
-import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Options;
+import io.quarkiverse.langchain4j.watsonx.runtime.TextExtraction.Parameters;
 import io.quarkiverse.langchain4j.watsonx.runtime.TokenGenerationCache;
 import io.quarkiverse.langchain4j.watsonx.runtime.TokenGenerator;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -141,10 +145,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String textExtracted = textExtraction.extractAndFetch(fileAlreadyUploaded, List.of(ENGLISH));
+        String textExtracted = textExtraction.extractAndFetch(fileAlreadyUploaded);
         assertEquals("Hello", textExtracted);
 
-        textExtracted = textExtraction.extractAndFetch(fileAlreadyUploaded, Options.create(List.of(ENGLISH)));
+        textExtracted = textExtraction.extractAndFetch(fileAlreadyUploaded, Parameters.builder().build());
         assertEquals("Hello", textExtracted);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -166,10 +170,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String textExtracted = textExtraction.uploadExtractAndFetch(inputStream, fileName, List.of(ENGLISH));
+        String textExtracted = textExtraction.uploadExtractAndFetch(inputStream, fileName);
         assertEquals("Hello", textExtracted);
 
-        textExtracted = textExtraction.uploadExtractAndFetch(inputStream, fileName, Options.create(List.of(ENGLISH)));
+        textExtracted = textExtraction.uploadExtractAndFetch(inputStream, fileName, Parameters.builder().build());
         assertEquals("Hello", textExtracted);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -190,10 +194,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String textExtracted = textExtraction.uploadExtractAndFetch(file, List.of(ENGLISH));
+        String textExtracted = textExtraction.uploadExtractAndFetch(file);
         assertEquals("Hello", textExtracted);
 
-        textExtracted = textExtraction.uploadExtractAndFetch(file, Options.create(List.of(ENGLISH)));
+        textExtracted = textExtraction.uploadExtractAndFetch(file, Parameters.builder().build());
         assertEquals("Hello", textExtracted);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -214,7 +218,7 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFileName, false, false);
 
         TextExtractionException ex = assertThrows(TextExtractionException.class,
-                () -> textExtraction.uploadExtractAndFetch(file, List.of(ENGLISH)));
+                () -> textExtraction.uploadExtractAndFetch(file));
         assertEquals(ex.getCode(), "file_not_found");
         assertTrue(ex.getCause() instanceof FileNotFoundException);
 
@@ -236,10 +240,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String processId = textExtraction.startExtraction(fileAlreadyUploaded, List.of(ENGLISH));
+        String processId = textExtraction.startExtraction(fileAlreadyUploaded);
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        processId = textExtraction.startExtraction(fileAlreadyUploaded, Options.create(List.of(ENGLISH)));
+        processId = textExtraction.startExtraction(fileAlreadyUploaded, Parameters.builder().build());
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -260,10 +264,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String processId = textExtraction.uploadAndStartExtraction(file, List.of(ENGLISH));
+        String processId = textExtraction.uploadAndStartExtraction(file);
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        processId = textExtraction.uploadAndStartExtraction(file, Options.create(List.of(ENGLISH)));
+        processId = textExtraction.uploadAndStartExtraction(file, Parameters.builder().build());
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -285,7 +289,7 @@ public class TextExtractionTest extends WireMockAbstract {
         mockServers(body, outputFileName, false, false);
 
         TextExtractionException ex = assertThrows(TextExtractionException.class,
-                () -> textExtraction.uploadAndStartExtraction(file, List.of(ENGLISH)));
+                () -> textExtraction.uploadAndStartExtraction(file));
         assertEquals(ex.getCode(), "file_not_found");
         assertTrue(ex.getCause() instanceof FileNotFoundException);
 
@@ -308,10 +312,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         mockServers(body, outputFileName, false, false);
 
-        String processId = textExtraction.uploadAndStartExtraction(inputStream, fileName, List.of(ENGLISH));
+        String processId = textExtraction.uploadAndStartExtraction(inputStream, fileName);
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
-        processId = textExtraction.uploadAndStartExtraction(inputStream, fileName, Options.create(List.of(ENGLISH)));
+        processId = textExtraction.uploadAndStartExtraction(inputStream, fileName, Parameters.builder().build());
         assertEquals(PROCESS_EXTRACTION_ID, processId);
 
         watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
@@ -331,20 +335,19 @@ public class TextExtractionTest extends WireMockAbstract {
         TextExtractionRequest body = TextExtractionRequest.builder()
                 .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
                 .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFileName, BUCKET_NAME))
-                .steps(TextExtractionSteps.of(List.of("en", "it"), false))
-                .type(ASSEMBLY_JSON)
+                .parameters(new TextExtractionParameters(List.of(JSON), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
 
         mockServers(body, outputFileName, true, true);
 
-        Options options = Options.create(List.of(ENGLISH, ITALIAN))
+        Parameters options = Parameters.builder()
                 .outputFileName(outputFileName)
                 .removeOutputFile(true)
                 .removeUploadedFile(true)
-                .tableProcessing(false)
-                .type(ASSEMBLY_JSON);
+                .types(JSON)
+                .build();
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -396,15 +399,14 @@ public class TextExtractionTest extends WireMockAbstract {
         TextExtractionRequest body = TextExtractionRequest.builder()
                 .documentReference(TextExtractionDataReference.of(CONNECTION_ID, "test", BUCKET_NAME))
                 .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFileName, BUCKET_NAME))
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_MD)
+                .parameters(new TextExtractionParameters(List.of(MD), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
 
         mockServers(body, outputFileName, false, false);
 
-        textExtraction.startExtraction("test", List.of(ENGLISH));
+        textExtraction.startExtraction("test");
         watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
         watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
         cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
@@ -420,21 +422,278 @@ public class TextExtractionTest extends WireMockAbstract {
         TextExtractionRequest body = TextExtractionRequest.builder()
                 .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
                 .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFileName, BUCKET_NAME))
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_JSON)
+                .parameters(new TextExtractionParameters(List.of(JSON), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
 
         mockServers(body, outputFileName, false, false);
 
-        textExtraction.startExtraction(FILE_NAME, Options.create(List.of(ENGLISH)).type(ASSEMBLY_JSON));
+        textExtraction.startExtraction(FILE_NAME, Parameters.builder().types(JSON).build());
         watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
         watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
         cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
         cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
         cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
         cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+    }
+
+    @Test
+    void textPlainOutputFileNameTest() throws Exception {
+        String outputFileName = "test.txt";
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFileName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(PLAIN_TEXT), null, null, null, null, null, null))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFileName, false, false);
+
+        textExtraction.startExtraction(FILE_NAME, Parameters.builder().types(PLAIN_TEXT).build());
+        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
+        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
+        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFileName))));
+    }
+
+    @Test
+    void pageImagesOutputFolderTest() throws Exception {
+        String outputFolderName = "/";
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(PAGE_IMAGES), null, null, null, null, null, null))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+
+        textExtraction.startExtraction(FILE_NAME, Parameters.builder().types(PAGE_IMAGES).build());
+        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
+        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
+        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+    }
+
+    @Test
+    void multipleTypeOutputFolderTest() throws Exception {
+        String outputFolderName = "/";
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML), null, null, null,
+                        null, null, null))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+
+        textExtraction.startExtraction(FILE_NAME,
+                Parameters.builder().types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML).build());
+        watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
+        watsonxServer.verify(0, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
+        cosServer.verify(0, putRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, getRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, FILE_NAME))));
+        cosServer.verify(0, deleteRequestedFor(urlEqualTo("/%s/%s".formatted(BUCKET_NAME, outputFolderName))));
+    }
+
+    @Test
+    void overrideParametersTest() throws Exception {
+        String outputFolderName = "/";
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML), Mode.STANDARD,
+                        OCR.DISABLED, false,
+                        EmbeddedImages.DISABLED, 16, false))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+
+        textExtraction.startExtraction(
+                FILE_NAME,
+                Parameters.builder()
+                        .types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML)
+                        .mode(Mode.STANDARD)
+                        .ocr(OCR.DISABLED)
+                        .autoRotationCorrection(false)
+                        .embeddedImages(EmbeddedImages.DISABLED)
+                        .dpi(16)
+                        .outputTokensAndBbox(false)
+                        .build());
+
+        body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(
+                        new TextExtractionParameters(List.of(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML), Mode.HIGH_QUALITY,
+                                OCR.ENABLED, true,
+                                EmbeddedImages.ENABLED_PLACEHOLDER, 32, true))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+
+        textExtraction.startExtraction(
+                FILE_NAME,
+                Parameters.builder()
+                        .types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML)
+                        .mode(Mode.HIGH_QUALITY)
+                        .ocr(OCR.ENABLED)
+                        .autoRotationCorrection(true)
+                        .embeddedImages(EmbeddedImages.ENABLED_PLACEHOLDER)
+                        .dpi(32)
+                        .outputTokensAndBbox(true)
+                        .build());
+
+        watsonxServer.verify(2, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
+    }
+
+    @Test
+    void fetchWithMultipleTypes() throws URISyntaxException {
+
+        String outputFolderName = "myFolder/";
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML), Mode.STANDARD,
+                        OCR.DISABLED, false,
+                        EmbeddedImages.DISABLED, 16, false))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+        var ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.extractAndFetch(
+                    FILE_NAME,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML)
+                            .mode(Mode.STANDARD)
+                            .ocr(OCR.DISABLED)
+                            .autoRotationCorrection(false)
+                            .embeddedImages(EmbeddedImages.DISABLED)
+                            .dpi(16)
+                            .outputTokensAndBbox(false)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed if more than one file is to be generated",
+                ex.getMessage());
+
+        File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
+
+        ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.uploadExtractAndFetch(
+                    file,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML)
+                            .mode(Mode.STANDARD)
+                            .ocr(OCR.DISABLED)
+                            .autoRotationCorrection(false)
+                            .embeddedImages(EmbeddedImages.DISABLED)
+                            .dpi(16)
+                            .outputTokensAndBbox(false)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed if more than one file is to be generated",
+                ex.getMessage());
+
+        InputStream inputStream = TextExtractionTest.class.getClassLoader().getResourceAsStream(FILE_NAME);
+
+        ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.uploadExtractAndFetch(
+                    inputStream,
+                    FILE_NAME,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(MD, JSON, PLAIN_TEXT, PAGE_IMAGES, HTML)
+                            .mode(Mode.STANDARD)
+                            .ocr(OCR.DISABLED)
+                            .autoRotationCorrection(false)
+                            .embeddedImages(EmbeddedImages.DISABLED)
+                            .dpi(16)
+                            .outputTokensAndBbox(false)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed if more than one file is to be generated",
+                ex.getMessage());
+    }
+
+    @Test
+    void fetchPageImages() throws URISyntaxException {
+        String outputFolderName = "myFolder/";
+        InputStream inputStream = TextExtractionTest.class.getClassLoader().getResourceAsStream(FILE_NAME);
+        File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
+
+        TextExtractionRequest body = TextExtractionRequest.builder()
+                .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
+                .resultsReference(TextExtractionDataReference.of(CONNECTION_ID, outputFolderName, BUCKET_NAME))
+                .parameters(new TextExtractionParameters(List.of(PAGE_IMAGES), null,
+                        null, null,
+                        null, null, null))
+                .projectId(PROJECT_ID)
+                .spaceId(null)
+                .build();
+
+        mockServers(body, outputFolderName, false, false);
+        var ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.extractAndFetch(
+                    FILE_NAME,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(PAGE_IMAGES)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed for the type \"page_images\"",
+                ex.getMessage());
+
+        ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.uploadExtractAndFetch(
+                    file,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(PAGE_IMAGES)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed for the type \"page_images\"",
+                ex.getMessage());
+
+        ex = assertThrows(TextExtractionException.class, () -> {
+            textExtraction.uploadExtractAndFetch(
+                    inputStream,
+                    FILE_NAME,
+                    Parameters.builder()
+                            .outputFileName("myFolder/")
+                            .types(PAGE_IMAGES)
+                            .build());
+        });
+        assertEquals("fetch_operation_not_allowed", ex.getCode());
+        assertEquals("The fetch operation cannot be executed for the type \"page_images\"",
+                ex.getMessage());
     }
 
     @Test
@@ -466,7 +725,7 @@ public class TextExtractionTest extends WireMockAbstract {
                 .response("Hello")
                 .build();
 
-        String extractedValue = textExtraction.extractAndFetch(FILE_NAME, List.of(ENGLISH));
+        String extractedValue = textExtraction.extractAndFetch(FILE_NAME);
         assertEquals("Hello", extractedValue);
         watsonxServer.verify(1, postRequestedFor(urlPathEqualTo("/ml/v1/text/extractions")));
         watsonxServer.verify(2, getRequestedFor(urlPathEqualTo("/ml/v1/text/extractions/" + PROCESS_EXTRACTION_ID)));
@@ -501,8 +760,9 @@ public class TextExtractionTest extends WireMockAbstract {
                 .response("Hello")
                 .build();
 
-        Options options = Options.create(List.of(ENGLISH))
-                .timeout(Duration.ofMillis(100));
+        Parameters options = Parameters.builder()
+                .timeout(Duration.ofMillis(100))
+                .build();
 
         var ex = assertThrows(
                 TextExtractionException.class,
@@ -523,10 +783,10 @@ public class TextExtractionTest extends WireMockAbstract {
 
         TextExtractionRequest request = createDefaultRequest();
 
-        List<Language> languages = List.of(ENGLISH);
-        Options options = Options.create(languages)
+        Parameters parameters = Parameters.builder()
                 .removeOutputFile(true)
-                .removeUploadedFile(true);
+                .removeUploadedFile(true)
+                .build();
 
         mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 200).build();
         mockCosBuilder(DELETE, BUCKET_NAME, FILE_NAME, 200).build();
@@ -550,14 +810,14 @@ public class TextExtractionTest extends WireMockAbstract {
 
         var ex = assertThrows(
                 TextExtractionException.class,
-                () -> textExtraction.extractAndFetch(FILE_NAME, options));
+                () -> textExtraction.extractAndFetch(FILE_NAME, parameters));
 
         assertEquals(ex.getCode(), "file_download_error");
         assertEquals(ex.getMessage(), "error message");
 
         ex = assertThrows(
                 TextExtractionException.class,
-                () -> textExtraction.uploadExtractAndFetch(file, options));
+                () -> textExtraction.uploadExtractAndFetch(file, parameters));
 
         assertEquals(ex.getCode(), "file_download_error");
         assertEquals(ex.getMessage(), "error message");
@@ -576,8 +836,6 @@ public class TextExtractionTest extends WireMockAbstract {
 
         String outputFileName = FILE_NAME.replace(".pdf", ".md");
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
-
-        List<Language> languages = List.of(ENGLISH);
 
         mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 404)
                 .response("""
@@ -601,14 +859,14 @@ public class TextExtractionTest extends WireMockAbstract {
 
         var ex = assertThrows(
                 COSException.class,
-                () -> textExtraction.uploadAndStartExtraction(file, languages),
+                () -> textExtraction.uploadAndStartExtraction(file),
                 "The specified bucket does not exist.");
 
         assertEquals(cosError, ex.details());
 
         ex = assertThrows(
                 COSException.class,
-                () -> textExtraction.uploadExtractAndFetch(file, languages),
+                () -> textExtraction.uploadExtractAndFetch(file),
                 "The specified bucket does not exist.");
 
         assertEquals(cosError, ex.details());
@@ -628,8 +886,6 @@ public class TextExtractionTest extends WireMockAbstract {
         File file = new File(TextExtractionTest.class.getClassLoader().getResource(FILE_NAME).toURI());
 
         TextExtractionRequest body = createDefaultRequest();
-
-        List<Language> languages = List.of(ENGLISH);
 
         mockCosBuilder(PUT, BUCKET_NAME, FILE_NAME, 200).build();
         mockCosBuilder(GET, BUCKET_NAME, outputFileName, 404)
@@ -664,14 +920,14 @@ public class TextExtractionTest extends WireMockAbstract {
 
         var ex = assertThrows(
                 COSException.class,
-                () -> textExtraction.extractAndFetch(FILE_NAME, languages),
+                () -> textExtraction.extractAndFetch(FILE_NAME),
                 "The specified key does not exist.");
 
         assertEquals(cosError, ex.details());
 
         ex = assertThrows(
                 COSException.class,
-                () -> textExtraction.uploadExtractAndFetch(file, languages),
+                () -> textExtraction.uploadExtractAndFetch(file),
                 "The specified key does not exist.");
 
         assertEquals(cosError, ex.details());
@@ -743,8 +999,7 @@ public class TextExtractionTest extends WireMockAbstract {
         TextExtractionRequest request = TextExtractionRequest.builder()
                 .documentReference(TextExtractionDataReference.of(NEW_CONNECTION_ID, FILE_NAME, NEW_BUCKET_NAME))
                 .resultsReference(TextExtractionDataReference.of(NEW_CONNECTION_ID, outputFileName, NEW_BUCKET_NAME))
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_MD)
+                .parameters(new TextExtractionParameters(List.of(MD), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();
@@ -769,14 +1024,14 @@ public class TextExtractionTest extends WireMockAbstract {
                 .response(request, PROCESS_EXTRACTION_ID, "completed")
                 .build();
 
-        Options options = Options.create(List.of(ENGLISH))
+        Parameters options = Parameters.builder()
                 .documentReference(new TextExtraction.Reference(NEW_CONNECTION_ID, NEW_BUCKET_NAME))
                 .outputFileName(outputFileName)
                 .removeOutputFile(false)
                 .removeUploadedFile(false)
                 .resultsReference(new TextExtraction.Reference(NEW_CONNECTION_ID, NEW_BUCKET_NAME))
-                .tableProcessing(true)
-                .type(ASSEMBLY_MD);
+                .types(MD)
+                .build();
 
         assertDoesNotThrow(() -> textExtraction.extractAndFetch(FILE_NAME, options));
         assertDoesNotThrow(() -> textExtraction.startExtraction(FILE_NAME, options));
@@ -874,8 +1129,7 @@ public class TextExtractionTest extends WireMockAbstract {
                 .documentReference(TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME, BUCKET_NAME))
                 .resultsReference(
                         TextExtractionDataReference.of(CONNECTION_ID, FILE_NAME.replace(".pdf", ".md"), BUCKET_NAME))
-                .steps(TextExtractionSteps.of(List.of("en"), true))
-                .type(ASSEMBLY_MD)
+                .parameters(new TextExtractionParameters(List.of(MD), null, null, null, null, null, null))
                 .projectId(PROJECT_ID)
                 .spaceId(null)
                 .build();

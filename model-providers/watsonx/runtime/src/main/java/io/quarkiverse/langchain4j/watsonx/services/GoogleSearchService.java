@@ -17,7 +17,7 @@ import dev.langchain4j.Experimental;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.watsonx.bean.GoogleSearchResult;
 import io.quarkiverse.langchain4j.watsonx.bean.UtilityAgentToolsRequest;
-import io.quarkiverse.langchain4j.watsonx.bean.UtilityAgentToolsRequest.StringInput;
+import io.quarkiverse.langchain4j.watsonx.bean.UtilityAgentToolsRequest.GoogleSearchInput;
 import io.quarkiverse.langchain4j.watsonx.bean.UtilityAgentToolsResponse;
 import io.quarkiverse.langchain4j.watsonx.client.UtilityAgentToolsRestApi;
 import io.quarkiverse.langchain4j.watsonx.exception.BuiltinServiceException;
@@ -70,7 +70,11 @@ public class GoogleSearchService {
             maxResults = 20;
         }
 
-        var request = new UtilityAgentToolsRequest(GOOGLE_SEARCH, new StringInput(input), Map.of("maxResults", maxResults));
+        var request = new UtilityAgentToolsRequest(
+                GOOGLE_SEARCH,
+                new GoogleSearchInput(input),
+                Map.of("maxResults", maxResults));
+
         var response = retryOn(new Callable<UtilityAgentToolsResponse>() {
             @Override
             public UtilityAgentToolsResponse call() throws Exception {
