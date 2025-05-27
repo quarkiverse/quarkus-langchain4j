@@ -152,11 +152,21 @@ The API supports text extraction from the following file types:
 * JPG
 * PNG
 * TIFF
+* BMP
+* DOC
+* DOCX
+* HTML
+* JFIF
+* PPT
+* PPTX
 
 The extracted text can be output in the following formats:
 
 * JSON
-* Markdown
+* MARKDOWN
+* HTML
+* PLAIN_TEXT
+* PAGE_IMAGES
 
 === Configuration
 
@@ -201,7 +211,7 @@ First, if the document is already stored in IBM Cloud Object Storage, you can in
 
 [source,java]
 ----
-String extractionId = textExtraction.startExtraction("path/to/document.pdf", List.of(Language.ENGLISH));
+String extractionId = textExtraction.startExtraction("path/to/document.pdf");
 ----
 
 Alternatively, if you're working with a local file, you can upload it and start the extraction process with:
@@ -209,7 +219,7 @@ Alternatively, if you're working with a local file, you can upload it and start 
 [source,java]
 ----
 File file = new File("path/to/document.pdf");
-String extractionId = textExtraction.uploadAndStartExtraction(file, List.of(Language.ENGLISH));
+String extractionId = textExtraction.uploadAndStartExtraction(file);
 ----
 
 After starting the extraction, you can check its status by calling:
@@ -225,7 +235,7 @@ You can either extract text from an existing file directly:
 
 [source,java]
 ----
-String extractedText = textExtraction.extractAndFetch("path/to/document.pdf", List.of(Language.ENGLISH));
+String extractedText = textExtraction.extractAndFetch("path/to/document.pdf");
 ----
 
 Or upload the file and retrieve the extracted text immediately:
@@ -233,27 +243,40 @@ Or upload the file and retrieve the extracted text immediately:
 [source,java]
 ----
 File file = new File("path/to/document.pdf");
-String extractedText = textExtraction.uploadExtractAndFetch(file, List.of(Language.ENGLISH));
+String extractedText = textExtraction.uploadExtractAndFetch(file);
 ----
 
+All extraction methods can accept a `Parameters` object to customize the behavior of the text extraction request.
 
-All extraction methods can also accept an `Options` object as parameter.
+The `Parameters` object allows fine-grained control over the extraction process, including:
 
-The `Options` object allows customization of extraction behavior, including:  
-
-- Whether uploaded files should be deleted after processing.  
-- Whether extracted text files should be removed from the results bucket after retrieval.  
-- Overriding default properties values configured.  
+- Whether the uploaded file should be deleted after processing (`removeUploadedFile`).
+- Whether the output file should be deleted from the results location after retrieval (`removeOutputFile`).
+- Customization of the output formats (e.g., plain text, HTML, markdown).
+- Selection of processing mode (`standard` or `high_quality`).
+- OCR behavior (`disabled`, `enabled`, or `forced`).
+- Whether to apply automatic rotation correction on images.
+- Generation of embedded images in markdown or JSON output.
+- Output resolution for generated images (DPI).
+- Whether to include token-level data and bounding boxes in the output.
+- Overriding default values from the configured data connection or system settings.
 
 [source,java]
 ----
-Options options = 
-    Options.create(List.of(ENGLISH))
+var parameters = Parameters.builder()
         .removeOutputFile(true)
-        .removeUploadedFile(true);
+        .removeUploadedFile(true)
+        .types(HTML)
+        .mode(Mode.STANDARD)
+        .ocr(OCR.DISABLED)
+        .autoRotationCorrection(false)
+        .embeddedImages(EmbeddedImages.DISABLED)
+        .dpi(16)
+        .outputTokensAndBbox(false)
+        .build()
 
 File file = new File("path/to/document.pdf");
-String extractedText = textExtraction.uploadExtractAndFetch(file, options));
+String extractedText = textExtraction.uploadExtractAndFetch(file, parameters));
 ----
 
 To perform Retrieval-Augmented Generation (RAG) on the extracted files in IBM Cloud Object Storage, you can use the following dependency to interact with the storage as it uses the S3 protocol:

@@ -1,26 +1,19 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 public record TextExtractionRequest(String spaceId, String projectId, TextExtractionDataReference documentReference,
-        TextExtractionDataReference resultsReference, Map<?, ?> assemblyJson, Map<?, ?> assemblyMd, TextExtractionSteps steps) {
+        TextExtractionDataReference resultsReference, TextExtractionParameters parameters) {
+
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record CosDataLocation(String fileName, String bucket) {
     }
 
     public record CosDataConnection(String id) {
-    }
-
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public record TextExtractionStepOcr(List<String> languagesList) {
-    }
-
-    public record TextExtractionStepTablesProcessing(boolean enabled) {
     }
 
     public record TextExtractionDataReference(String type, CosDataConnection connection, CosDataLocation location) {
@@ -36,31 +29,71 @@ public record TextExtractionRequest(String spaceId, String projectId, TextExtrac
     }
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public record TextExtractionSteps(TextExtractionStepOcr ocr, TextExtractionStepTablesProcessing tablesProcessing) {
-        public static TextExtractionSteps of(List<String> languages, boolean tableProcessing) {
-            var obj = new TextExtractionStepTablesProcessing(tableProcessing);
-            return new TextExtractionSteps(new TextExtractionStepOcr(languages), obj);
-        }
+    public record TextExtractionParameters(
+            List<Type> requestedOutputs, Mode mode, OCR ocrMode,
+            Boolean autoRotationCorrection, EmbeddedImages createEmbeddedImages,
+            Integer outputDpi, Boolean outputTokensAndBbox) {
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static enum TextExtractionType {
+    public static enum Type {
 
-        ASSEMBLY_JSON("assembly_json"),
-        ASSEMBLY_MD("assembly_md");
+        @JsonProperty("assembly")
+        JSON,
 
-        private final String value;
+        @JsonProperty("html")
+        HTML,
 
-        TextExtractionType(String value) {
-            this.value = value;
-        }
+        @JsonProperty("md")
+        MD,
 
-        public String value() {
-            return this.value;
-        }
+        @JsonProperty("plain_text")
+        PLAIN_TEXT,
+
+        @JsonProperty("page_images")
+        PAGE_IMAGES;
+    }
+
+    public static enum Mode {
+
+        @JsonProperty("standard")
+        STANDARD,
+
+        @JsonProperty("high_quality")
+        HIGH_QUALITY;
+    }
+
+    public static enum OCR {
+
+        @JsonProperty("disabled")
+        DISABLED,
+
+        @JsonProperty("enabled")
+        ENABLED,
+
+        @JsonProperty("forced")
+        FORCED;
+    }
+
+    public static enum EmbeddedImages {
+
+        @JsonProperty("disabled")
+        DISABLED,
+
+        @JsonProperty("enabled_placeholder")
+        ENABLED_PLACEHOLDER,
+
+        @JsonProperty("enabled_text")
+        ENABLED_TEXT,
+
+        @JsonProperty("enabled_verbalization")
+        ENABLED_VERBALIZATION,
+
+        @JsonProperty("enabled_verbalization_all")
+        ENABLED_VERBALIZATION_ALL;
     }
 
     public static class Builder {
@@ -69,8 +102,7 @@ public record TextExtractionRequest(String spaceId, String projectId, TextExtrac
         private String projectId;
         private TextExtractionDataReference documentReference;
         private TextExtractionDataReference resultsReference;
-        private TextExtractionSteps steps;
-        private TextExtractionType type = TextExtractionType.ASSEMBLY_JSON;
+        private TextExtractionParameters parameters;
 
         public Builder spaceId(String spaceId) {
             this.spaceId = spaceId;
@@ -92,27 +124,13 @@ public record TextExtractionRequest(String spaceId, String projectId, TextExtrac
             return this;
         }
 
-        public Builder steps(TextExtractionSteps steps) {
-            this.steps = steps;
-            return this;
-        }
-
-        public Builder type(TextExtractionType type) {
-            this.type = type;
+        public Builder parameters(TextExtractionParameters parameters) {
+            this.parameters = parameters;
             return this;
         }
 
         public TextExtractionRequest build() {
-            return switch (type) {
-                case ASSEMBLY_JSON ->
-                    new TextExtractionRequest(spaceId, projectId, documentReference, resultsReference, Collections.emptyMap(),
-                            null,
-                            steps);
-                case ASSEMBLY_MD ->
-                    new TextExtractionRequest(spaceId, projectId, documentReference, resultsReference, null,
-                            Collections.emptyMap(),
-                            steps);
-            };
+            return new TextExtractionRequest(spaceId, projectId, documentReference, resultsReference, parameters);
         }
     }
 }

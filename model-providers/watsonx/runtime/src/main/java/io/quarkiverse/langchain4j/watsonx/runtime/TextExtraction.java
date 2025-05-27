@@ -2,9 +2,9 @@ package io.quarkiverse.langchain4j.watsonx.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
-import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionType.ASSEMBLY_MD;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.MD;
+import static io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type.PAGE_IMAGES;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedInputStream;
@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -25,9 +26,12 @@ import org.jboss.logging.Logger;
 
 import io.quarkiverse.langchain4j.watsonx.WatsonxUtils;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.EmbeddedImages;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Mode;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.OCR;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionDataReference;
-import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionSteps;
-import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionType;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.TextExtractionParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest.Type;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse.ServiceError;
 import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionResponse.Status;
@@ -37,8 +41,9 @@ import io.quarkiverse.langchain4j.watsonx.exception.COSException;
 import io.quarkiverse.langchain4j.watsonx.exception.TextExtractionException;
 
 /**
- * This class provides methods for extracting text from high-value business documents, making them
- * more accessible to AI models or enabling the identification of key information.
+ * This class provides methods for extracting text from high-value business documents, making them more accessible to AI models
+ * or enabling the
+ * identification of key information.
  * <p>
  * The API supports text extraction from the following file types:
  * </p>
@@ -54,7 +59,10 @@ import io.quarkiverse.langchain4j.watsonx.exception.TextExtractionException;
  * </p>
  * <ul>
  * <li>JSON</li>
- * <li>Markdown</li>
+ * <li>MARKDOWN</li>
+ * <li>HTML</li>
+ * <li>PLAIN_TEXT</li>
+ * <li>PAGE_IMAGES</li>
  * </ul>
  */
 public class TextExtraction {
@@ -78,21 +86,20 @@ public class TextExtraction {
     final private String projectId, spaceId, version;
 
     /**
-     * Constructs a {@code TextExtraction} instance with the required parameters to perform text
-     * extraction from documents stored in IBM Cloud Object Storage (COS). This constructor initializes
-     * the necessary references, project details, and client instances for interacting with IBM COS and
+     * Constructs a {@code TextExtraction} instance with the required parameters to perform text extraction from documents
+     * stored in IBM Cloud Object
+     * Storage (COS). This constructor initializes the necessary references, project details, and client instances for
+     * interacting with IBM COS and
      * Watsonx AI services.
      * <p>
      * <strong>Default Bucket:</strong>
      * <p>
-     * The {@code documentReference.bucket} and {@code resultReference.bucket} fields are used as the
-     * default buckets for uploading documents to COS and they will serve as the target location for the
-     * following:
+     * The {@code documentReference.bucket} and {@code resultReference.bucket} fields are used as the default buckets for
+     * uploading documents to COS and
+     * they will serve as the target location for the following:
      * <ul>
-     * <li>{@code documentReference.bucket}: The default bucket for uploading local documents to
-     * COS.</li>
-     * <li>{@code resultReference.bucket}: The default bucket for uploading extracted documents to
-     * COS.</li>
+     * <li>{@code documentReference.bucket}: The default bucket for uploading local documents to COS.</li>
+     * <li>{@code resultReference.bucket}: The default bucket for uploading extracted documents to COS.</li>
      * </ul>
      */
     public TextExtraction(
@@ -105,14 +112,6 @@ public class TextExtraction {
         requireNonNull(resultReference);
         requireNonNull(watsonxClient);
 
-        if (nonNull(documentReference) && (isNull(documentReference.bucket) || documentReference.bucket.isBlank()))
-            throw new IllegalArgumentException(
-                    "The TextExtraction constructor needs a non-empty or null value for \"documentReference.bucket\", this value will be the default bucket used to upload the local documents to the Cloud Object Storage.");
-
-        if (nonNull(resultReference) && (isNull(resultReference.bucket) || resultReference.bucket.isBlank()))
-            throw new IllegalArgumentException(
-                    "The TextExtraction constructor needs a non-empty or null value for \"resultReference.bucket\", this value will be the default bucket used to upload the extracted documents to the Cloud Object Storage.");
-
         this.documentReference = documentReference;
         this.resultReference = resultReference;
         this.projectId = projectId;
@@ -123,285 +122,312 @@ public class TextExtraction {
     }
 
     /**
-     * Starts the asynchronous text extraction process for a document stored in IBM Cloud Object Storage
-     * (COS). The extracted text is saved as a new <b>Markdown</b> file in COS, preserving the original
-     * filename but using the {@code .md } extension. To customize the output behavior, use the method
-     * with the {@link Options} parameter.
+     * Starts the asynchronous text extraction process for a document stored in IBM Cloud Object Storage (COS). The extracted
+     * text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md } extension. To customize the
+     * output behavior, use the
+     * method with the {@link Parameters} class.
      *
      * <pre>
      * {@code
-     * String startExtraction(String absolutePath, Options options)
+     * String startExtraction(String absolutePath, Parameters parameters)
      * }
      * </pre>
      *
-     * <b>Note:</b> This method does not return the extracted value. Use {@code extractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted value. Use {@code extractAndFetch} to extract the text
+     * immediately.
      *
      * @param absolutePath The COS path of the document to extract text from.
-     * @param languages Language codes to guide the text extraction process.
      * @return The unique identifier of the text extraction process.
      */
-    public String startExtraction(String absolutePath, List<Language> languages) throws TextExtractionException {
-        requireNonNull(languages);
-        return startExtraction(absolutePath, Options.create(languages));
+    public String startExtraction(String absolutePath) throws TextExtractionException {
+        return startExtraction(absolutePath, Parameters.builder().build());
     }
 
     /**
-     * Starts the asynchronous text extraction process for a document stored in IBM Cloud Object Storage
-     * (COS). The extracted text is saved as a new <b>Markdown</b> file in COS, preserving the original
-     * filename but using the {@code .md} extension by default. Output behavior can be customized using
-     * the {@link Options} parameter.
+     * Starts the asynchronous text extraction process for a document stored in IBM Cloud Object Storage (COS). The extracted
+     * text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. Output
+     * behavior can be customized
+     * using the {@link Parameters} parameter.
      * <p>
-     * <b>Note:</b> This method does not return the extracted text. Use {@code extractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted text. Use {@code extractAndFetch} to extract the text immediately.
      *
      * @param absolutePath The COS path of the document to extract text from.
-     * @param options The configuration options for text extraction.
+     * @param parameters The configuration parameters for text extraction.
      * @return The unique identifier of the text extraction process.
      */
-    public String startExtraction(String absolutePath, Options options) throws TextExtractionException {
-        requireNonNull(options);
-        return startExtraction(absolutePath, options, false).metadata().id();
+    public String startExtraction(String absolutePath, Parameters parameters) throws TextExtractionException {
+        requireNonNull(parameters);
+        return startExtraction(absolutePath, parameters, false).metadata().id();
     }
 
     /**
-     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. To customize the output
-     * behavior you can use the {@link Options} parameter.
+     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The extracted
+     * text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. To
+     * customize the output behavior you
+     * can use the {@link Parameters} class.
      *
      * <pre>
      * {@code
-     * String uploadAndStartExtraction(File file, Options options);
+     * String uploadAndStartExtraction(File file, Parameters parameters);
      * }
      * </pre>
      *
-     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to extract the text
+     * immediately.
      *
      * @param file The local file to be uploaded and processed.
-     * @param languages Language codes to guide the text extraction process.
      * @return The unique identifier of the text extraction process.
      */
-    public String uploadAndStartExtraction(File file, List<Language> languages) throws TextExtractionException {
-        requireNonNull(languages);
-        return uploadAndStartExtraction(file, Options.create(languages));
+    public String uploadAndStartExtraction(File file) throws TextExtractionException {
+        return uploadAndStartExtraction(file, Parameters.builder().build());
     }
 
     /**
-     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. Output behavior can be
-     * customized using the {@link Options} parameter.
+     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The extracted
+     * text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. Output
+     * behavior can be customized
+     * using the {@link Parameters} parameter.
      *
      * <p>
-     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to extract the text
+     * immediately.
      *
      * @param file The local file to be uploaded and processed.
-     * @param options The configuration options for text extraction.
+     * @param parameters The configuration parameters for text extraction.
      * @return The unique identifier of the text extraction process.
      */
-    public String uploadAndStartExtraction(File file, Options options) throws TextExtractionException {
-        requireNonNull(options);
+    public String uploadAndStartExtraction(File file, Parameters parameters) throws TextExtractionException {
+        requireNonNull(parameters);
         requireNonNull(file);
 
         if (file.isDirectory())
             throw new TextExtractionException("directory_not_allowed", "The file can not be a directory");
 
         try {
-            upload(new BufferedInputStream(new FileInputStream(file)), file.getName(), options, false);
-            return startExtraction(file.getName(), options);
+            upload(new BufferedInputStream(new FileInputStream(file)), file.getName(), parameters, false);
+            return startExtraction(file.getName(), parameters);
         } catch (FileNotFoundException e) {
             throw new TextExtractionException("file_not_found", e.getMessage(), e);
         }
     }
 
     /**
-     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. To customize the output
-     * behavior you can use the {@link Options} parameter.
+     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The
+     * extracted text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. To
+     * customize the output behavior you
+     * can use the {@link Parameters} class.
      *
      * <pre>
      * {@code
-     * String uploadAndStartExtraction(InputStream is, String fileName, Options options);
+     * String uploadAndStartExtraction(InputStream is, String fileName, Parameters parameters);
      * }
      * </pre>
      *
-     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to extract the text
+     * immediately.
      *
      * @param is The input stream of the file to be uploaded and processed.
      * @param fileName The name of the file to be uploaded and processed.
-     * @param languages Language codes to guide the text extraction process.
      * @return The unique identifier of the text extraction process.
      */
-    public String uploadAndStartExtraction(InputStream is, String fileName, List<Language> languages)
+    public String uploadAndStartExtraction(InputStream is, String fileName)
             throws TextExtractionException {
-        requireNonNull(languages);
-        return uploadAndStartExtraction(is, fileName, Options.create(languages));
+        return uploadAndStartExtraction(is, fileName, Parameters.builder().build());
     }
 
     /**
-     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. Output behavior can be
-     * customized using the {@link Options} parameter.
+     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The
+     * extracted text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. Output
+     * behavior can be customized
+     * using the {@link Parameters} class.
      *
      * <p>
-     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to
-     * extract the text immediately.
+     * <b>Note:</b> This method does not return the extracted text. Use {@code uploadExtractAndFetch} to extract the text
+     * immediately.
      *
      * @param is The input stream of the file to be uploaded and processed.
      * @param fileName The name of the file to be uploaded and processed.
-     * @param options The configuration options for text extraction.
+     * @param parameters The configuration parameters for text extraction.
      * @return The unique identifier of the text extraction process.
      */
-    public String uploadAndStartExtraction(InputStream is, String fileName, Options options)
+    public String uploadAndStartExtraction(InputStream is, String fileName, Parameters parameters)
             throws TextExtractionException {
-        requireNonNull(options);
-        upload(is, fileName, options, false);
-        return startExtraction(fileName, options);
+        requireNonNull(parameters);
+        upload(is, fileName, parameters, false);
+        return startExtraction(fileName, parameters);
     }
 
     /**
-     * Starts the text extraction process for a file that is already present in Cloud Object Storage
-     * (COS) and returns the extracted text value. The extracted text is saved as a new <b>Markdown</b>
-     * file in COS, preserving the original filename but using the {@code .md} extension by default. To
-     * customize the output behavior, use the method with the {@link Options} parameter.
+     * Starts the text extraction process for a file that is already present in Cloud Object Storage (COS) and returns the
+     * extracted text value. The
+     * extracted text is saved as a new <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md}
+     * extension by default. To
+     * customize the output behavior, use the method with the {@link Parameters} parameter.
      *
      * <pre>
      * {@code
-     * String extractAndFetch(String absolutePath, Options options);
+     * String extractAndFetch(String absolutePath, Parameters parameters);
      * }
      * </pre>
      *
      * <b>Note:</b> The default timeout value is set to 60 seconds.
      *
      * @param absolutePath The absolute path of the file in Cloud Object Storage.
-     * @param languages Language codes to guide the text extraction process.
      * @return The text extracted.
      */
-    public String extractAndFetch(String absolutePath, List<Language> languages) throws TextExtractionException {
-        requireNonNull(languages);
-        return extractAndFetch(absolutePath, Options.create(languages));
+    public String extractAndFetch(String absolutePath) throws TextExtractionException {
+        return extractAndFetch(absolutePath, Parameters.builder().build());
     }
 
     /**
-     * Starts the text extraction process for a file that is already present in Cloud Object Storage
-     * (COS) and returns the extracted text value. The extracted text is saved as a new <b>Markdown</b>
-     * file in COS, preserving the original filename but using the {@code .md} extension by default.
-     * Output behavior can be customized using the {@link Options} parameter.
+     * Starts the text extraction process for a file that is already present in Cloud Object Storage (COS) and returns the
+     * extracted text value. The
+     * extracted text is saved as a new <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md}
+     * extension by default.
+     * Output behavior can be customized using the {@link Parameters} class.
      *
      * <p>
-     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the
-     * extracted value. The default timeout value is set to 60 seconds.
+     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the extracted value. The default
+     * timeout value is set to 60
+     * seconds.
      *
      * @param absolutePath The COS path of the document to extract text from.
-     * @param options Configuration options, including cleanup behavior.
+     * @param parameters Configuration parameters, including cleanup behavior.
      * @return The text extracted.
      */
-    public String extractAndFetch(String absolutePath, Options options) throws TextExtractionException {
-        requireNonNull(options);
-        var textExtractionResponse = startExtraction(absolutePath, options, true);
-        return getExtractedText(textExtractionResponse, options);
+    public String extractAndFetch(String absolutePath, Parameters parameters) throws TextExtractionException {
+        requireNonNull(parameters);
+        if (parameters.types.size() > 1) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed if more than one file is to be generated");
+        }
+        if (parameters.types.size() == 1 && parameters.types.get(0).equals(PAGE_IMAGES)) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed for the type \"page_images\"");
+        }
+        var textExtractionResponse = startExtraction(absolutePath, parameters, true);
+        return getExtractedText(textExtractionResponse, parameters);
     }
 
     /**
-     * Uploads a local file to IBM Cloud Object Storage (COS), starts text extraction process and
-     * returns the extracted text value. The extracted text is saved as a new <b>Markdown</b> file in
-     * COS, preserving the original filename but using the {@code .md} extension by default. To
-     * customize the output behavior, use the method with the {@link Options} parameter.
+     * Uploads a local file to IBM Cloud Object Storage (COS), starts text extraction process and returns the extracted text
+     * value. The extracted text is
+     * saved as a new <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by
+     * default. To customize the
+     * output behavior, use the method with the {@link Parameters} class.
      *
      * <pre>
      * {@code
-     * String uploadExtractAndFetch(File file, Options options);
+     * String uploadExtractAndFetch(File file, Parameters parameters);
      * }
      * </pre>
      *
-     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the
-     * extracted value. The default timeout value is set to 60 seconds.
+     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the extracted value. The default
+     * timeout value is set to 60
+     * seconds.
      *
      * @param file The local file to be uploaded and processed.
-     * @param languages Language codes to guide the text extraction process.
      * @return The text extracted.
      */
-    public String uploadExtractAndFetch(File file, List<Language> languages) throws TextExtractionException {
-        requireNonNull(languages);
-        return uploadExtractAndFetch(file, Options.create(languages));
+    public String uploadExtractAndFetch(File file) throws TextExtractionException {
+        return uploadExtractAndFetch(file, Parameters.builder().build());
     }
 
     /**
-     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. Output behavior can be
-     * customized using the {@link Options} parameter.
+     * Uploads a local file to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The extracted
+     * text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. Output
+     * behavior can be customized
+     * using the {@link Parameters} class.
      *
      * <p>
-     * <li><b>Notes:</b> This method waits until the extraction process is complete and returns the
-     * extracted value. The default timeout value is set to 60 seconds.
+     * <li><b>Notes:</b> This method waits until the extraction process is complete and returns the extracted value. The default
+     * timeout value is set to
+     * 60 seconds.
      *
      * @param file The local file to be uploaded and processed.
-     * @param options Configuration options, including cleanup behavior.
+     * @param parameters Configuration parameters, including cleanup behavior.
      * @return The text extracted.
      */
-    public String uploadExtractAndFetch(File file, Options options) throws TextExtractionException {
-        requireNonNull(options);
+    public String uploadExtractAndFetch(File file, Parameters parameters) throws TextExtractionException {
+        requireNonNull(parameters);
+        if (parameters.types.size() > 1) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed if more than one file is to be generated");
+        }
+        if (parameters.types.size() == 1 && parameters.types.get(0).equals(PAGE_IMAGES)) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed for the type \"page_images\"");
+        }
         try {
-            upload(new BufferedInputStream(new FileInputStream(file)), file.getName(), options, true);
+            upload(new BufferedInputStream(new FileInputStream(file)), file.getName(), parameters, true);
         } catch (FileNotFoundException e) {
             throw new TextExtractionException("file_not_found", e.getMessage(), e);
         }
-        return extractAndFetch(file.getName(), options);
+        return extractAndFetch(file.getName(), parameters);
     }
 
     /**
-     * Uploads an InputStream to IBM Cloud Object Storage (COS), starts text extraction process and
-     * returns the extracted text value. The extracted text is saved as a new <b>Markdown</b> file in
-     * COS, preserving the original filename but using the {@code .md} extension by default. To
-     * customize the output behavior, use the method with the {@link Options} parameter.
+     * Uploads an InputStream to IBM Cloud Object Storage (COS), starts text extraction process and returns the extracted text
+     * value. The extracted text
+     * is saved as a new <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by
+     * default. To customize the
+     * output behavior, use the method with the {@link Parameters} class.
      *
      * <pre>
      * {@code
-     * String uploadExtractAndFetch(InputStream is, String fileName, Options options);
+     * String uploadExtractAndFetch(InputStream is, String fileName, Parameters parameters);
      * }
      * </pre>
      *
-     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the
-     * extracted value. The default timeout value is set to 60 seconds.
+     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the extracted value. The default
+     * timeout value is set to 60
+     * seconds.
      *
      * @param is The input stream of the file to be uploaded and processed.
      * @param fileName The name of the file to be uploaded and processed.
-     * @param languages Language codes to guide the text extraction process.
      * @return The text extracted.
      */
-    public String uploadExtractAndFetch(InputStream is, String fileName, List<Language> languages)
-            throws TextExtractionException {
-        requireNonNull(languages);
-        return uploadExtractAndFetch(is, fileName, Options.create(languages));
+    public String uploadExtractAndFetch(InputStream is, String fileName) throws TextExtractionException {
+        return uploadExtractAndFetch(is, fileName, Parameters.builder().build());
     }
 
     /**
-     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text
-     * extraction process. The extracted text is saved as a new <b>Markdown</b> file in COS, preserving
-     * the original filename but using the {@code .md} extension by default. Output behavior can be
-     * customized using the {@link Options} parameter.
+     * Uploads an InputStream to IBM Cloud Object Storage (COS) and starts the asynchronous text extraction process. The
+     * extracted text is saved as a new
+     * <b>Markdown</b> file in COS, preserving the original filename but using the {@code .md} extension by default. Output
+     * behavior can be customized
+     * using the {@link Parameters} class.
      *
      * <p>
-     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the
-     * extracted value. The default timeout value is set to 60 seconds.
+     * <li><b>Note:</b> This method waits until the extraction process is complete and returns the extracted value. The default
+     * timeout value is set to 60
+     * seconds.
      *
      * @param is The input stream of the file to be uploaded and processed.
      * @param fileName The name of the file to be uploaded and processed.
-     * @param options Configuration options, including cleanup behavior.
+     * @param parameters Configuration parameters, including cleanup behavior.
      * @return The text extracted.
      */
-    public String uploadExtractAndFetch(InputStream is, String fileName, Options options)
+    public String uploadExtractAndFetch(InputStream is, String fileName, Parameters parameters)
             throws TextExtractionException {
-        requireNonNull(options);
-        upload(is, fileName, options, true);
-        return extractAndFetch(fileName, options);
+        requireNonNull(parameters);
+        if (parameters.types.size() > 1) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed if more than one file is to be generated");
+        }
+        if (parameters.types.size() == 1 && parameters.types.get(0).equals(PAGE_IMAGES)) {
+            throw new TextExtractionException("fetch_operation_not_allowed",
+                    "The fetch operation cannot be executed for the type \"page_images\"");
+        }
+        upload(is, fileName, parameters, true);
+        return extractAndFetch(fileName, parameters);
     }
 
     /**
@@ -450,19 +476,19 @@ public class TextExtraction {
     //
     // Upload a stream to the Cloud Object Storage.
     //
-    private void upload(InputStream is, String fileName, Options options, boolean waitForExtraction) {
+    private void upload(InputStream is, String fileName, Parameters parameters, boolean waitForExtraction) {
         requireNonNull(is);
         if (isNull(fileName) || fileName.isBlank())
             throw new IllegalArgumentException("The file name can not be null or empty");
 
-        boolean removeOutputFile = options.removeOutputFile.orElse(false);
-        boolean removeUploadedFile = options.removeUploadedFile.orElse(false);
+        boolean removeOutputFile = parameters.removeOutputFile.orElse(false);
+        boolean removeUploadedFile = parameters.removeUploadedFile.orElse(false);
 
         if (!waitForExtraction && (removeOutputFile || removeUploadedFile))
             throw new IllegalArgumentException(
-                    "The asynchronous version of startExtraction doesn't allow the use of the \"removeOutputFile\" and \"removeUploadedFile\" options");
+                    "The asynchronous version of startExtraction doesn't allow the use of the \"removeOutputFile\" and \"removeUploadedFile\" parameters");
 
-        Reference documentReference = firstOrDefault(this.documentReference, options.documentReference);
+        Reference documentReference = firstOrDefault(this.documentReference, parameters.documentReference);
         retryOn(new Callable<Response>() {
             @Override
             public Response call() throws Exception {
@@ -471,48 +497,58 @@ public class TextExtraction {
         });
     }
 
-    private TextExtractionResponse startExtraction(String absolutePath, Options options, boolean waitUntilJobIsDone)
+    private TextExtractionResponse startExtraction(String absolutePath, Parameters parameters,
+            boolean waitUntilJobIsDone)
             throws TextExtractionException {
         requireNonNull(absolutePath);
-        requireNonNull(options);
+        requireNonNull(parameters);
 
-        if (options.languages.isEmpty())
-            throw new IllegalArgumentException(
-                    "To start the extraction process, you must specify at least one language");
-
-        boolean removeOutputFile = options.removeOutputFile.orElse(false);
-        boolean removeUploadedFile = options.removeUploadedFile.orElse(false);
+        boolean removeOutputFile = parameters.removeOutputFile.orElse(false);
+        boolean removeUploadedFile = parameters.removeUploadedFile.orElse(false);
 
         if (!waitUntilJobIsDone && (removeOutputFile || removeUploadedFile))
             throw new IllegalArgumentException(
-                    "The asynchronous version of startExtraction doesn't allow the use of the \"removeOutputFile\" and \"removeUploadedFile\" options");
+                    "The asynchronous version of startExtraction doesn't allow the use of the \"removeOutputFile\" and \"removeUploadedFile\" parameters");
 
-        if (isNull(options.outputFileName) || options.outputFileName.isBlank()) {
+        if (isNull(parameters.outputFileName) || parameters.outputFileName.isBlank()) {
 
-            String extension = switch (options.type) {
-                case ASSEMBLY_JSON -> ".json";
-                case ASSEMBLY_MD -> ".md";
-            };
-
-            var index = absolutePath.lastIndexOf(".");
-            if (index > 0) {
-                options.outputFileName = absolutePath.substring(0, index) + extension;
-            } else {
-                options.outputFileName = absolutePath + extension;
+            if (parameters.types.size() > 1
+                    || (parameters.types.size() == 1 && parameters.types.get(0).equals(PAGE_IMAGES))) {
+                parameters.outputFileName = "/";
+            } else if (parameters.types.size() == 1) {
+                String extension = switch (parameters.types.get(0)) {
+                    case JSON -> ".json";
+                    case MD -> ".md";
+                    case HTML -> ".html";
+                    case PLAIN_TEXT -> ".txt";
+                    case PAGE_IMAGES -> throw new RuntimeException(
+                            "If you select \"page_images\" as type, the output file name cannot be null.");
+                };
+                var index = absolutePath.lastIndexOf(".");
+                if (index > 0) {
+                    parameters.outputFileName = absolutePath.substring(0, index) + extension;
+                } else {
+                    parameters.outputFileName = absolutePath + extension;
+                }
             }
         }
 
-        Reference documentReference = firstOrDefault(this.documentReference, options.documentReference);
-        Reference resultsReference = firstOrDefault(this.resultReference, options.resultsReference);
+        Reference documentReference = firstOrDefault(this.documentReference, parameters.documentReference);
+        Reference resultsReference = firstOrDefault(this.resultReference, parameters.resultsReference);
+        TextExtractionDataReference textExtractionDataReference = TextExtractionDataReference.of(documentReference.connection,
+                absolutePath, documentReference.bucket);
+        TextExtractionDataReference textExtractionResultsReference = TextExtractionDataReference.of(resultsReference.connection,
+                parameters.outputFileName,
+                resultsReference.bucket);
+        TextExtractionParameters textExtractionParameters = new TextExtractionParameters(parameters.types, parameters.mode,
+                parameters.ocr,
+                parameters.autoRotationCorrection, parameters.embeddedImages, parameters.dpi,
+                parameters.outputTokensAndBbox);
 
         var request = TextExtractionRequest.builder()
-                .documentReference(
-                        TextExtractionDataReference.of(documentReference.connection, absolutePath,
-                                documentReference.bucket))
-                .resultsReference(TextExtractionDataReference.of(resultsReference.connection, options.outputFileName,
-                        resultsReference.bucket))
-                .steps(TextExtractionSteps.of(options.languages, options.tableProcessing))
-                .type(options.type)
+                .documentReference(textExtractionDataReference)
+                .resultsReference(textExtractionResultsReference)
+                .parameters(textExtractionParameters)
                 .projectId(projectId)
                 .spaceId(spaceId)
                 .build();
@@ -529,14 +565,14 @@ public class TextExtraction {
 
         Status status;
         long sleepTime = 100;
-        LocalTime endTime = LocalTime.now().plus(options.timeout);
+        LocalTime endTime = LocalTime.now().plus(parameters.timeout);
 
         do {
 
             if (LocalTime.now().isAfter(endTime))
                 throw new TextExtractionException("timeout",
                         "Execution to extract %s file took longer than the timeout set by %s milliseconds"
-                                .formatted(absolutePath, options.timeout.toMillis()));
+                                .formatted(absolutePath, parameters.timeout.toMillis()));
 
             try {
 
@@ -563,21 +599,21 @@ public class TextExtraction {
         return response;
     }
 
-    private String getExtractedText(TextExtractionResponse textExtractionResponse, Options options)
+    private String getExtractedText(TextExtractionResponse textExtractionResponse, Parameters parameters)
             throws TextExtractionException {
         requireNonNull(textExtractionResponse);
-        requireNonNull(options);
+        requireNonNull(parameters);
 
         String uploadedPath = textExtractionResponse.entity().documentReference().location().fileName();
         String outputPath = textExtractionResponse.entity().resultsReference().location().fileName();
         Status status = textExtractionResponse.entity().results().status();
-        boolean removeUploadedFile = options.removeUploadedFile.orElse(false);
-        boolean removeOutputFile = options.removeOutputFile.orElse(false);
+        boolean removeUploadedFile = parameters.removeUploadedFile.orElse(false);
+        boolean removeOutputFile = parameters.removeOutputFile.orElse(false);
 
-        Reference documentReference = firstOrDefault(this.documentReference, options.documentReference);
+        Reference documentReference = firstOrDefault(this.documentReference, parameters.documentReference);
         String documentBucketName = documentReference.bucket;
 
-        Reference resultsReference = firstOrDefault(this.resultReference, options.resultsReference);
+        Reference resultsReference = firstOrDefault(this.resultReference, parameters.resultsReference);
         String resultsBucketName = resultsReference.bucket;
 
         try {
@@ -586,14 +622,15 @@ public class TextExtraction {
                 case COMPLETED -> retryOn(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-                        return cosClient.getFileContent(resultsBucketName, options.outputFileName);
+                        return cosClient.getFileContent(resultsBucketName, parameters.outputFileName);
                     }
                 });
                 case FAILED -> {
                     ServiceError error = textExtractionResponse.entity().results().error();
                     throw new TextExtractionException(error.code(), error.message());
                 }
-                default -> throw new TextExtractionException("generic_error", "Status %s not managed".formatted(status));
+                default -> throw new TextExtractionException("generic_error",
+                        "Status %s not managed".formatted(status));
             };
 
             if (removeOutputFile) {
@@ -636,133 +673,285 @@ public class TextExtraction {
     }
 
     /**
-     * Options to configure the behavior of the @{link TextExtraction} methods.
+     * Parameters to configure the behavior of the @{link TextExtraction} methods.
      */
-    public static class Options {
+    public static class Parameters {
 
-        Duration timeout;
+        final Duration timeout;
         String outputFileName;
-        List<String> languages;
-        TextExtractionType type;
-        boolean tableProcessing;
-        Optional<Reference> documentReference;
-        Optional<Reference> resultsReference;
-        Optional<Boolean> removeUploadedFile;
-        Optional<Boolean> removeOutputFile;
+        final List<Type> types;
+        final Optional<Reference> documentReference;
+        final Optional<Reference> resultsReference;
+        final Optional<Boolean> removeUploadedFile;
+        final Optional<Boolean> removeOutputFile;
+        final Mode mode;
+        final OCR ocr;
+        final Boolean autoRotationCorrection;
+        final EmbeddedImages embeddedImages;
+        final Integer dpi;
+        final Boolean outputTokensAndBbox;
 
-        protected Options(Duration timeout, String outputFileName, List<String> languages, TextExtractionType type,
-                boolean tableProcessing, Optional<Reference> documentReference, Optional<Reference> resultsReference,
-                Optional<Boolean> removeUploadedFile, Optional<Boolean> removeOutputFile) {
-            this.timeout = timeout;
-            this.outputFileName = outputFileName;
-            this.languages = languages;
-            this.type = type;
-            this.tableProcessing = tableProcessing;
-            this.documentReference = documentReference;
-            this.resultsReference = resultsReference;
-            this.removeUploadedFile = removeUploadedFile;
-            this.removeOutputFile = removeOutputFile;
+        protected Parameters(Builder builder) {
+            this.timeout = isNull(builder.timeout) ? Duration.ofSeconds(60) : builder.timeout;
+            this.outputFileName = builder.outputFileName;
+            this.types = isNull(builder.types) ? List.of(MD) : builder.types;
+            this.documentReference = isNull(builder.documentReference) ? Optional.empty() : builder.documentReference;
+            this.resultsReference = isNull(builder.resultsReference) ? Optional.empty() : builder.resultsReference;
+            this.removeUploadedFile = isNull(builder.removeUploadedFile) ? Optional.empty() : builder.removeUploadedFile;
+            this.removeOutputFile = isNull(builder.removeOutputFile) ? Optional.empty() : builder.removeOutputFile;
+            this.mode = builder.mode;
+            this.ocr = builder.ocr;
+            this.autoRotationCorrection = builder.autoRotationCorrection;
+            this.embeddedImages = builder.embeddedImages;
+            this.dpi = builder.dpi;
+            this.outputTokensAndBbox = builder.outputTokensAndBbox;
         }
 
-        protected Options(Options options) {
-            this(options.timeout, options.outputFileName, options.languages, options.type, options.tableProcessing,
-                    options.documentReference, options.resultsReference, options.removeUploadedFile,
-                    options.removeOutputFile);
+        public static Builder builder() {
+            return new Builder();
         }
 
-        public Options(List<Language> languages) {
-            this.type = ASSEMBLY_MD;
-            this.tableProcessing = true;
-            this.removeUploadedFile = Optional.empty();
-            this.removeOutputFile = Optional.empty();
-            this.languages = convertList(languages);
-            this.timeout = Duration.ofSeconds(60);
+        public Duration getTimeout() {
+            return timeout;
         }
 
-        public static Options create(List<Language> languages) {
-            return new Options(languages);
+        public String getOutputFileName() {
+            return outputFileName;
         }
 
-        public Options outputFileName(String outputFileName) {
-            this.outputFileName = outputFileName;
-            return this;
+        public List<Type> getTypes() {
+            return types;
         }
 
-        public Options languages(List<Language> languages) {
-            this.languages = convertList(languages);
-            return this;
+        public Optional<Reference> getDocumentReference() {
+            return documentReference;
         }
 
-        public Options type(TextExtractionType type) {
-            this.type = type;
-            return this;
+        public Optional<Reference> getResultsReference() {
+            return resultsReference;
         }
 
-        public Options tableProcessing(boolean tableProcessing) {
-            this.tableProcessing = tableProcessing;
-            return this;
+        public Optional<Boolean> getRemoveUploadedFile() {
+            return removeUploadedFile;
         }
 
-        public Options timeout(Duration timeout) {
-            this.timeout = timeout;
-            return this;
+        public Optional<Boolean> getRemoveOutputFile() {
+            return removeOutputFile;
         }
 
-        public Options documentReference(Reference documentReference) {
-            this.documentReference = Optional.of(documentReference);
-            return this;
+        public Mode getMode() {
+            return mode;
         }
 
-        public Options resultsReference(Reference resultsReference) {
-            this.resultsReference = Optional.of(resultsReference);
-            return this;
+        public OCR getOcr() {
+            return ocr;
         }
 
-        public Options removeUploadedFile(boolean removeUploadedFile) {
-            this.removeUploadedFile = Optional.of(removeUploadedFile);
-            return this;
+        public Boolean getAutoRotationCorrection() {
+            return autoRotationCorrection;
         }
 
-        public Options removeOutputFile(boolean removeOutputFile) {
-            this.removeOutputFile = Optional.of(removeOutputFile);
-            return this;
+        public EmbeddedImages getEmbeddedImages() {
+            return embeddedImages;
         }
 
-        private List<String> convertList(List<Language> languages) {
-            return isNull(languages) ? List.of() : languages.stream().map(Language::code).toList();
-        }
-    }
-
-    public static enum Language {
-        CHINESE_SIMPLIFIED("zh-CN"),
-        CHINESE_TRADITIONAL("zh-TW"),
-        DANISH("da"),
-        DUTCH("nl"),
-        ENGLISH("en"),
-        ENGLISH_HANDWRITING("en_hw"),
-        FINNISH("fi"),
-        FRENCH("fr"),
-        GERMAN("de"),
-        GREEK("el"),
-        HEBREW("he"),
-        ITALIAN("it"),
-        JAPANESE("ja"),
-        KOREAN("ko"),
-        NORWEGIAN_BOKMAL("nb"),
-        NORWEGIAN_NYNORSK("nn"),
-        POLISH("pl"),
-        PORTUGUESE("pt"),
-        SPANISH("es"),
-        SWEDISH("sv");
-
-        private final String code;
-
-        Language(String code) {
-            this.code = code;
+        public Integer getDpi() {
+            return dpi;
         }
 
-        public String code() {
-            return code;
+        public Boolean getOutputTokensAndBbox() {
+            return outputTokensAndBbox;
+        }
+
+        /**
+         * Builder class for constructing {@link Parameters} used in a text extraction request.
+         * <p>
+         * This builder allows fine-grained configuration of options for text and metadata extraction, such as document
+         * references, output settings, OCR
+         * behavior, image options, and post-processing outputs.
+         *
+         * @see Parameters
+         */
+        public static class Builder {
+
+            private Duration timeout;
+            private String outputFileName;
+            private List<Type> types;
+            private Optional<Reference> documentReference;
+            private Optional<Reference> resultsReference;
+            private Optional<Boolean> removeUploadedFile;
+            private Optional<Boolean> removeOutputFile;
+            private Mode mode;
+            private OCR ocr;
+            private Boolean autoRotationCorrection;
+            private EmbeddedImages embeddedImages;
+            private Integer dpi;
+            private Boolean outputTokensAndBbox;
+
+            /**
+             * Sets the maximum timeout for the extraction job.
+             *
+             * @param timeout a {@link Duration} representing how long the request may run.
+             */
+            public Builder timeout(Duration timeout) {
+                this.timeout = timeout;
+                return this;
+            }
+
+            /**
+             * Sets the name of the output file.
+             * <p>
+             * If multiple files are expected, this must specify a directory name and end with a slash (e.g. {@code /results/}).
+             *
+             * @param outputFileName the name of the file or output directory
+             */
+            public Builder outputFileName(String outputFileName) {
+                this.outputFileName = outputFileName;
+                return this;
+            }
+
+            /**
+             * Specifies the types of outputs to generate.
+             *
+             * @param types a list of {@link Type} indicating the processing types
+             */
+            public Builder types(List<Type> types) {
+                this.types = types;
+                return this;
+            }
+
+            /**
+             * Sets a single output type to be generated.
+             *
+             * @param type a {@link Type} to specify the processing type
+             */
+            public Builder types(Type type) {
+                this.types = List.of(type);
+                return this;
+            }
+
+            /**
+             * Sets multiple output types.
+             *
+             * @param types {@link Type} values
+             */
+            public Builder types(Type... types) {
+                this.types = Arrays.asList(types);
+                return this;
+            }
+
+            /**
+             * Sets the reference to the input document.
+             *
+             * @param reference a {@link Reference} to the document to be processed
+             */
+            public Builder documentReference(Reference reference) {
+                this.documentReference = Optional.ofNullable(reference);
+                return this;
+            }
+
+            /**
+             * Sets the reference for the results output.
+             *
+             * @param reference a {@link Reference} where extracted results will be stored
+             */
+            public Builder resultsReference(Reference reference) {
+                this.resultsReference = Optional.ofNullable(reference);
+                return this;
+            }
+
+            /**
+             * Indicates whether the uploaded file should be deleted after processing.
+             *
+             * @param removeUploadedFile {@code true} to remove the uploaded file
+             */
+            public Builder removeUploadedFile(Boolean removeUploadedFile) {
+                this.removeUploadedFile = Optional.ofNullable(removeUploadedFile);
+                return this;
+            }
+
+            /**
+             * Indicates whether the output file should be deleted after processing.
+             *
+             * @param removeOutputFile {@code true} to remove the output file
+             */
+            public Builder removeOutputFile(Boolean removeOutputFile) {
+                this.removeOutputFile = Optional.ofNullable(removeOutputFile);
+                return this;
+            }
+
+            /**
+             * Sets the processing mode.
+             *
+             * @param mode a {@link Mode} value specifying the processing mode
+             */
+            public Builder mode(Mode mode) {
+                this.mode = mode;
+                return this;
+            }
+
+            /**
+             * Sets the OCR mode used for document processing.
+             *
+             * @param ocr an {@link OCR} configuration
+             */
+            public Builder ocr(OCR ocr) {
+                this.ocr = ocr;
+                return this;
+            }
+
+            /**
+             * Enables or disables automatic rotation correction for input pages.
+             * <p>
+             * When enabled, the service attempts to detect and fix page orientation. Default is {@code false}.
+             *
+             * @param autoRotationCorrection true to enable auto-rotation correction
+             */
+            public Builder autoRotationCorrection(Boolean autoRotationCorrection) {
+                this.autoRotationCorrection = autoRotationCorrection;
+                return this;
+            }
+
+            /**
+             * Specifies the behavior for embedded image generation.
+             *
+             * @param embeddedImages option for embedded image generation
+             */
+            public Builder embeddedImages(EmbeddedImages embeddedImages) {
+                this.embeddedImages = embeddedImages;
+                return this;
+            }
+
+            /**
+             * Sets the target DPI for output images.
+             *
+             * @return this builder instance
+             */
+            public Builder dpi(Integer dpi) {
+                this.dpi = dpi;
+                return this;
+            }
+
+            /**
+             * Specifies whether to return individual tokens and bounding boxes in the response.
+             * <p>
+             * When {@code false}, token-level structures are excluded.
+             *
+             * @param outputTokensAndBbox true to include tokens and bounding boxes
+             */
+            public Builder outputTokensAndBbox(Boolean outputTokensAndBbox) {
+                this.outputTokensAndBbox = outputTokensAndBbox;
+                return this;
+            }
+
+            /**
+             * Builds and returns a {@link Parameters} object with the configured values.
+             *
+             * @return a new {@link Parameters} instance
+             */
+            public Parameters build() {
+                return new Parameters(this);
+            }
         }
     }
 }
