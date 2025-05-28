@@ -76,7 +76,10 @@ public class MetricsChatModelListener implements ChatModelListener {
 
         ChatRequest request = responseContext.chatRequest();
         ChatResponse response = responseContext.chatResponse();
-        Tags tags = Tags.of("gen_ai.request.model", request.parameters().modelName());
+        Tags tags = Tags.empty();
+        if (request.parameters().modelName() != null) {
+            tags = tags.and("gen_ai.request.model", request.parameters().modelName());
+        }
         if (response.metadata().modelName() != null) {
             tags = tags.and("gen_ai.response.model", response.metadata().modelName());
         }
