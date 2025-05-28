@@ -70,7 +70,7 @@ repository]. Simply clone the repository, navigate to
 environment variable containing your OpenAI API key and then start the
 project using `mvn quarkus:dev`. When the application starts, navigate to
 `localhost:8080` and ask any questions that the bot can answer (look into
-the files in `samples/chatbot-easy-rag/src/main/resources/documents` to see
+the files in `samples/chatbot-easy-rag/catalog` to see
 what documents the bot has ingested). For example, ask:
 
 ----
