@@ -387,7 +387,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the connection asset that contains the credentials required to access the data.
+The ID of the connection asset that contains the credentials required to access the data.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -408,7 +408,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The default bucket for uploading/extracting documents.
+The name of the bucket containing the input document.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -429,7 +429,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the connection asset that contains the credentials required to access the data.
+The ID of the connection asset used to store the extracted results.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -450,7 +450,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The default bucket for uploading/extracting documents.
+The name of the bucket where the output files will be written.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1905,7 +1905,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the connection asset that contains the credentials required to access the data.
+The ID of the connection asset that contains the credentials required to access the data.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1926,7 +1926,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The default bucket for uploading/extracting documents.
+The name of the bucket containing the input document.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1947,7 +1947,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The id of the connection asset that contains the credentials required to access the data.
+The ID of the connection asset used to store the extracted results.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1968,7 +1968,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The default bucket for uploading/extracting documents.
+The name of the bucket where the output files will be written.
 
 
 ifdef::add-copy-button-to-env-var[]
