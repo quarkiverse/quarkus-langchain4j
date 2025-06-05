@@ -4,6 +4,6 @@ import io.quarkus.picocli.runtime.annotations.TopCommand;
 import picocli.CommandLine;
 
 @TopCommand
-@CommandLine.Command(mixinStandardHelpOptions = true, subcommands = {WriteCommand.class})
+@CommandLine.Command(mixinStandardHelpOptions = true, subcommands = { WriteCommand.class, WeatherCommand.class })
 public class EntryCommand {
 }
