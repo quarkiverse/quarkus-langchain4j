@@ -29,6 +29,7 @@
         <module>sql-chatbot</module>
         <module>weather-agent</module>
         <module>react-chatbot</module>
+        <module>agentic-exploration</module>
     </modules>
 
     <build>
