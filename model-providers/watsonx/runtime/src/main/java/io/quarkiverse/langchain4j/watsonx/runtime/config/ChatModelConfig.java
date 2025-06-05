@@ -74,9 +74,9 @@ public interface ChatModelConfig {
     Optional<Integer> topLogprobs();
 
     /**
-     * Specifies the maximum number of tokens that can be generated in the chat completion.
-     * <p>
-     * The total number of tokens — including both input and output — must not exceed the model's context length.
+     * The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated
+     * tokens is limited by the
+     * model's context length. Set to 0 for the model's configured max generated tokens.
      */
     @WithDefault("1024")
     Integer maxTokens();

@@ -34,7 +34,7 @@ public class TextChatParameters {
     private final Map<String, Integer> logitBias;
     private final Boolean logprobs;
     private final Integer topLogprobs;
-    private final Integer maxTokens;
+    private final Integer maxCompletionTokens;
     private final Integer n;
     private final Double presencePenalty;
     private final Integer seed;
@@ -50,7 +50,7 @@ public class TextChatParameters {
         this.logitBias = builder.logitBias;
         this.logprobs = builder.logprobs;
         this.topLogprobs = builder.topLogprobs;
-        this.maxTokens = builder.maxTokens;
+        this.maxCompletionTokens = builder.maxTokens;
         this.n = builder.n;
         this.presencePenalty = builder.presencePenalty;
         this.temperature = builder.temperature;
@@ -172,8 +172,8 @@ public class TextChatParameters {
         return topLogprobs;
     }
 
-    public Integer getMaxTokens() {
-        return maxTokens;
+    public Integer getMaxCompletionTokens() {
+        return maxCompletionTokens;
     }
 
     public Integer getN() {
