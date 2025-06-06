@@ -71,6 +71,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.execannotations.ExecutionModelAnnotationsAllowedBuildItem;
+import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -108,6 +109,7 @@ public class ToolProcessor {
     public void handleTools(
             BuildProducer<ToolMethodBuildItem> toolMethodBuildItemProducer,
             CombinedIndexBuildItem indexBuildItem,
+            CurateOutcomeBuildItem curateOutcomeBuildItem,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
@@ -296,6 +298,16 @@ public class ToolProcessor {
         }
 
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    // TODO: generalize this if necessary
+    static void warnAboutMissingDeps(CurateOutcomeBuildItem curateOutcomeBuildItem, Set<String> toolClasses) {
+        if (toolClasses.contains("dev.langchain4j.web.search.WebSearchTool")
+                && curateOutcomeBuildItem.getApplicationModel().getDependencies().stream()
+                        .noneMatch(d -> d.isRuntimeCp() && "quarkus-langchain4j-tavily".equals(d.getArtifactId()))) {
+            log.warn(
+                    "If you plan on using the 'WebSearchTool' you most likely need to add the 'io.quarkiverse.langchain4j:quarkus-langchain4j-tavily' extension.");
+        }
     }
 
     @BuildStep
