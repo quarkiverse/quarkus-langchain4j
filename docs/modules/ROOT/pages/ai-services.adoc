@@ -149,6 +149,41 @@ String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 
 We'll explore an alternative approach to avoid manual memory handling in the <<memory,memory>> section.
 
+[#_streaming]
+=== Streaming
+
+When building a chatbot—especially one based on large language models—it is often desirable to stream the model's output token by token. This approach improves the user experience by reducing the perceived latency between user input and the model’s response.
+
+To implement streaming in a Quarkus-based application, you can return a Multi<String> from the chat() method. This leverages the https://quarkus.io/guides/mutiny-primer[Quarkus Mutiny] reactive programming library, which is well-suited for handling asynchronous, non-blocking data streams.
+
+[source,java]
+----
+Multi<String> chat(@MemoryId int memoryId, @UserMessage String userMessage);
+----
+
+To use the output of the stream in your application, you can do something like this:
+
+[source,java]
+----
+Multi<String> stream = model.chat(chatId, userMessage);
+
+stream.subscribe().with(
+    // onItem: called for each token
+    token -> {
+    // handle token in your ui
+    },
+    // onFailure: called if an error occurs
+    error -> {
+        logger.error("Error during streaming: " + error.getMessage(), error);
+        // handle error in your ui
+    },
+    // onCompletion: called when the stream completes
+    () -> {
+        // handle any stuff after stream completion
+    }
+);
+----
+
 == Configuring the Chat Language Model
 
 While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions. If you have a single chat language model, no specific configuration is required.
