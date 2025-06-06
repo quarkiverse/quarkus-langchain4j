@@ -126,6 +126,7 @@ import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.ClassCreator;
 import io.quarkus.gizmo.ClassOutput;
@@ -995,6 +996,7 @@ public class AiServicesProcessor {
             AiServicesRecorder recorder,
             RecorderContext recorderContext,
             CombinedIndexBuildItem indexBuildItem,
+            CurateOutcomeBuildItem curateOutcomeBuildItem,
             List<DeclarativeAiServiceBuildItem> declarativeAiServiceItems,
             List<MethodParameterAllowedAnnotationsBuildItem> methodParameterAllowedAnnotationsItems,
             List<MethodParameterIgnoredAnnotationsBuildItem> methodParameterIgnoredAnnotationsItems,
@@ -1189,6 +1191,10 @@ public class AiServicesProcessor {
                                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                                         + matchingBI.getServiceClassInfo().name() + "'");
                             }
+
+                            ToolProcessor.warnAboutMissingDeps(curateOutcomeBuildItem,
+                                    methodCreateInfo.getToolClassInfo().keySet());
+
                             methodCreateInfo.getToolClassInfo().keySet().stream()
                                     .map(DotName::createSimple)
                                     .map(UnremovableBeanBuildItem::beanTypes)
