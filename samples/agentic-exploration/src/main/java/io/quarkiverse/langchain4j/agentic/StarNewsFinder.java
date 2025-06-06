@@ -1,9 +1,9 @@
 package io.quarkiverse.langchain4j.agentic;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
@@ -11,11 +11,14 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
+import io.quarkus.arc.Arc;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
@@ -108,11 +111,22 @@ public class StarNewsFinder implements Runnable {
 
                     System.out.println("Need to execute '" + agentSpecification + "'");
 
+                    // TODO: replace with known agents
                     if ("astrologyAgent".equals(agentSpecification.name())) {
 
                         var extractorAgent = chatModel;
+
+                        //TODO: we need to obtain the parameters from the state or resolve them somehow
+                        // the easiest ones to resolve are the ones for which we just throw the conversation to an LLM
+                        // and it can extract the info
+                        // For others, we might need to have a DAG that will allow us to resolve each parameter
+
                         Person person = useAgentToExtractParameter(input, Person.class, extractorAgent);
-                        Horoscope horoscope = useAgentToExtractParameter(input, Horoscope.class, extractorAgent);
+                        // Horoscope (arc resolver) -> sign (llm resolver)
+                        //Horoscope horoscope = useAgentToExtractParameter(input, Horoscope.class, extractorAgent);
+
+                        // TODO: replace with proper resolution
+                        Horoscope horoscope = horoscopeService.dailyHoroscope(person.sign());
 
                         RelevantNewsStories relevantNewsStories = astrologyNewsAgent.find(person, horoscope);
                         System.out.println(relevantNewsStories);
@@ -133,33 +147,7 @@ public class StarNewsFinder implements Runnable {
 
     @SuppressWarnings("unchecked")
     private <T> T useAgentToExtractParameter(String input, Class<T> clazz, ChatModel extractorAgent) {
-        final var extractorSystemPrompt =
-                """
-                You are an agent that specializes in extracting structured information from a conversation.
-                """;
-        final var extractorUserPromptTemplate =
-                """
-                The conversion is the following:
-                
-                ---
-                %s
-                ---
-                
-                %s
-                """;
-        final var askForInputTool = ToolSpecification.builder()
-                .name("askForInput")
-                .description("Asks the user provide additional input that is needed by some part of the agent")
-                .parameters(JsonObjectSchema.builder().addStringProperty("input").required("input").build())
-                .build();
 
-        ChatResponse extractorChatResponse = extractorAgent.chat(ChatRequest.builder()
-                .messages(SystemMessage.systemMessage(extractorSystemPrompt),
-                        UserMessage.from(String.format(extractorUserPromptTemplate, input, SERVICE_OUTPUT_PARSER.outputFormatInstructions(clazz))))
-                .parameters(
-                        ChatRequestParameters.builder().modelName("gpt-4o").toolSpecifications(askForInputTool).build())
-                .build());
-        return (T) SERVICE_OUTPUT_PARSER.parse(extractorChatResponse, clazz);
     }
 
     @RegisterAiService
@@ -186,7 +174,6 @@ public class StarNewsFinder implements Runnable {
                         find news stories about training courses.
                         """)
         @ToolBox({WebSearchTool.class})
-        @Tool(name = "astrologyNews", value = "Obtains astrology related news given a person and a horoscope summary")
         RelevantNewsStories find(Person person, Horoscope horoscope);
     }
 
@@ -199,7 +186,8 @@ public class StarNewsFinder implements Runnable {
             this.horoscopeClient = horoscopeService;
         }
 
-        public Horoscope dailyHoroscope(String sign) {
+        @OutputKey("horoscope")
+        public Horoscope dailyHoroscope(@InputKey String sign) {
             return new Horoscope(horoscopeClient.horoscope(sign).data().horoscopeData());
         }
     }
@@ -248,6 +236,119 @@ public class StarNewsFinder implements Runnable {
 
         public UnknownToolException(String message) {
             super(message);
+        }
+    }
+
+    public interface AgentParameterResolver {
+
+        boolean supports(ParameterContext parameterContext);
+
+        OutputResolution resolve(ParameterContext parameterContext);
+
+
+        static OutputResolution execute(ParameterContext parameterContext) {
+
+        }
+
+        // TODO: this is hardcoded
+        private static List<AgentParameterResolver> allResolvers() {
+            return List.of(
+                    new AgentParameterResolver() {
+
+                        @Override
+                        public boolean supports(ParameterContext parameterContext) {
+                            return Horoscope.class.equals(parameterContext.type());
+                        }
+
+                        @Override
+                        public OutputResolution resolve(ParameterContext parameterContext) {
+                            return new ResolutionDone(Arc.container().instance(HoroscopeService.class));
+                        }
+                    },
+                    new LlmParameterProvider(
+                            OpenAiChatModel.builder().modelName("gpt-4o").build(),
+                            ToolSpecification.builder()
+                                .name("askForInput")
+                                .description("Asks the user provide additional input that is needed by some part of the agent")
+                                .parameters(JsonObjectSchema.builder().addStringProperty("input").required("input").build())
+                    .build()));
+        }
+
+        interface ParameterContext {
+            Class type();
+
+            List<ChatMessage> messages();
+        }
+
+        sealed interface OutputResolution permits ResolutionDone, ToolCallRequired {
+
+
+        }
+
+        record ResolutionDone(Object resolvedValue) implements OutputResolution {
+        }
+
+        record ToolCallRequired(ToolExecutionRequest toolExecutionRequest) implements OutputResolution {
+
+        }
+
+        class LlmParameterProvider implements AgentParameterResolver {
+
+            private static final String extractorSystemPrompt =
+                    """
+                    You are an agent that specializes in extracting structured information from a conversation.
+                    """;
+            private static final String extractorUserPromptTemplate =
+                    """
+                    The conversion is the following:
+                    
+                    ---
+                    %s
+                    ---
+                    
+                    %s
+                    """;
+
+            private final ChatModel chatModel;
+            private final ToolSpecification askForInputTool;
+
+            public LlmParameterProvider(ChatModel chatModel, ToolSpecification askForInputTool) {
+                this.chatModel = chatModel;
+                this.askForInputTool = askForInputTool;
+            }
+
+            @Override
+            public boolean supports(ParameterContext parameterContext) {
+                return true;
+            }
+
+            @Override
+            public OutputResolution resolve(ParameterContext parameterContext) {
+                final var askForInputTool = ToolSpecification.builder()
+                        .name("askForInput")
+                        .description("Asks the user provide additional input that is needed by some part of the agent")
+                        .parameters(JsonObjectSchema.builder().addStringProperty("input").required("input").build())
+                        .build();
+
+                StringBuilder sb = new StringBuilder();
+                parameterContext.messages().forEach(cm -> {
+                    sb.append("Type: ").append(cm.type()).append("\n").append(LangChain4jUtil.chatMessageToText(cm));
+                });
+                String input = sb.toString();
+
+                ChatResponse extractorChatResponse = chatModel.chat(ChatRequest.builder()
+                        .messages(SystemMessage.systemMessage(extractorSystemPrompt),
+                                UserMessage.from(String.format(extractorUserPromptTemplate, input, SERVICE_OUTPUT_PARSER.outputFormatInstructions(
+                                        parameterContext.type()))))
+                        .parameters(
+                                ChatRequestParameters.builder().toolSpecifications(askForInputTool).build())
+                        .build());
+                if (extractorChatResponse.aiMessage().hasToolExecutionRequests()) {
+                    return new ToolCallRequired(extractorChatResponse.aiMessage().toolExecutionRequests().get(0));
+                } else {
+                    return new ResolutionDone(SERVICE_OUTPUT_PARSER.parse(extractorChatResponse, parameterContext.type()));
+                }
+            }
         }
     }
 }
