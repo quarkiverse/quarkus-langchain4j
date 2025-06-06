@@ -18,7 +18,7 @@
     <quarkus.platform.version>3.20.0</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
-    <quarkus-langchain4j.version>1.0.0</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
   </properties>
 
   <dependencyManagement>
@@ -39,8 +39,17 @@
       <artifactId>quarkus-picocli</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-client-jackson</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai</artifactId>
+      <version>${quarkus-langchain4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.langchain4j</groupId>
+      <artifactId>quarkus-langchain4j-tavily</artifactId>
       <version>${quarkus-langchain4j.version}</version>
     </dependency>
 
@@ -60,7 +69,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
-      <artifactId>quarkus-langchain4j-redis-deployment</artifactId>
+      <artifactId>quarkus-langchain4j-tavily-deployment</artifactId>
       <version>${quarkus-langchain4j.version}</version>
       <scope>test</scope>
       <type>pom</type>
