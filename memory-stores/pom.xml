@@ -12,6 +12,7 @@
 
     <modules>
         <module>memory-store-redis</module>
+        <module>memory-store-mongodb</module>
     </modules>
-    
+
 </project>
