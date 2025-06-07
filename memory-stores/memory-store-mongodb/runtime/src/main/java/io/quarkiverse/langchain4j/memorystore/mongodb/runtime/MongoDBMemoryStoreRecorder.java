@@ -18,7 +18,6 @@ public class MongoDBMemoryStoreRecorder {
             @Override
             public MongoDBChatMemoryStore apply(SyntheticCreationalContext<MongoDBChatMemoryStore> context) {
                 MongoClient mongoClient;
-                System.out.println("clientName = " + clientName);
                 mongoClient = context.getInjectedReference(MongoClient.class,
                         new MongoClientName.Literal(Objects.requireNonNullElse(clientName, "default")));
                 return new MongoDBChatMemoryStore(mongoClient, database, collection);
