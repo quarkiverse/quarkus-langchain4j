@@ -47,3 +47,4 @@
 ** xref:websockets.adoc[WebSockets]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]
 ** xref:observability.adoc[Observability]
+** xref:security.adoc[Security/Privacy Considerations]
