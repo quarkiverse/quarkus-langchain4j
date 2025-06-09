@@ -34,6 +34,7 @@ quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 Then, set the `OPENAI_API_KEY` environment variable in your deployment environment rather than committing it to version control.
 
 * *Limit Permissions*: Apply the principle of least privilege. The credentials used by your application should have the minimum required permissions to perform their intended function.
+* When using providers like Gemini or Azure OpenAI, prefer short-lived access tokens obtained during login instead of long-lived API keys. See https://docs.quarkiverse.io/quarkus-langchain4j/dev/llms.html#_access_to_llms[Access to LLMs].
 
 == Input and Output Validation
 
