@@ -13,7 +13,7 @@ When you send a prompt to an LLM, the data within that prompt—including any se
 
 * *Third-Party Data Handling*: If you are using a managed LLM service (e.g., OpenAI, Cohere, Gemini), your data is subject to the provider's privacy policy and data-handling practices. Carefully review their terms of service to ensure they align with your organization's compliance and privacy requirements. Some providers may use customer data to train future models, which could be a significant risk.
 * *Data Minimization*: Before sending data to an LLM, remove any Personally Identifiable Information (PII) or other sensitive details that are not strictly necessary for the prompt.
-* *Anonymization and Pseudonymization*: Where possible, replace real data with placeholders or anonymized versions. Techniques like data masking can help protect sensitive information while preserving the meaning for the LLM.
+* *Anonymization and Pseudonymization*: Where possible, replace real data with placeholders or anonymized equivalents. Techniques like data masking can help protect sensitive information while preserving the data's utility for the LLM. For example, you can use the link:https://docs.quarkiverse.io/quarkus-presidio/dev/[Quarkus Presidio] extension to identify and anonymize PII in text before sending it to an LLM.
 
 == Secure Credential Management
 
@@ -34,7 +34,7 @@ quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 Then, set the `OPENAI_API_KEY` environment variable in your deployment environment rather than committing it to version control.
 
 * *Limit Permissions*: Apply the principle of least privilege. The credentials used by your application should have the minimum required permissions to perform their intended function.
-* When using providers like Gemini or Azure OpenAI, prefer short-lived access tokens obtained during login instead of long-lived API keys. See https://docs.quarkiverse.io/quarkus-langchain4j/dev/llms.html#_access_to_llms[Access to LLMs].
+* When using providers like Gemini or Azure OpenAI, also consider using short-lived access tokens obtained during login instead of long-lived API keys. See https://docs.quarkiverse.io/quarkus-langchain4j/dev/llms.html#_access_to_llms[Access to LLMs].
 
 == Input and Output Validation
 
