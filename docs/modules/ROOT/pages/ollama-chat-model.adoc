@@ -1,0 +1,101 @@
+= Ollama Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://ollama.com/[Ollama] allows developers to run large language models (LLMs) locally on their machines, with support for both CPU and GPU execution.
+It supports many popular open models such as DeepSeek R1, Llama3, Mistral, and CodeLlama, which can be pulled from the https://ollama.com/library[Ollama model library].
+
+[#_prerequisites]
+== Prerequisites
+
+=== Install Ollama
+
+Before using this extension, install Ollama locally. Visit the https://ollama.com/download[Ollama download page] and follow the instructions for your platform.
+
+Verify the installation with:
+
+[source,shell]
+----
+$ ollama --version
+----
+
+=== Dev Service
+
+The Dev Service bundled with this extension simplifies local setup:
+
+- It will *automatically pull* any model configured in your application.
+- If Ollama is not already running, it will *start an Ollama container* using your installed container runtime (Podman or Docker).
+- If, running in a container, the container will be exposed via configuration properties:
+
+[source,properties,subs=attributes+]
+----
+langchain4j-ollama-dev-service.ollama.host=host
+langchain4j-ollama-dev-service.ollama.port=port
+langchain4j-ollama-dev-service.ollama.endpoint=http://${langchain4j-ollama-dev-service.ollama.host}:${langchain4j-ollama-dev-service.ollama.port}
+----
+
+[WARNING]
+====
+Ollama models are large (e.g., Llama3 ~4.7 GB). Ensure sufficient disk space.
+====
+
+[NOTE]
+====
+Model pulls can take several minutes depending on the model size and connection speed.
+====
+
+== Using Ollama
+
+To enable Ollama support in your Quarkus project, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-ollama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is present, xref:ai-services.adoc[AI Services] will default to using the configured Ollama chat model.
+
+== Chat Model Configuration
+
+By default, the model `llama3.2` is used.
+
+You can change the chat model using the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.ollama.chat-model.model-name=mistral
+----
+
+== Dynamic Authorization
+
+If your Ollama endpoint requires authorization, you can implement `ModelAuthProvider`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class MyAuthProvider implements ModelAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) {
+        return "Bearer " + getTokenFromSomewhere();
+    }
+}
+----
+
+== Function calling support
+
+xref:./function-calling.adoc[Function calling] is supported in Ollama since version https://ollama.com/blog/tool-support[0.3.0].
+Not all models support function calling (tools).
+Refer to https://ollama.com/search?c=tools[this list] to find compatible ones.
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]

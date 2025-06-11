@@ -1,0 +1,98 @@
+= Pinecone Vector Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Pinecone is a fully managed, scalable vector database optimized for similarity search.
+With Quarkus LangChain4j, you can use Pinecone as a vector store to implement Retrieval-Augmented Generation (RAG) pipelines.
+
+This guide explains how to configure and use Pinecone as a document store for embedded vectors.
+
+== Prerequisites
+
+To use Pinecone, you need:
+
+* A Pinecone account and an active API key
+* A Pinecone index with a configured dimension matching your embedding model
+* The Pinecone index must support the same vector similarity metric as your use case (e.g., cosine)
+
+For more details, visit: https://docs.pinecone.io/docs/quickstart
+
+== Dependency
+
+Add the following dependency to your `pom.xml`:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-pinecone</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Configuration
+
+You must configure your Pinecone API key, environment, index name, and embedding dimension in `application.properties`.
+
+[source,properties]
+----
+quarkus.langchain4j.pinecone.api-key=your-api-key
+quarkus.langchain4j.pinecone.environment=us-west1-gcp
+quarkus.langchain4j.pinecone.project-id=your-project-id
+quarkus.langchain4j.pinecone.index-name=my-index
+quarkus.langchain4j.pinecone.dimension=1536
+----
+
+See below for full configuration options:
+
+include::includes/quarkus-langchain4j-pinecone.adoc[leveloffset=+1,opts=optional]
+
+== Embedding Dimension
+
+Make sure the configured dimension matches the embedding model you're using:
+
+* OpenAI `text-embedding-ada-002` → 1536
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+
+If the dimension mismatches the index configuration, insertion and querying will fail.
+
+[IMPORTANT]
+====
+Your Pinecone index must be created with the correct vector dimension ahead of time* Quarkus will not automatically provision or reconfigure indexes.
+====
+
+== Usage Example
+
+Once installed and configured, you can use the Pinecone vector store to ingest and retrieve embedded documents:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithPinecone.java[]
+----
+
+This example demonstrates how to store text segments along with embeddings and metadata in Pinecone.
+
+== How It Works
+
+The Pinecone store integration works by:
+
+* Converting input text into embedding vectors using your configured `EmbeddingModel`
+* Storing each vector with associated metadata and a unique ID
+* Executing similarity queries using Pinecone’s top-k vector search
+* Returning the most relevant matches for inclusion in a RAG prompt
+
+Internally, the extension uses Pinecone’s REST API (via the official Java SDK) to:
+
+* Upsert vectors (`/vectors/upsert`)
+* Query vectors (`/query`)
+* Fetch metadata for matched entries
+
+== Summary
+
+To use Pinecone as a vector store for RAG with Quarkus LangChain4j:
+
+* Create a Pinecone index with the correct vector dimension
+* Add the `quarkus-langchain4j-pinecone` dependency
+* Configure API credentials, environment, and index parameters
+* Use the `PineconeEmbeddingStore` to ingest and retrieve content

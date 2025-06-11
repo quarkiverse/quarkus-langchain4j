@@ -1,0 +1,45 @@
+= Mistral Moderation Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Mistral provides moderation models to detect harmful or unsafe content in user inputs before processing them.
+
+== Prerequisites
+
+Same setup as chat/embedding models. You must provide a valid API key.
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Configuration
+
+To enable the moderation model:
+
+[source,properties]
+----
+quarkus.langchain4j.mistralai.api-key=...
+quarkus.langchain4j.mistralai.moderation-model.model-name=mistral-moderation-latest
+----
+
+Available moderation model names may evolve — refer to https://docs.mistral.ai/platform/endpoints/#moderation for an up-to-date list.
+
+To use it programmatically:
+
+[source,java]
+----
+@Inject ModerationModel moderationModel;
+
+var result = moderationModel.moderate("user input text...").content();
+if (result.flagged()) {
+    // handle unsafe input
+}
+----
+
+include::includes/quarkus-langchain4j-mistralai.adoc[leveloffset=+1,opts=optional]

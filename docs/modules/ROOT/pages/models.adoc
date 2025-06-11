@@ -1,0 +1,214 @@
+= Understanding Models in Quarkus LangChain4j
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+AI-infused applications rely on specialized models, each fulfilling a specific role in the application's workflow.
+Quarkus LangChain4j provides a consistent and intuitive programming model across different AI capabilities, enabling developers to focus on business logic rather than low-level integration.
+
+This page introduces the types of models supported by Quarkus LangChain4j, their typical use cases, and the core entities they manipulate.
+
+For supported model providers, refer to the navigation menu.
+
+== What Is a Model?
+
+A model is a trained neural network capable of performing a specific task such as text generation, classification, moderation, or image creation. They are often based on architectures like https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)[Transformers], which excel at processing sequential data.
+
+Depending on the task, we distinguish between:
+
+* _Generative models_, which produce new content (e.g., text, images)
+* _Predictive models_, which infer properties or classifications from the input
+
+These models learn patterns from large training datasets. During training, the model adjusts its internal parameters to minimize the difference between its predictions and the expected outcomes.
+This process enables the model to #statistically deduce the most probable output based on a given input#, a process rooted in probability distributions over _tokens_ or input features.
+
+The outcome of training is a mathematical function that maps input to output: a model that can now be _served_ to clients.
+#Model serving refers to the process of making a trained model accessible via an interface# (e.g., HTTP API, gRPC, SDK) so that applications can send inputs and receive predictions or generations at runtime.
+
+Models in Quarkus LangChain4j are consumed through abstraction layers that unify interaction across providers and runtime environments.
+
+The following table outlines common model types and the entities they manipulate:
+
+[cols="1,3"]
+|===
+|Model Type |Entities Manipulated
+
+|Chat & Streaming Models | Chat messages (role-based history, plain text, optional function calls)
+|Embedding Models | Text or image inputs → numerical vector representations (embeddings)
+|Moderation Models | Text or image inputs → moderation results (categories, scores, flags)
+|Image Models | Text prompts → images (URLs, streams, or base64)
+|Reasoning Models | Structured inputs/outputs (e.g. tool calls, JSON structures, action plans)
+|===
+
+== Large Language Models (LLMs)
+
+Large Language Models (LLMs) are general-purpose models trained on massive text corpora.
+They can perform a wide range of natural language tasks:
+
+* Text generation
+* Question answering
+* Summarization
+* Classification
+* Translation
+
+Quarkus LangChain4j integrates LLMs through providers like OpenAI, Hugging Face, Ollama, and JLama.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=ai-service,indent=0]
+----
+
+== Chat Models
+
+Chat models are conversational LLMs optimized for #multi-turn dialogue#.
+They maintain context across exchanges (memory), handle roles (user, assistant, system), and support structured interactions like tool calling or function invocation.
+
+Chat models operate on sequences of #messages#, each consisting of:
+
+* a `role` — one of `user`, `assistant`, `system`, or `function`
+* a `content` — typically plain text (though structured formats like JSON or Markdown may also be used)
+* optional metadata — such as `name`, `tool_calls`, or function outputs
+
+This design allows applications to guide and constrain model behavior:
+- `system` messages set the context or persona
+- `user` messages provide prompts or queries
+- `assistant` messages are model-generated responses
+- `function` messages are returned after invoking external tools
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-model-2,indent=0]
+----
+
+== Streaming Models
+
+Streaming models are a variant of chat models that output incrementally produce token by token.
+They are ideal for responsive user interfaces, allowing partial content (e.g., a sentence in progress) to be displayed immediately.
+
+In Quarkus LangChain4j, streaming responses are exposed as `Multi<String>` sequences.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=streaming-ai-service,indent=0]
+----
+
+[#_embedding_models]== Embedding Models
+
+Embedding models convert #unstructured input (text or images) into numerical vectors known as _embeddings_#.
+An embedding is a high-dimensional representation that captures semantic similarity: items with similar meaning are close together in vector space.
+
+These embeddings are useful for:
+
+* Similarity search
+* Clustering and classification
+* Document retrieval (RAG)
+* Recommender systems
+
+The input entity is typically a `String` or image, and the output is a `float[]` embedding vector.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=embedding-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=embedding-model-2,indent=0]
+----
+
+For more details, see xref:rag.adoc[Retrieval-Augmented Generation].
+
+== Moderation Models
+
+Moderation models analyze content and flag potentially harmful, offensive, or policy-violating material.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=moderation,indent=0]
+----
+
+== Image Models
+
+Image models generate or manipulate images using text prompts.
+They may support tasks such as:
+
+* Text-to-image generation
+* Inpainting or editing
+* Image variation or transformation
+
+The output is generally an image URL, byte stream, or base64-encoded representation.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=image-service,indent=0]
+----
+
+[#_reasoning_models]== Reasoning Models
+
+Reasoning models go beyond plain generation by supporting structured planning, problem-solving, and tool invocation. They are commonly used when the model needs to make decisions, call external tools, or follow multi-step workflows.
+They are the base for building complex AI agents that can reason about tasks, invoke APIs, and produce structured outputs, paving the way for #agentic architectures#.
+
+Reasoning capabilities are especially useful in:
+
+* Agents that dynamically choose tools to use
+* Function-calling scenarios with parameter extraction
+* Multi-step question answering or decision trees
+
+Reasoning models may produce structured responses such as:
+
+* JSON payloads representing tool invocations
+* Structured plans or action sequences
+* Multiple steps of intermediate reasoning
+
+Several techniques can be employed during inference to enhance reasoning quality:
+
+* _Chain of Thought (CoT)_ — the model is prompted to explicitly enumerate intermediate steps before reaching a conclusion. This improves transparency and success rate on complex problems.
+* _Backtracking_ — the model explores alternative paths or corrects prior steps based on later inconsistencies (especially useful in code generation or symbolic reasoning).
+* _Self-Consistency_ — instead of relying on a single answer, the model produces multiple reasoning paths and aggregates them to derive a consensus.
+* _Function-calling_ or _tool use_ — the model delegates parts of the solution to external systems, such as APIs or computation libraries.
+
+=== Performance Tradeoff
+
+Reasoning models often exhibit a tradeoff between training complexity and inference efficiency:
+
+* Training-time investment: Techniques like instruction tuning or tool-aware pretraining can embed reasoning patterns into the model, improving reliability at inference time.
+* Inference-time complexity: More advanced reasoning (e.g., multi-step plans, CoT) may increase latency and token consumption, especially when iterative self-reflection is involved.
+
+== Orchestration Through AI Services
+
+Quarkus LangChain4j enables orchestration across multiple model types using `@RegisterAiService`.
+
+[mermaid,ai_service_orchestration,svg]
+----
+flowchart LR
+    App[Quarkus Application]
+    AIS[AI Service]
+    CM[Chat Model]
+    MM[Moderation Model]
+    IM[Image Model]
+    EM[Embedding Model]
+    CMP[Chat Model Provider]
+    MMP[Moderation Model Provider]
+    IMP[Image Model Provider]
+    EMP[Embedding Model Provider]
+
+    App e1@-->|1 - Invoke method| AIS
+    AIS e2@-.->|2 - Invoke models| CM
+    AIS e3@-.->|2 - Invoke models| EM
+    AIS e4@-.->|2 - Invoke models| IM
+    AIS e5@-.->|2 - Invoke models| MM
+    CM e6@--> CMP
+    EM e7@--> EMP
+    IM e8@--> IMP
+    MM e9@--> MMP
+    AIS e0@-->|3 - Provide result| App
+
+    class A,B,C,D,E,F node;
+    class e0,e1,e2,e3,e4,e5,e6,e7,e8,e9 edge;
+    classDef node fill:#4A93E9,stroke:white,color:white
+    classDef edge stroke-width:3px,stroke:#DF1862
+----
+
+== Related Guides
+
+[.lead]
+* xref:ai-services.adoc[AI Services Reference]
+* xref:rag.adoc[Retrieval-Augmented Generation (RAG)]
+* xref:function-calling.adoc[Function Calling and Tools]

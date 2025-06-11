@@ -1,0 +1,99 @@
+= PGVector Document Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The PGVector extension allows you to use PostgreSQL as a vector database for Retrieval-Augmented Generation (RAG) with Quarkus LangChain4j.
+It leverages the `pgvector` extension in PostgreSQL to store and search vector embeddings efficiently.
+
+== Prerequisites
+
+To use PGVector as a document store:
+
+* A PostgreSQL instance with the `pgvector` extension installed is required.
+* A Quarkus datasource must be configured.
+* The embedding vector dimension must match your embedding model.
+
+[NOTE]
+====
+PGVector is a native PostgreSQL extension that adds vector similarity search capabilities to PostgreSQL.
+It supports L2, cosine, and inner-product distance metrics.
+====
+
+NOTE: In dev mode, the `quarkus-langchain4j-pgvector` extension will automatically start a PostgreSQL instance with the `pgvector` extension enabled.
+
+== Dependency
+
+To enable PGVector integration in your Quarkus project, add the following Maven dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-pgvector</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension requires a configured Quarkus datasource.
+For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide].
+
+== Embedding Dimension
+
+You must explicitly configure the dimensionality of the embedding vector:
+
+[source,properties]
+----
+quarkus.langchain4j.pgvector.dimension=384
+----
+
+This value depends on the embedding model in use:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into PGVector using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithPgvector.java[]
+----
+
+This example shows how to embed and persist documents using the PGVector store, enabling efficient similarity search during RAG queries.
+
+== Configuration
+
+Customize the behavior of the extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-pgvector.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+The PGVector extension maps each ingested document to a row in a PostgreSQL table* Each row contains:
+
+* The original text content
+* Optional metadata
+* The vector embedding (stored as a `vector` type column)
+
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding <=> :query_vector LIMIT N`.
+
+The extension manages schema creation and indexing automatically unless overridden.
+
+== Summary
+
+To use PostgreSQL and PGVector as a document store with Quarkus LangChain4j:
+
+* Ensure the `pgvector` extension is installed in your PostgreSQL instance.
+* Add the extension dependency.
+* Configure a datasource and set the correct embedding dimension.
+* Use `PgVectorEmbeddingStore` to ingest and retrieve embedded documents.
+

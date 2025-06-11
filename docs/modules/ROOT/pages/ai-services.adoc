@@ -1,196 +1,269 @@
-= Designing AI services
+= AI Services Reference
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-An _AI Service_ employs a declarative approach to define interactions with the LLM, serving as the pivotal interaction point between your application and the LLM. It operates as an intermediary, known as an https://learn.microsoft.com/en-us/azure/architecture/patterns/ambassador[_ambassador_].
+_AI Services_ provide a declarative mechanism for interacting with LLMs, abstracting complexities behind annotated interfaces.
 
-== Purpose
+== Overview
 
-The _AI Service_ serves as the core connection point between your application and the LLM. It abstracts the LLM specifics, encapsulating and declaring all interactions within a singular interface.
+_AI Services_ act as the core connection between your application and Large Language Models (LLMs). They simplify the integration by encapsulating interactions declaratively within annotated Java interfaces, removing boilerplate and complexities typically associated with manual LLM integrations.
 
-== Leveraging @RegisterAiService
+[source,java]
+----
+@RegisterAiService
+public interface GreetingService {
+    @UserMessage("Greet the user named {name}")
+    String greet(String name);
+}
+----
 
-The `@RegisterAiService` annotation is pivotal for registering an _AI Service_, placed on an interface:
+Inject and use the generated service:
+
+[source,java]
+----
+@Inject GreetingService service;
+
+String greeting = service.greet("Quarkus");
+----
+
+IMPORTANT: You do **not** need to implement the interface. Quarkus LangChain4j automatically generates the implementation.
+
+== Annotations Reference
+
+=== @RegisterAiService
+
+Marks an interface as an AI Service managed by CDI, creating a bean for interactions with an LLM.
+
+[source,java]
+----
+@RegisterAiService(
+    modelName = "my-model",
+    tools = {MyTool.class},
+    chatMemoryProviderSupplier = CustomMemoryProvider.class,
+    retrievalAugmentor = MyRetrieverSupplier.class
+)
+----
+
+**Attributes:**
+
+|===
+|Attribute |Description |Default | Note
+
+|`modelName`
+|Specifies the named LLM model configuration.
+|`"<default>"`
+|If not set, uses the default model
+
+|`tools`
+|Array of tool classes (CDI beans) accessible to the LLM.
+|Empty array
+|If not set, no tools are available. Also, we recommend using `@ToolBox` to define a toolbox on each method instead.
+
+|`toolProviderSupplier`
+|Configures a supplier that can add tools dynamically.
+|
+|It is possible to use combine `tools` and the `toolProviderSupplier` to add tools dynamically at runtime.
+
+|`chatMemoryProviderSupplier`
+|Supplier class for chat memory provider.
+|Unset
+|If not set, the memory is managed using CDI-scope.
+
+|`retrievalAugmentor`
+|Supplier class for Retrieval Augmentor (for RAG).
+|Unset
+|See xref:rag.adoc[Retrieved Augmentation Generation (RAG)] for details.
+
+|`moderationModelSupplier`
+|Supplier for moderation model (optional).
+|Unset
+|If not set, no moderation is applied. You can also use guardrails to control content.
+
+|`toolHallucinationStrategy`
+|Strategy to handle hallucinated tool calls.
+|Unset
+|If not set, no special handling is applied. See the xref:function-calling.adoc[Function Calling] for details.
+
+|`streamingChatLanguageModelSupplier`
+|Supplier for streaming chat model (optional).
+|Unset
+| If not set, it uses the streaming support of the configured model.
+
+|`chatLanguageModelSupplier`
+|Supplier for chat model (optional).
+|Unset
+| If not set, it uses the streaming support of the configured model.
+
+|===
+
+In most cases, using an empty `@RegisterAiService` is sufficient, as it defaults to the configured model:
 
 [source,java]
 ----
 @RegisterAiService
 public interface MyAiService {
-    // methods.
+    @UserMessage("Answer the following question: {input}")
+    String process(String input);
 }
 ----
 
-Once registered, you can inject the _AI Service_ into your application:
+=== @SystemMessage
+
+The `@SystemMessage` annotation defines initial instructions or context for the LLM interaction.
+The system message can be set on the AI Service interface itself or on individual methods. In the first case, it applies to all methods in the service.
 
 [source,java]
 ----
-@Inject MyAiService service;
+@SystemMessage("You are an assistant helping with users.")
 ----
 
-[#scope]
-=== Scope
-The beans created by `@RegisterAiService` are `@RequestScoped` by default. The reason for this is that it enables removing chat <<memory,memory>> objects.
-This is a good default when a service is used during when handling an HTTP request, but it's inappropriate in CLIs or in WebSockets (WebSocket support is expected to improve in the near future).
-For example when using a service in a CLI, it makes sense to have the service be `@ApplicationScoped` and the extension allows this simply if the service is annotated with `@ApplicationScoped`.
+**Attributes:**
 
-=== AI method declaration
+- `value`: prompt template.
+- `delimiter`: line delimiter for multi-line templates (`"\n"` by default).
+- `fromResource`: load message from a resource file.
 
-Within the interface annotated with `@RegisterAiService`, you model interactions with the LLM using _methods_. These methods accept parameters and are annotated with `@SystemMessage` and `@UserMessage` to define instructions directed to the LLM:
+=== @UserMessage
 
-[source,java]
-----
-@SystemMessage("You are a professional poet.")
-@UserMessage("""
-    Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
-""")
-String writeAPoem(String topic, int lines);
-----
-
-[#_system_message]
-=== System Message
-
-The `@SystemMessage` annotation defines the scope and initial instructions, serving as the first message sent to the LLM. It delineates the AI service's role in the interaction:
-
-[source,java]
-----
-@SystemMessage("""
-    You are working for a bank, processing reviews about financial products. Triage reviews into positive and negative ones, responding with a JSON document.
-    """
-)
-----
-
-=== User Message (Prompt)
-
-The `@UserMessage` annotation defines primary instructions dispatched to the LLM. It typically encompasses requests and the expected response format:
+The `@UserMessage` annotation defines user instructions or prompts sent to the LLM.
+It can be applied to methods in the AI Service interface, allowing dynamic parameters to be included in the prompt.
+Method parameters can be used to fill in the prompt template.
 
 [source,java]
 ----
 @UserMessage("""
-    Your task is to process the review delimited by ---.
-    Apply a sentiment analysis to the review to determine if it is positive or negative, considering various languages.
-
-    For example:
-    - "I love your bank, you are the best!" is a 'POSITIVE' review
-    - "J'adore votre banque" is a 'POSITIVE' review
-    - "I hate your bank, you are the worst!" is a 'NEGATIVE' review
-
-    Respond with a JSON document containing:
-    - the 'evaluation' key set to 'POSITIVE' if the review is positive, 'NEGATIVE' otherwise
-    - the 'message' key set to a message thanking or apologizing to the customer. These messages must be polite and match the review's language.
-
-    ---
-    {review}
-    ---
+Analyze sentiment: {text}.
+Respond with POSITIVE or NEGATIVE.
 """)
-TriagedReview triage(String review);
+public Sentiment analyzeSentiment(String text);
 ----
 
-=== Parameter Passing and Referencing
+**Attributes:**
 
-AI methods can take parameters referenced in system and user messages using the `\{parameter}` syntax:
+- `value`: prompt template.
+- `delimiter`: line delimiter for multi-line templates (`"\n"` by default).
+- `fromResource`: load message from a resource file.
+
+
+The `@UserMessage` can also be used on method parameters:
 
 [source,java]
 ----
-@SystemMessage("You are a professional poet")
+public String answer(@UserMessage question);
+----
+
+If the method has a single parameter, the `@UserMessage` annotation can be omitted, as it is applied by default.
+
+=== @MemoryId
+
+Use `@MemoryId` on method parameters to uniquely identify memory contexts.
+It's crucial for distinguishing between different users or conversational sessions when using persistent or multi-user memory.
+
+[source,java]
+----
+String chat(@MemoryId String userId, @UserMessage String message);
+----
+
+CAUTION: Always ensure unique memory IDs to avoid mixing conversational contexts.
+
+=== @ImageUrl
+
+Marks a parameter providing the URL of an image for LLM processing.
+
+[source,java]
+----
+String describe(@ImageUrl String imageUrl);
+----
+
+Note that Quarkus LangChain4J also supports the `Image` type for more complex image handling, such as base64 encoding or MIME types.
+
+== Chat Memory Management
+
+AI Services manage conversational state using `ChatMemory`.
+This chat memory is used to maintain context across multiple interactions with the LLM.
+It can distinguish between different users or sessions using the `@MemoryId` annotation.
+Also, the memory can be persisted in various ways, such as in a database or in-memory store.
+
+- Default memory provider: `MessageWindowChatMemory` with 10-message window.
+- Memory is request-scoped by default; configure using `chatMemoryProviderSupplier`.
+
+To customize the memory provider, you can specify a custom class implementing `ChatMemoryProvider`:
+
+[source,java]
+----
+@RegisterAiService(chatMemoryProviderSupplier = MyCustomMemoryProvider.class)
+----
+
+See the <<Memory Management>> reference for detailed customization.
+
+== LLM Response Mapping
+
+AI Services map LLM responses to method return types:
+
+- Direct JSON mapping:
+[source,java]
+----
+@UserMessage("Evaluate review: {review}. Respond in JSON.")
+ReviewResponse evaluate(String review);
+----
+
+Quarkus automatically deserializes responses into `ReviewResponse`.
+Depending on the model, it forces the response format to match the expected type.
+It inserts the expected schema into the prompt automatically.
+
+- Dynamic schema with `{response_schema}` placeholder:
+[source,java]
+----
 @UserMessage("""
-    Write a poem about {topic}. The poem should be {lines} lines long. Then send this poem by email.
+Classify text: {text}. Schema: {response_schema}
 """)
-String writeAPoem(String topic, int lines);
 ----
 
-[NOTE]
-====
-The value of `@SystemMessage` is also a template, which in addition to be able to reference the various parameters of the method,
-also has access to the `chat_history` parameter which can be used to iterate over the chat history.
-====
+In this case, the schema is not automatically inserted.
 
-[#_ai_method_return_type]
-=== AI Method Return Type
+You can disable automatic schema insertion via configuration:
+[source,properties]
+----
+quarkus.langchain4j.response-schema=false
+----
 
-If the _prompt_ defines the JSON response format precisely, you can map the response directly to an object:
+== Streaming Responses
+
+AI Services can stream responses from the LLM token-by-token. Define the method to return a reactive stream (`Multi<String>`):
 
 [source,java]
 ----
-// ... See above for the prompt
-TriagedReview triage(String review);
+Multi<String> chat(@UserMessage String userMessage);
 ----
 
-In this instance, Quarkus automatically creates an instance of `TriagedReview` from the LLM's JSON response.
-
-To enhance the flexibility of prompt creation, the `\{response_schema\}` placeholder can be used within the prompt. This placeholder is dynamically replaced with the defined schema of the method's return object.
-
-[IMPORTANT]
-====
-By default, if the placeholder `\{response_schema\}` is not present in `@SystemMessage` or `@UserMessage`, it will be added to the end of the prompt.
-To avoid the generation of the schema, the property `quarkus.langchain4j.response-schema` can be set to `false`.
-====
-
-=== Receiving User Message as a Parameter
-
-For situations requiring the user message to be passed as a parameter, you can use the `@UserMessage` annotation on a parameter. Exercise caution with this feature, especially when the AI has access to _tools_:
+You can consume the stream internally:
 
 [source,java]
 ----
-String chat(@UserMessage String userMessage);
-----
-
-The annotated parameter should be of type `String`.
-
-=== Receiving MemoryId as a Parameter
-
-The _memory_ encompasses the cumulative context of the interaction with the LLM. To manage statelessness in LLMs, the complete context must be exchanged between the LLM and the AI service.
-
-Hence, the AI Service can store the latest messages in a _memory_, often termed _context_. The `@MemoryId` annotation enables referencing the memory for a specific user in the AI method:
-
-[source,java]
-----
-String chat(@MemoryId int memoryId, @UserMessage String userMessage);
-----
-
-We'll explore an alternative approach to avoid manual memory handling in the <<memory,memory>> section.
-
-[#_streaming]
-=== Streaming
-
-When building a chatbot—especially one based on large language models—it is often desirable to stream the model's output token by token. This approach improves the user experience by reducing the perceived latency between user input and the model’s response.
-
-To implement streaming in a Quarkus-based application, you can return a Multi<String> from the chat() method. This leverages the https://quarkus.io/guides/mutiny-primer[Quarkus Mutiny] reactive programming library, which is well-suited for handling asynchronous, non-blocking data streams.
-
-[source,java]
-----
-Multi<String> chat(@MemoryId int memoryId, @UserMessage String userMessage);
-----
-
-To use the output of the stream in your application, you can do something like this:
-
-[source,java]
-----
-Multi<String> stream = model.chat(chatId, userMessage);
-
-stream.subscribe().with(
-    // onItem: called for each token
-    token -> {
-    // handle token in your ui
-    },
-    // onFailure: called if an error occurs
-    error -> {
-        logger.error("Error during streaming: " + error.getMessage(), error);
-        // handle error in your ui
-    },
-    // onCompletion: called when the stream completes
-    () -> {
-        // handle any stuff after stream completion
-    }
+chat(userMessage).subscribe().with(
+    token -> { /* process token */ },
+    error -> { /* handle error */ },
+    () -> { /* on completion */ }
 );
 ----
 
-== Configuring the Chat Language Model
+Or expose the stream directly in REST endpoints:
 
-While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions. If you have a single chat language model, no specific configuration is required.
+[source,java]
+----
+@GET
+public Multi<String> stream(@QueryParam("question") String question) {
+    return aiService.chat(question);
+}
+----
 
-However, when multiple model providers are present in the application (such as OpenAI, Azure OpenAI, HuggingFace, etc.)
-each model needs to be given a name, which is then referenced by the AI service like below.
-The same also applies when you want to use different models that use the same provider (e.g. via OpenAI-APIs).
+== Configuring the chat model
+
+While LLMs are the base AI models, the chat language model builds upon them, enabling chat-like interactions.
+If you have a single chat language model, no specific configuration is required.
+
+However, when multiple model providers are present in the application (such as OpenAI, Azure OpenAI, HuggingFace, etc.) each model needs to be given a name, which is then referenced by the AI service like below. The same also applies when you want to use different models that use the same provider (e.g. via OpenAI-APIs).
 
 [source,java]
 ----
@@ -202,13 +275,13 @@ or
 [source,java]
 ----
 @Inject
-@ModelName("m3")
+@ModelName("m1")
 EmbeddingModel embeddingModel;
 ----
 
 The configuration of the various models could look like so:
 
-[source,properties,subs=attributes+]
+[source,properties]
 ----
 # ensure that the model with the name 'm1', is provided by OpenAI
 quarkus.langchain4j.m1.chat-model.provider=openai
@@ -225,135 +298,70 @@ quarkus.langchain4j.openai.m3.api-key=sk-...
 quarkus.langchain4j.openai.m3.embedding-model.model-name=text-emb...
 ----
 
-[#memory]
-== Configuring the Context (Memory)
 
-As LLMs are stateless, the memory — comprising the interaction context — must be exchanged each time. To prevent storing excessive messages, it's crucial to evict older messages.
+== Tools Integration
 
-The `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation enables configuring the `dev.langchain4j.memory.chat.ChatMemoryProvider`. The default value of this annotation is `RegisterAiService.BeanChatMemoryProviderSupplier.class`
-which means that the `AiService` will use whatever `ChatMemoryProvider` bean is configured by the application or the default one provided by the extension.
+Integrate function calling (methods) callable by the LLM:
 
-The extension provides a default implementation of `ChatMemoryProvider` which does two things:
-
-* It uses whatever bean `dev.langchain4j.store.memory.chat.ChatMemoryStore` bean is configured, as the backing store. The default implementation is `dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore`
-** If the application provides its own `ChatMemoryStore` bean, that will be used instead of the default `InMemoryChatMemoryStore`,
-* It leverages the available configuration options under `quarkus.langchain4j.chat-memory` to construct the  `ChatMemoryProvider`.
-** The default configuration values result in the usage of `dev.langchain4j.memory.chat.MessageWindowChatMemory` with a window size of ten.
-** By setting `quarkus.langchain4j.chat-memory.type=token-window`, a `dev.langchain4j.memory.chat.TokenWindowChatMemory` will be used. Note that this requires the presence of a `dev.langchain4j.model.Tokenizer` bean.
-
-[IMPORTANT]
-====
-The topic of `ChatMemory` cleanup is of paramount importance in order to avoid having the application terminate with `out of memory` errors. For this reason, the extension automatically removes all the `ChatMemory` objects from
-the underlying `ChatMemoryStore` when the AI Service goes out of scope (recall from our discussion about <<scope,scope>> that such beans are `@RequestScoped` by default).
-
-However, in cases where more fine-grained control is needed (which is the case when the bean is declared as `@Singleton` or `@ApplicationScoped`) then `io.quarkiverse.langchain4j.ChatMemoryRemover` should be used to manually remove elements.
-====
-
-[CAUTION]
-====
-When using an AiService that is expected to use to chat memory, it is very important to use `@MemoryId` (as mentioned in a later section). Failure to do so, can lead to unexpected and hard to debug results.
-====
-
-[TIP]
-====
-If your use case requires that no memory should be used, then be sure to use `@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)`
-====
-
-[TIP]
-====
-An `AiService` can have its memory seeded with memory entries by using `@SeedMemory`. See the Javadoc of the annotation for details as well as an example usage.
-====
-
-=== Advanced usage
-
-Although the extension's default `ChatMemoryProvider` is very configurable making unnecessary in most cases to resort to a custom implementation, such a capability is possible. Here is a possible example:
-
-[source,java]
-----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/CustomChatMemoryProvider.java[]
-----
-
-If for some reason different AI services need to have a different `ChatMemoryProvider` (i.e. not use the globally available bean), this is possible by configuring the `chatMemoryProviderSupplier` attribute of the `@RegisterAiService` annotation and implementing as custom provider.
-Here is a possible example:
-
-[source,java]
-----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/CustomProvider.java[]
-----
-
-and configuring the AiService as so:
-
-[source,java]
-----
-@RegisterAiService(
-    chatMemoryProviderSupplier = MySmallMemoryProvider.class)
-----
-
-TIP: For non-memory-reliant LLM interactions, you may skip memory configuration.
-
-=== @MemoryId
-
-In cases involving multiple users, ensure each user has a unique memory ID and pass this ID to the AI method:
-
-[source,java]
-----
-String chat(@MemoryId int memoryId, @UserMessage String userMessage);
-----
-
-Also, remember to clear out users to prevent memory issues.
-
-== Configuring Tools
-
-Tools are methods that LLMs can invoke to access additional data. These methods, declared using the `@Tool` annotation, should be part of a bean:
-
+- Define tools with `@Tool`:
 [source,java]
 ----
 @ApplicationScoped
-public class CustomerRepository implements PanacheRepository<Customer> {
+public class CustomerService {
 
-    @Tool("get the customer name for the given customerId")
-    public String getCustomerName(long id) {
-        return find("id", id).firstResult().name;
-    }
-
+    @Tool("Fetch customer name by ID")
+    public String getName(long id) { /*...*/ }
 }
 ----
 
-The `@Tool` annotation can provide a description of the action, aiding the LLM in tool selection. The `@RegisterAiService` annotation allows configuring the tool provider:
+- Configure tools:
+[source,java]
+----
+@RegisterAiService(tools = CustomerService.class)
+----
+
+or, (recommended) use a toolbox:
 
 [source,java]
 ----
-@RegisterAiService(tools = {TransactionRepository.class, CustomerRepository.class })
+@RegisterAiService
+public interface MyAiService {
+    @UserMessage("Answer the following question: {question}")
+    @ToolBox(CustomerService.class)
+    String answer(String question);
+}
 ----
 
-IMPORTANT: Ensure you configure the memory provider when using tools.
+More details on function calling and tool integration can be found in the xref:function-calling.adoc[Function Calling guide].
 
-IMPORTANT: Be cautious to avoid exposing destructive operations via tools.
+== Document Retrieval (RAG)
 
-// TODO: Add information about supported parameter types for tools.
+Integrate document retrieval using `RetrievalAugmentor`:
 
-More information about tools is available in the xref:./agent-and-tools.adoc[Agent and Tools] page.
+[source,java]
+----
+@RegisterAiService(retrievalAugmentor = MyRetrievalAugmentorSupplier.class)
+----
 
-== Configuring a Document Retriever
+If there is only one, no need to specify the `retrievalAugmentor` attribute, as it defaults to the configured retrieval augmentor.
 
-A document retriever fetches data from an external source and provides it to the LLM. It helps by sending only the relevant data, considering the LLM's context limitations.
-
-// TODO: Provide detailed information about document retrievers.
-
-This guidance aims to cover all crucial aspects of designing AI services with Quarkus, ensuring robust and efficient interactions with LLMs.
+Detailed setup in the xref:rag.adoc[RAG reference guide].
 
 == Moderation
 
-By default, @RegisterAiService annotated interfaces don't moderate content. However, users can opt in to having the LLM moderate
-content by annotating the method with `@Moderate`.
+By default, `@RegisterAiService` annotated interfaces don’t moderate content.
+However, users can opt in to having the LLM moderate content by annotating the method with `@Moderate`.
+
+[source,java]
+----
+@Moderate
+String respond(@UserMessage String message);
+----
 
 For moderation to work, the following criteria need to be met:
 
 * A CDI bean for `dev.langchain4j.model.moderation.ModerationModel` must be configured (the `quarkus-langchain4j-openai` and `quarkus-langchain4j-azure-openai` provide one out of the box)
-
-=== Advanced usage
-An alternative to providing a CDI bean is to configure the interface with `@RegisterAiService(moderationModelSupplier = MyCustomSupplier.class)`
-and implement `MyCustomModerationSupplier` like so:
+* or the `moderationModelSupplier` attribute of the `@RegisterAiService` annotation must be set to a custom moderation model supplier.
 
 [source,java]
 ----
@@ -363,49 +371,74 @@ public class MyCustomModerationSupplier implements Supplier<ModerationModel> {
 
     @Override
     public ModerationModel get(){
-        // TODO: implement
+        // ...
     }
 
 }
 ----
 
-== Working with images
+== Working with Images
 
-An _AI Service_ can also be used when working with images, both to describe an image and to generate one.
-The following code presents examples of both cases:
+AI Services support image processing and generation:
+
+**Describing images** using an image URL:
 
 [source,java]
 ----
-    @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
-    @ApplicationScoped
-    public interface ImageDescriber {
-
-        @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
-                + " with only the Java code. If it is not, respond with 'NOT AN IMAGE'")
-        String describe(@ImageUrl String url); // <1>
-    }
-
-    @RegisterAiService
-    @ApplicationScoped
-    public interface ImageGenerator {
-
-        Image generate(String prompt);  // <2>
-    }
+@UserMessage("Describe the content of this image.")
+String describe(@ImageUrl String imageUrl);
 ----
-<1> The use of `@ImageUrl` is what configures the _AI Service_ with the necessary image. The parameter in this case is a publicly available URL, but if a local image needs to be used, one can use `dev.langchain4j.data.image.Image`. In this case no `@ImageUrl` is needed and the `Image` can create it like so: `Image.builder().base64Data(encodeFileToBase64(someImage)).mimeType("image/png").build()`.
-<2> By returning `dev.langchain4j.data.image.Image`, _AI Service_ knows that it has been configured to generate images.
-For this to work, the application must be using a Quarkus LangChain4j extension that provides an `dev.langchain4j.model.image.ImageModel` (such as `quarkus-langchain4j-openai`)
+
+For local or base64-encoded images, use the `Image` class directly:
+
+[source,java]
+----
+String describe(Image image);
+----
+
+Create the image instance like this:
+
+[source,java]
+----
+Image image = Image.builder()
+    .base64Data(encodeFileToBase64(someImage))
+    .mimeType("image/png")
+    .build();
+----
+
+**Generating images**:
+
+[source,java]
+----
+Image generate(String prompt);
+----
 
 [CAUTION]
 ====
-Generating images with an _AI Service_ comes with restrictions compared to text generating _AI Services_.
+Limitations for image generation:
 
-* Memory is **not** used
-* Retrieval Augmentors are **not** used
-* Although auditing does work, it is however limited
-* Guardrails only work on the input
+* Memory and Retrieval Augmentors aren't supported.
+* Limited guardrails (input only).
 ====
 
-== Observability
+To summarize:
 
-Refer to link:https://docs.quarkiverse.io/quarkus-langchain4j/dev/observability.html[this page] to learn how to trace LangChain4j applications. 
+- Image description:
+[source,java]
+----
+String describe(@ImageUrl String imageUrl);
+----
+
+- Image generation:
+[source,java]
+----
+Image generate(String prompt);
+----
+
+== Related Guides
+
+[.lead]
+* xref:models.adoc[LLM Configuration and Providers]
+* xref:rag.adoc[Retrieval-Augmented Generation (RAG)]
+* xref:function-calling.adoc[Function Calling and Tool Integration]
+

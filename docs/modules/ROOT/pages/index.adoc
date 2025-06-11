@@ -1,107 +1,101 @@
+[.landing]
 = Quarkus LangChain4j
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-_Large Language Models_ (LLMs) are AI-based systems designed to understand, generate, and manipulate human language, showcasing advanced natural language processing capabilities.
-The dynamic LLM landscape is reshaping our interactions with applications and the very construction of these applications.
-The Quarkus LangChain4j extension seamlessly integrates LLMs into Quarkus applications, enabling the harnessing of LLM capabilities for the development of more intelligent applications.
+[.lead]
+**Build intelligent, AI-infused applications by integrating Large Language Models into your Quarkus services with a declarative, developer-friendly API.**
 
-For instance, an application utilizing this extension can:
-
-- Automatically triage or classify documents
-- Extract structured and unstructured information from various data sources
-- Construct chatbots for system interaction
-- Generate personalized text such as emails or reports
-
-This extension is built upon the https://github.com/langchain4j/langchain4j[LangChain4j library].
-It offers a declarative approach to interact with diverse LLMs like OpenAI, Hugging Face, Ollama, or Jlama. It facilitates LLM-invoked functions within Quarkus applications and allows document loading within the LLM "context".
+The Quarkus LangChain4j extension integrates Large Language Models (LLMs) into your Quarkus applications, enabling use cases such as summarization, classification, document extraction, intelligent chatbots, and more — all with Quarkus-native performance and developer experience.
 
 image::llms-big-picture.png[width=600,align="center"]
 
-== Quick Overview
 
-NOTE: If you're interested in a guided tutorial, there is also a https://github.com/quarkusio/quarkus-langchain4j-workshop[workshop] available that walks you through the basics of using Quarkus with LangChain4j.
+== Why Use Quarkus LangChain4j?
 
-To incorporate Quarkus LangChain4j into your Quarkus project, add the following Maven dependency:
+- ✅ **Declarative AI services**: Use Java interfaces and annotations to call LLMs with minimal boilerplate
+- 🔋 **Optimized for Quarkus**: Fast startup, native-image ready, low footprint
+- 🧠 **Support for tools (function calling), agentic patterns, and chat memory**: Easily create AI services that can invoke backend functions, maintain context, and handle complex _multi-turns_ interactions
+- 🔎 **Powerful RAG support**: Plug in Redis, Chroma, Infinispan, etc, and craft Retrieval-Augmented Generation (RAG) applications easily. You keep control over the retrieval logic and how to use the retrieved data
+- 📈 **Observability built-in**: Logs, metrics, tracing all built-in
+- ⌨️ **Dev UI & Dev Services**: A Dev experience sparking joy, even for AI-infused applications
+- 🤖 **Build for the future of intelligent applications**: Leverage protocols such as Model Control Protocol (MCP) and Agent-to-Agent (A2A) to create advanced AI applications
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+== What Can You Build?
 
-or, to use hugging face:
+From chatbots to intelligent document processing, Quarkus LangChain4j empowers you to infuse AI into real-world applications, all within a familiar Java and Quarkus environment.
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+Use it to:
 
+[.lead]
+*Classify and triage documents* automatically based on their content, ideal for support tickets, legal filings, or form submissions.
 
-Then, include your OpenAI API key in your `application.properties` file (or any other mandatory configuration):
+[.lead]
+*Extract structured or unstructured data* from free-form text, making it easy to pull key insights from reports, emails, or contracts.
 
-[source,properties,subs=attributes+]
-----
-quarkus.langchain4j.openai.api-key=sk-...
-----
+[.lead]
+*Generate content* like summaries, customer responses, reports, or recommendations tailored to your business logic.
 
-TIP: Alternatively, utilize the `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable.
+[.lead]
+*Analyze or generate images* using multi-modal models, for instance, extract text from screenshots or create illustrations from prompts.
 
-TIP: If you want to see the LLM requests or responses in the console log,
-also set `quarkus.langchain4j.log-requests=true` and/or
-`quarkus.langchain4j.log-responses=true`.
+[.lead]
+*Build chat-based assistants* that can guide users, invoke tools, or answer questions based on custom knowledge.
 
-Once you've added the dependency and configuration, the next step involves creating an _AI service_, serving as the integration point. This service is the interface your application code will utilize to interact with the LLM. A basic example is demonstrated below:
+[.lead]
+*Implement intelligent search* using Retrieval-Augmented Generation (RAG), combining LLMs with vector-based document stores for context-aware responses.
 
-[source,java]
-----
-include::{examples-dir}/io/quarkiverse/langchain4j/samples/MyAiService.java[]
-----
-<1> The `@RegisterAiService` annotation registers the _AI service_.
-<2> The `tools` attribute defines the _tools_ the LLM can employ.
-During interaction, the LLM can invoke these tools and reflect on their output.
-<3> The `@SystemMessage` annotation registers a _system message_, setting the initial context or "scope".
-<4> The `@UserMessage` annotation serves as the _prompt_.
-<5> The method invokes the LLM, initiating an exchange between the LLM and the application, beginning with the system message and then the user message. Your application triggers this method and receives the response.
+== Where to Go Next?
 
-== Advantages over vanilla LangChain4j
+Ready to dive deeper? Here are some good next steps depending on what you want to explore.
 
-The extension offers the following advantages over using the vanilla https://github.com/langchain4j/langchain4j[LangChain4j] library in Quarkus:
+[cols="1,4", frame=none, grid=none]
+|===
+| xref:quickstart.adoc[**Quickstart**]
+| Build your first AI-powered Quarkus app using OpenAI or HuggingFace in just a few minutes.
 
-* Seamless integration with the Quarkus programming model
-** CDI beans for the LangChain4j models
-** Standard configuration properties for configuring said models
-* xref:ai-services.adoc[Declarative AI Services]
-* Built-in observability
-** Metrics
-** Tracing
-** Auditing
-* Build time wiring
-** Reduced footprint of the library
-** Feedback about misuse at build time
-* Leverage runtime Quarkus components
-** REST calls and JSON handling are performed using the libraries used throughout Quarkus
-*** Results in reduces library footprint
-*** Enables GraalVM native image compilation
-* Dev Services
-** Quarkus starts embedding stores and chat memory stores for dev and test mode automatically
-** Quarkus integrates with Ollama in order to automatically pull and preload the models that users have configured
-* Dev UI features
-** View table with information about AI services and tools
-** Add embeddings into the embedding store
-** Search for relevant embeddings in the embedding store
+| xref:ai-services.adoc[**Reference Documentation**]
+| Learn how to declare and use AI services with annotations and CDI — the core of the extension.
+
+| xref:guide-prompt-engineering.adoc[**Prompt Engineering**]
+| Discover how to craft prompts effectively and structure conversations for better model control.
+
+| xref:rag.adoc[**Retrieval-Augmented Generation (RAG)**]
+| Combine your own knowledge sources with LLMs to build powerful search and Q&A systems.
+
+| https://github.com/quarkusio/quarkus-langchain4j-workshop[**Hands-on Workshop**]
+| Try the full guided workshop with code, exercises, and step-by-step labs.
+
+|===
+
+== Why not use LangChain4j directly?
+
+This extension builds on top of the https://github.com/langchain4j/langchain4j[LangChain4j] library and provides a declarative programming model tailored to Quarkus.
+
+The https://docs.langchain4j.dev/[Langchain4J] library is a flexible toolkit.
+It provides a rich set of building blocks to work with Large Language Models, such as agents, tools, retrievers, and chains, giving developers full control over how to compose and orchestrate them.
+
+However, when using LangChain4j directly, you're responsible for wiring these pieces together, configuring the model clients, handling lifecycle concerns, and integrating observability, configuration, and memory management into your application.
+This approach is powerful, but low-level and manual.
+
+The Quarkus LangChain4j extension builds on top of LangChain4j and brings an enterprise-grade, opinionated integration that handles much of this boilerplate for you:
+
+* Declarative AI services with CDI and annotations
+* Native support for OpenAI, Hugging Face, Ollama, and more
+* Centralized configuration with Quarkus config properties
+* Build-time optimization and validation
+* Observability: logs, metrics, traces
+* Dev Services for embedding stores and model servings
+* Dev UI for visual introspection and testing
 * Automatic chat memory management
-** For REST and WebSocket contexts, Quarkus can automatically handle the lifecycle of chat memory
 
-== Retrieval Augmented Generation
+This lets you focus on your application logic instead of infrastructure setup.
 
-For the easiest possible way to get started with Retrieval Augmented Generation,
-refer to xref:easy-rag.adoc[Easy RAG].
+That said, Quarkus LangChain4j doesn’t lock you into a single model. You can mix and match:
+
+* Use the high-level declarative approach (`@RegisterAiService`) for quick integration
+* Drop down to the lower-level LangChain4j APIs when you need more control
+
+#This balance provides the best of both worlds: high productivity with the flexibility to go low-level when required.#
 

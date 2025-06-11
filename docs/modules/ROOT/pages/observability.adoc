@@ -1,5 +1,8 @@
 = Observability
 
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
 Observability is built into services created via `@RegisterAiService` and is provided in the following form:
 
 * Metrics are enabled when `quarkus-micrometer` is part of the application

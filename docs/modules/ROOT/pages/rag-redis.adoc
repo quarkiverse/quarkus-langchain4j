@@ -1,0 +1,140 @@
+= Redis Document Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Redis can serve as an efficient document store for Retrieval-Augmented Generation (RAG) applications using Quarkus LangChain4j.
+This guide explains how to configure and use Redis as a vector-capable document store.
+
+[NOTE]
+====
+You can implement a custom `ContentRetriever` for Redis as well.
+This page focuses on the integration of Redis as a vector store, allowing you to store and retrieve documents enriched with vector embeddings for RAG scenarios.
+====
+
+== Prerequisites
+
+To use Redis as a document store, the following conditions must be met:
+
+* Redis must support both the **RedisJSON** and **RedisSearch** modules.
+* We recommend using **Redis Stack**, which bundles these modules.
+* Vector embeddings must have a fixed dimension matching your embedding model.
+
+[IMPORTANT]
+.Redis Stack Required
+====
+Redis support requires the RedisJSON and RedisSearch modules.
+These are not part of standard Redis deployments.
+Use the `redis-stack:latest` image or an equivalent setup that includes the necessary modules.
+====
+
+When using Dev Services, the `quarkus-langchain4j-redis` extension automatically uses the `redis-stack:latest` container image.
+You can override this by setting the following property:
+
+[source,properties]
+----
+quarkus.redis.devservices.image-name=your/custom/image
+----
+
+== Dependency
+
+To enable Redis integration in your Quarkus project, add the following Maven dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-redis</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension builds on top of the https://quarkus.io/guides/redis[Quarkus Redis client].
+Ensure the default Redis data source is properly configured* For more details, refer to:
+
+- https://quarkus.io/guides/redis[Redis Quickstart Guide]
+- https://quarkus.io/guides/redis-reference[Redis Reference Documentation]
+
+== Embedding Dimension
+
+You must configure the dimension of the embedding vectors to match your model by setting:
+
+[source,properties]
+----
+quarkus.langchain4j.redis.dimension=384
+----
+
+Typical values include:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Usage Example
+
+Once the extension is installed and configured, you can use the Redis document store as shown below:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithRedis.java[]
+----
+
+== Configuration
+
+By default, the extension uses the default Redis data source and standard configuration values.
+You can customize its behavior using the following options:
+
+include::includes/quarkus-langchain4j-redis.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+Each ingested document is stored in Redis as a JSON object that includes:
+
+* The original text
+* Metadata
+* A vector embedding
+
+The extension automatically indexes documents using RedisSearch, enabling fast similarity queries.
+Retrieval operations use `FT.SEARCH` combined with KNN (k-nearest neighbor) queries to find the most relevant results.
+
+== Metadata Filtering
+
+The Redis document store supports limited metadata filtering with the following constraints:
+
+* Only **numeric fields** can be used in filters.
+* Only **AND** conditions are supported (no `OR`, `NOT`, or nested logic).
+* You must explicitly declare the numeric fields that can be used for filtering:
+
+[source,properties]
+----
+quarkus.langchain4j.redis.numeric-metadata-fields=year,pageCount
+----
+
+You may also declare **textual fields**, which will be returned with search results but cannot be used for filtering:
+
+[source,properties]
+----
+quarkus.langchain4j.redis.textual-metadata-fields=language,author
+----
+
+[NOTE]
+====
+Textual metadata fields are returned in query results but are not currently usable as filter criteria.
+====
+
+== Summary
+
+To use Redis as a vector store with Quarkus LangChain4j:
+
+* Ensure Redis Stack (or Redis with RedisJSON and RedisSearch) is available
+* Add the required extension and configure the Redis client
+* Set the embedding dimension to match your embedding model
+* Declare metadata fields to support filtering and enrichment
+* Use `RedisEmbeddingStore` for ingestion and retrieval
+

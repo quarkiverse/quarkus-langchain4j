@@ -1,5 +1,8 @@
 = Testing AI-Infused Applications
 
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
 The `quarkus-langchain4j-testing-scorer-junit5` extension provides a pragmatic and extensible testing framework for evaluating AI-infused applications.
 It integrates with JUnit 5 and offers tools for automating evaluation processes, scoring outputs, and generating evaluation reports using customizable evaluation strategies.
 
