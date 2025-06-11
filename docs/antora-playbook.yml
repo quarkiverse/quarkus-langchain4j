@@ -8,12 +8,18 @@ content:
     start_path: docs
 ui: 
   bundle:
-    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    url: https://github.com/quarkiverse/antora-ui-quarkiverse/releases/latest/download/ui-bundle.zip
     snapshot: true
 
 asciidoc:
   attributes:
     kroki-fetch-diagram: true
+    page-related-doc-categories: ai,java,ml
+    page-pagination: ''
+    hide-uri-scheme: '@'
+    tabs-sync-option: '@'
+    chomp: 'all'
+    stem: 'asciimath'
 
 output:
   dir: ./target/site
