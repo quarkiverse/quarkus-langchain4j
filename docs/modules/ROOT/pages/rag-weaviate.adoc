@@ -1,0 +1,74 @@
+= Weaviate Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Weaviate is a scalable vector-native database designed for semantic search and Retrieval-Augmented Generation (RAG) use cases.
+This guide explains how to use Weaviate as an embedding store in Quarkus LangChain4j.
+
+== Overview
+
+Weaviate stores text segments and their corresponding embeddings and exposes powerful similarity search capabilities.
+With Quarkus LangChain4j, you can ingest documents and perform vector-based retrieval with minimal setup.
+
+== Dependency
+
+To enable Weaviate support in your Quarkus application, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-weaviate</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Dev Services Support
+
+When running in development or test mode, the extension will automatically start a containerized Weaviate instance using Dev Services, unless a `host` is explicitly configured.
+
+You can disable the Dev Service or connect to an existing Weaviate instance by configuring:
+
+[source,properties]
+----
+quarkus.langchain4j.weaviate.host=localhost
+quarkus.langchain4j.weaviate.port=8080
+----
+
+[NOTE]
+====
+When using a remote Weaviate instance, Dev Services are automatically disabled.
+====
+
+== Usage Example
+
+Once configured, you can use the Weaviate embedding store like any other vector store:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithWeaviate.java[]
+----
+
+This allows you to ingest documents and perform similarity queries with any supported embedding model.
+
+== Configuration
+
+You can customize the behavior of the extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-weaviate.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+* Ingested content is stored as `objects` in a Weaviate class with associated vector embeddings.
+* The extension uses `nearVector` queries to perform KNN-based similarity search.
+* Metadata is stored as custom object properties and returned in search results.
+
+== Summary
+
+To use Weaviate with Quarkus LangChain4j:
+
+1. Add the `quarkus-langchain4j-weaviate` extension
+2. Configure a local or remote Weaviate instance
+3. Ingest and retrieve documents using the `WeaviateEmbeddingStore`
+

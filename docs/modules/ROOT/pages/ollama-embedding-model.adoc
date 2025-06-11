@@ -1,0 +1,79 @@
+= Ollama Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Ollama supports embedding models suitable for semantic search, document retrieval, and RAG-style workflows.
+These models run locally, just like chat models.
+
+== Prerequisites
+
+=== Ollama Installation
+
+To use embedding models, you must have a working Ollama setup. Refer to xref:./ollama-chat-model.adoc[Ollama Chat Models] for details on installation and Dev Service support.
+
+== Enabling Ollama
+
+To enable embedding support, include the following extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-ollama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Default Model
+
+By default, the embedding model is set to `nomic-embed-text`.
+
+You can override this using:
+
+[source,properties]
+----
+quarkus.langchain4j.ollama.embedding-model.model-name=bge-m3
+----
+
+You may also wish to configure logging during development:
+
+[source,properties]
+----
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+----
+
+== Programmatic Usage
+
+You can inject the embedding model directly:
+
+[source,java]
+----
+@Inject EmbeddingModel model;
+----
+
+This will retrieve the embedding model configured in `application.properties`.
+
+== Dynamic Authorization
+
+To provide dynamic authorization headers, implement `ModelAuthProvider`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class MyAuthProvider implements ModelAuthProvider {
+
+    @Override
+    public String getAuthorization(Input input) {
+        return "Bearer " + fetchToken();
+    }
+}
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-ollama.adoc[leveloffset=+1,opts=optional]

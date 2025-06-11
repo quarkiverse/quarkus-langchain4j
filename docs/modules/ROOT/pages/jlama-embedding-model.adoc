@@ -1,0 +1,67 @@
+= Jlama Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Jlama provides local embedding models suitable for RAG (Retriever-Augmented Generation), semantic search, and document classification—all without leaving the Java process.
+
+== Prerequisites
+
+Jlama embedding models require Java 21 or later with the Vector API preview feature enabled:
+
+[source,shell]
+----
+--enable-preview --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+----
+
+See xref:jlama-chat-model.adoc[Jlama Chat Models] for Dev Mode details and model setup.
+
+== Using Jlama Embeddings
+
+To enable embedding model support, include:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-jlama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Default Model
+
+By default, the embedding model is set to: `intfloat/e5-small-v2`
+
+You can override the embedding model configuration:
+
+[source,properties]
+----
+quarkus.langchain4j.jlama.embedding-model.model-name=intfloat/e5-small-v2
+----
+
+Example of using both chat and embedding models:
+
+[source,properties]
+----
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+
+quarkus.langchain4j.jlama.chat-model.model-name=tjake/granite-3.0-2b-instruct-JQ4
+quarkus.langchain4j.jlama.embedding-model.model-name=intfloat/e5-small-v2
+----
+
+== Programmatic Access
+
+To inject the embedding model programmatically:
+
+[source,java]
+----
+@Inject EmbeddingModel model;
+----
+
+This allows direct access for use in retrievers, RAG pipelines, or semantic search.
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-jlama.adoc[leveloffset=+1,opts=optional]

@@ -1,0 +1,68 @@
+= Chroma Document Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Chroma is a lightweight, open-source vector database designed for embedding-based search.
+It can be used as a document store in Retrieval-Augmented Generation (RAG) pipelines with Quarkus LangChain4j.
+
+This guide explains how to configure and use Chroma as an embedding-aware document store.
+
+== Dependency
+
+To enable Chroma integration in your Quarkus project, add the following Maven dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-chroma</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Dev Services Support
+
+The Chroma extension provides Dev Services support: when running in development or test mode, a containerized Chroma instance will be started automatically, no manual configuration required.
+
+If you wish to customize the container behavior, such as the image or exposed ports, you can use standard `quarkus.devservices.*` properties.
+For example:
+
+[source,properties]
+----
+quarkus.langchain4j.chroma.devservices.image-name=ghcr.io/chroma-core/chroma:latest
+----
+
+Refer to the configuration section below for more options.
+
+== Usage Example
+
+Once the extension is installed and the dev service (or external Chroma instance) is available, you can use the Chroma document store as follows:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithChroma.java[]
+----
+
+This example demonstrates how to ingest content into Chroma, where it will be indexed and stored with its vector embedding.
+
+== Configuration
+
+The Chroma extension can be configured using the following options:
+
+include::includes/quarkus-langchain4j-chroma.adoc[leveloffset=+1,opts=optional]
+
+== Notes
+
+* Chroma supports metadata, but filtering capabilities may depend on the current Chroma version and API behavior.
+* The embedding vector size must match the dimension of your embedding model.
+* The Chroma backend is typically local (SQLite-based), but distributed setups may be available depending on your deployment.
+
+== Summary
+
+To use Chroma as a vector store for RAG with Quarkus LangChain4j:
+
+* Add the Chroma extension to your project.
+* Ensure your embedding model's vector dimension matches your configuration.
+* Use Dev Services for a containerized Chroma instance in dev/test mode.
+* Use the `ChromaEmbeddingStore` to ingest and retrieve vectorized documents.

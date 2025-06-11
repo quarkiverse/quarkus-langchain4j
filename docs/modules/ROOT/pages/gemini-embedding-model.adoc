@@ -1,0 +1,47 @@
+= Gemini Embedding Model
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://gemini.google.com/[Gemini] is a simpler platform designed for a broader audience than Vertex AI Gemini, including non-technical users.
+It is a good first step for developers to get started with Gemini models.
+
+== Using Gemini Embedding Models
+
+The Gemini platform also provides an embedding model suitable for transforming input text into vector representations.
+
+To use it, first add the required dependency to your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other embedding model is configured, xref:ai-services.adoc[AI Services] will automatically use the Gemini embedding model.
+
+To inject the embedding model:
+
+[source,java]
+----
+@Inject
+EmbeddingModel embeddingModel;
+----
+
+=== Configuration
+
+Set the API key in your `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.ai.gemini.api-key=...
+----
+
+TIP: Alternatively, use the `QUARKUS_LANGCHAIN4J_AI_GEMINI_API_KEY` environment variable.
+
+Several configuration properties are available:
+
+include::includes/quarkus-langchain4j-ai-gemini.adoc[leveloffset=+1,opts=optional]

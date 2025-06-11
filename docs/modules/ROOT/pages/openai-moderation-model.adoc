@@ -1,0 +1,75 @@
+= OpenAI Moderation Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+OpenAI provides a dedicated moderation model designed to detect and filter harmful, offensive, or otherwise inappropriate content in user-generated text.
+These models are particularly useful in public-facing applications where user safety and content compliance are essential.
+
+To learn more about moderation models and their role in AI applications, refer to the xref:models.adoc#_moderation_models[Moderation Models] section in the Models reference guide.
+
+== Prerequisites
+
+include::./openai-chat-model.adoc[tags=openai-prerequisites]
+
+=== OpenAI Quarkus Extension
+
+To use OpenAI moderation models in your Quarkus application, add the following dependency:
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured OpenAI moderation model.
+Note that to enable moderation, the method must be annotated with `@Moderate`.
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+
+== Using the Moderation Model
+
+You can use moderation models in Quarkus LangChain4j either declaratively via @Moderate in an AI service interface, or programmatically using the ModerationModel API.
+
+[source,java]
+----
+import dev.langchain4j.model.moderation.Moderation;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.moderation.Moderate;
+
+@RegisterAiService
+public interface MyModerationService {
+
+    @Moderate
+    @UserMessage("Answer this question: {input}")
+    String answer(String input);
+}
+----
+
+=== Programmatic Usage
+
+For more control, inject the ModerationModel and call the moderate method directly:
+
+[source,java]
+----
+import dev.langchain4j.model.moderation.Moderation;
+import dev.langchain4j.model.moderation.ModerationModel;
+import jakarta.inject.Inject;
+
+@Inject
+ModerationModel moderationModel;
+
+// …
+
+Moderation moderation = moderationModel.moderate("user input here").content();
+if (moderation.flagged()) {
+    // Take appropriate action
+}
+----
+

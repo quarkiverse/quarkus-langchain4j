@@ -1,99 +1,96 @@
 = In-Process Embedding Models
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-When ingesting document or implementing the RAG pattern, you need an _embedding model_.
-This is a model that takes a document and returns a vector representation of that document.
-The vector representation is stored in a vector database, and is used to find similar documents.
+In Retrieval-Augmented Generation (RAG) and other semantic search scenarios, embedding models are used to convert documents into vector representations. These vectors are stored in a vector database and used for similarity search.
 
-When using LLMs like OpenAI or HuggingFace, it provides _remote_ embedding models.
-To compute the _embedding_ of a document, you need to send the document to the remote model.
+By default, many providers (e.g., OpenAI, Hugging Face) expose remote APIs for embedding generation. However, this approach introduces network overhead and potential latency.
 
-In-process models avoids this overhead by running the model in the same process as the application.
-This is generally faster, but requires more memory.
+The in-process embedding model support in Quarkus LangChain4j runs the embedding model inside the application itself using ONNX. This yields lower latency and avoids external dependencies—but requires sufficient memory.
 
-You can check the https://huggingface.co/spaces/mteb/leaderboard[MTEB (Massive Text Embedding Benchmark) leaderboard] to select the most appropriate model for your use case.
+You can consult the https://huggingface.co/spaces/mteb/leaderboard[MTEB leaderboard] to select the most appropriate embedding model for your use case.
 
-== Supported in-process models
+== Supported Models
 
-The Quarkus LangChain4j extension provides supports for a set of in-process embedding models.
-They are **not** included by default, and you need to add the explicit dependency to your project.
-
-The following table lists the supported models, and the corresponding dependency to add to your project.
+The following table lists the supported in-process models and the corresponding Maven dependency to include in your project. These dependencies are not included by default.
 
 [cols="2,1,1,1",options="header"]
 |===
-| Model Name | Dependency | Vector Dimension | Injected type
+| Model Name | Dependency | Vector Dimension | Injected Type
 
-| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2 (quantized)]
-|`dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q:{langchain4j-version}`
+| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-MiniLM-L6-v2 (quantized)]
+| dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel
 
-| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-minlm-l6-v2]
-|`dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:{langchain4j-version}`
+| https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[all-MiniLM-L6-v2]
+| dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-en-v1.5[bge-small-en-v1.5 (quantized)]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-en-v15-q:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-en-v15-q:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.bgesmallenv15q.BgeSmallEnV15QuantizedEmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-en-v1.5[bge-small-en-v1.5]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-en-v15:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-en-v15:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallenv15.BgeSmallEnV15EmbeddingModel`
-
+| dev.langchain4j.model.embedding.onnx.bgesmallenv15.BgeSmallEnV15EmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-en[bge-small-en (quantized)]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-en-q:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-en-q:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.bgesmallenq.BgeSmallEnQuantizedEmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-en[bge-small-en]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-en:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-en:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallen.BgeSmallEnEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.bgesmallen.BgeSmallEnEmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-zh[bge-small-zh (quantized)]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-zh-q:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-zh-q:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallzhq.BgeSmallZhQuantizedEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.bgesmallzhq.BgeSmallZhQuantizedEmbeddingModel
 
 | https://huggingface.co/BAAI/bge-small-zh[bge-small-zh]
-|`dev.langchain4j:langchain4j-embeddings-bge-small-zh:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-bge-small-zh:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.bgesmallzh.BgeSmallZhEmbeddingModel`
-
+| dev.langchain4j.model.embedding.onnx.bgesmallzh.BgeSmallZhEmbeddingModel
 
 | https://huggingface.co/intfloat/e5-small-v2[e5-small-v2 (quantized)]
-|`dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-e5-small-v2-q:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.e5smallv2q.E5SmallV2QuantizedEmbeddingModel`
+| dev.langchain4j.model.embedding.onnx.e5smallv2q.E5SmallV2QuantizedEmbeddingModel
 
 | https://huggingface.co/intfloat/e5-small-v2[e5-small-v2]
-|`dev.langchain4j:langchain4j-embeddings-e5-small-v2:{langchain4j-version}`
+| dev.langchain4j:langchain4j-embeddings-e5-small-v2:{langchain4j-version}
 | 384
-| `dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel`
-
+| dev.langchain4j.model.embedding.onnx.e5smallv2.E5SmallV2EmbeddingModel
 |===
 
-== Injecting an embedding model
+== Using an In-Process Embedding Model
 
-You can inject the model in your application using:
-
-[source,java]
-----
-@Inject E5SmallV2QuantizedEmbeddingModel model;
-----
-
-Use the corresponding model type for the model you want to use, and make sure you have added the corresponding dependency to your project.
-
-Note that if you do not have any other embedding model in your project, you can inject the `EmbeddingModel` interface, and it will be automatically injected with the available model:
+To use an in-process embedding model, add the corresponding dependency listed above to your pom.xml, then inject the appropriate model type:
 
 [source,java]
 ----
-@Inject EmbeddingModel model;
+@Inject
+E5SmallV2QuantizedEmbeddingModel model;
 ----
+
+Each model provides a concrete class to inject. Make sure you match the injected type with the dependency you've added.
+
+Alternatively, if you don’t use any other embedding model provider in your application, you can inject the generic interface:
+
+[source,java]
+----
+@Inject
+EmbeddingModel model;
+----
+
+This allows for more flexibility and simplifies configuration in small applications.
+
+TIP: In-process embedding models work well for local development, edge environments, and production use cases where low-latency and data privacy are critical.
 

@@ -25,6 +25,7 @@ public class RetrievalAugmentorExample implements Supplier<RetrievalAugmentor> {
                 .builder()
                 .contentRetriever(contentRetriever)
                 .build();
+
     }
 
     @Override

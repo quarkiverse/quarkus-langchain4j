@@ -1,0 +1,157 @@
+= Infinispan Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Quarkus LangChain4j integrates with Infinispan Server to provide a scalable, distributed vector store for Retrieval-Augmented Generation (RAG).
+This extension enables you to persist and query embedding vectors for document retrieval.
+
+== Prerequisites
+
+To use Infinispan as a vector-capable embedding store:
+
+* An Infinispan Server must be running and accessible
+* The Quarkus Infinispan client must be configured
+* Vector embeddings must have a fixed dimension that matches your embedding model
+
+[IMPORTANT]
+====
+This extension requires Infinispan Server with Protobuf indexing enabled.
+It automatically registers the required schema on startup.
+====
+
+== Dependency
+
+To enable Infinispan support in your Quarkus project, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-infinispan</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension builds upon the https://quarkus.io/guides/infinispan-client[Quarkus Infinispan client].
+Ensure that the default Infinispan client is correctly configured* For more details, see:
+
+- https://quarkus.io/guides/infinispan-client[Infinispan Client Quickstart]
+- https://quarkus.io/guides/infinispan-client-reference[Infinispan Client Reference]
+
+== Embedding Dimension
+
+You must configure the dimension of the embedding vectors to match your embedding model:
+
+[source,properties]
+----
+quarkus.langchain4j.infinispan.dimension=384
+----
+
+Common model dimensions:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Usage Example
+
+Once installed and configured, you can use the Infinispan embedding store as follows:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithInfinispan.java[]
+----
+
+This demonstrates how to store and retrieve embedded documents using Infinispan as the backend.
+
+== Configuration
+
+By default, the extension uses the default Infinispan client and cache.
+You can customize its behavior via the following configuration options:
+
+include::includes/quarkus-langchain4j-infinispan.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+The Infinispan extension registers a Protobuf schema to define an indexable entity with a vector field.
+For example, for a dimension of 384, the following schema is generated and registered:
+
+[source,protobuf]
+----
+/**
+ * @Indexed
+ */
+message LangchainItem384 {
+
+   /**
+    * @Keyword
+    */
+   optional string id = 1;
+
+   /**
+    * @Vector(dimension=384, similarity=COSINE)
+    */
+   repeated float floatVector = 2;
+
+   optional string text = 3;
+
+   repeated string metadataKeys = 4;
+
+   repeated string metadataValues = 5;
+}
+----
+
+The embedding vector is stored as a `repeated float` and indexed for similarity search.
+
+== Infinispan Cache Configuration
+
+The extension will create an indexed cache if one is not already defined.
+Below is the default configuration that may be used or customized:
+
+[source,json]
+----
+{
+  "embeddings-cache": {
+    "distributed-cache": {
+      "mode": "SYNC",
+      "remote-timeout": "17500",
+      "statistics": true,
+      "locking": {
+        "concurrency-level": "1000",
+        "acquire-timeout": "15000",
+        "striping": false
+      },
+      "indexing": {
+        "enabled": true,
+        "storage": "local-heap",
+        "indexed-entities": [
+          "LangchainItem384"
+        ]
+      },
+      "state-transfer": {
+        "timeout": "60000"
+      }
+    }
+  }
+}
+----
+
+NOTE: The name of the indexed entity (`LangchainItem384`) changes depending on the configured embedding dimension.
+
+== Summary
+
+To use Infinispan as a distributed vector store for RAG with Quarkus LangChain4j:
+
+* Ensure Infinispan Server is running with indexing enabled
+* Add the required extension dependency
+* Set the embedding vector dimension
+* Configure or allow the extension to create an indexed cache
+* Use `InfinispanEmbeddingStore` to ingest and retrieve documents for similarity search
+

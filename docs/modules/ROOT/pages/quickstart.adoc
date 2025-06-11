@@ -1,0 +1,183 @@
+= Getting Started with Quarkus LangChain4j
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+This guide shows you how to get started with Quarkus LangChain4j by building a simple CLI application that generates poems using an AI model.
+
+[#install-extension]
+== Install the Extension
+
+To use the extension, add the dependency for your preferred model provider.
+
+For example, to use OpenAI:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>quarkus-langchain4j-openai</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+[NOTE]
+.Want to use another model serving?
+====
+See the xref:./models.adoc[Models serving] page for other available providers.
+In this guide, we will use OpenAI as an example.
+====
+
+[#configure]
+== Configure the Model Provider
+
+Set your OpenAI API key in `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+TIP: You can also use the `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` environment variable.
+
+[TIP]
+.Enable request/response logging
+====
+You can log the interactions between your application and the model:
+
+[source,properties]
+----
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+----
+====
+
+[#ai-service]
+== Define an AI Service
+
+An AI service is a Java interface annotated to describe how your application interacts with the model.
+
+It follows the _Ambassador pattern_, where the interface acts as a contract, and the implementation is generated automatically.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/MyAiService.java[]
+----
+
+<1> Declares the AI service.
+<2> Sets the system message to define the model’s behavior.
+<3> Declares it as a CDI singleton.
+<4> Defines the prompt template.
+<5> This method invokes the LLM and returns the result.
+
+[#poem-app]
+== Use the AI Service from a CLI App
+
+Let’s build a simple CLI application that asks the AI service to generate a poem.
+
+Add the `quarkus-picocli` extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-picocli</artifactId>
+</dependency>
+----
+
+Then create a class named `PoemCommand.java`:
+
+[source,java]
+----
+package io.quarkiverse.langchain4j.samples;
+
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+@Command(name = "poem", mixinStandardHelpOptions = true)
+public class PoemCommand implements Runnable {
+
+    @Parameters(paramLabel = "<topic>", defaultValue = "quarkus",
+            description = "The topic.")
+    String topic;
+
+    @CommandLine.Option(names = "--lines", defaultValue = "4",
+            description = "The number of lines in the poem.")
+    int lines;
+
+    @Inject
+    MyAiService myAiService;
+
+    @Override
+    public void run() {
+        System.out.println(myAiService.writeAPoem(topic, lines));
+    }
+}
+----
+[#run]
+== Run the Application in Dev Mode
+
+Start the application in dev mode:
+
+[source,shell]
+----
+./mvnw quarkus:dev
+----
+
+Then run the command:
+
+[source,shell]
+----
+java -jar target/quarkus-app/quarkus-run.jar --lines=5 "AI with Quarkus"
+----
+
+This will output a poem like:
+
+[example]
+----
+In the realm of code and light,
+Quarkus dances, swift and bright,
+AI whispers in the breeze,
+Crafting dreams with agile ease,
+Future's song in bytes takes flight.
+----
+
+Exit the app with `Ctrl+C`.
+
+[#package]
+== Package the Application
+
+Build the application:
+
+[source,shell]
+----
+./mvnw package
+----
+
+Run the packaged JAR:
+
+[source,shell]
+----
+java -jar target/quarkus-app/quarkus-run.jar --lines=5 "AI with Quarkus"
+----
+
+[TIP]
+.Compile to Native Image
+====
+To compile to native, run:
+
+[source,shell]
+----
+./mvnw package -Dnative
+----
+
+Then run it with:
+
+[source,shell]
+----
+./target/*-runner --lines=5 "Quarkus poetry"
+----
+====

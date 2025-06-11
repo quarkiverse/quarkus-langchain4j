@@ -1,6 +1,7 @@
 = Security and Privacy Recommendations
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 Working with Large Language Models (LLMs) often means that prompts and retrieved documents may contain sensitive or private data. 
 The following considerations can help reduce risks when integrating LLMs into Quarkus applications.

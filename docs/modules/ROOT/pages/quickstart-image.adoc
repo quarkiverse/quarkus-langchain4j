@@ -1,0 +1,120 @@
+= Extracting Text from an Image
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+This guide demonstrates how to use Quarkus LangChain4j to extract text from an image using a Large Language Model (LLM). You will create a simple CLI application that loads an image, converts it to a base64 payload, and sends it to a model for text extraction and translation.
+
+[#image-support]
+== Using the `Image` Type
+
+LangChain4j supports vision-capable models by allowing you to send image inputs alongside your prompts. To pass an image, you use the `Image` type from `dev.langchain4j.data.image.Image`.
+
+You can provide the image either by URL or by sending raw base64-encoded content with a MIME type. In this example, we use the base64 method.
+
+[NOTE]
+.Requirements
+====
+Make sure you're using a model provider that supports vision-based prompts.
+====
+
+[#ai-service]
+== Define the AI Service
+
+The service interface declares how your application interacts with the model using a declarative approach.
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+public interface OCR {
+
+    @UserMessage("""
+            You take an image in and output the text extracted from the image.
+            Translate it in English.
+            """)
+    String process(Image image);
+}
+----
+
+This interface defines an AI service capable of receiving an image and returning a translated transcription of any text it finds.
+
+[#main-app]
+== Writing the Application
+
+The main application loads the image from disk, encodes it as base64, and sends it to the AI service for processing.
+
+[source,java]
+----
+@QuarkusMain
+public class OCRApplication implements QuarkusApplication {
+
+    @Inject
+    OCR ocr;
+
+    public static String encodeFileToBase64(File file) throws IOException {
+        var content = Files.readAllBytes(file.toPath());
+        return Base64.getEncoder().encodeToString(content);
+    }
+
+    @Override
+    public int run(String... args) throws Exception {
+        File file = new File("text.jpg");
+        Log.infof("Converting image...");
+        var image = Image.builder()
+            .base64Data(encodeFileToBase64(file))
+            .mimeType("image/jpeg")
+            .build();
+
+        Log.info("Processing image...");
+        System.out.println("----");
+        System.out.println(ocr.process(image));
+        System.out.println("----");
+
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Quarkus.run(OCRApplication.class, args);
+    }
+}
+----
+
+This example assumes the input image is a local `.jpg` file.
+It is converted to a base64 string and wrapped in the `Image` object with its MIME type (`image/jpeg`).
+
+[TIP]
+.Use image URLs
+====
+Alternatively, you can use the `@ImageUrl` annotation to pass remote images by URL:
+
+[source,java]
+----
+String process(@ImageUrl String imageUrl);
+----
+====
+
+[#run]
+== Running the Application
+
+Start the application in dev mode:
+
+[source,shell]
+----
+./mvnw quarkus:dev
+----
+
+You should see the detected and translated text printed to the console.
+
+[NOTE]
+.Output depends on the image
+====
+The result will vary depending on the image content, clarity, and the model used.
+====
+
+[#next]
+== Next Steps
+
+[.lead]
+- Try combining this example with xref:quickstart-summarization.adoc[summarization] to analyze long scanned documents
+- Use image URLs instead of base64 payloads for remote images

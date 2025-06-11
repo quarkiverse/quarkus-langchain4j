@@ -1,0 +1,128 @@
+= Implementing a Summarization Service
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+This guide shows you how to implement a simple text summarization service using Quarkus LangChain4j and run it as a standalone CLI application.
+The service reads a plain text file (such as an article or report), sends the content to a Large Language Model, and receives a structured Markdown summary in return.
+
+[#setup]
+== Project Setup
+
+Make sure you’ve added your preferred LLM provider to your `pom.xml`. For example, to use OpenAI:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>quarkus-langchain4j-openai</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+Then configure your API key in `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+[NOTE]
+.Other providers supported
+====
+See xref:models.adoc[Models Serving] for other available LLM integrations.
+====
+
+[#ai-service]
+== Defining the Summarization Service
+
+The summarization logic is defined using a declarative AI service, a Java interface annotated with system and user messages.
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+You are an expert content summarizer. You take content in and output a Markdown formatted summary using the format below.
+
+# OUTPUT SECTIONS
+- Combine all of your understanding of the content into a single, 20-word sentence in a section called ONE SENTENCE SUMMARY:.
+- Output the 10 most important points of the content as a list with no more than 15 words per point into a section called MAIN POINTS:
+- Output a list of the 5 best takeaways from the content in a section called TAKEAWAYS:.
+
+# OUTPUT INSTRUCTIONS
+- Create the output using the formatting above.
+- You only output human readable Markdown.
+- Output numbered lists, not bullets.
+- Do not output warnings or notes—just the requested sections.
+- Do not repeat items in the output sections.
+- Do not start items with the same opening words.
+""")
+public interface SummarizationService {
+
+    @UserMessage("Input: {input}")
+    String summarize(String input);
+}
+----
+
+This interface defines a system message to guide the model's behavior and a method for passing the input content.
+
+Let's look at the `summarize` method.
+The `@UserMessage` annotation specifies how the input should be formatted when sent to the model.
+The `{input}` placeholder will be replaced with the actual content passed to the method.
+
+[#main-app]
+== Writing the Main Application
+
+The main class reads a text file and uses the summarization service to process it.
+
+[source,java]
+----
+@QuarkusMain
+public class Main implements QuarkusApplication {
+
+    @Inject
+    SummarizationService ai;
+
+    @Override
+    public int run(String... args) throws IOException {
+        if (args.length == 0) {
+            System.err.println("Please provide the path to the text file as an argument.");
+            return 1;
+        }
+        var article = Files.readString(new File(args[0]).toPath());
+        System.out.println(ai.summarize(article));
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Quarkus.run(Main.class, args);
+    }
+}
+----
+
+This class is annotated with `@QuarkusMain`, making it the application's entry point.
+It loads a text file from disk (the path is given as parameter) and passes the content to the AI service for summarization.
+
+[#run]
+== Running the Application
+
+To run the application in dev mode:
+
+[source,shell]
+----
+./mvnw quarkus:dev -Dquarkus.args="path/to/your/article.txt"
+----
+
+Once running, the console should print a structured summary in Markdown format, including:
+
+- A one-sentence summary
+- A list of main points
+- A list of key takeaways
+
+[NOTE]
+.The output format is defined in the system message
+====
+The model is instructed to format the result in Markdown using numbered sections.
+This makes the output easy to parse, store, or render in downstream applications.
+====

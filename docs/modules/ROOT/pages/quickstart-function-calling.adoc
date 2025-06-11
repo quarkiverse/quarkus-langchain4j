@@ -1,0 +1,126 @@
+= Implementing a Function Calling AI Service
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Function calling allows Large Language Models (LLMs) to invoke application-specific methods based on user prompts.
+Rather than returning free-form text, the model is instructed to identify when an application-defined *function* (called a *tool*) should be used, and to call it with structured arguments.
+
+This is a powerful way to turn an LLM into an intelligent coordinator of domain-specific capabilities—like fetching data, invoking services, or executing business logic.
+
+Quarkus LangChain4j makes function calling seamless through integration with the LangChain4j `Tool` mechanism.
+For more details, refer to the xref:function-calling.adoc[Agent and Tools reference documentation].
+
+== Example
+
+In this example, we'll create a simple AI service that helps users plan a trip. The LLM will be allowed to call two functions: one to get the weather at a destination, and another to suggest an activity based on the weather.
+
+=== Step 1: Create the Toolbox
+
+A toolbox is a CDI bean containing all the methods the LLM is allowed to call. These methods are annotated with `@Tool`.
+
+[source,java]
+----
+package me.escoffier.quarkus.ai;
+
+import dev.langchain4j.agent.tool.Tool;
+import io.quarkiverse.langchain4j.Toolbox;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class TripTools {
+
+    @Tool
+    public String weather(String location) {
+        // Simulate a weather API call
+        return switch (location.toLowerCase()) {
+            case "paris" -> "Rainy";
+            case "barcelona" -> "Sunny";
+            default -> "Unknown";
+        };
+    }
+
+    @Tool
+    public String activity(String weather) {
+        return switch (weather.toLowerCase()) {
+            case "rainy" -> "Visit a museum";
+            case "sunny" -> "Go to the beach";
+            default -> "Stay indoors with a good book";
+        };
+    }
+}
+----
+
+Each method annotated with `@Tool` will be made available to the LLM (if added to the toolbox).
+Descriptive method names and parameters help the model understand what each tool does. Otherwise, `@Tool` can also take a _description_ as parameter to provide more context.
+
+=== Step 2: Register the AI Service
+
+Next, we define the AI service that uses the tools. The `@RegisterAiService` annotation declares the service, and the `@Toolbox` annotation specifies which tools are available to the model.
+
+[source,java]
+----
+package me.escoffier.quarkus.ai;
+
+import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.SystemMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.ToolBox;import jakarta.enterprise.context.ApplicationScoped;
+
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+    You are a smart travel planner. Your job is to help users plan their trips.
+    You may call available tools to determine the weather and propose activities.
+    Always reflect on tool results before giving a final answer.
+""")
+public interface TravelPlanner {
+
+    @UserMessage("I want to go to {destination}. What should I do?")
+    @ToolBox(TripTools.class)
+    String plan(String destination);
+}
+----
+
+The `@SystemMessage` gives the model a role and general instructions on how to use the tools.
+The `@UserMessage` prompt provides the dynamic input from the user.
+The `@ToolBox` annotation specifies which tool to use, allowing the model to call the methods annotated with `@Tool` defined in `TripTools`.
+
+=== Step 3: Use the AI Service
+
+You can now inject and call the AI service just like any other CDI bean:
+
+[source,java]
+----
+@Inject
+TravelPlanner planner;
+
+System.out.println(planner.plan("Barcelona"));
+----
+
+The model will:
+
+1. Analyze the destination
+2. Call `weather("Barcelona")`
+3. Use the result ("Sunny") to call `activity("Sunny")`
+4. Combine the responses into a natural-language reply
+
+== Summary
+
+With Quarkus LangChain4j:
+
+- Tools are simple CDI beans annotated with `@Tool`
+- A toolbox is defined using `@Toolbox`
+- The LLM can invoke tools during reasoning and produce grounded responses
+
+== What's Next?
+
+[.lead]
+* xref:function-calling.adoc[Reference documentation covering function calling] — See more details about tools and function calling.
+[.lead]
+* xref:guide-prompt-engineering.adoc[Improve tool usage with better prompts] — Learn how to guide tool invocation using structured prompt techniques.
+[.lead]
+* xref:rag.adoc[Combine function calling with Retrieval-Augmented Generation (RAG)] — Let your AI search documents and act on what it finds.
+
+Want to see it in action?
+Try combining function calling with the xref:quickstart-summarization.adoc[summarization example] to create an AI that can read, understand, and act on documents.

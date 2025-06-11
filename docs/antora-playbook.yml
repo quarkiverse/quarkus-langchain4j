@@ -12,8 +12,16 @@ ui:
     snapshot: true
 
 asciidoc:
+  extensions:
+    - asciidoctor-kroki
   attributes:
-    kroki-fetch-diagram: true
+    kroki-fetch-diagram: false
+    page-related-doc-categories: ai,java,ml
+    page-pagination: ''
+    hide-uri-scheme: '@'
+    tabs-sync-option: '@'
+    chomp: 'all'
+    stem: 'asciimath'
 
 output:
   dir: ./target/site

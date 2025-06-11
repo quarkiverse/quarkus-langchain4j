@@ -1,0 +1,116 @@
+= Using Web Search with Tavily
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The Quarkus LangChain4j extension supports integrating the https://tavily.com/[Tavily] web search engine to enrich your AI services with up-to-date external knowledge.
+
+Web search can be used in two main ways:
+
+- As a tool that the language model can invoke during function calling.
+- As a content retriever inside a Retrieval-Augmented Generation (RAG) pipeline.
+
+== Getting Started
+
+To enable Tavily, add the `quarkus-langchain4j-tavily` extension to your project:
+
+[source,shell]
+----
+./mvnw quarkus:add-extension -Dextensions="quarkus-langchain4j-tavily"
+----
+
+Then configure your API key:
+
+[source,properties]
+----
+quarkus.langchain4j.tavily.api-key=your-api-key
+----
+
+Inject the engine as needed:
+
+[source,java]
+----
+@Inject
+WebSearchEngine engine;
+----
+
+You can now use it directly in your application via the `search` method, or make it available to the LLM using tools or RAG.
+
+== Using Tavily as a Tool
+
+You can expose web search to the LLM as a tool in a function calling setup. This allows the model to invoke the search when needed and incorporate the results in its response.
+
+There are two main approaches:
+
+- Use the provided `dev.langchain4j.web.search.WebSearchTool` from LangChain4j
+- Implement your own tool that wraps `WebSearchEngine`
+
+Example AI service using the built-in tool:
+
+[source,java]
+----
+@RegisterAiService
+public interface Assistant {
+
+    @ToolBox(WebSearchTool.class)
+    String chat(String question);
+}
+----
+
+For a full working example, see: https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/chatbot-web-search[chatbot-web-search sample].
+
+== Using Tavily in a RAG Pipeline
+
+Tavily can also power content retrieval in a Retrieval-Augmented Generation (RAG) workflow. To do this, use the provided `WebSearchContentRetriever` in a `RetrievalAugmentor`.
+
+Example:
+
+[source,java]
+----
+@ApplicationScoped
+public class WebSearchRetrievalAugmentor implements Supplier<RetrievalAugmentor> {
+
+    @Inject
+    WebSearchEngine webSearchEngine;
+
+    @Inject
+    ChatModel chatModel;
+
+    @Override
+    public RetrievalAugmentor get() {
+        return DefaultRetrievalAugmentor.builder()
+            .queryTransformer(question -> {
+                String query = chatModel.generate("""
+                    Transform the user's question into a suitable search query for Tavily.
+                    The query should yield results relevant to answering the user's question.
+                    User's question: """ + question.text());
+                return Collections.singleton(Query.from(query));
+            })
+            .contentRetriever(new WebSearchContentRetriever(webSearchEngine, 10))
+            .build();
+    }
+}
+----
+
+This approach lets you combine the strengths of LLM reasoning with up-to-date external information retrieved at runtime.
+
+== Choosing Between Tool and RAG
+
+Use **function calling** when:
+- You want the LLM to choose *when* to query the web
+- The web search result is short and structured (e.g. 1–2 snippets)
+
+Use **RAG** when:
+- You want to inject relevant documents *into* the prompt before generation
+- You need summarization or multi-document synthesis
+
+== Tavily Configuration Reference
+
+include::includes/quarkus-langchain4j-tavily.adoc[leveloffset=+1,opts=optional]
+
+== Going Further
+
+[.lead]
+xref:function-calling.adoc[Function Calling with Tools] +
+xref:rag.adoc[Retrieval-Augmented Generation (RAG)] +
+xref:ai-services.adoc[AI Service Reference]

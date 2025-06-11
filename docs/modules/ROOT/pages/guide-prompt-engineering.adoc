@@ -1,0 +1,684 @@
+= Prompt Engineering Techniques
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Prompt engineering is the art of crafting precise and effective inputs to guide language model behavior.
+With the right techniques, prompts can dramatically improve the quality, consistency, and structure of the model's responses.
+
+This guide outlines several practical patterns and techniques to help you shape how LLMs respond to user input when using Quarkus LangChain4j.
+
+IMPORTANT: Each model is different, and each model may interpret prompts differently. There is an implicit binding between the prompt and the model, so you may need to adjust your prompts based on the model you are using, or when that model is updated (or retrained).
+
+== Chat Model Configuration
+
+Before applying prompt engineering techniques, it’s important to understand how to configure your model.
+These settings affect the quality, determinism, creativity, and structure of the model's responses.
+
+Quarkus LangChain4j allows you to control generation behavior through configuration properties.
+
+[#provider-selection]
+=== Selecting a Model Provider
+
+You can use any supported model provider by adding the appropriate extension to your project.
+
+For example, to use OpenAI:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>quarkus-langchain4j-openai</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+To use Anthropic (Claude):
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>quarkus-langchain4j-anthropic</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+To use Ollama:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>quarkus-langchain4j-ollama</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+For other providers, see xref:models.adoc[Models Serving].
+
+You can switch providers without changing application code; just update the dependency and configuration.
+
+[#common-parameters]
+=== Configuring Model Output Behavior
+
+You can configure LLM generation behavior using standard Quarkus configuration properties.
+
+[source,properties]
+----
+# Model to use
+quarkus.langchain4j.openai.chat-model.model-name=gpt-4o
+
+# Generation controls
+quarkus.langchain4j.openai.chat-model.temperature=0.2
+quarkus.langchain4j.openai.chat-model.max-tokens=500
+quarkus.langchain4j.openai.chat-model.top-p=0.9
+----
+
+These parameters apply to most models/model providers, though the property names vary slightly.
+See the provider-specific documentation for exact keys.
+
+[cols="1,3", frame=none, grid=rows]
+|===
+| `temperature` | Controls randomness. Use low values (0.1–0.3) for deterministic output, high values (0.7–1.0) for creative generation.
+| `max-tokens`  | Limits the length of the response.
+| `top-p`       | Enables nucleus sampling (probability-based token filtering).
+| `top-k`       | Limits token sampling to the top-K most likely tokens.
+|===
+
+[TIP]
+====
+Want to see generation settings in action? Try adjusting `temperature` or `max-tokens` in:
+
+* xref:quickstart-summarization.adoc[the summarization example]
+// TODO Add RAG
+====
+
+[#delimiters]
+== Input Delimiters
+
+Delimiters help the model understand where the actual input begins and ends.
+This technique improves clarity, prevents misinterpretation, and helps reduce prompt injection risks.
+
+[source,text]
+----
+Objective: Write a summary of the text delimited by ---
+
+---
+{text}
+---
+----
+
+You can implement this technique in an AI service like this:
+
+[source,java]
+----
+@RegisterAiService
+@SystemMessage("You are a professional summarizer.")
+public interface SummaryService {
+
+    @UserMessage("""
+        Objective: Write a summary of the text delimited by ---
+
+        ---
+        {input}
+        ---
+        """)
+    String summarize(String input);
+}
+----
+
+[#zero-shot]
+== Zero-Shot Prompting
+
+Zero-shot prompting involves asking a language model to perform a task without providing any examples. Instead, the prompt includes only a clear instruction and the input data. This technique relies on the model's pre-trained understanding of general tasks like classification, translation, or summarization.
+
+Zero-shot prompts are simple, fast, and compact and ideal when:
+
+- The task is common or general
+- You want to minimize token usage
+- You prioritize portability or latency
+
+However, for complex or domain-specific tasks, zero-shot prompting may be less reliable than xref:#few-shot[few-shot examples].
+
+=== Example: Sentiment Classification
+
+Here’s how to classify the sentiment of a movie review using a zero-shot prompt and an enum return type:
+
+[source,java]
+----
+public enum Sentiment {
+    POSITIVE, NEUTRAL, NEGATIVE
+}
+
+@RegisterAiService
+public interface SentimentAnalyzer {
+
+    @UserMessage("""
+        Classify movie reviews as POSITIVE, NEUTRAL or NEGATIVE.
+
+        Review: "{review}"
+
+        Sentiment:
+        """)
+    Sentiment classify(String review);
+}
+----
+
+This interface sends the instruction and input in a single message and maps the result to a `Sentiment` enum. Quarkus LangChain4j handles converting the LLM output into a structured Java object automatically.
+
+[TIP]
+.Configure the output for precision
+====
+For better consistency, configure your provider to use:
+
+- Low `temperature` (e.g., 0.1) for deterministic output
+- Small `maxTokens` (e.g., 5–10) for short responses like enum values
+
+[source,properties]
+----
+quarkus.langchain4j.openai.chat-model.temperature=0.1
+quarkus.langchain4j.openai.chat-model.max-tokens=5
+----
+====
+
+=== Why It Works
+
+Large language models have been trained on a wide range of patterns and tasks. For many common requests (classification, tagging, summarization, translation), the model already "knows" what to do, as long as the instructions are well written.
+
+This approach was popularized in the paper “Language Models are Few-Shot Learners” (Brown et al., 2020), which demonstrated that models like GPT-3 can solve many tasks with no examples — just the right instructions.
+
+=== When to Use Zero-Shot Prompting
+
+Use it when:
+
+- You want short, fast prompts
+- You’re working with well-known tasks
+- You want to avoid extra examples or training
+
+Avoid it when:
+
+- The task is ambiguous, multi-step, or domain-specific
+- The model repeatedly misinterprets the prompt
+- Slight phrasing changes cause inconsistent output
+
+In such cases, consider switching to xref:#few-shot[few-shot prompting] for added clarity and control.
+
+[#few-shot]
+== One-Shot & Few-Shot Prompting
+
+Few-shot prompting is a technique where the prompt includes one or more examples of expected inputs and outputs before presenting the actual task to the model. This helps guide the model by showing it patterns to mimic.
+
+- *One-shot prompting* uses a single example.
+- *Few-shot prompting* uses multiple examples (typically 3–5).
+
+This technique is especially useful when:
+
+- The task is subjective or ambiguous
+- You require consistent output values (e.g., enums)
+- You want to reinforce specific formats or language
+
+=== Example: Sentiment Classification with a Few-Shot Prompt
+
+The following AI service classifies movie reviews into sentiment categories based on a few labeled examples.
+
+[source,java]
+----
+public enum Sentiment {
+    POSITIVE, NEUTRAL, NEGATIVE
+}
+
+@RegisterAiService
+public interface SentimentClassifier {
+
+    @UserMessage("""
+        Classify the sentiment of each movie review using one of the following categories:
+        POSITIVE, NEUTRAL, or NEGATIVE.
+
+        Here are a few examples:
+
+        - "I love this product." - POSITIVE
+        - "Not bad, but could be better." - NEUTRAL
+        - "I'm thoroughly disappointed." - NEGATIVE
+
+        Review:
+        {review}
+
+        Sentiment:
+        """)
+    Sentiment classify(String review);
+}
+----
+
+This approach helps guide the model to produce a predictable label (`POSITIVE`, `NEUTRAL`, or `NEGATIVE`) by reinforcing the expected format and tone.
+
+[#when-to-use-few-shot]
+=== When to Use Few-Shot
+
+Use few-shot prompting when:
+
+- The model struggles to generate structured or valid responses with zero-shot
+- You need consistent enum-like answers
+- The task benefits from disambiguation through examples
+
+[#config-few-shot]
+=== Recommended Configuration
+
+For more reliable and deterministic results, use the following settings:
+
+[source,properties]
+----
+quarkus.langchain4j.openai.chat-model.temperature=0.1
+quarkus.langchain4j.openai.chat-model.max-tokens=5 #Enum max size
+----
+
+A low temperature ensures less variation, and the small token limit prevents unnecessarily verbose outputs.
+
+[#few-shot-tips]
+=== Tips for High-Quality Few-Shot Prompts
+
+- Keep examples concise and focused.
+- Match the output format and tone expected from the model.
+- Vary input phrasing to show different review styles.
+- Limit the number of examples to avoid context overflow.
+
+[#comparison]
+=== One-Shot vs. Few-Shot vs. Zero-Shot
+
+[cols="1,3,3", options="header"]
+|===
+| Technique
+| Description
+| When to Use
+
+| Zero-Shot
+| The model performs a task with only an instruction, no examples provided.
+a|
+- The task is well-known or common.
+- You want to minimize prompt length.
+- You want fast results with minimal context setup.
+
+| One-Shot
+| A single example is included in the prompt to demonstrate the expected format or behavior.
+a|
+- The task is slightly ambiguous without an example.
+- There’s limited room for prompt content.
+- You want to guide the model while keeping it concise.
+
+| Few-Shot
+| Multiple examples (typically 3–5) are provided to illustrate the expected pattern or behavior.
+a|
+* The task is complex or has edge cases.
+* Output requires a specific structure or tone.
+* You need more consistency in responses.
+|===
+
+[#system-role-context]
+== System, Role, and Contextual Prompting
+
+Prompt engineering is not limited to just crafting user instructions. The Quarkus LangChain4j extension allows you to influence the behavior, tone, and framing of model responses using additional techniques:
+
+- **System prompting** sets the overall purpose and behavior of the model
+- **Role prompting** simulates a specific identity or communication style
+- **Contextual prompting** injects background knowledge or dynamic inputs into the prompt
+
+These techniques are often used together to guide complex or multi-turn conversations, enforce consistent output, or tailor the response to a specific audience or domain.
+
+[#system-prompting]
+=== System Prompting
+
+A *system message* defines the model’s global behavior; its _mission statement_. It sets expectations for tone, format, rules, or scope, and applies consistently to all user interactions within that AI service.
+
+System prompts are declared using the `@SystemMessage` annotation.
+
+==== Example: Summarization with Output Constraints
+
+This AI service summarizes input text into a strict Markdown format, using a system message to define structure, tone, and formatting rules.
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+    You are a professional content summarizer.
+    Your goal is to produce a Markdown-formatted summary using three sections:
+
+    1. ONE SENTENCE SUMMARY: one concise sentence (max 20 words)
+    2. MAIN POINTS: a numbered list of up to 10 bullet points, no longer than 15 words each
+    3. TAKEAWAYS: a numbered list of 5 insightful or useful conclusions
+
+    Do not include additional commentary or warnings. Only output valid Markdown.
+""")
+public interface SummaryService {
+
+    @UserMessage("Please summarize the following input:\n\n{input}")
+    String summarize(String input);
+}
+----
+
+This technique is especially useful when:
+
+- You want consistent formatting (e.g. Markdown or JSON)
+- You are building a multi-turn conversation with persistent behavior
+- You need the model to enforce style, tone, or ethical constraints
+
+[NOTE]
+====
+System messages are never evicted from the conversation memory.
+====
+
+[#role-prompting]
+=== Role Prompting
+
+*Role prompting* is a form of system prompting that assigns a persona to the model. This affects how the model responds, including tone, expertise, and perspective.
+
+Common roles include:
+
+- Domain experts (e.g. "You are a data scientist.")
+- Professionals (e.g. "You are a cybersecurity analyst.")
+- Creative personas (e.g. "Explain like you’re a poet.")
+
+==== Example: Summarization from the Perspective of a Journalist
+
+[source,java]
+----
+@RegisterAiService
+@SystemMessage("""
+    You are a professional journalist. Your job is to summarize complex articles
+    in plain, concise language for a general audience.
+""")
+public interface JournalistSummary {
+
+    @UserMessage("Please summarize the following article:\n\n{content}")
+    String summarize(String content);
+}
+----
+
+You can combine role prompting with tone or style instructions to simulate real-world personas (e.g. teacher, coach, assistant, translator).
+
+[TIP]
+====
+Role prompting is especially effective when tailoring output to a specific audience, such as legal summaries, financial advice, or technical documentation.
+====
+
+[#contextual-prompting]
+=== Contextual Prompting
+
+*Contextual prompting* provides the model with relevant background information that helps refine the response. It is useful when the task depends on dynamic input, domain knowledge, or user intent that is not explicitly part of the primary input.
+
+With Quarkus LangChain4j, context can be injected as method parameters and used directly in the prompt. We also use this technique when utilizing the Retrieval-Augmented Generation (RAG) pattern, where the context is retrieved from a knowledge base.
+
+==== Example: Topic Suggestions Based on Writing Context
+
+[source,java]
+----
+@RegisterAiService
+public interface TopicGenerator {
+
+    @UserMessage("""
+        Suggest 3 article topics related to the following context.
+        Include a short description for each suggestion.
+
+        Context: {context}
+        """)
+    String suggestTopics(String context);
+}
+----
+
+This approach helps the model adapt to different domains, use cases, or target audiences without hardcoding the background into the service.
+
+[#when-to-use]
+=== When to Use These Techniques
+
+[cols="1,3", options="header"]
+|===
+| Technique           | Use When…
+
+| System Prompting    | You need consistent tone, format, or behavior across invocations
+| Role Prompting      | You want the model to simulate an expert or specific personality
+| Contextual Prompting| You need to tailor the output to a domain, use case, or background data
+|===
+
+== Step-Back Prompting
+
+Step-back prompting (also known as multi-stage or decomposition prompting) is a technique that decomposes complex requests into multiple stages by first prompting the model to reflect on the broader context or fundamental principles of a problem before addressing a specific task. Note that these different steps are not chained together, but rather the model is asked to reflect on the context before addressing the task.
+
+This approach is effective when the final task depends on external knowledge, domain understanding, or layered reasoning. By first retrieving or generating relevant background information, the model can then produce more thoughtful, accurate, and coherent responses. These steps may use different models.
+
+=== Example: Enriching a Summary with Context
+
+In the example below, we first ask the model to identify the key themes of a long article before generating a concise summary.
+This encourages the model to “step back” and gain an overview before focusing on the summarization.
+
+[source,java]
+----
+@QuarkusMain
+public class StepBackMain implements QuarkusApplication {
+    @Inject
+    BackgroundService background;
+
+    @Inject
+    SummaryService summarizer;
+
+    @Override
+    public int run(String... args) throws IOException {
+        var text = Files.readString(Path.of("<some article file>"));
+
+        // Step 1: Ask for key themes
+        var context = background.extractThemes(text);
+
+        // Step 2: Generate the summary using the extracted context
+        var summary = summarizer.summarize(text, context);
+
+        System.out.println("== Summary ==");
+        System.out.println(summary);
+
+        return 0;
+    }
+
+    @RegisterAiService
+    @ApplicationScoped
+    interface BackgroundService {
+
+        @UserMessage("""
+            Read the following article and list the 5 most important themes discussed.
+
+            ---
+            {input}
+            ---
+        """)
+        String extractThemes(String input);
+    }
+
+    @RegisterAiService
+    @ApplicationScoped
+    interface SummaryService {
+
+        @SystemMessage("""
+        You are a professional summarizer. Use the given context to enrich the summary output.
+        """)
+        @UserMessage("""
+            Article:
+            ---
+            {input}
+            ---
+
+            Context (Themes): {context}
+
+            Write a concise, well-structured summary of the article above, integrating the key themes provided in the context.
+        """)
+        String summarize(String input, String context);
+    }
+}
+----
+
+== Advanced Prompting Techniques
+
+This section expands on common prompting strategies and introduces techniques designed to enhance reasoning, reduce hallucinations, and achieve multi-step tasks effectively.
+
+=== Chain-of-Thought Prompting
+
+Chain-of-thought prompting helps the model reason through problems step-by-step before producing an answer. It's useful for complex tasks like arithmetic, logic puzzles, or causal reasoning.
+
+==== Description
+This technique encourages the model to "think out loud" by walking through intermediate reasoning steps before providing a final answer. It mirrors how humans often tackle complex tasks.
+
+==== When to Use
+Use when the task involves reasoning, multiple constraints, or logical steps (e.g., math, code understanding).
+
+==== Example
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+You are an AI assistant that solves math word problems step-by-step.
+For each question, show your reasoning first, then answer in the format:
+
+ANSWER: <final_answer>
+
+""")
+public interface MathSolver {
+
+@UserMessage("""
+If Alice has 4 apples and Bob gives her 3 more, how many apples does Alice have?
+""")
+String solve();
+
+}
+----
+
+=== Decomposition Prompting
+
+Decomposition prompting splits a complex instruction into smaller sub-tasks. Each step is independently understood and executed before combining the results.
+
+==== Description
+This is helpful when solving a task end-to-end requires multiple skills (e.g., understanding + summarization).
+
+==== When to Use
+Use when a prompt contains multiple questions or objectives (e.g., "Summarize and extract action items").
+
+==== Example
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+You will receive a task. First decompose it into smaller steps. Then solve each step individually.
+""")
+public interface TaskDecomposer {
+
+@UserMessage("""
+Analyze this article and produce a summary and a list of 5 follow-up actions.
+""")
+String execute(String article);
+
+}
+----
+
+=== ReAct Prompting (Reason + Act)
+
+ReAct prompting combines step-by-step reasoning (like Chain-of-Thought) with action-taking, especially when function calling (tools) are involved.
+
+==== Description
+The model reasons about what to do and selects a tool (e.g., calculator, web search) to apply, updating its thinking after each step.
+
+==== When to Use
+Use when integrating tools, agents, or APIs where decisions depend on intermediate results.
+
+==== Example
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ToolBox;@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+You are a reasoning agent. For each problem, reason about the solution, and when necessary, use available tools.
+""")
+public interface AgentService {
+
+@UserMessage("""
+    What’s the weather like in Tokyo tomorrow?
+""")
+@ToolBox(WeatherForecastTool.class)
+String answer();
+
+}
+----
+
+=== Reflection Prompting
+
+Reflection prompting asks the model to generate an initial answer, then review and correct its own output.
+
+==== Description
+It mimics human double-checking: the model "thinks twice" by reviewing an earlier result.
+
+==== When to Use
+Use when accuracy is critical, or when tasks are error-prone (e.g., summarization, translations).
+
+==== Example
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+You answer questions. Then, you reflect on your own answer and improve it if needed.
+""")
+public interface ReflectiveAI {
+
+    @UserMessage("""
+    ORIGINAL TASK: Summarize the following article in 3 sentences.
+    CONTENT: {article}
+    STEP 1: Provide a first version.
+    STEP 2: Reflect on and improve the answer.
+    """)
+String summarize(String article);
+
+}
+----
+
+=== Multi-Stage Prompting
+
+Multi-stage prompting chains together multiple prompts or agents, each handling a specific part of the task.
+
+==== Description
+Each stage builds on the previous one—e.g., first extract facts, then summarize, then propose actions.
+
+==== When to Use
+Use when you want to isolate different steps or responsibilities (especially useful for multi-agent workflows).
+
+==== Example
+
+[source,java]
+----
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("""
+    Stage 1: Extract the key facts.
+    Stage 2: Generate a summary.
+    Stage 3: Propose 3 actions.
+    Ensure each stage completes before moving to the next.
+""")
+public interface MultiStagePlanner {
+
+@UserMessage("""
+Input: {text}
+""")
+String process(String text);
+
+}
+----
+
+[#testing-prompts]
+== Testing and Refining Prompts
+
+Prompt engineering is inherently iterative. Small changes to wording, examples, or format can significantly impact results.
+
+To evaluate prompts:
+
+* Use xref:testing.adoc[automated tests] to assert the structure or content of results
+* Adjust formatting or strategy incrementally
+
+Prompt engineering gives you powerful control over LLM behavior. By combining clear intent, formatting patterns, and structured guidance, you can shape model output to meet your application needs precisely.
