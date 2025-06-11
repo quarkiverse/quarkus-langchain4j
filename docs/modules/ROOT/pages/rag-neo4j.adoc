@@ -1,0 +1,146 @@
+= Neo4j Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Neo4j is a graph database that also supports vector search starting from version 5.x.
+With Quarkus LangChain4j, you can use Neo4j as a vector-capable document store for implementing Retrieval-Augmented Generation (RAG) pipelines.
+
+[IMPORTANT]
+====
+Neo4j 5.11 or later is required for native vector similarity search via the `KNN` clause.
+Ensure your Neo4j deployment supports this feature.
+====
+
+== Dependency
+
+To enable Neo4j vector store support, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-neo4j</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+This extension depends on the https://github.com/quarkiverse/quarkus-neo4j[`quarkus-neo4j`] extension for Neo4j driver configuration, Dev Services support, and reactive client integration.
+
+[NOTE]
+====
+All standard `quarkus-neo4j` configuration properties are available. For full documentation, refer to:
+https://docs.quarkiverse.io/quarkus-neo4j/dev/index.html
+====
+
+== Prerequisites
+
+Ensure your Neo4j instance:
+
+* Is running version 5.11 or newer
+* Has the `gds` (Graph Data Science) plugin installed (if needed for advanced vector operations)
+* Has schema configured for vector indexing (see below)
+
+== Embedding Dimension
+
+You must define the dimensionality of your embedding vectors:
+
+[source,properties]
+----
+quarkus.langchain4j.neo4j.dimension=384
+----
+
+Typical dimensions:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Usage Example
+
+Once installed and configured, you can use Neo4j to ingest and retrieve documents based on vector similarity:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithNeo4J.java[]
+----
+
+== Configuration
+
+You can configure the Neo4j connection and vector store behavior using these properties:
+
+include::includes/quarkus-langchain4j-neo4j.adoc[leveloffset=+1,opts=optional]
+
+Common settings include:
+
+* `quarkus.langchain4j.neo4j.dimension` – Required; dimension of your embeddings
+* `quarkus.neo4j.uri`, `quarkus.neo4j.authentication.*` – Standard Neo4j driver settings
+
+== How It Works
+
+Internally, the extension maps each document into a Neo4j node with:
+
+* A `text` property (raw content)
+* A `vector` property (embedding)
+* Optional metadata stored as node properties
+
+Documents are stored in a custom label (`:Document`) and indexed using Neo4j’s vector search capabilities.
+
+Vector queries are executed using the `KNN` clause:
+
+[source,cypher]
+----
+MATCH (d:Document)
+RETURN d.text, gds.similarity.cosine(d.vector, $queryVector) AS score
+ORDER BY score DESC
+LIMIT 5
+----
+
+== Schema Setup
+
+The vector field is stored as a list of floats and must be indexed for similarity search:
+
+[source,cypher]
+----
+CREATE VECTOR INDEX langchain_vector_index FOR (d:Document)
+ON (d.vector) OPTIONS {indexConfig: {
+  `vector.dimensions`: 384,
+  `vector.similarity_function`: 'cosine'
+}};
+----
+
+The extension will attempt to create this index automatically if it does not exist.
+
+== Metadata Filtering
+
+Neo4j supports flexible filtering based on node properties. You can attach metadata as key-value pairs to each node and query with Cypher expressions.
+
+Example: Restrict to documents from a given author and year:
+
+[source,cypher]
+----
+MATCH (d:Document)
+WHERE d.author = 'Alice' AND d.year = 2023
+RETURN ...
+----
+
+[NOTE]
+Metadata filtering is fully supported using standard Cypher conditions alongside vector similarity.
+
+== Summary
+
+To use Neo4j as a vector store for RAG with Quarkus LangChain4j:
+
+1. Ensure Neo4j 5.11+ with vector indexing is available
+2. Add the `quarkus-langchain4j-neo4j` dependency
+3. Set the vector `dimension` and Neo4j connection parameters
+4. Use the `Neo4jEmbeddingStore` to ingest and retrieve documents
+5. Leverage Cypher filters and indexing for fine-grained control
+
+

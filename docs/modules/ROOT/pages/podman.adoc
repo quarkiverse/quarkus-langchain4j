@@ -1,19 +1,26 @@
-= Podman AI Lab
+= Podman AI Lab Chat Models
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-https://developers.redhat.com/products/podman-desktop/podman-ai-lab/[Podman AI Lab] simplifies getting started and developing with AI in a local environment.
-A curated catalogue of recipes help navigate the jungle of AI use cases and AI models. You can also import your models to run them locally (currently only with CPU support).
+https://developers.redhat.com/products/podman-desktop/podman-ai-lab/[Podman AI Lab] is a local AI development environment provided as an extension to Podman Desktop.
+It simplifies experimentation with AI by providing a curated catalog of models and recipes, all runnable on your local machine via containerized infrastructure.
+
+Podman AI Lab includes an inference server that is **compatible with the OpenAI REST API**, making it usable with the `quarkus-langchain4j-openai` extension.
 
 == Prerequisites
 
-To use Podman AI Lab, you need to first have installed https://podman-desktop.io/docs/installation[Podman Desktop] which is available for all major platforms.
+To use Podman AI Lab with Quarkus:
 
-Once Podman Desktop is up in running, Podman AI Lab can be installed from the UI by locating it in the e Extensions catalog (see https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-file#installation[this] for more details).
+1. Install https://podman-desktop.io/docs/installation[Podman Desktop].
+2. From the Podman Desktop UI, install the **Podman AI Lab** extension from the *Extensions* catalog.
+See https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-file#installation[this guide] for step-by-step instructions.
+3. Launch Podman AI Lab and download a model (such as `granite-7b`) through the UI.
+4. Start the inference server by selecting the model and clicking *Run*.
 
-== Using Podman AI Lab
+== Dependency
 
-Podman AI Lab provides an inference server that is compatible with the OpenAI REST API, meaning that the `quarkus-langchain4j-openai` dependency can be used to interact with it from Quarkus.
+Add the OpenAI extension to your project:
 
 [source,xml,subs=attributes+]
 ----
@@ -24,19 +31,55 @@ Podman AI Lab provides an inference server that is compatible with the OpenAI RE
 </dependency>
 ----
 
-Before proceeding, a model (`granite-7b` for example) needs to be downloaded in the Podman AI Lab UI and the inference server started.
-See https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-file#usage[this] for screenshots on how this can be accomplished.
+Even though this is not an actual OpenAI deployment, the API is compatible and works seamlessly with this extension.
 
-Assuming the inference server was started on port `44079`, the application needs to be configured like so:
+IMPORTANT: Only the chat model API is supported at the moment. Other OpenAI APIs (like embeddings or moderation) are not available through Podman AI Lab.
+
+== Configuration
+
+Once the inference server is running (e.g., on port `44079`), configure your application like so:
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.openai.base-url=http://localhost:44079/v1
-# Responses might be a bit slow, so we increase the timeout
+# Responses may be slightly slower than cloud models
 quarkus.langchain4j.openai.timeout=60s
 ----
 
+[TIP]
+====
+You can verify the port from the Podman AI Lab UI under the *Running Inference Server* section.
+====
+
 [IMPORTANT]
 ====
-The model configuration completely ignored when using Podman Desktop AI, as the inference server runs a single model
+Podman AI Lab currently supports **only a single running model** at a time.
+This means that any `model-name` configuration is ignored.
+The model to use must be selected manually through the Podman AI Lab UI.
 ====
+
+== Usage
+
+Once configured, you can use the API as if communicating with an OpenAI model:
+
+[source,java]
+----
+@Inject ChatModel chatModel;
+----
+
+Or register an AI service interface:
+
+[source,java]
+----
+@RegisterAiService
+public interface Assistant {
+    String chat(String prompt);
+}
+----
+
+== Limitations
+
+- Only **chat models** are supported at the moment.
+- Embedding and moderation APIs are **not yet available**.
+- The inference server only runs **one model at a time**.
+- GPU support is not currently enabled; all inference runs on CPU.

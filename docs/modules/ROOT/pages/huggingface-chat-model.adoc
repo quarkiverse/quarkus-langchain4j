@@ -1,0 +1,76 @@
+= Hugging Face Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://huggingface.co/[Hugging Face] is a leading platform in the field of natural language processing (NLP) that provides a wide collection of pre-trained language models. It facilitates easy access to cutting-edge models for various NLP tasks through hosted APIs or local inference.
+
+== Prerequisites
+
+=== Extension Installation
+
+To use Hugging Face chat models in your Quarkus application, add the following extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Hugging Face chat model.
+
+=== API Key
+
+You need a Hugging Face account and an access token. Set the token in your `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.huggingface.api-key=hf-...
+----
+
+[TIP]
+====
+You can also use the `QUARKUS_LANGCHAIN4J_HUGGINGFACE_API_KEY` environment variable.
+====
+
+== Supported Models
+
+Only *text-to-text* models are supported (i.e., models that take a textual prompt and return a textual result).
+
+By default, the following model is used:
+
+- https://huggingface.co/tiiuae/falcon-7b-instruct[`tiiuae/falcon-7b-instruct`] for chat-style generation
+
+== Configuration
+
+To use a custom Hugging Face model hosted on the Hugging Face Hub, configure the endpoint:
+
+[source,properties]
+----
+quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url=https://api-inference.huggingface.co/models/google/flan-t5-small
+----
+
+You can also point to a locally hosted or private endpoint:
+
+[source,properties]
+----
+quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url=http://localhost:8085
+----
+
+For a fully hosted endpoint (e.g., AWS-hosted Hugging Face endpoint):
+
+[source,properties]
+----
+quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url=https://<endpoint>.endpoints.huggingface.cloud
+----
+
+== Limitations
+
+Hugging Face models do not support tool usage or function calling.
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-huggingface.adoc[leveloffset=+1,opts=optional]

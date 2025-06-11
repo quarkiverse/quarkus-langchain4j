@@ -1,0 +1,70 @@
+= Hugging Face Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Hugging Face provides several pre-trained embedding models useful for semantic search, document retrieval, and Retrieval-Augmented Generation (RAG) workflows.
+
+== Prerequisites
+
+=== Extension Installation
+
+To use Hugging Face embedding models in your Quarkus application, add the following extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Hugging Face embedding model.
+
+=== API Key
+
+You need a Hugging Face account and an access token. Set it in your `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.huggingface.api-key=hf-...
+----
+
+[TIP]
+====
+You can also use the `QUARKUS_LANGCHAIN4J_HUGGINGFACE_API_KEY` environment variable.
+====
+
+== Default Model
+
+By default, the following model is used for embeddings:
+
+- https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2[`sentence-transformers/all-MiniLM-L6-v2`]
+
+== Usage in RAG
+
+You can inject the embedding model directly:
+
+[source,java]
+----
+@Inject EmbeddingModel model;
+----
+
+And configure it using:
+
+[source,properties]
+----
+quarkus.langchain4j.huggingface.embedding-model.inference-endpoint-url=https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2
+----
+
+This is especially useful when building a xref:quickstart-rag.adoc[RAG ingestor or retriever].
+
+[WARNING]
+====
+Not all Sentence Transformers models are compatible. If you use a custom model, ensure it is supported or implement a custom `EmbeddingModel`.
+====
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-huggingface.adoc[leveloffset=+1,opts=optional]

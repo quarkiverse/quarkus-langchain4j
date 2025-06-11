@@ -72,3 +72,6 @@ release.properties
 #Dolphin
 .directory
 /samples/chatbot/dev.sh
+/docs/node_modules/
+node_modules/
+antora-cache/

@@ -1,0 +1,315 @@
+= Getting Started with Retrieval-Augmented Generation (RAG)
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Retrieval-Augmented Generation (RAG) enhances LLM responses by allowing them to retrieve relevant external content at runtime, thus significantly improving response accuracy and context relevance.
+
+
+RAG typically involves two main phases:
+
+- **Ingestion Phase**: Documents are indexed and stored as embeddings in a vector store.
+- **Retrieval Phase**: At runtime, relevant document segments are retrieved and provided to the LLM for generating enriched answers.
+
+The ingestion phase parses documents, splits them into manageable segments, and generates embeddings that capture their semantic meaning.
+These embeddings are then stored in a vector database, allowing for efficient similarity searches.
+
+[mermaid,ingestion,svg,float=left]
+----
+graph LR
+    A[Documents] e1@--> B[DocumentLoader reads content]
+    B e2@--> C[Splitter cuts documents into segments]
+    C e3@--> D[EmbeddingModel generates embeddings for each segment]
+    D e4@-->|Stores embeddings| E[(Embedding Store)]
+
+    class A,B,C,D,E,F node;
+    class e1,e2,e3,e4 edge
+    classDef node fill:#4A93E9,stroke:white,color:white
+    classDef edge stroke-width:3px,stroke:#DF1862
+----
+
+
+The retrieval phase uses the embeddings to find relevant segments based on user queries. The retrieved segments are then used to provide context for the LLM, enabling it to generate more accurate and context-aware responses:
+
+[mermaid,retrieval,svg]
+----
+graph LR
+    A[User asks question] e1@--> B[1 - The AI Service processes request]
+    B e2@--> C[2 - The document retriever orchestrates the retrieval process]
+    C e3@<--> D[3 - The embedding model is used to generate an embedding for the query]
+    C e4@<--> |4 - Query the embedding store| E[(Embedding Store)]
+    C e5@-->|5 - Provides the segments| B
+    B e6@<--> F[6 - LLM generates answer based on segments]
+    B e7@-->|7 - Return the response| A
+
+    class A,B,C,D,E,F node;
+    classDef node fill:#4A93E9,stroke:white,color:white
+    class e1,e2,e3,e4,e5,e6,e7 edge
+    classDef edge stroke-width:3px,stroke:#DF1862
+----
+
+
+== Example Overview
+
+In this guide, you'll build an AI service that answers questions based on documentation stored in a markdown file (`quarkus-overview.md`). You'll use the `pgvector` embedding store.
+
+== Setup
+
+
+=== Dependencies
+
+Add these dependencies to your pom.xml:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-embeddings</artifactId>
+    <version>{langchain4j-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-pgvector</artifactId>
+    <version>{project-version}</version>
+</dependency>
+<!-- For CLI support -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-picocli</artifactId>
+</dependency>
+----
+
+=== Configuration
+
+Configure the vector dimension and OpenAI API key in `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.pgvector.dimension=1536
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+[NOTE]
+.Other Vector Stores
+====
+Quarkus LangChain4j supports multiple vector stores. See the xref:index.adoc[supported vector stores] documentation for alternatives.
+// TODO Change link to the actual page when available
+====
+
+=== Create the document to be ingested
+
+At the root of the project, create a `docs` directory and add a file named `quarkus-overview.md` with the following content:
+
+[source,markdown]
+----
+# Quarkus Overview
+
+Quarkus is a Java framework tailored for deployment on Kubernetes. Key technology components surrounding it are OpenJDK HotSpot and GraalVM. Quarkus aims to make Java a leading platform in Kubernetes and serverless environments while offering developers a unified reactive and imperative programming model to address a wider range of distributed application architectures optimally.
+
+Quarkus offers quick scale-up and high-density use in container orchestration platforms such as Kubernetes. Many more application instances can be run given the same hardware resources. After its initial debut, Quarkus underwent several enhancements over the next few months, culminating in a 1.0.0 release within the open-source community in November 2019.
+
+## Design pillars
+
+### Container first
+From the beginning, Quarkus was designed around the container-first and Kubernetes-native philosophy, optimizing for low memory usage and fast startup times.
+
+As much processing as possible is done at build time, including taking a closed-world assumption approach to building and running applications. This optimization means that, in most cases, all code that does not have an execution path at runtime isn't loaded into the JVM.
+
+In Quarkus, classes used only at application startup are invoked at build time and not loaded into the runtime JVM. Quarkus also avoids reflection as much as possible, instead favoring static class binding. These design principles reduce the size, and ultimately the memory footprint, of the application running on the JVM while also enabling Quarkus to be natively-native.
+
+Quarkus' design accounted for native compilation from the outset. It was optimized for using the native image capability of GraalVM to compile JVM bytecode to a native machine binary. GraalVM aggressively removes any unreachable code found within the application's source code as well as any of its dependencies. Combined with Linux containers and Kubernetes, a Quarkus application runs as a native Linux executable, eliminating the JVM. A Quarkus native executable starts much faster and uses far less memory than a traditional JVM.
+
+* Fast Startup (tens of milliseconds) allows automatic scaling up and down of microservices on containers and Kubernetes, as well as FaaS on-the-spot execution
+* Low memory use helps optimize container density in microservices architecture deployments requiring multiple containers
+Smaller application and container image footprint
+
+...
+----
+
+The content of this file comes from the https://en.wikipedia.org/wiki/Quarkus[Quarkus Wikipedia page].
+
+== Document Ingestion
+
+
+In general, it's a separate process from the AI service, but for simplicity, we'll do it in the same application.
+
+
+[source,java]
+----
+package org.acme;
+
+import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
+import io.quarkus.runtime.Startup;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static dev.langchain4j.data.document.splitter.DocumentSplitters.recursive;
+
+@Singleton
+@Startup
+public class DocumentLoader {
+
+    @Inject
+    EmbeddingStore<TextSegment> store;
+
+    @Inject
+    EmbeddingModel embeddingModel;
+
+    @PostConstruct
+    void loadDocument() throws Exception {
+        var content = Files
+            .readString(Path.of("docs/quarkus-overview.md"));
+
+        var doc = Document.document(content);
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor
+            .builder()
+                .embeddingStore(store)
+                .embeddingModel(embeddingModel)
+                .documentSplitter(recursive(500, 0))
+                .build();
+        ingestor.ingest(doc);
+    }
+
+}
+----
+
+== Document Retrieval
+
+At runtime (inference time), the document retrieval retrieves relevant segments from the embedding store.
+
+[source,java]
+----
+package org.acme;
+
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.rag.DefaultRetrievalAugmentor;
+import dev.langchain4j.rag.RetrievalAugmentor;
+import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class DocumentRetriever implements RetrievalAugmentor {
+
+    private final RetrievalAugmentor augmentor;
+
+    DocumentRetriever(EmbeddingStore store, EmbeddingModel model) {
+        EmbeddingStoreContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingModel(model)
+                .embeddingStore(store)
+                .maxResults(3)
+                .build();
+        augmentor = DefaultRetrievalAugmentor
+                .builder()
+                .contentRetriever(contentRetriever)
+                .build();
+    }
+
+    @Override
+    public AugmentationResult augment(AugmentationRequest augmentationRequest) {
+        return augmentor.augment(augmentationRequest);
+    }
+
+}
+----
+
+== Define AI Service
+
+The AI service uses retrieved content to answer user questions:
+
+[source,java]
+----
+package org.acme;
+
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@RegisterAiService
+@ApplicationScoped
+@SystemMessage("You are a Quarkus documentation assistant. Use the retrieved content to answer user questions.")
+public interface DocumentationAssistant {
+
+    String ask(String question); // <1>
+
+}
+----
+
+<1> The `ask` method will be used to ask questions about the Quarkus documentation. There is no need to annotate it with `@UserMessage` because the only parameter is considered as the user message automatically.
+
+== Using the AI Service
+
+Inject and call the AI service:
+
+[source,java]
+----
+package org.acme;
+
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.annotations.QuarkusMain;
+import jakarta.inject.Inject;
+import io.quarkus.runtime.QuarkusApplication;
+
+@QuarkusMain
+public class RAGApp implements QuarkusApplication {
+
+    @Inject
+    DocumentationAssistant assistant;
+
+    @Override
+    public int run(String... args) {
+        String answer = assistant.ask("How does Quarkus achieve fast startup times?");
+        System.out.println(answer);
+        return 0;
+    }
+}
+----
+
+== Running the Application
+
+=== Dev Mode
+
+To run your application in development mode, use:
+
+[source,bash]
+----
+./mvnw quarkus:dev
+----
+
+Your AI service is now running and the question "How does Quarkus achieve fast startup times?" will be answered using the indexed document.
+
+=== Prod Mode
+
+Before running in production mode, ensure you have started the PostgreSQL database with the `pgvector` extension enabled, and configured the connection in `application.properties`.
+
+Then, build and run your application:
+
+[source,bash]
+----
+./mvnw clean package
+java -jar target/quarkus-app/quarkus-run.jar
+----
+
+== What's Next?
+
+- xref:rag-ingestion.adoc[Ingestion Pipelines] — Learn about document splitting and embedding.
+
+- xref:rag-query.adoc[Advanced Retrieval Techniques] — Discover techniques to improve retrieval accuracy.
+
+

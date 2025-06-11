@@ -1,0 +1,139 @@
+= Loading CSV Files into a Vector Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+When building a Retrieval-Augmented Generation (RAG) application, it's common to ingest structured tabular data such as CSV files.
+This guide walks you through the process of transforming CSV data into embeddings and storing them in a vector store.
+
+You’ll learn how to:
+
+1. Parse a CSV file and convert rows into `Document` objects
+2. Ingest these documents into an embedding store using a splitter
+3. Build a `RetrievalAugmentor` to enable querying
+
+TIP: You can find a complete working example in the https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/sql-chatbot[SQL Chatbot Sample].
+
+== Step 1: Parse CSV Data into Documents
+
+Start by loading and processing your CSV file. We'll use Apache Commons CSV in this example, but you may use any CSV library.
+
+Add the following dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-csv</artifactId>
+    <version>1.10.0</version>
+</dependency>
+----
+
+Here is a Quarkus-based example that reads the CSV file on application startup:
+
+[source,java]
+----
+@ConfigProperty(name = "csv.file")
+File file;
+
+@ConfigProperty(name = "csv.headers")
+List<String> headers;
+
+public void ingest(@Observes StartupEvent event) throws IOException {
+    CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
+        .setHeader(headers.toArray(new String[0]))
+        .setSkipHeaderRecord(true)
+        .build();
+
+    List<Document> documents = new ArrayList<>();
+
+    try (Reader reader = new FileReader(file)) {
+        Iterable<CSVRecord> records = csvFormat.parse(reader);
+        int rowIndex = 1;
+        for (CSVRecord record : records) {
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("source", file.getAbsolutePath());
+            metadata.put("row", String.valueOf(rowIndex++));
+
+            StringBuilder content = new StringBuilder();
+            for (String header : headers) {
+                metadata.put(header, record.get(header));
+                content.append(header).append(": ").append(record.get(header)).append("\n");
+            }
+
+            documents.add(new Document(content.toString(), Metadata.from(metadata)));
+        }
+    }
+
+    // Proceed to ingestion
+}
+----
+
+NOTE: Each row is converted into a `Document` with structured metadata (like row number and field values) and textual content for embedding.
+
+== Step 2: Ingest the Documents
+
+To store the documents in a vector store, you need to embed and split them into smaller chunks.
+
+Use the `EmbeddingStoreIngestor` along with a `DocumentSplitter`. Here we use a recursive splitter for simplicity:
+
+[source,java]
+----
+var ingestor = EmbeddingStoreIngestor.builder()
+    .embeddingStore(store) // Injected
+    .embeddingModel(embeddingModel) // Injected
+    .documentSplitter(DocumentSplitters.recursive(500, 0))
+    .build();
+
+ingestor.ingest(documents);
+----
+
+TIP: Adjust chunk size (500 tokens here) and overlap (0) based on your model and document structure.
+
+== Step 3: Build the Retrieval Augmentor
+
+Once documents are ingested, configure a `RetrievalAugmentor` to enable retrieval during question answering.
+
+Here’s an example CDI bean producing a basic `RetrievalAugmentor`:
+
+[source,java]
+----
+@ApplicationScoped
+public class AugmentorExample implements Supplier<RetrievalAugmentor> {
+
+    private final EmbeddingStoreContentRetriever retriever;
+
+    AugmentorExample(EmbeddingStore store, EmbeddingModel model) {
+        this.retriever = EmbeddingStoreContentRetriever.builder()
+            .embeddingModel(model)
+            .embeddingStore(store)
+            .maxResults(10)
+            .build();
+    }
+
+    @Override
+    public RetrievalAugmentor get() {
+        return DefaultRetrievalAugmentor.builder()
+            .contentRetriever(retriever)
+            .build();
+    }
+}
+----
+
+You can now inject this augmentor into your AI service or `ChatMemory` configuration to provide context-aware answers based on your CSV data.
+
+== Summary
+
+To use CSV data in a RAG pipeline:
+
+1. Parse each row into a `Document` with content and metadata
+2. Use a `DocumentSplitter` and `EmbeddingStoreIngestor` to embed and store the documents
+3. Implement a `RetrievalAugmentor` that performs semantic search against your vector store
+
+This enables your application to ask and answer questions grounded in structured tabular data.
+
+== See Also
+
+* xref:rag.adoc[RAG Overview]
+* xref:rag-ingestion.adoc[Ingestion Pipeline]
+* xref:models.adoc#_embedding_models[Embedding Models]
