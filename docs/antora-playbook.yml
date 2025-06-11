@@ -8,7 +8,7 @@ content:
     start_path: docs
 ui: 
   bundle:
-    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    url: https://github.com/quarkiverse/antora-ui-quarkiverse/releases/latest/download/ui-bundle.zip
     snapshot: true
 
 asciidoc:
