@@ -11,7 +11,6 @@ public class ShadowSensitiveData {
 
         final JsonObject bodyJson = buffer.toJsonObject();
         if (bodyJson.containsKey(field)) {
-
             final String apiKeyField = bodyJson.getString(field);
             String shadowedData;
             if (apiKeyField.length() < NUMBER_VISIBLE_CHARS) {
