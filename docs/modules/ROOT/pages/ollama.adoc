@@ -1,6 +1,7 @@
 = Ollama
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://ollama.com/[Ollama] provides a way to run large language models (LLMs) locally.
 You can run many https://ollama.com/library[models] such as LLama3, Mistral, CodeLlama and many others on your machine, with full CPU and GPU support.

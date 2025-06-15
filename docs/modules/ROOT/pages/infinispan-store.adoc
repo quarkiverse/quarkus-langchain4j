@@ -1,6 +1,7 @@
 = Infinispan Embedding Store for Retrieval Augmented Generation (RAG)
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 When implementing Retrieval Augmented Generation (RAG), a capable document store is necessary. This guide will explain how to leverage Infinispan Server as the embeddings store.
 

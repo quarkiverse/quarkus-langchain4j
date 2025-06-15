@@ -1,6 +1,7 @@
 = Making AI interactions more robust
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 When implementing an AI service, leveraging Quarkus fault tolerance annotations can enhance the reliability of your interactions.
 To integrate fault tolerance, follow these steps:

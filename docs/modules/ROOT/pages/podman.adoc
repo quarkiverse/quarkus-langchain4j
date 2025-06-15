@@ -1,6 +1,7 @@
 = Podman AI Lab
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://developers.redhat.com/products/podman-desktop/podman-ai-lab/[Podman AI Lab] simplifies getting started and developing with AI in a local environment.
 A curated catalogue of recipes help navigate the jungle of AI use cases and AI models. You can also import your models to run them locally (currently only with CPU support).

@@ -1,6 +1,7 @@
 = Reranking using scoring models
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 When using RAG, a scoring model can be used to rerank the top-k documents retrieved by the content retriever(s). This can specifically be useful in these cases:
 

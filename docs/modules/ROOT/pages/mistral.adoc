@@ -1,6 +1,7 @@
 = Mistral
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://mistral.ai/[Mistral] is a French company that provide open source LLM models.
 

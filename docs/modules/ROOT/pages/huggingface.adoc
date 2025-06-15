@@ -1,6 +1,7 @@
 = Hugging Face
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://huggingface.co/[Hugging Face] is a leading platform in the field of natural language processing (NLP) that provides a comprehensive collection of pre-trained language models. Hugging Face facilitates easy access to a wide range of state-of-the-art models for various NLP tasks.
 Its focus on democratizing access to cutting-edge NLP capabilities has made Hugging Face a pivotal player in the advancement of language technology.

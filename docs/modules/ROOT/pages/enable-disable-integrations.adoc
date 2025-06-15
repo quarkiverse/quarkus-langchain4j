@@ -1,6 +1,7 @@
 = Enabling and Disabling Integrations
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 By default, all integrations with AI providers (OpenAI, HuggingFace, Azure OpenAI, etc.) are enabled. This means that live calls are made to the configured AI provider.
 
