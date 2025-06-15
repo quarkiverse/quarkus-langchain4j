@@ -15,9 +15,7 @@ import io.quarkiverse.langchain4j.memorystore.MongoDBChatMemoryStore;
 import io.quarkiverse.langchain4j.memorystore.mongodb.runtime.MongoDBMemoryStoreRecorder;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
-import io.quarkus.deployment.annotations.BuildProducer;
-import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.annotations.ExecutionTime;
+import io.quarkus.deployment.annotations.*;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.mongodb.MongoClientName;
@@ -34,12 +32,14 @@ class MongoDBMemoryStoreProcessor {
     }
 
     @BuildStep
-    public MongoClientNameBuildItem requestMongoClient(MongoDBMemoryStoreBuildTimeConfig config) {
-        return new MongoClientNameBuildItem(config.clientName().orElse("default"));
+    public void requestMongoClient(MongoDBMemoryStoreBuildTimeConfig config,
+            BuildProducer<MongoClientNameBuildItem> mongoClientName) {
+        config.clientName().ifPresent(clientName -> mongoClientName.produce(new MongoClientNameBuildItem(clientName)));
     }
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
+    @Consume(MongoClientNameBuildItem.class)
     public void createMemoryStoreBean(
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
