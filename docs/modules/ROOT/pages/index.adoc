@@ -2,6 +2,8 @@
 = Quarkus LangChain4j
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+include::./includes/customization.adoc[]
 
 [.lead]
 **Build intelligent, AI-infused applications by integrating Large Language Models into your Quarkus services with a declarative, developer-friendly API.**
@@ -98,11 +100,3 @@ That said, Quarkus LangChain4j doesn’t lock you into a single model. You can m
 
 This balance provides the best of both worlds: high productivity with the flexibility to go low-level when required.
 
-++++
-<script>
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = './_images/quarkus-langchain4j-style.css';
-document.head.appendChild(link);
-</script>
-++++

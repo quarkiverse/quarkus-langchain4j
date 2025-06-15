@@ -1,6 +1,7 @@
 = OpenAI
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 OpenAI stands as a pioneering AI research organization, famous for its groundbreaking Large Language Models (LLMs) like GPT-3 and GPT-4, setting new benchmarks in natural language understanding and generation.
 

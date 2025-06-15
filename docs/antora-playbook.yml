@@ -12,6 +12,8 @@ ui:
     snapshot: true
 
 asciidoc:
+  extensions:
+    - asciidoctor-kroki
   attributes:
     kroki-fetch-diagram: true
     page-related-doc-categories: ai,java,ml

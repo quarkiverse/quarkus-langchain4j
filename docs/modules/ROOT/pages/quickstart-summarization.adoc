@@ -1,6 +1,7 @@
 = Implementing a Summarization Service
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 This guide shows you how to implement a simple text summarization service using Quarkus LangChain4j and run it as a standalone CLI application.
 The service reads a plain text file (such as an article or report), sends the content to a Large Language Model, and receives a structured Markdown summary in return.
@@ -29,7 +30,7 @@ quarkus.langchain4j.openai.api-key=sk-...
 [NOTE]
 .Other providers supported
 ====
-See xref:llms.adoc[Models Serving] for other available LLM integrations.
+See xref:models.adoc[Models Serving] for other available LLM integrations.
 ====
 
 [#ai-service]
@@ -135,12 +136,3 @@ This makes the output easy to parse, store, or render in downstream applications
 - Try adding support for xref:guide-passing-images.adoc[text+image inputs]
 [.lead]
 - Add xref:observability.adoc[observability] to monitor prompt usage and performance
-
-++++
-<script>
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = './_images/quarkus-langchain4j-style.css';
-document.head.appendChild(link);
-</script>
-++++

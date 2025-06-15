@@ -11,8 +11,15 @@
 }
 
 .body {
-    font-family: "Roboto", sans-serif;
+    font-family: "Open Sans", sans-serif;
+    font-size: .8rem;
+    line-height: 1.6;
 }
+
+strong {
+    font-weight: 700;
+}
+
 
 .landing .sidebar {
     display: none;

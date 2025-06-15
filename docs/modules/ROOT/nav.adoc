@@ -31,22 +31,23 @@
 .Reference
 
 * xref:ai-services.adoc[AI Services]
-* Models serving/providers
-** xref:llms.adoc[LLMs]
-** xref:openai.adoc[OpenAI]
-** xref:huggingface.adoc[HuggingFace]
-** xref:ollama.adoc[Ollama]
-** xref:jlama.adoc[Jlama]
-** xref:llama3.adoc[Llama3.java]
-** xref:podman.adoc[Podman AI Lab]
-** xref:anthropic.adoc[Anthropic (Claude)]
-** xref:mistral.adoc[Mistral AI]
-** xref:watsonx.adoc[IBM watsonx.ai]
-// Model Selection Logic / Fallback Strategy
-
+* xref:models.adoc[Models]
+** Chat Models
+*** xref:openai.adoc[OpenAI]
+*** xref:huggingface.adoc[HuggingFace]
+*** xref:ollama.adoc[Ollama]
+*** xref:jlama.adoc[Jlama]
+*** xref:llama3.adoc[Llama3.java]
+*** xref:podman.adoc[Podman AI Lab]
+*** xref:anthropic.adoc[Anthropic (Claude)]
+*** xref:mistral.adoc[Mistral AI]
+*** xref:watsonx.adoc[IBM watsonx.ai]
+** Image Models
+*** xref:openai.adoc[OpenAI]
+** Embedding Models
+*** xref:in-process-embedding.adoc[In-Process Embeddings]
+*** xref:openai.adoc[OpenAI]
 * xref:agent-and-tools.adoc[Agent and Tools] // Rename to function calling
-
-* xref:prompt-engineering.adoc[Prompt Engineering 101]
 * xref:prompt-generation.adoc[Prompt Generation]
 * xref:guardrails.adoc[Guardrails]
 * xref:response-augmenter.adoc[Augmenting responses]
@@ -62,7 +63,7 @@
 // 	Prompt Injection Protection
 // 	Multi-turn Conversations and Context Windows
 // Chat History Management
-
+// Model Selection Logic / Fallback Strategy
 
 * Retrieved Augmented Generation (RAG)
 ** xref:rag.adoc[Retrieval Augmented Generation (RAG)]
@@ -73,13 +74,12 @@
 ** xref:retrievers.adoc[Embeddings and Document Retrievers]
 ** xref:easy-rag.adoc[EasyRAG]
 ** xref:contextual-rag.adoc[Contextual RAG]
-** Document Stores
+** Document and Vector Stores
 *** xref:redis-store.adoc[Redis Store]
 *** xref:chroma-store.adoc[Chroma Store]
 *** xref:infinispan-store.adoc[Infinispan Store]
 *** xref:pinecone-store.adoc[Pinecone Store]
 *** xref:pgvector-store.adoc[PgVector (PostgreSQL) Store]
-*** xref:in-process-embedding.adoc[In-Process Embeddings]
 *** xref:csv.adoc[Loading CSV files]
 *** xref:neo4j.adoc[Neo4j Store]
 *** xref:qdrant-store.adoc[Qdrant Store]

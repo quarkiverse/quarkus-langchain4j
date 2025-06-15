@@ -1,6 +1,7 @@
 = Implementing a Function Calling AI Service
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 Function calling allows Large Language Models (LLMs) to invoke application-specific methods based on user prompts.
 Rather than returning free-form text, the model is instructed to identify when an application-defined *function* (called a *tool*) should be used, and to call it with structured arguments.

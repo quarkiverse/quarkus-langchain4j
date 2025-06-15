@@ -1,6 +1,7 @@
 = Jlama
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://github.com/tjake/Jlama[Jlama] provides a way to run large language models (LLMs) locally and in pure Java and embedded in your Quarkus application.
 You can run many https://huggingface.co/tjake[models] such as LLama3, Mistral, Granite and many others on your machine.

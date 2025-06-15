@@ -1,6 +1,7 @@
 = AI Gemini
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://gemini.google.com/[Gemini] is a simpler platform designed for more broader audience than Vertex AI Gemini, including non-technical users.
 It is a good first step for developers to get started on Gemini models.

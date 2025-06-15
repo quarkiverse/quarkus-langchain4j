@@ -1,6 +1,7 @@
 = Prompt Engineering Techniques
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 Prompt engineering is the art of crafting precise and effective inputs to guide language model behavior.
 With the right techniques, prompts can dramatically improve the quality, consistency, and structure of the model's responses.
@@ -54,7 +55,7 @@ To use Ollama:
 </dependency>
 ----
 
-For other providers, see xref:llms.adoc[Models Serving].
+For other providers, see xref:models.adoc[Models Serving].
 
 You can switch providers without changing application code; just update the dependency and configuration.
 
@@ -682,12 +683,3 @@ To evaluate prompts:
 * Adjust formatting or strategy incrementally
 
 Prompt engineering gives you powerful control over LLM behavior. By combining clear intent, formatting patterns, and structured guidance, you can shape model output to meet your application needs precisely.
-
-++++
-<script>
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = './_images/quarkus-langchain4j-style.css';
-document.head.appendChild(link);
-</script>
-++++

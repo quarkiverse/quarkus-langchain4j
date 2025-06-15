@@ -1,6 +1,7 @@
 = Extracting Text from an Image
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 This guide demonstrates how to use Quarkus LangChain4j to extract text from an image using a Large Language Model (LLM). You will create a simple CLI application that loads an image, converts it to a base64 payload, and sends it to a model for text extraction and translation.
 
@@ -118,12 +119,3 @@ The result will vary depending on the image content, clarity, and the model used
 - Try combining this example with xref:quickstart-summarization.adoc[summarization] to analyze long scanned documents
 - Use image URLs instead of base64 payloads for remote images
 - Return structured output using xref:guide-structured-output.adoc[structured return types]
-
-++++
-<script>
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = './_images/quarkus-langchain4j-style.css';
-document.head.appendChild(link);
-</script>
-++++

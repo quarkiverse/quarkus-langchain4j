@@ -1,6 +1,7 @@
 = Getting Started with Quarkus LangChain4j
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 This guide shows you how to get started with Quarkus LangChain4j by building a simple CLI application that generates poems using an AI model.
 
@@ -23,7 +24,7 @@ For example, to use OpenAI:
 [NOTE]
 .Want to use another model serving?
 ====
-See the xref:./llms.adoc[Models serving] page for other available providers.
+See the xref:./models.adoc[Models serving] page for other available providers.
 In this guide, we will use OpenAI as an example.
 ====
 
@@ -180,12 +181,3 @@ Then run it with:
 ./target/*-runner --lines=5 "Quarkus poetry"
 ----
 ====
-
-++++
-<script>
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = './_images/quarkus-langchain4j-style.css';
-document.head.appendChild(link);
-</script>
-++++
