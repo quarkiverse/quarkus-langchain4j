@@ -34,9 +34,9 @@
 * xref:models.adoc[Models]
 ** Chat Models
 *** xref:azure-openai-chat-model.adoc[Azure OpenAI]
+*** xref:huggingface-chat-model.adoc[HuggingFace]
 *** xref:openai-chat-model.adoc[OpenAI]
-*** xref:huggingface.adoc[HuggingFace]
-*** xref:ollama.adoc[Ollama]
+*** xref:ollama-chat-model.adoc[Ollama]
 *** xref:jlama.adoc[Jlama]
 *** xref:llama3.adoc[Llama3.java]
 *** xref:podman.adoc[Podman AI Lab]
@@ -48,7 +48,9 @@
 *** xref:openai-image-model.adoc[OpenAI]
 ** Embedding Models
 *** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
+*** xref:huggingface-embedding-model.adoc[HuggingFace]
 *** xref:in-process-embedding.adoc[In-Process Embeddings]
+*** xref:ollama-embedding-model.adoc[Ollama]
 *** xref:openai-embedding-model.adoc[OpenAI]
 * xref:agent-and-tools.adoc[Agent and Tools] // Rename to function calling
 * xref:prompt-generation.adoc[Prompt Generation]
