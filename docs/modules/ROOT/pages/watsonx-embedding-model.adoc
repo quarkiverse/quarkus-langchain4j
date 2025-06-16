@@ -1,0 +1,56 @@
+= IBM watsonx.ai Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+IBM watsonx.ai also provides access to embedding models that can be used for vector-based similarity search, semantic retrieval, and RAG scenarios.
+
+== Prerequisites
+
+Same as for the chat model. Ensure:
+
+- base-url
+- project-id
+- api-key
+
+are configured.
+
+See xref:watsonx-chat-model.adoc[IBM watsonx.ai Chat Models] for details on setting up the service and obtaining an API key.
+
+== Dependency
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-watsonx</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Default Configuration
+
+By default, embedding models are auto-detected if no other LLM extension is installed.
+
+You can inject the embedding model like so:
+
+[source,java]
+----
+@Inject
+EmbeddingModel model;
+----
+
+To customize the model, set the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.embedding-model.model-name=mistralai/mistral-embed
+----
+
+TIP: The same base-url, project-id, and api-key must be present to successfully authenticate with the watsonx service.
+
+== Configuration
+
+include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
+
+NOTE: IBM watsonx.ai also provides a scoring model interface (used for reranking tasks). This feature is documented separately in the RAG and reranking section.

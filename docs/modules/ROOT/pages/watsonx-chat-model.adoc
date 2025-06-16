@@ -1,34 +1,19 @@
-= IBM watsonx.ai
+= IBM watsonx.ai Chat and Generation Models
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-You can develop generative AI solutions with foundation models in IBM watsonx.ai. You can use prompts to generate, classify, summarize, or extract content from your input text. Choose from IBM models or open source models from Hugging Face. You can tune foundation models to customize your prompt output or optimize inferencing performance.
+https://www.ibm.com/products/watsonx-ai/foundation-models[IBM watsonx.ai] enables the development of generative AI applications using foundation models from IBM and Hugging Face.
 
-IMPORTANT: Supported only for IBM watsonx as a service on link:https://www.ibm.com/products/watsonx-ai/foundation-models[IBM Cloud].
+IMPORTANT: This extension supports IBM watsonx as a service on IBM Cloud only.
 
-== Using watsonx.ai
+== Prerequisites
 
-To employ watsonx.ai LLMs, integrate the following dependency into your project:
+To use watsonx.ai models, configure the following required values in your `application.properties` file:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-watsonx</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+=== Base URL
 
-If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured watsonx dependency.
-
-=== Configuration
-To use the watsonx.ai dependency, you must configure some required values in the `application.properties` file.
-
----
-
-==== Base URL
-The `base-url` property depends on the region of the provided service instance, use one of the following values:
+The `base-url` depends on the region of your service instance:
 
 * Dallas: https://us-south.ml.cloud.ibm.com
 * Frankfurt: https://eu-de.ml.cloud.ibm.com
@@ -42,61 +27,67 @@ The `base-url` property depends on the region of the provided service instance, 
 quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
 ----
 
----
+=== Project ID
 
-==== Project ID
-To prompt foundation models in watsonx.ai, you need to pass the identifier of a project.
+Obtain the _Project ID_ via:
 
-To get the ID of a project, complete the following steps:
+- Visit https://dataplatform.cloud.ibm.com/projects/?context=wx
+- Open your project and click the Manage tab.
+- Copy the Project ID from the Details section.
 
-1. Go to https://dataplatform.cloud.ibm.com/projects/?context=wx.
-2. Open the project, and then click the Manage tab.
-3. Copy the project ID from the Details section of the General page.
-
-[source,properties,subs=attributes+]
+[source,properties]
 ----
 quarkus.langchain4j.watsonx.project-id=23d...
 ----
 
-NOTE: If you like, you can use the Space ID property with `quarkus.langchain4j.watsonx.space-id`
+NOTE: You may use the optional _space-id_ as an alternative.
 
----
+=== API Key
 
-==== API Key
-To use foundation models in IBM Watsonx.ai, you need an IBM Cloud API key. 
+Create an API key by visiting https://cloud.ibm.com/iam/apikeys and clicking Create +.
 
-Follow these steps to generate one:
-
-1. Go to https://cloud.ibm.com/iam/apikeys.
-2. Click `Create +` button.
-3. Provide a name and description for your new API key, then click `Create`.
-4. Copy or securely save the API key.
-
-[source,properties,subs=attributes+]
+[source,properties]
 ----
-quarkus.langchain4j.watsonx.api-key=hG-...
+quarkus.langchain4j.watsonx.api-key=your-api-key
 ----
 
----
+TIP: You can also use the QUARKUS_LANGCHAIN4J_WATSONX_API_KEY environment variable.
 
-=== Modes of Interaction
+== Dependency
 
-The `watsonx.ai` module provides two modes for interacting with large language models: `chat` and `generation`. These modes allow you to tailor interactions based on the complexity of your use case and the level of control you require over the prompt structure.
+Add the following dependency to your project:
 
-You can select the interaction mode using the property `quarkus.langchain4j.watsonx.mode`.
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-watsonx</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
 
-* **`chat`**: This mode abstracts the complexity of tagging by automatically formatting prompts (*default value*). 
-* **`generation`**: In this mode, you must explicitly structure the prompts using the required model-specific tags. This provides full control over the format of the prompt but requires in-depth knowledge of the model being used. For best results, always refer to the documentation provided for each model to maximize the effectiveness of your prompts.
+If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically use this provider.
 
-Each mode uses its own property namespace for customization:
+== Modes of Interaction
 
-* For `chat` mode the properties are under `quarkus.langchain4j.watsonx.chat-model`.
-* For `generation` mode properties are under `quarkus.langchain4j.watsonx.generation-model`.
+watsonx.ai supports two modes:
 
----
+- chat (default): Automatically formats prompts.
+- generation: Requires manual prompt formatting.
 
-==== Chat Mode Example
-The following example demonstrates how to configure and use `chat` mode:
+Use the following property to select the mode:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.mode=chat
+----
+
+Each mode has its own configuration namespace:
+
+- chat: `quarkus.langchain4j.watsonx.chat-model`
+- generation: `quarkus.langchain4j.watsonx.generation-model`
+
+=== Chat Mode Example
 
 [source,properties,subs=attributes+]
 ----
@@ -104,7 +95,7 @@ quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
 quarkus.langchain4j.watsonx.chat-model.model-id=mistralai/mistral-large
-quarkus.langchain4j.watsonx.mode=chat // You can omit this property, as 'chat' is the default mode.
+quarkus.langchain4j.watsonx.mode=chat
 ----
 
 [source,java]
@@ -112,21 +103,18 @@ quarkus.langchain4j.watsonx.mode=chat // You can omit this property, as 'chat' i
 @RegisterAiService
 public interface AiService {
     @SystemMessage("You are a helpful assistant")
-    public String chat(@MemoryId String id, @UserMessage message);
+    String chat(@MemoryId String id, @UserMessage String message);
 }
 ----
 
----
-
-==== Generation Mode Example
-The following example demonstrates how to configure and use `generation` mode:
+=== Generation Mode Example
 
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
-quarkus.langchain4j.watsonx.generation-model.model-id=mistralai/mistral-large
+quarkus.langchain4j.watsonx.generation-model.model-name=mistralai/mistral-large
 quarkus.langchain4j.watsonx.mode=generation
 ----
 
@@ -134,13 +122,18 @@ quarkus.langchain4j.watsonx.mode=generation
 ----
 @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
 public interface AiService {
-    @SystemMessage("<s>[INST] You are a helpful assistant [/INST]</s>")
+    @SystemMessage("[INST] You are a helpful assistant [/INST]")
     @UserMessage("[INST] What is the capital of {capital}? [/INST]")
-    public String askCapital(String capital);
+    String askCapital(String capital);
 }
 ----
 
+
 NOTE: The `@SystemMessage` and `@UserMessage` annotations are joined by default with no separator (an empty string `""`). If you want to change this behavior, use the property `quarkus.langchain4j.watsonx.generation-model.prompt-joiner=<value>`.
+
+== Configuration
+
+include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
 
 == Text Extraction
 
@@ -182,11 +175,11 @@ quarkus.langchain4j.watsonx.text-extraction.results-reference.connection=<connec
 quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name=<bucket-name>
 ----
 
-- **`base-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].  
-- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.  
-- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded.  
-- **`results-reference.connection`**: The connection asset ID containing credentials to access the output storage.  
-- **`results-reference.bucket-name`**: The bucket where extracted text documents will be saved as new files.  
+- **`base-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded.
+- **`results-reference.connection`**: The connection asset ID containing credentials to access the output storage.
+- **`results-reference.bucket-name`**: The bucket where extracted text documents will be saved as new files.
 
 The `document reference` properties define the source storage for input and uloaded files, while the `results reference` properties specify where the extracted content is stored. Both can refer to the same bucket or different ones.
 
@@ -206,7 +199,7 @@ TextExtraction textExtraction;
 TextExtraction customTextExtraction;
 ----
 
-You can start the extraction process in two ways. 
+You can start the extraction process in two ways.
 
 First, if the document is already stored in IBM Cloud Object Storage, you can initiate the extraction by using the following method:
 
@@ -290,7 +283,3 @@ To perform Retrieval-Augmented Generation (RAG) on the extracted files in IBM Cl
     <version>...</version>
 </dependency>
 ----
-
-==== All configuration properties
-
-include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
