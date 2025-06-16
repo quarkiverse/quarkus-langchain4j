@@ -70,6 +70,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[ta
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-streaming-model-2,indent=0]
 ----
 
+[#_embedding_models]
 == Embedding Models
 
 Embedding models convert text or images into numerical vectors, useful for similarity search, recommendation, and RAG.
@@ -87,6 +88,7 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[ta
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=embedding-model-2,indent=0]
 ----
 
+[#_moderation_models]
 == Moderation Models
 
 Moderation models detect inappropriate or harmful content.
@@ -106,9 +108,10 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[ta
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-moderation-service-2,indent=0]
 ----
 
+[#_image_models_]
 == Image Models
 
-Image models generate or analyze images using textual prompts.
+Image models generate or edit images using textual prompts.
 
 [source,java]
 ----

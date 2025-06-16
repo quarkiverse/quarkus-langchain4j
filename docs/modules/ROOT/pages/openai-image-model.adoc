@@ -1,0 +1,81 @@
+= OpenAI Image Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+OpenAI provides various image models capable of generating or editing images based on textual prompts.
+These models are ideal for use cases involving content creation, design assistance, or visual storytelling.
+
+For an overview of how image models fit into AI-infused applications, see the xref:models.adoc#_image_models_[Image Models] section in the Models reference guide.
+
+== Prerequisites
+
+include::./openai-chat-model.adoc[tags=openai-prerequisites]
+
+=== OpenAI Quarkus Extension
+
+To use OpenAI image models in your Quarkus application, add the `quarkus-langchain4j-openai` extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically use the configured OpenAI image model.
+
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+You can configure image model parameters (such as resolution or style) through the shared OpenAI configuration properties. See the corresponding configuration section for available options.
+
+== Using Image Models
+
+Once the extension is configured, you can access image generation capabilities either via an AI service interface or directly through the ImageModel API.
+
+For example, to declare an AI service that generates or describes images:
+
+[source,java]
+----
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService
+public interface MyImageService {
+
+    @UserMessage("Generate an image of a futuristic city at sunset")
+    Image generateFuturisticCity();
+
+    @UserMessage("Describe the given image")
+    String describeImage(Image image);
+}
+----
+
+To use the model programmatically:
+
+[source,java]
+----
+import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.data.image.Image;
+import jakarta.inject.Inject;
+
+@Inject
+ImageModel imageModel;
+
+// ...
+Image image = imageModel.generate("A majestic dragon flying over a medieval castle").content();
+----
+
+== Additional Resources
+
+[.lead]
+* Learn more about xref:models.adoc#_image_models_[Image Models]
+* Explore xref:ai-services.adoc[AI Services] for orchestrating multiple models
+
+

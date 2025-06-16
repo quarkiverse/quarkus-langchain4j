@@ -33,7 +33,8 @@
 * xref:ai-services.adoc[AI Services]
 * xref:models.adoc[Models]
 ** Chat Models
-*** xref:openai.adoc[OpenAI]
+*** xref:azure-openai-chat-model.adoc[Azure OpenAI]
+*** xref:openai-chat-model.adoc[OpenAI]
 *** xref:huggingface.adoc[HuggingFace]
 *** xref:ollama.adoc[Ollama]
 *** xref:jlama.adoc[Jlama]
@@ -43,10 +44,12 @@
 *** xref:mistral.adoc[Mistral AI]
 *** xref:watsonx.adoc[IBM watsonx.ai]
 ** Image Models
-*** xref:openai.adoc[OpenAI]
+*** xref:azure-openai-image-model.adoc[Azure OpenAI]
+*** xref:openai-image-model.adoc[OpenAI]
 ** Embedding Models
+*** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
 *** xref:in-process-embedding.adoc[In-Process Embeddings]
-*** xref:openai.adoc[OpenAI]
+*** xref:openai-embedding-model.adoc[OpenAI]
 * xref:agent-and-tools.adoc[Agent and Tools] // Rename to function calling
 * xref:prompt-generation.adoc[Prompt Generation]
 * xref:guardrails.adoc[Guardrails]
