@@ -388,7 +388,7 @@ public class AiChatServiceTest extends WireMockAbstract {
     private TextChatRequest generateChatRequest(List<TextChatMessage> messages, List<TextChatParameterTool> tools) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         ChatModelConfig chatModelConfig = watsonConfig.chatModel();
-        String modelId = chatModelConfig.modelId();
+        String modelId = chatModelConfig.modelName();
         String spaceId = watsonConfig.spaceId().orElse(null);
         String projectId = watsonConfig.projectId().orElse(null);
 

@@ -87,7 +87,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(false, runtimeConfig.logRequests().orElse(false));
         assertEquals(false, runtimeConfig.logResponses().orElse(false));
         assertEquals(VERSION, runtimeConfig.version());
-        assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelId());
+        assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.chatModel().modelName());
         assertEquals(0, runtimeConfig.chatModel().frequencyPenalty());
         assertEquals(false, runtimeConfig.chatModel().logprobs());
         assertTrue(runtimeConfig.chatModel().topLogprobs().isEmpty());
@@ -107,7 +107,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.chatModel().modelId();
+        String modelId = config.chatModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -129,7 +129,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.chatModel().modelId();
+        String modelId = config.chatModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -144,7 +144,7 @@ public class ChatDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.chatModel().modelId();
+        String modelId = config.chatModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 

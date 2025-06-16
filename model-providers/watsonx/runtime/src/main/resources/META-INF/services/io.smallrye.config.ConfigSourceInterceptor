@@ -1,0 +1,2 @@
+io.quarkiverse.langchain4j.watsonx.runtime.config.ModelIdConfigFallbackInterceptor
+io.quarkiverse.langchain4j.watsonx.runtime.config.ModelIdConfigRelocateInterceptor
