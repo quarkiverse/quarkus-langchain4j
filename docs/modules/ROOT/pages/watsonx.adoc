@@ -1,6 +1,7 @@
 = IBM watsonx.ai
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 You can develop generative AI solutions with foundation models in IBM watsonx.ai. You can use prompts to generate, classify, summarize, or extract content from your input text. Choose from IBM models or open source models from Hugging Face. You can tune foundation models to customize your prompt output or optimize inferencing performance.
 

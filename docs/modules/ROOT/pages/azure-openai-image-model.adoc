@@ -1,0 +1,68 @@
+= Azure OpenAI Image Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Azure OpenAI provides image generation models that can create or modify images based on natural language prompts. These models enable use cases such as visual storytelling, creative content generation, and image editing workflows.
+
+For an overview of how image models fit into AI workflows, refer to the xref:models.adoc#_image_models_[Image Models] section of the Models documentation.
+
+== Prerequisites
+
+include::./azure-openai-chat-model.adoc[tags=azure-openai-prerequisites]
+
+=== Azure OpenAI Quarkus Extension
+
+To use Azure OpenAI image models in your Quarkus application, add the following extension:
+
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Azure OpenAI image model.
+
+[NOTE]
+====
+This extension also supports Azure OpenAI chat and embedding models. Moderation models are not currently supported by Azure OpenAI.
+====
+
+== Configuration
+
+include::includes/quarkus-langchain4j-azure-openai.adoc[leveloffset=+1,opts=optional]
+
+You can configure multiple Azure OpenAI image models using named configurations:
+
+[source,properties,subs=attributes+]
+----
+# Default image model configuration
+quarkus.langchain4j.azure-openai.image-model.model-name=dall-e-3
+
+#Named configuration
+quarkus.langchain4j.azure-openai.my-image.image-model.model-name=dall-e-2
+----
+
+Use the `modelName` attribute in the `@RegisterAiService` annotation to specify which model to use in your AI service. When using the programmatic API, you can also use the `@ModelName` annotation to select a specific model:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+import dev.langchain4j.model.image.ImageModel;
+import jakarta.inject.Inject;
+
+@Inject ImageModel defaultImageModel;
+@Inject @ModelName("my-image") ImageModel namedImageModel;
+----
+
+== Related Topics
+
+[.lead]
+* xref:models.adoc#_image_models_[Image Models Overview]
+* xref:ai-services.adoc[AI Services Reference]
+
+

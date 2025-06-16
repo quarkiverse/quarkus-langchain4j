@@ -1,0 +1,179 @@
+= Understanding Models in Quarkus LangChain4j
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+AI-infused applications rely on specialized models, each fulfilling a specific role in the application's workflow.
+Quarkus LangChain4j makes it simple to orchestrate these models through consistent and intuitive interfaces, allowing developers to focus on logic instead of plumbing.
+
+This page provides an overview of the model types supported by Quarkus LangChain4j and how to use them effectively.
+For supported model providers, refer to the left-hand menu.
+
+
+== Large Language Models (LLMs)
+
+Large Language Models (LLMs) like GPT-4, Claude, and LLaMA are trained on massive corpora to perform general-purpose language tasks:
+
+* Text generation
+* Summarization
+* Classification
+* Sentiment analysis
+* Translation
+
+Quarkus LangChain4j integrates LLMs via providers such as OpenAI, Hugging Face, Ollama, and JLama.
+
+Example using AI Services:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=ai-service,indent=0]
+----
+
+== Chat Models
+
+Chat models are conversational LLMs that preserve history, handle turns, and maintain state.
+They are the most common models used in AI services for chatbots and assistants.
+
+
+You can use the `@RegisterAiService` annotation to declare an AI service that uses an LLM, like this:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=ai-service,indent=0]
+----
+
+Example using the programmatic API:
+
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-model-2,indent=0]
+----
+
+== Streaming Models
+
+Streaming models return output token-by-token, ideal for chat UIs and real-time interactions.
+
+To stream with an AI Service, return a Multi<String>:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=streaming-ai-service,indent=0]
+----
+
+Or use the programmatic API:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-streaming-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-chat-streaming-model-2,indent=0]
+----
+
+[#_embedding_models]
+== Embedding Models
+
+Embedding models convert text or images into numerical vectors, useful for similarity search, recommendation, and RAG.
+
+Used in:
+
+* Retrieval-augmented generation (see xref:rag.adoc[Retrieval-Augmented Generation])
+* Search and classification
+
+You can also use them directly in your application to compute embeddings for text or images:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=embedding-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=embedding-model-2,indent=0]
+----
+
+[#_moderation_models]
+== Moderation Models
+
+Moderation models detect inappropriate or harmful content.
+
+Example using AI Service:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=moderation,indent=0]
+----
+
+Or programmatically:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-moderation-service-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-moderation-service-2,indent=0]
+----
+
+[#_image_models_]
+== Image Models
+
+Image models generate or edit images using textual prompts.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=image-service,indent=0]
+----
+
+Or programmatically:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-image-model-1,indent=0]
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=programmatic-image-model-2,indent=0]
+----
+
+Reasoning models support structured thinking, planning, and tool use.
+
+You’ll typically use reasoning models when using function calling or agents in your AI service.
+
+== Orchestration Through AI Services
+
+The power of Quarkus LangChain4j lies in AI Service orchestration.
+By abstracting complex model interactions behind declarative annotations, you can build rich experiences with minimal boilerplate.
+
+Here’s an illustrative flow showing how AI Service orchestrates model interactions in a typical scenario:
+
+[mermaid,ai_service_orchestration,svg]
+----
+flowchart LR
+    App[Quarkus Application]
+    AIS[AI Service]
+    CM[Chat Model]
+    MM[Moderation Model]
+    IM[Image Model]
+    EM[Embedding Model]
+    CMP[Chat Model Provider]
+    MMP[Moderation Model Provider]
+    IMP[Image Model Provider]
+    EMP[Embedding Model Provider]
+
+    App e1@-->|1 - Invoke method| AIS
+    AIS e2@-.->|2 - Invoke models| CM
+    AIS e3@-.->|2 - Invoke models| EM
+    AIS e4@-.->|2 - Invoke models| IM
+    AIS e5@-.->|2 - Invoke models| MM
+    CM e6@--> CMP
+    EM e7@--> EMP
+    IM e8@--> IMP
+    MM e9@--> MMP
+    AIS e0@-->|3 - Provide result| App
+
+    class A,B,C,D,E,F node;
+    class e0,e1,e2,e3,e4,e5,e6,e7,e8,e9 edge;
+    classDef node fill:#4A93E9,stroke:white,color:white
+    classDef edge stroke-width:3px,stroke:#DF1862
+----
+
+== Related Guides
+
+[.lead]
+* xref:ai-services.adoc[AI Services Reference]
+* xref:rag.adoc[Retrieval-Augmented Generation (RAG)]
+* xref:agent-and-tools.adoc[Function Calling and Tools]
+
+
+

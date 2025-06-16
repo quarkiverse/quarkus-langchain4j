@@ -1,6 +1,7 @@
 = In-Process Embedding Models
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 When ingesting document or implementing the RAG pattern, you need an _embedding model_.
 This is a model that takes a document and returns a vector representation of that document.

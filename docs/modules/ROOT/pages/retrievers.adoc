@@ -1,6 +1,7 @@
 = Document Retrieval for Language Models
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 Many applications involving Large Language Models (LLMs) often require user-specific data beyond their training set, such as CSV files, data from various sources, or reports. To achieve this, the process of Retrieval Augmented Generation (RAG) is commonly employed.
 

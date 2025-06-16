@@ -1,6 +1,7 @@
 = Easy RAG: the easiest way to get started with Retrieval Augmented Generation
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 The Quarkus LangChain4j project provides a separate extension named
 `quarkus-langchain4j-easy-rag` which provides an extremely easy way to get a

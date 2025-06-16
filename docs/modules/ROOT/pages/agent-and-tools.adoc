@@ -1,6 +1,7 @@
 = Agent and Tools
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 The core premise of agents involves employing a language model to discern a sequence of actions.
 Unlike _chains_, where actions are hardcoded, agents utilize a language model as a reasoning engine to determine the actions (_tools_) and their sequence.

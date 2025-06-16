@@ -1,6 +1,7 @@
 = Anthropic
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 https://www.anthropic.com/[Anthropic] is an AI safety and research company based in San Francisco which provides the https://www.anthropic.com/claude[Claude] LLM models.
 

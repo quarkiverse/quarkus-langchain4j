@@ -1,0 +1,42 @@
+= Mistral Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Mistral provides highly efficient embedding models that can be used to build RAG systems and perform vector similarity search.
+
+== Prerequisites
+
+See xref:mistral-chat-model.adoc[Mistral Chat Models] for prerequisites, including obtaining an API key from the Mistral platform.
+
+Add this dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Configuration
+
+To enable the embedding model, configure:
+
+[source,properties]
+----
+quarkus.langchain4j.mistralai.api-key=...
+quarkus.langchain4j.mistralai.embedding-model.model-name=mistral-embed
+----
+
+Available models: `mistral-embed`, `codestral-embed`, etc. (see https://docs.mistral.ai/platform/endpoints/#embeddings)
+
+Example injection:
+
+[source,java]
+----
+@Inject EmbeddingModel embeddingModel;
+----
+
+include::includes/quarkus-langchain4j-mistralai.adoc[leveloffset=+1,opts=optional]

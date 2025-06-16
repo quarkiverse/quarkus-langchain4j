@@ -1,6 +1,7 @@
 = Using AI services in WebSockets
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 Using a chatbot in a WebSockets environment is quite common, which is why the extension provides a few facilities to make such usages as easy as possible.
 

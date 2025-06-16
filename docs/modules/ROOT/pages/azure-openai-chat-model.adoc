@@ -1,0 +1,100 @@
+= Azure OpenAI Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Azure OpenAI is a managed service provided by Microsoft that gives developers access to OpenAI’s Large Language Models (LLMs) via the Azure cloud platform.
+
+It supports multiple chat models—specialized LLMs designed for conversational tasks such as virtual assistants, interactive applications, and customer-facing chatbots.
+
+Azure OpenAI uses the same REST-compatible API as OpenAI itself. This means the same Quarkus LangChain4j code can target either OpenAI or Azure OpenAI. The main difference lies in the configuration: Azure requires additional parameters related to its deployment structure and authentication model.
+
+== Prerequisites
+
+// tag::azure-openai-prerequisites[]
+=== Azure OpenAI Account and API Key
+
+To use Azure OpenAI models in your Quarkus application, configure your Azure credentials and endpoint.
+
+1.	Obtain your Azure OpenAI endpoint, resource name, deployment name, and either an api-key or an Azure AD access token from the https://portal.azure.com/[Azure Portal].
+2.	Configure your application.properties with the necessary details:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.azure-openai.resource-name=
+quarkus.langchain4j.azure-openai.deployment-name=
+
+# And one of the below depending on your scenario
+quarkus.langchain4j.azure-openai.api-key=
+quarkus.langchain4j.azure-openai.ad-token=
+----
+
+// end::azure-openai-prerequisites[]
+=== Azure OpenAI Quarkus Extension
+
+Add the `quarkus-langchain4j-azure-openai` extension to your project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically use the configured Azure OpenAI chat model.
+
+[IMPORTANT]
+====
+This extension also includes:
+
+* an EmbeddingModel implementation for computing embeddings (e.g., for search or RAG),
+* an ImageModel implementation for generating images from prompts.
+
+Unlike the OpenAI extension, Azure OpenAI does not currently support moderation models.
+====
+
+== Configuration
+
+include::includes/quarkus-langchain4j-azure-openai.adoc[leveloffset=+1,opts=optional]
+
+You can define multiple Azure OpenAI model configurations by using different prefixes:
+
+[source,properties,subs=attributes+]
+----
+# Default Azure OpenAI model configuration
+quarkus.langchain4j.azure-openai.chat-model.temperature=0
+# Custom Azure OpenAI model configuration
+quarkus.langchain4j.azure-openai.some-name.chat-model.temperature=0.8
+----
+
+To use a specific model in an AI service, set the `modelName` in the `@RegisterAiService` annotation:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService(modelName = "some-name")
+public interface MyService {
+    // ...
+}
+----
+
+If `modelName` is omitted, the default configuration is used.
+
+You can also select a model programmatically using the `@ModelName` qualifier:
+
+
+[source,java]
+----
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.ModelName;
+import jakarta.inject.Inject;
+
+// ...
+
+@Inject @ModelName("some-name") ChatModel chatModel;
+----
+
+

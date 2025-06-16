@@ -1,6 +1,7 @@
 = Loading CSV files
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
 When working with the Retrieval Augmented Generation (RAG) model, it is often necessary to load tabular data, such as a CSV file. This guide provides recommendations for loading CSV files in a way that is compatible with the RAG model.
 
