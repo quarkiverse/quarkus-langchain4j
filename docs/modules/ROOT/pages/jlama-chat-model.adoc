@@ -1,0 +1,73 @@
+= Jlama Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://github.com/tjake/Jlama[Jlama] provides a way to run Large Language Models (LLMs) *locally and in pure Java*, embedded within your Quarkus application.
+It supports a growing set of models available on Hugging Face: https://huggingface.co/tjake[https://huggingface.co/tjake].
+
+[#_prerequisites]
+== Prerequisites
+
+=== Java Version and Vector API
+
+Jlama requires *Java 21* or later because it leverages the https://openjdk.org/jeps/448[Java Vector API] for efficient inference.
+As this is a *preview feature*, you must enable it explicitly at runtime:
+
+[source,shell]
+----
+--enable-preview --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+----
+
+=== Dev Mode Support
+
+When using Dev Mode:
+
+- The extension will automatically pull the configured model.
+- JVM flags are set up automatically to enable the C2 compiler, which is required for proper inference performance.
+- Disk space is required for downloaded models. The model directory can be customized via:
+
+[source,properties]
+----
+quarkus.langchain4j.jlama.models-path=/path/to/model/storage
+----
+
+[WARNING]
+====
+Jlama models can be large (several GB) and may take time to download and initialize.
+====
+
+== Using Jlama
+
+To integrate Jlama into your Quarkus project, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-jlama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Jlama chat model.
+
+== Chat Model Configuration
+
+By default, Jlama uses the `TinyLlama-1.1B-Chat-v1.0-Jlama-Q4` model:
+
+[source,properties]
+----
+quarkus.langchain4j.jlama.chat-model.model-name=tjake/TinyLlama-1.1B-Chat-v1.0-Jlama-Q4
+----
+
+To switch to another model, such as Granite, update the model name:
+
+[source,properties]
+----
+quarkus.langchain4j.jlama.chat-model.model-name=tjake/granite-3.0-2b-instruct-JQ4
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-jlama.adoc[leveloffset=+1,opts=optional]

@@ -33,7 +33,7 @@ You can override this using:
 
 [source,properties]
 ----
-quarkus.langchain4j.ollama.embedding-model.model-id=bge-m3
+quarkus.langchain4j.ollama.embedding-model.model-name=bge-m3
 ----
 
 You may also wish to configure logging during development:

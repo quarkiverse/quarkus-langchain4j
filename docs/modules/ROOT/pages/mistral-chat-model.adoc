@@ -1,0 +1,59 @@
+= Mistral Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://mistral.ai/[Mistral] is a French AI company offering high-performance open-weight LLMs. This extension allows seamless integration of Mistral's chat models into Quarkus applications.
+
+== Prerequisites
+
+To use Mistral models, you need an API key from the https://docs.mistral.ai/platform/overview/[Mistral platform].
+
+Add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+[NOTE]
+====
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the Mistral chat model.
+====
+
+== Configuration
+
+Set the API key in `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.mistralai.api-key=...
+----
+
+You can change the default chat model by setting:
+
+[source,properties]
+----
+quarkus.langchain4j.mistralai.chat-model.model-name=ministral-3b-2410
+----
+
+Refer to https://docs.mistral.ai/platform/endpoints/#chat-completions[official endpoints] for available models.
+
+You can inject or register the chat model as:
+
+[source,java]
+----
+@Inject ChatModel model;
+
+// or using AI Services
+@RegisterAiService
+public interface Assistant {
+    String chat(String input);
+}
+----
+
+include::includes/quarkus-langchain4j-mistralai.adoc[leveloffset=+1,opts=optional]

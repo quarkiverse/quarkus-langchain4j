@@ -37,11 +37,11 @@
 *** xref:huggingface-chat-model.adoc[HuggingFace]
 *** xref:openai-chat-model.adoc[OpenAI]
 *** xref:ollama-chat-model.adoc[Ollama]
-*** xref:jlama.adoc[Jlama]
-*** xref:llama3.adoc[Llama3.java]
+*** xref:jlama-chat-model.adoc[Jlama]
+*** xref:llama3-chat-model.adoc[Llama3.java]
+*** xref:mistral-chat-model.adoc[Mistral AI]
 *** xref:podman.adoc[Podman AI Lab]
 *** xref:anthropic.adoc[Anthropic (Claude)]
-*** xref:mistral.adoc[Mistral AI]
 *** xref:watsonx.adoc[IBM watsonx.ai]
 ** Image Models
 *** xref:azure-openai-image-model.adoc[Azure OpenAI]
@@ -50,8 +50,13 @@
 *** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
 *** xref:huggingface-embedding-model.adoc[HuggingFace]
 *** xref:in-process-embedding.adoc[In-Process Embeddings]
+*** xref:jlama-embedding-model.adoc[Jlama]
 *** xref:ollama-embedding-model.adoc[Ollama]
 *** xref:openai-embedding-model.adoc[OpenAI]
+*** xref:mistral-embedding-model.adoc[Mistral AI]
+** Moderation Models
+*** xref:mistral-moderation-model.adoc[Mistral AI]
+*** xref:openai-moderation-model.adoc[OpenAI]
 * xref:agent-and-tools.adoc[Agent and Tools] // Rename to function calling
 * xref:prompt-generation.adoc[Prompt Generation]
 * xref:guardrails.adoc[Guardrails]

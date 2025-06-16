@@ -1,0 +1,82 @@
+= Llama3.java Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://github.com/mukel/llama3.java[Llama3.java] enables running Large Language Models (LLMs) *locally and purely in Java*, embedded in your Quarkus application.
+It supports a growing collection of models available on Hugging Face under https://huggingface.co/mukel[https://huggingface.co/mukel], such as *Llama3* and *Mistral* variants.
+
+[#_prerequisites]
+== Prerequisites
+
+=== Java Version and Vector API
+
+Llama3.java requires *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API] for high-performance inference.
+
+Since the Vector API is still a *preview feature* (as of Java 21–23), you must enable it explicitly:
+
+[source,shell]
+----
+--enable-preview --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+----
+
+=== Dev Mode Support
+
+When using Dev Mode, the extension:
+
+- Automatically pulls and configures the selected model.
+- Ensures the *C2 JIT compiler* is enabled for optimal runtime performance.
+- Allows you to configure the model directory via:
+
+[source,properties]
+----
+quarkus.langchain4j.llama3.models-path=/your/custom/location
+----
+
+[WARNING]
+====
+Model files are large (e.g., Llama3 models can exceed several GB) and may take time to download.
+====
+
+=== Native Mode Support
+
+Llama3.java is compatible with GraalVM native mode, *but only with Early Access versions of Oracle GraalVM 24*.
+
+For best native performance, add the following flags:
+
+[source,properties]
+----
+quarkus.native.additional-build-args=-O3,-march=native
+----
+
+== Using Llama3.java
+
+To integrate the Llama3.java chat model into your Quarkus application, add:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-llama3-java</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Llama3.java chat model.
+
+== Chat Model Configuration
+
+By default, the extension uses:
+
+*https://huggingface.co/mukel/Llama-3.2-1B-Instruct-GGUF[`mukel/Llama-3.2-1B-Instruct-GGUF`]*
+
+To configure a different model, update the following property:
+
+[source,properties]
+----
+quarkus.langchain4j.llama3.chat-model.model-name=mukel/Llama-3.2-3B-Instruct-GGUF
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-llama3-java.adoc[leveloffset=+1,opts=optional]

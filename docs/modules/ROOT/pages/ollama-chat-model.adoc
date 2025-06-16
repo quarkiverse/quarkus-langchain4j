@@ -68,7 +68,7 @@ You can change the chat model using the following property:
 
 [source,properties]
 ----
-quarkus.langchain4j.ollama.chat-model.model-id=mistral
+quarkus.langchain4j.ollama.chat-model.model-name=mistral
 ----
 
 == Dynamic Authorization
