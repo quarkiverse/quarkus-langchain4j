@@ -20,7 +20,7 @@ public interface EmbeddingModelConfig {
      * To use a model, locate the <code>API model ID</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("ibm/granite-embedding-278m-multilingual")
-    String modelId();
+    String modelName();
 
     /**
      * Specifies the maximum number of input tokens accepted. This can be used to prevent requests from failing due to input

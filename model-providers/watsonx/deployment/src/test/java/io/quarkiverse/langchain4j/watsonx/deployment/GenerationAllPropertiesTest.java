@@ -173,7 +173,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals(0, runtimeConfig.generationModel().truncateInputTokens().get());
         assertEquals(false, runtimeConfig.generationModel().includeStopSequence().get());
         assertEquals("@", runtimeConfig.generationModel().promptJoiner());
-        assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelId());
+        assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelName());
         assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
         assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelId());
         assertEquals(10, runtimeConfig.scoringModel().truncateInputTokens().orElse(null));
@@ -448,7 +448,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_embedding_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.embeddingModel().modelId();
+        String modelId = config.embeddingModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
         EmbeddingRequest request = new EmbeddingRequest(modelId, spaceId, projectId,

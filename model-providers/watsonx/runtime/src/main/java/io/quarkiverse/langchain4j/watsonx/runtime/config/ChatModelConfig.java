@@ -21,7 +21,7 @@ public interface ChatModelConfig {
      * To use a model, locate the <code>API model ID</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("meta-llama/llama-4-maverick-17b-128e-instruct-fp8")
-    String modelId();
+    String modelName();
 
     /**
      * Specifies how the model should choose which tool to call during a request.

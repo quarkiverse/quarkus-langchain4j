@@ -225,7 +225,7 @@ public class WatsonxRecorder {
                     .version(watsonConfig.version())
                     .spaceId(spaceId)
                     .projectId(projectId)
-                    .modelId(embeddingModelConfig.modelId())
+                    .modelId(embeddingModelConfig.modelName())
                     .truncateInputTokens(embeddingModelConfig.truncateInputTokens().orElse(null));
             var iamBaseUrl = watsonConfig.iam().baseUrl();
             var granType = watsonConfig.iam().grantType();
@@ -426,7 +426,7 @@ public class WatsonxRecorder {
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
-                .modelId(watsonConfig.chatModel().modelId())
+                .modelId(watsonConfig.chatModel().modelName())
                 .toolChoice(toolChoice)
                 .toolChoiceName(toolChoiceName)
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())
@@ -491,7 +491,7 @@ public class WatsonxRecorder {
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
-                .modelId(watsonConfig.chatModel().modelId())
+                .modelId(watsonConfig.chatModel().modelName())
                 .toolChoice(toolChoice)
                 .toolChoiceName(toolChoiceName)
                 .frequencyPenalty(chatModelConfig.frequencyPenalty())

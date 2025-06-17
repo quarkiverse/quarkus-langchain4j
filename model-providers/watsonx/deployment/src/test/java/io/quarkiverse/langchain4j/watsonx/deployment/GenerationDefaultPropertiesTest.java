@@ -118,7 +118,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         assertTrue(runtimeConfig.generationModel().truncateInputTokens().isEmpty());
         assertTrue(runtimeConfig.generationModel().includeStopSequence().isEmpty());
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
-        assertEquals(DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelId());
+        assertEquals(DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelName());
         assertTrue(runtimeConfig.embeddingModel().truncateInputTokens().isEmpty());
         assertEquals(DEFAULT_SCORING_MODEL, runtimeConfig.scoringModel().modelId());
         assertTrue(runtimeConfig.scoringModel().truncateInputTokens().isEmpty());
@@ -189,7 +189,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_embedding_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.embeddingModel().modelId();
+        String modelId = config.embeddingModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
