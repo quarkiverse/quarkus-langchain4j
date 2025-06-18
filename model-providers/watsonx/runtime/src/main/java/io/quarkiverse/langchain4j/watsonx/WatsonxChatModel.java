@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx;
 
 import static io.quarkiverse.langchain4j.watsonx.WatsonxUtils.retryOn;
+import static java.util.Objects.nonNull;
 
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,11 @@ public class WatsonxChatModel extends Watsonx implements ChatModel {
     public WatsonxChatModel(Builder builder) {
         super(builder);
 
+        var responseFormat = nonNull(builder.responseFormatText) &&
+                (builder.responseFormatText.equals("json_object") || builder.responseFormatText.equals("json_schema"))
+                        ? ResponseFormat.JSON
+                        : null;
+
         //
         // The space_id and project_id fields cannot be overwritten by the ChatRequest object.
         //
@@ -51,12 +57,12 @@ public class WatsonxChatModel extends Watsonx implements ChatModel {
                 .maxOutputTokens(builder.maxTokens)
                 .n(builder.n)
                 .presencePenalty(builder.presencePenalty)
-                .responseFormat(builder.responseFormat)
                 .seed(builder.seed)
                 .stopSequences(builder.stop)
                 .temperature(builder.temperature)
                 .topP(builder.topP)
                 .timeLimit(builder.timeout)
+                .responseFormat(responseFormat)
                 .build();
     }
 
@@ -125,6 +131,9 @@ public class WatsonxChatModel extends Watsonx implements ChatModel {
 
     @Override
     public Set<Capability> supportedCapabilities() {
+        if (nonNull(responseFormatText) && responseFormatText.equals("json_schema"))
+            return Set.of(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+
         return Set.of();
     }
 

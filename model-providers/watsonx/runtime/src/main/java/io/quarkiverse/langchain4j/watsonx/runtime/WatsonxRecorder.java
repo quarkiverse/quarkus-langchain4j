@@ -23,7 +23,6 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -397,10 +396,10 @@ public class WatsonxRecorder {
             throw new RuntimeException(e);
         }
 
-        ResponseFormat responseFormat = null;
+        String responseFormat = null;
         if (chatModelConfig.responseFormat().isPresent()) {
             responseFormat = switch (chatModelConfig.responseFormat().get().toLowerCase()) {
-                case "json_object" -> ResponseFormat.JSON;
+                case "json_object", "json_schema", "text" -> chatModelConfig.responseFormat().get();
                 default -> throw new IllegalArgumentException(
                         "The value '%s' for the response-format property is not available. Use one of the values: [%s]"
                                 .formatted(chatModelConfig.responseFormat().get(), "json_object"));
@@ -439,7 +438,7 @@ public class WatsonxRecorder {
                 .stop(chatModelConfig.stop().orElse(null))
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
-                .responseFormat(responseFormat);
+                .responseFormatText(responseFormat);
     }
 
     private WatsonxStreamingChatModel.Builder streamingChatBuilder(LangChain4jWatsonxConfig runtimeConfig,
@@ -462,10 +461,10 @@ public class WatsonxRecorder {
             throw new RuntimeException(e);
         }
 
-        ResponseFormat responseFormat = null;
+        String responseFormat = null;
         if (chatModelConfig.responseFormat().isPresent()) {
             responseFormat = switch (chatModelConfig.responseFormat().get().toLowerCase()) {
-                case "json_object" -> ResponseFormat.JSON;
+                case "json_object", "json_schema", "text" -> chatModelConfig.responseFormat().get();
                 default -> throw new IllegalArgumentException(
                         "The value '%s' for the response-format property is not available. Use one of the values: [%s]"
                                 .formatted(chatModelConfig.responseFormat().get(), "json_object"));
@@ -504,7 +503,7 @@ public class WatsonxRecorder {
                 .stop(chatModelConfig.stop().orElse(null))
                 .temperature(chatModelConfig.temperature())
                 .topP(chatModelConfig.topP())
-                .responseFormat(responseFormat);
+                .responseFormatText(responseFormat);
     }
 
     private WatsonxGenerationModel.Builder generationBuilder(LangChain4jWatsonxConfig runtimeConfig,

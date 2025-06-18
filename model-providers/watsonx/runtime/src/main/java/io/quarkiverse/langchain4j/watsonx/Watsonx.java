@@ -17,7 +17,7 @@ import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 
 public abstract class Watsonx {
 
-    protected final String modelId, projectId, spaceId, version;
+    protected final String modelId, projectId, spaceId, version, responseFormatText;
     protected final WatsonxRestApi client;
     protected final List<ChatModelListener> listeners;
 
@@ -40,6 +40,7 @@ public abstract class Watsonx {
         this.spaceId = builder.spaceId;
         this.projectId = builder.projectId;
         this.version = builder.version;
+        this.responseFormatText = builder.responseFormatText;
         this.listeners = builder.listeners;
     }
 
@@ -75,6 +76,7 @@ public abstract class Watsonx {
         protected boolean logResponses;
         protected boolean logRequests;
         protected TokenGenerator tokenGenerator;
+        protected String responseFormatText;
         private List<ChatModelListener> listeners = Collections.emptyList();
 
         public T modelId(String modelId) {
@@ -114,6 +116,11 @@ public abstract class Watsonx {
 
         public T tokenGenerator(TokenGenerator tokenGenerator) {
             this.tokenGenerator = tokenGenerator;
+            return (T) this;
+        }
+
+        public T responseFormatText(String responseFormatText) {
+            this.responseFormatText = responseFormatText;
             return (T) this;
         }
 

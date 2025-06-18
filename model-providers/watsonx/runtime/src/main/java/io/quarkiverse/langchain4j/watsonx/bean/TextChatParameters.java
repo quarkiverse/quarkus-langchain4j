@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.watsonx.bean;
 
-import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.joining;
 
 import java.util.List;
@@ -10,13 +10,17 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import io.quarkiverse.langchain4j.watsonx.WatsonxChatRequestParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters.TextChatResponseFormat.JsonSchemaObject;
 
 public class TextChatParameters {
 
-    public record TextChatResponseFormat(String type) {
+    public record TextChatResponseFormat(String type, JsonSchemaObject jsonSchema) {
+        public record JsonSchemaObject(String name, Object schema, boolean strict) {
+        }
     };
 
     public record TextChatToolChoiceTool(String type, Function function) {
@@ -58,16 +62,13 @@ public class TextChatParameters {
         this.timeLimit = builder.timeLimit;
         this.seed = builder.seed;
         this.stop = builder.stop;
+        this.responseFormat = builder.responseFormat;
 
         if (builder.toolChoice != null && !builder.toolChoice.isBlank())
             this.toolChoice = TextChatToolChoiceTool.of(builder.toolChoice);
         else
             this.toolChoice = null;
 
-        if (builder.responseFormat != null && builder.responseFormat.equalsIgnoreCase("json_object"))
-            this.responseFormat = new TextChatResponseFormat(builder.responseFormat);
-        else
-            this.responseFormat = null;
     }
 
     public static TextChatParameters convert(ChatRequestParameters parameters) {
@@ -75,12 +76,28 @@ public class TextChatParameters {
                 .frequencyPenalty(parameters.frequencyPenalty())
                 .maxTokens(parameters.maxOutputTokens())
                 .presencePenalty(parameters.presencePenalty())
-                .responseFormat(
-                        parameters.responseFormat() != null && parameters.responseFormat().type().equals(JSON) ? "json_object"
-                                : null)
                 .stop(parameters.stopSequences())
                 .temperature(parameters.temperature())
                 .topP(parameters.topP());
+
+        if (nonNull(parameters.responseFormat())) {
+            var responseFormat = parameters.responseFormat();
+            builder.responseFormat(
+                    switch (responseFormat.type()) {
+                        case JSON -> {
+
+                            if (nonNull(responseFormat.jsonSchema())) {
+                                var jsonSchema = JsonSchemaElementUtils.toMap(responseFormat.jsonSchema().rootElement());
+                                var jsonSchemaObject = new JsonSchemaObject(responseFormat.jsonSchema().name(), jsonSchema,
+                                        true);
+                                yield new TextChatResponseFormat("json_schema", jsonSchemaObject);
+                            }
+
+                            yield new TextChatResponseFormat("json_object", null);
+                        }
+                        case TEXT -> null;
+                    });
+        }
 
         if (parameters instanceof WatsonxChatRequestParameters watsonxParameters) {
             builder.logitBias(watsonxParameters.logitBias());
@@ -219,7 +236,7 @@ public class TextChatParameters {
         private Integer maxTokens;
         private Integer n;
         private Double presencePenalty;
-        private String responseFormat;
+        private TextChatResponseFormat responseFormat;
         private Integer seed;
         private List<String> stop;
         private Double temperature;
@@ -286,7 +303,7 @@ public class TextChatParameters {
             return this;
         }
 
-        public Builder responseFormat(String responseFormat) {
+        public Builder responseFormat(TextChatResponseFormat responseFormat) {
             this.responseFormat = responseFormat;
             return this;
         }
