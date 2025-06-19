@@ -141,7 +141,7 @@ public interface ChatModelConfig {
     /**
      * Specifies the desired format for the model's output.
      * <p>
-     * <strong>Allowable values:</strong> <code>[json_object]</code>
+     * <strong>Allowable values:</strong> <code>[text, json_object, json_schema]</code>
      */
     Optional<String> responseFormat();
 

@@ -55,6 +55,7 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUs
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatParameterTool;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatToolCall;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
+import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters.TextChatResponseFormat;
 import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkiverse.langchain4j.watsonx.bean.TokenizationRequest;
 import io.quarkus.test.QuarkusUnitTest;
@@ -118,7 +119,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
             .temperature(1.5)
             .timeLimit(60000L)
             .topP(0.5)
-            .responseFormat("json_object")
+            .responseFormat(new TextChatResponseFormat("json_object", null))
             .toolChoice("myfunction")
             .build();
 
@@ -184,6 +185,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                         .parameters(
                                 ChatRequestParameters.builder()
                                         .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                        .responseFormat(ResponseFormat.JSON)
                                         .build())
                         .build());
 
@@ -346,7 +348,9 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 ChatRequest.builder()
                         .messages(chatMessages)
                         .parameters(ChatRequestParameters.builder()
-                                .toolSpecifications(ToolSpecification.builder().name("myfunction").build()).build())
+                                .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                .responseFormat(ResponseFormat.JSON)
+                                .build())
                         .build(),
                 streamingChatResponseHandler(streamingResponse));
 
@@ -512,6 +516,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .parameters(
                         ChatRequestParameters.builder()
                                 .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                .responseFormat(ResponseFormat.JSON)
                                 .build());
 
         assertEquals("AI Response", chatModel.chat(request.build()).aiMessage().text());
@@ -567,6 +572,7 @@ public class ChatAllPropertiesTest extends WireMockAbstract {
                 .parameters(
                         ChatRequestParameters.builder()
                                 .toolSpecifications(ToolSpecification.builder().name("myfunction").build())
+                                .responseFormat(ResponseFormat.JSON)
                                 .build())
                 .build();
 

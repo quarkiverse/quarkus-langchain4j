@@ -47,6 +47,11 @@ public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatM
     public WatsonxStreamingChatModel(Builder builder) {
         super(builder);
 
+        var responseFormat = nonNull(builder.responseFormatText) &&
+                (builder.responseFormatText.equals("json_object") || builder.responseFormatText.equals("json_schema"))
+                        ? ResponseFormat.JSON
+                        : null;
+
         //
         // The space_id and project_id fields cannot be overwritten by the ChatRequest
         // object.
@@ -69,6 +74,7 @@ public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatM
                 .temperature(builder.temperature)
                 .topP(builder.topP)
                 .timeLimit(builder.timeout)
+                .responseFormat(responseFormat)
                 .build();
     }
 
@@ -238,6 +244,9 @@ public class WatsonxStreamingChatModel extends Watsonx implements StreamingChatM
 
     @Override
     public Set<Capability> supportedCapabilities() {
+        if (nonNull(responseFormatText) && responseFormatText.equals("json_schema"))
+            return Set.of(Capability.RESPONSE_FORMAT_JSON_SCHEMA);
+
         return Set.of();
     }
 
