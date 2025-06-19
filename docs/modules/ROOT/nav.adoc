@@ -31,6 +31,7 @@
 .Reference
 
 * xref:ai-services.adoc[AI Services]
+** xref:prompt-and-template.adoc[Prompt and Template]
 * xref:models.adoc[Models]
 ** Chat Models
 *** xref:anthropic-chat-model.adoc[Anthropic (Claude)]
@@ -61,7 +62,6 @@
 *** xref:mistral-moderation-model.adoc[Mistral AI]
 *** xref:openai-moderation-model.adoc[OpenAI]
 * xref:agent-and-tools.adoc[Agent and Tools] // Rename to function calling
-* xref:prompt-generation.adoc[Prompt Generation]
 * xref:guardrails.adoc[Guardrails]
 * xref:response-augmenter.adoc[Augmenting responses]
 * xref:testing.adoc[Testing & Evaluation]
