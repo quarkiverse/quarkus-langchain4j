@@ -239,6 +239,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
                   } ],
                   "system" : [ ],
                   "max_tokens" : 1024,
+                  "stop_sequences" : [ ],
                   "stream" : true,
                   "top_k" : 40
                 }""";

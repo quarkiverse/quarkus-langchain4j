@@ -21,7 +21,6 @@ import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
@@ -32,8 +31,8 @@ import dev.langchain4j.model.anthropic.internal.api.AnthropicToolUseContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClient;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClientBuilderFactory;
-import dev.langchain4j.model.anthropic.internal.client.AnthropicHttpException;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
@@ -75,7 +74,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     @Override
-    public void createMessage(AnthropicCreateMessageRequest request, StreamingResponseHandler<AiMessage> handler) {
+    public void createMessage(AnthropicCreateMessageRequest request, StreamingChatResponseHandler handler) {
         restApi.streamMessage(request, createMetadata(request))
                 .subscribe()
                 .withSubscriber(new AnthropicStreamingSubscriber(handler));
@@ -108,7 +107,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     private static class AnthropicStreamingSubscriber implements MultiSubscriber<AnthropicStreamingData> {
-        private final StreamingResponseHandler<AiMessage> handler;
+        private final StreamingChatResponseHandler handler;
         private Subscription subscription;
         private volatile AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         private volatile String stopReason;
@@ -116,7 +115,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final AtomicInteger inputTokenCount = new AtomicInteger();
         private final AtomicInteger outputTokenCount = new AtomicInteger();
 
-        private AnthropicStreamingSubscriber(StreamingResponseHandler<AiMessage> handler) {
+        private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler) {
             this.handler = handler;
         }
 
@@ -175,7 +174,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
-                    handler.onNext(text);
+                    handler.onPartialResponse(text);
                 }
             }
         }
@@ -186,7 +185,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
-                    handler.onNext(text);
+                    handler.onPartialResponse(text);
                 }
             }
         }
@@ -211,16 +210,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleMessageStop() {
-            var response = Response.from(
-                    AiMessage.from(String.join("\n", contents)),
-                    new TokenUsage(inputTokenCount.get(), outputTokenCount.get()),
-                    toFinishReason(stopReason));
+            ChatResponse response = ChatResponse.builder()
+                    .aiMessage(AiMessage.from(String.join("\n", contents)))
+                    .tokenUsage(new TokenUsage(inputTokenCount.get(), outputTokenCount.get()))
+                    .finishReason(toFinishReason(stopReason))
+                    .build();
 
-            handler.onComplete(response);
+            handler.onCompleteResponse(response);
         }
 
         private void handleError(AnthropicStreamingData data) {
-            onFailure(new AnthropicHttpException(null, "Got error processing data (%s)".formatted(data)));
+            onFailure(new RuntimeException("Got error processing data (%s)".formatted(data)));
         }
 
         @Override
