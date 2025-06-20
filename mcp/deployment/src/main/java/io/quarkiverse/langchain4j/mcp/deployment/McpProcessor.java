@@ -16,6 +16,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,6 +25,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.opentelemetry.api.trace.Tracer;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
@@ -53,6 +57,7 @@ public class McpProcessor {
     private static final DotName MCP_CLIENT = DotName.createSimple(McpClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
+    private static final DotName TRACER = DotName.createSimple(Tracer.class);
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @BuildStep
@@ -157,6 +162,8 @@ public class McpProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(TRACER) }, null))
                         .createWith(recorder.toolProviderFunction(clients.keySet()));
                 for (AnnotationInstance qualifier : qualifiers) {
                     configurator.addInjectionPoint(ClassType.create(MCP_CLIENT), qualifier);
