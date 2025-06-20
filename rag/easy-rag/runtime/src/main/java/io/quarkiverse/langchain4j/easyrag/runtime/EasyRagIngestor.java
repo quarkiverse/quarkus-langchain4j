@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
+import dev.langchain4j.data.document.loader.ClassPathDocumentLoader;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
@@ -21,7 +22,6 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
 public class EasyRagIngestor {
-
     private static final Logger LOGGER = Logger.getLogger(EasyRagIngestor.class);
 
     private EmbeddingModel embeddingModel;
@@ -64,19 +64,34 @@ public class EasyRagIngestor {
         } else {
             ingestDocumentsFromFilesystem(config, embeddingStore, embeddingModel);
         }
+    }
 
+    private List<Document> getDocuments(EasyRagConfig config) {
+        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(config.pathMatcher());
+        boolean recursive = config.recursive();
+
+        return switch (config.pathType()) {
+            case CLASSPATH -> recursive
+                    ? ClassPathDocumentLoader.loadDocumentsRecursively(config.path(), pathMatcher)
+                    : ClassPathDocumentLoader.loadDocuments(config.path(), pathMatcher);
+
+            case FILESYSTEM -> recursive
+                    ? FileSystemDocumentLoader.loadDocumentsRecursively(config.path(), pathMatcher)
+                    : FileSystemDocumentLoader.loadDocuments(config.path(), pathMatcher);
+        };
     }
 
     private void ingestDocumentsFromFilesystem(EasyRagConfig config, EmbeddingStore<TextSegment> embeddingStore,
             EmbeddingModel embeddingModel) {
-        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(config.pathMatcher());
-        LOGGER.info("Ingesting documents from path: " + config.path() +
-                ", path matcher = " + config.pathMatcher() + ", recursive = " + config.recursive());
 
-        List<Document> documents = config.recursive()
-                ? FileSystemDocumentLoader.loadDocumentsRecursively(config.path(), pathMatcher)
-                : FileSystemDocumentLoader.loadDocuments(config.path(), pathMatcher);
+        var msg = "Ingesting documents from %s: %s, path matcher = %s, recursive = %s".formatted(
+                config.pathType().name().toLowerCase(),
+                config.path(),
+                config.pathMatcher(),
+                config.recursive());
+        LOGGER.info(msg);
 
+        List<Document> documents = getDocuments(config);
         DocumentSplitter documentSplitter = DocumentSplitters.recursive(config.maxSegmentSize(),
                 config.maxOverlapSize(), new HuggingFaceTokenCountEstimator());
 

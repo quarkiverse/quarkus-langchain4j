@@ -17,12 +17,22 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagConfig.PathType;
 
 abstract class EasyRagReuseEmbeddingsDontAlreadyExistBaseTest {
     protected static void verifyLogRecords(List<LogRecord> logRecords) {
+        verifyLogRecords(logRecords, PathType.FILESYSTEM);
+    }
+
+    protected static void verifyLogRecords(List<LogRecord> logRecords, PathType pathType) {
+        var ingestMessage = "Ingesting documents from %sragdocuments, path matcher = glob:**, recursive = true"
+                .formatted(switch (pathType) {
+                    case CLASSPATH -> "classpath: ";
+                    case FILESYSTEM -> "filesystem: src/test/resources/";
+                });
+
         assertThat(logRecords.stream().map(LogRecord::getMessage))
-                .contains(
-                        "Ingesting documents from path: src/test/resources/ragdocuments, path matcher = glob:**, recursive = true")
+                .contains(ingestMessage)
                 .contains("Ingested 2 files as 2 documents")
                 .contains("Writing embeddings to %s")
                 .doesNotContain("Reading embeddings from %s");
