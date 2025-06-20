@@ -12,6 +12,17 @@ import io.smallrye.config.WithDefault;
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.easy-rag")
 public interface EasyRagConfig {
+    enum PathType {
+        /**
+         * The {@link #path()} represents a filesystem reference
+         */
+        FILESYSTEM,
+
+        /**
+         * The {@link #path()} represents a classpath reference
+         */
+        CLASSPATH;
+    }
 
     /**
      * Path to the directory containing the documents to be ingested. This is either
@@ -19,6 +30,14 @@ public interface EasyRagConfig {
      * resolved against the current working directory at runtime.
      */
     String path();
+
+    /**
+     * Does {@link #path()} represent a filesystem reference or a classpath reference?
+     *
+     * @see PathType
+     */
+    @WithDefault("FILESYSTEM")
+    PathType pathType();
 
     /**
      * Matcher used for filtering which files from the directory should be ingested.
