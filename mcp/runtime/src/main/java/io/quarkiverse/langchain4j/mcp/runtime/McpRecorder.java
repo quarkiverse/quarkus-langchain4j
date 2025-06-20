@@ -8,11 +8,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.TypeLiteral;
+
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.service.tool.ToolProvider;
+import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientRuntimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
@@ -26,6 +30,9 @@ import io.quarkus.runtime.configuration.ConfigurationException;
 
 @Recorder
 public class McpRecorder {
+
+    private static final TypeLiteral<Instance<Tracer>> TRACER_TYPE_LITERAL = new TypeLiteral<>() {
+    };
 
     public static Map<String, LocalLaunchParams> claudeConfigContents = Collections.emptyMap();
 
@@ -88,7 +95,7 @@ public class McpRecorder {
                     McpClientName.Literal qualifier = McpClientName.Literal.of(mcpClientName);
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
-                return new QuarkusMcpToolProvider(clients);
+                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL));
             }
         };
     }

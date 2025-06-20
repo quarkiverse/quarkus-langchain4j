@@ -52,6 +52,11 @@
             <artifactId>quarkus-junit5-internal</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- we only depend on the API as it's up to the user whether to use the Quarkus OTel extension -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
