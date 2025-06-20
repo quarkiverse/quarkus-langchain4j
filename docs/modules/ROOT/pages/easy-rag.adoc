@@ -8,8 +8,11 @@ RAG pipeline up and running. After adding this extension to your
 application, all that is needed to ingest documents into an embedding store
 is to add a dependency that provides an embedding model, and provide a
 single configuration property, `quarkus.langchain4j.easy-rag.path`, which
-denotes a path in the local filesystem where your documents are stored. On
-startup, Quarkus will automatically scan all files in the directory and
+denotes a path in the local filesystem where your documents are stored.
+
+NOTE: You can also define `quarkus.langchain4j.easy-rag.path-type=CLASSPATH` if you wish to define a location relative to the application's classpath.
+
+On startup, Quarkus will automatically scan all files in the directory and
 ingest them into an in-memory embedding store.
 
 Apache Tika, a library for parsing various file formats, is used under the
