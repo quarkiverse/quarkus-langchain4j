@@ -19,11 +19,14 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionChoice;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiFimCompletionRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
@@ -31,7 +34,6 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiUsage;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.vertx.core.Handler;
@@ -71,7 +73,7 @@ public class QuarkusMistralAiClient extends MistralAiClient {
 
     @Override
     public void streamingChatCompletion(MistralAiChatCompletionRequest request,
-            StreamingResponseHandler<AiMessage> handler) {
+            StreamingChatResponseHandler handler) {
         AtomicReference<StringBuffer> contentBuilder = new AtomicReference<>(new StringBuffer());
         AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
         AtomicReference<FinishReason> finishReason = new AtomicReference<>();
@@ -83,7 +85,7 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                 contentBuilder.get().append(chunk);
 
                 if (chunk != null) {
-                    handler.onNext(chunk);
+                    handler.onPartialResponse(chunk);
                 }
 
                 MistralAiUsage usageInfo = response.getUsage();
@@ -104,11 +106,13 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         }, new Runnable() {
             @Override
             public void run() {
-                Response<AiMessage> response = Response.from(
-                        AiMessage.from(contentBuilder.get().toString()),
-                        tokenUsage.get(),
-                        finishReason.get());
-                handler.onComplete(response);
+                ChatResponse response = ChatResponse.builder()
+                        .aiMessage(AiMessage.from(contentBuilder.get().toString()))
+                        .tokenUsage(tokenUsage.get())
+                        .finishReason(finishReason.get())
+                        .build();
+
+                handler.onCompleteResponse(response);
             }
         });
     }
@@ -127,6 +131,17 @@ public class QuarkusMistralAiClient extends MistralAiClient {
     @Override
     public MistralAiModelResponse listModels() {
         return restApi.models(apiKey);
+    }
+
+    @Override
+    public MistralAiChatCompletionResponse fimCompletion(MistralAiFimCompletionRequest mistralAiFimCompletionRequest) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void streamingFimCompletion(MistralAiFimCompletionRequest mistralAiFimCompletionRequest,
+            StreamingResponseHandler<String> streamingResponseHandler) {
+        throw new UnsupportedOperationException();
     }
 
     public static class QuarkusMistralAiClientBuilderFactory implements MistralAiClientBuilderFactory {

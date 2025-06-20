@@ -18,6 +18,7 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
@@ -56,6 +57,7 @@ public class OllamaRecorder {
             ChatModelConfig chatModelConfig = ollamaConfig.chatModel();
 
             JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+
             OllamaChatModel.OllamaChatModelBuilder ollamaChatModelBuilder = OllamaChatModel.builder()
                     .httpClientBuilder(httpClientBuilder)
                     .baseUrl(ollamaConfig.baseUrl().orElse(DEFAULT_BASE_URL))
@@ -63,7 +65,8 @@ public class OllamaRecorder {
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
                     .modelName(ollamaFixedConfig.chatModel().modelId())
-                    .format(chatModelConfig.format().orElse(null))
+                    .responseFormat(chatModelConfig.format().filter("json"::equalsIgnoreCase).map(format -> ResponseFormat.JSON)
+                            .orElse(null))
                     .temperature(chatModelConfig.temperature())
                     .topK(chatModelConfig.topK())
                     .topP(chatModelConfig.topP());

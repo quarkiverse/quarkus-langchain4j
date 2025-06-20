@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import dev.langchain4j.model.bedrock.BedrockAnthropicStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockChatModel;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
+import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
@@ -123,26 +123,29 @@ public class BedrockRecorder {
             Supplier<StreamingChatModel> supplier;
             if (modelId.startsWith("anthropic")) {
 
-                var builder = BedrockAnthropicStreamingChatModel.builder()
-                        .model(modelConfig.modelId().orElse("anthropic.claude-v2"))
-                        .asyncClient(clientBuilder.build())
-                        .maxTokens(modelConfig.maxTokens());
+                var paramsBuilder = ChatRequestParameters.builder()
+                        .maxOutputTokens(modelConfig.maxTokens());
 
                 if (modelConfig.temperature().isPresent()) {
-                    builder.temperature((float) modelConfig.temperature().getAsDouble());
+                    paramsBuilder.temperature(modelConfig.temperature().getAsDouble());
                 }
 
                 if (modelConfig.topP().isPresent()) {
-                    builder.topP((float) modelConfig.topP().getAsDouble());
+                    paramsBuilder.topP(modelConfig.topP().getAsDouble());
                 }
 
                 if (modelConfig.topK().isPresent()) {
-                    builder.topK(modelConfig.topK().getAsInt());
+                    paramsBuilder.topK(modelConfig.topK().getAsInt());
                 }
 
                 if (modelConfig.stopSequences().isPresent()) {
-                    builder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+                    paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
                 }
+
+                var builder = BedrockStreamingChatModel.builder()
+                        .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
+                        .client(clientBuilder.build())
+                        .defaultRequestParameters(paramsBuilder.build());
 
                 supplier = new Supplier<StreamingChatModel>() {
                     @Override
