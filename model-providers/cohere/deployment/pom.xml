@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-cohere-parent</artifactId>
-        <version>1.0.2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-cohere-deployment</artifactId>
     <name>Quarkus LangChain4j - Cohere - Deployment</name>
