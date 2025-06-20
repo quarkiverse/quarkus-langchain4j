@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.LogRecord;
 
@@ -27,20 +28,37 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRetrievalAugmentor;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class EasyRagTest {
+public class EasyRagOnClasspathTest {
+    //    static final JavaArchive ARCHIVE = ShrinkWrap.create(JavaArchive.class)
+    //            .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
+    //            .addAsResource(new StringAsset("""
+    //                    quarkus.langchain4j.easy-rag.path=ragdocuments
+    //                    quarkus.langchain4j.easy-rag.path-type=CLASSPATH
+    //                    """), "application.properties");
+    //
+    //    @Test
+    //    void archive() {
+    //        var resource = Thread.currentThread().getContextClassLoader().getResource("ragdocuments");
+    //        //        var resource = Thread.currentThread().getContextClassLoader().getSystemClassLoader().getResource("ragdocuments");
+    //        System.out.println(ARCHIVE.toString(true));
+    //        ARCHIVE.as(ZipExporter.class).exportTo(Paths.get(System.getProperty("user.home"), "lc4j.jar").toFile(), true);
+    //    }
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments"),
-                            "application.properties"))
+                    .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
+                    .addAsResource(new StringAsset("""
+                            quarkus.langchain4j.easy-rag.path=ragdocuments
+                            quarkus.langchain4j.easy-rag.path-type=CLASSPATH
+                            """), "application.properties"))
             .setLogRecordPredicate(record -> true)
-            .assertLogRecords(EasyRagTest::verifyLogRecords);
+            .assertLogRecords(EasyRagOnClasspathTest::verifyLogRecords);
 
     private static void verifyLogRecords(List<LogRecord> logRecords) {
         assertThat(logRecords.stream().map(LogRecord::getMessage))
                 .contains(
-                        "Ingesting documents from filesystem: src/test/resources/ragdocuments, path matcher = glob:**, recursive = true")
+                        "Ingesting documents from classpath: ragdocuments, path matcher = glob:**, recursive = true")
                 .contains("Ingested 2 files as 2 documents")
                 .doesNotContain("Writing embeddings to %s")
                 .doesNotContain("Reading embeddings from %s");
@@ -49,6 +67,12 @@ public class EasyRagTest {
     // The following three tests verify that when using Easy RAG,
     // EmbeddingModel, an EmbeddingStore, and an EasyRetrievalAugmentor are always present even when the application
     // doesn't have any explicit injection points for them.
+
+    @Test
+    void findDocs() {
+        var resource = Thread.currentThread().getContextClassLoader().getResource("ragdocuments");
+        System.out.println("resource: " + resource);
+    }
 
     @Test
     public void verifyThatEmbeddingModelIsPresent() {

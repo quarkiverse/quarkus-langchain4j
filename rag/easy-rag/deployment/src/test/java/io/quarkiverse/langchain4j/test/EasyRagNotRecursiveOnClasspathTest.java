@@ -1,8 +1,10 @@
 package io.quarkiverse.langchain4j.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.LogRecord;
 
@@ -22,18 +24,21 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Verify usage of the `quarkus.langchain4j.easy-rag.path-matcher` property.
+ * Verify usage of the `quarkus.langchain4j.easy-rag.path-matcher` property using a classpath reference.
  */
-public class EasyRagPathMatcherTest {
+public class EasyRagNotRecursiveOnClasspathTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments\n" +
-                            "quarkus.langchain4j.easy-rag.path-matcher=glob:*.pdf\n"),
+                    .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
+                    .addAsResource(new StringAsset(
+                            "quarkus.langchain4j.easy-rag.path=ragdocuments\n" +
+                                    "quarkus.langchain4j.easy-rag.recursive=false\n" +
+                                    "quarkus.langchain4j.easy-rag.path-type=CLASSPATH\n"),
                             "application.properties"))
             .setLogRecordPredicate(record -> true)
-            .assertLogRecords(EasyRagPathMatcherTest::verifyLogRecords);
+            .assertLogRecords(EasyRagNotRecursiveOnClasspathTest::verifyLogRecords);
 
     @Inject
     InMemoryEmbeddingStore<TextSegment> embeddingStore;
@@ -43,14 +48,14 @@ public class EasyRagPathMatcherTest {
     private static void verifyLogRecords(List<LogRecord> logRecords) {
         assertThat(logRecords.stream().map(LogRecord::getMessage))
                 .contains(
-                        "Ingesting documents from filesystem: src/test/resources/ragdocuments, path matcher = glob:*.pdf, recursive = true")
+                        "Ingesting documents from classpath: ragdocuments, path matcher = glob:**, recursive = false")
                 .contains("Ingested 1 files as 1 documents")
                 .doesNotContain("Writing embeddings to %s")
                 .doesNotContain("Reading embeddings from %s");
     }
 
     @Test
-    public void verifyPathMatchingOnlyPdf() {
+    public void verifyOnlyTheRootDirectoryIsIngested() {
         List<EmbeddingMatch<TextSegment>> relevant = embeddingStore
                 .search(EmbeddingSearchRequest.builder().queryEmbedding(DUMMY_EMBEDDING).maxResults(3).build()).matches();
         assertEquals(1, relevant.size());

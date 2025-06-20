@@ -1,8 +1,9 @@
 package io.quarkiverse.langchain4j.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.logging.LogRecord;
 
@@ -20,15 +21,18 @@ import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class EasyRagWithExplicitAugmentorTest {
+public class EasyRagWithExplicitAugmentorOnClasspathTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addAsResource(new StringAsset("quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments"),
-                            "application.properties"))
+                    .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
+                    .addAsResource(new StringAsset("""
+                            quarkus.langchain4j.easy-rag.path=ragdocuments
+                            quarkus.langchain4j.easy-rag.path-type=CLASSPATH
+                            """), "application.properties"))
             .setLogRecordPredicate(record -> true)
-            .assertLogRecords(EasyRagWithExplicitAugmentorTest::verifyLogRecords);
+            .assertLogRecords(EasyRagWithExplicitAugmentorOnClasspathTest::verifyLogRecords);
 
     @ApplicationScoped
     public static class ExplicitRetrievalAugmentor implements RetrievalAugmentor {
@@ -44,7 +48,7 @@ public class EasyRagWithExplicitAugmentorTest {
     private static void verifyLogRecords(List<LogRecord> logRecords) {
         assertThat(logRecords.stream().map(LogRecord::getMessage))
                 .contains(
-                        "Ingesting documents from filesystem: src/test/resources/ragdocuments, path matcher = glob:**, recursive = true")
+                        "Ingesting documents from classpath: ragdocuments, path matcher = glob:**, recursive = true")
                 .contains("Ingested 2 files as 2 documents")
                 .doesNotContain("Writing embeddings to %s")
                 .doesNotContain("Reading embeddings from %s");

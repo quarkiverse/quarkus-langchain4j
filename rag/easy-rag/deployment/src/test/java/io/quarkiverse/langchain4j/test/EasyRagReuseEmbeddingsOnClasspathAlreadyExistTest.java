@@ -25,21 +25,23 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkus.test.QuarkusUnitTest;
 
-class EasyRagReuseEmbeddingsAlreadyExistTest {
+class EasyRagReuseEmbeddingsOnClasspathAlreadyExistTest {
     private static final String EMBEDDING_FILE_NAME = "embeddings.json";
     private static final Path EMBEDDINGS_DIR = Path.of("src", "test", "resources", "embeddings");
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addAsResource(Path.of("target", "test-classes", "ragdocuments").toFile(), "ragdocuments")
                     .addAsResource(new StringAsset("""
-                            quarkus.langchain4j.easy-rag.path=src/test/resources/ragdocuments
+                            quarkus.langchain4j.easy-rag.path=ragdocuments
+                            quarkus.langchain4j.easy-rag.path-type=CLASSPATH
                             quarkus.langchain4j.easy-rag.reuse-embeddings.enabled=true
                             quarkus.langchain4j.easy-rag.reuse-embeddings.file=%s
                             """.formatted(embeddingsFile())),
                             "application.properties"))
             .setLogRecordPredicate(record -> true)
-            .assertLogRecords(EasyRagReuseEmbeddingsAlreadyExistTest::verifyLogRecords);
+            .assertLogRecords(EasyRagReuseEmbeddingsOnClasspathAlreadyExistTest::verifyLogRecords);
 
     private static Path embeddingsFile() {
         return EMBEDDINGS_DIR.resolve(EMBEDDING_FILE_NAME).toAbsolutePath();
@@ -48,7 +50,7 @@ class EasyRagReuseEmbeddingsAlreadyExistTest {
     private static void verifyLogRecords(List<LogRecord> logRecords) {
         assertThat(logRecords.stream().map(LogRecord::getMessage))
                 .doesNotContain(
-                        "Ingesting documents from filesystem: src/test/resources/ragdocuments, path matcher = glob:**, recursive = true")
+                        "Ingesting documents from classpath: ragdocuments, path matcher = glob:**, recursive = true")
                 .doesNotContain("Ingested 2 files as 2 documents")
                 .contains("Reading embeddings from %s")
                 .doesNotContain("Writing embeddings to %s");

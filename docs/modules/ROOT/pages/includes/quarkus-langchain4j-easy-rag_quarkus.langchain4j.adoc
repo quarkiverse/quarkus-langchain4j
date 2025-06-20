@@ -28,6 +28,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
+a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-type[`quarkus.langchain4j.easy-rag.path-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.easy-rag.path-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Does `path()` represent a filesystem reference or a classpath reference?
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`filesystem`, `classpath`
+|`filesystem`
+
 a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher[`quarkus.langchain4j.easy-rag.path-matcher`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.easy-rag.path-matcher+++[]

@@ -44,7 +44,7 @@ public class EasyRagNotRecursiveTest {
     private static void verifyLogRecords(List<LogRecord> logRecords) {
         assertThat(logRecords.stream().map(LogRecord::getMessage))
                 .contains(
-                        "Ingesting documents from path: src/test/resources/ragdocuments, path matcher = glob:**, recursive = false")
+                        "Ingesting documents from filesystem: src/test/resources/ragdocuments, path matcher = glob:**, recursive = false")
                 .contains("Ingested 1 files as 1 documents")
                 .doesNotContain("Writing embeddings to %s")
                 .doesNotContain("Reading embeddings from %s");
