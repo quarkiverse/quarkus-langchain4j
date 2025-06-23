@@ -264,9 +264,8 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         return ChatResponse.builder()
                 .aiMessage(response.aiMessage())
-                .finishReason(response.finishReason())
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
-                        .tokenUsage(response.tokenUsage()).build())
+                        .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
     }
 
