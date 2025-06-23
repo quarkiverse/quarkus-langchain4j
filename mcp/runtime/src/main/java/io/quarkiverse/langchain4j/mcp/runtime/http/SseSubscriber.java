@@ -42,9 +42,6 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
         }
         String data = s.data();
         if (name.equals("message")) {
-            if (logEvents) {
-                log.debug("< " + data);
-            }
             try {
                 JsonNode jsonNode = OBJECT_MAPPER.readTree(data);
                 operationHandler.handle(jsonNode);
