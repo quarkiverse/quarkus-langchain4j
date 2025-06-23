@@ -68,7 +68,7 @@ class McpClientAuthFilter implements ResteasyReactiveClientRequestFilter {
         }
     }
 
-    private record AuthInputImpl(
+    record AuthInputImpl(
             String method,
             URI uri,
             MultivaluedMap<String, Object> headers) implements McpClientAuthProvider.Input {

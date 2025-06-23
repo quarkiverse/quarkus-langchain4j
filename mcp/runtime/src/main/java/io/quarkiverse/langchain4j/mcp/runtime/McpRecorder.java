@@ -22,11 +22,13 @@ import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientRuntimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
+import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import io.vertx.core.Vertx;
 
 @Recorder
 public class McpRecorder {
@@ -38,6 +40,8 @@ public class McpRecorder {
 
     private final RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration;
 
+    private Vertx vertx;
+
     public McpRecorder(RuntimeValue<McpRuntimeConfiguration> mcpRuntimeConfiguration) {
         this.mcpRuntimeConfiguration = mcpRuntimeConfiguration;
     }
@@ -46,7 +50,10 @@ public class McpRecorder {
         McpRecorder.claudeConfigContents = contents;
     }
 
-    public Supplier<McpClient> mcpClientSupplier(String key, McpTransportType mcpTransportType, ShutdownContext shutdown) {
+    public Supplier<McpClient> mcpClientSupplier(String key,
+            McpTransportType mcpTransportType,
+            ShutdownContext shutdown,
+            Supplier<Vertx> vertx) {
         return new Supplier<McpClient>() {
             @Override
             public McpClient get() {
@@ -67,6 +74,14 @@ public class McpRecorder {
                                     "MCP client configuration named " + key + " is missing the 'url' property")))
                             .logRequests(runtimeConfig.logRequests().orElse(false))
                             .logResponses(runtimeConfig.logResponses().orElse(false))
+                            .mcpClientName(key)
+                            .build();
+                    case STREAMABLE_HTTP -> new QuarkusStreamableHttpMcpTransport.Builder()
+                            .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
+                                    "MCP client configuration named " + key + " is missing the 'url' property")))
+                            .logRequests(runtimeConfig.logRequests().orElse(false))
+                            .logResponses(runtimeConfig.logResponses().orElse(false))
+                            .httpClient(vertx.get().createHttpClient())
                             .mcpClientName(key)
                             .build();
                 };
