@@ -123,6 +123,9 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
 
+      - name: Setup JBang
+        uses: jbangdev/setup-jbang@main
+
       - name: Download the Maven repo
         uses: actions/download-artifact@v4
         with:
@@ -183,6 +186,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Setup JBang
+        uses: jbangdev/setup-jbang@main
 
       - name: Download the Maven repo
         uses: actions/download-artifact@v4
