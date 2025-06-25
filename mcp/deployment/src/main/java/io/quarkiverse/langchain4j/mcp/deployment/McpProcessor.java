@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.mcp.deployment;
 
+import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
+import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class McpProcessor {
@@ -123,6 +126,7 @@ public class McpProcessor {
             BuildProducer<HealthBuildItem> healthBuildItems,
             ShutdownContextBuildItem shutdown,
             Capabilities capabilities,
+            CoreVertxBuildItem vertxBuildItem,
             McpRecorder recorder) {
         Map<String, McpTransportType> clients = new HashMap<>();
         if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
@@ -150,7 +154,7 @@ public class McpProcessor {
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
                         .supplier(
-                                recorder.mcpClientSupplier(client, transportType, shutdown))
+                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx()))
                         .done());
             });
             // generate a tool provider if configured to do so
