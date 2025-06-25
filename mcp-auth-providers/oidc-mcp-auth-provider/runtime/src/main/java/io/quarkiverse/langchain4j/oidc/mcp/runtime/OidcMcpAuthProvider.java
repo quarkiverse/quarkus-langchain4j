@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.oidc.mcp.runtime;
 
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
@@ -11,6 +12,7 @@ public class OidcMcpAuthProvider implements McpClientAuthProvider {
     Instance<TokenCredential> tokenCredential;
 
     @Override
+    @ActivateRequestContext
     public String getAuthorization(Input input) {
         return tokenCredential.isResolvable() ? "Bearer " + tokenCredential.get().getToken() : null;
     }

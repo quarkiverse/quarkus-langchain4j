@@ -1,27 +1,28 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
-import static dev.langchain4j.data.message.AiMessage.aiMessage;
+import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.withLoggingExceptions;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
-import static io.quarkiverse.langchain4j.gemini.common.BaseGeminiChatModel.log;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import org.jboss.resteasy.reactive.client.SseEvent;
+
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.internal.ExceptionMapper;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.Capability;
-import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
-import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
@@ -29,13 +30,13 @@ import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
-import dev.langchain4j.model.output.FinishReason;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
-import dev.langchain4j.model.output.TokenUsage;
+import io.smallrye.mutiny.Multi;
 
-public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implements ChatModel {
+public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
-    public GeminiChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
+    public GeminiStreaminChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
         super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners);
     }
@@ -53,7 +54,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
     }
 
     @Override
-    public ChatResponse chat(ChatRequest chatRequest) {
+    public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler aHandler) {
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
         GenerationConfig generationConfig = GenerationConfig.builder()
@@ -82,43 +83,31 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 log.warn("Exception while calling model listener", e);
             }
         });
-
         try {
-            GenerateContentResponse response = generateContext(request);
-
-            String text = GenerateContentResponseHandler.getText(response);
-            List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler
-                    .getToolExecutionRequests(response);
-            AiMessage aiMessage = toolExecutionRequests.isEmpty()
-                    ? aiMessage(text)
-                    : aiMessage(text, toolExecutionRequests);
-
-            final TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
-            final FinishReason finishReason = FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
-            final Response<AiMessage> aiMessageResponse = Response.from(aiMessage, tokenUsage);
-
-            ChatResponse modelListenerResponse = createModelListenerResponse(
-                    null,
-                    modelId,
-                    aiMessageResponse);
-            ChatModelResponseContext responseContext = new ChatModelResponseContext(
-                    modelListenerResponse,
-                    modelListenerRequest,
-                    ModelProvider.OTHER,
-                    attributes);
-            listeners.forEach(listener -> {
+            GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
+            Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
+            event.subscribe().with(e -> {
+                GenerateContentResponse response = e.data();
+                Optional<String> maybeText = responseBuilder.append(response);
+                maybeText.ifPresent(text -> {
+                    try {
+                        System.out.println("Streamed Text:" + text);
+                        aHandler.onPartialResponse(text);
+                    } catch (Exception ex) {
+                        withLoggingExceptions(() -> aHandler.onError(ex));
+                    }
+                });
+            }, x -> {
+                RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
+                withLoggingExceptions(() -> aHandler.onError(mappedError));
+            }, () -> {
+                ChatResponse chatResponse = responseBuilder.build();
                 try {
-                    listener.onResponse(responseContext);
+                    aHandler.onCompleteResponse(chatResponse);
                 } catch (Exception e) {
-                    log.warn("Exception while calling model listener", e);
+                    withLoggingExceptions(() -> aHandler.onError(e));
                 }
             });
-
-            return dev.langchain4j.model.chat.response.ChatResponse.builder()
-                    .aiMessage(aiMessage)
-                    .tokenUsage(GenerateContentResponseHandler.getTokenUsage(response.usageMetadata()))
-                    .finishReason(FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response)))
-                    .build();
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -138,7 +127,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
         }
     }
 
-    protected abstract GenerateContentResponse generateContext(GenerateContentRequest request);
+    protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);
 
     private ChatRequest createModelListenerRequest(GenerateContentRequest request,
             List<ChatMessage> messages,
@@ -175,27 +164,13 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
             return "text/plain";
         }
 
-        if (ResponseFormatType.JSON.equals(responseFormat.type()) &&
-                responseFormat.jsonSchema() != null &&
-                responseFormat.jsonSchema().rootElement() != null &&
-                responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
+        if (ResponseFormatType.JSON.equals(responseFormat.type())
+                && responseFormat.jsonSchema() != null
+                && responseFormat.jsonSchema().rootElement() != null
+                && responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
             return "text/x.enum";
         }
 
         return "application/json";
-    }
-
-    @Override
-    public ChatResponse doChat(ChatRequest chatRequest) {
-        var chatResponse = chat(dev.langchain4j.model.chat.request.ChatRequest.builder()
-                .messages(chatRequest.messages())
-                .toolSpecifications(chatRequest.toolSpecifications())
-                .build());
-
-        return ChatResponse.builder()
-                .aiMessage(chatResponse.aiMessage())
-                .tokenUsage(chatResponse.tokenUsage())
-                .finishReason(chatResponse.finishReason())
-                .build();
     }
 }

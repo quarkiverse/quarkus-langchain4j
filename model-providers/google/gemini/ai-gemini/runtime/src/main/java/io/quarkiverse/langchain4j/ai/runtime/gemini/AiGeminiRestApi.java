@@ -3,12 +3,16 @@ package io.quarkiverse.langchain4j.ai.runtime.gemini;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,6 +26,7 @@ import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
@@ -42,6 +47,12 @@ public interface AiGeminiRestApi {
     @POST
     GenerateContentResponse generateContent(GenerateContentRequest request, @BeanParam ApiMetadata apiMetadata);
 
+    @Path("{modelId}:streamGenerateContent")
+    @POST
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    Multi<SseEvent<GenerateContentResponse>> generateContentStream(GenerateContentRequest request,
+            @BeanParam ApiMetadata apiMetadata, @QueryParam("alt") String sse);
+
     @ClientExceptionMapper
     static ClientWebApplicationException toException(Response response) {
         if (response.getStatus() == 400) {
@@ -60,6 +71,7 @@ public interface AiGeminiRestApi {
     }
 
     class ApiMetadata {
+
         @RestQuery
         public final String key;
 
@@ -76,6 +88,7 @@ public interface AiGeminiRestApi {
         }
 
         public static class Builder {
+
             private String key;
             private String modelId;
 
@@ -96,6 +109,7 @@ public interface AiGeminiRestApi {
     }
 
     class AiClientLogger implements ClientLogger {
+
         private static final Logger log = Logger.getLogger(AiClientLogger.class);
 
         private final boolean logRequests;
