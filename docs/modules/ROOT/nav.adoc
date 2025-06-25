@@ -1,50 +1,105 @@
-* xref:index.adoc[Getting started]
 
-* AI Services
-** xref:ai-services.adoc[AI Services]
-** xref:agent-and-tools.adoc[Agent and Tools]
-** xref:retrievers.adoc[Embeddings and Document Retrievers]
-** xref:prompt-engineering.adoc[Prompt Engineering 101]
-** xref:prompt-generation.adoc[Prompt Generation]
+[.list-top-item]
+.Getting Started
+
+* xref:quickstart.adoc[Quick start]
+* xref:quickstart-summarization.adoc[Implementing a summarization service]
+* xref:quickstart-image.adoc[Extracting text from an image]
+* xref:quickstart-rag.adoc[Implementing a simple RAG application]
+* xref:quickstart-function-calling.adoc[Using function calling]
+
+[.list-top-item]
+.Guides
+
+* xref:guide-prompt-engineering.adoc[Prompt engineering patterns]
+// * xref:guide-ai-services-patterns.adoc[AI Services patterns]
+* xref:guide-fault-tolerance.adoc[Fault Tolerance]
+* xref:guide-csv.adoc[Index CSVs in a RAG pipeline]
+* xref:guide-web-search.adoc[Using Tavily Web Search]
+// * xref:guide-agentic-patterns.adoc[Implementing Agentic patterns]
+// * xref:guide-structured-output.adoc[Returning structured data from a model]
+// * xref:guide-streamed-responses.adoc[Using function calling]
+// * xref:guide-log.adoc[Logging Model Interactions]
+// * xref:guide-token.adoc[Tracking token usages]
+// * xref:guide-few-shots.adoc[Using few-shots in prompts]
+// * xref:guide-local-models.adoc[Using local models]
+// * xref:guide-in-process-models.adoc[Using in-process models]
+// * xref:guide-passing-images.adoc[Passing Images to Models]
+// * xref:guide-generating-images.adoc[Generating Images from Prompts]
+// Add evaluation and guardrails and testing guides
+// Give knowledge to AI models
+
+[.list-top-item]
+.Reference
+
+* xref:ai-services.adoc[AI Services]
+** xref:prompt-and-template.adoc[Prompt and Template]
+** xref:messages-and-memory.adoc[Messages and Memory]
+** xref:function-calling.adoc[Function Calling]
 ** xref:guardrails.adoc[Guardrails]
 ** xref:response-augmenter.adoc[Response Augmenter]
-** xref:testing.adoc[Testing]
-
-* LLMs
-** xref:llms.adoc[LLMs]
-** xref:openai.adoc[OpenAI]
-** xref:huggingface.adoc[HuggingFace]
-** xref:ollama.adoc[Ollama]
-** xref:jlama.adoc[Jlama]
-** xref:llama3.adoc[Llama3.java]
-** xref:podman.adoc[Podman AI Lab]
-** xref:anthropic.adoc[Anthropic (Claude)]
-** xref:mistral.adoc[Mistral AI]
-** xref:watsonx.adoc[IBM watsonx.ai]
-
-* Document Stores
-** xref:redis-store.adoc[Redis Store]
-** xref:chroma-store.adoc[Chroma Store]
-** xref:infinispan-store.adoc[Infinispan Store]
-** xref:pinecone-store.adoc[Pinecone Store]
-** xref:pgvector-store.adoc[PgVector (PostgreSQL) Store]
-** xref:in-process-embedding.adoc[In-Process Embeddings]
-** xref:csv.adoc[Loading CSV files]
-** xref:neo4j.adoc[Neo4j Store]
-** xref:qdrant-store.adoc[Qdrant Store]
-** xref:milvus-store.adoc[Milvus Store]
-** xref:weaviate.adoc[Weaviate]
-
-* Additional tools
-** xref:easy-rag.adoc[Easy RAG]
-** xref:dev-ui.adoc[Dev UI]
-** xref:reranking.adoc[Reranking]
-** xref:web-search.adoc[Web search]
-** xref:mcp.adoc[Model Context Protocol]
-
-* Advanced topics
-** xref:fault-tolerance.adoc[Fault Tolerance]
-** xref:websockets.adoc[WebSockets]
+* xref:models.adoc[Models]
+** Chat Models
+*** xref:anthropic-chat-model.adoc[Anthropic (Claude)]
+*** xref:azure-openai-chat-model.adoc[Azure OpenAI]
+*** xref:gemini-chat-model.adoc[Google Gemini]
+*** xref:huggingface-chat-model.adoc[HuggingFace]
+*** xref:watsonx-chat-model.adoc[IBM watsonx.ai]
+*** xref:openai-chat-model.adoc[OpenAI]
+*** xref:ollama-chat-model.adoc[Ollama]
+*** xref:jlama-chat-model.adoc[Jlama]
+*** xref:llama3-chat-model.adoc[Llama3.java]
+*** xref:mistral-chat-model.adoc[Mistral AI]
+*** xref:podman.adoc[Podman AI Lab]
+** Image Models
+*** xref:azure-openai-image-model.adoc[Azure OpenAI]
+*** xref:openai-image-model.adoc[OpenAI]
+** Embedding Models
+*** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
+*** xref:gemini-embedding-model.adoc[Anthropic (Claude)]
+*** xref:huggingface-embedding-model.adoc[HuggingFace]
+*** xref:watsonx-chat-model.adoc[IBM watsonx.ai]
+*** xref:in-process-embedding.adoc[In-Process Embeddings (ONNX)]
+*** xref:jlama-embedding-model.adoc[Jlama]
+*** xref:ollama-embedding-model.adoc[Ollama]
+*** xref:openai-embedding-model.adoc[OpenAI]
+*** xref:mistral-embedding-model.adoc[Mistral AI]
+** Moderation Models
+*** xref:mistral-moderation-model.adoc[Mistral AI]
+*** xref:openai-moderation-model.adoc[OpenAI]
 ** xref:enable-disable-integrations.adoc[Enabling and Disabling Integrations]
-** xref:observability.adoc[Observability]
-** xref:security.adoc[Security/Privacy Considerations]
+* xref:testing.adoc[Testing & Evaluation]
+// 	Handling Model Errors and Timeouts
+// 	Prompt Injection Protection
+// 	Multi-turn Conversations and Context Windows
+// Chat History Management
+// Model Selection Logic / Fallback Strategy
+
+* xref:rag.adoc[Retrieval Augmented Generation (RAG)]
+** xref:rag-ingestion.adoc[Ingestion pipeline]
+// Evaluating RAG Quality (move from testing?)
+** xref:rag-query.adoc[Query-Time Augmentation]
+** xref:rag-easy-rag.adoc[EasyRAG]
+** xref:rag-contextual-rag.adoc[Contextual RAG]
+** xref:reranking.adoc[Reranking]
+** Document and Vector Stores
+*** xref:rag-chroma-store.adoc[Chroma]
+*** xref:rag-infinispan-store.adoc[Infinispan]
+*** xref:rag-milvus-store.adoc[Milvus]
+*** xref:rag-neo4j.adoc[Neo4j]
+*** xref:rag-pgvector-store.adoc[PgVector (PostgreSQL)]
+*** xref:rag-pinecone-store.adoc[Pinecone]
+*** xref:rag-qdrant-store.adoc[Qdrant]
+*** xref:rag-redis.adoc[Redis]
+*** xref:rag-weaviate.adoc[Weaviate]
+
+* xref:mcp.adoc[Model Context Protocol (MCP)]
+* xref:dev-ui.adoc[Dev UI]
+* xref:observability.adoc[Observability]
+* xref:websockets.adoc[WebSockets Integration]
+* xref:security.adoc[Security and Privacy Recommendations]
+
+[.list-top-item]
+.Development
+* https://github.com/quarkiverse/quarkus-langchain4j[Source Code^,role=github]
+* https://github.com/quarkiverse/quarkus-langchain4j/issues[Issues^,role=github]

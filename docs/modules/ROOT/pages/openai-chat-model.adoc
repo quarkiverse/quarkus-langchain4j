@@ -1,0 +1,261 @@
+= OpenAI Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+OpenAI is a leading AI research organization known for its groundbreaking Large Language Models (LLMs) like GPT-4.
+
+It provides various _chat models_, which are specialized LLMs designed for conversational tasks such as chatbots, virtual assistants, and interactive applications. These models also support advanced capabilities like reasoning and function calling.
+
+
+[IMPORTANT]
+====
+This extension can be used with any provider that supports OpenAI-compatible APIs, including OpenAI itself, OpenShift AI, and others.
+If you’re using a provider other than OpenAI, ensure that the authentication and endpoint configuration are set up accordingly.
+====
+
+
+== Prerequisites
+
+// tag::openai-prerequisites[]
+=== OpenAI Account and API Key
+
+=== OpenAI Account and API Key
+
+To use OpenAI models in your Quarkus application:
+
+1.	https://auth.openai.com/create-account[Create an OpenAI account].
+2.	https://platform.openai.com/api-keys[Generate an API key] from the API Keys page.
+3.	Add the following to your `application.properties`:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=sk-...
+----
+
+[TIP]
+.Use environment variables
+====
+You can use the environment variable `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` instead of hardcoding the key in your properties file.
+====
+
+[NOTE]
+.Using configuration placeholders
+====
+You can also reference an environment variable directly in your properties file:
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
+----
+====
+// end::openai-prerequisites[]
+=== OpenAI Quarkus Extension
+
+To enable OpenAI chat model support, add the following dependency to your `pom.xml`:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+[NOTE]
+====
+This extension also provides:
+
+* `EmbeddingModel` support for computing document embeddings
+* `ModerationModel` for content filtering
+* `ImageModel` for image generation
+
+These are enabled by default and can be configured separately.
+====
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+You can define multiple configurations to support different OpenAI models:
+
+[source,properties,subs=attributes+]
+----
+# Default OpenAI model configuration
+quarkus.langchain4j.openai.chat-model.model-name=gpt-4o-mini
+quarkus.langchain4j.openai.api-key=sk-...
+# Custom OpenAI model configuration
+quarkus.langchain4j.openai.some-name.chat-model.model-name=o3
+quarkus.langchain4j.openai.some-name.api-key=sk-...
+quarkus.langchain4j.openai.some-name.chat-model.temperature=0.8
+----
+
+You can then select the model to use in your application by using the `@RegisterAiService` annotation with the `modelName` attribute:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+@RegisterAiService(modelName = "some-name")
+public interface MyService {
+    // ...
+}
+----
+
+Or use the `@ModelName` annotation for programmatic injection:
+
+[source,java]
+----
+import dev.langchain4j.model.chat.ChatModel;
+import io.quarkiverse.langchain4j.ModelName;
+import jakarta.inject.Inject;
+
+// ...
+
+@Inject @ModelName("some-name") ChatModel chatModel;
+----
+
+If no model name is specified, the default configuration is used.
+
+== Advanced usage
+
+The OpenAI extension internally uses a Quarkus REST Client to make API calls. This client can also be used directly:
+
+
+[source,java]
+----
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+
+import org.jboss.resteasy.reactive.RestStreamElementType;
+
+import dev.ai4j.openai4j.completion.CompletionChoice;
+import io.quarkiverse.langchain4j.openai.common.OpenAiRestApi;
+import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.smallrye.mutiny.Multi;
+
+
+@Path("restApi")
+@ApplicationScoped
+public class QuarkusRestApiResource {
+
+    private final OpenAiRestApi restApi;
+    private final String token;
+
+    public QuarkusRestApiResource() throws URISyntaxException {
+        this.restApi = QuarkusRestClientBuilder.newBuilder()
+                .baseUri(new URI("https://api.openai.com/v1/"))
+                .build(OpenAiRestApi.class);
+        this.token = "sometoken";
+
+    }
+
+    @GET
+    @Path("language/streaming")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> languageStreaming() {
+        return restApi.streamingCompletion(
+                createCompletionRequest("Write a short 1 paragraph funny poem about Enterprise Java"), token, null)
+                .map(r -> {
+                    if (r.choices() != null) {
+                        if (r.choices().size() == 1) {
+                            CompletionChoice choice = r.choices().get(0);
+                            var text = choice.text();
+                            if (text != null) {
+                                return text;
+                            }
+                        }
+                    }
+                    return "";
+                });
+    }
+}
+----
+
+[NOTE]
+====
+In the example above, `null` is passed for the `apiVersion` parameter. This is valid for OpenAI’s standard API.
+For Azure OpenAI, you must provide the proper version string.
+====
+
+
+=== Dynamic Authorization Headers
+
+In some scenarios, you may need to dynamically inject authorization headers into OpenAI requests.
+
+There are two supported approaches:
+
+
+==== Using a ContainerRequestFilter annotated with `@Provider`.
+Create a filter implementing `ResteasyReactiveClientRequestFilter`:
+
+[source,java]
+----
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.ext.Provider;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
+import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
+
+@Provider
+@ApplicationScoped
+public class RequestFilter implements ResteasyReactiveClientRequestFilter {
+
+    @Inject
+    MyAuthorizationService myAuthorizationService;
+
+    @Override
+    public void filter(ResteasyReactiveClientRequestContext requestContext) {
+        /*
+         * All requests will be filtered here, therefore make sure that you make
+         * the necessary checks to avoid putting the Authorization header in
+         * requests that do not need it.
+         */
+        requestContext.getHeaders().putSingle("Authorization", ...);
+    }
+}
+----
+
+Ensure the filter is selective if other requests use the same HTTP client infrastructure.
+
+
+==== Using `AuthProvider`
+This method allows associating a custom token provider per model using `@ModelName`:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+@ModelName("my-model-name") //you can omit this if you have only one model or if you want to use the default model
+public class TestClass implements ModelAuthProvider {
+    @Inject MyTokenProviderService tokenProviderService;
+
+    @Override
+    public String getAuthorization(Input input) {
+        /*
+         * The `input` will contain some information about the request
+         * about to be passed to the remote model endpoints
+         */
+        return "Bearer " + tokenProviderService.getToken();
+    }
+}
+----
+
+This approach is ideal for multi-tenant setups or dynamic token rotation.
+
+== See Also
+
+[.lead]
+* xref:ai-services.adoc[AI Services]
+* xref:./models.adoc#_embedding_models[Embedding Models]
+* xref:./models.adoc#_moderation_models[Moderation Models]
+* xref:./models.adoc#_image_models_[Image Models]
+
+

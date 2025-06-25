@@ -505,9 +505,9 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-name[`quarkus.langchain4j.watsonx.chat-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-model-id[`quarkus.langchain4j.watsonx.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.chat-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -521,10 +521,10 @@ To use a model, locate the `API model ID` column in the table and copy the corre
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -823,7 +823,7 @@ endif::add-copy-button-to-config-props[]
 --
 Specifies the desired format for the model's output.
 
-*Allowable values:* `++[++text, json_object, json_schema++]++`
+*Allowable values:* `++[++json_object++]++`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1265,9 +1265,9 @@ endif::add-copy-button-to-env-var[]
 |`
 `
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-name[`quarkus.langchain4j.watsonx.embedding-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-embedding-model-model-id[`quarkus.langchain4j.watsonx.embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.embedding-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -1281,10 +1281,10 @@ To use a model, locate the `API model ID` column in the table and copy the corre
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_EMBEDDING_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -2021,9 +2021,9 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-name[`quarkus.langchain4j.watsonx."model-name".chat-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-model-id[`quarkus.langchain4j.watsonx."model-name".chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".chat-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -2037,10 +2037,10 @@ To use a model, locate the `API model ID` column in the table and copy the corre
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
@@ -2339,7 +2339,7 @@ endif::add-copy-button-to-config-props[]
 --
 Specifies the desired format for the model's output.
 
-*Allowable values:* `++[++text, json_object, json_schema++]++`
+*Allowable values:* `++[++json_object++]++`
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -2781,9 +2781,9 @@ endif::add-copy-button-to-env-var[]
 |`
 `
 
-a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-name[`quarkus.langchain4j.watsonx."model-name".embedding-model.model-name`]##
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-embedding-model-model-id[`quarkus.langchain4j.watsonx."model-name".embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".embedding-model.model-id+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -2797,10 +2797,10 @@ To use a model, locate the `API model ID` column in the table and copy the corre
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__EMBEDDING_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

@@ -1,14 +1,23 @@
-= Enabling and Disabling Integrations
+= Enabling or Disabling AI Model Integrations
 
 include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-By default, all integrations with AI providers (OpenAI, HuggingFace, Azure OpenAI, etc.) are enabled. This means that live calls are made to the configured AI provider.
+By default, all AI provider integrations (e.g., OpenAI, HuggingFace, Azure OpenAI) are enabled. This means that live API calls are made to the respective providers when an AI service is invoked.
 
-Each provider has an `enable-integration` property (i.e. `quarkus.langchain4j.openai.enable-integration`, `quarkus.langchain4j.huggingface.enable-integration`, etc.) that can be set to `false` to disable the integration. This property is read at runtime.
+You can disable any provider at runtime using the corresponding configuration property:
 
-When disabled, any call made to the AI provider will end up in an `dev.langchain4j.model.ModelDisabledException` runtime exception being thrown.
+- `quarkus.langchain4j.openai.enable-integration`
+- `quarkus.langchain4j.huggingface.enable-integration`
+- `quarkus.langchain4j.azure-openai.enable-integration`
 
-In this case your xref:ai-services.adoc[AI Service] could use xref:fault-tolerance.adoc[fault tolerance] to handle this and serve a fallback response without making a live call to the AI provider. Below are a few examples of how it could be used:
+Setting this property to `false` will prevent any live call to the model, and a call to the provider will result in a `dev.langchain4j.model.ModelDisabledException` being thrown.
+
+NOTE: It disables the whole integration, so all the models provided by the extension are disabled.
+
+In such cases, your xref:ai-services.adoc[AI Service] can leverage xref:guide-fault-tolerance.adoc[fault tolerance] mechanisms to handle this exception and provide a fallback response.
+
+The following examples illustrate how to handle disabled integrations using fault-tolerant within AI services:
 
 [source,java]
 .Handling disabled integration separately from other error conditions

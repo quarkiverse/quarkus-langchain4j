@@ -1,0 +1,88 @@
+= Milvus Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Milvus is a scalable and high-performance vector database optimized for AI and semantic search use cases.
+This guide explains how to use Milvus as an embedding store in Quarkus LangChain4j for RAG applications.
+
+== Overview
+
+The `quarkus-langchain4j-milvus` extension enables seamless integration with a Milvus instance for storing and retrieving embedded documents using vector similarity.
+
+Milvus supports approximate nearest neighbor (ANN) search with various indexing strategies and similarity metrics.
+
+== Dependency
+
+To enable Milvus integration in your Quarkus project, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-milvus</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Dev Services Support
+
+This extension includes Dev Services support. In dev and test mode, a containerized Milvus instance is started automatically.
+
+To configure Dev Services for Milvus, set the vector dimension according to your embedding model:
+
+[source,properties]
+----
+quarkus.langchain4j.milvus.dimension=384
+----
+
+TIP: For example, `AllMiniLmL6V2QuantizedEmbeddingModel` → 384; OpenAI `text-embedding-ada-002` → 1536.
+
+== Connecting to an External Milvus Instance
+
+If you prefer to connect to a remote Milvus instance, disable Dev Services and provide the host and port:
+
+[source,properties]
+----
+quarkus.langchain4j.milvus.host=localhost
+quarkus.langchain4j.milvus.port=19530
+quarkus.langchain4j.milvus.dimension=384
+----
+
+When a host is defined, Dev Services will not start a container.
+
+== Usage Example
+
+Once the extension is configured, you can use Milvus as an embedding store in your ingestion logic:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithMilvus.java[]
+----
+
+This example shows how to store vectorized content and make it retrievable via similarity search.
+
+== Configuration Options
+
+Customize the behavior of the extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-milvus.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+Milvus stores each embedded text segment along with its metadata and vector in a collection. The vector similarity search uses one of several distance metrics:
+
+* `COSINE`
+* `L2` (Euclidean)
+* `IP` (Inner Product / dot product)
+
+The extension automatically initializes the collection and schema if it does not already exist. It uses gRPC-based access for high performance and low latency.
+
+== Summary
+
+To use Milvus with Quarkus LangChain4j:
+
+1. Add the required extension
+2. Set the embedding dimension to match your model
+3. Use Dev Services or connect to an external Milvus instance
+4. Ingest documents and perform similarity search using `MilvusEmbeddingStore`

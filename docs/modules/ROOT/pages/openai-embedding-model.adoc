@@ -1,0 +1,64 @@
+= OpenAI Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+OpenAI is a leading AI research organization known for its groundbreaking Large Language Models (LLMs) such as GPT-4.
+
+In addition to chat capabilities, OpenAI provides https://platform.openai.com/docs/guides/embeddings#embedding-models[embedding models], which are essential for building semantic search and Retrieval-Augmented Generation (RAG) applications.
+
+== Prerequisites
+
+include::./openai-chat-model.adoc[tags=openai-prerequisites]
+
+=== OpenAI Quarkus Extension
+
+To use OpenAI’s embedding models in your Quarkus application, add the `quarkus-langchain4j-openai` extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically use the configured OpenAI embedding model.
+
+== Configuration
+
+include::includes/quarkus-langchain4j-openai.adoc[leveloffset=+1,opts=optional]
+
+You can configure one or more embedding models, each with its own credentials and model-specific options.
+
+[source,properties,subs=attributes+]
+----
+# Default OpenAI model configuration
+quarkus.langchain4j.openai.embedding-model.model-name=text-embedding-3-large
+quarkus.langchain4j.openai.api-key=sk-...
+# Custom OpenAI model configuration
+quarkus.langchain4j.openai.some-name.embedding-model.model-name=text-embedding-ada-002
+quarkus.langchain4j.openai.some-name.api-key=sk-...
+----
+
+== Using Embedding Models
+
+To use the configured embedding models, inject them into your application or RAG components. If you define multiple models, you can select the appropriate one using the `@ModelName` qualifier:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+
+@Inject EmbeddingModel defaultEmbeddingModel;
+@Inject @ModelName("some-name") EmbeddingModel namedEmbeddingModel;
+----
+
+These models are typically used during:
+
+*	Document ingestion, where content is transformed into vector representations
+*	Retrieval, where incoming queries are compared against stored vectors for semantic similarity
+
+For a full example, refer to the xref:quickstart-rag.adoc[RAG Getting Started Guide].
+
+

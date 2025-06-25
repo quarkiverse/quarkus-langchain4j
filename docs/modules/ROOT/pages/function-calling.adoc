@@ -1,0 +1,434 @@
+= Function Calling
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+== Overview
+
+Function calling enables a language model to interact with application-defined tools (methods or functions) as part of generating a response.
+This approach enhances the model's capabilities by allowing it to execute actions, fetch data, or perform computations mid-conversation before formulating a final reply.
+
+The Quarkus LangChain4j extension abstracts the complexities of this process, automatically generating the required system prompts, managing tool descriptions, invoking tools, and handling their results.
+
+Function calling requires a model that supports tool use and reasoning (see xref:models.adoc#_reasoning_models[Reasoning Models]).
+
+image::function-calling-general.png[Function Calling and AI Services,width=600]
+
+== Concepts
+
+=== Tools
+
+A tool is a method exposed to the language model.
+Tools must be part of a CDI bean and annotated with `@Tool`.
+The annotation's description helps the model understand when and how to use it.
+When omitted, the name of the method and the name of the parameters is used by the model to understand what the method is about.
+
+[source,java]
+----
+@ApplicationScoped
+public class Calculator {
+
+    @Tool("Calculates the length of a string")
+    int stringLength(String s) {
+        return s.length();
+    }
+}
+----
+
+You can expose multiple tool methods from a single CDI bean, but their method names must be unique across all tools.
+
+TIP: Tool method parameters must follow the snake_case naming convention to ensure compatibility with the LLM.
+
+=== ToolBox - Declaring Tools in AI Services
+
+You declare which tools are available to an AI service using the `@ToolBox` annotation.
+
+[source,java]
+----
+@RegisterAiService
+interface Assistant {
+
+    @ToolBox(Calculator.class) // <1>
+    String chat(String userMessage);
+}
+----
+
+<1> Provide access to the `stringLength` method from the `Calculator` bean.
+
+Alternatively, you can use `@RegisterAiService(tools=...)` to provide tools to all the methods from the AI service.
+Here's a simple example:
+
+[source,java]
+----
+@RegisterAiService(tools = Calculator.class) // <1>
+interface Assistant {
+    String chat(String userMessage);
+}
+----
+
+<1> Provide access to the `stringLength` method from the `Calculator` bean.
+
+== Examples
+
+With Quarkus LangChain4j, function calling provides flexibility, like accessing a database, calling a remote service or invoking another AI service.
+This section provides examples for these use cases.
+
+=== Accessing a database
+
+In a Panache repository (or any other database access mechanism you use), you can use the `@Tool` annotation to provide access to your database:
+
+
+[source,java]
+----
+@ApplicationScoped
+public class BookingRepository implements PanacheRepository {
+
+    @Tool("Cancel a booking")
+    @Transactional
+    public void cancelBooking(long bookingId,
+      String customerFirstName,
+      String customerLastName) {
+        var booking = getBookingDetails(bookingId, customerFirstName,customerLastName);
+        delete(booking);
+    }
+
+    @Tool("List booking for a customer")
+    public List listBookingsForCustomer(String customerName,
+      String customerSurname) {
+        var found = Customer.find("firstName = ?1 and lastName = ?2",
+        customerName, customerSurname).singleResultOptional();
+        return list("customer", found.get());
+    }
+}
+----
+
+Then, an AI service can be granted access to these methods as follows:
+
+[source, java]
+----
+
+public interface MainAiService {
+
+    @ToolBox(BookingRepository.class)
+    String answer(String question);
+
+}
+----
+
+== Calling a remote service
+
+In Quarkus, you can use a REST Client to represent and invoke a remote service.
+Rest Clients follow the same approach as AI services in the sense they use an ambassador pattern.
+
+Thus, you can annotate methods from the Rest Client interface with `@Tool` to allow an AI service to call the remote service:
+
+[source, java]
+----
+@RegisterRestClient(configKey = "openmeteo")
+@Path("/v1")
+public interface WeatherForecastService {
+
+    @GET
+    @Path("/forecast")
+    @ClientQueryParam(name = "forecast_days", value = "7")
+    @Tool("Forecasts the weather for the given latitude and longitude")
+    WeatherForecast forecast(
+            @RestQuery double latitude,
+            @RestQuery double longitude);
+}
+----
+
+Then, an AI service configured with `@ToolBox(WeatherForecastService.class)` can invoke the remote service.
+
+=== Calling another AI service
+
+By adding `@Tool` on an AI service method, another AI service can invoke it:
+
+[source,java]
+----
+@RegisterAiService
+public interface CityExtractorAgent {
+
+    @UserMessage("""
+    You are given one question and you have to extract
+    city name from it. Only reply the city name if it
+    exists or reply 'unknown_city' if there is no city
+    name in question
+
+   Here is the question: {question}
+   """)
+
+    @Tool("Extracts the city from a question")
+    String extractCity(String question);
+}
+----
+
+[source, java]
+----
+@RegisterAiService
+public interface MainAiService {
+
+    @ToolBox(CityExtractorAgent.class)
+    String answer(String question);
+
+}
+----
+
+== Recommendations for Function Calling
+
+When utilizing function calling, consider:
+
+- Setting the model temperature to 0 for the AI service to consistently choose the most probable action.
+- Ensuring well-detailed descriptions of tools.
+- Listing steps in the prompt in the desired execution order.
+
+== Execution Models
+
+The tool execution model determines how the tool is invoked:
+
+* `@Blocking`: runs on the caller thread
+* `@NonBlocking`: runs on an _event loop_ and *must* not block
+* `@RunOnVirtualThread`: runs on a virtual thread
+
+If the return type is a `Uni` or a `CompletionStage`, it is treated as non-blocking
+
+.Blocking example
+[source,java]
+----
+@Tool("get the customer name for the given customerId")
+public String getCustomerName(long id) {
+    return find("id", id).firstResult().name;
+}
+----
+
+.Non-Blocking example
+[source,java]
+----
+@Tool("add a and b")
+@NonBlocking
+int sum(int a, int b) {
+    return a + b;
+}
+----
+
+.Virtual thread example
+[source,java]
+----
+@Tool("get the customer name for the given customerId")
+@RunOnVirtualThread
+public String getCustomerName(long id) {
+    return find("id", id).firstResult().name;
+}
+----
+
+More details on virtual thread support in Quarkus can be found in the https://quarkus.io/guides/virtual-threads[Virtual Thread reference guide].
+
+
+=== Streaming Support
+
+When AI service methods return streams (`Multi<String>`), the model emits each token on the event loop.
+
+Blocking tools cannot run on the event loop.
+Thus, Quarkus LangChain4j automatically shifts to a worker thread or virtual thread when required.
+
+[source,java]
+----
+@UserMessage("...")
+@ToolBox({TransactionRepository.class, CustomerRepository.class}) // <1>
+Multi<Fraud> detectAmountFraudForCustomerStreamed(long customerId);
+----
+
+<1> The invocation to the repositories are automatically dispatched to a worker thread as the defined tool methods are blocking.
+
+== Request Scope Propagation
+
+When the request scope is active, tool invocations can inherit it, enabling propagation of transactional or security contexts.
+This applies even when running on virtual threads or worker threads.
+
+== Dynamically Providing Tools
+
+Instead of declaring tools statically, you can provide them dynamically using `ToolProvider`.
+
+[source,java]
+----
+@RegisterAiService(toolProviderSupplier = MyToolProviderSupplier.class)
+public interface MyAiService {
+// ...
+}
+----
+
+
+To support dynamic tool selection, you'll need to create a `ToolProviderSupplier`, which must be marked as `@ApplicationScoped`.
+Here's an example:
+
+[source,java]
+----
+@ApplicationScoped
+public class MyToolProviderSupplier implements Supplier<ToolProvider> {
+    @Inject MyCustomToolProvider provider;
+
+    public ToolProvider get() {
+        return provider;
+    }
+}
+----
+
+[source, java]
+----
+@ApplicationScoped
+public class MyCustomToolProvider implements ToolProvider {
+    @Inject BookingTool bookingTool;
+
+    public ToolProviderResult provideTools(ToolProviderRequest request) {
+        boolean containsBooking = request.userMessage().singleText().contains("booking");
+        if (!containsBooking) {
+            return ToolProviderResult.builder().build(); // No tools
+        }
+        return buildToolProviderResult(List.of(bookingTool)); // Only the booking tool will be provided in this case
+    }
+}
+----
+
+=== Alternative: Using `ToolSpecification` and `ToolExecutor`
+
+If you prefer more control, you can work directly with `ToolSpecification` and `ToolExecutor` to provide tools.
+
+
+== How Function Calling Works Internally
+
+First, it's important to understand that the model never calls the _tools_ directly, **but** always goes through the AI-infused application.
+
+image::function-calling-seq.png["How functions are called by a model",width=600]
+
+Here is the process explained:
+
+1. The user's input is combined with tool descriptions.
+2. The LLM is prompted with that context.
+3. The LLM responds with a function_call (tool name + parameters).
+4. The Quarkus Langchain4J extension invokes the tool and returns the result to the LLM.
+5. The LLM may continue reasoning or produce a final answer.
+
+These interactions are stored in the memory (see xref:messages-and-memory.adoc[Messages and Memory]) to maintain context across reasoning steps.
+
+== Example: Multi-step Tool Reasoning
+
+This section provides a slightly more complicated example with an AI Service using multiple tools:
+
+- A tool to extract a city from a question (implemented as another AI service)
+- A tool to access weather data (implemented as a REST client)
+- A tool to transform a location into latitude and longitude (implemented as a REST client)
+
+image::agent.png["Agent orchestrating tool usage",width=600]
+
+The main AI service is the following:
+
+[source,java]
+----
+@RegisterAiService(modelName = "tool-use")
+public interface WeatherForecastAgent {
+
+    @SystemMessage("""
+        You are a meteorologist, and you need to answer questions asked by the user about weather using at most 3 lines.
+
+        The weather information is a JSON object and has the following fields:
+
+        maxTemperature is the maximum temperature of the day in Celsius degrees
+        minTemperature is the minimum temperature of the day in Celsius degrees
+        precipitation is the amount of water in mm
+        windSpeed is the speed of wind in kilometers per hour
+        weather is the overall weather.
+    """)
+    @ToolBox({CityExtractorAgent.class, WeatherForecastService.class, GeoCodingService.class}) // <1>
+    String chat(String query);
+}
+----
+
+<1> List of the three tools to answer the user question like: "What's the weather tomorrow in Valence."
+
+The previous AI service is the one that will reason about the user question and orchestrate the calls to the different tools to produce the final response.
+
+The tool _implementations_ are very simple:
+
+1) The city extractor agent just extracts the city from the user question. It's implemented as an AI service.
+[source, java]
+----
+@ApplicationScoped
+@RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class) // <1>
+public interface CityExtractorAgent {
+
+    @UserMessage("""
+        You are given one question and you have to extract city name from it
+        Only reply the city name if it exists or reply 'unknown_city' if there is no city name in question
+
+        Here is the question: {question}
+        """)
+    @Tool("Extracts the city from a question") // <2>
+    String extractCity(String question); // <3>
+}
+----
+
+<1> This service does not require memory.
+<2> The tool description, the LLM can use it to decide when to call this tool.
+<3> The method signature, the LLM use it to know how to call this tool.
+
+2) The geocoding tool is a REST client that provide the _GeoResult_ for a given city:
+
+[source, java]
+----
+@RegisterRestClient(configKey = "geocoding")
+@Path("/v1")
+public interface GeoCodingService {
+
+    @GET
+    @Path("/search")
+    @ClientQueryParam(name = "count", value = "1") // Limit the number of results to 1 (HTTP query parameter)
+    @Tool("Finds the latitude and longitude of a given city")
+    GeoResults findCity(@RestQuery String name);
+}
+----
+
+3) The weather forecast tools is also implemented as a REST client:
+
+[source, java]
+----
+@RegisterRestClient(configKey = "openmeteo")
+@Path("/v1")
+public interface WeatherForecastService {
+
+    @GET
+    @Path("/forecast")
+    @ClientQueryParam(name = "forecast_days", value = "7")
+    @ClientQueryParam(name = "daily", value = {
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "wind_speed_10m_max",
+            "weather_code"
+    })
+    @Tool("Forecasts the weather for the given latitude and longitude")
+    WeatherForecast forecast(@RestQuery double latitude, @RestQuery double longitude);
+}
+----
+
+== Summary
+
+Function calling enables the model to take actions and retrieve external information by invoking application-defined tools. Quarkus LangChain4j simplifies this process through annotations and automatic orchestration and execution.
+
+[cols="1,3"]
+|===
+|Annotation |Purpose
+
+|`@Tool` | Marks a method as invocable by the LLM
+|`@ToolBox` | Declares the set of tools used for a specific method
+|`@RegisterAiService(tools = ...)` | Declares globally available tools for an AI service
+|`@Blocking`, `@NonBlocking`, `@RunOnVirtualThread` | Control how tool execution is scheduled
+|`@UserMessage`, `@SystemMessage` | Provide instructions to guide tool use, depending on the model, the prompt should provide hints.
+|`toolProviderSupplier` | Allows dynamic tool provisioning via ToolProvider
+|===
+
+== Going Further
+
+[.lead]
+* xref:ai-services.adoc[AI Service Configuration]
+* xref:messages-and-memory.adoc[Memory and Context Management]
+* xref:observability.adoc[Observability of Tool Invocations]

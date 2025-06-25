@@ -1,0 +1,142 @@
+= Prompts and Templates
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Prompts are how you instruct large language models to perform a task. In Quarkus Langchain4J, prompts are usually expressed using annotations and can be templated using https://quarkus.io/guides/qute[Qute].
+
+image::model-serving.png[width=600,align="center"]
+
+This document explains how to write prompts, how to inject dynamic input, and how to structure conversations for models with chat memory.
+
+== Prompt Basics
+
+A prompt provides instructions to the model. It can be a static string, or contain variables populated at runtime. Prompts are typically passed as:
+
+- `@SystemMessage`: Instructions that set context or behavior for the model.
+- `@UserMessage`: Dynamic input from the user, such as a question or command.
+
+You can define these directly in a method inside an `@RegisterAiService` interface.
+
+IMPORTANT: Prompts are **not universal**, different models interpret them differently. Some models require explicit tags or structured inputs. Always refer to the documentation for the specific model in use.
+
+== Passing User Input
+
+When a method in your AI service has a single parameter, it is treated as a user message by default:
+
+[source,java]
+----
+public String answer(String question);
+----
+
+If the method has multiple parameters, you must indicate the user message explicitly using `@UserMessage`:
+
+[source,java]
+----
+public String answer(@UserMessage String question, String other);
+----
+
+== Using Templated Prompts
+
+Quarkus LangChain4j supports templated prompts using Qute, allowing you to bind method parameters to variables in `@SystemMessage` or `@UserMessage`:
+
+[source,java]
+----
+@UserMessage("Answer the user's question: {question}")
+public String answer(String question);
+----
+
+Qute supports logic and loops. Here's an advanced example where a follow-up question is rephrased using previous conversation context:
+
+[source,java]
+----
+@SystemMessage("""
+    Given the following conversation and a follow-up question,
+    rephrase the follow-up question to be a standalone question.
+
+    Context:
+    {#for m in chatMessages}
+        {#if m.type.name() == "USER"}
+            User: {m.text()}
+        {/if}
+        {#if m.type.name() == "AI"}
+            Assistant: {m.text()}
+        {/if}
+    {/for}
+""")
+public String rephrase(List<ChatMessage> chatMessages, @UserMessage String question);
+----
+
+== Template Extensions for ChatMessage Lists
+
+To avoid repetitive logic, there are  Qute `TemplateExtension` methods for `List<ChatMessage>`. These simplify formatting historical chat messages.
+
+Available methods:
+
+- `extractDialogue(userPrefix, assistantPrefix, delimiter)`: fully customizable.
+- `extractDialogue(delimiter)`: uses default `User:` and `Assistant:` prefixes.
+- `extractDialogue()`: simplest usage, with newline separation.
+
+.Example 1: custom prefixes and delimiter
+[source,java]
+----
+@SystemMessage("""
+    Context:
+    {chatMessages.extractDialogue("U:", "A:", "|")}
+""")
+public String rephrase(List<ChatMessage> chatMessages, @UserMessage String question);
+----
+
+.Example 2: custom delimiter
+[source,java]
+----
+@SystemMessage("""
+    Context:
+    {chatMessages.extractDialogue("-")}
+""")
+public String rephrase(List<ChatMessage> chatMessages, @UserMessage String question);
+----
+
+.Example 3: default formatting
+[source,java]
+----
+@SystemMessage("""
+    Context:
+    {chatMessages.extractDialogue}
+""")
+public String rephrase(List<ChatMessage> chatMessages, @UserMessage String question);
+----
+
+== Using `chat_memory`
+
+If your AI service is configured with memory, you can use the built-in `chat_memory` placeholder to access the memory's conversation history.
+
+This avoids the need to manually pass a `List<ChatMessage>` parameter.
+
+[source,java]
+----
+@SystemMessage("""
+    Given the following conversation and a follow-up question,
+    rephrase the follow-up question to be a standalone question.
+
+    Context:
+    {chat_memory.extractDialogue}
+""")
+public String rephrase(@UserMessage String question);
+----
+
+Because `chat_memory` is a `List<ChatMessage>`, you can use the same `extractDialogue` extensions as described above.
+
+== Best Practices
+
+- Prefer concise, specific instructions.
+- Test and iterate your prompt structure with the actual model.
+- Use Qute expressions to avoid manual string manipulation.
+- Document and version critical prompts to support evolution.
+
+== Further Reading
+
+[.lead]
+- https://quarkus.io/guides/qute[Qute Template Engine]
+- xref:./guide-prompt-engineering.adoc[Prompt engineering guide]
+- xref:./messages-and-memory.adoc[Messages and Memory]

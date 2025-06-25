@@ -1,0 +1,79 @@
+= Anthropic Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://www.anthropic.com/[Anthropic] is an AI safety and research company. It provides the _Claude_ family of Large Language Models, designed with constitutional AI principles for safe and controllable output.
+
+This extension allows you to integrate Claude models into your Quarkus applications via the Anthropic API.
+
+== Prerequisites
+
+To use Anthropic models, you need an API key. Follow the steps on the https://docs.anthropic.com/claude/docs/getting-access-to-claude[Claude documentation portal] to request access and retrieve your credentials.
+
+== Dependency
+
+To enable Anthropic LLM integration in your project, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-anthropic</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Anthropic chat model.
+
+== Configuration
+
+Set your API key in the `application.properties` file:
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.anthropic.api-key=...
+----
+
+You can also set it using the environment variable:
+
+[source,bash]
+----
+QUARKUS_LANGCHAIN4J_ANTHROPIC_API_KEY=...
+----
+
+By default, the extension uses the latest available Claude model. You can specify the model explicitly using:
+
+[source,properties]
+----
+quarkus.langchain4j.anthropic.chat-model.model-name=claude-opus-4-20250514
+----
+
+Refer to https://docs.anthropic.com/claude/docs/models-overview[Anthropic's model catalog] for available versions, such as:
+
+- `claude-sonnet-4-20250514	`
+- `claude-3-opus-20240229`
+- `claude-3-haiku-20240307	`
+
+== Usage
+
+You can inject the chat model directly:
+
+[source,java]
+----
+@Inject ChatModel chatModel;
+----
+
+Or declare an AI service interface:
+
+[source,java]
+----
+@RegisterAiService
+public interface Assistant {
+    String chat(String input);
+}
+----
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-anthropic.adoc[leveloffset=+1,opts=optional]

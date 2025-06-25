@@ -1,26 +1,28 @@
-= Model Context Protocol
+= Model Context Protocol (MCP) Integration
 
-LangChain4j supports the Model Context Protocol (MCP) to communicate with
-MCP compliant servers that can provide and execute tools. General
-information about the protocol can be found at the
-https://modelcontextprotocol.io/[MCP website]. More detailed information can
-also be found in the https://docs.langchain4j.dev/tutorials/mcp[LangChain4j
-documentation], this documentation focuses on features that Quarkus provides
-on top of the upstream module. For an example project that uses MCP, see
-https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-tools[mcp-tools]
-project in the `quarkus-langchain4j` repository.
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
 
-NOTE: There is also a Quarkus extension for developing MCP servers. See
-https://github.com/quarkiverse/quarkus-mcp-server[GitHub repo] and
-https://docs.quarkiverse.io/quarkus-mcp-server/dev/index.html[documentation].
+Quarkus LangChain4j supports the Model Context Protocol (MCP) for interacting with MCP-compliant servers that provide and execute tools dynamically.
 
-== Declaratively generating a tool provider backed by MCP
+- General information: https://modelcontextprotocol.io/[modelcontextprotocol.io]
+- LangChain4j-specific docs: https://docs.langchain4j.dev/tutorials/mcp[MCP in LangChain4j]
+- Sample project: https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-tools[`mcp-tools` sample]
 
-Quarkus offers a way to generate a tool provider backed by one or more MCP
-servers declaratively from the configuration model. When using this, all AI
-services that don't explicitly declare to use a different tool provider will
-then be wired up to it, without having to write any MCP-specific code in the
-AI service. Example:
+[NOTE]
+====
+Quarkus also provides a dedicated extension for building MCP servers. See:
+
+- https://github.com/quarkiverse/quarkus-mcp-server[quarkus-mcp-server GitHub repo]
+- https://docs.quarkiverse.io/quarkus-mcp-server/dev/index.html[Documentation]
+====
+
+== Declarative Tool Provider Generation
+
+Quarkus allows you to configure an MCP-backed `ToolProvider` declaratively via configuration properties.
+This provider is automatically used by AI services **unless explicitly overridden**.
+
+Example configuration:
 
 [source,properties]
 ----
@@ -29,17 +31,14 @@ quarkus.langchain4j.mcp.github.command=npm,exec,@modelcontextprotocol/server-git
 quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>
 ----
 
-With this configuration, Quarkus will generate a tool provider that talks to the `server-github`
-MCP server. The server will be started automatically as a subprocess using the provided command
-(`npm exec @modelcontextprotocol/server-github`). The `environment.*` properties define
-environment variables that will be passed to the subprocess. With this configuration, any
-AI Service that does not declare a specific tool provider will be wired to this one.
+This will:
 
-With this generated tool provider, by default an AI Service won't use any of the tools provided
-by any of the configured MCP servers. To enable a method of an AI service to use the MCP servers
-it is required to annotate it with `@McpToolBox`. This annotation allows to specify the list of
-MCP servers that the AI service can use. For example to enable a method to use the `github` MCP
-server configured above and only that one it is necessary to annotate it with:
+- Start the MCP server using `npm exec @modelcontextprotocol/server-github` as a subprocess
+- Provide environment variables to the subprocess
+- Register a `ToolProvider` under the name `github`
+- Use this provider for all AI services unless a specific provider is configured
+
+To **enable the use of MCP tools** in a method of an AI service, annotate it with `@McpToolBox`:
 
 [source,java]
 ----
@@ -47,40 +46,42 @@ server configured above and only that one it is necessary to annotate it with:
 String useGithub(@UserMessage String userMessage);
 ----
 
-If the `@McpToolBox` is used without any name then the method will automatically use all the MCP
-servers available.
-
-== Authorization
-
-MCP servers that use the "Streamable HTTP" or HTTP/SSE transport may require MCP client authorization.
-
-In such cases, MCP clients must submit access tokens or API keys as bearer access tokens using an HTTP Authorization header, for example: `Authorization: Bearer <access token>`.
-
-You can register a custom `io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider` to load tokens or API keys from the database or other sources, for example:
+If no name is provided, all available MCP servers will be used:
 
 [source,java]
 ----
-import jakarta.enterprise.context.ApplicationScoped;
-import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
+@McpToolBox
+String useAllMcpServers(@UserMessage String userMessage);
+----
 
+== Authorization
+
+If your MCP server uses the *Streamable HTTP* or *HTTP/SSE* transport, it may require client authorization using bearer tokens or API keys.
+
+To support this, implement the `McpClientAuthProvider` interface to inject credentials dynamically:
+
+[source,java]
+----
 @ApplicationScoped
-public static class TestMcpAuthProvider implements McpClientAuthProvider {
+public class MyMcpAuthProvider implements McpClientAuthProvider {
 
     @Override
-    public String getAuthorization(Input input) { <1>
-        String token = getToken(input);
+    public String getAuthorization(Input input) {
+        String token = retrieveToken(input);
         return "Bearer " + token;
     }
-    private String getToken(Input input) {
-        // ...
+
+    private String retrieveToken(Input input) {
+        // Logic to extract token from DB, session, etc.
     }
 }
 ----
-<1> Represents current HTTP request URI, method and headers
 
-When your Quarkus LangChain4j AI service application that uses MCP client requires an OpenId Connect or OAuth2 authorization code flow login, for example, with Google or GitHub, MCP client can propagate the acquired access token to access the MCP server on the authenticated user's behalf.
+TIP: The `Input` object gives you access to the HTTP request context (URI, method, headers).
 
-All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-mcp-auth-provider` dependency:
+=== Propagating OIDC Access Tokens
+
+If your application uses OpenID Connect (OIDC) and the user has authenticated, you can **automatically propagate** the user's access token to the MCP server by adding:
 
 [source,xml]
 ----
@@ -90,31 +91,34 @@ All you need to do to achieve it is to add the `quarkus-langchain4j-oidc-mcp-aut
 </dependency>
 ----
 
+This allows the MCP client to act on behalf of the authenticated user (e.g., when calling GitHub APIs).
+
 == Logging
 
-For declaratively defined MCP clients, Quarkus overrides the default handler
-for received MCP logging messages with a handler that, apart from simply
-logging them with an application logger, produces a CDI event for each
-message. So if you need your application to react to MCP logging messages,
-you can observe these events in a CDI bean like this:
+MCP clients configured declaratively in Quarkus support log message observation.
+
+Quarkus replaces the default MCP log handler with one that:
+
+- Logs messages via the application logger
+- Fires CDI events for each log message
+
+To react to these events:
 
 [source,java]
 ----
-public void onLogMessage(@Observes @McpClientName("KEY") McpLogMessage logMessage) {
-    // ...
+public void onMcpLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
+    // React to log message
 }
 ----
 
-The `McpLogMessage` class's fully qualified name is
-`dev.langchain4j.mcp.client.logging.McpLogMessage` and it contains the log
-message as a `JsonNode`, the log level and the logger name.
+The `McpLogMessage` class (`dev.langchain4j.mcp.client.logging.McpLogMessage`) includes:
 
-The optional `@McpClientName` qualifier is used to specify the name of the
-MCP client that the log message is related to. This is useful when you have
-multiple MCP clients in your application and you want to react to log
-messages from a specific one.
+- The log message (`JsonNode`)
+- Log level
+- Logger name
 
-== Configuration reference
+You can omit `@McpClientName` if you want to listen to log messages from all clients.
+
+== Configuration Reference
 
 include::includes/quarkus-langchain4j-mcp.adoc[leveloffset=+1,opts=optional]
-

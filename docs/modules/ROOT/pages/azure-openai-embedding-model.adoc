@@ -1,0 +1,66 @@
+= Azure OpenAI Embedding Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Azure OpenAI supports the development of Retrieval-Augmented Generation (RAG) applications by offering embedding models that transform text into high-dimensional vector representations. These embeddings enable similarity search, semantic retrieval, and other vector-based operations.
+
+
+== Prerequisites
+
+include::./azure-openai-chat-model.adoc[tags=azure-openai-prerequisites]
+
+=== Azure OpenAI Quarkus Extension
+
+To use Azure OpenAI embedding models in your Quarkus application, add the `quarkus-langchain4j-azure-openai` extension:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically select the configured Azure OpenAI embedding model.
+
+[NOTE]
+====
+This extension also provides support for Azure OpenAI chat and image models. See the corresponding sections for details.
+====
+
+== Configuration
+
+include::includes/quarkus-langchain4j-azure-openai.adoc[leveloffset=+1,opts=optional]
+
+You can configure multiple Azure OpenAI embedding models in your application using named configurations:
+
+[source,properties,subs=attributes+]
+----
+# Default configuration
+quarkus.langchain4j.azure-openai.embedding-model.model-name=text-embedding-3-large
+
+# Custom configuration (under ‘my-retriever’)
+quarkus.langchain4j.azure-openai.my-retriever.embedding-model.model-name=text-embedding-ada-002
+----
+
+In your RAG implementation, select a model using the `@ModelName` annotation:
+
+[source,java]
+----
+import io.quarkiverse.langchain4j.ModelName;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import jakarta.inject.Inject;
+
+@Inject EmbeddingModel defaultEmbeddingModel;
+@Inject @ModelName("my-retriever") EmbeddingModel namedEmbeddingModel;
+----
+
+== Related Topics
+
+[.lead]
+* xref:quickstart-rag.adoc[RAG Quickstart]
+* xref:models.adoc#_embedding_models[Embedding Models Overview]
+* xref:ai-services.adoc[AI Services Reference]
+

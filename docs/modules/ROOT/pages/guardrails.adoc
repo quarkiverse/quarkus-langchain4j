@@ -1,15 +1,18 @@
 = Guardrails - Controlling the Chaos
 
-Guardrails are mechanisms that let you validate the output of the LLM to ensure it meets your expectations.
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Guardrails are mechanisms that validate the user input and the output of an LLM to ensure it meets your expectations.
 Typically, you can:
 
 - Ensure that the format is correct (e.g., it is a JSON document with the right schema)
-- Detect hallucinations (especially in the context of a RAG)
+- Detect hallucinations (especially in the context of Retrieval-Augmented Generation (RAG))
 - Verify that the user input is not out of scope
 
 Input guardrails are executed before the LLM is called, while output guardrails are executed after the LLM has produced its output.
-Failing an input guardrail prevents the LLM from being called.
-Failing an output guardrail allows retrying or reprompting to improve the response.
+If an input guardrail fails, the LLM is not called.
+If an output guardrail fails, the system may retry or reprompt to improve the response.
 
 image::guardrails.png[width=600,align="center"]
 
@@ -83,17 +86,17 @@ The `validate` method of the `InputGuardrail` interface can have two signatures:
 - `InputGuardrailParams validate(UserMessage responseFromLLM)`
 - `InputGuardrailParams validate(InputGuardrailParams params)`
 
-The first one is used when the guardrail only needs the user message.
+The first method is used when the guardrail only requires the user message.
 Simple guardrails can use this method.
 The second one is used for more complex guardrails that need more information, like the memory or the augmentation results.
-For example, they can check that there are enough documents in the augmentation results, or that the user is not asking the same question multiple times.
+For example, they can check whether enough documents are present in the augmentation results, or whether the user is repeating the same question.
 
 ==== Input Guardrails Outcome
 
 Input guardrails can have three outcomes:
 
 - _pass_ - The input is valid, the next guardrail is executed, and if the last guardrail passes, the LLM is called.
-- _fail_ - The input is invalid, but the next guardrail is executed the same, in order to accumulate all the possible validation problems. The LLM is not called.
+- _fail_ – The input is invalid, but the next guardrail is still executed to accumulate all potential validation issues.
 - _fatal_ - The input is invalid, the next guardrail is **not** executed, and the error is rethrown. The LLM is not called.
 
 ==== Input Guardrails Scopes
@@ -101,7 +104,7 @@ Input guardrails can have three outcomes:
 Input guardrails are CDI beans.
 They can be in any CDI scope, including request scope, application scope, or session scope.
 
-The scope of the guardrail is important as it defines the lifecycle of the guardrail, especially when the guardrail is stateful.
+The CDI scope of a guardrail defines its lifecycle, which is particularly important when the guardrail maintains state.
 
 === Declaring Input Guardrails
 
@@ -163,7 +166,8 @@ public interface Simulator {
 In this example, the `VerifyHeroFormat` is executed first to check that the passed hero is valid.
 Then, the `VerifyVillainFormat` is executed to check that the villain is valid.
 
-If the `VerifyHeroFormat` fails, the `VerifyVillainFormat` may or may not be executed depending on whether the failure is fatal or not. For instance, the `VerifyHeroFormat` could be implemented as it follows.
+If `VerifyHeroFormat` fails, `VerifyVillainFormat` may or may not be executed, depending on whether the failure is marked as fatal.
+For instance, the `VerifyHeroFormat` could be implemented as it follows.
 
 [source,java]
 ----
@@ -302,13 +306,14 @@ The <<_detecting_hallucinations_in_the_rag_context>> section gives an example of
 Output guardrails can have six outcomes:
 
 - _pass_ - The output is valid, the next guardrail is executed, and if the last guardrail passes, the output is returned to the caller.
-- _pass with rewrite_ - The output isn't valid in its original form, but has been rewritten in order to make it valid, the next guardrail is executed against the rewritten output, and if the last guardrail passes, the output is returned to the caller.
+- _pass with rewrite_ – The output is not valid in its original form but has been rewritten to make it valid.
+The next guardrail is executed against the rewritten output.
 - _fail_ - The output is invalid, but the next guardrail is executed the same, in order to accumulate all the possible validation problems.
 - _fatal_ - The output is invalid, the next guardrail is **not** executed, and the error is rethrown.
 - _fatal with retry_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with the **same** prompt.
 - _fatal with reprompt_ - The output is invalid, the next guardrail is **not** executed, and the LLM is called again with a **new** prompt.
 
-In fact if the validation fails, then the guardrail can specify whether the LLM should be retried or reprompted.
+If validation fails, the guardrail can specify whether the LLM should be retried or reprompted.
 
 [source,java]
 ----
@@ -409,7 +414,7 @@ Output guardrails can be applied to methods that return `Multi`, but not to thos
 By default, Quarkus will automatically assemble the full response before executing the guardrail chain.
 Keep in mind that this may have a performance impact when handling large responses.
 
-To control when the guardrail chain is invoked during streaming, you can configure an accumulator:
+To control when the guardrail chain is invoked during streaming, configure an accumulator:
 
 [source, java]
 ----
@@ -421,7 +426,7 @@ Multi<String> ask();
 
 The `@OutputGuardrailAccumulator` annotation allows you to specify a custom accumulator.
 The accumulator must implement the `io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator` interface and be exposed as a CDI bean.
-Here’s a simple example of an accumulator that does not perform any accumulation:
+The following is an example of a pass-through accumulator that does not accumulate tokens:
 
 [source,java]
 ----
@@ -511,7 +516,7 @@ public class HallucinationGuard implements OutputGuardrail {
 ----
 
 === Rewriting the LLM output
-It may happen that the output generated by the LLM is not completely satisfying, but it can be programmatically adjusted instead of attempting a retry or a reprompt, both implying a costly, time consuming and less reliable new interaction with the LLM. For instance, it is quite common that an LLM produces the json of the data object that it is required to extract from the user prompt, but appends to it some unwanted explanation of why it generated that result, making the json unparsable, something like
+It may happen that the output generated by the LLM is not completely satisfying, but it can be programmatically adjusted instead of attempting a retry or a reprompt, both implying a costly, time consuming and less reliable new interaction with the LLM. For instance, it is quite common that an LLM produces the json of the data object that it is required to extract from the user prompt, but appends some unwanted explanation to it, making the json unparsable, something like
 
 [source]
 ----
@@ -583,7 +588,7 @@ public abstract class AbstractJsonExtractorOutputGuardrail implements OutputGuar
 
 This implementation, first tries to deserialize the LLM response into the expected class to be returned by the data extraction. If this doesn't succeed it tries to trim away the non-json part of the response and perform the deserialization again. Note that in both case together with the json response, either the original LLM one or the one programmatically trimmed, the `successWith` method also returns the resulting deserialized object, so that it could be used directly as the final response of the data extraction, instead of uselessly having to execute a second deserialization. In case that both these attempts of deserialization fail then the `OutputGuardrail` perform a reprompt, hoping that the LLM will finally produce a valid json string.
 
-In this way if for example there is an AI service trying to extract the data of a customer from the user prompts like the following
+For example, consider an AI service that extracts customer data from user input, as shown below:
 
 [source,java]
 ----
@@ -610,7 +615,7 @@ public class CustomerExtractionOutputGuardrail extends AbstractJsonExtractorOutp
 }
 ----
 
-Note that if the data extraction requires a generified Java type, like a `List<Customer>`, it is conversely necessary to extend the `getOutputType` and return a Jackson's `TypeReference` as it follows:
+If the data extraction requires a generic Java type, like a `List<Customer>`, it is conversely necessary to extend the `getOutputType` and return a Jackson's `TypeReference` as it follows:
 
 [source,java]
 ----
@@ -625,7 +630,8 @@ public class CustomersExtractionOutputGuardrail extends AbstractJsonExtractorOut
 ----
 
 === Unit testing
-You can also unit test your output guardrails. A set of AssertJ custom assertions (following https://assertj.github.io/doc/#assertj-core-custom-assertions-entry-point[AssertJ's custom assertions pattern]) are available to help you unit test your guardrails.
+Output guardrails can also be unit tested using provided AssertJ-based helpers.
+A set of AssertJ custom assertions (following https://assertj.github.io/doc/#assertj-core-custom-assertions-entry-point[AssertJ's custom assertions pattern]) are available to help you unit test your guardrails.
 
 To get access to these helpers you'll need to add a `test` dependency to `io.quarkiverse.langchain4j:quarkus-langchain4j-testing-core`:
 
@@ -849,3 +855,39 @@ class EmailContainsRequiredInformationOutputGuardrailTests {
 ----
 
 See https://github.com/quarkiverse/quarkus-langchain4j/blob/main/testing/core/src/main/java/io/quarkiverse/langchain4j/guardrails/OutputGuardrailResultAssert.java[`OutputGuardrailResultAssert.java`] for more information about the different kinds of asserts you can do.
+
+== Summary
+
+Guardrails in Quarkus LangChain4j provide a declarative and extensible way to validate both input and output around LLM invocations.
+
+[cols="1,2"]
+|===
+|Type |Purpose
+
+|Input Guardrail | Validates the user message before the LLM is called. Can access memory and augmentation results.
+|Output Guardrail | Validates the LLM’s response. Can rewrite, retry, or reprompt if validation fails.
+|===
+
+[cols="1,3"]
+|===
+|Validation Outcome |Effect
+
+|pass | Validation successful; processing continues.
+|fail | Invalid input/output; next guardrail is still executed.
+|fatal | Halts the chain immediately and throws an error.
+|fatal with retry | Retries the same prompt.
+|fatal with reprompt | Sends a new prompt with guidance.
+|pass with rewrite | Rewritten output is used and passed to the next guardrail.
+|===
+
+Guardrails are declared using annotations directly on AI service interfaces or methods, and executed in a chain.
+They can inspect inputs, outputs, memory, and augmentation results (in RAG scenarios).
+They support streaming, reprompting, and rewriting, and can be thoroughly tested using dedicated test helpers.
+
+== Going Further
+
+[.lead]
+* xref:ai-services.adoc[AI Services Reference] – Learn how to declare and customize AI services, including memory and streaming behaviors.
+* xref:rag.adoc[Retrieval-Augmented Generation (RAG)] – Understand how augmentation results are passed into guardrails and used to detect hallucinations.
+* xref:messages-and-memory.adoc[Messages and Memory] – See how memory is stored, scoped, and accessed by guardrails.
+* xref:testing.adoc[Testing LLM Applications] – Explore how to unit test your guardrails using AssertJ-based custom assertions.

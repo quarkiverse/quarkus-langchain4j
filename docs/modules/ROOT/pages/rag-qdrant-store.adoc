@@ -1,0 +1,78 @@
+= Qdrant Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Qdrant is a high-performance vector database optimized for semantic search and Retrieval-Augmented Generation (RAG) workloads.
+This guide explains how to use Qdrant as a vector-capable document store in Quarkus LangChain4j.
+
+== Overview
+
+The `quarkus-langchain4j-qdrant` extension allows you to connect to a Qdrant instance, manage collections, and perform vector similarity search using embedded text segments.
+
+== Dependency
+
+To enable Qdrant integration, add the following dependency to your Quarkus project:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-qdrant</artifactId>
+    <version>{project-version}</version>
+</dependency>
+----
+
+== Dev Services Support
+
+The extension includes Dev Services support for Qdrant.
+In dev and test modes, a containerized Qdrant instance is automatically started and initialized with a default or user-defined collection.
+
+To configure Dev Services for Qdrant, you must set the following properties:
+
+[source,properties]
+----
+# Required: collection name
+quarkus.langchain4j.qdrant.devservices.service-name=my-collection
+
+# Required: vector size (depends on embedding model)
+quarkus.langchain4j.qdrant.devservices.collection.vector-params.size=384
+
+# Required: distance metric (e.g., Cosine, Dot, Euclidean)
+quarkus.langchain4j.qdrant.devservices.collection.vector-params.distance=Cosine
+----
+
+TIP: The vector size must match the output dimension of your embedding model (e.g., 384 for BGE, 1536 for OpenAI’s ada-002).
+
+Dev Services will use the `qdrant/qdrant` Docker image by default and expose the gRPC endpoint.
+
+== Connecting to an External Qdrant Instance
+
+If you want to use a remote Qdrant instance instead of Dev Services, disable it and provide the connection parameters:
+
+[source,properties]
+----
+quarkus.langchain4j.qdrant.host=localhost
+quarkus.langchain4j.qdrant.port=6334
+quarkus.langchain4j.qdrant.use-grpc=true
+quarkus.langchain4j.qdrant.collection.name=my-collection
+quarkus.langchain4j.qdrant.collection.vector-params.size=384
+quarkus.langchain4j.qdrant.collection.vector-params.distance=Cosine
+----
+
+== Configuration
+
+You can customize the behavior of the Qdrant extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-qdrant.adoc[leveloffset=+1,opts=optional]
+
+
+== Summary
+
+To use Qdrant with Quarkus LangChain4j:
+
+1. Add the `quarkus-langchain4j-qdrant` extension
+2. Choose between Dev Services or external Qdrant
+3. Define the collection name, vector size...
+4. Ingest and retrieve documents via the `QdrantEmbeddingStore`
+

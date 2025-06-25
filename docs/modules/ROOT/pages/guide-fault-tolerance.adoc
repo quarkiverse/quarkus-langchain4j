@@ -1,0 +1,50 @@
+= Using Quarkus Fault Tolerance with AI Services
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Quarkus Fault Tolerance helps you make your AI service interactions more robust and resilient to failure.
+This is particularly useful when working with external model providers that may be unavailable or experience latency.
+
+To enable fault tolerance for AI services, follow these steps:
+
+* Add the `quarkus-smallrye-fault-tolerance` extension to your project:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+</dependency>
+----
+
+* Use fault tolerance annotations such as `@Fallback`, `@Timeout`, or `@Retry` on your AI service methods:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultTolerance.java[]
+----
+
+== Understanding the Annotations
+
+- `@Fallback`: provides an alternative response if the AI interaction fails
+- `@Timeout`: limits how long the LLM call is allowed to run
+- `@Retry`: automatically retries the call in case of transient failure
+
+NOTE: Use `@Timeout` carefully when using tools or multi-step function calls, as those may require more time to complete due to multiple background interactions with your application's tools or services.
+
+== Example: Handling Disabled Integrations
+
+If model integrations are disabled (e.g. via `quarkus.langchain4j.openai.enable-integration=false`), calling the AI service will throw a `ModelDisabledException`. You can use `@Fallback` to gracefully recover:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultToleranceOnlyOnDisabledIntegration.java[]
+----
+
+== Going Further
+
+[.lead]
+* xref:https://quarkus.io/guides/smallrye-fault-tolerance[Quarkus Fault Tolerance Guide]
+* xref:ai-services.adoc[AI Services Reference]
+* xref:enable-disable-integrations.adoc[Enabling and Disabling AI Model Integrations]
