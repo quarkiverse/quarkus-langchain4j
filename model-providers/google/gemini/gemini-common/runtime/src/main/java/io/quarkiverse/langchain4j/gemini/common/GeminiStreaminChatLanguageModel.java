@@ -88,9 +88,9 @@ public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatMode
             GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
             Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
             event.subscribe().with(
-                    onItem(responseBuilder, aHandler),
-                    onError(aHandler),
-                    onComplete(responseBuilder, aHandler));
+                    new OnItemConsumer(responseBuilder, aHandler),
+                    new OnErrorConsumer(aHandler),
+                    new OnCompleteRunnable(responseBuilder, aHandler));
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -108,39 +108,6 @@ public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatMode
 
             throw e;
         }
-    }
-
-    private Runnable onComplete(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler aHandler) {
-        return () -> {
-            ChatResponse chatResponse = responseBuilder.build();
-            try {
-                aHandler.onCompleteResponse(chatResponse);
-            } catch (Exception e) {
-                withLoggingExceptions(() -> aHandler.onError(e));
-            }
-        };
-    }
-
-    private Consumer<Throwable> onError(StreamingChatResponseHandler aHandler) {
-        return x -> {
-            RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
-            withLoggingExceptions(() -> aHandler.onError(mappedError));
-        };
-    }
-
-    private Consumer<SseEvent<GenerateContentResponse>> onItem(GeminiStreamingResponseBuilder responseBuilder,
-            StreamingChatResponseHandler aHandler) {
-        return e -> {
-            GenerateContentResponse response = e.data();
-            Optional<String> maybeText = responseBuilder.append(response);
-            maybeText.ifPresent(text -> {
-                try {
-                    aHandler.onPartialResponse(text);
-                } catch (Exception ex) {
-                    withLoggingExceptions(() -> aHandler.onError(ex));
-                }
-            });
-        };
     }
 
     protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);
@@ -188,5 +155,65 @@ public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatMode
         }
 
         return "application/json";
+    }
+
+    private static class OnCompleteRunnable implements Runnable {
+
+        private final GeminiStreamingResponseBuilder responseBuilder;
+        private final StreamingChatResponseHandler handler;
+
+        public OnCompleteRunnable(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler) {
+            this.responseBuilder = responseBuilder;
+            this.handler = handler;
+        }
+
+        @Override
+        public void run() {
+            ChatResponse chatResponse = responseBuilder.build();
+            try {
+                handler.onCompleteResponse(chatResponse);
+            } catch (Exception e) {
+                withLoggingExceptions(() -> handler.onError(e));
+            }
+        }
+    }
+
+    private static class OnErrorConsumer implements Consumer<Throwable> {
+
+        private final StreamingChatResponseHandler handler;
+
+        public OnErrorConsumer(StreamingChatResponseHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void accept(Throwable x) {
+            RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
+            withLoggingExceptions(() -> handler.onError(mappedError));
+        }
+    }
+
+    private static class OnItemConsumer implements Consumer<SseEvent<GenerateContentResponse>> {
+
+        private final GeminiStreamingResponseBuilder responseBuilder;
+        private final StreamingChatResponseHandler handler;
+
+        public OnItemConsumer(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler handler) {
+            this.responseBuilder = responseBuilder;
+            this.handler = handler;
+        }
+
+        @Override
+        public void accept(SseEvent<GenerateContentResponse> t) {
+            GenerateContentResponse response = t.data();
+            Optional<String> maybeText = responseBuilder.append(response);
+            maybeText.ifPresent(text -> {
+                try {
+                    handler.onPartialResponse(text);
+                } catch (Exception ex) {
+                    withLoggingExceptions(() -> handler.onError(ex));
+                }
+            });
+        }
     }
 }
