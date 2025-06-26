@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.jboss.resteasy.reactive.client.SseEvent;
 
@@ -86,28 +87,10 @@ public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatMode
         try {
             GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
             Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
-            event.subscribe().with(e -> {
-                GenerateContentResponse response = e.data();
-                Optional<String> maybeText = responseBuilder.append(response);
-                maybeText.ifPresent(text -> {
-                    try {
-                        System.out.println("Streamed Text:" + text);
-                        aHandler.onPartialResponse(text);
-                    } catch (Exception ex) {
-                        withLoggingExceptions(() -> aHandler.onError(ex));
-                    }
-                });
-            }, x -> {
-                RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
-                withLoggingExceptions(() -> aHandler.onError(mappedError));
-            }, () -> {
-                ChatResponse chatResponse = responseBuilder.build();
-                try {
-                    aHandler.onCompleteResponse(chatResponse);
-                } catch (Exception e) {
-                    withLoggingExceptions(() -> aHandler.onError(e));
-                }
-            });
+            event.subscribe().with(
+                    onItem(responseBuilder, aHandler),
+                    onError(aHandler),
+                    onComplete(responseBuilder, aHandler));
         } catch (RuntimeException e) {
             ChatModelErrorContext errorContext = new ChatModelErrorContext(
                     e,
@@ -125,6 +108,39 @@ public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatMode
 
             throw e;
         }
+    }
+
+    private Runnable onComplete(GeminiStreamingResponseBuilder responseBuilder, StreamingChatResponseHandler aHandler) {
+        return () -> {
+            ChatResponse chatResponse = responseBuilder.build();
+            try {
+                aHandler.onCompleteResponse(chatResponse);
+            } catch (Exception e) {
+                withLoggingExceptions(() -> aHandler.onError(e));
+            }
+        };
+    }
+
+    private Consumer<Throwable> onError(StreamingChatResponseHandler aHandler) {
+        return x -> {
+            RuntimeException mappedError = ExceptionMapper.DEFAULT.mapException(x);
+            withLoggingExceptions(() -> aHandler.onError(mappedError));
+        };
+    }
+
+    private Consumer<SseEvent<GenerateContentResponse>> onItem(GeminiStreamingResponseBuilder responseBuilder,
+            StreamingChatResponseHandler aHandler) {
+        return e -> {
+            GenerateContentResponse response = e.data();
+            Optional<String> maybeText = responseBuilder.append(response);
+            maybeText.ifPresent(text -> {
+                try {
+                    aHandler.onPartialResponse(text);
+                } catch (Exception ex) {
+                    withLoggingExceptions(() -> aHandler.onError(ex));
+                }
+            });
+        };
     }
 
     protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);

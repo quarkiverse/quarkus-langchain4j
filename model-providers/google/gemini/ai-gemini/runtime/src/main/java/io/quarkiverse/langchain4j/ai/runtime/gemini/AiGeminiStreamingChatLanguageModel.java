@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.ai.runtime.gemini;
 
-import static dev.langchain4j.http.client.HttpMethod.POST;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -13,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
-import dev.langchain4j.http.client.HttpRequest;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiStreaminChatLanguageModel;
@@ -64,19 +61,6 @@ public class AiGeminiStreamingChatLanguageModel extends GeminiStreaminChatLangua
     @Override
     protected Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request) {
         return restApi.generateContentStream(request, apiMetadata, "sse");
-    }
-
-    private static final String API_KEY_HEADER_NAME = "x-goog-api-key";
-
-    private HttpRequest buildHttpRequest(String url, String apiKey, String jsonBody) {
-        return HttpRequest.builder()
-                .method(POST)
-                .url(url)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("User-Agent", "LangChain4j")
-                .addHeader(API_KEY_HEADER_NAME, apiKey)
-                .body(jsonBody)
-                .build();
     }
 
     public static Builder builder() {
