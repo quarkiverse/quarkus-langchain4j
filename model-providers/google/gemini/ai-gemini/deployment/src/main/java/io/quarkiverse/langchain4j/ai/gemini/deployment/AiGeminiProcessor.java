@@ -80,7 +80,7 @@ public class AiGeminiProcessor {
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
-                //
+                
                 var streamingChatModel = recorder.streamingChatModel(config, configName);
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
