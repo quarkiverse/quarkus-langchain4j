@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -18,6 +17,7 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.Candidate.Part;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.UsageMetadata;
@@ -27,8 +27,6 @@ import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse.UsageMet
  * This class accumulates partial responses and builds a final response.
  */
 class GeminiStreamingResponseBuilder {
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final StringBuilder contentBuilder;
     private final List<ToolExecutionRequest> functionCalls;
@@ -175,7 +173,7 @@ class GeminiStreamingResponseBuilder {
                     try {
                         return ToolExecutionRequest.builder()
                                 .name(functionCall.name())
-                                .arguments(MAPPER.writeValueAsString(functionCall.args()))
+                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(functionCall.args()))
                                 .build();
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
