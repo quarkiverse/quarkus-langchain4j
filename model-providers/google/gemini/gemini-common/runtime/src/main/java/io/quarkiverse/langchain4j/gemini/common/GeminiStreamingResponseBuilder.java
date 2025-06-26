@@ -173,7 +173,8 @@ class GeminiStreamingResponseBuilder {
                     try {
                         return ToolExecutionRequest.builder()
                                 .name(functionCall.name())
-                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER.writeValueAsString(functionCall.args()))
+                                .arguments(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER
+                                        .writeValueAsString(functionCall.args()))
                                 .build();
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
