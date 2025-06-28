@@ -11,6 +11,8 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -125,6 +127,59 @@ public class AiGeminiRecorder {
             };
         }
 
+    }
+
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
+            LangChain4jAiGeminiConfig config, String configName) {
+        var aiConfig = correspondingAiConfig(config, configName);
+
+        if (aiConfig.enableIntegration()) {
+            var chatModelConfig = aiConfig.chatModel();
+            Optional<String> baseUrl = aiConfig.baseUrl();
+
+            String apiKey = aiConfig.apiKey().orElse(null);
+            var builder = AiGeminiStreamingChatLanguageModel.builder()
+                    .baseUrl(baseUrl)
+                    .key(apiKey)
+                    .modelId(chatModelConfig.modelId())
+                    .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), aiConfig.logResponses()));
+
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().getAsDouble());
+            }
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().getAsDouble());
+            }
+            if (chatModelConfig.timeout().isPresent()) {
+                builder.timeout(chatModelConfig.timeout().get());
+            }
+
+            // TODO: add the rest of the properties
+
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
+                            configName);
+
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
+                }
+            };
+        }
     }
 
     private void throwIfApiKeysNotConfigured(String apiKey, boolean authProviderAvailable, String configName) {
