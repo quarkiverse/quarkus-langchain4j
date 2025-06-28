@@ -2,7 +2,8 @@ package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.List;
 
-public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata usageMetadata) {
+public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata usageMetadata, String modelVersion,
+        String responseId) {
 
     public record Candidate(Content content, FinishReason finishReason) {
 
@@ -27,7 +28,11 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
         MAX_TOKENS,
         SAFETY,
         RECITATION,
+        LANGUAGE,
         OTHER,
-        UNRECOGNIZED
+        BLOCKLIST,
+        PROHIBITED_CONTENT,
+        SPII,
+        MALFORMED_FUNCTION_CALL
     }
 }
