@@ -9,9 +9,13 @@ import java.util.regex.Pattern;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestPath;
+import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,6 +28,7 @@ import io.quarkiverse.langchain4j.gemini.common.EmbedContentResponses;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
+import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -44,6 +49,12 @@ public interface VertxAiGeminiRestApi {
     @Path("{modelId}:embedContent")
     @POST
     EmbedContentResponse embedContent(EmbedContentRequest embedContentRequest, @BeanParam ApiMetadata apiMetadata);
+
+    @Path("{modelId}:streamGenerateContent")
+    @POST
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    Multi<SseEvent<GenerateContentResponse>> generateContentStream(GenerateContentRequest request,
+            @BeanParam ApiMetadata apiMetadata, @QueryParam("alt") String sse);
 
     @ClientObjectMapper
     static ObjectMapper mapper(ObjectMapper defaultObjectMapper) {

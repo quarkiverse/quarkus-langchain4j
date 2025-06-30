@@ -12,6 +12,8 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -23,6 +25,7 @@ import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class VertexAiGeminiRecorder {
+
     private static final String DUMMY_KEY = "dummy";
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
@@ -105,7 +108,6 @@ public class VertexAiGeminiRecorder {
             }
 
             // TODO: add the rest of the properties
-
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
@@ -123,6 +125,65 @@ public class VertexAiGeminiRecorder {
             };
         }
 
+    }
+
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
+            LangChain4jVertexAiGeminiConfig config, String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+
+        if (vertexAiConfig.enableIntegration()) {
+            var chatModelConfig = vertexAiConfig.chatModel();
+            Optional<String> baseUrl = vertexAiConfig.baseUrl();
+
+            String location = vertexAiConfig.location();
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(location)) {
+                throw new ConfigValidationException(createConfigProblems("location", configName));
+            }
+            String projectId = vertexAiConfig.projectId();
+            if (baseUrl.isEmpty() && DUMMY_KEY.equals(projectId)) {
+                throw new ConfigValidationException(createConfigProblems("project-id", configName));
+            }
+
+            var builder = VertexAiGeminiStreamingChatLanguageModel.builder()
+                    .baseUrl(baseUrl)
+                    .location(location)
+                    .projectId(projectId)
+                    .publisher(vertexAiConfig.publisher())
+                    .modelId(chatModelConfig.modelId())
+                    .maxOutputTokens(chatModelConfig.maxOutputTokens())
+                    .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
+                    .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
+
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().getAsDouble());
+            }
+            if (chatModelConfig.topK().isPresent()) {
+                builder.topK(chatModelConfig.topK().getAsInt());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().getAsDouble());
+            }
+            if (chatModelConfig.timeout().isPresent()) {
+                builder.timeout(chatModelConfig.timeout().get());
+            }
+
+            // TODO: add the rest of the properties
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
+                            .collect(Collectors.toList()));
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Function<>() {
+                @Override
+                public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
+                    return new DisabledStreamingChatModel();
+                }
+            };
+        }
     }
 
     private LangChain4jVertexAiGeminiConfig.VertexAiGeminiConfig correspondingVertexAiConfig(
