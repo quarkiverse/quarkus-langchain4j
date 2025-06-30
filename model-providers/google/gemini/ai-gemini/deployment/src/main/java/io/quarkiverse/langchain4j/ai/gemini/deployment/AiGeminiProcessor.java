@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.EMBEDDING_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.util.List;
 
@@ -79,6 +80,21 @@ public class AiGeminiProcessor {
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
+
+                var streamingChatModel = recorder.streamingChatModel(config, configName);
+                var streamingBuilder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
+                        .createWith(streamingChatModel);
+
+                addQualifierIfNecessary(streamingBuilder, configName);
+                beanProducer.produce(streamingBuilder.done());
             }
         }
 
