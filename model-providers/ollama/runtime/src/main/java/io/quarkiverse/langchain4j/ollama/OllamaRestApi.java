@@ -63,7 +63,7 @@ public interface OllamaRestApi {
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     Multi<ChatResponse> streamingChat(ChatRequest request);
 
-    @Path("/api/embeddings")
+    @Path("/api/embed")
     @POST
     EmbeddingResponse embeddings(EmbeddingRequest request);
 

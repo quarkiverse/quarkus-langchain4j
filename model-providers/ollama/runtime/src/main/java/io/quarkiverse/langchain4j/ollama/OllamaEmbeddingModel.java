@@ -31,12 +31,14 @@ public class OllamaEmbeddingModel implements EmbeddingModel {
         textSegments.forEach(textSegment -> {
             EmbeddingRequest request = EmbeddingRequest.builder()
                     .model(model)
-                    .prompt(textSegment.text())
+                    .input(textSegment.text())
                     .build();
 
             EmbeddingResponse response = client.embedding(request);
 
-            embeddings.add(Embedding.from(response.getEmbedding()));
+            for (float[] embedding : response.getEmbeddings()) {
+                embeddings.add(Embedding.from(embedding));
+            }
         });
 
         return Response.from(embeddings);
