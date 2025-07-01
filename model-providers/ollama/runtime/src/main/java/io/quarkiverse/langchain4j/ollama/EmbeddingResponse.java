@@ -6,29 +6,29 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = EmbeddingResponse.Builder.class)
 public class EmbeddingResponse {
 
-    private float[] embedding;
+    private float[][] embeddings;
 
     private EmbeddingResponse(Builder builder) {
-        embedding = builder.embedding;
+        embeddings = builder.embeddings;
     }
 
-    public float[] getEmbedding() {
-        return embedding;
+    public float[][] getEmbeddings() {
+        return embeddings;
     }
 
-    public void setEmbedding(float[] embedding) {
-        this.embedding = embedding;
+    public void setEmbeddings(float[][] embeddings) {
+        this.embeddings = embeddings;
     }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static final class Builder {
-        private float[] embedding;
+        private float[][] embeddings;
 
         private Builder() {
         }
 
-        public Builder embedding(float[] val) {
-            embedding = val;
+        public Builder embeddings(float[][] val) {
+            embeddings = val;
             return this;
         }
 

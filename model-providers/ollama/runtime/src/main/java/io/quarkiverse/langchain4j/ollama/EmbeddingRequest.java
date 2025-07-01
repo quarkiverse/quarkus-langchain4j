@@ -3,11 +3,11 @@ package io.quarkiverse.langchain4j.ollama;
 public class EmbeddingRequest {
 
     private final String model;
-    private final String prompt;
+    private final String input;
 
     private EmbeddingRequest(Builder builder) {
         model = builder.model;
-        prompt = builder.prompt;
+        input = builder.input;
     }
 
     public static Builder builder() {
@@ -18,13 +18,13 @@ public class EmbeddingRequest {
         return model;
     }
 
-    public String getPrompt() {
-        return prompt;
+    public String getInput() {
+        return input;
     }
 
     public static final class Builder {
         private String model = "llama2";
-        private String prompt;
+        private String input;
 
         private Builder() {
         }
@@ -34,8 +34,8 @@ public class EmbeddingRequest {
             return this;
         }
 
-        public Builder prompt(String val) {
-            prompt = val;
+        public Builder input(String val) {
+            input = val;
             return this;
         }
 
