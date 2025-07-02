@@ -32,12 +32,6 @@ import io.quarkiverse.langchain4j.watsonx.bean.TextGenerationResponse.Result;
 public class WatsonxGenerationModel extends Watsonx
         implements ChatModel {
 
-    private static final String INPUT_TOKEN_COUNT_CONTEXT = "INPUT_TOKEN_COUNT";
-    private static final String GENERATED_TOKEN_COUNT_CONTEXT = "GENERATED_TOKEN_COUNT";
-    private static final String COMPLETE_MESSAGE_CONTEXT = "COMPLETE_MESSAGE";
-    private static final String FINISH_REASON_CONTEXT = "FINISH_REASON";
-    private static final String MODEL_ID_CONTEXT = "MODEL_ID";
-
     private final WatsonxGenerationRequestParameters defaultRequestParameters;
     private final String promptJoiner;
 

@@ -83,7 +83,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.timeout", "60s")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.grant-type", "grantME")
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-id", "my_super_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-name", "my_super_model")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.prompt-joiner", "@")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.decoding-method", "greedy")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.length-penalty.decay-factor", "1.1")
@@ -98,9 +98,9 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.repetition-penalty", "2.0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.truncate-input-tokens", "0")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.include-stop-sequence", "false")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-id", "my_super_embedding_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.model-name", "my_super_embedding_model")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.embedding-model.truncate-input-tokens", "10")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.model-id", "my_super_scoring_model")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.model-name", "my_super_scoring_model")
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.scoring-model.truncate-input-tokens", "10")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
@@ -158,7 +158,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals(true, runtimeConfig.logRequests().orElse(false));
         assertEquals(true, runtimeConfig.logResponses().orElse(false));
         assertEquals("aaaa-mm-dd", runtimeConfig.version());
-        assertEquals("my_super_model", runtimeConfig.generationModel().modelId());
+        assertEquals("my_super_model", runtimeConfig.generationModel().modelName());
         assertEquals("greedy", runtimeConfig.generationModel().decodingMethod());
         assertEquals(1.1, runtimeConfig.generationModel().lengthPenalty().decayFactor().get());
         assertEquals(0, runtimeConfig.generationModel().lengthPenalty().startIndex().get());
@@ -175,7 +175,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
         assertEquals("@", runtimeConfig.generationModel().promptJoiner());
         assertEquals("my_super_embedding_model", runtimeConfig.embeddingModel().modelName());
         assertEquals(10, runtimeConfig.embeddingModel().truncateInputTokens().orElse(null));
-        assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelId());
+        assertEquals("my_super_scoring_model", runtimeConfig.scoringModel().modelName());
         assertEquals(10, runtimeConfig.scoringModel().truncateInputTokens().orElse(null));
     }
 
@@ -183,7 +183,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     void chat_request_test() throws Exception {
         // Use the chat method without customization:
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -289,7 +289,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     void chat_request_streaming_test() throws Exception {
         // Use the chat method without customization:
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -430,7 +430,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -467,7 +467,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_scoring_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.scoringModel().modelId();
+        String modelId = config.scoringModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -510,7 +510,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
         var body = new TokenizationRequest(modelId, "test", spaceId, projectId);
@@ -524,7 +524,7 @@ public class GenerationAllPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
         TextGenerationRequest body = new TextGenerationRequest(modelId, spaceId, projectId, "SystemMessage@UserMessage",

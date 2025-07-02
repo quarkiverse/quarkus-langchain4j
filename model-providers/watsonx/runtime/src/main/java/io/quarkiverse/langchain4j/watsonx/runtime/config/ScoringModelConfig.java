@@ -19,7 +19,7 @@ public interface ScoringModelConfig {
      * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("cross-encoder/ms-marco-minilm-l-12-v2")
-    String modelId();
+    String modelName();
 
     /**
      * Specifies the maximum number of input tokens accepted. This helps to avoid requests failing due to input exceeding the

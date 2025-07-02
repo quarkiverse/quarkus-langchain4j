@@ -102,7 +102,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         assertEquals(false, runtimeConfig.logRequests().orElse(false));
         assertEquals(false, runtimeConfig.logResponses().orElse(false));
         assertEquals(VERSION, runtimeConfig.version());
-        assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.generationModel().modelId());
+        assertEquals(DEFAULT_CHAT_MODEL, runtimeConfig.generationModel().modelName());
         assertEquals("greedy", runtimeConfig.generationModel().decodingMethod());
         assertEquals(null, runtimeConfig.generationModel().lengthPenalty().decayFactor().orElse(null));
         assertEquals(null, runtimeConfig.generationModel().lengthPenalty().startIndex().orElse(null));
@@ -120,14 +120,14 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
         assertEquals("urn:ibm:params:oauth:grant-type:apikey", runtimeConfig.iam().grantType());
         assertEquals(DEFAULT_EMBEDDING_MODEL, runtimeConfig.embeddingModel().modelName());
         assertTrue(runtimeConfig.embeddingModel().truncateInputTokens().isEmpty());
-        assertEquals(DEFAULT_SCORING_MODEL, runtimeConfig.scoringModel().modelId());
+        assertEquals(DEFAULT_SCORING_MODEL, runtimeConfig.scoringModel().modelName());
         assertTrue(runtimeConfig.scoringModel().truncateInputTokens().isEmpty());
     }
 
     @Test
     void check_chat_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -146,7 +146,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_scoring_model() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.scoringModel().modelId();
+        String modelId = config.scoringModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -209,7 +209,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_token_count_estimator() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
@@ -224,7 +224,7 @@ public class GenerationDefaultPropertiesTest extends WireMockAbstract {
     @Test
     void check_chat_streaming_model_config() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
-        String modelId = config.generationModel().modelId();
+        String modelId = config.generationModel().modelName();
         String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 

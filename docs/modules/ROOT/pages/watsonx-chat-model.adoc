@@ -94,7 +94,7 @@ Each mode has its own configuration namespace:
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
 quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
-quarkus.langchain4j.watsonx.chat-model.model-id=mistralai/mistral-large
+quarkus.langchain4j.watsonx.chat-model.model-name=mistralai/mistral-large
 quarkus.langchain4j.watsonx.mode=chat
 ----
 
