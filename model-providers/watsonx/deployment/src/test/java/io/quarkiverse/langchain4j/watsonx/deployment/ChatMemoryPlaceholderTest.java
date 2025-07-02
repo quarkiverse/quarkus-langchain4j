@@ -299,7 +299,7 @@ public class ChatMemoryPlaceholderTest extends WireMockAbstract {
     private TextGenerationRequest createRequest(String input) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
-        String modelId = chatModelConfig.modelId();
+        String modelId = chatModelConfig.modelName();
         String spaceId = watsonConfig.spaceId().orElse(null);
         String projectId = watsonConfig.projectId().orElse(null);
         TextGenerationParameters parameters = TextGenerationParameters.builder()

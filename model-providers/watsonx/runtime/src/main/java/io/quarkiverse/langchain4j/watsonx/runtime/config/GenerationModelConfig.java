@@ -20,7 +20,7 @@ public interface GenerationModelConfig {
      * To use a model, locate the <code>API model_id</code> column in the table and copy the corresponding model ID.
      */
     @WithDefault("meta-llama/llama-4-maverick-17b-128e-instruct-fp8")
-    String modelId();
+    String modelName();
 
     /**
      * Represents the strategy used for picking the tokens during generation of the output text. During text generation when

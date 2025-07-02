@@ -40,7 +40,7 @@ public class AiGenerationServiceTest extends WireMockAbstract {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.iam.base-url", URL_IAM_SERVER)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
-            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-id", "mistralai/mistral-large")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.generation-model.model-name", "mistralai/mistral-large")
             .overrideConfigKey("quarkus.langchain4j.watsonx.mode", "generation")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClass(WireMockUtil.class));
 
@@ -83,7 +83,7 @@ public class AiGenerationServiceTest extends WireMockAbstract {
     private TextGenerationRequest generateRequest() {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig = langchain4jWatsonConfig.defaultConfig();
         GenerationModelConfig chatModelConfig = watsonConfig.generationModel();
-        String modelId = chatModelConfig.modelId();
+        String modelId = chatModelConfig.modelName();
         String spaceId = watsonConfig.spaceId().orElse(null);
         String projectId = watsonConfig.projectId().orElse(null);
         String input = new StringBuilder()
