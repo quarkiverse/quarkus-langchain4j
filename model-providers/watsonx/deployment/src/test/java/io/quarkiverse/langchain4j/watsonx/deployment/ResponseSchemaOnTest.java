@@ -269,7 +269,7 @@ public class ResponseSchemaOnTest extends WireMockAbstract {
 
     private TextGenerationRequest from(List<ChatMessage> messages) {
         var config = langchain4jWatsonConfig.defaultConfig();
-        var modelId = config.generationModel().modelId();
+        var modelId = config.generationModel().modelName();
         var spaceId = config.spaceId().orElse(null);
         var projectId = config.projectId().orElse(null);
 

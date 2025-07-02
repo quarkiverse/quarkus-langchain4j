@@ -287,7 +287,7 @@ public class WatsonxRecorder {
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
-                .modelId(rerankModelConfig.modelId())
+                .modelId(rerankModelConfig.modelName())
                 .truncateInputTokens(rerankModelConfig.truncateInputTokens().orElse(null));
         var iamBaseUrl = watsonConfig.iam().baseUrl();
         var granType = watsonConfig.iam().grantType();
@@ -546,7 +546,7 @@ public class WatsonxRecorder {
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
-                .modelId(watsonConfig.generationModel().modelId())
+                .modelId(watsonConfig.generationModel().modelName())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)
                 .startIndex(startIndex)
@@ -603,7 +603,7 @@ public class WatsonxRecorder {
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
-                .modelId(watsonConfig.generationModel().modelId())
+                .modelId(watsonConfig.generationModel().modelName())
                 .decodingMethod(generationModelConfig.decodingMethod())
                 .decayFactor(decayFactor)
                 .startIndex(startIndex)
