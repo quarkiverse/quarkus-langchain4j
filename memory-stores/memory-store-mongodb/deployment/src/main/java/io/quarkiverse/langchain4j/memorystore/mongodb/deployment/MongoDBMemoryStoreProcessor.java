@@ -51,6 +51,8 @@ class MongoDBMemoryStoreProcessor {
             mongoClientName.produce(new MongoClientNameBuildItem(MongoClientBeanUtil.DEFAULT_MONGOCLIENT_NAME));
         }
 
+        config.clientName().ifPresent(clientName -> mongoClientName.produce(new MongoClientNameBuildItem(clientName)));
+
     }
 
     private boolean shouldCreateDefaultBean(MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
