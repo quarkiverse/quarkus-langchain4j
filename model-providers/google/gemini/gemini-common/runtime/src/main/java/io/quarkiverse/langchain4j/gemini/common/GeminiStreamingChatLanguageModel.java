@@ -32,9 +32,9 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.smallrye.mutiny.Multi;
 
-public abstract class GeminiStreaminChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
+public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
-    public GeminiStreaminChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
+    public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
         super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners);
     }
