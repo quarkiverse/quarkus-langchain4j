@@ -1,4 +1,7 @@
+
 package io.quarkiverse.langchain4j.memorystore.mongodb.deployment;
+
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -12,17 +15,23 @@ import com.mongodb.client.MongoClient;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.memorystore.MongoDBChatMemoryStore;
 import io.quarkiverse.langchain4j.memorystore.mongodb.runtime.MongoDBMemoryStoreRecorder;
-import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.processor.BuildExtension;
+import io.quarkus.arc.processor.InjectionPointInfo;
 import io.quarkus.deployment.annotations.*;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.mongodb.MongoClientName;
+import io.quarkus.mongodb.deployment.MongoClientBuildTimeConfig;
 import io.quarkus.mongodb.deployment.MongoClientNameBuildItem;
+import io.quarkus.mongodb.deployment.MongoUnremovableClientsBuildItem;
+import io.quarkus.mongodb.runtime.MongoClientBeanUtil;
 
 class MongoDBMemoryStoreProcessor {
 
-    public static final DotName MONGODB_CHAT_MEMORY_STORE = DotName.createSimple(MongoDBChatMemoryStore.class);
+    private static final DotName MONGODB_CHAT_MEMORY_STORE = DotName.createSimple(MongoDBChatMemoryStore.class);
+    private static final DotName MONGO_CLIENT = DotName.createSimple(MongoClient.class.getName());
     private static final String FEATURE = "langchain4j-memory-store-mongodb";
 
     @BuildStep
@@ -32,15 +41,45 @@ class MongoDBMemoryStoreProcessor {
 
     @BuildStep
     public void requestMongoClient(MongoDBMemoryStoreBuildTimeConfig config,
+            MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
+            BeanRegistrationPhaseBuildItem registrationPhase,
+            List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem,
             BuildProducer<MongoClientNameBuildItem> mongoClientName) {
-        config.clientName().ifPresent(clientName -> mongoClientName.produce(new MongoClientNameBuildItem(clientName)));
+
+        if (shouldCreateDefaultBean(mongoClientBuildTimeConfig, registrationPhase, mongoUnremovableClientsBuildItem)
+                && config.clientName().isEmpty()) {
+            mongoClientName.produce(new MongoClientNameBuildItem(MongoClientBeanUtil.DEFAULT_MONGOCLIENT_NAME));
+        }
+
+    }
+
+    private boolean shouldCreateDefaultBean(MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
+            BeanRegistrationPhaseBuildItem registrationPhase,
+            List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem) {
+
+        // Don't create if there are unremovable clients
+        if (!mongoUnremovableClientsBuildItem.isEmpty()) {
+            return false;
+        }
+
+        // Don't create if force default clients is enabled
+        if (mongoClientBuildTimeConfig.forceDefaultClients()) {
+            return false;
+        }
+
+        // Don't create if there's already a default MongoClient injection point
+        for (InjectionPointInfo injectionPoint : registrationPhase.getContext().get(BuildExtension.Key.INJECTION_POINTS)) {
+            if (injectionPoint.getRequiredType().name().equals(MONGO_CLIENT) && injectionPoint.hasDefaultedQualifier()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    @Consume(MongoClientNameBuildItem.class)
     public void createMemoryStoreBean(
-            BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             MongoDBMemoryStoreRecorder recorder,
             MongoDBMemoryStoreBuildTimeConfig buildTimeConfig) {
