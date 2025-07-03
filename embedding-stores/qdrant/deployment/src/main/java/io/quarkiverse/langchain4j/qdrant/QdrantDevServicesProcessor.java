@@ -23,13 +23,13 @@ import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
+import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)
+@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
 public class QdrantDevServicesProcessor {
     private static final Logger LOG = Logger.getLogger(QdrantDevServicesProcessor.class);
 
@@ -45,7 +45,7 @@ public class QdrantDevServicesProcessor {
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
-            GlobalDevServicesConfig devServicesConfig) {
+            DevServicesConfig devServicesConfig) {
 
         List<DevServicesResultBuildItem> result = new ArrayList<>();
         QdrantDevServiceCfg configuration = getConfiguration(qdrantBuildConfig);
@@ -80,7 +80,7 @@ public class QdrantDevServicesProcessor {
                     dockerStatusBuildItem,
                     configuration,
                     launchMode,
-                    devServicesConfig.timeout,
+                    devServicesConfig.timeout(),
                     !devServicesSharedNetworkBuildItem.isEmpty());
 
             if (newDevService != null) {
