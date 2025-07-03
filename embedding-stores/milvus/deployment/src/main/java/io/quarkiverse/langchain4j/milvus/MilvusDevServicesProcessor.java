@@ -25,7 +25,7 @@ import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
+import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ConfigureUtil;
 import io.quarkus.devservices.common.ContainerLocator;
@@ -33,7 +33,7 @@ import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigUtils;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)
+@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
 public class MilvusDevServicesProcessor {
 
     private static final Logger log = Logger.getLogger(MilvusDevServicesProcessor.class);
@@ -61,7 +61,7 @@ public class MilvusDevServicesProcessor {
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
-            GlobalDevServicesConfig devServicesConfig) {
+            DevServicesConfig devServicesConfig) {
 
         List<DevServicesResultBuildItem> result = new ArrayList<>();
         MilvusDevServiceCfg configuration = getConfiguration(milvusBuildConfig);
@@ -91,7 +91,7 @@ public class MilvusDevServicesProcessor {
         try {
             DevServicesResultBuildItem.RunningDevService newMilvusDevService = startMilvusContainer(
                     dockerStatusBuildItem, configuration, launchMode,
-                    devServicesConfig.timeout, !devServicesSharedNetworkBuildItem.isEmpty());
+                    devServicesConfig.timeout(), !devServicesSharedNetworkBuildItem.isEmpty());
             if (newMilvusDevService != null) {
                 milvusDevService = newMilvusDevService;
                 if (milvusDevService.isOwner()) {

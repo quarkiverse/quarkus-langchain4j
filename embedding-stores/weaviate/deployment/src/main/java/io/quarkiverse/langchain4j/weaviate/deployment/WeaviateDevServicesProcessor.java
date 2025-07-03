@@ -22,13 +22,13 @@ import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
+import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.LaunchMode;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)
+@BuildSteps(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
 public class WeaviateDevServicesProcessor {
 
     private static final Logger log = Logger.getLogger(WeaviateDevServicesProcessor.class);
@@ -55,7 +55,7 @@ public class WeaviateDevServicesProcessor {
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
-            GlobalDevServicesConfig devServicesConfig) {
+            DevServicesConfig devServicesConfig) {
 
         WeaviateDevServiceCfg configuration = getConfiguration(weaviateBuildConfig);
 
@@ -74,7 +74,7 @@ public class WeaviateDevServicesProcessor {
         try {
             DevServicesResultBuildItem.RunningDevService newDevService = startContainer(dockerStatusBuildItem, configuration,
                     launchMode,
-                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout);
+                    !devServicesSharedNetworkBuildItem.isEmpty(), devServicesConfig.timeout());
             if (newDevService != null) {
                 devService = newDevService;
 
