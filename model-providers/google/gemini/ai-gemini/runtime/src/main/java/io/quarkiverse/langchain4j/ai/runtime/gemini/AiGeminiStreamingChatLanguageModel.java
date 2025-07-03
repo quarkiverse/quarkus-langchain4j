@@ -13,14 +13,14 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
-import io.quarkiverse.langchain4j.gemini.common.GeminiStreaminChatLanguageModel;
+import io.quarkiverse.langchain4j.gemini.common.GeminiStreamingChatLanguageModel;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentRequest;
 import io.quarkiverse.langchain4j.gemini.common.GenerateContentResponse;
 import io.quarkiverse.langchain4j.gemini.common.ModelAuthProviderFilter;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.Multi;
 
-public class AiGeminiStreamingChatLanguageModel extends GeminiStreaminChatLanguageModel {
+public class AiGeminiStreamingChatLanguageModel extends GeminiStreamingChatLanguageModel {
 
     private final AiGeminiRestApi.ApiMetadata apiMetadata;
     private final AiGeminiRestApi restApi;
