@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -49,6 +50,38 @@ public class MongoDBChatMemoryStoreTest extends OpenAiBaseTest {
     @BeforeEach
     void setUp() {
         wiremock().resetRequests();
+        wiremock().resetMappings();
+    }
+
+    @Override
+    protected void setChatCompletionMessageContent(String messageContent) {
+        wiremock().register(
+                WireMock.post(WireMock.urlEqualTo("/v1/chat/completions"))
+                        .willReturn(WireMock.aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withTransformers("chat-completion-transformer")
+                                .withBody("""
+                                        {
+                                          "id": "chatcmpl-test",
+                                          "object": "chat.completion",
+                                          "created": 1677652288,
+                                          "model": "gpt-4o-mini",
+                                          "choices": [{
+                                            "index": 0,
+                                            "message": {
+                                              "role": "assistant",
+                                              "content": "%s"
+                                            },
+                                            "finish_reason": "stop"
+                                          }],
+                                          "usage": {
+                                            "prompt_tokens": 9,
+                                            "completion_tokens": 12,
+                                            "total_tokens": 21
+                                          }
+                                        }
+                                        """.formatted(messageContent))));
     }
 
     @RegisterAiService
