@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-weaviate-parent</artifactId>
-        <version>1.1.0.CR1</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-weaviate</artifactId>
     <name>Quarkus LangChain4j - Weaviate - Runtime</name>
