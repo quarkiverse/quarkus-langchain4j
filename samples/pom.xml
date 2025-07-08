@@ -22,6 +22,7 @@
         <module>mcp-tools</module>
         <module>mcp-sse-client-server</module>
         <module>secure-mcp-sse-client-server</module>
+        <module>secure-mcp-cmd-client-server</module>
         <module>review-triage</module>
         <module>secure-fraud-detection</module>
         <module>secure-poem-multiple-models</module>

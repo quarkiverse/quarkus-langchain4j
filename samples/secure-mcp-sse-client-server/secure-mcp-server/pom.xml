@@ -39,7 +39,7 @@
         <dependency>
             <groupId>io.quarkiverse.mcp</groupId>
             <artifactId>quarkus-mcp-server-sse</artifactId>
-            <version>1.1.1</version>
+            <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
