@@ -36,7 +36,7 @@ public class InProcessEmbeddingProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(InProcessEmbeddingProcessor.class);
 
-    private static List<LocalEmbeddingModel> MODELS = List.of(
+    private final static List<LocalEmbeddingModel> MODELS = List.of(
             new LocalEmbeddingModel("dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel",
                     "all-minilm-l6-v2-q", "all-minilm-l6-v2-q.onnx", "all-minilm-l6-v2-q-tokenizer.json"),
             new LocalEmbeddingModel("dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel",
@@ -101,10 +101,13 @@ public class InProcessEmbeddingProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (InProcessEmbeddingBuildItem embedding : embeddings) {
-            Optional<String> modelName = selectedEmbedding.stream()
+            Optional<SelectedEmbeddingModelCandidateBuildItem> matchingSelected = selectedEmbedding.stream()
                     .filter(se -> se.getProvider().equals(embedding.getProvider()))
-                    .map(SelectedEmbeddingModelCandidateBuildItem::getConfigName)
                     .findFirst();
+            if (matchingSelected.isEmpty() && !selectedEmbedding.isEmpty()) {
+                continue;
+            }
+
             var builder = SyntheticBeanBuildItem
                     .configure(DotName.createSimple(embedding.className()))
                     .types(EmbeddingModel.class)
@@ -113,7 +116,7 @@ public class InProcessEmbeddingProcessor {
                     .unremovable()
                     .scope(ApplicationScoped.class)
                     .supplier(recorder.instantiate(embedding.className()));
-            modelName.ifPresent(m -> addQualifierIfNecessary(builder, m));
+            matchingSelected.ifPresent(m -> addQualifierIfNecessary(builder, m.getConfigName()));
             beanProducer.produce(builder.done());
         }
     }

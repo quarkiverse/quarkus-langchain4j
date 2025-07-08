@@ -16,6 +16,7 @@
     <module>embed-bge-small-en-q</module>
     <module>embed-bge-small-en</module>
     <module>embed-bge-small-en-v15</module>
+    <module>embed-bge-small-en-v15-and-ollama</module>
     <module>embed-bge-small-en-v15-q</module>
     <module>embed-e5-small-v2-q</module>
     <module>embed-e5-small-v2</module>
