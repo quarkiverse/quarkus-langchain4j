@@ -1,7 +1,6 @@
 package io.quarkiverse.langchain4j.azure.openai.test;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -14,52 +13,27 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.tomakehurst.wiremock.WireMockServer;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiStreamingChatModel;
-import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AzureOpenAiStreamingChatModelTest extends OpenAiBaseTest {
-
-    private static final int WIREMOCK_PORT = 8089;
-    private static WireMockServer wireMockServer;
+public class AzureOpenAiStreamingChatModelTest extends WiremockAware {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.api-key", "api-key")
-            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint",
-                    "http://localhost:%d".formatted(WIREMOCK_PORT))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.endpoint", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.log-requests", "true")
             .overrideRuntimeConfigKey("quarkus.langchain4j.azure-openai.log-responses", "true");
-
-    @BeforeAll
-    static void beforeAll() {
-        wireMockServer = new WireMockServer(options().port(WIREMOCK_PORT));
-        wireMockServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        wireMockServer.stop();
-    }
-
-    @BeforeEach
-    void setup() {
-        wireMockServer.resetAll();
-    }
 
     @Inject
     StreamingChatModel streamingChatModel;
@@ -86,7 +60,7 @@ public class AzureOpenAiStreamingChatModelTest extends OpenAiBaseTest {
                 data: [DONE]
                 """;
 
-        wireMockServer.stubFor(
+        wiremock().register(
                 post(urlMatching("/chat/completions.*"))
                         .willReturn(okForContentType(MediaType.SERVER_SENT_EVENTS, eventStream)));
         var streamingResponse = new AtomicReference<AiMessage>();
