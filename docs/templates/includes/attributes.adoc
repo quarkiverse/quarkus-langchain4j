@@ -1,3 +1,4 @@
 :project-version: ${release.current-version}
 :langchain4j-version: ${langchain4j.version}
+:langchain4j-embeddings-version: ${langchain4j-embeddings.version}
 :examples-dir: ./../examples/

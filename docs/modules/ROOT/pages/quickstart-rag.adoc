@@ -70,7 +70,7 @@ Add these dependencies to your pom.xml:
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-embeddings</artifactId>
-    <version>{langchain4j-version}</version>
+    <version>{langchain4j-embeddings-version}</version>
 </dependency>
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
