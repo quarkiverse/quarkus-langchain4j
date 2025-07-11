@@ -43,7 +43,7 @@ public class AiGeminiChatLanguageModelAuthProviderSmokeTest extends WiremockAwar
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:generateContent", CHAT_MODEL_ID)))
+                        String.format("/v1/models/%s:generateContent", CHAT_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
