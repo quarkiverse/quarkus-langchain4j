@@ -67,7 +67,12 @@ public class McpAccessTokenTest {
 
         @Override
         public String getAuthorization(Input input) {
-            return "Bearer test-token";
+            try {
+                Thread.sleep(5000);
+                return "Bearer test-token";
+            } catch (Exception ex) {
+            }
+            return null;
         }
 
     }
