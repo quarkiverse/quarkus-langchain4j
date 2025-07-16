@@ -1,0 +1,74 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-client-name]] [.property-path]##link:#quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-client-name[`quarkus.langchain4j.memorystore.mongodb.client-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.mongodb.client-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the MongoDB client to use. These clients are configured by means of the `mongodb` extension. If unspecified, it will use the default MongoDB client.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_CLIENT_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_CLIENT_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-database]] [.property-path]##link:#quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-database[`quarkus.langchain4j.memorystore.mongodb.database`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.mongodb.database+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the database to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_DATABASE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_DATABASE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`langchain4j`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-collection]] [.property-path]##link:#quarkus-langchain4j-memory-store-mongodb_quarkus-langchain4j-memorystore-mongodb-collection[`quarkus.langchain4j.memorystore.mongodb.collection`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.memorystore.mongodb.collection+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the collection to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_COLLECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MEMORYSTORE_MONGODB_COLLECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`chat_memory`
+
+|===
+

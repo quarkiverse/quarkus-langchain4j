@@ -1,0 +1,202 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-enabled[`quarkus.langchain4j.docling.devservices.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices are generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled, Quarkus will attempt to automatically configure and start a Docling server when running in Dev or Test mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-image-name[`quarkus.langchain4j.docling.devservices.image-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The container image name to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`quay.io/docling-project/docling-serve:latest`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-enable-ui]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-enable-ui[`quarkus.langchain4j.docling.devservices.enable-ui`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.devservices.enable-ui+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether or not to enable the docling UI
+
+See https://github.com/docling-project/docling-serve?tab=readme-ov-file++#++demonstration-ui
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_ENABLE_UI+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_ENABLE_UI+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-devservices-container-env-container-env[`quarkus.langchain4j.docling.devservices.container-env."container-env"`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.devservices.container-env."container-env"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment variables that are passed to the container
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_DEVSERVICES_CONTAINER_ENV__CONTAINER_ENV_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a| [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-base-url]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-base-url[`quarkus.langchain4j.docling.base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The default base url of where docling is
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-timeout]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-timeout[`quarkus.langchain4j.docling.timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout for Docling calls
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-docling_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`1m`
+
+a| [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-log-requests]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-log-requests[`quarkus.langchain4j.docling.log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Docling client should log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-docling_quarkus-langchain4j-docling-log-responses]] [.property-path]##link:#quarkus-langchain4j-docling_quarkus-langchain4j-docling-log-responses[`quarkus.langchain4j.docling.log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.docling.log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Docling client should log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_DOCLING_LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_DOCLING_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-langchain4j-docling_quarkus-langchain4j]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

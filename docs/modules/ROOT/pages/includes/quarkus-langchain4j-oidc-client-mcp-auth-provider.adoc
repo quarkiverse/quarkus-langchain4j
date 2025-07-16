@@ -1,0 +1,32 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled]] [.property-path]##link:#quarkus-langchain4j-oidc-client-mcp-auth-provider_quarkus-langchain4j-oidc-client-mcp-auth-provider-enabled[`quarkus.langchain4j.oidc-client-mcp-auth-provider.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.oidc-client-mcp-auth-provider.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the OIDC Client McpClientAuthProvider should be enabled
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OIDC_CLIENT_MCP_AUTH_PROVIDER_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OIDC_CLIENT_MCP_AUTH_PROVIDER_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+|===
+
