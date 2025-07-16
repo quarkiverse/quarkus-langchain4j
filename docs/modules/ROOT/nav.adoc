@@ -11,6 +11,7 @@
 [.list-top-item]
 .Guides
 
+* xref:guide-few-shots.adoc[Using few-shots in prompts]
 * xref:guide-prompt-engineering.adoc[Prompt engineering patterns]
 // * xref:guide-ai-services-patterns.adoc[AI Services patterns]
 * xref:guide-fault-tolerance.adoc[Fault Tolerance]
@@ -21,7 +22,7 @@
 // * xref:guide-streamed-responses.adoc[Using function calling]
 // * xref:guide-log.adoc[Logging Model Interactions]
 // * xref:guide-token.adoc[Tracking token usages]
-// * xref:guide-few-shots.adoc[Using few-shots in prompts]
+
 // * xref:guide-local-models.adoc[Using local models]
 // * xref:guide-in-process-models.adoc[Using in-process models]
 // * xref:guide-passing-images.adoc[Passing Images to Models]
