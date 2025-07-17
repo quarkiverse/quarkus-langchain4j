@@ -8,9 +8,9 @@ import jakarta.ws.rs.Produces;
 
 @RegisterRestClient
 @AccessToken 
-public interface UserNameRestClient {
+public interface ServiceAccountNameRestClient {
 
     @GET
     @Produces("text/plain")
-    String getUserName();
+    String getServiceAccountName();
 }
