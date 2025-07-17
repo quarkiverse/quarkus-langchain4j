@@ -17,6 +17,7 @@
 * xref:guide-fault-tolerance.adoc[Fault Tolerance]
 * xref:guide-csv.adoc[Index CSVs in a RAG pipeline]
 * xref:guide-web-search.adoc[Using Tavily Web Search]
+* xref:guide-passing-image.adoc[Passing Images to Models]
 // * xref:guide-agentic-patterns.adoc[Implementing Agentic patterns]
 // * xref:guide-structured-output.adoc[Returning structured data from a model]
 // * xref:guide-streamed-responses.adoc[Using function calling]
@@ -25,7 +26,7 @@
 
 // * xref:guide-local-models.adoc[Using local models]
 // * xref:guide-in-process-models.adoc[Using in-process models]
-// * xref:guide-passing-images.adoc[Passing Images to Models]
+
 // * xref:guide-generating-images.adoc[Generating Images from Prompts]
 // Add evaluation and guardrails and testing guides
 // Give knowledge to AI models
