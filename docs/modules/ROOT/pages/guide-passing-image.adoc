@@ -1,0 +1,103 @@
+= Extracting data from images
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Some large language models now support vision inputs, letting you automate tasks like OCR-ing receipts, detecting objects in photos, or generating image captions.
+This guide shows you how to build a Quarkus microservice that sends image data—either via URL or Base64—to a vision-capable LLM (e.g., GPT-4o) using Quarkus LangChain4j.
+
+== Prerequisites
+
+* A Quarkus project with the `quarkus-langchain4j-openai` extension (or another model provider that supports a model with vision capabilities)
+* `quarkus.langchain4j.openai.api-key` set in `application.properties`
+* A vision-capable model (for example: `gpt-4.1-mini`, `o3`. The default model has vision capabilities, but you can specify a different one if needed)
+
+[source,properties]
+----
+quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
+quarkus.langchain4j.openai.chat-model.model-name=gpt-4.1-mini
+----
+
+* Set the temperature to 0.0 for deterministic outputs, especially for tasks like OCR or object detection where precision matters:
+
+[source,properties]
+----
+quarkus.langchain4j.openai.chat-model.temperature=0
+----
+
+== Vision Capability
+
+Vision-capable LLMs can process and understand images alongside text.
+Common use cases include:
+
+* **OCR (Optical Character Recognition)** – extract text from receipts, invoices, or documents
+* **Object Detection** – identify and classify objects in a photo
+* **Image Captioning** – generate descriptive text for an image
+* **Visual Question Answering** – answer questions about image content
+
+NOTE: Image payloads count toward the model’s context window limits.
+Always validate image size and format before sending.
+
+
+== Step 1. Define the AI service
+
+Declare an AI Service interface to encapsulate your vision calls:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/ImageAiService.java[tags=head]
+----
+
+Here, `@RegisterAiService` creates the xref:ai-services.adoc[AI Service], and `@SystemMessage` supplies the global instruction for all methods in the service.
+
+== Step 2. Passing an image by URL
+
+Use `@ImageUrl` to mark a String parameter as a remote image URL:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/ImageAiService.java[tags=head;url]
+----
+<1> The `@ImageUrl` annotation tells Quarkus LangChain4j to wrap this String as an image URL payload.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/Endpoint.java[tags=head;url]
+----
+<1> This endpoint accepts `?u=<imageUrl>` and returns the extracted data
+
+
+== Step 3. Passing images as Base64 data
+
+Use the `Image` data type for local or in-memory images:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/ImageAiService.java[tags=head;ocr]
+----
+<1> The `Image` parameter carries Base64 data plus a _MIME_ type.
+
+In your application code, read and encode the image:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/images/Endpoint.java[tags=head;ocr]
+----
+
+== Error-Handling Tips
+
+* **Invalid URL or unreachable host:** makes sure the URL is valid and accessible.
+* **Oversized Base64 payload:** validate file size (e.g., `< 4 MB`) before encoding to avoid context-window errors.
+* **Unsupported MIME type:** check file extension and only accept `image/jpeg`, `image/png`, etc.
+
+== Conclusion
+
+In this guide, you learned two ways to pass images to a vision-capable LLM using Quarkus LangChain4j:
+
+* By URL with `@ImageUrl`
+* By Base64 data with the `Image` type
+
+Next steps:
+
+* Combine text and image inputs in a single prompt for richer multimodal interactions
+* Chain image extraction into downstream workflows (e.g., store OCR results in a database)

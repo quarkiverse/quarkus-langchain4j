@@ -1,0 +1,80 @@
+= Implementing Few-Shot Prompting
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Few-shot prompting lets you guide an LLM by embedding a handful of input–output examples directly in the prompt—no fine-tuning required.
+It strikes a balance between zero-shot and one-shot prompting, boosting accuracy on tasks like classification, extraction, and summarization while keeping your code simple.
+
+This guide walks you through three implementation steps to build a sentiment-classification microservice using Quarkus LangChain4j.
+
+== What is the Few-Shot Technique
+
+Few-shot prompting is an in-context learning technique where you provide two or more _input–output demonstrations_ in the same prompt to establish a pattern the model can generalize.
+This approach:
+
+* Improves accuracy over zero- and one-shot prompting for complex tasks.
+* Avoids the overhead of model fine-tuning or external retrieval.
+* Is ideal for tasks requiring a consistent output format or style.
+
+However, this technique is not intended to be used to add new knowledge to the model, but rather to guide its output style and format.
+
+== Step 1. Define the AI service
+
+Declare your AI Service interface with CDI and LangChain4j annotations so Quarkus can manage it:
+In this example, we will create a service that classifies text sentiment as either positive or negative.
+
+[source,java]
+----
+package io.quarkiverse.langchain4j.samples.fewshots;
+
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+
+
+@RegisterAiService
+@SystemMessage("You are an assistant that classifies text sentiment.")
+public interface SentimentAiService {
+    // few-shot method defined in Step 2
+}
+----
+
+Here, `@RegisterAiService` creates the xref:ai-services.adoc[AI Service], and `@SystemMessage` supplies the global instruction for all methods in the service.
+
+== Step 2. Add Few-Shots
+
+Inside the same interface, define a method with `@UserMessage` that inlines your examples:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/fewshots/SentimentAiService.java[]
+----
+
+<1>	The multi-line string contains two complete "INPUT: … OUTPUT: …" pairs followed by the placeholder `\{text}` for the new query.
+<2> When the method is invoked, Quarkus Langchain4j will replace `\{text}` with the actual text parameter.
+
+[TIP]
+While in this example we added the few-shot example in the user message, they can also be added in the system message.
+
+== Step 3. Invoke the AI Service from an HTTP Endpoint
+
+Finally, expose a REST resource that injects and calls your AI Service:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/fewshots/SentimentResource.java[]
+----
+
+This `SentimentResource` bean handles HTTP GET requests, delegates to the few-shot prompt method, and returns the classification.
+The endpoint can be tested with a simple HTTP client or browser by accessing:
+
+[source,curl]
+----
+curl http://localhost:8080/sentiment?text=I%20love%20this%20product!
+----
+
+== Conclusion
+
+By defining an AI service, embedding a few-shot prompt, and wiring it to a REST endpoint, you’ve built a complete sentiment-classification microservice with minimal code.
+Find more details about the few-shot technique in the xref:guide-prompt-engineering.adoc#few-shot[Prompt Engineering Guide].
