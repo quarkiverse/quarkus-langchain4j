@@ -7,8 +7,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-@Path("/user-name-service")
-public class UserNameRestServer {
+@Path("/service-account-name")
+public class ServiceAccountNameRestServer {
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -16,7 +16,7 @@ public class UserNameRestServer {
     @GET
     @Produces("text/plain")
     @Authenticated
-    public String getUserName() {
+    public String getServiceAccountName() {
         return securityIdentity.getPrincipal().getName();
     }
 }
