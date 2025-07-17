@@ -17,6 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -31,15 +37,9 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -125,9 +125,9 @@ public class GuardrailWithAugmentationTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             spy.incrementAndGet();
-            assertThat(params.augmentationResult().contents()).hasSize(2);
+            assertThat(request.requestParams().augmentationResult().contents()).hasSize(2);
             return InputGuardrailResult.success();
         }
 
@@ -142,9 +142,9 @@ public class GuardrailWithAugmentationTest {
         AtomicInteger spy = new AtomicInteger();
 
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             spy.incrementAndGet();
-            assertThat(params.augmentationResult().contents()).hasSize(2);
+            assertThat(request.requestParams().augmentationResult().contents()).hasSize(2);
             return OutputGuardrailResult.success();
         }
 

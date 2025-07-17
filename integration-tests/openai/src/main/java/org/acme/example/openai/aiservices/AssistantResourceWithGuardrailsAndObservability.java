@@ -6,15 +6,15 @@ import jakarta.ws.rs.Path;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 
 @Path("assistant-with-guardrails-observability")
 public class AssistantResourceWithGuardrailsAndObservability {
@@ -51,7 +51,7 @@ public class AssistantResourceWithGuardrailsAndObservability {
     @ApplicationScoped
     public static class IGDirectlyImplementInputGuardrailWithParams implements InputGuardrail {
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             return success();
         }
     }
@@ -59,7 +59,7 @@ public class AssistantResourceWithGuardrailsAndObservability {
     @ApplicationScoped
     public static class OGDirectlyImplementOutputGuardrailWithParams implements OutputGuardrail {
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             return success();
         }
     }
@@ -90,7 +90,7 @@ public class AssistantResourceWithGuardrailsAndObservability {
 
     public static abstract class AbstractOGImplementingValidateWithParams implements OutputGuardrail {
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             return success();
         }
     }
@@ -104,7 +104,7 @@ public class AssistantResourceWithGuardrailsAndObservability {
 
     public static abstract class AbstractIGImplementingValidateWithParams implements InputGuardrail {
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             return success();
         }
     }

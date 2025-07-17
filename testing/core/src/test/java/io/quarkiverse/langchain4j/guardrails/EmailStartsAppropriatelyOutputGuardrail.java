@@ -2,6 +2,10 @@ package io.quarkiverse.langchain4j.guardrails;
 
 import dev.langchain4j.data.message.AiMessage;
 
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
 public class EmailStartsAppropriatelyOutputGuardrail implements OutputGuardrail {
     static final String REPROMPT_MESSAGE = "Invalid email";
     static final String REPROMPT_PROMPT = """

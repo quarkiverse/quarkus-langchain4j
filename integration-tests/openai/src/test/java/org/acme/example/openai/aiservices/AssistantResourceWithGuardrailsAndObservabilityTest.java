@@ -39,7 +39,7 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
 
     @Test
     void guardrailMetricsAvailable() {
-        get("/assistant-with-guardrails-observability").then()
+        get("assistant-with-guardrails-observability").then()
                 .statusCode(200)
                 .body(containsString("MockGPT"));
 

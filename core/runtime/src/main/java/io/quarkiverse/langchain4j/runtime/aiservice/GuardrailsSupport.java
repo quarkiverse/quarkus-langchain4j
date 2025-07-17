@@ -37,6 +37,10 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.smallrye.mutiny.Multi;
 
+/**
+ * @deprecated Deprecated in favor of upstream implementation
+ */
+@Deprecated(forRemoval = true)
 public class GuardrailsSupport {
 
     public static UserMessage invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
@@ -269,6 +273,7 @@ public class GuardrailsSupport {
         return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams, beanManager, auditSourceInfo);
     }
 
+    @Deprecated(forRemoval = true)
     static class GuardrailRetryException extends RuntimeException {
         // Marker class to indicate a retry to the downstream consumer.
     }

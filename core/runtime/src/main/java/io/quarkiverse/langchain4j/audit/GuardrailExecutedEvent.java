@@ -11,7 +11,9 @@ import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
  *
  * @param <P> the type of guardrail parameters used in the validation process
  * @param <R> the type of guardrail result produced by the validation process
+ * @deprecated This will be replaced with an alternate version when the upstream guardrail implementation is merged
  */
+@Deprecated(forRemoval = true)
 public interface GuardrailExecutedEvent<P extends GuardrailParams, R extends GuardrailResult<R>, G extends Guardrail<P, R>>
         extends LLMInteractionEvent {
     /**
