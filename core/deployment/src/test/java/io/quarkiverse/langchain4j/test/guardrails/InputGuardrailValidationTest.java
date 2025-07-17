@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.GuardrailException;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -29,12 +33,8 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -181,15 +181,16 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             spy.incrementAndGet();
-            if (params.memory().messages().isEmpty()) {
-                assertThat(params.userMessage().singleText()).isEqualTo("foo");
+            var messages = request.requestParams().chatMemory().messages();
+            if (messages.isEmpty()) {
+                assertThat(request.userMessage().singleText()).isEqualTo("foo");
             }
-            if (params.memory().messages().size() == 2) {
-                assertThat(chatMessageToText(params.memory().messages().get(0))).isEqualTo("foo");
-                assertThat(chatMessageToText(params.memory().messages().get(1))).isEqualTo("Hi!");
-                assertThat(params.userMessage().singleText()).isEqualTo("bar");
+            if (messages.size() == 2) {
+                assertThat(chatMessageToText(messages.get(0))).isEqualTo("foo");
+                assertThat(chatMessageToText(messages.get(1))).isEqualTo("Hi!");
+                assertThat(request.userMessage().singleText()).isEqualTo("bar");
             }
             return success();
         }

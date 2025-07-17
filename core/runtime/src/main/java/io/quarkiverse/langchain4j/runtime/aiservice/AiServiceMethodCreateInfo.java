@@ -15,8 +15,8 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.tool.ToolExecutor;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
@@ -45,8 +45,20 @@ public final class AiServiceMethodCreateInfo {
     private final ResponseSchemaInfo responseSchemaInfo;
 
     // support for guardrails
-    private final List<String> outputGuardrailsClassNames;
-    private final List<String> inputGuardrailsClassNames;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private final List<String> quarkusOutputGuardrailsClassNames;
+
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private final List<String> quarkusInputGuardrailsClassNames;
+
+    private final InputGuardrailsLiteral inputGuardrails;
+    private final OutputGuardrailsLiteral outputGuardrails;
 
     // support for response augmenter, potentially null
     private final String responseAugmenterClassName;
@@ -56,8 +68,16 @@ public final class AiServiceMethodCreateInfo {
     private transient final Map<String, ToolExecutor> toolExecutors = new ConcurrentHashMap<>();
 
     // Don't cache the instances, because of scope issues (some will need to be re-queried)
-    private transient final List<Class<? extends OutputGuardrail>> outputGuardrails = new CopyOnWriteArrayList<>();
-    private transient final List<Class<? extends InputGuardrail>> inputGuardrails = new CopyOnWriteArrayList<>();
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private transient final List<Class<? extends io.quarkiverse.langchain4j.guardrails.OutputGuardrail>> quarkusOutputGuardrailsClasses = new CopyOnWriteArrayList<>();
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private transient final List<Class<? extends io.quarkiverse.langchain4j.guardrails.InputGuardrail>> quarkusInputGuardrailsClasses = new CopyOnWriteArrayList<>();
     private transient Class<? extends AiResponseAugmenter<?>> augmenter;
 
     private final String outputTokenAccumulatorClassName;
@@ -81,10 +101,12 @@ public final class AiServiceMethodCreateInfo {
             Map<String, AnnotationLiteral<?>> toolClassInfo,
             List<String> mcpClientNames,
             boolean switchToWorkerThreadForToolExecution,
-            List<String> inputGuardrailsClassNames,
-            List<String> outputGuardrailsClassNames,
+            List<String> quarkusInputGuardrailsClassNames,
+            List<String> quarkusOutputGuardrailsClassNames,
             String outputTokenAccumulatorClassName,
-            String responseAugmenterClassName) {
+            String responseAugmenterClassName,
+            InputGuardrailsLiteral inputGuardrails,
+            OutputGuardrailsLiteral outputGuardrails) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
         this.systemMessageInfo = systemMessageInfo;
@@ -105,8 +127,10 @@ public final class AiServiceMethodCreateInfo {
         this.responseSchemaInfo = responseSchemaInfo;
         this.toolClassInfo = toolClassInfo;
         this.mcpClientNames = mcpClientNames;
-        this.inputGuardrailsClassNames = inputGuardrailsClassNames;
-        this.outputGuardrailsClassNames = outputGuardrailsClassNames;
+        this.quarkusInputGuardrailsClassNames = quarkusInputGuardrailsClassNames;
+        this.quarkusOutputGuardrailsClassNames = quarkusOutputGuardrailsClassNames;
+        this.inputGuardrails = inputGuardrails;
+        this.outputGuardrails = outputGuardrails;
         this.outputTokenAccumulatorClassName = outputTokenAccumulatorClassName;
         // Use a lazy value to get the value at runtime.
         this.guardrailsMaxRetry = new LazyValue<Integer>(new Supplier<Integer>() {
@@ -188,12 +212,24 @@ public final class AiServiceMethodCreateInfo {
         return toolExecutors;
     }
 
-    public List<String> getOutputGuardrailsClassNames() {
-        return outputGuardrailsClassNames;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<String> getQuarkusOutputGuardrailsClassNames() {
+        return quarkusOutputGuardrailsClassNames;
     }
 
-    public List<Class<? extends OutputGuardrail>> getOutputGuardrailsClasses() {
-        return outputGuardrails;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<Class<? extends io.quarkiverse.langchain4j.guardrails.OutputGuardrail>> getQuarkusOutputGuardrailsClasses() {
+        return quarkusOutputGuardrailsClasses;
+    }
+
+    public InputGuardrailsLiteral getInputGuardrails() {
+        return inputGuardrails;
     }
 
     public String getResponseAugmenterClassName() {
@@ -227,12 +263,24 @@ public final class AiServiceMethodCreateInfo {
         return guardrailsMaxRetry.get();
     }
 
-    public List<String> getInputGuardrailsClassNames() {
-        return inputGuardrailsClassNames;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<String> getQuarkusInputGuardrailsClassNames() {
+        return quarkusInputGuardrailsClassNames;
     }
 
-    public List<Class<? extends InputGuardrail>> getInputGuardrailsClasses() {
-        return inputGuardrails;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<Class<? extends io.quarkiverse.langchain4j.guardrails.InputGuardrail>> getQuarkusInputGuardrailsClasses() {
+        return quarkusInputGuardrailsClasses;
+    }
+
+    public OutputGuardrailsLiteral getOutputGuardrails() {
+        return outputGuardrails;
     }
 
     public String getOutputTokenAccumulatorClassName() {

@@ -4,7 +4,10 @@ import java.util.List;
 
 /**
  * The result of the validation of an interaction between a user and the LLM.
+ *
+ * @deprecated Use {@link dev.langchain4j.guardrail.GuardrailResult} instead
  */
+@Deprecated(forRemoval = true)
 public interface GuardrailResult<GR extends GuardrailResult> {
 
     /**

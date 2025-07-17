@@ -37,6 +37,10 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.smallrye.mutiny.Multi;
 
+/**
+ * @deprecated Deprecated in favor of upstream implementation
+ */
+@Deprecated(forRemoval = true)
 public class GuardrailsSupport {
 
     public static UserMessage invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
@@ -136,14 +140,14 @@ public class GuardrailsSupport {
     @SuppressWarnings("unchecked")
     private static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             OutputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+        if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()) {
             return OutputGuardrailResult.success();
         }
         List<Class<? extends OutputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
-            classes = methodCreateInfo.getOutputGuardrailsClasses();
+            classes = methodCreateInfo.getQuarkusOutputGuardrailsClasses();
             if (classes.isEmpty()) {
-                for (String className : methodCreateInfo.getOutputGuardrailsClassNames()) {
+                for (String className : methodCreateInfo.getQuarkusOutputGuardrailsClassNames()) {
                     try {
                         classes.add((Class<? extends OutputGuardrail>) Class.forName(className, true,
                                 Thread.currentThread().getContextClassLoader()));
@@ -164,14 +168,14 @@ public class GuardrailsSupport {
     @SuppressWarnings("unchecked")
     private static InputGuardrailResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             InputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        if (methodCreateInfo.getInputGuardrailsClassNames().isEmpty()) {
+        if (methodCreateInfo.getQuarkusInputGuardrailsClassNames().isEmpty()) {
             return InputGuardrailResult.success();
         }
         List<Class<? extends InputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
-            classes = methodCreateInfo.getInputGuardrailsClasses();
+            classes = methodCreateInfo.getQuarkusInputGuardrailsClasses();
             if (classes.isEmpty()) {
-                for (String className : methodCreateInfo.getInputGuardrailsClassNames()) {
+                for (String className : methodCreateInfo.getQuarkusInputGuardrailsClassNames()) {
                     try {
                         classes.add((Class<? extends InputGuardrail>) Class.forName(className, true,
                                 Thread.currentThread().getContextClassLoader()));
@@ -234,7 +238,7 @@ public class GuardrailsSupport {
     }
 
     public static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
-        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+        if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()) {
             return upstream;
         }
         OutputTokenAccumulator accumulator;
@@ -269,6 +273,7 @@ public class GuardrailsSupport {
         return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams, beanManager, auditSourceInfo);
     }
 
+    @Deprecated(forRemoval = true)
     static class GuardrailRetryException extends RuntimeException {
         // Marker class to indicate a retry to the downstream consumer.
     }
