@@ -14,7 +14,10 @@ import io.smallrye.common.annotation.Experimental;
  * In the case of reprompting, the reprompt message is added to the LLM context and the request is retried.
  * <p>
  * The maximum number of retries is configurable using {@code quarkus.langchain4j.guardrails.max-retries}, defaulting to 3.
+ *
+ * @deprecated Use {@link dev.langchain4j.guardrail.OutputGuardrail} instead
  */
+@Deprecated(forRemoval = true)
 @Experimental("This feature is experimental and the API is subject to change")
 public interface OutputGuardrail extends Guardrail<OutputGuardrailParams, OutputGuardrailResult> {
 

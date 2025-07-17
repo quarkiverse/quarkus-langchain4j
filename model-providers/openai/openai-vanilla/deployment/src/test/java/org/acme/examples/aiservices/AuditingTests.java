@@ -3,7 +3,7 @@ package org.acme.examples.aiservices;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat;
+import static dev.langchain4j.test.guardrail.GuardrailAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.atIndex;
 
@@ -30,31 +30,32 @@ import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.GuardrailException;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
+import dev.langchain4j.test.guardrail.GuardrailAssertions;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
 import io.quarkiverse.langchain4j.audit.InitialMessagesCreatedEvent;
-import io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.LLMInteractionCompleteEvent;
 import io.quarkiverse.langchain4j.audit.LLMInteractionEvent;
 import io.quarkiverse.langchain4j.audit.LLMInteractionFailureEvent;
-import io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.ResponseFromLLMReceivedEvent;
 import io.quarkiverse.langchain4j.audit.ToolExecutedEvent;
+import io.quarkiverse.langchain4j.audit.guardrails.InputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.audit.guardrails.OutputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.audit.guardrails.internal.DefaultInputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.audit.guardrails.internal.DefaultOutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultInitialMessagesCreatedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultInputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionCompleteEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionFailureEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultOutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultResponseFromLLMReceivedEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultToolExecutedEvent;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.logging.Log;
 import io.quarkus.test.QuarkusUnitTest;
@@ -85,6 +86,94 @@ class AuditingTests extends OpenAiBaseTest {
     OutputGuardrailAuditor outputGuardrailAuditor;
 
     @Test
+    void should_audit_quarkus_input_guardrail_events() {
+        setupWiremock();
+
+        assertThatExceptionOfType(io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException.class)
+                .isThrownBy(() -> assistant.chatWithQuarkusInputGuardrails(USER_MESSAGE))
+                .withMessage("The guardrail %s failed with this message: User message is not valid",
+                        FailureQuarkusInputGuardrail.class.getName());
+
+        io.quarkiverse.langchain4j.guardrails.GuardrailAssertions
+                .assertThat(inputGuardrailAuditor.quarkusInputGuardrailExecutedEvents)
+                .hasSize(2)
+                .satisfies(inputGuardrailExecutedEvent -> {
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(inputGuardrailExecutedEvent)
+                            .extracting(
+                                    e -> e.sourceInfo().methodName(),
+                                    e -> e.params().userMessage().singleText(),
+                                    e -> e.rewrittenUserMessage().singleText(),
+                                    io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent::guardrailClass)
+                            .containsExactly(
+                                    "chatWithQuarkusInputGuardrails",
+                                    USER_MESSAGE,
+                                    "Success!!",
+                                    SuccessQuarkusInputGuardrail.class);
+
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(inputGuardrailExecutedEvent.result())
+                            .isSuccessful();
+                }, atIndex(0))
+                .satisfies(inputGuardrailExecutedEvent -> {
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(inputGuardrailExecutedEvent)
+                            .extracting(
+                                    e -> e.sourceInfo().methodName(),
+                                    e -> e.params().userMessage().singleText(),
+                                    e -> e.rewrittenUserMessage().singleText(),
+                                    io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent::guardrailClass)
+                            .containsExactly(
+                                    "chatWithQuarkusInputGuardrails",
+                                    "Success!!",
+                                    "Success!!",
+                                    FailureQuarkusInputGuardrail.class);
+
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(inputGuardrailExecutedEvent.result())
+                            .hasSingleFailureWithMessage("User message is not valid");
+                }, atIndex(1));
+    }
+
+    @Test
+    void should_audit_quarkus_output_guardrail_events() {
+        setupWiremock();
+
+        assertThatExceptionOfType(io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException.class)
+                .isThrownBy(() -> assistant.chatWithQuarkusOutputGuardrails(USER_MESSAGE))
+                .withMessage("The guardrail %s failed with this message: LLM response is not valid",
+                        FailureQuarkusOutputGuardrail.class.getName());
+
+        io.quarkiverse.langchain4j.guardrails.GuardrailAssertions
+                .assertThat(outputGuardrailAuditor.quarkusOutputGuardrailExecutedEvents)
+                .hasSize(2)
+                .satisfies(outputGuardrailExecutedEvent -> {
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(outputGuardrailExecutedEvent)
+                            .extracting(
+                                    e -> e.sourceInfo().methodName(),
+                                    e -> e.params().responseFromLLM().text(),
+                                    io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent::guardrailClass)
+                            .containsExactly(
+                                    "chatWithQuarkusOutputGuardrails",
+                                    EXPECTED_RESPONSE,
+                                    SuccessQuarkusOutputGuardrail.class);
+
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(outputGuardrailExecutedEvent.result())
+                            .hasSuccess("Success!!", "Success!!");
+                }, atIndex(0))
+                .satisfies(outputGuardrailExecutedEvent -> {
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(outputGuardrailExecutedEvent)
+                            .extracting(
+                                    e -> e.sourceInfo().methodName(),
+                                    e -> e.params().responseFromLLM().text(),
+                                    io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent::guardrailClass)
+                            .containsExactly(
+                                    "chatWithQuarkusOutputGuardrails",
+                                    "Success!!",
+                                    FailureQuarkusOutputGuardrail.class);
+
+                    io.quarkiverse.langchain4j.guardrails.GuardrailAssertions.assertThat(outputGuardrailExecutedEvent.result())
+                            .hasSingleFailureWithMessage("LLM response is not valid");
+                }, atIndex(1));
+    }
+
+    @Test
     void should_audit_input_guardrail_events() {
         setupWiremock();
 
@@ -93,39 +182,7 @@ class AuditingTests extends OpenAiBaseTest {
                 .withMessage("The guardrail %s failed with this message: User message is not valid",
                         FailureInputGuardrail.class.getName());
 
-        assertThat(inputGuardrailAuditor.inputGuardrailExecutedEvents)
-                .hasSize(2)
-                .satisfies(inputGuardrailExecutedEvent -> {
-                    assertThat(inputGuardrailExecutedEvent)
-                            .extracting(
-                                    e -> e.sourceInfo().methodName(),
-                                    e -> e.params().userMessage().singleText(),
-                                    e -> e.rewrittenUserMessage().singleText(),
-                                    InputGuardrailExecutedEvent::guardrailClass)
-                            .containsExactly(
-                                    "chatWithInputGuardrails",
-                                    USER_MESSAGE,
-                                    "Success!!",
-                                    SuccessInputGuardrail.class);
-
-                    assertThat(inputGuardrailExecutedEvent.result()).isSuccessful();
-                }, atIndex(0))
-                .satisfies(inputGuardrailExecutedEvent -> {
-                    assertThat(inputGuardrailExecutedEvent)
-                            .extracting(
-                                    e -> e.sourceInfo().methodName(),
-                                    e -> e.params().userMessage().singleText(),
-                                    e -> e.rewrittenUserMessage().singleText(),
-                                    InputGuardrailExecutedEvent::guardrailClass)
-                            .containsExactly(
-                                    "chatWithInputGuardrails",
-                                    "Success!!",
-                                    "Success!!",
-                                    FailureInputGuardrail.class);
-
-                    assertThat(inputGuardrailExecutedEvent.result())
-                            .hasSingleFailureWithMessage("User message is not valid");
-                }, atIndex(1));
+        assertThat(inputGuardrailAuditor.inputGuardrailExecutedEvents).isEmpty();
     }
 
     @Test
@@ -137,36 +194,7 @@ class AuditingTests extends OpenAiBaseTest {
                 .withMessage("The guardrail %s failed with this message: LLM response is not valid",
                         FailureOutputGuardrail.class.getName());
 
-        assertThat(outputGuardrailAuditor.outputGuardrailExecutedEvents)
-                .hasSize(2)
-                .satisfies(outputGuardrailExecutedEvent -> {
-                    assertThat(outputGuardrailExecutedEvent)
-                            .extracting(
-                                    e -> e.sourceInfo().methodName(),
-                                    e -> e.params().responseFromLLM().text(),
-                                    OutputGuardrailExecutedEvent::guardrailClass)
-                            .containsExactly(
-                                    "chatWithOutputGuardrails",
-                                    EXPECTED_RESPONSE,
-                                    SuccessOutputGuardrail.class);
-
-                    assertThat(outputGuardrailExecutedEvent.result())
-                            .hasSuccess("Success!!", "Success!!");
-                }, atIndex(0))
-                .satisfies(outputGuardrailExecutedEvent -> {
-                    assertThat(outputGuardrailExecutedEvent)
-                            .extracting(
-                                    e -> e.sourceInfo().methodName(),
-                                    e -> e.params().responseFromLLM().text(),
-                                    OutputGuardrailExecutedEvent::guardrailClass)
-                            .containsExactly(
-                                    "chatWithOutputGuardrails",
-                                    "Success!!",
-                                    FailureOutputGuardrail.class);
-
-                    assertThat(outputGuardrailExecutedEvent.result())
-                            .hasSingleFailureWithMessage("LLM response is not valid");
-                }, atIndex(1));
+        assertThat(outputGuardrailAuditor.outputGuardrailExecutedEvents).isEmpty();
     }
 
     @Test
@@ -176,9 +204,12 @@ class AuditingTests extends OpenAiBaseTest {
         var answer = assistant.chat(USER_MESSAGE);
 
         assertThat(answer).isEqualTo(EXPECTED_RESPONSE);
-        assertThat(wiremock().getServeEvents()).hasSize(2);
 
-        assertMultipleRequestMessage(getRequestAsMap(getRequestBody(wiremock().getServeEvents().get(0))),
+        var numServeEvents = wiremock().getServeEvents().size();
+        assertThat(numServeEvents).isGreaterThanOrEqualTo(2);
+
+        assertMultipleRequestMessage(
+                getRequestAsMap(getRequestBody(wiremock().getServeEvents().get((numServeEvents == 2) ? 0 : 2))),
                 List.of(
                         new MessageContent("system", "You are a chat bot that answers questions"),
                         new MessageContent("user",
@@ -279,6 +310,38 @@ class AuditingTests extends OpenAiBaseTest {
     }
 
     @Singleton
+    static class SuccessQuarkusInputGuardrail implements io.quarkiverse.langchain4j.guardrails.InputGuardrail {
+        @Override
+        public io.quarkiverse.langchain4j.guardrails.InputGuardrailResult validate(UserMessage userMessage) {
+            return successWith("Success!!");
+        }
+    }
+
+    @Singleton
+    static class FailureQuarkusInputGuardrail implements io.quarkiverse.langchain4j.guardrails.InputGuardrail {
+        @Override
+        public io.quarkiverse.langchain4j.guardrails.InputGuardrailResult validate(UserMessage userMessage) {
+            return failure("User message is not valid");
+        }
+    }
+
+    @Singleton
+    static class SuccessQuarkusOutputGuardrail implements io.quarkiverse.langchain4j.guardrails.OutputGuardrail {
+        @Override
+        public io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            return successWith("Success!!");
+        }
+    }
+
+    @Singleton
+    static class FailureQuarkusOutputGuardrail implements io.quarkiverse.langchain4j.guardrails.OutputGuardrail {
+        @Override
+        public io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            return failure("LLM response is not valid");
+        }
+    }
+
+    @Singleton
     static class SuccessInputGuardrail implements InputGuardrail {
         @Override
         public InputGuardrailResult validate(UserMessage userMessage) {
@@ -330,6 +393,14 @@ class AuditingTests extends OpenAiBaseTest {
     @dev.langchain4j.service.SystemMessage("You are a chat bot that answers questions")
     interface Assistant {
         String chat(String message);
+
+        @io.quarkiverse.langchain4j.guardrails.InputGuardrails({ SuccessQuarkusInputGuardrail.class,
+                FailureQuarkusInputGuardrail.class })
+        String chatWithQuarkusInputGuardrails(String message);
+
+        @io.quarkiverse.langchain4j.guardrails.OutputGuardrails({ SuccessQuarkusOutputGuardrail.class,
+                FailureQuarkusOutputGuardrail.class })
+        String chatWithQuarkusOutputGuardrails(String message);
 
         @InputGuardrails({ SuccessInputGuardrail.class, FailureInputGuardrail.class })
         String chatWithInputGuardrails(String message);
@@ -456,7 +527,28 @@ class AuditingTests extends OpenAiBaseTest {
 
     @Singleton
     static class InputGuardrailAuditor {
+        /**
+         * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        List<io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent> quarkusInputGuardrailExecutedEvents = new ArrayList<>();
         List<InputGuardrailExecutedEvent> inputGuardrailExecutedEvents = new ArrayList<>();
+
+        /**
+         * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        public void inputGuardrailExecuted(
+                @Observes io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent inputGuardrailExecutedEvent) {
+            assertThat(inputGuardrailExecutedEvent)
+                    .isNotNull()
+                    .isExactlyInstanceOf(io.quarkiverse.langchain4j.audit.internal.DefaultInputGuardrailExecutedEvent.class);
+            handle(inputGuardrailExecutedEvent);
+
+            if ("chatWithQuarkusInputGuardrails".equals(inputGuardrailExecutedEvent.sourceInfo().methodName())) {
+                this.quarkusInputGuardrailExecutedEvents.add(inputGuardrailExecutedEvent);
+            }
+        }
 
         public void inputGuardrailExecuted(@Observes InputGuardrailExecutedEvent inputGuardrailExecutedEvent) {
             assertThat(inputGuardrailExecutedEvent)
@@ -464,7 +556,7 @@ class AuditingTests extends OpenAiBaseTest {
                     .isExactlyInstanceOf(DefaultInputGuardrailExecutedEvent.class);
             handle(inputGuardrailExecutedEvent);
 
-            if ("chatWithInputGuardrails".equals(inputGuardrailExecutedEvent.sourceInfo().methodName())) {
+            if ("chatWithQuarkusInputGuardrails".equals(inputGuardrailExecutedEvent.sourceInfo().methodName())) {
                 this.inputGuardrailExecutedEvents.add(inputGuardrailExecutedEvent);
             }
         }
@@ -476,7 +568,28 @@ class AuditingTests extends OpenAiBaseTest {
 
     @Singleton
     static class OutputGuardrailAuditor {
+        /**
+         * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        List<io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent> quarkusOutputGuardrailExecutedEvents = new ArrayList<>();
         List<OutputGuardrailExecutedEvent> outputGuardrailExecutedEvents = new ArrayList<>();
+
+        /**
+         * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        public void outputGuardrailExecuted(
+                @Observes io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent outputGuardrailExecutedEvent) {
+            assertThat(outputGuardrailExecutedEvent)
+                    .isNotNull()
+                    .isExactlyInstanceOf(io.quarkiverse.langchain4j.audit.internal.DefaultOutputGuardrailExecutedEvent.class);
+            handle(outputGuardrailExecutedEvent);
+
+            if ("chatWithQuarkusOutputGuardrails".equals(outputGuardrailExecutedEvent.sourceInfo().methodName())) {
+                this.quarkusOutputGuardrailExecutedEvents.add(outputGuardrailExecutedEvent);
+            }
+        }
 
         public void outputGuardrailExecuted(@Observes OutputGuardrailExecutedEvent outputGuardrailExecutedEvent) {
             assertThat(outputGuardrailExecutedEvent)
@@ -484,7 +597,7 @@ class AuditingTests extends OpenAiBaseTest {
                     .isExactlyInstanceOf(DefaultOutputGuardrailExecutedEvent.class);
             handle(outputGuardrailExecutedEvent);
 
-            if ("chatWithOutputGuardrails".equals(outputGuardrailExecutedEvent.sourceInfo().methodName())) {
+            if ("chatWithQuarkusOutputGuardrails".equals(outputGuardrailExecutedEvent.sourceInfo().methodName())) {
                 this.outputGuardrailExecutedEvents.add(outputGuardrailExecutedEvent);
             }
         }

@@ -31,6 +31,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final String moderationModelName;
     private final String imageModelName;
     private final Optional<String> beanName;
+    private final DeclarativeAiServiceInputGuardrails inputGuardrails;
+    private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -49,7 +51,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String imageModelName,
             DotName toolProviderClassDotName,
             Optional<String> beanName,
-            DotName toolHallucinationStrategyClassDotName) {
+            DotName toolHallucinationStrategyClassDotName,
+            DeclarativeAiServiceInputGuardrails inputGuardrails,
+            DeclarativeAiServiceOutputGuardrails outputGuardrails) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -67,6 +71,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolProviderClassDotName = toolProviderClassDotName;
         this.beanName = beanName;
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
+        this.inputGuardrails = inputGuardrails;
+        this.outputGuardrails = outputGuardrails;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -135,5 +141,29 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getToolHallucinationStrategyClassDotName() {
         return toolHallucinationStrategyClassDotName;
+    }
+
+    public DeclarativeAiServiceInputGuardrails getInputGuardrails() {
+        return inputGuardrails;
+    }
+
+    public DeclarativeAiServiceOutputGuardrails getOutputGuardrails() {
+        return outputGuardrails;
+    }
+
+    public record DeclarativeAiServiceInputGuardrails(List<ClassInfo> inputGuardrailClassInfos) {
+        public List<String> asClassNames() {
+            return this.inputGuardrailClassInfos.stream()
+                    .map(classInfo -> classInfo.name().toString())
+                    .toList();
+        }
+    }
+
+    public record DeclarativeAiServiceOutputGuardrails(List<ClassInfo> outputGuardrailClassInfos, int maxRetries) {
+        public List<String> asClassNames() {
+            return this.outputGuardrailClassInfos.stream()
+                    .map(classInfo -> classInfo.name().toString())
+                    .toList();
+        }
     }
 }

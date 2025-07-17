@@ -22,7 +22,9 @@ import io.quarkiverse.langchain4j.guardrails.GuardrailResult.Result;
  * @param <A> The type of {@link GuardrailResultAssert}
  * @param <R> The type of {@link GuardrailResult}
  * @param <F> The type of {@link Failure}
+ * @deprecated Use {@link dev.langchain4j.test.guardrail.GuardrailResultAssert} instead
  */
+@Deprecated(forRemoval = true)
 public sealed abstract class GuardrailResultAssert<A extends GuardrailResultAssert<A, R, F>, R extends GuardrailResult<R>, F extends Failure>
         extends AbstractObjectAssert<A, R>
         permits InputGuardrailResultAssert, OutputGuardrailResultAssert {

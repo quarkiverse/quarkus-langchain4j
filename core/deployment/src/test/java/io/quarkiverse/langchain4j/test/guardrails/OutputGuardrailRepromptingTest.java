@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.test.guardrails;
 import static io.quarkiverse.langchain4j.runtime.LangChain4jUtil.chatMessageToText;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.atIndex;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.GuardrailException;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -30,12 +35,8 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class OutputGuardrailRepromptingTest {
@@ -125,26 +126,31 @@ public class OutputGuardrailRepromptingTest {
         private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             int v = spy.incrementAndGet();
-            List<ChatMessage> messages = params.memory().messages();
-            if (v == 1) {
-                ChatMessage last = messages.get(messages.size() - 1);
-                assertThat(last).isInstanceOf(AiMessage.class);
-                assertThat(((AiMessage) last).text()).isEqualTo("Nope");
-                assertThat(params.responseFromLLM().text()).isEqualTo("Nope");
-                return reprompt("Retry", "Retry");
-            }
-            if (v == 2) {
-                // Check that it's in memory
-                ChatMessage last = messages.get(messages.size() - 1);
-                ChatMessage beforeLast = messages.get(messages.size() - 2);
+            List<ChatMessage> messages = request.requestParams().chatMemory().messages();
 
-                assertThat(last).isInstanceOf(AiMessage.class);
-                assertThat(((AiMessage) last).text()).isEqualTo("Hello");
-                assertThat(params.responseFromLLM().text()).isEqualTo("Hello");
-                assertThat(beforeLast).isInstanceOf(UserMessage.class);
-                assertThat(chatMessageToText(beforeLast)).isEqualTo("Retry");
+            if ((v == 1) || (v == 2)) {
+                assertThat(messages)
+                        .hasSize(3)
+                        .satisfies(message -> assertThat(message)
+                                .isNotNull()
+                                .isInstanceOf(dev.langchain4j.data.message.SystemMessage.class)
+                                .extracting(m -> ((dev.langchain4j.data.message.SystemMessage) m).text())
+                                .isEqualTo("Say Hi!"),
+                                atIndex(0))
+                        .satisfies(message -> assertThat(message)
+                                .isNotNull()
+                                .isInstanceOf(UserMessage.class)
+                                .extracting(m -> ((UserMessage) m).singleText())
+                                .isEqualTo("foo"),
+                                atIndex(1))
+                        .satisfies(message -> assertThat(message)
+                                .isNotNull()
+                                .isInstanceOf(AiMessage.class)
+                                .extracting(m -> ((AiMessage) m).text())
+                                .isEqualTo("Nope"),
+                                atIndex(2));
 
                 return reprompt("Retry", "Retry");
             }
@@ -165,9 +171,9 @@ public class OutputGuardrailRepromptingTest {
         private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             int v = spy.incrementAndGet();
-            List<ChatMessage> messages = params.memory().messages();
+            List<ChatMessage> messages = request.requestParams().chatMemory().messages();
             if (v == 1) {
                 ChatMessage last = messages.get(messages.size() - 1);
                 assertThat(last).isInstanceOf(AiMessage.class);
@@ -175,14 +181,13 @@ public class OutputGuardrailRepromptingTest {
                 return reprompt("Retry", "Retry Once");
             }
             if (v == 2) {
-                // Check that it's in memory
+                // Check that it's not in memory
                 ChatMessage last = messages.get(messages.size() - 1);
                 ChatMessage beforeLast = messages.get(messages.size() - 2);
 
                 assertThat(last).isInstanceOf(AiMessage.class);
-                assertThat(((AiMessage) last).text()).isEqualTo("Hello");
+                assertThat(((AiMessage) last).text()).isEqualTo("Nope");
                 assertThat(beforeLast).isInstanceOf(UserMessage.class);
-                assertThat(chatMessageToText(beforeLast)).isEqualTo("Retry Once");
                 return reprompt("Retry", "Retry Twice");
             }
             return reprompt("Retry", "Retry Again");

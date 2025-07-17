@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.GuardrailException;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -25,13 +28,10 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -46,16 +46,21 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
     @Inject
     MyAiService aiService;
 
+    @Inject
+    OKGuardrail okGuardrail;
+
     @Test
     @ActivateRequestContext
     void testOk() {
         aiService.ok("1").collect().asList().await().indefinitely();
+        assertThat(okGuardrail.spy()).isEqualTo(1);
     }
 
     @Test
     @ActivateRequestContext
     void testOkWithPassThroughAccumulator() {
         aiService.okWithPassThroughAccumulator("1").collect().asList().await().indefinitely();
+        assertThat(okGuardrail.spy()).isEqualTo(1);
     }
 
     @Test

@@ -26,6 +26,8 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
@@ -35,8 +37,6 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 
 public class LangChain4jDotNames {
@@ -48,6 +48,18 @@ public class LangChain4jDotNames {
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public static final DotName QUARKUS_OUTPUT_GUARDRAILS = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.OutputGuardrails.class);
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public static final DotName QUARKUS_INPUT_GUARDRAILS = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.InputGuardrails.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
     public static final DotName INPUT_GUARDRAILS = DotName.createSimple(InputGuardrails.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
