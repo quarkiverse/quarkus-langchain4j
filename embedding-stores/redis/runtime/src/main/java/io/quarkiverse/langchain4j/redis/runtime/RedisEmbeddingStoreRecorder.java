@@ -9,13 +9,19 @@ import io.quarkiverse.langchain4j.redis.RedisEmbeddingStore;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.redis.client.RedisClientName;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class RedisEmbeddingStoreRecorder {
+    private final RuntimeValue<RedisEmbeddingStoreConfig> runtimeConfig;
+
+    public RedisEmbeddingStoreRecorder(RuntimeValue<RedisEmbeddingStoreConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
 
     public Function<SyntheticCreationalContext<RedisEmbeddingStore>, RedisEmbeddingStore> embeddingStoreFunction(
-            RedisEmbeddingStoreConfig config, String clientName) {
+            String clientName) {
         return new Function<>() {
             @Override
             public RedisEmbeddingStore apply(SyntheticCreationalContext<RedisEmbeddingStore> context) {
@@ -30,15 +36,15 @@ public class RedisEmbeddingStoreRecorder {
                 builder.dataSource(dataSource);
 
                 RedisSchema schema = new RedisSchema.Builder()
-                        .indexName(config.indexName())
-                        .prefix(config.prefix())
-                        .vectorFieldName(config.vectorFieldName())
-                        .scalarFieldName(config.scalarFieldName())
-                        .numericMetadataFields(config.numericMetadataFields().orElse(Collections.emptyList()))
-                        .textualMetadataFields(config.textualMetadataFields().orElse(Collections.emptyList()))
-                        .vectorAlgorithm(config.vectorAlgorithm())
-                        .dimension(config.dimension())
-                        .metricType(config.distanceMetric())
+                        .indexName(runtimeConfig.getValue().indexName())
+                        .prefix(runtimeConfig.getValue().prefix())
+                        .vectorFieldName(runtimeConfig.getValue().vectorFieldName())
+                        .scalarFieldName(runtimeConfig.getValue().scalarFieldName())
+                        .numericMetadataFields(runtimeConfig.getValue().numericMetadataFields().orElse(Collections.emptyList()))
+                        .textualMetadataFields(runtimeConfig.getValue().textualMetadataFields().orElse(Collections.emptyList()))
+                        .vectorAlgorithm(runtimeConfig.getValue().vectorAlgorithm())
+                        .dimension(runtimeConfig.getValue().dimension())
+                        .metricType(runtimeConfig.getValue().distanceMetric())
                         .build();
                 builder.schema(schema);
 

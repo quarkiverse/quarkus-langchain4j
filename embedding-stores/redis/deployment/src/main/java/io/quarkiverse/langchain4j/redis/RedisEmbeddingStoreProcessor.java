@@ -11,7 +11,6 @@ import org.jboss.jandex.ParameterizedType;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
-import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.redis.runtime.RedisEmbeddingStoreRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -45,7 +44,6 @@ public class RedisEmbeddingStoreProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             RedisEmbeddingStoreRecorder recorder,
-            RedisEmbeddingStoreConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             RedisEmbeddingStoreBuildTimeConfig buildTimeConfig) {
         String clientName = buildTimeConfig.clientName().orElse(null);
@@ -67,7 +65,7 @@ public class RedisEmbeddingStoreProcessor {
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(ReactiveRedisDataSource.class)),
                         redisClientQualifier)
-                .createWith(recorder.embeddingStoreFunction(config, clientName))
+                .createWith(recorder.embeddingStoreFunction(clientName))
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

@@ -12,7 +12,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.neo4j.runtime.Neo4jEmbeddingStoreRecorder;
-import io.quarkiverse.langchain4j.neo4j.runtime.Neo4jRuntimeConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -36,7 +35,6 @@ public class Neo4jEmbeddingStoreProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             Neo4jEmbeddingStoreRecorder recorder,
-            Neo4jRuntimeConfig config,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(Driver.class));
@@ -51,7 +49,7 @@ public class Neo4jEmbeddingStoreProcessor {
                 .unremovable()
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(Driver.class)))
-                .createWith(recorder.embeddingStoreFunction(config))
+                .createWith(recorder.embeddingStoreFunction())
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

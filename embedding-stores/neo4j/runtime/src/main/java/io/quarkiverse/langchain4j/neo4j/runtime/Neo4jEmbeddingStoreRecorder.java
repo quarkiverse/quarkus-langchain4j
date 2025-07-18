@@ -9,29 +9,34 @@ import org.neo4j.driver.SessionConfig;
 
 import dev.langchain4j.community.store.embedding.neo4j.Neo4jEmbeddingStore;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class Neo4jEmbeddingStoreRecorder {
+    private final RuntimeValue<Neo4jRuntimeConfig> runtimeConfig;
 
-    public Function<SyntheticCreationalContext<Neo4jEmbeddingStore>, Neo4jEmbeddingStore> embeddingStoreFunction(
-            Neo4jRuntimeConfig config) {
+    public Neo4jEmbeddingStoreRecorder(RuntimeValue<Neo4jRuntimeConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Function<SyntheticCreationalContext<Neo4jEmbeddingStore>, Neo4jEmbeddingStore> embeddingStoreFunction() {
         return new Function<>() {
             @Override
             public Neo4jEmbeddingStore apply(SyntheticCreationalContext<Neo4jEmbeddingStore> context) {
                 var builder = Neo4jEmbeddingStore.builder();
                 Driver driver = context.getInjectedReference(Driver.class, new Default.Literal());
                 builder.driver(driver);
-                builder.dimension(config.dimension());
-                builder.label(config.label());
-                builder.embeddingProperty(config.embeddingProperty());
-                builder.idProperty(config.idProperty());
-                builder.metadataPrefix(config.metadataPrefix().orElse(""));
-                builder.textProperty(config.textProperty());
-                builder.indexName(config.indexName());
-                builder.databaseName(config.databaseName());
-                builder.retrievalQuery(config.retrievalQuery());
-                builder.config(SessionConfig.forDatabase(config.databaseName()));
+                builder.dimension(runtimeConfig.getValue().dimension());
+                builder.label(runtimeConfig.getValue().label());
+                builder.embeddingProperty(runtimeConfig.getValue().embeddingProperty());
+                builder.idProperty(runtimeConfig.getValue().idProperty());
+                builder.metadataPrefix(runtimeConfig.getValue().metadataPrefix().orElse(""));
+                builder.textProperty(runtimeConfig.getValue().textProperty());
+                builder.indexName(runtimeConfig.getValue().indexName());
+                builder.databaseName(runtimeConfig.getValue().databaseName());
+                builder.retrievalQuery(runtimeConfig.getValue().retrievalQuery());
+                builder.config(SessionConfig.forDatabase(runtimeConfig.getValue().databaseName()));
                 return builder.build();
             }
         };

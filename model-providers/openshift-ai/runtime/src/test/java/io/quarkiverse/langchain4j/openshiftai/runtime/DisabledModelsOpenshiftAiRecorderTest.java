@@ -10,11 +10,12 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig.OpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 
 class DisabledModelsOpenshiftAiRecorderTest {
     LangChain4jOpenshiftAiConfig config = mock(LangChain4jOpenshiftAiConfig.class);
     OpenshiftAiConfig defaultConfig = mock(OpenshiftAiConfig.class);
-    OpenshiftAiRecorder recorder = new OpenshiftAiRecorder();
+    OpenshiftAiRecorder recorder = new OpenshiftAiRecorder(new RuntimeValue<>(config));
 
     @BeforeEach
     void setupMocks() {
@@ -27,7 +28,7 @@ class DisabledModelsOpenshiftAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatModel.class);
     }

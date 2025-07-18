@@ -7,7 +7,6 @@ import org.jboss.jandex.DotName;
 
 import dev.langchain4j.web.search.WebSearchEngine;
 import io.quarkiverse.langchain4j.tavily.QuarkusTavilyWebSearchEngine;
-import io.quarkiverse.langchain4j.tavily.runtime.TavilyConfig;
 import io.quarkiverse.langchain4j.tavily.runtime.TavilyRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -36,8 +35,7 @@ public class TavilyProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
-            TavilyRecorder recorder,
-            TavilyConfig config) {
+            TavilyRecorder recorder) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(TAVILY_WEB_SEARCH_ENGINE)
                 .types(ClassType.create(WebSearchEngine.class),
@@ -46,7 +44,7 @@ public class TavilyProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.tavilyEngineSupplier(config))
+                .supplier(recorder.tavilyEngineSupplier())
                 .done());
     }
 

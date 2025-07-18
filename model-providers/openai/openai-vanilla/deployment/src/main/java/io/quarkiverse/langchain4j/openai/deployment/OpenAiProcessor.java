@@ -36,7 +36,6 @@ import io.quarkiverse.langchain4j.openai.QuarkusOpenAiEmbeddingModelBuilderFacto
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiModerationModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.QuarkusOpenAiStreamingChatModelBuilderFactory;
 import io.quarkiverse.langchain4j.openai.runtime.OpenAiRecorder;
-import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -86,7 +85,6 @@ public class OpenAiProcessor {
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedModerationModelProviderBuildItem> selectedModeration,
             List<SelectedImageModelProviderBuildItem> selectedImage,
-            LangChain4jOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -99,7 +97,7 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .createWith(recorder.chatModel(config, configName));
+                        .createWith(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
@@ -110,7 +108,7 @@ public class OpenAiProcessor {
                         .scope(ApplicationScoped.class)
                         .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                                 new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
-                        .createWith(recorder.streamingChatModel(config, configName));
+                        .createWith(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
@@ -125,7 +123,7 @@ public class OpenAiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .supplier(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -139,7 +137,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.moderationModel(config, configName));
+                        .supplier(recorder.moderationModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -153,7 +151,7 @@ public class OpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.imageModel(config, configName));
+                        .supplier(recorder.imageModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

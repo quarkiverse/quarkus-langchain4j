@@ -20,6 +20,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -30,8 +31,14 @@ public class VertexAiGeminiRecorder {
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jVertexAiGeminiConfig config, String configName) {
-        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+    private final RuntimeValue<LangChain4jVertexAiGeminiConfig> runtimeConfig;
+
+    public VertexAiGeminiRecorder(RuntimeValue<LangChain4jVertexAiGeminiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(configName);
 
         if (vertexAiConfig.enableIntegration()) {
             var embeddingModelConfig = vertexAiConfig.embeddingModel();
@@ -68,9 +75,8 @@ public class VertexAiGeminiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jVertexAiGeminiConfig config, String configName) {
-        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(configName);
 
         if (vertexAiConfig.enableIntegration()) {
             var chatModelConfig = vertexAiConfig.chatModel();
@@ -127,9 +133,8 @@ public class VertexAiGeminiRecorder {
 
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jVertexAiGeminiConfig config, String configName) {
-        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(configName);
 
         if (vertexAiConfig.enableIntegration()) {
             var chatModelConfig = vertexAiConfig.chatModel();
@@ -186,11 +191,10 @@ public class VertexAiGeminiRecorder {
         }
     }
 
-    private LangChain4jVertexAiGeminiConfig.VertexAiGeminiConfig correspondingVertexAiConfig(
-            LangChain4jVertexAiGeminiConfig runtimeConfig, String configName) {
+    private LangChain4jVertexAiGeminiConfig.VertexAiGeminiConfig correspondingVertexAiConfig(String configName) {
 
-        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
-                : runtimeConfig.namedConfig().get(configName);
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.getValue().defaultConfig()
+                : runtimeConfig.getValue().namedConfig().get(configName);
     }
 
     private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

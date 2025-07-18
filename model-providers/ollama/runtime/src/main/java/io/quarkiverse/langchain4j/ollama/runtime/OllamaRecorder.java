@@ -34,6 +34,7 @@ import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaConfig;
 import io.quarkiverse.langchain4j.ollama.runtime.config.LangChain4jOllamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
@@ -43,13 +44,20 @@ public class OllamaRecorder {
 
     private static final String DEFAULT_BASE_URL = "http://localhost:11434";
 
+    private final LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig;
+    private final RuntimeValue<LangChain4jOllamaConfig> runtimeConfig;
+
+    public OllamaRecorder(LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig,
+            RuntimeValue<LangChain4jOllamaConfig> runtimeConfig) {
+        this.fixedRuntimeConfig = fixedRuntimeConfig;
+        this.runtimeConfig = runtimeConfig;
+    }
+
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jOllamaConfig runtimeConfig,
-            LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig, String configName) {
-        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig.getValue(), configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
                 configName);
 
@@ -120,9 +128,8 @@ public class OllamaRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jOllamaConfig runtimeConfig,
-            LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig, String configName) {
-        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig.getValue(), configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
                 configName);
 
@@ -163,10 +170,8 @@ public class OllamaRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jOllamaConfig runtimeConfig,
-            LangChain4jOllamaFixedRuntimeConfig fixedRuntimeConfig, String configName) {
-        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jOllamaConfig.OllamaConfig ollamaConfig = correspondingOllamaConfig(runtimeConfig.getValue(), configName);
         LangChain4jOllamaFixedRuntimeConfig.OllamaConfig ollamaFixedConfig = correspondingOllamaFixedConfig(fixedRuntimeConfig,
                 configName);
 

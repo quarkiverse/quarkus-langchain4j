@@ -21,7 +21,6 @@ import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuil
 import io.quarkiverse.langchain4j.deployment.items.SelectedEmbeddingModelCandidateBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.gemini.VertexAiGeminiRecorder;
-import io.quarkiverse.langchain4j.vertexai.runtime.gemini.config.LangChain4jVertexAiGeminiConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -61,11 +60,11 @@ public class VertexAiGeminiProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(VertexAiGeminiRecorder recorder, List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
-            LangChain4jVertexAiGeminiConfig config, BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 var configName = selected.getConfigName();
-                var chatModel = recorder.chatModel(config, configName);
+                var chatModel = recorder.chatModel(configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
@@ -78,7 +77,7 @@ public class VertexAiGeminiProcessor {
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
-                var streamingChatModel = recorder.streamingChatModel(config, configName);
+                var streamingChatModel = recorder.streamingChatModel(configName);
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
                         .setRuntimeInit()
@@ -103,7 +102,7 @@ public class VertexAiGeminiProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(config, configName));
+                        .supplier(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

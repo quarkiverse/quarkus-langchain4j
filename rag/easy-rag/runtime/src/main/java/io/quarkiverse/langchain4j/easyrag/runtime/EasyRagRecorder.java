@@ -16,39 +16,42 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.runtime.BeanContainer;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class EasyRagRecorder {
-
     private static final Logger LOGGER = Logger.getLogger(EasyRagRecorder.class);
 
-    // store the config to be used later by EasyRagManualIngestionTrigger
-    public static EasyRagConfig easyRagConfig;
+    private final RuntimeValue<EasyRagConfig> runtimeConfig;
 
-    public void ingest(EasyRagConfig config, BeanContainer beanContainer) {
-        easyRagConfig = config;
-        if (config.ingestionStrategy() == IngestionStrategy.OFF) {
+    public EasyRagRecorder(RuntimeValue<EasyRagConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public void ingest(BeanContainer beanContainer) {
+        if (runtimeConfig.getValue().ingestionStrategy() == IngestionStrategy.OFF) {
             LOGGER.info("Skipping document ingestion as per configuration");
             return;
         }
-        if (config.ingestionStrategy() == IngestionStrategy.MANUAL) {
+        if (runtimeConfig.getValue().ingestionStrategy() == IngestionStrategy.MANUAL) {
             LOGGER.info("Not ingesting documents for now because ingestion strategy is set to MANUAL");
             return;
         }
 
         EmbeddingStore<TextSegment> embeddingStore = beanContainer.beanInstance(EmbeddingStore.class);
         EmbeddingModel embeddingModel = beanContainer.beanInstance(EmbeddingModel.class);
-        new EasyRagIngestor(embeddingModel, embeddingStore, config).ingest();
+        new EasyRagIngestor(embeddingModel, embeddingStore, runtimeConfig.getValue()).ingest();
     }
 
-    public Supplier<InMemoryEmbeddingStore<TextSegment>> inMemoryEmbeddingStoreSupplier(EasyRagConfig config) {
+    public Supplier<InMemoryEmbeddingStore<TextSegment>> inMemoryEmbeddingStoreSupplier() {
         return new Supplier<>() {
             @Override
             public InMemoryEmbeddingStore<TextSegment> get() {
-                if ((config.ingestionStrategy() == IngestionStrategy.ON) && config.reuseEmbeddings().enabled()) {
+                if ((runtimeConfig.getValue().ingestionStrategy() == IngestionStrategy.ON)
+                        && runtimeConfig.getValue().reuseEmbeddings().enabled()) {
                     // Want to reuse existing embeddings
-                    Path embeddingsFile = Path.of(config.reuseEmbeddings().file()).toAbsolutePath();
+                    Path embeddingsFile = Path.of(runtimeConfig.getValue().reuseEmbeddings().file()).toAbsolutePath();
 
                     // If the file exists then read it and populate
                     if (Files.isRegularFile(embeddingsFile)) {
@@ -64,15 +67,14 @@ public class EasyRagRecorder {
 
     }
 
-    public Function<SyntheticCreationalContext<RetrievalAugmentor>, RetrievalAugmentor> easyRetrievalAugmentorFunction(
-            EasyRagConfig config) {
+    public Function<SyntheticCreationalContext<RetrievalAugmentor>, RetrievalAugmentor> easyRetrievalAugmentorFunction() {
         return new Function<>() {
             @Override
             public RetrievalAugmentor apply(SyntheticCreationalContext<RetrievalAugmentor> context) {
                 EmbeddingModel model = context.getInjectedReference(EmbeddingModel.class, Default.Literal.INSTANCE);
                 EmbeddingStore<TextSegment> store = context.getInjectedReference(EmbeddingStore.class,
                         Default.Literal.INSTANCE);
-                return new EasyRetrievalAugmentor(config, model, store);
+                return new EasyRetrievalAugmentor(runtimeConfig.getValue(), model, store);
             }
         };
     }

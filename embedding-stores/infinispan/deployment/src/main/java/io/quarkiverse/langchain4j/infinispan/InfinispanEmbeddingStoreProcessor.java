@@ -12,7 +12,6 @@ import org.jboss.jandex.ParameterizedType;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
-import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.infinispan.runtime.InfinispanEmbeddingStoreRecorder;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -48,7 +47,6 @@ public class InfinispanEmbeddingStoreProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             InfinispanEmbeddingStoreRecorder recorder,
-            InfinispanEmbeddingStoreConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             InfinispanEmbeddingStoreBuildTimeConfig buildTimeConfig) {
         String clientName = buildTimeConfig.clientName().orElse(null);
@@ -71,7 +69,7 @@ public class InfinispanEmbeddingStoreProcessor {
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(DotName.createSimple(RemoteCacheManager.class)),
                         infinispanClientQualifier)
-                .createWith(recorder.embeddingStoreFunction(config, clientName))
+                .createWith(recorder.embeddingStoreFunction(clientName))
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
