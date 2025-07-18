@@ -120,6 +120,23 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-cost-listener]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-cost-listener[`quarkus.langchain4j.cost-listener`]##
+
+[.description]
+--
+Configuration property to enable or disable generic cost listener
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_COST_LISTENER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_COST_LISTENER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages[`quarkus.langchain4j.chat-memory.memory-window.max-messages`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.chat-memory.memory-window.max-messages+++[]

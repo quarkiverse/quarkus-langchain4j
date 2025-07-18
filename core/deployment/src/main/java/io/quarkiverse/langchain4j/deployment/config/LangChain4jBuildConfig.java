@@ -43,6 +43,12 @@ public interface LangChain4jBuildConfig {
     @WithDefault("true")
     boolean responseSchema();
 
+    /**
+     * Configuration property to enable or disable generic cost listener
+     */
+    @WithDefault("false")
+    boolean costListener();
+
     interface BaseConfig {
         /**
          * Chat model
