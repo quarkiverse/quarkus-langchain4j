@@ -10,7 +10,6 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.TokenCountEstimator;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.runtime.ChatMemoryRecorder;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -23,7 +22,7 @@ public class ChatMemoryProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void setupBeans(ChatMemoryBuildConfig buildConfig, ChatMemoryConfig runtimeConfig,
+    void setupBeans(ChatMemoryBuildConfig buildConfig,
             ChatMemoryRecorder recorder,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer) {
@@ -38,10 +37,10 @@ public class ChatMemoryProcessor {
                 .defaultBean();
 
         if (buildConfig.type() == ChatMemoryBuildConfig.Type.MESSAGE_WINDOW) {
-            fun = recorder.messageWindow(runtimeConfig);
+            fun = recorder.messageWindow();
         } else if (buildConfig.type() == ChatMemoryBuildConfig.Type.TOKEN_WINDOW) {
             configurator.addInjectionPoint(ClassType.create(TokenCountEstimator.class));
-            fun = recorder.tokenWindow(runtimeConfig);
+            fun = recorder.tokenWindow();
         } else {
             throw new IllegalStateException(
                     "Invalid configuration '" + buildConfig.type() + "' used in 'quarkus.langchain4j.chat-memory.type'");

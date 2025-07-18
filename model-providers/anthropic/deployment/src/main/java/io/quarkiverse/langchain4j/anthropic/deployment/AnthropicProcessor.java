@@ -11,7 +11,6 @@ import org.jboss.jandex.AnnotationInstance;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.anthropic.runtime.AnthropicRecorder;
-import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -48,7 +47,7 @@ public class AnthropicProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(AnthropicRecorder recorder, List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            LangChain4jAnthropicConfig config, BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 var configName = selected.getConfigName();
@@ -57,7 +56,7 @@ public class AnthropicProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .supplier(recorder.chatModel(configName));
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
@@ -67,7 +66,7 @@ public class AnthropicProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(config, configName));
+                        .supplier(recorder.streamingChatModel(configName));
 
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());

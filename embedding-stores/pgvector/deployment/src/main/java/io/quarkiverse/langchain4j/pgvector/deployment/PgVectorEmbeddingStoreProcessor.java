@@ -17,7 +17,6 @@ import io.agroal.api.AgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.pgvector.PgVectorAgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
-import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreConfig;
 import io.quarkiverse.langchain4j.pgvector.runtime.PgVectorEmbeddingStoreRecorder;
 import io.quarkus.agroal.DataSource;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -53,7 +52,6 @@ class PgVectorEmbeddingStoreProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             PgVectorEmbeddingStoreRecorder recorder,
-            PgVectorEmbeddingStoreConfig config,
             PgVectorEmbeddingStoreBuildTimeConfig buildTimeConfig,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
 
@@ -70,7 +68,7 @@ class PgVectorEmbeddingStoreProcessor {
                 .defaultBean()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .createWith(recorder.embeddingStoreFunction(config, buildTimeConfig.datasource().orElse(null)))
+                .createWith(recorder.embeddingStoreFunction(buildTimeConfig.datasource().orElse(null)))
                 .addInjectionPoint(ClassType.create(DotName.createSimple(AgroalDataSource.class)), datasourceQualifier)
                 .done());
 
@@ -80,7 +78,7 @@ class PgVectorEmbeddingStoreProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.pgVectorAgroalPoolInterceptor(config))
+                .supplier(recorder.pgVectorAgroalPoolInterceptor())
                 .qualifiers(datasourceQualifier)
                 .done());
 

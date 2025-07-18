@@ -9,7 +9,6 @@ import org.jboss.jandex.ParameterizedType;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
-import io.quarkiverse.langchain4j.pinecone.runtime.PineconeConfig;
 import io.quarkiverse.langchain4j.pinecone.runtime.PineconeRecorder;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -38,7 +37,6 @@ public class PineconeProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             PineconeRecorder recorder,
-            PineconeConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(PINECONE_EMBEDDING_STORE)
@@ -48,7 +46,7 @@ public class PineconeProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.pineconeStoreSupplier(config))
+                .supplier(recorder.pineconeStoreSupplier())
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

@@ -13,7 +13,6 @@ import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBui
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.VertexAiRecorder;
-import io.quarkiverse.langchain4j.vertexai.runtime.config.LangChain4jVertexAiConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -48,7 +47,7 @@ public class VertexAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(VertexAiRecorder recorder, List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            LangChain4jVertexAiConfig config, BuildProducer<SyntheticBeanBuildItem> beanProducer) {
+            BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 var configName = selected.getConfigName();
@@ -57,7 +56,7 @@ public class VertexAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(config, configName));
+                        .supplier(recorder.chatModel(configName));
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());

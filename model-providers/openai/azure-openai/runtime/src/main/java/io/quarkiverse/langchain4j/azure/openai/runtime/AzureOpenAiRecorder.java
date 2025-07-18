@@ -36,6 +36,7 @@ import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 import io.quarkiverse.langchain4j.openai.common.runtime.AdditionalPropertiesHack;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -52,9 +53,15 @@ public class AzureOpenAiRecorder {
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
+    private final RuntimeValue<LangChain4jAzureOpenAiConfig> runtimeConfig;
+
+    public AzureOpenAiRecorder(RuntimeValue<LangChain4jAzureOpenAiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
+                configName);
 
         if (azureAiConfig.enableIntegration()) {
             var chatModelConfig = azureAiConfig.chatModel();
@@ -102,10 +109,9 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jAzureOpenAiConfig runtimeConfig,
-            String configName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
+                configName);
 
         if (azureAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = azureAiConfig.chatModel();
@@ -151,9 +157,9 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(
-            LangChain4jAzureOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
+                configName);
 
         if (azureAiConfig.enableIntegration()) {
             var embeddingModelConfig = azureAiConfig.embeddingModel();
@@ -188,9 +194,9 @@ public class AzureOpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ImageModel>, ImageModel> imageModel(LangChain4jAzureOpenAiConfig runtimeConfig,
-            String configName) {
-        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<ImageModel>, ImageModel> imageModel(String configName) {
+        LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig = correspondingAzureOpenAiConfig(runtimeConfig.getValue(),
+                configName);
 
         if (azureAiConfig.enableIntegration()) {
             var imageModelConfig = azureAiConfig.imageModel();

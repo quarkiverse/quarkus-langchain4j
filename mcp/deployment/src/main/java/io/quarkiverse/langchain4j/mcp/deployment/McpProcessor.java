@@ -35,7 +35,6 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -120,7 +119,6 @@ public class McpProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     public void registerMcpClients(McpBuildTimeConfiguration mcpBuildTimeConfiguration,
-            McpRuntimeConfiguration mcpRuntimeConfiguration,
             Optional<McpConfigFileContentsBuildItem> maybeMcpConfigFileContents,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             BuildProducer<HealthBuildItem> healthBuildItems,

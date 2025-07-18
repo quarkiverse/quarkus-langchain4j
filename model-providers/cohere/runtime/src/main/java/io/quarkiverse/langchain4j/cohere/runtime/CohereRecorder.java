@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.cohere.runtime.config.Langchain4jCohereConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -16,8 +17,14 @@ public class CohereRecorder {
     private static final String DUMMY_API_KEY = "dummy";
     private static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ScoringModel> cohereScoringModelSupplier(Langchain4jCohereConfig runtimeConfig, String configName) {
-        Langchain4jCohereConfig.CohereConfig cohereConfig = correspondingCohereConfig(runtimeConfig, configName);
+    private final RuntimeValue<Langchain4jCohereConfig> runtimeConfig;
+
+    public CohereRecorder(RuntimeValue<Langchain4jCohereConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ScoringModel> cohereScoringModelSupplier(String configName) {
+        Langchain4jCohereConfig.CohereConfig cohereConfig = correspondingCohereConfig(configName);
 
         var configProblems = checkConfigurations(cohereConfig, configName);
 
@@ -60,14 +67,12 @@ public class CohereRecorder {
                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), key));
     }
 
-    private Langchain4jCohereConfig.CohereConfig correspondingCohereConfig(
-            Langchain4jCohereConfig runtimeConfig,
-            String configName) {
+    private Langchain4jCohereConfig.CohereConfig correspondingCohereConfig(String configName) {
         Langchain4jCohereConfig.CohereConfig cohereConfig;
         if (NamedConfigUtil.isDefault(configName)) {
-            cohereConfig = runtimeConfig.defaultConfig();
+            cohereConfig = runtimeConfig.getValue().defaultConfig();
         } else {
-            cohereConfig = runtimeConfig.namedConfig().get(configName);
+            cohereConfig = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return cohereConfig;
     }

@@ -24,15 +24,20 @@ import io.quarkiverse.langchain4j.mistralai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
 @Recorder
 public class MistralAiRecorder {
+    private final RuntimeValue<LangChain4jMistralAiConfig> runtimeConfig;
 
-    public Supplier<ChatModel> chatModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
-        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                configName);
+    public MistralAiRecorder(RuntimeValue<LangChain4jMistralAiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
@@ -83,10 +88,8 @@ public class MistralAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jMistralAiConfig runtimeConfig,
-            String configName) {
-        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                configName);
+    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = mistralAiConfig.chatModel();
@@ -137,9 +140,8 @@ public class MistralAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
-        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
             EmbeddingModelConfig embeddingModelConfig = mistralAiConfig.embeddingModel();
@@ -174,9 +176,8 @@ public class MistralAiRecorder {
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(LangChain4jMistralAiConfig runtimeConfig, String configName) {
-        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(runtimeConfig,
-                configName);
+    public Supplier<ModerationModel> moderationModel(String configName) {
+        LangChain4jMistralAiConfig.MistralAiConfig mistralAiConfig = correspondingMistralAiConfig(configName);
 
         if (mistralAiConfig.enableIntegration()) {
             ModerationModelConfig moderationModelConfig = mistralAiConfig.moderationModel();
@@ -211,13 +212,12 @@ public class MistralAiRecorder {
         }
     }
 
-    private LangChain4jMistralAiConfig.MistralAiConfig correspondingMistralAiConfig(
-            LangChain4jMistralAiConfig runtimeConfig, String configName) {
+    private LangChain4jMistralAiConfig.MistralAiConfig correspondingMistralAiConfig(String configName) {
         LangChain4jMistralAiConfig.MistralAiConfig config;
         if (NamedConfigUtil.isDefault(configName)) {
-            config = runtimeConfig.defaultConfig();
+            config = runtimeConfig.getValue().defaultConfig();
         } else {
-            config = runtimeConfig.namedConfig().get(configName);
+            config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
     }

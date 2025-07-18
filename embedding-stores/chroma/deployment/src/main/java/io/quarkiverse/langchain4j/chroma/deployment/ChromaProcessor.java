@@ -9,7 +9,6 @@ import org.jboss.jandex.ParameterizedType;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
-import io.quarkiverse.langchain4j.chroma.runtime.ChromaConfig;
 import io.quarkiverse.langchain4j.chroma.runtime.ChromaRecorder;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -40,7 +39,6 @@ class ChromaProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             ChromaRecorder recorder,
-            ChromaConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(CHROMA_EMBEDDING_STORE)
@@ -50,7 +48,7 @@ class ChromaProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.chromaStoreSupplier(config))
+                .supplier(recorder.chromaStoreSupplier())
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

@@ -10,13 +10,19 @@ import io.quarkiverse.langchain4j.pgvector.PgVectorAgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
 import io.quarkus.agroal.DataSource.DataSourceLiteral;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class PgVectorEmbeddingStoreRecorder {
+    private final RuntimeValue<PgVectorEmbeddingStoreConfig> runtimeConfig;
+
+    public PgVectorEmbeddingStoreRecorder(RuntimeValue<PgVectorEmbeddingStoreConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
 
     public Function<SyntheticCreationalContext<PgVectorEmbeddingStore>, PgVectorEmbeddingStore> embeddingStoreFunction(
-            PgVectorEmbeddingStoreConfig config, String datasourceName) {
+            String datasourceName) {
         return new Function<>() {
             @Override
             public PgVectorEmbeddingStore apply(SyntheticCreationalContext<PgVectorEmbeddingStore> context) {
@@ -29,17 +35,23 @@ public class PgVectorEmbeddingStoreRecorder {
 
                 dataSource.flush(AgroalDataSource.FlushMode.GRACEFUL);
 
-                return new PgVectorEmbeddingStore(dataSource, config.table(), config.dimension(), config.useIndex(),
-                        config.indexListSize(), config.createTable(), config.dropTableFirst(), config.metadata());
+                return new PgVectorEmbeddingStore(dataSource,
+                        runtimeConfig.getValue().table(),
+                        runtimeConfig.getValue().dimension(),
+                        runtimeConfig.getValue().useIndex(),
+                        runtimeConfig.getValue().indexListSize(),
+                        runtimeConfig.getValue().createTable(),
+                        runtimeConfig.getValue().dropTableFirst(),
+                        runtimeConfig.getValue().metadata());
             }
         };
     }
 
-    public Supplier<PgVectorAgroalPoolInterceptor> pgVectorAgroalPoolInterceptor(PgVectorEmbeddingStoreConfig config) {
+    public Supplier<PgVectorAgroalPoolInterceptor> pgVectorAgroalPoolInterceptor() {
         return new Supplier<>() {
             @Override
             public PgVectorAgroalPoolInterceptor get() {
-                return new PgVectorAgroalPoolInterceptor(config);
+                return new PgVectorAgroalPoolInterceptor(runtimeConfig.getValue());
             }
         };
     }

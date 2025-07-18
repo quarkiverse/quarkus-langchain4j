@@ -9,6 +9,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.vertexai.runtime.config.LangChain4jVertexAiConfig;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -16,8 +17,14 @@ import io.smallrye.config.ConfigValidationException;
 public class VertexAiRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatModel> chatModel(LangChain4jVertexAiConfig config, String configName) {
-        var vertexAiConfig = correspondingVertexAiConfig(config, configName);
+    private final RuntimeValue<LangChain4jVertexAiConfig> runtimeConfig;
+
+    public VertexAiRecorder(RuntimeValue<LangChain4jVertexAiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        var vertexAiConfig = correspondingVertexAiConfig(configName);
 
         if (vertexAiConfig.enableIntegration()) {
             var chatModelConfig = vertexAiConfig.chatModel();
@@ -63,11 +70,10 @@ public class VertexAiRecorder {
 
     }
 
-    private LangChain4jVertexAiConfig.VertexAiConfig correspondingVertexAiConfig(
-            LangChain4jVertexAiConfig runtimeConfig, String configName) {
+    private LangChain4jVertexAiConfig.VertexAiConfig correspondingVertexAiConfig(String configName) {
 
-        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
-                : runtimeConfig.namedConfig().get(configName);
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.getValue().defaultConfig()
+                : runtimeConfig.getValue().namedConfig().get(configName);
     }
 
     private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

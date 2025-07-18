@@ -36,7 +36,6 @@ import io.quarkiverse.langchain4j.watsonx.deployment.items.BuiltinServiceBuildIt
 import io.quarkiverse.langchain4j.watsonx.deployment.items.TextExtractionClassBuildItem;
 import io.quarkiverse.langchain4j.watsonx.runtime.BuiltinServiceRecorder;
 import io.quarkiverse.langchain4j.watsonx.runtime.WatsonxRecorder;
-import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxFixedRuntimeConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
@@ -130,7 +129,6 @@ public class WatsonxProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBuiltinToolBeans(
             BuiltinServiceRecorder recorder,
-            LangChain4jWatsonxConfig runtimeConfig,
             List<BuiltinServiceBuildItem> builtinToolClasses,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
@@ -143,11 +141,11 @@ public class WatsonxProcessor {
                     .scope(ApplicationScoped.class);
 
             if (builtinToolClass.getDotName().equals(WatsonxDotNames.GOOGLE_SEARCH_SERVICE))
-                builder.supplier(recorder.googleSearch(runtimeConfig));
+                builder.supplier(recorder.googleSearch());
             else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEB_CRAWLER_SERVICE))
-                builder.supplier(recorder.webCrawler(runtimeConfig));
+                builder.supplier(recorder.webCrawler());
             else if (builtinToolClass.getDotName().equals(WatsonxDotNames.WEATHER_SERVICE))
-                builder.supplier(recorder.weather(runtimeConfig));
+                builder.supplier(recorder.weather());
             else
                 throw new RuntimeException("BuiltinServiceClass not recognised");
 
@@ -157,7 +155,7 @@ public class WatsonxProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void generateBeans(WatsonxRecorder recorder, LangChain4jWatsonxConfig runtimeConfig,
+    void generateBeans(WatsonxRecorder recorder,
             LangChain4jWatsonxFixedRuntimeConfig fixedRuntimeConfig,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
@@ -179,7 +177,7 @@ public class WatsonxProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.textExtraction(runtimeConfig, configName));
+                        .supplier(recorder.textExtraction(configName));
                 addQualifierIfNecessary(textExtractionBuilder, configName);
                 beanProducer.produce(textExtractionBuilder.done());
             }
@@ -199,11 +197,11 @@ public class WatsonxProcessor {
             Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel;
 
             if (mode.equalsIgnoreCase("chat")) {
-                chatModel = recorder.chatModel(runtimeConfig, configName);
-                streamingChatModel = recorder.streamingChatModel(runtimeConfig, configName);
+                chatModel = recorder.chatModel(configName);
+                streamingChatModel = recorder.streamingChatModel(configName);
             } else if (mode.equalsIgnoreCase("generation")) {
-                chatModel = recorder.generationModel(runtimeConfig, configName);
-                streamingChatModel = recorder.generationStreamingModel(runtimeConfig, configName);
+                chatModel = recorder.generationModel(configName);
+                streamingChatModel = recorder.generationStreamingModel(configName);
             } else {
                 throw new RuntimeException(
                         "The \"mode\" value for the model \"%s\" is not valid. Choose one between [\"chat\", \"generation\"]"
@@ -244,7 +242,7 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.embeddingModel(runtimeConfig, configName));
+                        .supplier(recorder.embeddingModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }
@@ -259,7 +257,7 @@ public class WatsonxProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.scoringModel(runtimeConfig, configName));
+                        .supplier(recorder.scoringModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

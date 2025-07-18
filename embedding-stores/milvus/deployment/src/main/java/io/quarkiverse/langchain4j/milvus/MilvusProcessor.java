@@ -11,7 +11,6 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.milvus.runtime.MilvusRecorder;
-import io.quarkiverse.langchain4j.milvus.runtime.MilvusRuntimeConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -34,7 +33,6 @@ public class MilvusProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             MilvusRecorder recorder,
-            MilvusRuntimeConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(MILVUS_EMBEDDING_STORE)
@@ -44,7 +42,7 @@ public class MilvusProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.milvusStoreSupplier(config))
+                .supplier(recorder.milvusStoreSupplier())
                 .done());
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }

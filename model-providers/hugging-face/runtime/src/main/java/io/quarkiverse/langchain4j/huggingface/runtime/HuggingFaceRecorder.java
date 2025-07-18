@@ -16,6 +16,7 @@ import io.quarkiverse.langchain4j.huggingface.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.huggingface.runtime.config.LangChain4jHuggingFaceConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -25,9 +26,15 @@ public class HuggingFaceRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String HUGGING_FACE_URL_MARKER = "api-inference.huggingface.co";
 
-    public Supplier<ChatModel> chatModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
-        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
-                configName);
+    private final RuntimeValue<LangChain4jHuggingFaceConfig> runtimeConfig;
+
+    public HuggingFaceRecorder(RuntimeValue<LangChain4jHuggingFaceConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(
+                runtimeConfig.getValue(), configName);
 
         if (huggingFaceConfig.enableIntegration()) {
             String apiKey = huggingFaceConfig.apiKey();
@@ -75,9 +82,9 @@ public class HuggingFaceRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jHuggingFaceConfig runtimeConfig, String configName) {
-        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(runtimeConfig,
-                configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jHuggingFaceConfig.HuggingFaceConfig huggingFaceConfig = correspondingHuggingFaceConfig(
+                runtimeConfig.getValue(), configName);
 
         if (huggingFaceConfig.enableIntegration()) {
             String apiKey = huggingFaceConfig.apiKey();
