@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
  *
  * @param result The result of the output guardrail validation.
  * @param failures The list of failures, empty if the validation succeeded.
+ * @deprecated Use {@link dev.langchain4j.guardrail.OutputGuardrailResult} instead
  */
+@Deprecated(forRemoval = true)
 public record OutputGuardrailResult(Result result, String successfulText, Object successfulResult,
         List<Failure> failures) implements GuardrailResult<OutputGuardrailResult> {
 

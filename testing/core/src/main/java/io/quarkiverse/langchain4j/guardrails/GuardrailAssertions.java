@@ -7,7 +7,10 @@ import org.assertj.core.api.Assertions;
  * <p>
  * This follows the pattern described in https://assertj.github.io/doc/#assertj-core-custom-assertions-entry-point
  * </p>
+ *
+ * @deprecated Use {@link dev.langchain4j.test.guardrail.GuardrailAssertions} instead
  */
+@Deprecated(forRemoval = true)
 public class GuardrailAssertions extends Assertions {
     /**
      * Returns an {@link OutputGuardrailResultAssert} for assertions on an {@link OutputGuardrailResult}

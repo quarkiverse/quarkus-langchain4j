@@ -3,10 +3,10 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.INPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_INPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
@@ -1398,8 +1398,8 @@ public class AiServicesProcessor {
 
         List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
 
-        List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
-        List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
+        List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, QUARKUS_OUTPUT_GUARDRAILS);
+        List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, QUARKUS_INPUT_GUARDRAILS);
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 

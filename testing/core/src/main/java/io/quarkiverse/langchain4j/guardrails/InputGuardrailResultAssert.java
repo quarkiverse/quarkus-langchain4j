@@ -7,7 +7,10 @@ import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult.Failure;
  * <p>
  * This follows the pattern described in https://assertj.github.io/doc/#assertj-core-custom-assertions-creation
  * </p>
+ *
+ * @deprecated Use {@link dev.langchain4j.test.guardrail.InputGuardrailResultAssert} instead
  */
+@Deprecated(forRemoval = true)
 public final class InputGuardrailResultAssert
         extends GuardrailResultAssert<InputGuardrailResultAssert, InputGuardrailResult, Failure> {
 
