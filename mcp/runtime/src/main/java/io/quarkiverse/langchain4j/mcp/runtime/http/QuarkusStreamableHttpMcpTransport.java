@@ -142,8 +142,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         log.debug("Assigned MCP session ID: " + mcpSessionId);
                                         this.mcpSessionId.set(mcpSessionId);
                                     }
+
                                     String contentType = response.result().getHeader("Content-Type");
-                                    if (contentType != null && contentType.contains("text/event-stream")) {
+                                    if (id != null && contentType != null && contentType.contains("text/event-stream")) {
                                         // the server has started a SSE channel
                                         response.result().handler(bodyBuffer -> {
                                             String responseString = bodyBuffer.toString();
