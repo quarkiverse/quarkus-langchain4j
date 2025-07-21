@@ -75,6 +75,7 @@ public class McpRecorder {
                             .logRequests(runtimeConfig.logRequests().orElse(false))
                             .logResponses(runtimeConfig.logResponses().orElse(false))
                             .mcpClientName(key)
+                            .timeout(runtimeConfig.toolExecutionTimeout())
                             .build();
                     case STREAMABLE_HTTP -> new QuarkusStreamableHttpMcpTransport.Builder()
                             .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
@@ -83,6 +84,7 @@ public class McpRecorder {
                             .logResponses(runtimeConfig.logResponses().orElse(false))
                             .httpClient(vertx.get().createHttpClient())
                             .mcpClientName(key)
+                            .timeout(runtimeConfig.toolExecutionTimeout())
                             .build();
                 };
                 DefaultMcpClient client = new DefaultMcpClient.Builder()
