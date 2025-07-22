@@ -221,7 +221,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TOOL_EXECUTION_T
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`60S`
+|`60s`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`quarkus.langchain4j.mcp."client-name".resources-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -242,7 +242,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__RESOURCES_TIMEOU
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`60S`
+|`60s`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout[`quarkus.langchain4j.mcp."client-name".ping-timeout`]##
 ifdef::add-copy-button-to-config-props[]
