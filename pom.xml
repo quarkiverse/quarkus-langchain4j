@@ -46,7 +46,7 @@
     <sundrio.version>0.200.4</sundrio.version>
     <quarkus-wiremock.version>1.5.1</quarkus-wiremock.version>
     <wiremock.version>3.13.1</wiremock.version>
-    <quarkus-neo4j.version>5.5.0</quarkus-neo4j.version>
+    <quarkus-neo4j.version>5.6.0</quarkus-neo4j.version>
     <jlama.version>0.8.4</jlama.version>
     <google-auth-library-oauth2-http.version>1.37.1</google-auth-library-oauth2-http.version>
   </properties>
