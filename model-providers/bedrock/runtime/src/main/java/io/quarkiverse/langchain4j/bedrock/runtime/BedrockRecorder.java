@@ -130,7 +130,7 @@ public class BedrockRecorder {
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
             Supplier<StreamingChatModel> supplier;
-            if (modelId.startsWith("anthropic")) {
+            if (modelId.contains("anthropic")) {
 
                 var paramsBuilder = ChatRequestParameters.builder()
                         .maxOutputTokens(modelConfig.maxTokens());
