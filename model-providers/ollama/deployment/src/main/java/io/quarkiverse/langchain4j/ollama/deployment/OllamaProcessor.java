@@ -36,6 +36,9 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyReaderOverrideBuildItem;
 import io.quarkus.resteasy.reactive.spi.MessageBodyWriterOverrideBuildItem;
@@ -55,9 +58,25 @@ public class OllamaProcessor {
     }
 
     @BuildStep
-    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer) {
+    IndexDependencyBuildItem indexUpstreamOllamaModule() {
+        return new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-ollama");
+    }
+
+    @BuildStep
+    void nativeSupport(BuildProducer<ServiceProviderBuildItem> serviceProviderProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyProducer) {
         serviceProviderProducer
                 .produce(ServiceProviderBuildItem.allProvidersFromClassPath(ConfigSourceInterceptor.class.getName()));
+        reflectiveHierarchyProducer
+                .produce(ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.ollama.OllamaChatRequest")
+                        .source(getClass().getSimpleName()).build());
+        reflectiveHierarchyProducer
+                .produce(ReflectiveHierarchyBuildItem.builder("dev.langchain4j.model.ollama.OllamaChatResponse")
+                        .source(getClass().getSimpleName()).ignoreNested(false).build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem
+                .builder("dev.langchain4j.model.ollama.FormatSerializer", "dev.langchain4j.model.ollama.OllamaDateDeserializer")
+                .constructors().methods(false).fields(false).build());
     }
 
     @BuildStep
