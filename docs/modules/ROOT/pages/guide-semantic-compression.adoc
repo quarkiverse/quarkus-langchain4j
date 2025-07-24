@@ -1,0 +1,194 @@
+= Implementing Semantic Compression
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Semantic compression is a strategy that uses an LLM to summarize long chat histories in place—rather than truncating them, so you preserve critical context while staying within token limits.
+In Quarkus LangChain4j, you can provide a custom `ChatMemoryStore` CDI bean that wraps an existing memory store, detects when history length or token count exceeds a configurable threshold, and invokes a summarization model to compress the messages under a distinct system-message prefix.
+By retaining the original system instructions separately and embedding only the distilled summary, you maintain the assistant’s role and optimize for long-running dialogs.
+
+== Introduction & Motivation
+
+Semantic compression addresses two core challenges in conversational AI:
+
+1.	Token-Limit Errors: Passing entire chat histories can exceed a model’s context window, leading to failed requests or silent truncation.
+2.	Cost and Latency: Sending large prompts increases both API costs and response times.
+
+By summarizing rather than evicting old messages, you preserve essential facts and action items—ensuring the assistant “remembers” continuity—while reducing token usage.
+
+== What Is Semantic Compression
+
+Semantic compression transforms a sequence of chat messages into a concise representation that retains meaning, key entities, dates, and conversational tone.
+Unlike hard truncation or eviction—which simply drops messages—semantic compression uses an LLM to generate a summary in place of older history, allowing dialog to continue seamlessly.
+
+A more formal definition is the following: "Prompt compression shortens input text while ensuring essential meaning and context remain intact".
+
+
+=== Example Prompts
+
+Here are a few example prompts you can use to summarize conversations or create timelines:
+
+.Summarize Prompt - works well for meeting notes or general summaries
+[source, text]
+----
+Summarize the conversation below, preserving names, dates, and action items in bullet form:
+
+[full chat history here]
+
+Summary:
+----
+
+.Timeline Prompt - useful for extracting key events in chronological order
+[source, text]
+----
+Convert this dialogue into a timeline of events, each with a one-sentence description:
+
+[chat history]
+
+Timeline:
+----
+
+Both prompts receive the full conversation history and return a concise summary.
+Note that you may have to tune the prompts to fit your specific use case and ensure the LLM captures all relevant details.
+
+== Step 1. Applying Semantic Compression in a ChatMemoryStore
+
+Quarkus LangChain4j’s ChatMemoryStore interface defines methods for managing chat history:
+
+* `updateMessages(memoryId, messages)`: Replace the current history for `memoryId` with a new list of messages
+* `getMessages(memoryId)`: Retrieve the stored history
+* `deleteMessages(memoryId)`: Remove all messages for `memoryId`
+
+By implementing this interface as a CDI bean, you can wrap an existing store, monitor history length, and trigger semantic compression when a threshold is exceeded—while retaining system instructions.
+Let's create a custom `ChatMemoryStore` that applies semantic compression:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/compression/CompressingChatMemoryStore.java[]
+----
+
+This class:
+
+* Uses an `InMemoryChatMemoryStore` delegate - this is a simple in-memory store that holds chat messages.
+* Reads a `threshold` from configuration (kept low for demonstration purposes).
+* Retains or creates a system message with a summary - this is the most complex part.
+* Replaces the history with the updated system message when compression is triggered
+
+So, in other words, when the chat history exceeds the configured threshold:
+
+1. It checks if there is a system message already present.
+2. If it does, it checks if that system message already contains a summary, and extracts it if it does.
+3. Build a textual representation of the chat history, including the "fake" system message containing the previous summary if any.
+4. Sends the chat history to the LLM for summarization.
+5. Replaces the system message with the new summary and store this as the history.
+
+As you can also see, we do not trigger compressions if the last message is a system message, or if the last message is involved in a function call.
+It would corrupt the history.
+
+If you want to configure the compression threshold, you can do so in your `application.properties`:
+
+[source,properties]
+----
+semantic-compression-threshold=20
+----
+
+== Step 2. Using the Custom Memory Store
+
+If you have a single memory store, you don't need to do anything special to use the custom `ChatMemoryStore`.
+Quarkus will auto-discover your `ChatMemoryStore` bean when building an AI service:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/compression/Assistant.java[]
+----
+
+For demo purpose, we use an `@ApplicationScoped` bean, but you can also use `@RequestScoped` or any other scope that fits your application.
+
+== Step 3. Testing the Compression
+
+Let's now create a REST endpoint using our `Assistant` service to test the compression:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/compression/ChatResource.java[]
+----
+
+It uses a single specific memory ID (`"abc"`), so you can test the compression by sending multiple requests to the same endpoint.
+For example, you can use `curl` to send a request with a long chat history:
+
+[source, bash]
+----
+# User Message A
+curl -X POST http://localhost:8080/chat \
+     -H "Content-Type: text/plain" \
+     -d "Hello, my name is Bob. I would like to discuss planning a trip to Athens, Greece."
+
+# User Message B
+curl -X POST http://localhost:8080/chat \
+     -H "Content-Type: text/plain" \
+     -d "Thanks, let's look at transportation options. What are the available flights from Lyon to Athens?"
+
+# User Message C
+curl -X POST http://localhost:8080/chat \
+     -H "Content-Type: text/plain" \
+     -d "Ok, I found a flight from Lyon to Athens on August 15th at 10:00 AM. The flight is operated by Air France and arrives in Athens at 1:30 PM. The cost is approximately €150. Once in Athens, what are the available transportation options to get to the city center?"
+
+# User Message D
+curl -X POST http://localhost:8080/chat \
+     -H "Content-Type: text/plain" \
+     -d "Thanks, I will take a taxi from the airport to the city center. How long does it take to get from Athens airport to the city center by taxi?"
+----
+
+If you execute these commands in sequence, you will see the chat history being summarized after the third request, and the summary will be used in the fourth request.
+
+Let's take a look at the evolution of the chat history:
+
+1) After the first request, the chat history contains only the system message, user message and the response from the assistant:
+
+
+* *System:* You are a police and helpful assistant.
+* *User:* Hello, my name is Bob. I would like to discuss plan a trip to Athens, Greece.
+* *Assistant:* Hello, Bob! I'd be happy to help you plan your trip to Athens, Greece. What specific information or aspects would you like to discuss? For example, are you looking for travel tips, places to visit, accommodation suggestions, or something else?
+
+2) After the second request, the chat history contains the system message, 2 user messages and the two responses from the assistant:
+
+* *System:* You are a police and helpful assistant.
+* *User:* Hello, my name is Bob. I would like to discuss plan a trip to Athens, Greece.
+* *Assistant:* Hello, Bob! I'd be happy to help you plan your trip to Athens, Greece. What specific information or aspects would you like to discuss? For example, are you looking for travel tips, places to visit, accommodation suggestions, or something else?
+* *User:* Thanks, let's look at transportation options. What are the available flights from Lyon to Athens?
+* *Assistant:* To find the most accurate and up-to-date information about available flights from Lyon to Athens, I recommend checking popular travel websites or airline booking platforms. However, I can provide you with general information! ...
+
+We are now at the point where the chat history exceeds the configured threshold, so the next request will trigger semantic compression.
+
+3) After the third request, the chat history is summarized:
+
+* *System:* You are a police and helpful assistant.
+
+    Context: The following is a summary of the previous conversation:
+    Bob is seeking assistance in planning his trip to Athens, Greece, starting with transportation options. He inquired about available flights from Lyon to Athens, and the assistant advised him to check travel websites, providing general information on airlines, flight duration, frequency, booking tips, and airport transfers. Clement found a specific flight on Air France for August 15th and asked about transportation options from the Athens airport to the city center.
+
+* *Assistant:* Great choice! Air France is a reliable airline, and it seems like you’ve found a convenient flight. Once you arrive in Athens, there are several transportation options to get to the city center from Athens International Airport (Eleftherios Venizelos) ...
+
+So our chat history now contains the system message with the summary, and the Assistant's response to the last user question.
+
+4) After the fourth request, the chat history is still summarized, and the summary is used in the next request:
+
+* *System:* You are a police and helpful assistant.
+
+    Context: The following is a summary of the previous conversation:
+    ...
+
+* *Assistant:* Great choice! Air France is a reliable airline, and it seems like you’ve found a convenient flight. Once you arrive in Athens, there are several transportation options to get to the city center from Athens International Airport (Eleftherios Venizelos) ...
+
+* *User:* Thanks, I will take a taxi from the airport to the city center. How long does it take to get from Athens airport to the city center by taxi?
+
+* *Assistant:* Taking a taxi from Athens International Airport to the city center typically takes about 30 to 40 minutes, depending on traffic conditions. During peak hours, such as mornings and late afternoons, it may take a bit longer due to congestion. Be sure to communicate your destination clearly to the driver. Safe travels! If you have any more questions, feel free to ask.
+
+This sequence demonstrates how semantic compression allows the conversation to continue without losing context, even as the chat history grows.
+
+== Conclusion
+
+By integrating semantic compression via a custom `ChatMemoryStore`, you preserve key context, avoid token-limit errors, and optimize costs and latency for long-running dialogs.
+
+
+WARNING: Semantic compression only applies to textual chat memories and should not be used for vision or other non-text data.
