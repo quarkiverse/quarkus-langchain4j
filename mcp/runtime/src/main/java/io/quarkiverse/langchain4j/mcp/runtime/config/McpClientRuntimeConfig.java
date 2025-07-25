@@ -46,6 +46,15 @@ public interface McpClientRuntimeConfig {
     Optional<Boolean> logResponses();
 
     /**
+     * Whether to prefer MicroProfile health checks. Applies to MCP HTTP clients only.
+     * If this property is enabled but a MicroProfile health check returns an HTTP 404 or other error status,
+     * then a default MCP Client health check opening a Streamable HTTP or SSE transport channel will be attempted.
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("false")
+    boolean preferMicroprofileHealthCheck();
+
+    /**
      * Timeout for tool executions performed by the MCP client
      */
     @WithDefault("${quarkus.langchain4j.timeout:60s}")
