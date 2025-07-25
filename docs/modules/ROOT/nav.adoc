@@ -19,6 +19,7 @@
 * xref:guide-web-search.adoc[Using Tavily Web Search]
 * xref:guide-passing-image.adoc[Passing Images to Models]
 * xref:guide-generating-image.adoc[Generating Images]
+* xref:guide-semantic-compression.adoc[Compressing Chat History]
 // * xref:guide-agentic-patterns.adoc[Implementing Agentic patterns]
 // * xref:guide-structured-output.adoc[Returning structured data from a model]
 // * xref:guide-streamed-responses.adoc[Using function calling]
