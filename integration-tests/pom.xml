@@ -34,6 +34,7 @@
     <module>easy-rag</module>
     <module>tools</module>
     <module>mcp</module>
+    <module>secure-mcp</module>
   </modules>
 
   <profiles>

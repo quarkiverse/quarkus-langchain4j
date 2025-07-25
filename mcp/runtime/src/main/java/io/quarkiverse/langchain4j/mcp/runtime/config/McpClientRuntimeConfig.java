@@ -46,6 +46,31 @@ public interface McpClientRuntimeConfig {
     Optional<Boolean> logResponses();
 
     /**
+     * Whether to prefer MicroProfile health checks. Applies to MCP HTTP clients only.
+     * <p>
+     * If this property is enabled, an HTTP GET call is made to an MCP Server MicroProfile Health endpoint.
+     * MicroProfile Health endpoint URL is calculated by extracting a base URL that has no path component
+     * from the {@link #url()} property and adding the {@link #microprofileHealthCheckPath()} path to it.
+     * <p>
+     * Default MCP Client health check that opens a Streamable HTTP or SSE transport channel is attempted
+     * when a MicroProfile health check returns an HTTP 404 or other error status.
+     */
+    @ConfigDocDefault("false")
+    @WithDefault("false")
+    boolean microprofileHealthCheck();
+
+    /**
+     * Relative path of an MCP Server MicroProfile Health endpoint.
+     * This property is effective only when the {@link #microprofileHealthCheck()} property is enabled.
+     * <p>
+     * MicroProfile Health endpoint URL is calculated by extracting the base URL that has no path component
+     * from the {@link #url()} property and adding a value of this property to it.
+     */
+    @ConfigDocDefault("/q/health")
+    @WithDefault("/q/health")
+    String microprofileHealthCheckPath();
+
+    /**
      * Timeout for tool executions performed by the MCP client
      */
     @WithDefault("${quarkus.langchain4j.timeout:60s}")
