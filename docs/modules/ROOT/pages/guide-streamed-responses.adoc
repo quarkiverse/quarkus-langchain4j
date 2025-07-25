@@ -1,0 +1,163 @@
+= Using Streamed Responses with Quarkus LangChain4j
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Streamed responses allow large language models to return partial answers as they are generated.
+It significantly improves latency and responsiveness for end users.
+With Quarkus LangChain4j, you can integrate streaming via REST (SSE) or WebSockets, leveraging `Multi<String>` for reactive, non-blocking processing.
+
+This guide shows how to:
+
+* Define AI services that return streamed responses
+* Implement both SSE and WebSocket endpoints
+* Test your application using `curl` and `wscat`
+
+== Why Use Streamed Responses?
+
+Traditional AI services generate the entire response before returning it, which can lead to:
+
+* Perceived latency (long pause before the first word appears)
+* Higher memory usage (especially for long completions)
+
+Streaming addresses this by sending tokens as they are produced. Benefits include:
+
+* Better user experience (progressive rendering)
+* Reduced memory pressure on both server and client
+* Easier integration with frontend frameworks (chat bots, dashboards)
+
+== Project Setup
+
+Add the following dependencies in your `pom.xml`:
+
+[source,xml,subs=attributes+]
+----
+<!-- Or any other model provider that supports streaming, such as OpenAI -->
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-ollama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-rest-jackson</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-websockets-next</artifactId>
+</dependency>
+----
+
+IF you are using Ollama, configure your model in `application.properties`:
+
+[source,properties]
+----
+quarkus.langchain4j.ollama.chat-model.model-name=qwen3:1.7b
+----
+
+== Streamed Responses in AI Services
+
+To enable streaming, your AI service method must return a `Multi<String>`.
+Each emitted item represents a token or part of the final response.
+
+[source,java]
+----
+@RegisterAiService
+@SystemMessage("You are a helpful AI assistant. Be concise and to the point.")
+public interface StreamedAssistant {
+
+    @UserMessage("Answer the question: {question}")
+    Multi<String> respondToQuestion(String question);
+
+}
+----
+
+Quarkus uses https://smallrye.io/smallrye-mutiny/latest/[Mutiny] under the hood.
+In Quarkus, methods returning Multi are considered non-blocking.
+Do not use blocking code inside streaming pipelines. For details, refer to the https://quarkus.io/guides/quarkus-reactive-architecture[Quarkus Reactive Architecture].
+
+== Streaming with Server-Sent Events (SSE)
+
+SSE is a simple way to stream text over HTTP. Let’s expose an endpoint returning `Multi<String>` as an event stream:
+
+[source,java]
+----
+@Path("/stream")
+public class Endpoint {
+
+    @Inject StreamedAssistant assistant;
+
+    @POST
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public Multi<String> stream(String question) {
+        return assistant.respondToQuestion(question);
+    }
+}
+----
+
+Run the application (`mvn quarkus:dev`), then use `curl`:
+
+[source,bash]
+----
+curl -N -X POST http://localhost:8080/stream -d "Why is the sky blue?" \
+  -H "Content-Type: text/plain"
+----
+
+The `-N` option disables buffering so you see the stream as it arrives.
+You’ll receive a stream of tokens, each appearing as a new line in the terminal.
+
+== Streaming with WebSockets
+
+For more interactive use cases (chat UIs, dashboards), you can expose a WebSocket endpoint using Quarkus WebSockets.Next.
+
+[source,java]
+----
+@WebSocket(path = "/ws/stream")
+public class WebSocketEndpoint {
+
+    @Inject WSStreamedAssistant assistant;
+
+    @OnTextMessage
+    public Multi<String> onTextMessage(String question) {
+        return assistant.respondToQuestion(question);
+    }
+}
+----
+
+To manage state across messages (local message history), annotate the AI service with `@SessionScoped`:
+
+[source,java]
+----
+@RegisterAiService
+@SystemMessage("You are a helpful AI assistant. Be concise and to the point.")
+@SessionScoped
+public interface WSStreamedAssistant {
+
+    @UserMessage("Answer the question: {question}")
+    Multi<String> respondToQuestion(String question);
+}
+----
+
+Install a WebSocket client like `wscat`:
+
+[source,bash]
+----
+npm install -g wscat
+----
+
+Connect and send a message:
+
+[source,bash]
+----
+wscat -c ws://localhost:8080/ws/stream
+> Why is swimming pool water blue?
+----
+
+You’ll see a token stream printed as separate lines in real-time.
+
+== Summary
+
+* Use `Multi<String>` in your AI services to enable streaming
+* Streaming improves user experience and scalability
+* SSE offers a simple HTTP-based solution
+* WebSockets provide a more interactive and stateful option
