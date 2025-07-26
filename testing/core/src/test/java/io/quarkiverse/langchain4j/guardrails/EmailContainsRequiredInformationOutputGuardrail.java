@@ -4,6 +4,10 @@ import java.util.Optional;
 
 import dev.langchain4j.data.message.AiMessage;
 
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
 public class EmailContainsRequiredInformationOutputGuardrail implements OutputGuardrail {
     static final String NO_RESPONSE_MESSAGE = "No response found";
     static final String NO_RESPONSE_PROMPT = "The response was empty. Please try again.";

@@ -48,6 +48,10 @@ import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.pdf.PdfFile;
+import dev.langchain4j.guardrail.ChatExecutor;
+import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -263,27 +267,49 @@ public class AiServiceMethodImplementationSupport {
             }
         }
 
+        var guardrailService = context.guardrailService();
+        var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null;
+
+        /**
+         * @deprecated Deprecated in favor of upstream implementation
+         */
         userMessage = GuardrailsSupport.invokeInputGuardrails(methodCreateInfo, userMessage,
-                context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
+                chatMemory,
                 augmentationResult, templateVariables, beanManager, auditSourceInfo);
 
-        CommittableChatMemory chatMemory;
+        if (guardrailService.hasInputGuardrails(methodCreateInfo)) {
+            var request = InputGuardrailRequest.builder()
+                    .userMessage(userMessage)
+                    .commonParams(
+                            GuardrailRequestParams.builder()
+                                    .chatMemory(chatMemory)
+                                    .augmentationResult(augmentationResult)
+                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                                    .variables(templateVariables)
+                                    .build())
+                    .build();
+
+            userMessage = guardrailService.executeGuardrails(methodCreateInfo, request);
+        }
+
+        CommittableChatMemory committableChatMemory;
         List<ChatMessage> messagesToSend;
 
         if (context.hasChatMemory()) {
             // we want to defer saving the new messages because the service could fail and be retried
-            chatMemory = new DefaultCommittableChatMemory(context.chatMemoryService.getChatMemory(memoryId));
-            messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, chatMemory, needsMemorySeed,
+            committableChatMemory = new DefaultCommittableChatMemory(chatMemory);
+            messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, committableChatMemory,
+                    needsMemorySeed,
                     context, methodCreateInfo);
         } else {
-            chatMemory = new NoopChatMemory();
+            committableChatMemory = new NoopChatMemory();
             messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
                     methodCreateInfo);
         }
 
         if (TypeUtil.isTokenStream(returnType)) {
             // TODO Indicate the output guardrails cannot be used when using token stream.
-            chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
+            committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             var aiServiceTokenStreamParams = AiServiceTokenStreamParameters.builder()
                     .messages(messagesToSend)
                     .toolSpecifications(toolSpecifications)
@@ -298,14 +324,14 @@ public class AiServiceMethodImplementationSupport {
         var actualAugmentationResult = augmentationResult;
         var actualUserMessage = userMessage;
         if (TypeUtil.isMulti(returnType)) {
-            chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+            committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
+            if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()) {
                 var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                         (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
                         methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
                 return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                         new ResponseAugmenterParams(actualUserMessage,
-                                chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
+                                committableChatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
                                 Collections.unmodifiableMap(templateVariables))));
             }
 
@@ -317,7 +343,8 @@ public class AiServiceMethodImplementationSupport {
                         OutputGuardrailResult result;
                         try {
                             result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
-                                    new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult,
+                                    new OutputGuardrailParams(AiMessage.from(chunk), committableChatMemory,
+                                            actualAugmentationResult,
                                             methodCreateInfo.getUserMessageTemplate(),
                                             Collections.unmodifiableMap(templateVariables)),
                                     beanManager, auditSourceInfo);
@@ -329,7 +356,7 @@ public class AiServiceMethodImplementationSupport {
                             if (!result.isRetry()) {
                                 throw new GuardrailException(result.toString(), result.getFirstFailureException());
                             } else if (result.getReprompt() != null) {
-                                chatMemory.add(new UserMessage(result.getReprompt()));
+                                committableChatMemory.add(new UserMessage(result.getReprompt()));
                                 throw new GuardrailsSupport.GuardrailRetryException();
                             } else {
                                 // Retry without re-prompting
@@ -353,7 +380,7 @@ public class AiServiceMethodImplementationSupport {
                             "Output validation failed. The guardrails have reached the maximum number of retries"))
                     .plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                             new ResponseAugmenterParams(actualUserMessage,
-                                    chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
+                                    committableChatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
                                     Collections.unmodifiableMap(templateVariables))));
         }
 
@@ -361,7 +388,12 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        ChatResponse response = executeRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
+        ChatRequest chatRequest = createChatRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
+        ChatExecutor chatExecutor = ChatExecutor.builder(context.effectiveChatModel(methodCreateInfo, methodArgs))
+                .chatRequest(chatRequest)
+                .build();
+
+        ChatResponse response = chatExecutor.execute();
 
         log.debug("AI response obtained");
 
@@ -382,7 +414,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             AiMessage aiMessage = response.aiMessage();
-            chatMemory.add(aiMessage);
+            committableChatMemory.add(aiMessage);
 
             if (!aiMessage.hasToolExecutionRequests()) {
                 break;
@@ -396,12 +428,12 @@ public class AiServiceMethodImplementationSupport {
                         ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
                         : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, memoryId, beanManager);
 
-                chatMemory.add(toolExecutionResultMessage);
+                committableChatMemory.add(toolExecutionResultMessage);
             }
 
             log.debug("Attempting to obtain AI response");
             ChatModel effectiveChatModel = context.effectiveChatModel(methodCreateInfo, methodArgs);
-            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(chatMemory.messages());
+            ChatRequest.Builder chatRequestBuilder = ChatRequest.builder().messages(committableChatMemory.messages());
             DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
             if (supportsJsonSchema(effectiveChatModel)) {
                 Optional<JsonSchema> jsonSchema = methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema();
@@ -437,24 +469,46 @@ public class AiServiceMethodImplementationSupport {
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
 
-        var guardrailResponse = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, chatMemory,
+        /**
+         * @deprecated Deprecated in favor of upstream implementation
+         */
+        var guardrailResponse = GuardrailsSupport.invokeOutputGuardrails(methodCreateInfo, committableChatMemory,
                 context.effectiveChatModel(methodCreateInfo, methodArgs),
                 response,
                 toolSpecifications,
-                new OutputGuardrailParams(response.aiMessage(), chatMemory, augmentationResult, userMessageTemplate,
+                new OutputGuardrailParams(response.aiMessage(), committableChatMemory, augmentationResult, userMessageTemplate,
                         Collections.unmodifiableMap(templateVariables)),
                 beanManager, auditSourceInfo);
 
         response = guardrailResponse.response();
+        Object guardrailResult = guardrailResponse.getRewrittenResult();
+
+        if (guardrailService.hasOutputGuardrails(methodCreateInfo)) {
+            var request = OutputGuardrailRequest.builder()
+                    .responseFromLLM(response)
+                    .chatExecutor(chatExecutor)
+                    .requestParams(
+                            GuardrailRequestParams.builder()
+                                    .chatMemory(committableChatMemory)
+                                    .augmentationResult(augmentationResult)
+                                    .userMessageTemplate(userMessageTemplate)
+                                    .variables(templateVariables)
+                                    .build())
+                    .build();
+            guardrailResult = guardrailService.executeGuardrails(methodCreateInfo, request);
+
+            if (guardrailResult instanceof ChatResponse) {
+                response = (ChatResponse) guardrailResult;
+            }
+        }
 
         // everything worked as expected so let's commit the messages
-        chatMemory.commit();
+        committableChatMemory.commit();
 
-        var responseAugmenterParam = new ResponseAugmenterParams(userMessage, chatMemory, augmentationResult,
+        var responseAugmenterParam = new ResponseAugmenterParams(userMessage, committableChatMemory, augmentationResult,
                 userMessageTemplate, templateVariables);
 
-        Object guardrailResult = guardrailResponse.getRewrittenResult();
-        if (guardrailResult != null && TypeUtil.isTypeOf(returnType, guardrailResult.getClass())) {
+        if ((guardrailResult != null) && TypeUtil.isTypeOf(returnType, guardrailResult.getClass())) {
             return ResponseAugmenterSupport.invoke(guardrailResult, methodCreateInfo, responseAugmenterParam);
         }
 
@@ -493,6 +547,10 @@ public class AiServiceMethodImplementationSupport {
         return toolExecutionResultMessage;
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     private static ChatResponse executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
             ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
@@ -503,6 +561,18 @@ public class AiServiceMethodImplementationSupport {
         return chatModel.chat(chatRequest);
     }
 
+    private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend, ChatModel chatModel,
+            List<ToolSpecification> toolSpecifications) {
+        return ChatRequest.builder()
+                .messages(messagesToSend)
+                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
+                .build();
+    }
+
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     private static ChatResponse executeRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
             List<ToolSpecification> toolSpecifications) {
         var chatRequest = ChatRequest.builder()
@@ -513,6 +583,21 @@ public class AiServiceMethodImplementationSupport {
         return chatModel.chat(chatRequest.build());
     }
 
+    static ChatRequest createChatRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
+            List<ToolSpecification> toolSpecifications) {
+        var chatRequest = ChatRequest.builder()
+                .messages(messagesToSend);
+
+        if (toolSpecifications != null) {
+            chatRequest.toolSpecifications(toolSpecifications);
+        }
+        return chatRequest.build();
+    }
+
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     static ChatResponse executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
             ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
         var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
@@ -522,11 +607,20 @@ public class AiServiceMethodImplementationSupport {
                 : executeRequest(messagesToSend, chatModel, toolSpecifications);
     }
 
-    static ChatResponse executeRequest(QuarkusAiServiceContext context,
+    static ChatRequest createChatRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
+            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
+        var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
+                : Optional.<JsonSchema> empty();
+
+        return jsonSchema.isPresent() ? createChatRequest(jsonSchema.get(), messagesToSend, chatModel, toolSpecifications)
+                : createChatRequest(messagesToSend, chatModel, toolSpecifications);
+    }
+
+    static ChatRequest createChatRequest(QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
             List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications) {
-        return executeRequest(methodCreateInfo, messagesToSend,
-                context.effectiveChatModel(methodCreateInfo, methodArgs),
+
+        return createChatRequest(methodCreateInfo, messagesToSend, context.effectiveChatModel(methodCreateInfo, methodArgs),
                 toolSpecifications);
     }
 
