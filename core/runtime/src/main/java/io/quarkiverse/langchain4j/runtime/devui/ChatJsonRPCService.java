@@ -351,7 +351,7 @@ public class ChatJsonRPCService {
 
             @Override
             public void onError(Throwable error) {
-                throw new RuntimeException(error);
+                em.fail(error);
             }
         });
     }
