@@ -35,6 +35,10 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         try {
             String baseUrl = builder.baseUrl.orElse("https://generativelanguage.googleapis.com");
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+            baseUrl += builder.apiVersion;
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
@@ -70,6 +74,7 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         private String configName;
         private Optional<String> baseUrl = Optional.empty();
+        private String apiVersion;
         private String modelId;
         private String key;
         private Double temperature;
@@ -89,6 +94,11 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
             return this;
         }
 
