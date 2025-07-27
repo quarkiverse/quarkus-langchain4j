@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.rag.AugmentationResult;
 import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
 import io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent;
@@ -233,18 +235,40 @@ public class GuardrailsSupport {
         return producer.apply(failures);
     }
 
-    public static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
-        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
-            return upstream;
+    private static class ChatResponseAccumulator {
+        private final StringBuilder stringBuilder;
+        private ChatResponseMetadata metadata;
+
+        ChatResponseAccumulator() {
+            this.stringBuilder = new StringBuilder();
+            this.metadata = null;
         }
+
+    }
+
+    public static Multi<ChatEvent.AccumulatedResponseEvent> accumulate(
+            Multi<ChatEvent> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
         OutputTokenAccumulator accumulator;
         synchronized (AiServiceMethodImplementationSupport.class) {
             accumulator = methodCreateInfo.getOutputTokenAccumulator();
             if (accumulator == null) {
                 String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
                 if (cn == null) {
-                    return upstream.collect().in(StringBuilder::new, StringBuilder::append)
-                            .map(StringBuilder::toString)
+                    return upstream.collect().in(ChatResponseAccumulator::new, (chatResponseAccumulator, chatEvent) -> {
+                        if (chatEvent
+                                .getEventType() == ChatEvent.ChatEventType.PartialResponse) {
+                            chatResponseAccumulator.stringBuilder.append(
+                                    ((ChatEvent.PartialResponseEvent) chatEvent)
+                                            .getChunk());
+                        }
+                        if (chatEvent
+                                .getEventType() == ChatEvent.ChatEventType.Completed) {
+                            chatResponseAccumulator.metadata = ((ChatEvent.ChatCompletedEvent) chatEvent)
+                                    .getChatResponse().metadata();
+                        }
+                    })
+                            .map(acc -> new ChatEvent.AccumulatedResponseEvent(
+                                    acc.stringBuilder.toString(), acc.metadata))
                             .toMulti();
                 }
                 try {
@@ -261,7 +285,18 @@ public class GuardrailsSupport {
             }
         }
         var actual = accumulator;
-        return upstream.plug(s -> actual.accumulate(upstream));
+        AtomicReference<ChatResponseMetadata> metadataAtomicReference = new AtomicReference<>();
+        return upstream.invoke(it -> {
+            if (it.getEventType() == ChatEvent.ChatEventType.Completed) {
+                metadataAtomicReference.set(((ChatEvent.ChatCompletedEvent) it)
+                        .getChatResponse().metadata());
+            }
+        }).filter(it -> it.getEventType() == ChatEvent.ChatEventType.PartialResponse)
+                .map(it -> ((ChatEvent.PartialResponseEvent) it).getChunk())
+                .plug(actual::accumulate)
+                .map(s -> new ChatEvent.AccumulatedResponseEvent(s,
+                        Optional.ofNullable(metadataAtomicReference.get()).orElse(ChatResponseMetadata.builder().build())));
+
     }
 
     public static OutputGuardrailResult invokeOutputGuardrailsForStream(AiServiceMethodCreateInfo methodCreateInfo,

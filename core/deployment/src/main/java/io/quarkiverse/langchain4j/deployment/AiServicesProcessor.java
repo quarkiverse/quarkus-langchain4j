@@ -693,14 +693,15 @@ public class AiServicesProcessor {
                 if (!DotNames.MULTI.equals(method.returnType().name())) {
                     continue;
                 }
-                boolean isMultiString = false;
+                boolean isSupportedResponseType = false;
                 if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     Type multiType = method.returnType().asParameterizedType().arguments().get(0);
-                    if (DotNames.STRING.equals(multiType.name())) {
-                        isMultiString = true;
+                    if (DotNames.STRING.equals(multiType.name())
+                            || DotNames.CHAT_EVENT.equals(multiType.name())) {
+                        isSupportedResponseType = true;
                     }
                 }
-                if (!isMultiString) {
+                if (!isSupportedResponseType) {
                     throw illegalConfiguration("Only Multi<String> is supported as a Multi return type. Offending method is '"
                             + method.declaringClass().name().toString() + "#" + method.name() + "'");
                 }
