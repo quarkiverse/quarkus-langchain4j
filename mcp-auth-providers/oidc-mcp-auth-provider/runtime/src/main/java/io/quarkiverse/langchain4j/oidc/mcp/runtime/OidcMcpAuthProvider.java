@@ -1,17 +1,22 @@
 package io.quarkiverse.langchain4j.oidc.mcp.runtime;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InjectableInstance;
+import io.quarkus.arc.ManagedContext;
 import io.quarkus.security.credential.TokenCredential;
 
 public class OidcMcpAuthProvider implements McpClientAuthProvider {
-    @Inject
-    Instance<TokenCredential> tokenCredential;
 
     @Override
     public String getAuthorization(Input input) {
-        return tokenCredential.isResolvable() ? "Bearer " + tokenCredential.get().getToken() : null;
+        ManagedContext managedContext = Arc.container().requestContext();
+        if (managedContext.isActive()) {
+            InjectableInstance<TokenCredential> tokenCredential = Arc.container().select(TokenCredential.class);
+            if (tokenCredential.isResolvable()) {
+                return "Bearer " + tokenCredential.get().getToken();
+            }
+        }
+        return null;
     }
 }
