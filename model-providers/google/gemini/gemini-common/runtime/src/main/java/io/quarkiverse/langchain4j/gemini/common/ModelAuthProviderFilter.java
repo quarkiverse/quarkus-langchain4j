@@ -5,64 +5,47 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.concurrent.Executor;
 
-import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.core.MultivaluedMap;
 
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestContext;
 import org.jboss.resteasy.reactive.client.spi.ResteasyReactiveClientRequestFilter;
 
 import com.google.auth.oauth2.GoogleCredentials;
 
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
-import io.vertx.core.Context;
-import io.vertx.core.Vertx;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 
 public class ModelAuthProviderFilter implements ResteasyReactiveClientRequestFilter {
 
     private final ModelAuthProvider authorizer;
-    private final Vertx vertx;
 
     public ModelAuthProviderFilter(String modelId) {
         this.authorizer = ModelAuthProvider.resolve(modelId).orElse(new ApplicationDefaultAuthProvider());
-        this.vertx = vertx();
-    }
-
-    private static Vertx vertx() {
-        Instance<Vertx> vertxInstance = CDI.current().select(Vertx.class);
-        return vertxInstance.isResolvable() ? vertxInstance.get() : null;
     }
 
     @Override
     public void filter(ResteasyReactiveClientRequestContext requestContext) {
-        if (vertx != null) {
-            Executor executorService = createExecutor();
-            requestContext.suspend();
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        setAuthorization(requestContext);
-                        requestContext.resume();
-                    } catch (Exception e) {
-                        requestContext.resume(e);
-                    }
+        Executor executorService = createExecutor();
+        requestContext.suspend();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    setAuthorization(requestContext);
+                    requestContext.resume();
+                } catch (Exception e) {
+                    requestContext.resume(e);
                 }
-            });
-        } else {
-            setAuthorization(requestContext);
-        }
-
+            }
+        });
     }
 
     private Executor createExecutor() {
-        Context context = vertx.getOrCreateContext();
-        return new Executor() {
-            @Override
-            public void execute(Runnable command) {
-                context.runOnContext(v -> command.run());
-            }
-        };
+        InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
+        return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
     }
 
     private void setAuthorization(ResteasyReactiveClientRequestContext requestContext) {
