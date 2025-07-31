@@ -66,6 +66,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
@@ -144,6 +145,8 @@ public class AiServicesProcessor {
 
     private static final Logger log = Logger.getLogger(AiServicesProcessor.class);
 
+    private static final DotName TOOL = DotName.createSimple(Tool.class);
+    private static final DotName TOOLBOX = DotName.createSimple(ToolBox.class);
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     public static final String DEFAULT_DELIMITER = "\n";
@@ -224,6 +227,78 @@ public class AiServicesProcessor {
                 ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).constructors().build());
         reflectiveClassProducer.produce(
                 ReflectiveClassBuildItem.builder(PropertyNamingStrategies.LowerCamelCaseStrategy.class).constructors().build());
+    }
+
+    @BuildStep
+    public void validateToolsPerAiService(BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation,
+            CombinedIndexBuildItem indexBuildItem) {
+        // Validate that from a given @RegisterAiServices class, the tool names are unique across all tools and tool boxes.
+        IndexView index = indexBuildItem.getIndex();
+        Collection<AnnotationInstance> instances = index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES);
+        for (AnnotationInstance instance : instances) {
+            if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
+                continue; // should never happen
+            }
+            ClassInfo declarativeAiServiceClassInfo = instance.target().asClass();
+            List<ClassInfo> tools = new ArrayList<>();
+            Set<String> visited = new HashSet<>();
+            Set<String> toolNames = new HashSet<>();
+            // Check @RegisterAiServices.tools
+            for (ClassInfo toolClass : tools(instance, index)) {
+                if (visited.contains(toolClass.name().toString())) {
+                    continue;
+                }
+                tools.add(toolClass);
+                visited.add(toolClass.name().toString());
+                Set<String> currentToolNames = gatherToolNames(toolClass);
+                for (String toolName : currentToolNames) {
+                    if (toolNames.contains(toolName)) {
+                        validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
+                                "Duplicate tool name '" + toolName + "' found in tools for ai services class '"
+                                        + declarativeAiServiceClassInfo.name() + "'.")));
+                    }
+                    toolNames.add(toolName);
+                }
+            }
+            // Check @RegisterAiServices.tools + service method @ToolBox
+            for (MethodInfo serviceMethodInfo : declarativeAiServiceClassInfo.methods()) {
+                if (serviceMethodInfo.hasAnnotation(TOOLBOX)) {
+                    AnnotationInstance toolBoxInstance = serviceMethodInfo.declaredAnnotation(TOOLBOX);
+                    if (toolBoxInstance == null) {
+                        continue;
+                    }
+                    for (String methodToolClassName : gatherMethodToolClassNames(serviceMethodInfo)) {
+                        if (visited.contains(methodToolClassName)) {
+                            continue;
+                        }
+                        visited.add(methodToolClassName);
+                        Set<String> currentToolNames = gatherToolNames(index.getClassByName(methodToolClassName));
+                        for (String toolName : currentToolNames) {
+                            if (toolNames.contains(toolName)) {
+                                validation.produce(
+                                        new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
+                                                "Duplicate tool name '" + toolName + "' found in tools for ai services method '"
+                                                        + serviceMethodInfo.name() + "' of class '"
+                                                        + declarativeAiServiceClassInfo.name() + "'.")));
+                            }
+                            toolNames.add(toolName);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static Set<String> gatherToolNames(ClassInfo toolClass) {
+        Set<String> toolNames = new HashSet<>();
+        for (MethodInfo method : toolClass.methods()) {
+            String toolName = ToolProcessor.resolveToolName(method);
+            if (toolName == null) {
+                continue;
+            }
+            toolNames.add(toolName);
+        }
+        return toolNames;
     }
 
     @BuildStep
