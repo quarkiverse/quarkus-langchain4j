@@ -20,26 +20,6 @@ import io.quarkus.test.QuarkusUnitTest;
 public class ToolValidationTest {
 
     @Nested
-    @DisplayName("Duplicated tools detection")
-    class DuplicatedTools {
-        @RegisterExtension
-        static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-                .setArchiveProducer(
-                        () -> ShrinkWrap.create(JavaArchive.class).addClasses(MyFirstTool.class, MySecondTool.class))
-                .assertException(t -> {
-                    assertThat(t)
-                            .isInstanceOf(DeploymentException.class)
-                            .hasCauseInstanceOf(IllegalStateException.class)
-                            .hasMessageContaining("A tool with the name 'myTool'");
-                });
-
-        @Test
-        void test() {
-            fail("Should not be called");
-        }
-    }
-
-    @Nested
     @DisplayName("Abstract tool detection")
     class AbstractTools {
         @RegisterExtension

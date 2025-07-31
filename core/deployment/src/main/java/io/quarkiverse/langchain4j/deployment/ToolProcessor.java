@@ -125,8 +125,6 @@ public class ToolProcessor {
         List<String> generatedInvokerClasses = new ArrayList<>();
         List<String> generatedArgumentMapperClasses = new ArrayList<>();
 
-        Set<String> toolsNames = new HashSet<>();
-
         if (!instances.isEmpty()) {
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
 
@@ -164,27 +162,25 @@ public class ToolProcessor {
             }
 
             boolean validationErrorFound = false;
-            Map<String, ClassInfo> discoveredTools = new HashMap<>();
             for (var entry : methodsPerClass.entrySet()) {
                 DotName className = entry.getKey();
 
                 List<MethodInfo> toolMethods = entry.getValue();
                 List<MethodInfo> privateMethods = new ArrayList<>();
+                Set<String> discoveredToolNames = new HashSet<>();
                 for (MethodInfo toolMethod : toolMethods) {
+                    String toolName = resolveToolName(toolMethod);
                     // Validation
-                    // - Must not have another tool with the same method name
-                    // - Must have at least one parameter
-                    if (discoveredTools.containsKey(toolMethod.name())) {
+                    // - Must not have another tool with the same name
+                    if (discoveredToolNames.contains(toolName)) {
                         validation.produce(
                                 new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
-                                        "A tool with the name '" + toolMethod.name() + "' from class '"
-                                                + className + "' is already declared in class '"
-                                                + discoveredTools.get(toolMethod.name())
-                                                + "'. Tools method name must be unique.")));
+                                        "Duplicate tool name '" + toolName + "' found in class '"
+                                                + className + "'. Tools name must be unique within a class.")));
                         validationErrorFound = true;
                         continue;
                     }
-                    discoveredTools.put(toolMethod.name(), toolMethod.declaringClass());
+                    discoveredToolNames.add(toolName);
 
                     if (Modifier.isPrivate(toolMethod.flags())) {
                         privateMethods.add(toolMethod);
@@ -269,13 +265,7 @@ public class ToolProcessor {
 
                     validateExecutionModel(methodCreateInfo, toolMethod, validation);
 
-                    if (toolsNames.add(toolName)) {
-                        toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
-                    } else {
-                        validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
-                                new IllegalStateException("A tool with the name '" + toolName
-                                        + "' is already declared. Tools method name must be unique.")));
-                    }
+                    toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
 
                     metadata.computeIfAbsent(className.toString(), (c) -> new ArrayList<>()).add(methodCreateInfo);
 
@@ -298,6 +288,16 @@ public class ToolProcessor {
         }
 
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    public static String resolveToolName(MethodInfo toolMethod) {
+        AnnotationInstance instance = toolMethod.annotation(TOOL);
+        if (instance == null) {
+            return null;
+        }
+        AnnotationValue nameValue = instance.value("name");
+        String toolName = getToolName(nameValue, toolMethod);
+        return toolName;
     }
 
     // TODO: generalize this if necessary
