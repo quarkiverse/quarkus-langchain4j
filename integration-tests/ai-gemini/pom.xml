@@ -10,6 +10,7 @@
   <name>Quarkus LangChain4j - Integration Tests - AI Gemini</name>
   <properties>
     <skipITs>true</skipITs>
+    <quarkus.langchain4j.version>${project.version}</quarkus.langchain4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -19,7 +20,7 @@
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
-      <version>${project.version}</version>
+      <version>${quarkus.langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -55,7 +56,7 @@
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-ai-gemini-deployment</artifactId>
-      <version>${project.version}</version>
+      <version>${quarkus.langchain4j.version}</version>
       <type>pom</type>
       <scope>test</scope>
       <exclusions>
