@@ -16,6 +16,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.quarkiverse.langchain4j.guardrails.JsonGuardrailsUtils;
 import io.quarkus.test.QuarkusUnitTest;
 
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
 class JsonGuardrailsUtilsTest {
 
     @RegisterExtension

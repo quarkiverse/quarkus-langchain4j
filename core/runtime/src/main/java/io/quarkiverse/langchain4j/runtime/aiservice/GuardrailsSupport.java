@@ -15,11 +15,18 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.ChatExecutor;
+import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailException;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.rag.AugmentationResult;
+import dev.langchain4j.service.guardrail.GuardrailService;
 import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
 import io.quarkiverse.langchain4j.audit.InputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.audit.OutputGuardrailExecutedEvent;
@@ -31,6 +38,7 @@ import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.NoopChatExecutor;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
@@ -38,8 +46,150 @@ import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
+    static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
+            AiServiceMethodCreateInfo methodCreateInfo, ChatMemory chatMemory, AugmentationResult augmentationResult,
+            Map<String, Object> templateVariables) {
+        var um = userMessage;
 
-    public static UserMessage invokeInputGuardrails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
+        if (guardrailService.hasInputGuardrails(methodCreateInfo)) {
+            var request = InputGuardrailRequest.builder()
+                    .userMessage(userMessage)
+                    .commonParams(
+                            GuardrailRequestParams.builder()
+                                    .chatMemory(chatMemory)
+                                    .augmentationResult(augmentationResult)
+                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                                    .variables(templateVariables)
+                                    .build())
+                    .build();
+
+            um = guardrailService.executeGuardrails(methodCreateInfo, request);
+        }
+
+        return um;
+    }
+
+    static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
+        if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()
+                && !methodCreateInfo.getOutputGuardrails().hasGuardrails()) {
+            return upstream;
+        }
+
+        OutputTokenAccumulator accumulator;
+        synchronized (AiServiceMethodImplementationSupport.class) {
+            accumulator = methodCreateInfo.getOutputTokenAccumulator();
+
+            if (accumulator == null) {
+                String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
+
+                if (cn == null) {
+                    return upstream.collect()
+                            .in(StringBuilder::new, StringBuilder::append)
+                            .map(StringBuilder::toString)
+                            .toMulti();
+                }
+
+                try {
+                    Class<? extends OutputTokenAccumulator> clazz = Class
+                            .forName(cn, true, Thread.currentThread().getContextClassLoader())
+                            .asSubclass(OutputTokenAccumulator.class);
+                    accumulator = CDI.current().select(clazz).get();
+                    methodCreateInfo.setOutputTokenAccumulator(accumulator);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Could not find " + OutputTokenAccumulator.class.getSimpleName() + " implementation class: " + cn,
+                            e);
+                }
+            }
+        }
+
+        var actual = accumulator;
+        return upstream.plug(s -> actual.accumulate(upstream));
+    }
+
+    static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
+            ChatResponse response, ChatExecutor chatExecutor, CommittableChatMemory committableChatMemory,
+            AugmentationResult augmentationResult, Map<String, Object> templateVariables,
+            @Deprecated(forRemoval = true) T quarkusSpecificGuardrailResult) {
+
+        /**
+         * The quarkusSpecificGuardrailResult will be removed when the quarkus-specific guardrails implementation is removed
+         */
+        T result = quarkusSpecificGuardrailResult;
+
+        if (guardrailService.hasOutputGuardrails(methodCreateInfo)) {
+            var request = OutputGuardrailRequest.builder()
+                    .responseFromLLM(response)
+                    .chatExecutor(chatExecutor)
+                    .requestParams(
+                            GuardrailRequestParams.builder()
+                                    .chatMemory(committableChatMemory)
+                                    .augmentationResult(augmentationResult)
+                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                                    .variables(templateVariables)
+                                    .build())
+                    .build();
+
+            result = guardrailService.executeGuardrails(methodCreateInfo, request);
+        }
+
+        return result;
+    }
+
+    static boolean isOutputGuardrailRetry(Throwable t) {
+        return (t instanceof OutputGuardrailException) &&
+                t.getMessage().contains("The guardrails have reached the maximum number of retries.");
+    }
+
+    static class OutputGuardrailStreamingMapper implements Function<String, String> {
+        private final GuardrailService guardrailService;
+        private final AiServiceMethodCreateInfo methodCreateInfo;
+        private final CommittableChatMemory committableChatMemory;
+        private final AugmentationResult augmentationResult;
+        private final Map<String, Object> templateVariables;
+
+        OutputGuardrailStreamingMapper(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
+                CommittableChatMemory committableChatMemory, AugmentationResult augmentationResult,
+                Map<String, Object> templateVariables) {
+            this.guardrailService = guardrailService;
+            this.methodCreateInfo = methodCreateInfo;
+            this.committableChatMemory = committableChatMemory;
+            this.augmentationResult = augmentationResult;
+            this.templateVariables = templateVariables;
+        }
+
+        @Override
+        public String apply(String chunk) {
+            var guardrailResult = executeOutputGuardrails(
+                    guardrailService,
+                    methodCreateInfo,
+                    ChatResponse.builder()
+                            .aiMessage(AiMessage.from(chunk))
+                            .build(),
+                    new NoopChatExecutor(),
+                    committableChatMemory,
+                    augmentationResult,
+                    templateVariables,
+                    null);
+
+            if (guardrailResult instanceof ChatResponse) {
+                return ((ChatResponse) guardrailResult).aiMessage().text();
+            } else if (guardrailResult instanceof String) {
+                return (String) guardrailResult;
+            } else if (guardrailResult != null) {
+                // TODO is this really needed
+                return guardrailResult.toString();
+            }
+
+            return chunk;
+        }
+    }
+
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
+    public static UserMessage invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo, UserMessage userMessage,
             ChatMemory chatMemory, AugmentationResult augmentationResult, Map<String, Object> templateVariables,
             BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
         InputGuardrailResult result;
@@ -64,14 +214,18 @@ public class GuardrailsSupport {
         return userMessage;
     }
 
-    public static OutputGuardrailResponse invokeOutputGuardrails(AiServiceMethodCreateInfo methodCreateInfo,
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
+    public static OutputGuardrailResponse invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             ChatMemory chatMemory,
             ChatModel chatModel,
             ChatResponse response,
             List<ToolSpecification> toolSpecifications,
             OutputGuardrailParams output, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
         int attempt = 0;
-        int max = methodCreateInfo.getGuardrailsMaxRetry();
+        int max = methodCreateInfo.getQuarkusGuardrailsMaxRetry();
         if (max <= 0) {
             max = 1;
         }
@@ -122,6 +276,10 @@ public class GuardrailsSupport {
         return new OutputGuardrailResponse(response, result);
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     public record OutputGuardrailResponse(ChatResponse response, OutputGuardrailResult result) {
 
         public boolean hasRewrittenResult() {
@@ -133,17 +291,21 @@ public class GuardrailsSupport {
         }
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     @SuppressWarnings("unchecked")
-    private static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
+    static OutputGuardrailResult invokeOutputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             OutputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
+        if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()) {
             return OutputGuardrailResult.success();
         }
         List<Class<? extends OutputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
-            classes = methodCreateInfo.getOutputGuardrailsClasses();
+            classes = methodCreateInfo.getQuarkusOutputGuardrailsClasses();
             if (classes.isEmpty()) {
-                for (String className : methodCreateInfo.getOutputGuardrailsClassNames()) {
+                for (String className : methodCreateInfo.getQuarkusOutputGuardrailsClassNames()) {
                     try {
                         classes.add((Class<? extends OutputGuardrail>) Class.forName(className, true,
                                 Thread.currentThread().getContextClassLoader()));
@@ -161,17 +323,21 @@ public class GuardrailsSupport {
                 beanManager, auditSourceInfo);
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     @SuppressWarnings("unchecked")
     private static InputGuardrailResult invokeInputGuardRails(AiServiceMethodCreateInfo methodCreateInfo,
             InputGuardrailParams params, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        if (methodCreateInfo.getInputGuardrailsClassNames().isEmpty()) {
+        if (methodCreateInfo.getQuarkusInputGuardrailsClassNames().isEmpty()) {
             return InputGuardrailResult.success();
         }
         List<Class<? extends InputGuardrail>> classes;
         synchronized (AiServiceMethodImplementationSupport.class) {
-            classes = methodCreateInfo.getInputGuardrailsClasses();
+            classes = methodCreateInfo.getQuarkusInputGuardrailsClasses();
             if (classes.isEmpty()) {
-                for (String className : methodCreateInfo.getInputGuardrailsClassNames()) {
+                for (String className : methodCreateInfo.getQuarkusInputGuardrailsClassNames()) {
                     try {
                         classes.add((Class<? extends InputGuardrail>) Class.forName(className, true,
                                 Thread.currentThread().getContextClassLoader()));
@@ -189,6 +355,10 @@ public class GuardrailsSupport {
                 beanManager, auditSourceInfo);
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     private static <GR extends GuardrailResult> GR guardrailResult(GuardrailParams params,
             List<Class<? extends Guardrail>> classes, GR accumulatedResults,
             Function<List<? extends GuardrailResult.Failure>, GR> producer, BeanManager beanManager,
@@ -219,6 +389,10 @@ public class GuardrailsSupport {
         return accumulatedResults;
     }
 
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     private static <GR extends GuardrailResult> GR compose(GR oldResult, GR newResult,
             Function<List<? extends GuardrailResult.Failure>, GR> producer) {
         if (oldResult.isSuccess()) {
@@ -233,42 +407,10 @@ public class GuardrailsSupport {
         return producer.apply(failures);
     }
 
-    public static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
-        if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
-            return upstream;
-        }
-        OutputTokenAccumulator accumulator;
-        synchronized (AiServiceMethodImplementationSupport.class) {
-            accumulator = methodCreateInfo.getOutputTokenAccumulator();
-            if (accumulator == null) {
-                String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
-                if (cn == null) {
-                    return upstream.collect().in(StringBuilder::new, StringBuilder::append)
-                            .map(StringBuilder::toString)
-                            .toMulti();
-                }
-                try {
-                    Class<? extends OutputTokenAccumulator> clazz = Class
-                            .forName(cn, true, Thread.currentThread().getContextClassLoader())
-                            .asSubclass(OutputTokenAccumulator.class);
-                    accumulator = CDI.current().select(clazz).get();
-                    methodCreateInfo.setOutputTokenAccumulator(accumulator);
-                } catch (Exception e) {
-                    throw new RuntimeException(
-                            "Could not find " + OutputTokenAccumulator.class.getSimpleName() + " implementation class: " + cn,
-                            e);
-                }
-            }
-        }
-        var actual = accumulator;
-        return upstream.plug(s -> actual.accumulate(upstream));
-    }
-
-    public static OutputGuardrailResult invokeOutputGuardrailsForStream(AiServiceMethodCreateInfo methodCreateInfo,
-            OutputGuardrailParams outputGuardrailParams, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
-        return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams, beanManager, auditSourceInfo);
-    }
-
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
     static class GuardrailRetryException extends RuntimeException {
         // Marker class to indicate a retry to the downstream consumer.
     }
