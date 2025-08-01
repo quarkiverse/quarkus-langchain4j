@@ -75,7 +75,6 @@ public class OutputGuardrailChainOnStreamedResponseTest {
     @ActivateRequestContext
     void testThatRetryRestartTheChain() {
         aiService.failingFirstTwo("1", "foo").collect().asList().await().indefinitely();
-        ;
         assertThat(firstGuardrail.spy()).isEqualTo(2);
         assertThat(secondGuardrail.spy()).isEqualTo(1);
         assertThat(failingGuardrail.spy()).isEqualTo(2);
@@ -105,7 +104,6 @@ public class OutputGuardrailChainOnStreamedResponseTest {
     @ActivateRequestContext
     void testThatRetryRestartTheChainWithPassThroughAccumulator() {
         aiService.failingFirstTwoWithPassThroughAccumulator("1", "foo").collect().asList().await().indefinitely();
-        ;
         assertThat(firstGuardrail.spy()).isEqualTo(4);
         assertThat(secondGuardrail.spy()).isEqualTo(3);
         assertThat(failingGuardrail.spy()).isEqualTo(4);

@@ -83,7 +83,7 @@ public final class AiServiceMethodCreateInfo {
     private final String outputTokenAccumulatorClassName;
     private OutputTokenAccumulator accumulator;
 
-    private final LazyValue<Integer> guardrailsMaxRetry;
+    private final LazyValue<Integer> quarkusGuardrailsMaxRetry;
     private final boolean switchToWorkerThreadForToolExecution;
 
     @RecordableConstructor
@@ -133,7 +133,7 @@ public final class AiServiceMethodCreateInfo {
         this.outputGuardrails = outputGuardrails;
         this.outputTokenAccumulatorClassName = outputTokenAccumulatorClassName;
         // Use a lazy value to get the value at runtime.
-        this.guardrailsMaxRetry = new LazyValue<Integer>(new Supplier<Integer>() {
+        this.quarkusGuardrailsMaxRetry = new LazyValue<Integer>(new Supplier<Integer>() {
             @Override
             public Integer get() {
                 return ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.guardrails.max-retries", Integer.class)
@@ -259,8 +259,8 @@ public final class AiServiceMethodCreateInfo {
         }
     }
 
-    public int getGuardrailsMaxRetry() {
-        return guardrailsMaxRetry.get();
+    public int getQuarkusGuardrailsMaxRetry() {
+        return quarkusGuardrailsMaxRetry.get();
     }
 
     /**

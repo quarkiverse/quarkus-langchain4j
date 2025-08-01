@@ -15,10 +15,12 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailException;
 import dev.langchain4j.guardrail.OutputGuardrailRequest;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
@@ -36,6 +38,7 @@ import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.NoopChatExecutor;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
@@ -43,7 +46,7 @@ import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
-    public static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
+    static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
             AiServiceMethodCreateInfo methodCreateInfo, ChatMemory chatMemory, AugmentationResult augmentationResult,
             Map<String, Object> templateVariables) {
         var um = userMessage;
@@ -66,7 +69,7 @@ public class GuardrailsSupport {
         return um;
     }
 
-    public static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
+    static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
         if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()
                 && !methodCreateInfo.getOutputGuardrails().hasGuardrails()) {
             return upstream;
@@ -104,7 +107,7 @@ public class GuardrailsSupport {
         return upstream.plug(s -> actual.accumulate(upstream));
     }
 
-    public static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
+    static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
             ChatResponse response, ChatExecutor chatExecutor, CommittableChatMemory committableChatMemory,
             AugmentationResult augmentationResult, Map<String, Object> templateVariables,
             @Deprecated(forRemoval = true) T quarkusSpecificGuardrailResult) {
@@ -131,6 +134,55 @@ public class GuardrailsSupport {
         }
 
         return result;
+    }
+
+    static boolean isOutputGuardrailRetry(Throwable t) {
+        return (t instanceof OutputGuardrailException) &&
+                t.getMessage().contains("The guardrails have reached the maximum number of retries.");
+    }
+
+    static class OutputGuardrailStreamingMapper implements Function<String, String> {
+        private final GuardrailService guardrailService;
+        private final AiServiceMethodCreateInfo methodCreateInfo;
+        private final CommittableChatMemory committableChatMemory;
+        private final AugmentationResult augmentationResult;
+        private final Map<String, Object> templateVariables;
+
+        OutputGuardrailStreamingMapper(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
+                CommittableChatMemory committableChatMemory, AugmentationResult augmentationResult,
+                Map<String, Object> templateVariables) {
+            this.guardrailService = guardrailService;
+            this.methodCreateInfo = methodCreateInfo;
+            this.committableChatMemory = committableChatMemory;
+            this.augmentationResult = augmentationResult;
+            this.templateVariables = templateVariables;
+        }
+
+        @Override
+        public String apply(String chunk) {
+            var guardrailResult = executeOutputGuardrails(
+                    guardrailService,
+                    methodCreateInfo,
+                    ChatResponse.builder()
+                            .aiMessage(AiMessage.from(chunk))
+                            .build(),
+                    new NoopChatExecutor(),
+                    committableChatMemory,
+                    augmentationResult,
+                    templateVariables,
+                    null);
+
+            if (guardrailResult instanceof ChatResponse) {
+                return ((ChatResponse) guardrailResult).aiMessage().text();
+            } else if (guardrailResult instanceof String) {
+                return (String) guardrailResult;
+            } else if (guardrailResult != null) {
+                // TODO is this really needed
+                return guardrailResult.toString();
+            }
+
+            return chunk;
+        }
     }
 
     /**
@@ -173,7 +225,7 @@ public class GuardrailsSupport {
             List<ToolSpecification> toolSpecifications,
             OutputGuardrailParams output, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
         int attempt = 0;
-        int max = methodCreateInfo.getGuardrailsMaxRetry();
+        int max = methodCreateInfo.getQuarkusGuardrailsMaxRetry();
         if (max <= 0) {
             max = 1;
         }

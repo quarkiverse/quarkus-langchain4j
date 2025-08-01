@@ -68,13 +68,11 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.AugmentationRequest;
 import dev.langchain4j.rag.AugmentationResult;
-import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.query.Metadata;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
-import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
@@ -97,15 +95,14 @@ import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.GuardrailRetryException;
+import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
+import io.quarkiverse.langchain4j.runtime.aiservice.TokenStreamMulti.TokenStreamMultiResponseAugmentorSupport;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
-import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.operators.AbstractMulti;
-import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
-import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.Context;
 
 /**
@@ -252,10 +249,9 @@ public class AiServiceMethodImplementationSupport {
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
                                         methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
-                                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                                        new ResponseAugmenterParams((UserMessage) augmentedUserMessage,
-                                                memory, ar, methodCreateInfo.getUserMessageTemplate(),
-                                                templateVariables)));
+
+                                return stream.plug(new TokenStreamMultiResponseAugmentorSupport<>(methodCreateInfo,
+                                        (UserMessage) augmentedUserMessage, memory, ar, templateVariables));
                             }
 
                             private List<ChatMessage> messagesToSend(UserMessage augmentedUserMessage,
@@ -328,22 +324,17 @@ public class AiServiceMethodImplementationSupport {
         var actualUserMessage = userMessage;
         if (TypeUtil.isMulti(returnType)) {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()
-                    && !methodCreateInfo.getOutputGuardrails().hasGuardrails()) {
-                var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
-                        (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
-                        methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
-                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                        new ResponseAugmenterParams(actualUserMessage,
-                                committableChatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
-                                Collections.unmodifiableMap(templateVariables))));
-            }
-
-            return new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
+            var hasQuarkusOutputGuardrails = !methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty();
+            var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
+            Multi<String> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
-                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread)
-                    .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
-                    .map(chunk -> {
+                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
+
+            if (hasQuarkusOutputGuardrails || hasUpstreamGuardrails) {
+                stream = stream.plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo));
+
+                if (hasQuarkusOutputGuardrails) {
+                    stream = stream.map(chunk -> {
                         OutputGuardrailResult result;
                         try {
                             result = GuardrailsSupport.invokeOutputGuardRails(methodCreateInfo,
@@ -374,18 +365,33 @@ public class AiServiceMethodImplementationSupport {
                             return chunk;
                         }
                     })
-                    // Retry logic:
-                    // 1. retry only on the custom RetryException
-                    // 2. If we still have a RetryException afterward, we fail.
-                    .onFailure(GuardrailsSupport.GuardrailRetryException.class).retry()
-                    .atMost(methodCreateInfo.getGuardrailsMaxRetry())
-                    .onFailure(GuardrailsSupport.GuardrailRetryException.class)
-                    .transform(t -> new GuardrailException(
-                            "Output validation failed. The guardrails have reached the maximum number of retries"))
-                    .plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                            new ResponseAugmenterParams(actualUserMessage,
-                                    committableChatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
-                                    Collections.unmodifiableMap(templateVariables))));
+                            // Retry logic:
+                            // 1. retry only on the custom RetryException
+                            // 2. If we still have a RetryException afterward, we fail.
+                            .onFailure(GuardrailRetryException.class)
+                            .retry()
+                            .atMost(methodCreateInfo.getQuarkusGuardrailsMaxRetry())
+                            .onFailure(GuardrailRetryException.class)
+                            .transform(t -> new GuardrailException(
+                                    "Output validation failed. The guardrails have reached the maximum number of retries"));
+                }
+
+                if (hasUpstreamGuardrails) {
+                    stream = stream.map(
+                            new OutputGuardrailStreamingMapper(
+                                    guardrailService,
+                                    methodCreateInfo,
+                                    committableChatMemory,
+                                    actualAugmentationResult,
+                                    templateVariables))
+                            .onFailure(GuardrailsSupport::isOutputGuardrailRetry)
+                            .retry()
+                            .atMost(methodCreateInfo.getOutputGuardrails().getMaxRetriesAsSetByConfig());
+                }
+            }
+
+            return stream.plug(new TokenStreamMultiResponseAugmentorSupport<>(methodCreateInfo, actualUserMessage,
+                    committableChatMemory, actualAugmentationResult, templateVariables));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
@@ -1000,65 +1006,4 @@ public class AiServiceMethodImplementationSupport {
         Object wrap(Input input, Function<Input, Object> fun);
     }
 
-    private static class TokenStreamMulti extends AbstractMulti<String> implements Multi<String> {
-        private final List<ChatMessage> messagesToSend;
-        private final List<ToolSpecification> toolSpecifications;
-        private final Map<String, ToolExecutor> toolsExecutors;
-        private final List<Content> contents;
-        private final QuarkusAiServiceContext context;
-        private final Object memoryId;
-        private final boolean switchToWorkerThreadForToolExecution;
-        private final boolean isCallerRunningOnWorkerThread;
-
-        public TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
-                Map<String, ToolExecutor> toolExecutors,
-                List<Content> contents, QuarkusAiServiceContext context, Object memoryId,
-                boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread) {
-            // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
-            this.messagesToSend = messagesToSend;
-            this.toolSpecifications = toolSpecifications;
-            this.toolsExecutors = toolExecutors;
-            this.contents = contents;
-            this.context = context;
-            this.memoryId = memoryId;
-            this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
-            this.isCallerRunningOnWorkerThread = isCallerRunningOnWorkerThread;
-        }
-
-        @Override
-        public void subscribe(MultiSubscriber<? super String> subscriber) {
-            UnicastProcessor<String> processor = UnicastProcessor.create();
-            processor.subscribe(subscriber);
-
-            createTokenStream(processor);
-        }
-
-        private void createTokenStream(UnicastProcessor<String> processor) {
-            Context ctxt = null;
-            if (switchToWorkerThreadForToolExecution || isCallerRunningOnWorkerThread) {
-                // we create or retrieve the current context, to use `executeBlocking` when required.
-                ctxt = VertxContext.getOrCreateDuplicatedContext();
-            }
-
-            var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                    toolsExecutors, contents, context, memoryId, ctxt, switchToWorkerThreadForToolExecution,
-                    isCallerRunningOnWorkerThread);
-            TokenStream tokenStream = stream
-                    .onPartialResponse(processor::onNext)
-                    .onCompleteResponse(message -> processor.onComplete())
-                    .onError(processor::onError);
-            // This is equivalent to "run subscription on worker thread"
-            if (switchToWorkerThreadForToolExecution && Context.isOnEventLoopThread()) {
-                ctxt.executeBlocking(new Callable<Void>() {
-                    @Override
-                    public Void call() {
-                        tokenStream.start();
-                        return null;
-                    }
-                });
-            } else {
-                tokenStream.start();
-            }
-        }
-    }
 }

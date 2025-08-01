@@ -5,7 +5,6 @@ import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigu
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_INPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
@@ -41,6 +40,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.tools.Tool;
+
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
@@ -48,6 +49,7 @@ import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
 import jakarta.interceptor.InterceptorBinding;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -69,7 +71,6 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import dev.langchain4j.guardrail.OutputGuardrail;
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
@@ -108,6 +109,8 @@ import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
 import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
+import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
+import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
@@ -1587,12 +1590,29 @@ public class AiServicesProcessor {
         List<String> quarkusOutputGuardrailClasses = AiServicesMethodBuildItem.gatherGuardrails(method,
                 QUARKUS_OUTPUT_GUARDRAILS);
 
+        var guardrailDeprecationWarning = """
+
+                ================== DEPRECATION WARNING ==================
+                The following Quarkus-specific %s guardrail classes have been discovered on the method (%s) in the class (%s). Please move to the new upstream guardrails.
+                %s
+                """;
+
+        if (!quarkusOutputGuardrailClasses.isEmpty()) {
+            log.warnf(guardrailDeprecationWarning, "output", method, method.declaringClass(),
+                    String.join("\n", quarkusOutputGuardrailClasses));
+        }
+
         /**
          * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
          */
         @Deprecated(forRemoval = true)
         List<String> quarkusInputGuardrailClassess = AiServicesMethodBuildItem.gatherGuardrails(method,
                 QUARKUS_INPUT_GUARDRAILS);
+
+        if (!quarkusInputGuardrailClassess.isEmpty()) {
+            log.warnf(guardrailDeprecationWarning, "input", method, method.declaringClass(),
+                    String.join("\n", quarkusInputGuardrailClassess));
+        }
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 
@@ -1602,14 +1622,16 @@ public class AiServicesProcessor {
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
                 methodToolClassInfo.keySet());
 
+        var methodReturnTypeSignature = returnTypeSignature(method.returnType(),
+                new TypeArgMapper(method.declaringClass(), index));
+
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
+                userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution, quarkusInputGuardrailClassess,
                 quarkusOutputGuardrailClasses,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
-                gatherOutputGuardrails(method));
+                gatherOutputGuardrails(method, methodReturnTypeSignature));
     }
 
     private static InputGuardrailsLiteral gatherInputGuardrails(MethodInfo method) {
@@ -1617,14 +1639,23 @@ public class AiServicesProcessor {
                 gatherGuardrails(getGuardrailsAnnotation(method, LangChain4jDotNames.INPUT_GUARDRAILS)));
     }
 
-    private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method) {
+    private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method, String methodReturnTypeSignature) {
         var annotationInstance = getGuardrailsAnnotation(method, LangChain4jDotNames.OUTPUT_GUARDRAILS);
-        var maxRetries = annotationInstance
+        var methodReturnsMulti = TypeUtil.isMulti(TypeSignatureParser.parse(methodReturnTypeSignature));
+        var maxRetriesAsSetByConfig = annotationInstance
                 .map(v -> v.value("maxRetries"))
                 .map(AnnotationValue::asInt)
+                .or(() -> ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.guardrails.max-retries",
+                        Integer.class))
                 .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
 
-        return new OutputGuardrailsLiteral(gatherGuardrails(annotationInstance), maxRetries);
+        // If the method returns a Multi, then we don't want the guardrail service to perform any retries on its own
+        // Instead we'll store the value as a config value and we'll have the multi itself perform the retries
+        // based on the number of retries configured, either on the annotation or set through config
+        return new OutputGuardrailsLiteral(
+                gatherGuardrails(annotationInstance),
+                methodReturnsMulti ? 0 : maxRetriesAsSetByConfig,
+                maxRetriesAsSetByConfig);
     }
 
     private static Optional<AnnotationInstance> getGuardrailsAnnotation(MethodInfo methodInfo, DotName annotation) {

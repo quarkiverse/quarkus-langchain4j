@@ -8,9 +8,11 @@ import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.smallrye.config.SmallRyeConfig;
 
 public class QuarkusOutputGuardrailsConfig implements OutputGuardrailsConfig {
+    private final int maxRetries;
     private final GuardrailsConfig guardrailsConfig;
 
-    public QuarkusOutputGuardrailsConfig() {
+    public QuarkusOutputGuardrailsConfig(QuarkusOutputGuardrailsConfigBuilder builder) {
+        this.maxRetries = builder.maxRetries;
         this.guardrailsConfig = ConfigProvider.getConfig()
                 .unwrap(SmallRyeConfig.class)
                 .getConfigMapping(LangChain4jConfig.class)
@@ -19,6 +21,22 @@ public class QuarkusOutputGuardrailsConfig implements OutputGuardrailsConfig {
 
     @Override
     public int maxRetries() {
-        return this.guardrailsConfig.maxRetries();
+        return (this.guardrailsConfig.maxRetries() == GuardrailsConfig.MAX_RETRIES_DEFAULT) ? this.maxRetries
+                : this.guardrailsConfig.maxRetries();
+    }
+
+    static class QuarkusOutputGuardrailsConfigBuilder implements OutputGuardrailsConfigBuilder {
+        private int maxRetries = GuardrailsConfig.MAX_RETRIES_DEFAULT;
+
+        @Override
+        public OutputGuardrailsConfigBuilder maxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
+        @Override
+        public OutputGuardrailsConfig build() {
+            return new QuarkusOutputGuardrailsConfig(this);
+        }
     }
 }

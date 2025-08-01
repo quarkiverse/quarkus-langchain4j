@@ -49,6 +49,9 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
     @Inject
     OKGuardrail okGuardrail;
 
+    @Inject
+    RewritingGuardrail rewriting;
+
     @Test
     @ActivateRequestContext
     void testOk() {
@@ -60,7 +63,7 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
     @ActivateRequestContext
     void testOkWithPassThroughAccumulator() {
         aiService.okWithPassThroughAccumulator("1").collect().asList().await().indefinitely();
-        assertThat(okGuardrail.spy()).isEqualTo(1);
+        assertThat(okGuardrail.spy()).isEqualTo(3);
     }
 
     @Test
@@ -85,14 +88,17 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
     @Test
     @ActivateRequestContext
     void testRetryOk() {
-        aiService.retry("3").collect().asList().await().indefinitely();
+        assertThat(aiService.retry("3").collect().asList().await().indefinitely())
+                .singleElement()
+                .isEqualTo("Hi! World!");
         assertThat(retry.spy()).isEqualTo(2);
     }
 
     @Test
     @ActivateRequestContext
     void testRetryOkWithPassThroughAccumulator() {
-        aiService.retryWithPassThroughAccumulator("3").collect().asList().await().indefinitely();
+        assertThat(aiService.retryWithPassThroughAccumulator("3").collect().asList().await().indefinitely())
+                .containsExactly("Hi!", " ", "World!");
         assertThat(retry.spy()).isEqualTo(4); // "Hi!", "Hi!" (retry), " ", "World!"
     }
 
@@ -145,10 +151,11 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
 
     @Test
     @ActivateRequestContext
-    void testRewritingWhileStreamingIsNotAllowed() {
-        assertThatThrownBy(() -> aiService.rewriting("1").collect().asList().await().indefinitely())
-                .isInstanceOf(GuardrailException.class)
-                .hasMessageContaining("Attempting to rewrite the LLM output while streaming is not allowed");
+    void rewritingWhileStreaming() throws InterruptedException {
+        assertThat(aiService.rewriting("1").collect().asList().await().indefinitely())
+                .singleElement()
+                .isEqualTo("Hi! World!,1");
+        assertThat(rewriting.spy()).isEqualTo(1);
     }
 
     @RegisterAiService(streamingChatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -273,7 +280,6 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
 
     @RequestScoped
     public static class KOFatalGuardrail implements OutputGuardrail {
-
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
@@ -289,11 +295,17 @@ public class OutputGuardrailOnStreamedResponseValidationTest {
 
     @RequestScoped
     public static class RewritingGuardrail implements OutputGuardrail {
+        AtomicInteger spy = new AtomicInteger(0);
 
         @Override
         public OutputGuardrailResult validate(AiMessage responseFromLLM) {
+            spy.incrementAndGet();
             String text = responseFromLLM.text();
             return successWith(text + ",1");
+        }
+
+        public int spy() {
+            return spy.get();
         }
     }
 

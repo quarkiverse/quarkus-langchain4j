@@ -33,6 +33,7 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
+import io.quarkiverse.langchain4j.test.guardrails.OutputGuardrailOnStreamedResponseValidationTest.OKGuardrail;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
@@ -50,16 +51,21 @@ public class QuarkusOutputGuardrailOnStreamedResponseValidationTest {
     @Inject
     MyAiService aiService;
 
+    @Inject
+    OKGuardrail okGuardrail;
+
     @Test
     @ActivateRequestContext
     void testOk() {
         aiService.ok("1").collect().asList().await().indefinitely();
+        assertThat(okGuardrail.spy()).isEqualTo(1);
     }
 
     @Test
     @ActivateRequestContext
     void testOkWithPassThroughAccumulator() {
         aiService.okWithPassThroughAccumulator("1").collect().asList().await().indefinitely();
+        assertThat(okGuardrail.spy()).isEqualTo(3);
     }
 
     @Test

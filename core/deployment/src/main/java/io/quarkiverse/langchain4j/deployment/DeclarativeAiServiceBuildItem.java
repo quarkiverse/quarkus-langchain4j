@@ -159,7 +159,12 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         }
     }
 
-    public record DeclarativeAiServiceOutputGuardrails(List<ClassInfo> outputGuardrailClassInfos, int maxRetries) {
+    public record DeclarativeAiServiceOutputGuardrails(List<ClassInfo> outputGuardrailClassInfos, int maxRetries,
+            int actualMaxRetries) {
+        public DeclarativeAiServiceOutputGuardrails(List<ClassInfo> outputGuardrailClassInfos, int maxRetries) {
+            this(outputGuardrailClassInfos, maxRetries, maxRetries);
+        }
+
         public List<String> asClassNames() {
             return this.outputGuardrailClassInfos.stream()
                     .map(classInfo -> classInfo.name().toString())

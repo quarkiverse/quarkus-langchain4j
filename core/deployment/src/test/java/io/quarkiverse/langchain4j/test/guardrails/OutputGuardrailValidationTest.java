@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.guardrail.GuardrailException;
 import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailException;
 import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
@@ -91,6 +93,19 @@ public class OutputGuardrailValidationTest {
         assertThat(fatal.spy()).isEqualTo(1);
     }
 
+    @Test
+    @ActivateRequestContext
+    void noRetries() {
+        MyChatModelSupplier.CHAT_MODEL.spy.set(0);
+        assertThatExceptionOfType(OutputGuardrailException.class)
+                .isThrownBy(() -> aiService.noRetry("6"))
+                .withMessageContaining(
+                        "Output validation failed. The guardrails have reached the maximum number of retries.");
+
+        assertThat(MyChatModelSupplier.CHAT_MODEL.spy()).isEqualTo(1);
+        assertThat(retry.spy()).isEqualTo(1);
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
@@ -109,6 +124,10 @@ public class OutputGuardrailValidationTest {
         @UserMessage("Say Hi!")
         @OutputGuardrails(RetryingButFailGuardrail.class)
         String retryButFail(@MemoryId String mem);
+
+        @UserMessage("Say Hi!")
+        @OutputGuardrails(value = RetryingGuardrail.class, maxRetries = 0)
+        String noRetry(@MemoryId String mem);
 
         @UserMessage("Say Hi!")
         @OutputGuardrails(KOFatalGuardrail.class)
@@ -147,7 +166,7 @@ public class OutputGuardrailValidationTest {
         }
     }
 
-    @ApplicationScoped
+    @RequestScoped
     public static class RetryingGuardrail implements OutputGuardrail {
 
         AtomicInteger spy = new AtomicInteger(0);
@@ -199,18 +218,25 @@ public class OutputGuardrailValidationTest {
     }
 
     public static class MyChatModelSupplier implements Supplier<ChatModel> {
+        static final MyChatModel CHAT_MODEL = new MyChatModel();
 
         @Override
         public ChatModel get() {
-            return new MyChatModel();
+            return CHAT_MODEL;
         }
     }
 
     public static class MyChatModel implements ChatModel {
+        private final AtomicInteger spy = new AtomicInteger(0);
 
         @Override
         public ChatResponse doChat(ChatRequest request) {
+            spy.incrementAndGet();
             return ChatResponse.builder().aiMessage(new AiMessage("Hi!")).build();
+        }
+
+        public int spy() {
+            return spy.get();
         }
     }
 
