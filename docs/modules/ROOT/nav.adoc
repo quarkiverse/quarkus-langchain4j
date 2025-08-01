@@ -13,22 +13,24 @@
 
 * xref:guide-few-shots.adoc[Using few-shots in prompts]
 * xref:guide-prompt-engineering.adoc[Prompt engineering patterns]
+* xref:guide-ollama.adoc[Using Ollama models]
 // * xref:guide-ai-services-patterns.adoc[AI Services patterns]
 * xref:guide-fault-tolerance.adoc[Fault Tolerance]
 * xref:guide-csv.adoc[Index CSVs in a RAG pipeline]
 * xref:guide-web-search.adoc[Using Tavily Web Search]
 * xref:guide-passing-image.adoc[Passing Images to Models]
 * xref:guide-generating-image.adoc[Generating Images]
+* xref:guide-streamed-responses.adoc[Using streamed responses]
+* xref:guide-semantic-compression.adoc[Compressing Chat History]
 // * xref:guide-agentic-patterns.adoc[Implementing Agentic patterns]
 // * xref:guide-structured-output.adoc[Returning structured data from a model]
-// * xref:guide-streamed-responses.adoc[Using function calling]
+
+
 // * xref:guide-log.adoc[Logging Model Interactions]
 // * xref:guide-token.adoc[Tracking token usages]
 
-// * xref:guide-local-models.adoc[Using local models]
 // * xref:guide-in-process-models.adoc[Using in-process models]
 
-// * xref:guide-generating-images.adoc[Generating Images from Prompts]
 // Add evaluation and guardrails and testing guides
 // Give knowledge to AI models
 

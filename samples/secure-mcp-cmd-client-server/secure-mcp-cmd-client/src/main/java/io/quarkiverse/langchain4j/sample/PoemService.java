@@ -8,7 +8,8 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 public interface PoemService {
     @UserMessage("""
             Write a short 1 paragraph poem in {language} about a Java programming language.
-            Please use the service account name when creating the poem.""")
+            Provide a translation to English if the original poem language is not English.
+            Dedicate the poem to the service account, refer to this account by its name.""")
     @McpToolBox("service-account-name")
     String writePoem(String language);
 }

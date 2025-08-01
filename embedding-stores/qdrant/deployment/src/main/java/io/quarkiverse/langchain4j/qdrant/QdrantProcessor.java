@@ -11,7 +11,6 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.qdrant.QdrantEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.qdrant.runtime.QdrantRecorder;
-import io.quarkiverse.langchain4j.qdrant.runtime.QdrantRuntimeConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -34,7 +33,6 @@ public class QdrantProcessor {
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             QdrantRecorder recorder,
-            QdrantRuntimeConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
 
         beanProducer.produce(SyntheticBeanBuildItem
@@ -46,7 +44,7 @@ public class QdrantProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.qdrantStoreSupplier(config))
+                .supplier(recorder.qdrantStoreSupplier())
                 .done());
 
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());

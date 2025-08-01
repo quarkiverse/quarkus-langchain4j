@@ -16,7 +16,6 @@ import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
-import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
@@ -68,13 +67,12 @@ public class AzureOpenAiProcessor {
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
             List<SelectedEmbeddingModelCandidateBuildItem> selectedEmbedding,
             List<SelectedImageModelProviderBuildItem> selectedImage,
-            LangChain4jAzureOpenAiConfig config,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
 
-                var chatModel = recorder.chatModel(config, configName);
+                var chatModel = recorder.chatModel(configName);
                 var chatBuilder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
@@ -88,7 +86,7 @@ public class AzureOpenAiProcessor {
                 addQualifierIfNecessary(chatBuilder, configName);
                 beanProducer.produce(chatBuilder.done());
 
-                var streamingChatModel = recorder.streamingChatModel(config, configName);
+                var streamingChatModel = recorder.streamingChatModel(configName);
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
                         .setRuntimeInit()
@@ -108,7 +106,7 @@ public class AzureOpenAiProcessor {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
 
-                var embeddingModel = recorder.embeddingModel(config, configName);
+                var embeddingModel = recorder.embeddingModel(configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(EMBEDDING_MODEL)
                         .setRuntimeInit()
@@ -127,7 +125,7 @@ public class AzureOpenAiProcessor {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
 
-                var imageModel = recorder.imageModel(config, configName);
+                var imageModel = recorder.imageModel(configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(IMAGE_MODEL)
                         .setRuntimeInit()

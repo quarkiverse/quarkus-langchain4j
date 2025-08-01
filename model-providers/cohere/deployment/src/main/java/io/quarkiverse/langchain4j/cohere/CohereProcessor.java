@@ -13,7 +13,6 @@ import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.cohere.runtime.CohereRecorder;
 import io.quarkiverse.langchain4j.cohere.runtime.QuarkusCohereScoringModel;
-import io.quarkiverse.langchain4j.cohere.runtime.config.Langchain4jCohereConfig;
 import io.quarkiverse.langchain4j.deployment.items.ScoringModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedScoringModelProviderBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -53,8 +52,7 @@ public class CohereProcessor {
     public void createScoringModelBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             List<SelectedScoringModelProviderBuildItem> selectedScoring,
-            CohereRecorder recorder,
-            Langchain4jCohereConfig config) {
+            CohereRecorder recorder) {
 
         for (var selected : selectedScoring) {
             if (PROVIDER.equals(selected.getProvider())) {
@@ -67,7 +65,7 @@ public class CohereProcessor {
                         .defaultBean()
                         .unremovable()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.cohereScoringModelSupplier(config, configName));
+                        .supplier(recorder.cohereScoringModelSupplier(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
             }

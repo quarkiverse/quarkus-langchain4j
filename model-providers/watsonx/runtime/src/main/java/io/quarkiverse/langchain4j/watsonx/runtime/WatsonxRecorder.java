@@ -47,6 +47,7 @@ import io.quarkiverse.langchain4j.watsonx.runtime.config.ScoringModelConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.TextExtractionConfig;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -57,14 +58,18 @@ public class WatsonxRecorder {
     private static final TypeLiteral<Instance<ChatModelListener>> CHAT_MODEL_LISTENER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jWatsonxConfig runtimeConfig, String configName) {
+    private final RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig;
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.defaultConfig().apiKey());
+    public WatsonxRecorder(RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(configName);
+        String apiKey = firstOrDefault(null, watsonRuntimeConfig.apiKey(), runtimeConfig.getValue().defaultConfig().apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
-            var builder = chatBuilder(runtimeConfig, configName);
+            var builder = chatBuilder(configName);
             var iamBaseUrl = watsonRuntimeConfig.iam().baseUrl();
             var granType = watsonRuntimeConfig.iam().grantType();
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
@@ -88,15 +93,14 @@ public class WatsonxRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
+        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(configName);
+        String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
+                watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
-            var builder = streamingChatBuilder(runtimeConfig, configName);
+            var builder = streamingChatBuilder(configName);
             var iamBaseUrl = watsonRuntimeConfig.iam().baseUrl();
             var granType = watsonRuntimeConfig.iam().grantType();
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
@@ -120,15 +124,14 @@ public class WatsonxRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> generationModel(
-            LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> generationModel(String configName) {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
+        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(configName);
+        String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
+                watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
-            var builder = generationBuilder(runtimeConfig, configName);
+            var builder = generationBuilder(configName);
             var iamBaseUrl = watsonRuntimeConfig.iam().baseUrl();
             var granType = watsonRuntimeConfig.iam().grantType();
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
@@ -154,14 +157,14 @@ public class WatsonxRecorder {
     }
 
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> generationStreamingModel(
-            LangChain4jWatsonxConfig runtimeConfig,
             String configName) {
 
-        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
-        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonRuntimeConfig.apiKey());
+        LangChain4jWatsonxConfig.WatsonConfig watsonRuntimeConfig = correspondingWatsonRuntimeConfig(configName);
+        String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
+                watsonRuntimeConfig.apiKey());
 
         if (watsonRuntimeConfig.enableIntegration()) {
-            var builder = generationStreamingBuilder(runtimeConfig, configName);
+            var builder = generationStreamingBuilder(configName);
             var iamBaseUrl = watsonRuntimeConfig.iam().baseUrl();
             var granType = watsonRuntimeConfig.iam().grantType();
             var duration = watsonRuntimeConfig.iam().timeout().orElse(Duration.ofSeconds(10));
@@ -186,12 +189,12 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
         if (watsonConfig.enableIntegration()) {
-            var configProblems = checkConfigurations(runtimeConfig, configName);
+            var configProblems = checkConfigurations(configName);
 
             if (!configProblems.isEmpty()) {
                 throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -250,11 +253,11 @@ public class WatsonxRecorder {
         }
     }
 
-    public Supplier<ScoringModel> scoringModel(LangChain4jWatsonxConfig runtimeConfig, String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    public Supplier<ScoringModel> scoringModel(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        var configProblems = checkConfigurations(runtimeConfig, configName);
+        var configProblems = checkConfigurations(configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -302,11 +305,12 @@ public class WatsonxRecorder {
         };
     }
 
-    public Supplier<TextExtraction> textExtraction(LangChain4jWatsonxConfig runtimeConfig, String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    public Supplier<TextExtraction> textExtraction(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
         List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
-        TextExtractionConfig textExtractionConfig = firstOrDefault(runtimeConfig.defaultConfig().textExtraction().orElse(null),
+        TextExtractionConfig textExtractionConfig = firstOrDefault(
+                runtimeConfig.getValue().defaultConfig().textExtraction().orElse(null),
                 watsonConfig.textExtraction());
 
         if (isNull(textExtractionConfig)) {
@@ -314,7 +318,7 @@ public class WatsonxRecorder {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
         }
 
-        String apiKey = firstOrDefault(runtimeConfig.defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
+        String apiKey = firstOrDefault(runtimeConfig.getValue().defaultConfig().apiKey().orElse(null), watsonConfig.apiKey());
         URL iamBaseUrl = watsonConfig.iam().baseUrl();
         String granType = watsonConfig.iam().grantType();
         Duration iamDuration = watsonConfig.iam().timeout().orElse(Duration.ofSeconds(10));
@@ -329,7 +333,8 @@ public class WatsonxRecorder {
         try {
             cosUrl = URI.create(textExtractionConfig.baseUrl()).toURL();
             watsonxUrl = URI
-                    .create(firstOrDefault(runtimeConfig.defaultConfig().baseUrl().orElse(null), watsonConfig.baseUrl()))
+                    .create(firstOrDefault(runtimeConfig.getValue().defaultConfig().baseUrl().orElse(null),
+                            watsonConfig.baseUrl()))
                     .toURL();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -368,8 +373,9 @@ public class WatsonxRecorder {
                                 textExtractionConfig.documentReference().bucketName()),
                         new Reference(textExtractionConfig.resultsReference().connection(),
                                 textExtractionConfig.resultsReference().bucketName()),
-                        firstOrDefault(runtimeConfig.defaultConfig().projectId().orElse(null), watsonConfig.projectId()),
-                        firstOrDefault(runtimeConfig.defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()),
+                        firstOrDefault(runtimeConfig.getValue().defaultConfig().projectId().orElse(null),
+                                watsonConfig.projectId()),
+                        firstOrDefault(runtimeConfig.getValue().defaultConfig().spaceId().orElse(null), watsonConfig.spaceId()),
                         watsonConfig.version(),
                         cosClient.build(COSRestApi.class),
                         watsonxClient.build(WatsonxRestApi.class));
@@ -377,11 +383,11 @@ public class WatsonxRecorder {
         };
     }
 
-    private WatsonxChatModel.Builder chatBuilder(LangChain4jWatsonxConfig runtimeConfig, String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    private WatsonxChatModel.Builder chatBuilder(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        var configProblems = checkConfigurations(runtimeConfig, configName);
+        var configProblems = checkConfigurations(configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -441,12 +447,11 @@ public class WatsonxRecorder {
                 .responseFormatText(responseFormat);
     }
 
-    private WatsonxStreamingChatModel.Builder streamingChatBuilder(LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    private WatsonxStreamingChatModel.Builder streamingChatBuilder(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        var configProblems = checkConfigurations(runtimeConfig, configName);
+        var configProblems = checkConfigurations(configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -506,12 +511,11 @@ public class WatsonxRecorder {
                 .responseFormatText(responseFormat);
     }
 
-    private WatsonxGenerationModel.Builder generationBuilder(LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    private WatsonxGenerationModel.Builder generationBuilder(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        var configProblems = checkConfigurations(runtimeConfig, configName);
+        var configProblems = checkConfigurations(configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -563,12 +567,11 @@ public class WatsonxRecorder {
                 .promptJoiner(promptJoiner);
     }
 
-    private WatsonxGenerationStreamingModel.Builder generationStreamingBuilder(LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
-        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.defaultConfig();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+    private WatsonxGenerationStreamingModel.Builder generationStreamingBuilder(String configName) {
+        LangChain4jWatsonxConfig.WatsonConfig defaultConfig = runtimeConfig.getValue().defaultConfig();
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        var configProblems = checkConfigurations(runtimeConfig, configName);
+        var configProblems = checkConfigurations(configName);
 
         if (!configProblems.isEmpty()) {
             throw new ConfigValidationException(configProblems.toArray(EMPTY_PROBLEMS));
@@ -620,30 +623,28 @@ public class WatsonxRecorder {
                 .promptJoiner(promptJoiner);
     }
 
-    private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonRuntimeConfig(LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
+    private LangChain4jWatsonxConfig.WatsonConfig correspondingWatsonRuntimeConfig(String configName) {
         LangChain4jWatsonxConfig.WatsonConfig watsonConfig;
         if (NamedConfigUtil.isDefault(configName)) {
-            watsonConfig = runtimeConfig.defaultConfig();
+            watsonConfig = runtimeConfig.getValue().defaultConfig();
         } else {
-            watsonConfig = runtimeConfig.namedConfig().get(configName);
+            watsonConfig = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return watsonConfig;
     }
 
-    private List<ConfigValidationException.Problem> checkConfigurations(LangChain4jWatsonxConfig runtimeConfig,
-            String configName) {
+    private List<ConfigValidationException.Problem> checkConfigurations(String configName) {
         List<ConfigValidationException.Problem> configProblems = new ArrayList<>();
-        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(runtimeConfig, configName);
+        LangChain4jWatsonxConfig.WatsonConfig watsonConfig = correspondingWatsonRuntimeConfig(configName);
 
-        if (watsonConfig.baseUrl().isEmpty() && runtimeConfig.defaultConfig().baseUrl().isEmpty()) {
+        if (watsonConfig.baseUrl().isEmpty() && runtimeConfig.getValue().defaultConfig().baseUrl().isEmpty()) {
             configProblems.add(createBaseURLConfigProblem(configName));
         }
-        if (watsonConfig.apiKey().isEmpty() && runtimeConfig.defaultConfig().apiKey().isEmpty()) {
+        if (watsonConfig.apiKey().isEmpty() && runtimeConfig.getValue().defaultConfig().apiKey().isEmpty()) {
             configProblems.add(createApiKeyConfigProblem(configName));
         }
-        if (watsonConfig.projectId().isEmpty() && runtimeConfig.defaultConfig().projectId().isEmpty() &&
-                watsonConfig.spaceId().isEmpty() && runtimeConfig.defaultConfig().spaceId().isEmpty()) {
+        if (watsonConfig.projectId().isEmpty() && runtimeConfig.getValue().defaultConfig().projectId().isEmpty() &&
+                watsonConfig.spaceId().isEmpty() && runtimeConfig.getValue().defaultConfig().spaceId().isEmpty()) {
             var config = NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + ".");
             var errorMessage = "One of the properties quarkus.langchain4j.watsonx%s%s / quarkus.langchain4j.watsonx%s%s is required, but could not be found in any config source";
             configProblems.add(new ConfigValidationException.Problem(

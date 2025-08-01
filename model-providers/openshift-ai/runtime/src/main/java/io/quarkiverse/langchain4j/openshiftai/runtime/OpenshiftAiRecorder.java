@@ -14,6 +14,7 @@ import io.quarkiverse.langchain4j.openshiftai.OpenshiftAiChatModel;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.openshiftai.runtime.config.LangChain4jOpenshiftAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -24,9 +25,15 @@ public class OpenshiftAiRecorder {
     private static final String DUMMY_MODEL_ID = "dummy";
     public static final ConfigValidationException.Problem[] EMPTY_PROBLEMS = new ConfigValidationException.Problem[0];
 
-    public Supplier<ChatModel> chatModel(LangChain4jOpenshiftAiConfig runtimeConfig, String configName) {
-        LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(runtimeConfig,
-                configName);
+    private final RuntimeValue<LangChain4jOpenshiftAiConfig> runtimeConfig;
+
+    public OpenshiftAiRecorder(RuntimeValue<LangChain4jOpenshiftAiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jOpenshiftAiConfig.OpenshiftAiConfig openshiftAiConfig = correspondingOpenshiftAiConfig(
+                runtimeConfig.getValue(), configName);
 
         if (openshiftAiConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = openshiftAiConfig.chatModel();

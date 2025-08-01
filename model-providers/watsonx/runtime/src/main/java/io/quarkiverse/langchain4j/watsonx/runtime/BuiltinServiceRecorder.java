@@ -24,6 +24,7 @@ import io.quarkiverse.langchain4j.watsonx.services.GoogleSearchService;
 import io.quarkiverse.langchain4j.watsonx.services.WeatherService;
 import io.quarkiverse.langchain4j.watsonx.services.WebCrawlerService;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -34,20 +35,26 @@ public class BuiltinServiceRecorder {
     private static final String MISSING_BUILTIN_SERVICE_PROPERTY_ERROR = "To use the built-in service classes, you must set the property 'quarkus.langchain4j.watsonx.built-in.%s'";
     private static final String INVALID_BASE_URL_ERROR = "The property 'quarkus.langchain4j.watsonx.base-url' does not have a correct url. Use one of the urls given in the documentation or use the property 'quarkus.langchain4j.watsonx.built-in-service.base-url' to set a custom url.";
 
-    public Supplier<WebCrawlerService> webCrawler(LangChain4jWatsonxConfig runtimeConfig) {
+    private final RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig;
 
-        IAMConfig iamConfig = runtimeConfig.defaultConfig().iam();
-        BuiltinServiceConfig builtinToolConfig = runtimeConfig.builtInService();
+    public BuiltinServiceRecorder(RuntimeValue<LangChain4jWatsonxConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<WebCrawlerService> webCrawler() {
+
+        IAMConfig iamConfig = runtimeConfig.getValue().defaultConfig().iam();
+        BuiltinServiceConfig builtinToolConfig = runtimeConfig.getValue().builtInService();
 
         String baseUrl = firstOrDefault(
-                getWxBaseUrl(runtimeConfig.defaultConfig().baseUrl()),
+                getWxBaseUrl(runtimeConfig.getValue().defaultConfig().baseUrl()),
                 builtinToolConfig.baseUrl());
 
-        if (isNull(baseUrl) && runtimeConfig.defaultConfig().baseUrl().isPresent())
+        if (isNull(baseUrl) && runtimeConfig.getValue().defaultConfig().baseUrl().isPresent())
             throw new RuntimeException(INVALID_BASE_URL_ERROR);
 
         String apiKey = firstOrDefault(
-                runtimeConfig.defaultConfig().apiKey().orElse(null),
+                runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
                 builtinToolConfig.apiKey());
 
         var configProblems = checkConfigurations(baseUrl, apiKey);
@@ -57,14 +64,14 @@ public class BuiltinServiceRecorder {
 
         Duration timeout = firstOrDefault(Duration.ofSeconds(10),
                 builtinToolConfig.timeout(),
-                runtimeConfig.defaultConfig().timeout());
+                runtimeConfig.getValue().defaultConfig().timeout());
 
         boolean logRequests = firstOrDefault(
-                runtimeConfig.defaultConfig().logRequests().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logRequests().orElse(false),
                 builtinToolConfig.logRequests());
 
         boolean logResponses = firstOrDefault(
-                runtimeConfig.defaultConfig().logResponses().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logResponses().orElse(false),
                 builtinToolConfig.logResponses());
 
         return new Supplier<WebCrawlerService>() {
@@ -76,20 +83,20 @@ public class BuiltinServiceRecorder {
         };
     }
 
-    public Supplier<GoogleSearchService> googleSearch(LangChain4jWatsonxConfig runtimeConfig) {
+    public Supplier<GoogleSearchService> googleSearch() {
 
-        IAMConfig iamConfig = runtimeConfig.defaultConfig().iam();
-        BuiltinServiceConfig builtinToolConfig = runtimeConfig.builtInService();
+        IAMConfig iamConfig = runtimeConfig.getValue().defaultConfig().iam();
+        BuiltinServiceConfig builtinToolConfig = runtimeConfig.getValue().builtInService();
 
         String baseUrl = firstOrDefault(
-                getWxBaseUrl(runtimeConfig.defaultConfig().baseUrl()),
+                getWxBaseUrl(runtimeConfig.getValue().defaultConfig().baseUrl()),
                 builtinToolConfig.baseUrl());
 
-        if (isNull(baseUrl) && runtimeConfig.defaultConfig().baseUrl().isPresent())
+        if (isNull(baseUrl) && runtimeConfig.getValue().defaultConfig().baseUrl().isPresent())
             throw new RuntimeException(INVALID_BASE_URL_ERROR);
 
         String apiKey = firstOrDefault(
-                runtimeConfig.defaultConfig().apiKey().orElse(null),
+                runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
                 builtinToolConfig.apiKey());
 
         var configProblems = checkConfigurations(baseUrl, apiKey);
@@ -99,14 +106,14 @@ public class BuiltinServiceRecorder {
 
         Duration timeout = firstOrDefault(Duration.ofSeconds(10),
                 builtinToolConfig.timeout(),
-                runtimeConfig.defaultConfig().timeout());
+                runtimeConfig.getValue().defaultConfig().timeout());
 
         boolean logRequests = firstOrDefault(
-                runtimeConfig.defaultConfig().logRequests().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logRequests().orElse(false),
                 builtinToolConfig.logRequests());
 
         boolean logResponses = firstOrDefault(
-                runtimeConfig.defaultConfig().logResponses().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logResponses().orElse(false),
                 builtinToolConfig.logResponses());
 
         return new Supplier<GoogleSearchService>() {
@@ -119,20 +126,20 @@ public class BuiltinServiceRecorder {
         };
     }
 
-    public Supplier<WeatherService> weather(LangChain4jWatsonxConfig runtimeConfig) {
+    public Supplier<WeatherService> weather() {
 
-        IAMConfig iamConfig = runtimeConfig.defaultConfig().iam();
-        BuiltinServiceConfig builtinToolConfig = runtimeConfig.builtInService();
+        IAMConfig iamConfig = runtimeConfig.getValue().defaultConfig().iam();
+        BuiltinServiceConfig builtinToolConfig = runtimeConfig.getValue().builtInService();
 
         String baseUrl = firstOrDefault(
-                getWxBaseUrl(runtimeConfig.defaultConfig().baseUrl()),
+                getWxBaseUrl(runtimeConfig.getValue().defaultConfig().baseUrl()),
                 builtinToolConfig.baseUrl());
 
-        if (isNull(baseUrl) && runtimeConfig.defaultConfig().baseUrl().isPresent())
+        if (isNull(baseUrl) && runtimeConfig.getValue().defaultConfig().baseUrl().isPresent())
             throw new RuntimeException(INVALID_BASE_URL_ERROR);
 
         String apiKey = firstOrDefault(
-                runtimeConfig.defaultConfig().apiKey().orElse(null),
+                runtimeConfig.getValue().defaultConfig().apiKey().orElse(null),
                 builtinToolConfig.apiKey());
 
         var configProblems = checkConfigurations(baseUrl, apiKey);
@@ -142,14 +149,14 @@ public class BuiltinServiceRecorder {
 
         Duration timeout = firstOrDefault(Duration.ofSeconds(10),
                 builtinToolConfig.timeout(),
-                runtimeConfig.defaultConfig().timeout());
+                runtimeConfig.getValue().defaultConfig().timeout());
 
         boolean logRequests = firstOrDefault(
-                runtimeConfig.defaultConfig().logRequests().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logRequests().orElse(false),
                 builtinToolConfig.logRequests());
 
         boolean logResponses = firstOrDefault(
-                runtimeConfig.defaultConfig().logResponses().orElse(false),
+                runtimeConfig.getValue().defaultConfig().logResponses().orElse(false),
                 builtinToolConfig.logResponses());
 
         return new Supplier<WeatherService>() {

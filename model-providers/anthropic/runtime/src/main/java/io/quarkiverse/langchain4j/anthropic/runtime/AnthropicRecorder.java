@@ -13,6 +13,7 @@ import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -20,8 +21,14 @@ import io.smallrye.config.ConfigValidationException;
 public class AnthropicRecorder {
     private static final String DUMMY_KEY = "dummy";
 
-    public Supplier<ChatModel> chatModel(LangChain4jAnthropicConfig runtimeConfig, String configName) {
-        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
+    private final RuntimeValue<LangChain4jAnthropicConfig> runtimeConfig;
+
+    public AnthropicRecorder(RuntimeValue<LangChain4jAnthropicConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig.getValue(), configName);
 
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();
@@ -71,9 +78,8 @@ public class AnthropicRecorder {
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jAnthropicConfig runtimeConfig,
-            String configName) {
-        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig, configName);
+    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+        var anthropicConfig = correspondingAnthropicConfig(runtimeConfig.getValue(), configName);
 
         if (anthropicConfig.enableIntegration()) {
             var chatModelConfig = anthropicConfig.chatModel();

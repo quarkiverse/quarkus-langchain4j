@@ -14,11 +14,12 @@ import dev.langchain4j.model.image.DisabledImageModel;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig;
 import io.quarkiverse.langchain4j.azure.openai.runtime.config.LangChain4jAzureOpenAiConfig.AzureAiConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 
 class DisabledModelsAzureOpenAiRecorderTest {
     LangChain4jAzureOpenAiConfig config = mock(LangChain4jAzureOpenAiConfig.class);
     AzureAiConfig defaultConfig = mock(AzureAiConfig.class);
-    AzureOpenAiRecorder recorder = new AzureOpenAiRecorder();
+    AzureOpenAiRecorder recorder = new AzureOpenAiRecorder(new RuntimeValue<>(config));
 
     @BeforeEach
     void setupMocks() {
@@ -31,28 +32,28 @@ class DisabledModelsAzureOpenAiRecorderTest {
 
     @Test
     void disabledChatModel() {
-        assertThat(recorder.chatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
+        assertThat(recorder.chatModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatModel.class);
     }
 
     @Test
     void disabledStreamingChatModel() {
-        assertThat(recorder.streamingChatModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
+        assertThat(recorder.streamingChatModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatModel.class);
     }
 
     @Test
     void disabledEmbeddingModel() {
-        assertThat(recorder.embeddingModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
+        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
 
     @Test
     void disabledImageModel() {
-        assertThat(recorder.imageModel(config, NamedConfigUtil.DEFAULT_NAME).apply(null))
+        assertThat(recorder.imageModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledImageModel.class);
     }

@@ -45,6 +45,7 @@ import io.quarkiverse.langchain4j.openai.runtime.config.LangChain4jOpenAiConfig;
 import io.quarkiverse.langchain4j.openai.runtime.config.ModerationModelConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
@@ -58,9 +59,14 @@ public class OpenAiRecorder {
     private static final String DUMMY_KEY = "dummy";
     private static final String OPENAI_BASE_URL = "https://api.openai.com/v1/";
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
+    private final RuntimeValue<LangChain4jOpenAiConfig> runtimeConfig;
+
+    public OpenAiRecorder(RuntimeValue<LangChain4jOpenAiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -118,10 +124,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jOpenAiConfig runtimeConfig,
-            String configName) {
-        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -176,8 +180,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -225,8 +229,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<ModerationModel> moderationModel(LangChain4jOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
+    public Supplier<ModerationModel> moderationModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();
@@ -270,8 +274,8 @@ public class OpenAiRecorder {
         }
     }
 
-    public Supplier<ImageModel> imageModel(LangChain4jOpenAiConfig runtimeConfig, String configName) {
-        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig, configName);
+    public Supplier<ImageModel> imageModel(String configName) {
+        LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
         if (openAiConfig.enableIntegration()) {
             String apiKey = openAiConfig.apiKey();

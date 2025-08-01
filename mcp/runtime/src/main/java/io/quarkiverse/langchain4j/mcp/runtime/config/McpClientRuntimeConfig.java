@@ -48,14 +48,16 @@ public interface McpClientRuntimeConfig {
     /**
      * Timeout for tool executions performed by the MCP client
      */
-    @WithDefault("60s")
+    @WithDefault("${quarkus.langchain4j.timeout:60s}")
+    @ConfigDocDefault("60s")
     Duration toolExecutionTimeout();
 
     /**
      * Timeout for resource-related operations (retrieving a list of resources as well as
      * the actual contents of resources).
      */
-    @WithDefault("60s")
+    @WithDefault("${quarkus.langchain4j.timeout:60s}")
+    @ConfigDocDefault("60s")
     Duration resourcesTimeout();
 
     /**

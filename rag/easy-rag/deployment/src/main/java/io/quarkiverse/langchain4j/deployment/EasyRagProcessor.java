@@ -18,7 +18,6 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.items.AutoCreateEmbeddingModelBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.InMemoryEmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.easyrag.EasyRagManualIngestion;
-import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagConfig;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRagRecorder;
 import io.quarkiverse.langchain4j.easyrag.runtime.EasyRetrievalAugmentor;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
@@ -52,10 +51,8 @@ public class EasyRagProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    public void ingest(EasyRagConfig config,
-            EasyRagRecorder recorder,
-            BeanContainerBuildItem beanContainer) {
-        recorder.ingest(config, beanContainer.getValue());
+    public void ingest(EasyRagRecorder recorder, BeanContainerBuildItem beanContainer) {
+        recorder.ingest(beanContainer.getValue());
     }
 
     @BuildStep
@@ -64,7 +61,6 @@ public class EasyRagProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             List<EmbeddingStoreBuildItem> embeddingStores,
             EasyRagRecorder recorder,
-            EasyRagConfig config,
             BuildProducer<InMemoryEmbeddingStoreBuildItem> inMemoryEmbeddingStoreBuildItemBuildProducer) {
         if (embeddingStores.isEmpty()) {
             beanProducer.produce(SyntheticBeanBuildItem
@@ -78,7 +74,7 @@ public class EasyRagProcessor {
                     .defaultBean()
                     .unremovable()
                     .scope(ApplicationScoped.class)
-                    .supplier(recorder.inMemoryEmbeddingStoreSupplier(config))
+                    .supplier(recorder.inMemoryEmbeddingStoreSupplier())
                     .done());
             inMemoryEmbeddingStoreBuildItemBuildProducer.produce(new InMemoryEmbeddingStoreBuildItem());
         }
@@ -95,8 +91,7 @@ public class EasyRagProcessor {
             BeanDiscoveryFinishedBuildItem beans,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             BuildProducer<AutoCreateEmbeddingModelBuildItem> autoCreateEmbeddingModelBuildItemBuildProducer,
-            EasyRagRecorder recorder,
-            EasyRagConfig config) {
+            EasyRagRecorder recorder) {
         Type retrievalAugmentor = ClassType.create(RetrievalAugmentor.class);
         Type retrievalAugmentorSupplier = ParameterizedType.create(Supplier.class, retrievalAugmentor);
         for (BeanInfo bean : beans.getBeans()) {
@@ -115,7 +110,7 @@ public class EasyRagProcessor {
                 .scope(ApplicationScoped.class)
                 .addInjectionPoint(ClassType.create(EmbeddingStore.class))
                 .addInjectionPoint(ClassType.create(EmbeddingModel.class))
-                .createWith(recorder.easyRetrievalAugmentorFunction(config))
+                .createWith(recorder.easyRetrievalAugmentorFunction())
                 .done());
     }
 }

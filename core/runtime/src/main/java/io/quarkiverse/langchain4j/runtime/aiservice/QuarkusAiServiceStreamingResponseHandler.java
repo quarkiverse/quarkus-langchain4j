@@ -141,7 +141,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private void executeTools(Runnable runnable) {
         if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-            executeOnWorkerThread(runnable);
+            executeOnWorkerThread(runnable, false);
         } else {
             runnable.run();
         }
@@ -149,13 +149,13 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private void execute(Runnable runnable) {
         if (switchToWorkerForEmission && Context.isOnEventLoopThread()) {
-            executeOnWorkerThread(runnable);
+            executeOnWorkerThread(runnable, true);
         } else {
             runnable.run();
         }
     }
 
-    private void executeOnWorkerThread(Runnable runnable) {
+    private void executeOnWorkerThread(Runnable runnable, boolean ordered) {
         if (executionContext != null) {
             executionContext.executeBlocking(new Callable<Object>() {
                 @Override
@@ -163,7 +163,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     runnable.run();
                     return null;
                 }
-            }, true);
+            }, ordered);
         } else {
             executor.submit(runnable);
         }

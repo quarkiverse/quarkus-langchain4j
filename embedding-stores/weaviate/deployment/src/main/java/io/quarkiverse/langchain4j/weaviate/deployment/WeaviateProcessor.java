@@ -11,7 +11,6 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.weaviate.WeaviateEmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.weaviate.runtime.WeaviateRecorder;
-import io.quarkiverse.langchain4j.weaviate.runtime.WeaviateRuntimeConfig;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -37,7 +36,6 @@ class WeaviateProcessor {
     public void createBeans(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             WeaviateRecorder recorder,
-            WeaviateRuntimeConfig config,
             BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer) {
         beanProducer.produce(SyntheticBeanBuildItem
                 .configure(WEAVIATE_EMBEDDING_STORE)
@@ -47,7 +45,7 @@ class WeaviateProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.weaviateStoreSupplier(config))
+                .supplier(recorder.weaviateStoreSupplier())
                 .done());
 
         beanProducer.produce(SyntheticBeanBuildItem
@@ -57,7 +55,7 @@ class WeaviateProcessor {
                 .setRuntimeInit()
                 .unremovable()
                 .scope(ApplicationScoped.class)
-                .supplier(recorder.weaviateClientSupplier(config))
+                .supplier(recorder.weaviateClientSupplier())
                 .done());
 
         embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());

@@ -24,6 +24,7 @@ import io.quarkiverse.langchain4j.bedrock.runtime.config.LangChain4jBedrockConfi
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.config.LangChain4jConfig;
 import io.quarkus.arc.Arc;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
@@ -35,10 +36,17 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 
 @Recorder
 public class BedrockRecorder {
+    private final RuntimeValue<LangChain4jConfig> rootRuntimeConfig;
+    private final RuntimeValue<LangChain4jBedrockConfig> runtimeConfig;
 
-    public Supplier<ChatModel> chatModel(LangChain4jBedrockConfig runtimeConfig, String configName,
-            final LangChain4jConfig rootConfig) {
-        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
+    public BedrockRecorder(RuntimeValue<LangChain4jConfig> rootRuntimeConfig,
+            RuntimeValue<LangChain4jBedrockConfig> runtimeConfig) {
+        this.rootRuntimeConfig = rootRuntimeConfig;
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
             var modelConfig = config.chatModel();
@@ -64,7 +72,8 @@ public class BedrockRecorder {
 
             var clientBuilder = BedrockRuntimeClient.builder();
 
-            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootConfig));
+            clientBuilder.httpClient(
+                    JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
 
             configureClient(clientBuilder, modelConfig, config);
 
@@ -105,23 +114,23 @@ public class BedrockRecorder {
                         cp.getClass().getName()));
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(final LangChain4jBedrockConfig runtimeConfig,
-            final String configName, final LangChain4jConfig rootConfig) {
-        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
+    public Supplier<StreamingChatModel> streamingChatModel(final String configName) {
+        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
             var modelConfig = config.chatModel();
 
             var clientBuilder = BedrockRuntimeAsyncClient.builder();
 
-            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(), rootConfig));
+            clientBuilder.httpClient(
+                    JaxRsSdkHttpClientFactory.createAsync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
 
             configureClient(clientBuilder, modelConfig, config);
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
             Supplier<StreamingChatModel> supplier;
-            if (modelId.startsWith("anthropic")) {
+            if (modelId.contains("anthropic")) {
 
                 var paramsBuilder = ChatRequestParameters.builder()
                         .maxOutputTokens(modelConfig.maxTokens());
@@ -174,16 +183,16 @@ public class BedrockRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(final LangChain4jBedrockConfig runtimeConfig,
-            final String configName, final LangChain4jConfig rootConfig) {
-        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(final String configName) {
+        LangChain4jBedrockConfig.BedrockConfig config = correspondingBedrockConfig(configName);
 
         if (config.enableIntegration()) {
             var modelConfig = config.embeddingModel();
 
             var clientBuilder = BedrockRuntimeClient.builder(); //NOSONAR creds can be specified later
 
-            clientBuilder.httpClient(JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootConfig));
+            clientBuilder.httpClient(
+                    JaxRsSdkHttpClientFactory.createSync(modelConfig.client(), config.client(), rootRuntimeConfig.getValue()));
 
             configureClient(clientBuilder, modelConfig, config);
 
@@ -241,13 +250,12 @@ public class BedrockRecorder {
         }
     }
 
-    private LangChain4jBedrockConfig.BedrockConfig correspondingBedrockConfig(LangChain4jBedrockConfig runtimeConfig,
-            String configName) {
+    private LangChain4jBedrockConfig.BedrockConfig correspondingBedrockConfig(String configName) {
         LangChain4jBedrockConfig.BedrockConfig config;
         if (NamedConfigUtil.isDefault(configName)) {
-            config = runtimeConfig.defaultConfig();
+            config = runtimeConfig.getValue().defaultConfig();
         } else {
-            config = runtimeConfig.namedConfig().get(configName);
+            config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return config;
     }

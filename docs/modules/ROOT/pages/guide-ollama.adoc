@@ -1,0 +1,231 @@
+= Using Ollama with Quarkus LangChain4j
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+This guide shows how to use local Ollama models with the Quarkus LangChain4j extension.
+You'll learn how to:
+
+* Set up the environment and dependencies
+* Use an Ollama-powered chat model
+* Use function calling (tool execution)
+* Use an Ollama embedding model
+
+== 1. Setup
+
+=== Install Ollama
+
+First, install Ollama from https://ollama.com. It lets you run LLMs locally with minimal setup.
+
+To verify installation:
+
+[source, bash]
+----
+ollama run llama3
+----
+
+You can pull other models using:
+
+[source, bash]
+----
+ollama pull qwen3:1.7b
+ollama pull snowflake-arctic-embed:latest
+----
+
+NOTE: Some models may require more RAM or GPU acceleration. Check the Ollama model card for details.
+
+
+TIP: In dev mode, Quarkus will automatically starts the Ollama server if it is not already running. This allows you to test your application without needing to manually start the Ollama server. It will also automatically pull the models you use in your application if they are not already available locally. This can take some time, so pre-pulling is recommended for faster startup.
+
+=== Add Maven Dependencies
+
+Add the following dependencies to your `pom.xml`:
+
+[source, xml, subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-ollama</artifactId>
+    <version>{project-version}</version>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-rest-jackson</artifactId>
+</dependency>
+----
+
+The `quarkus-langchain4j-ollama` extension provides the necessary integration with Ollama models.
+The `quarkus-rest-jackson` dependency is needed for REST endpoints (for demo purpose).
+
+=== Configure the Application
+
+In your `application.properties`, configure the chat and embedding models:
+
+[source, properties]
+----
+# Chat model
+quarkus.langchain4j.ollama.chat-model.model-name=qwen3:1.7b <1>
+quarkus.langchain4j.ollama.chat-model.temperature=0 <2>
+quarkus.langchain4j.timeout=60s <3>
+
+# Embedding model
+quarkus.langchain4j.ollama.embedding-model.model-name=snowflake-arctic-embed:latest <4>
+----
+1. Specify the Ollama chat model to use (e.g., `qwen3:1.7b`).
+2. Set the temperature to 0 for deterministic outputs (especially useful for function calling).
+3. Local inference can take time, so set a reasonable timeout (e.g., 60 seconds).
+4. Specify the Ollama embedding model (e.g., `snowflake-arctic-embed:latest`).
+
+== 2. Using the Ollama Chat Model
+
+To interact with an Ollama chat model, define an AI service interface:
+
+[source, java]
+----
+@RegisterAiService
+public interface Assistant {
+
+    @UserMessage("Say 'hello world' using a 4 line poem.")
+    String greeting();
+}
+----
+
+Quarkus will automatically generate the implementation using the configured Ollama model.
+
+You can expose this through a simple REST endpoint:
+
+[source, java]
+----
+@Path("/hello")
+public class GreetingResource {
+
+    @Inject
+    Assistant assistant;
+
+    @GET
+    public String hello() {
+        return assistant.greeting();
+    }
+}
+----
+
+Visit http://localhost:8080/hello to see the model generate a 4-line “hello world” poem:
+
+[source, text]
+----
+In the quiet dawn, a whisper breaks the silence,
+Hello, world, where dreams take flight and light.
+The sun ascends, a golden, warm embrace,
+A greeting to the earth, a heart's soft grace.
+----
+
+== 3. Using Function Calling
+
+Ollama also provides reasoning model (like `qwen3:1.7b`) that supports function calling, allowing the model to invoke external tools or business logic.
+
+Here, we declare a tool method that logs a message:
+
+[source, java]
+----
+@ApplicationScoped
+public class SenderService {
+
+    @Tool
+    public void sendMessage(String message) {
+        Log.infof("Sending message: %s", message);
+    }
+}
+----
+
+Then we declare an AI service that uses this tool:
+
+[source, java]
+----
+@RegisterAiService
+public interface Assistant {
+
+    @UserMessage("Say 'hello world' using a 4 line poem and send it using the SenderService.")
+    @ToolBox(SenderService.class)
+    String greetingAndSend();
+}
+----
+
+The assistant will:
+
+1. Generate a poem
+2. Call the `sendMessage(...)` tool with the poem
+
+You can test this via:
+
+[source, java]
+----
+@GET
+@Path("/function-calling")
+public String helloWithFunctionCalling() {
+    return assistant.greetingAndSend();
+}
+----
+
+Visit http://localhost:8080/hello/function-calling to trigger the tool.
+If you check the logs, you should see:
+
+[source, text]
+----
+.... INFO  [org.acm.SenderService] (executor-thread-1) Sending message: Hello, world!
+A simple message.
+In this, we go.
+Peace and joy.
+----
+
+NOTE: Lowering the temperature helps ensure the model uses the tool consistently.
+
+
+== 4. Using the Ollama Embedding Model
+
+You can also use Ollama to generate text embeddings for vector-based tasks.
+This is useful for Retrieval-Augmented Generation (RAG) or semantic search.
+
+Inject the `EmbeddingModel`:
+
+[source, java]
+----
+@Inject
+EmbeddingModel embeddingModel;
+----
+
+Then use it like this:
+
+[source, java]
+----
+@POST
+@Path("/embed")
+public List<Float> embed(String text) {
+    return embeddingModel.embed(text).content().vectorAsList();
+}
+----
+
+Send a POST request with plain text to `/hello/embed`, and you’ll get a float vector representing the input:
+
+[source, shell]
+----
+curl -X POST http://localhost:8080/hello/embed \
+  -H "Content-Type: text/plain" \
+  --data-binary @- <<EOF
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+EOF
+----
+
+You will receive a list of floats representing the embedding.
+
+== 5. Conclusion
+
+Ollama enables local inference with a wide variety of LLMs, and Quarkus LangChain4j makes it easy to integrate them into Java applications.
+
+Next steps:
+
+* Try other Ollama models (e.g. `llama3`, `mistral`)
+* Switch the xref:quickstart-rag.adoc[RAG quickstart] to use Ollama-served models (both chat and embedding)
+* Implement more xref:rag.adoc[complex RAG workflows] using Ollama models

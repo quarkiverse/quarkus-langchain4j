@@ -20,6 +20,7 @@ import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiCo
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 import io.smallrye.config.ConfigValidationException;
 
@@ -30,9 +31,14 @@ public class AiGeminiRecorder {
     private static final TypeLiteral<Instance<ModelAuthProvider>> MODEL_AUTH_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
     };
 
-    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(LangChain4jAiGeminiConfig config,
-            String configName) {
-        var aiConfig = correspondingAiConfig(config, configName);
+    private final RuntimeValue<LangChain4jAiGeminiConfig> runtimeConfig;
+
+    public AiGeminiRecorder(RuntimeValue<LangChain4jAiGeminiConfig> runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public Function<SyntheticCreationalContext<EmbeddingModel>, EmbeddingModel> embeddingModel(String configName) {
+        var aiConfig = correspondingAiConfig(configName);
 
         if (aiConfig.enableIntegration()) {
             var embeddingModelConfig = aiConfig.embeddingModel();
@@ -75,9 +81,8 @@ public class AiGeminiRecorder {
         }
     }
 
-    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(
-            LangChain4jAiGeminiConfig config, String configName) {
-        var aiConfig = correspondingAiConfig(config, configName);
+    public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
+        var aiConfig = correspondingAiConfig(configName);
 
         if (aiConfig.enableIntegration()) {
             var chatModelConfig = aiConfig.chatModel();
@@ -129,9 +134,8 @@ public class AiGeminiRecorder {
 
     }
 
-    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(
-            LangChain4jAiGeminiConfig config, String configName) {
-        var aiConfig = correspondingAiConfig(config, configName);
+    public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
+        var aiConfig = correspondingAiConfig(configName);
 
         if (aiConfig.enableIntegration()) {
             var chatModelConfig = aiConfig.chatModel();
@@ -192,11 +196,10 @@ public class AiGeminiRecorder {
         return context.getInjectedReference(MODEL_AUTH_PROVIDER_TYPE_LITERAL).isResolvable();
     }
 
-    private LangChain4jAiGeminiConfig.AiGeminiConfig correspondingAiConfig(
-            LangChain4jAiGeminiConfig runtimeConfig, String configName) {
+    private LangChain4jAiGeminiConfig.AiGeminiConfig correspondingAiConfig(String configName) {
 
-        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
-                : runtimeConfig.namedConfig().get(configName);
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.getValue().defaultConfig()
+                : runtimeConfig.getValue().namedConfig().get(configName);
     }
 
     private static ConfigValidationException.Problem[] createConfigProblems(String key, String configName) {

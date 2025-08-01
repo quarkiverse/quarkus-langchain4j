@@ -13,12 +13,13 @@ import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig.WatsonConfig;
+import io.quarkus.runtime.RuntimeValue;
 
 class DisabledModelsWatsonRecorderTest {
     LangChain4jWatsonxConfig runtimeConfig = mock(LangChain4jWatsonxConfig.class);
 
     WatsonConfig defaultConfig = mock(WatsonConfig.class);
-    WatsonxRecorder recorder = new WatsonxRecorder();
+    WatsonxRecorder recorder = new WatsonxRecorder(new RuntimeValue<>(runtimeConfig));
 
     @BeforeEach
     void setupMocks() {
@@ -32,16 +33,16 @@ class DisabledModelsWatsonRecorderTest {
     @Test
     void disabledChatModel() {
         assertThat(recorder
-                .generationModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
+                .generationModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledChatModel.class);
 
         assertThat(
-                recorder.generationStreamingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).apply(null))
+                recorder.generationStreamingModel(NamedConfigUtil.DEFAULT_NAME).apply(null))
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledStreamingChatModel.class);
 
-        assertThat(recorder.embeddingModel(runtimeConfig, NamedConfigUtil.DEFAULT_NAME).get())
+        assertThat(recorder.embeddingModel(NamedConfigUtil.DEFAULT_NAME).get())
                 .isNotNull()
                 .isExactlyInstanceOf(DisabledEmbeddingModel.class);
     }
