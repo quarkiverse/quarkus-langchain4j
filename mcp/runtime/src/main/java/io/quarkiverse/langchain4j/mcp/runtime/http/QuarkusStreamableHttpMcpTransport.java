@@ -34,6 +34,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.parsetools.RecordParser;
 
 public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
@@ -143,14 +144,16 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         this.mcpSessionId.set(mcpSessionId);
                                     }
 
+                                    RecordParser sseEventparser = RecordParser.newDelimited("\n\n", bodyBuffer -> {
+                                        String responseString = bodyBuffer.toString();
+                                        SseEvent<String> sseEvent = parseSseEvent(responseString);
+                                        sseSubscriber.accept(sseEvent);
+                                    });
+
                                     String contentType = response.result().getHeader("Content-Type");
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
                                         // the server has started a SSE channel
-                                        response.result().handler(bodyBuffer -> {
-                                            String responseString = bodyBuffer.toString();
-                                            SseEvent<String> sseEvent = parseSseEvent(responseString);
-                                            sseSubscriber.accept(sseEvent);
-                                        });
+                                        response.result().handler(sseEventparser);
                                     } else {
                                         // the server has sent a single regular response
                                         if (id == null) {
