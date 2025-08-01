@@ -10,6 +10,7 @@
     <name>Quarkus LangChain4j - Integration Tests - Multiple providers</name>
     <properties>
         <skipITs>true</skipITs>
+        <quarkus.langchain4j.version>${project.version}</quarkus.langchain4j.version>
     </properties>
     <dependencies>
         <dependency>
@@ -19,22 +20,22 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-azure-openai</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-hugging-face</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-ollama</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
@@ -44,17 +45,17 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openshift-ai</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-watsonx</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-cohere</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -82,7 +83,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-azure-openai-deployment</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus.langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>
