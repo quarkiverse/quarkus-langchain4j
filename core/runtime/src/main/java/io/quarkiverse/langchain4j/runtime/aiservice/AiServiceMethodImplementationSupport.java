@@ -177,6 +177,10 @@ public class AiServiceMethodImplementationSupport {
         Map<String, Object> templateVariables = getTemplateVariables(methodArgs, methodCreateInfo.getUserMessageInfo());
 
         Type returnType = methodCreateInfo.getReturnType();
+        boolean isMulti = TypeUtil.isMulti(returnType);
+
+        final boolean isStringMulti = (isMulti && returnType instanceof ParameterizedType
+                && TypeUtil.isTypeOf(((ParameterizedType) returnType).getActualTypeArguments()[0], String.class));
         if (TypeUtil.isImage(returnType) || TypeUtil.isResultImage(returnType)) {
             return doImplementGenerateImage(methodCreateInfo, context, systemMessage, userMessage, memoryId, returnType,
                     templateVariables, auditSourceInfo);
@@ -217,7 +221,7 @@ public class AiServiceMethodImplementationSupport {
             Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
-            if (!TypeUtil.isMulti(returnType)) {
+            if (!isMulti) {
                 augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
                 userMessage = (UserMessage) augmentationResult.chatMessage();
             } else {
@@ -244,10 +248,18 @@ public class AiServiceMethodImplementationSupport {
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, memoryId,
                                         methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
-                                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                                        new ResponseAugmenterParams((UserMessage) augmentedUserMessage,
-                                                memory, ar, methodCreateInfo.getUserMessageTemplate(),
-                                                templateVariables)));
+                                return stream
+                                        .filter(event -> {
+                                            return !isStringMulti || event instanceof ChatEvent.PartialResponseEvent;
+                                        }).map(event -> {
+                                            if (isStringMulti && event instanceof ChatEvent.PartialResponseEvent) {
+                                                return ((ChatEvent.PartialResponseEvent) event).getChunk();
+                                            }
+                                            return event;
+                                        }).plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                                                new ResponseAugmenterParams((UserMessage) augmentedUserMessage,
+                                                        memory, ar, methodCreateInfo.getUserMessageTemplate(),
+                                                        templateVariables)));
                             }
 
                             private List<ChatMessage> messagesToSend(UserMessage augmentedUserMessage,
@@ -297,13 +309,20 @@ public class AiServiceMethodImplementationSupport {
 
         var actualAugmentationResult = augmentationResult;
         var actualUserMessage = userMessage;
-        if (TypeUtil.isMulti(returnType)) {
+        if (isMulti) {
             chatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
             if (methodCreateInfo.getOutputGuardrailsClassNames().isEmpty()) {
                 var stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                         (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
                         methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
-                return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                return stream.filter(event -> {
+                    return !isStringMulti || event instanceof ChatEvent.PartialResponseEvent;
+                }).map(event -> {
+                    if (isStringMulti && event instanceof ChatEvent.PartialResponseEvent) {
+                        return ((ChatEvent.PartialResponseEvent) event).getChunk();
+                    }
+                    return event;
+                }).plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
                         new ResponseAugmenterParams(actualUserMessage,
                                 chatMemory, actualAugmentationResult, methodCreateInfo.getUserMessageTemplate(),
                                 Collections.unmodifiableMap(templateVariables))));
@@ -317,7 +336,8 @@ public class AiServiceMethodImplementationSupport {
                         OutputGuardrailResult result;
                         try {
                             result = GuardrailsSupport.invokeOutputGuardrailsForStream(methodCreateInfo,
-                                    new OutputGuardrailParams(AiMessage.from(chunk), chatMemory, actualAugmentationResult,
+                                    new OutputGuardrailParams(AiMessage.from(chunk.getMessage()), chatMemory,
+                                            actualAugmentationResult,
                                             methodCreateInfo.getUserMessageTemplate(),
                                             Collections.unmodifiableMap(templateVariables)),
                                     beanManager, auditSourceInfo);
@@ -339,6 +359,9 @@ public class AiServiceMethodImplementationSupport {
                             if (result.hasRewrittenResult()) {
                                 throw new GuardrailException(
                                         "Attempting to rewrite the LLM output while streaming is not allowed");
+                            }
+                            if (isStringMulti) {
+                                return chunk.getMessage();
                             }
                             return chunk;
                         }
@@ -915,7 +938,7 @@ public class AiServiceMethodImplementationSupport {
         Object wrap(Input input, Function<Input, Object> fun);
     }
 
-    private static class TokenStreamMulti extends AbstractMulti<String> implements Multi<String> {
+    private static class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEvent> {
         private final List<ChatMessage> messagesToSend;
         private final List<ToolSpecification> toolSpecifications;
         private final Map<String, ToolExecutor> toolsExecutors;
@@ -941,14 +964,14 @@ public class AiServiceMethodImplementationSupport {
         }
 
         @Override
-        public void subscribe(MultiSubscriber<? super String> subscriber) {
-            UnicastProcessor<String> processor = UnicastProcessor.create();
+        public void subscribe(MultiSubscriber<? super ChatEvent> subscriber) {
+            UnicastProcessor<ChatEvent> processor = UnicastProcessor.create();
             processor.subscribe(subscriber);
 
             createTokenStream(processor);
         }
 
-        private void createTokenStream(UnicastProcessor<String> processor) {
+        private void createTokenStream(UnicastProcessor<ChatEvent> processor) {
             Context ctxt = null;
             if (switchToWorkerThreadForToolExecution || isCallerRunningOnWorkerThread) {
                 // we create or retrieve the current context, to use `executeBlocking` when required.
@@ -959,8 +982,18 @@ public class AiServiceMethodImplementationSupport {
                     toolsExecutors, contents, context, memoryId, ctxt, switchToWorkerThreadForToolExecution,
                     isCallerRunningOnWorkerThread);
             TokenStream tokenStream = stream
-                    .onPartialResponse(processor::onNext)
-                    .onCompleteResponse(message -> processor.onComplete())
+                    .onPartialResponse(chunk -> processor
+                            .onNext(new ChatEvent.PartialResponseEvent(chunk)))
+                    .onCompleteResponse(message -> {
+                        processor.onNext(new ChatEvent.ChatCompletedEvent(message));
+                        processor.onComplete();
+                    })
+                    .onRetrieved(content -> {
+                        processor.onNext(new ChatEvent.ContentFetchedEvent(content));
+                    })
+                    .onToolExecuted(execution -> {
+                        processor.onNext(new ChatEvent.ToolExecutedEvent(execution));
+                    })
                     .onError(processor::onError);
             // This is equivalent to "run subscription on worker thread"
             if (switchToWorkerThreadForToolExecution && Context.isOnEventLoopThread()) {

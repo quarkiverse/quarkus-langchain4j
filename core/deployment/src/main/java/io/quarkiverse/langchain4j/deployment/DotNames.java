@@ -17,6 +17,7 @@ import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -62,6 +63,7 @@ public class DotNames {
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);
+    public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);
 
     public static final DotName REGISTER_REST_CLIENT = DotName.createSimple(RegisterRestClient.class);
 
