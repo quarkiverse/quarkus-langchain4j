@@ -79,12 +79,13 @@ public class MultipleMcpClientsTest {
     public void providingAllTools() {
         ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
 
-        assertThat(toolProviderResult.tools()).hasSize(5);
+        assertThat(toolProviderResult.tools()).hasSize(7);
         Set<String> toolNames = toolProviderResult.tools().keySet().stream()
                 .map(ToolSpecification::name)
                 .collect(Collectors.toSet());
         assertThatIterable(toolNames)
-                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging");
+                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging", "get_resource",
+                        "list_resources");
     }
 
     @Test
@@ -93,12 +94,13 @@ public class MultipleMcpClientsTest {
                 List.of("client1", "client3"));
         ToolProviderResult toolProviderResult = toolProvider.provideTools(request);
 
-        assertThat(toolProviderResult.tools()).hasSize(4);
+        assertThat(toolProviderResult.tools()).hasSize(6);
         Set<String> toolNames = toolProviderResult.tools().keySet().stream()
                 .map(ToolSpecification::name)
                 .collect(Collectors.toSet());
         assertThatIterable(toolNames)
-                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
+                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging", "get_resource",
+                        "list_resources");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -113,8 +115,9 @@ public class MultipleMcpClientsTest {
     public void serviceHasAllTools() {
         String[] toolNames = allToolsService.toolsList("test").split(",");
         assertThat(toolNames)
-                .hasSize(5)
-                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging");
+                .hasSize(7)
+                .containsExactlyInAnyOrder("add", "subtract", "multiply", "longRunningOperation", "logging", "get_resource",
+                        "list_resources");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -129,8 +132,9 @@ public class MultipleMcpClientsTest {
     public void serviceHasOnlySelectedTools() {
         String[] toolNames = selectedToolsService.toolsList("test").split(",");
         assertThat(toolNames)
-                .hasSize(4)
-                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging");
+                .hasSize(6)
+                .containsExactlyInAnyOrder("add", "multiply", "longRunningOperation", "logging", "get_resource",
+                        "list_resources");
     }
 
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
@@ -144,8 +148,9 @@ public class MultipleMcpClientsTest {
     @ActivateRequestContext
     public void serviceHasOneTool() {
         String[] toolNames = singleToolService.toolsList("test").split(",");
-        assertThat(toolNames).hasSize(1);
-        assertThat(toolNames[0]).isEqualTo("subtract");
+        assertThat(toolNames)
+                .hasSize(3)
+                .containsExactlyInAnyOrder("subtract", "get_resource", "list_resources");
     }
 
     public static class MyChatModelSupplier implements Supplier<ChatModel> {
@@ -165,7 +170,7 @@ public class MultipleMcpClientsTest {
     @Test
     @ActivateRequestContext
     public void serviceHasNoTools() {
-        assertThat(noToolService.toolsList("test")).hasSize(0);
+        assertThat(noToolService.toolsList("test")).hasSize(27);
     }
 
     public static class MyChatModel implements ChatModel {

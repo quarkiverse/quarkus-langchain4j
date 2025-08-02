@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
@@ -51,15 +50,20 @@ public class McpAccessTokenTest {
         ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
 
         // verify the list of tools
-        assertThat(toolProviderResult.tools().size()).isEqualTo(1);
-        ToolSpecification addTool = toolProviderResult.tools().keySet().iterator().next();
-        assertThat(addTool.name()).isEqualTo("add");
+        assertThat(toolProviderResult.tools().size()).isEqualTo(3);
+        assertThat(toolProviderResult.tools().keySet().stream().map(ToolSpecification::name).toList())
+                .containsExactlyInAnyOrder("add", "get_resource", "list_resources");
+        assertThat(toolProviderResult.tools().keySet().stream().map(ToolSpecification::description).toList())
+                .containsExactlyInAnyOrder("Adds two numbers", "Lists all available resources.",
+                        "Retrieves a resource identified by the MCP server name and the resource URI.The 'list_resources' tool should be called before this one to obtain the list.");
 
-        assertThat(addTool.description()).isEqualTo("Adds two numbers");
-        JsonNumberSchema a = (JsonNumberSchema) addTool.parameters().properties().get("a");
-        assertThat(a.description().equals("First number"));
-        JsonNumberSchema b = (JsonNumberSchema) addTool.parameters().properties().get("b");
-        assertThat(b.description().equals("Second number"));
+        var addTool = toolProviderResult.tools().keySet().stream().filter(spec -> "add".equals(spec.name())).findFirst();
+        assertThat(addTool)
+                .get()
+                .extracting(
+                        spec -> spec.parameters().properties().get("a").description(),
+                        spec -> spec.parameters().properties().get("b").description())
+                .containsExactly("First number", "Second number");
     }
 
     @ApplicationScoped
