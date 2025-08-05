@@ -138,7 +138,9 @@ public class JaxRsSdkAsyncHttpClientSubscriber implements Subscriber<ByteBuffer>
                         subscriber.onError(new IllegalArgumentException("Demand must be positive"));
                     } else {
                         if (content.hasRemaining()) {
-                            subscriber.onNext(content);
+                            var readOnlyBuffer = content.asReadOnlyBuffer();
+                            content.position(content.limit());
+                            subscriber.onNext(readOnlyBuffer);
                         }
                         subscriber.onComplete();
                         executeFuture.complete(null);
