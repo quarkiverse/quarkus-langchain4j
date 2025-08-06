@@ -82,6 +82,15 @@ public @interface RegisterAiService {
     String modelName() default "<default>";
 
     /**
+     * Defines the maximum number of sequential calls to tools while handling a single chat request.
+     * If this number is exceeded, the chat request will fail.
+     * If not specified (left to zero) for a specific AI service,
+     * the AI service will use the value of the common {@code quarkus.langchain4j.ai-service.max-tool-executions} property.
+     * If that property is unset too, the default is 10 invocations.
+     */
+    int maxSequentialToolInvocations() default 0;
+
+    /**
      * Tool classes to use. All tools are expected to be CDI beans.
      */
     Class<?>[] tools() default {};

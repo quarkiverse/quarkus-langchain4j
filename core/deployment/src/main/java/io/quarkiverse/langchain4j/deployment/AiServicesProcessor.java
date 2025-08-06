@@ -418,6 +418,9 @@ public class AiServicesProcessor {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
             }
+            Integer maxSequentialToolInvocations = instance.value("maxSequentialToolInvocations") != null
+                    ? instance.value("maxSequentialToolInvocations").asInt()
+                    : 0;
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -436,7 +439,8 @@ public class AiServicesProcessor {
                             imageModelName,
                             toolProviderClassName,
                             beanName(declarativeAiServiceClassInfo),
-                            toolHallucinationStrategy(instance)));
+                            toolHallucinationStrategy(instance),
+                            maxSequentialToolInvocations));
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
 
@@ -627,6 +631,7 @@ public class AiServicesProcessor {
         for (DeclarativeAiServiceBuildItem bi : declarativeAiServiceItems) {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
             String serviceClassName = declarativeAiServiceClassInfo.name().toString();
+            Integer maxSequentialToolInvocations = bi.getMaxSequentialToolInvocations();
 
             String chatLanguageModelSupplierClassName = (bi.getChatLanguageModelSupplierClassDotName() != null
                     ? bi.getChatLanguageModelSupplierClassDotName().toString()
@@ -750,7 +755,8 @@ public class AiServicesProcessor {
                                     injectStreamingChatModelBean,
                                     injectModerationModelBean,
                                     injectImageModel,
-                                    toolHallucinationStrategyClassName)))
+                                    toolHallucinationStrategyClassName,
+                                    maxSequentialToolInvocations)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)

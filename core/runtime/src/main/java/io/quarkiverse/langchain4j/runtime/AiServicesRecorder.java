@@ -301,6 +301,9 @@ public class AiServicesRecorder {
                                 .loadClass(info.chatMemorySeederClassName())
                                 .getConstructor().newInstance());
                     }
+                    if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
+                        quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
+                    }
 
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {

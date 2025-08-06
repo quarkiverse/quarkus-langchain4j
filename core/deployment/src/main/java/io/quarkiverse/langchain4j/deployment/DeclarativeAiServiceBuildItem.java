@@ -31,6 +31,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final String moderationModelName;
     private final String imageModelName;
     private final Optional<String> beanName;
+    private final Integer maxSequentialToolInvocations;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -49,7 +50,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             String imageModelName,
             DotName toolProviderClassDotName,
             Optional<String> beanName,
-            DotName toolHallucinationStrategyClassDotName) {
+            DotName toolHallucinationStrategyClassDotName,
+            Integer maxSequentialToolInvocations) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -67,6 +69,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolProviderClassDotName = toolProviderClassDotName;
         this.beanName = beanName;
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
+        this.maxSequentialToolInvocations = maxSequentialToolInvocations;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -135,5 +138,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DotName getToolHallucinationStrategyClassDotName() {
         return toolHallucinationStrategyClassDotName;
+    }
+
+    public Integer getMaxSequentialToolInvocations() {
+        return maxSequentialToolInvocations;
     }
 }
