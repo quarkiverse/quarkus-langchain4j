@@ -21,5 +21,6 @@ public record DeclarativeAiServiceCreateInfo(
         boolean needsStreamingChatModel,
         boolean needsModerationModel,
         boolean needsImageModel,
-        String toolHallucinationStrategyClassName) {
+        String toolHallucinationStrategyClassName,
+        Integer maxSequentialToolInvocations) {
 }

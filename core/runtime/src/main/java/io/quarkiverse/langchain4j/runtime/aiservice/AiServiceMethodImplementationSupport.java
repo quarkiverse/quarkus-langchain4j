@@ -395,7 +395,9 @@ public class AiServiceMethodImplementationSupport {
 
         verifyModerationIfNeeded(moderationFuture);
 
-        int maxSequentialToolExecutions = getMaxSequentialToolExecutions();
+        int maxSequentialToolExecutions = context.maxSequentialToolExecutions != null && context.maxSequentialToolExecutions > 0
+                ? context.maxSequentialToolExecutions
+                : getMaxSequentialToolExecutions();
         int executionsLeft = maxSequentialToolExecutions;
         while (true) {
 
