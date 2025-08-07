@@ -66,4 +66,13 @@ public interface McpClientRuntimeConfig {
      */
     @WithDefault("10s")
     Duration pingTimeout();
+
+    /**
+     * The initial list of MCP roots that the client can present to the server. The list can
+     * be later updated programmatically during runtime. The list is formatted as key-value pairs
+     * separated by commas. For example:
+     * workspace1=/path/to/workspace1,workspace2=/path/to/workspace2
+     */
+    Optional<List<String>> roots();
+
 }
