@@ -38,6 +38,8 @@ import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -47,6 +49,7 @@ import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema.Builder;
 import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.output.structured.Description;
@@ -85,6 +88,7 @@ public class ToolProcessor {
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
+    private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
@@ -582,22 +586,37 @@ public class ToolProcessor {
             var builder = JsonObjectSchema.builder()
                     .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)));
 
-            Optional.ofNullable(index.getClassByName(type.name()))
-                    .map(ClassInfo::fields)
-                    .orElseGet(List::of)
-                    .forEach(field -> {
-                        var fieldName = field.name();
-                        var fieldType = field.type();
-                        var fieldDescription = descriptionFrom(field);
-                        var fieldSchema = toJsonSchemaElement(fieldType, index, fieldDescription);
-
-                        builder.addProperty(fieldName, fieldSchema);
-                    });
+            ClassInfo targetClass = index.getClassByName(type.name());
+            buildSchema(index, builder, targetClass);
 
             return builder.build();
         }
 
         throw new IllegalArgumentException("Unsupported type: " + type);
+    }
+
+    private void buildSchema(IndexView index, Builder builder, ClassInfo targetClass) {
+        if (targetClass.superName() != null) {
+            ClassInfo superClass = index.getClassByName(targetClass.superName());
+            if (superClass != null) {
+                buildSchema(index, builder, superClass);
+            }
+        }
+        Optional.ofNullable(targetClass)
+                .map(ClassInfo::fields)
+                .orElseGet(List::of)
+                .forEach(field -> {
+                    if (Modifier.isStatic(field.flags()) || field.hasAnnotation(JSON_IGNORE)) {
+                        // skip static fields and fields annotated with @JsonIgnore
+                        return;
+                    }
+                    var fieldName = field.name();
+                    var fieldType = field.type();
+                    var fieldDescription = descriptionFrom(field);
+                    var fieldSchema = toJsonSchemaElement(fieldType, index, fieldDescription);
+
+                    builder.addProperty(fieldName, fieldSchema);
+                });
     }
 
     private boolean isComplexType(Type type) {
