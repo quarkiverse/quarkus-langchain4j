@@ -15,8 +15,8 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import dev.langchain4j.mcp.client.protocol.InitializationNotification;
 import dev.langchain4j.mcp.client.protocol.McpClientMessage;
+import dev.langchain4j.mcp.client.protocol.McpInitializationNotification;
 import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
@@ -93,7 +93,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
         return execute(request, request.getId()).onItem()
                 .transformToUni(
-                        response -> execute(new InitializationNotification(), null).onItem().transform(ignored -> response))
+                        response -> execute(new McpInitializationNotification(), null).onItem().transform(ignored -> response))
                 .subscribeAsCompletionStage();
     }
 
