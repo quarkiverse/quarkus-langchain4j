@@ -111,7 +111,7 @@ class ChatMessageSerializerTest {
                 "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
                 "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
                 "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
-                "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"text\":\"Hello from AI\",\"type\":\"AI\"},"
+                "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"text\":\"Hello from AI\",\"attributes\":{},\"type\":\"AI\"},"
                 +
                 "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +
                 "]");
