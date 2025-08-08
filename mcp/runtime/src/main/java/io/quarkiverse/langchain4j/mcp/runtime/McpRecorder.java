@@ -112,7 +112,9 @@ public class McpRecorder {
                     McpClientName.Literal qualifier = McpClientName.Literal.of(mcpClientName);
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
-                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL));
+                boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
+                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL),
+                        exposeResourcesAsTools);
             }
         };
     }

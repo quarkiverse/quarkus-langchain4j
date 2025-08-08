@@ -66,5 +66,4 @@ public interface McpClientRuntimeConfig {
      */
     @WithDefault("10s")
     Duration pingTimeout();
-
 }

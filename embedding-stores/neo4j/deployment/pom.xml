@@ -21,7 +21,7 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-community-neo4j</artifactId>
-            <version>${langchain4j-beta.version}</version>
+            <version>${langchain4j-community.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
