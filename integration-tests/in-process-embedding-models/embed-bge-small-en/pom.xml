@@ -5,11 +5,11 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-in-process-embedding-models</artifactId>
-        <version>1.1.1</version>
+        <version>999-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <quarkus-langchain4j.version>1.1.1</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
 
     <artifactId>quarkus-langchain4j-integration-test-embed-bge-small-en</artifactId>
