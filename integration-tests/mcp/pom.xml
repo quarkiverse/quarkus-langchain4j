@@ -8,7 +8,11 @@
     </parent>
     <artifactId>quarkus-langchain4j-integration-test-mcp</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - MCP</name>
-    
+
+    <properties>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -17,7 +21,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -45,7 +49,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>

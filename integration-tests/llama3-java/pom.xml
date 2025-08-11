@@ -10,6 +10,7 @@
     <name>Quarkus LangChain4j - Integration Tests - Llama3 Java</name>
     <properties>
         <skipITs>true</skipITs>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
         <maven.compiler.release>21</maven.compiler.release>
         <quarkus.version>3.18.0</quarkus.version>
     </properties>
@@ -21,7 +22,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-llama3-java</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -49,7 +50,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-llama3-java-deployment</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>

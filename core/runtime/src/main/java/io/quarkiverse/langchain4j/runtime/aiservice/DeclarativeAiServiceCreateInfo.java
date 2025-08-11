@@ -26,5 +26,6 @@ public record DeclarativeAiServiceCreateInfo(
         boolean needsImageModel,
         String toolHallucinationStrategyClassName,
         InputGuardrailsLiteral inputGuardrails,
-        OutputGuardrailsLiteral outputGuardrails) {
+        OutputGuardrailsLiteral outputGuardrails,
+        Integer maxSequentialToolInvocations) {
 }

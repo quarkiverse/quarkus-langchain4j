@@ -8,6 +8,10 @@
         <version>999-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+    </properties>
+
     <artifactId>quarkus-langchain4j-integration-test-embed-e5-small-v2</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - embeddings-e5-small-v2</name>
 
@@ -21,7 +25,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
 
         <dependency>
@@ -55,7 +59,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core-deployment</artifactId>
-            <version>${project.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>

@@ -63,6 +63,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        public AiServices<T> maxSequentialToolInvocations(Integer maxSequentialToolInvocations) {
+            quarkusAiServiceContext().maxSequentialToolExecutions = maxSequentialToolInvocations;
+            return this;
+        }
+
         @SuppressWarnings("unchecked")
         @Override
         public T build() {
@@ -98,6 +103,7 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
         private QuarkusAiServiceContext quarkusAiServiceContext() {
             return (QuarkusAiServiceContext) context;
         }
+
     }
 
 }

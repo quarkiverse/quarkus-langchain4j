@@ -57,8 +57,9 @@ quarkus.langchain4j.ollama.chat-model.model-name=qwen3:1.7b
 
 == Streamed Responses in AI Services
 
-To enable streaming, your AI service method must return a `Multi<String>`.
-Each emitted item represents a token or part of the final response.
+To enable streaming, your AI service method must return a `Multi<String>` or a `Multi<ChatEvent>`.
+When using a `Multi<String>` each emitted item represents a token or part of the final response.
+When using a `Multi<ChatEvent>` each emitted item is a subclass of `ChatEvent` - ToolExecutedEvent (Tool execution metadata), PartialResponseEvent (A partial token), ContentFetchedEvent (When using Rag) and ChatCompletedEvent (The final LLM response).
 
 [source,java]
 ----
@@ -68,6 +69,9 @@ public interface StreamedAssistant {
 
     @UserMessage("Answer the question: {question}")
     Multi<String> respondToQuestion(String question);
+
+    @UserMessage("Answer the question: {question}")
+    Multi<ChatEvent> respondToQuestionUsingChatEvent(String question);
 
 }
 ----

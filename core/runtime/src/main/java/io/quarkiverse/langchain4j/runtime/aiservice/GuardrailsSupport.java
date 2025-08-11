@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ import dev.langchain4j.guardrail.OutputGuardrailRequest;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.service.guardrail.GuardrailService;
 import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
@@ -405,6 +407,83 @@ public class GuardrailsSupport {
         failures.addAll(oldResult.failures());
         failures.addAll(newResult.failures());
         return producer.apply(failures);
+    }
+
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
+    private static class ChatResponseAccumulator {
+        private final StringBuilder stringBuilder;
+        private ChatResponseMetadata metadata;
+
+        ChatResponseAccumulator() {
+            this.stringBuilder = new StringBuilder();
+            this.metadata = null;
+        }
+
+    }
+
+    public static Multi<ChatEvent.AccumulatedResponseEvent> accumulate(
+            Multi<ChatEvent> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
+        OutputTokenAccumulator accumulator;
+        synchronized (AiServiceMethodImplementationSupport.class) {
+            accumulator = methodCreateInfo.getOutputTokenAccumulator();
+            if (accumulator == null) {
+                String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
+                if (cn == null) {
+                    return upstream.collect().in(ChatResponseAccumulator::new, (chatResponseAccumulator, chatEvent) -> {
+                        if (chatEvent
+                                .getEventType() == ChatEvent.ChatEventType.PartialResponse) {
+                            chatResponseAccumulator.stringBuilder.append(
+                                    ((ChatEvent.PartialResponseEvent) chatEvent)
+                                            .getChunk());
+                        }
+                        if (chatEvent
+                                .getEventType() == ChatEvent.ChatEventType.Completed) {
+                            chatResponseAccumulator.metadata = ((ChatEvent.ChatCompletedEvent) chatEvent)
+                                    .getChatResponse().metadata();
+                        }
+                    })
+                            .map(acc -> new ChatEvent.AccumulatedResponseEvent(
+                                    acc.stringBuilder.toString(), acc.metadata))
+                            .toMulti();
+                }
+                try {
+                    Class<? extends OutputTokenAccumulator> clazz = Class
+                            .forName(cn, true, Thread.currentThread().getContextClassLoader())
+                            .asSubclass(OutputTokenAccumulator.class);
+                    accumulator = CDI.current().select(clazz).get();
+                    methodCreateInfo.setOutputTokenAccumulator(accumulator);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Could not find " + OutputTokenAccumulator.class.getSimpleName() + " implementation class: " + cn,
+                            e);
+                }
+            }
+        }
+        var actual = accumulator;
+        AtomicReference<ChatResponseMetadata> metadataAtomicReference = new AtomicReference<>();
+        return upstream.invoke(it -> {
+            if (it.getEventType() == ChatEvent.ChatEventType.Completed) {
+                metadataAtomicReference.set(((ChatEvent.ChatCompletedEvent) it)
+                        .getChatResponse().metadata());
+            }
+        }).filter(it -> it.getEventType() == ChatEvent.ChatEventType.PartialResponse)
+                .map(it -> ((ChatEvent.PartialResponseEvent) it).getChunk())
+                .plug(actual::accumulate)
+                .map(s -> new ChatEvent.AccumulatedResponseEvent(s,
+                        Optional.ofNullable(metadataAtomicReference.get()).orElse(ChatResponseMetadata.builder().build())));
+
+    }
+
+    /**
+     * @deprecated Deprecated in favor of upstream implementation
+     */
+    @Deprecated(forRemoval = true)
+    public static OutputGuardrailResult invokeOutputGuardrailsForStream(AiServiceMethodCreateInfo methodCreateInfo,
+            OutputGuardrailParams outputGuardrailParams, BeanManager beanManager, AuditSourceInfo auditSourceInfo) {
+        return invokeOutputGuardRails(methodCreateInfo, outputGuardrailParams, beanManager, auditSourceInfo);
     }
 
     /**
