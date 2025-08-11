@@ -10,14 +10,14 @@
     <name>Quarkus LangChain4j - Integration Tests - Dev UI</name>
     <properties>
         <skipITs>true</skipITs>
-        <quarkus.langchain4j.version>${project.version}</quarkus.langchain4j.version>
+        <quarkus-langchain4j.version>${project.version}</quarkus-langchain4j.version>
     </properties>
     <dependencies>
         <!-- The test needs an embedding store and an embedding model -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-chroma</artifactId>
-            <version>${quarkus.langchain4j.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core-deployment</artifactId>
-            <version>${quarkus.langchain4j.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>
