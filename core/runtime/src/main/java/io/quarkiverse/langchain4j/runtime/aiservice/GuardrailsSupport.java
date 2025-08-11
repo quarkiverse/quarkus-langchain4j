@@ -45,6 +45,8 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.AccumulatedResponseEvent;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent.ChatEventType;
 import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
@@ -69,44 +71,6 @@ public class GuardrailsSupport {
         }
 
         return um;
-    }
-
-    static Multi<String> accumulate(Multi<String> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
-        if (methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty()
-                && !methodCreateInfo.getOutputGuardrails().hasGuardrails()) {
-            return upstream;
-        }
-
-        OutputTokenAccumulator accumulator;
-        synchronized (AiServiceMethodImplementationSupport.class) {
-            accumulator = methodCreateInfo.getOutputTokenAccumulator();
-
-            if (accumulator == null) {
-                String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
-
-                if (cn == null) {
-                    return upstream.collect()
-                            .in(StringBuilder::new, StringBuilder::append)
-                            .map(StringBuilder::toString)
-                            .toMulti();
-                }
-
-                try {
-                    Class<? extends OutputTokenAccumulator> clazz = Class
-                            .forName(cn, true, Thread.currentThread().getContextClassLoader())
-                            .asSubclass(OutputTokenAccumulator.class);
-                    accumulator = CDI.current().select(clazz).get();
-                    methodCreateInfo.setOutputTokenAccumulator(accumulator);
-                } catch (Exception e) {
-                    throw new RuntimeException(
-                            "Could not find " + OutputTokenAccumulator.class.getSimpleName() + " implementation class: " + cn,
-                            e);
-                }
-            }
-        }
-
-        var actual = accumulator;
-        return upstream.plug(s -> actual.accumulate(upstream));
     }
 
     static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
@@ -140,28 +104,61 @@ public class GuardrailsSupport {
 
     static boolean isOutputGuardrailRetry(Throwable t) {
         return (t instanceof OutputGuardrailException) &&
-                t.getMessage().contains("The guardrails have reached the maximum number of retries.");
+                t.getMessage().toLowerCase().contains("the guardrails have reached the maximum number of retries.");
     }
 
-    static class OutputGuardrailStreamingMapper implements Function<String, String> {
+    static class OutputGuardrailStreamingMapper
+            implements Function<Object, Object> {
         private final GuardrailService guardrailService;
         private final AiServiceMethodCreateInfo methodCreateInfo;
         private final CommittableChatMemory committableChatMemory;
         private final AugmentationResult augmentationResult;
         private final Map<String, Object> templateVariables;
+        private final boolean isStringMulti;
 
         OutputGuardrailStreamingMapper(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
                 CommittableChatMemory committableChatMemory, AugmentationResult augmentationResult,
-                Map<String, Object> templateVariables) {
+                Map<String, Object> templateVariables, boolean isStringMulti) {
             this.guardrailService = guardrailService;
             this.methodCreateInfo = methodCreateInfo;
             this.committableChatMemory = committableChatMemory;
             this.augmentationResult = augmentationResult;
             this.templateVariables = templateVariables;
+            this.isStringMulti = isStringMulti;
         }
 
-        @Override
-        public String apply(String chunk) {
+        private Object apply(ChatEvent chunk) {
+            if (chunk.getEventType() == ChatEventType.AccumulatedResponse) {
+                var accumulatedChunk = (ChatEvent.AccumulatedResponseEvent) chunk;
+                var metadata = accumulatedChunk.getMetadata();
+                var guardrailResult = executeOutputGuardrails(
+                        guardrailService,
+                        methodCreateInfo,
+                        ChatResponse.builder()
+                                .aiMessage(AiMessage.from(accumulatedChunk.getMessage()))
+                                .build(),
+                        new NoopChatExecutor(),
+                        committableChatMemory,
+                        augmentationResult,
+                        templateVariables,
+                        null);
+
+                if (guardrailResult instanceof ChatResponse) {
+                    String message = ((ChatResponse) guardrailResult).aiMessage().text();
+                    return isStringMulti ? message : new AccumulatedResponseEvent(message, metadata);
+                } else if (guardrailResult instanceof String) {
+                    return isStringMulti ? (String) guardrailResult
+                            : new AccumulatedResponseEvent((String) guardrailResult, metadata);
+                } else if (guardrailResult != null) {
+                    return isStringMulti ? guardrailResult.toString()
+                            : new AccumulatedResponseEvent(guardrailResult.toString(), metadata);
+                }
+            }
+
+            return chunk;
+        }
+
+        private Object apply(String chunk) {
             var guardrailResult = executeOutputGuardrails(
                     guardrailService,
                     methodCreateInfo,
@@ -181,6 +178,17 @@ public class GuardrailsSupport {
             } else if (guardrailResult != null) {
                 // TODO is this really needed
                 return guardrailResult.toString();
+            }
+
+            return chunk;
+        }
+
+        @Override
+        public Object apply(Object chunk) {
+            if (chunk instanceof ChatEvent) {
+                return apply((ChatEvent) chunk);
+            } else if (chunk instanceof String) {
+                return apply((String) chunk);
             }
 
             return chunk;
@@ -409,10 +417,6 @@ public class GuardrailsSupport {
         return producer.apply(failures);
     }
 
-    /**
-     * @deprecated Deprecated in favor of upstream implementation
-     */
-    @Deprecated(forRemoval = true)
     private static class ChatResponseAccumulator {
         private final StringBuilder stringBuilder;
         private ChatResponseMetadata metadata;
@@ -424,28 +428,29 @@ public class GuardrailsSupport {
 
     }
 
-    public static Multi<ChatEvent.AccumulatedResponseEvent> accumulate(
-            Multi<ChatEvent> upstream, AiServiceMethodCreateInfo methodCreateInfo) {
+    public static Multi<ChatEvent.AccumulatedResponseEvent> accumulate(Multi<ChatEvent> upstream,
+            AiServiceMethodCreateInfo methodCreateInfo) {
         OutputTokenAccumulator accumulator;
         synchronized (AiServiceMethodImplementationSupport.class) {
             accumulator = methodCreateInfo.getOutputTokenAccumulator();
             if (accumulator == null) {
                 String cn = methodCreateInfo.getOutputTokenAccumulatorClassName();
                 if (cn == null) {
-                    return upstream.collect().in(ChatResponseAccumulator::new, (chatResponseAccumulator, chatEvent) -> {
-                        if (chatEvent
-                                .getEventType() == ChatEvent.ChatEventType.PartialResponse) {
-                            chatResponseAccumulator.stringBuilder.append(
-                                    ((ChatEvent.PartialResponseEvent) chatEvent)
-                                            .getChunk());
-                        }
-                        if (chatEvent
-                                .getEventType() == ChatEvent.ChatEventType.Completed) {
-                            chatResponseAccumulator.metadata = ((ChatEvent.ChatCompletedEvent) chatEvent)
-                                    .getChatResponse().metadata();
-                        }
-                    })
-                            .map(acc -> new ChatEvent.AccumulatedResponseEvent(
+                    return upstream.collect()
+                            .in(ChatResponseAccumulator::new, (chatResponseAccumulator, chatEvent) -> {
+                                if (chatEvent
+                                        .getEventType() == ChatEventType.PartialResponse) {
+                                    chatResponseAccumulator.stringBuilder.append(
+                                            ((ChatEvent.PartialResponseEvent) chatEvent)
+                                                    .getChunk());
+                                }
+                                if (chatEvent
+                                        .getEventType() == ChatEventType.Completed) {
+                                    chatResponseAccumulator.metadata = ((ChatEvent.ChatCompletedEvent) chatEvent)
+                                            .getChatResponse().metadata();
+                                }
+                            })
+                            .map(acc -> new AccumulatedResponseEvent(
                                     acc.stringBuilder.toString(), acc.metadata))
                             .toMulti();
                 }

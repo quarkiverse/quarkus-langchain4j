@@ -173,6 +173,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
                     .map(classInfo -> classInfo.name().toString())
                     .toList();
         }
+    }
 
     public Integer getMaxSequentialToolInvocations() {
         return maxSequentialToolInvocations;
