@@ -9,7 +9,7 @@
     </parent>
 
     <properties>
-        <quarkus.langchain4j.version>${project.version}</quarkus.langchain4j.version>
+        <quarkus-langchain4j.version>${project.version}</quarkus-langchain4j.version>
     </properties>
 
     <artifactId>quarkus-langchain4j-integration-test-embed-bge-small-en</artifactId>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
-            <version>${quarkus.langchain4j.version}</version>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
 
         <dependency>
