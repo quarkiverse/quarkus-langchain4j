@@ -408,20 +408,20 @@ public class AiServiceMethodImplementationSupport {
                             .retry()
                             .atMost(methodCreateInfo.getOutputGuardrails().getMaxRetriesAsSetByConfig());
                 }
+            } else {
+                stream = stream.filter(event -> !isStringMulti || event instanceof ChatEvent.PartialResponseEvent)
+                        .map(event -> {
+                            if (isStringMulti && (event instanceof ChatEvent.PartialResponseEvent)) {
+                                return ((ChatEvent.PartialResponseEvent) event).getChunk();
+                            }
+
+                            return event;
+                        });
             }
 
-            return stream
-                    .filter(event -> !isStringMulti || event instanceof ChatEvent.PartialResponseEvent)
-                    .map(event -> {
-                        if (isStringMulti && (event instanceof ChatEvent.PartialResponseEvent)) {
-                            return ((ChatEvent.PartialResponseEvent) event).getChunk();
-                        }
-
-                        return event;
-                    })
-                    .plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                            new ResponseAugmenterParams(actualUserMessage, chatMemory, actualAugmentationResult,
-                                    methodCreateInfo.getUserMessageTemplate(), templateVariables)));
+            return stream.plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
+                    new ResponseAugmenterParams(actualUserMessage, chatMemory, actualAugmentationResult,
+                            methodCreateInfo.getUserMessageTemplate(), templateVariables)));
         }
 
         Future<Moderation> moderationFuture = triggerModerationIfNeeded(context, methodCreateInfo, messagesToSend);
