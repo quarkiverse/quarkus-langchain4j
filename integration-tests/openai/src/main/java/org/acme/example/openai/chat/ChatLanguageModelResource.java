@@ -14,6 +14,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -37,6 +38,9 @@ public class ChatLanguageModelResource {
 
     private final ChatModel chatLanguageModel;
     private final StreamingChatModel streamingChatLanguageModel;
+
+    @ConfigProperty(name = "quarkus.langchain4j.openai.chat-model.model-name")
+    String modelName;
 
     public ChatLanguageModelResource(ChatModel chatLanguageModel,
             StreamingChatModel streamingChatLanguageModel) {
@@ -96,14 +100,13 @@ public class ChatLanguageModelResource {
     @Path("memory")
     public String memory() throws Exception {
 
-        TokenCountEstimator tokenizer = new OpenAiTokenCountEstimator("gpt-3.5-turbo");
+        TokenCountEstimator tokenizer = new OpenAiTokenCountEstimator(modelName);
         ChatMemory chatMemory = TokenWindowChatMemory.withMaxTokens(1000, tokenizer);
 
         StringBuffer sb = new StringBuffer();
 
         UserMessage userMessage1 = userMessage(
-                "How do I optimize database queries for a large-scale e-commerce platform? "
-                        + "Answer short in three to five lines maximum.");
+                "Who is the original creator of Linux operation system?");
         chatMemory.add(userMessage1);
 
         sb.append("[User]: ")
@@ -138,9 +141,7 @@ public class ChatLanguageModelResource {
         AiMessage firstAiMessage = futureRef.get().get(60, TimeUnit.SECONDS);
         chatMemory.add(firstAiMessage);
 
-        UserMessage userMessage2 = userMessage(
-                "Give a concrete example implementation of the first point? " +
-                        "Be short, 10 lines of code maximum.");
+        UserMessage userMessage2 = userMessage("In which country was he born?");
         chatMemory.add(userMessage2);
 
         sb.append("\n\n[User]: ")

@@ -1,8 +1,8 @@
 package org.acme.example.openai.chat;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.sse.SseEventSource;
 
+import org.acme.example.openai.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -37,7 +38,7 @@ public class QuarkusOpenAiServerClientChatResourceTest {
                 .get("sync")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("dynamic", "type"));
     }
 
     @Test
@@ -48,7 +49,7 @@ public class QuarkusOpenAiServerClientChatResourceTest {
                 .get("async")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("Scrum"));
     }
 
     @Test
@@ -65,8 +66,10 @@ public class QuarkusOpenAiServerClientChatResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
+            List<String> result = res.get(30, TimeUnit.SECONDS);
+            assertFalse(result.isEmpty());
+            String wholeAnswer = result.stream().reduce("", String::concat);
+            assertThat(wholeAnswer, TestUtils.containsStringOrMock("React"));
         }
     }
-
 }

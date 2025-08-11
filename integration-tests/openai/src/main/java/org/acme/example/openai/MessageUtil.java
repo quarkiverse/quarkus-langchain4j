@@ -2,15 +2,23 @@ package org.acme.example.openai;
 
 import java.util.Collections;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.completion.CompletionRequest;
 import dev.langchain4j.model.openai.internal.embedding.EmbeddingRequest;
 
 public class MessageUtil {
 
+    static String model;
+
+    static {
+        model = ConfigProvider.getConfig().getValue("quarkus.langchain4j.openai.chat-model.model-name", String.class);
+    }
+
     public static CompletionRequest createCompletionRequest(String prompt) {
         return CompletionRequest.builder()
-                .model("gpt-3.5-turbo")
+                .model(model)
                 .logitBias(Collections.emptyMap())
                 .maxTokens(100)
                 .user("testing")
@@ -22,7 +30,7 @@ public class MessageUtil {
 
     public static ChatCompletionRequest createChatCompletionRequest(String userMessage) {
         return ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")
+                .model(model)
                 .logitBias(Collections.emptyMap())
                 .maxTokens(100)
                 .user("testing")

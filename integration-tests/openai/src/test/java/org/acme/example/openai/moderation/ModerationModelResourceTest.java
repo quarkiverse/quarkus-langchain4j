@@ -1,19 +1,19 @@
 package org.acme.example.openai.moderation;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
 
 import java.net.URL;
 
-import org.junit.jupiter.api.Disabled;
+import org.acme.example.openai.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@Disabled("mockgpt does not implement moderations")
+@EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement moderations")
 public class ModerationModelResourceTest {
 
     @TestHTTPEndpoint(ModerationModelResource.class)
@@ -27,6 +27,6 @@ public class ModerationModelResourceTest {
                 .get("blocking")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("false"));
     }
 }

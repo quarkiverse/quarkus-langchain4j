@@ -2,7 +2,6 @@ package org.acme.example.openai;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ class OpenAiRestApiResourceTest {
                 .get("chat/sync")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("C++"));
     }
 
     @Test
@@ -48,7 +47,7 @@ class OpenAiRestApiResourceTest {
                 .get("chat/async")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("Unicode"));
     }
 
     @Test
