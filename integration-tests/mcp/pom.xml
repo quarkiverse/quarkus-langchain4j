@@ -44,6 +44,12 @@
             <artifactId>quarkus-devtools-testing</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-openai</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Make sure the deployment artifact is built before executing this module -->
         <dependency>
