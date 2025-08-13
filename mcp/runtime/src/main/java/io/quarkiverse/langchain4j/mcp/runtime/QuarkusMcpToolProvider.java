@@ -10,6 +10,7 @@ import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.resourcesastools.DefaultMcpResourcesAsToolsPresenter;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
@@ -20,9 +21,11 @@ import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusToolProviderRequest;
 
 public class QuarkusMcpToolProvider extends McpToolProvider {
 
-    QuarkusMcpToolProvider(List<McpClient> mcpClients, Instance<Tracer> tracerInstance) {
-        super(mcpClients, false, AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE,
-                determineToolWrapper(tracerInstance));
+    QuarkusMcpToolProvider(List<McpClient> mcpClients, Instance<Tracer> tracerInstance, boolean exposeResourcesAsTools) {
+        super(mcpClients, false,
+                AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE,
+                determineToolWrapper(tracerInstance),
+                exposeResourcesAsTools ? DefaultMcpResourcesAsToolsPresenter.builder().build() : null);
     }
 
     private static Function<ToolExecutor, ToolExecutor> determineToolWrapper(Instance<Tracer> tracerInstance) {

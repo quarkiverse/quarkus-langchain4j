@@ -1,12 +1,14 @@
 package io.quarkiverse.langchain4j.mcp.runtime.config;
 
 import java.util.Map;
+import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
@@ -21,4 +23,9 @@ public interface McpRuntimeConfiguration {
     @WithParentName
     Map<String, McpClientRuntimeConfig> clients();
 
+    /**
+     * Whether resources should be exposed as MCP tools.
+     */
+    @WithDefault("false")
+    Optional<Boolean> exposeResourcesAsTools();
 }

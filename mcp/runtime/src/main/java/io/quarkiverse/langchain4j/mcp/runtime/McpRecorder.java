@@ -13,6 +13,7 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -59,6 +60,13 @@ public class McpRecorder {
             public McpClient get() {
                 McpTransport transport;
                 McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.getValue().clients().get(key);
+                List<McpRoot> initialRoots = new ArrayList<>();
+                if (runtimeConfig.roots().isPresent()) {
+                    for (String kvPair : runtimeConfig.roots().get()) {
+                        String[] split = kvPair.split("=");
+                        initialRoots.add(new McpRoot(split[0], split[1]));
+                    }
+                }
                 transport = switch (mcpTransportType) {
                     case STDIO -> {
                         List<String> command = runtimeConfig.command().orElseThrow(() -> new ConfigurationException(
@@ -95,6 +103,7 @@ public class McpRecorder {
                         .pingTimeout(runtimeConfig.pingTimeout())
                         // TODO: it should be possible to choose a log handler class via configuration
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
+                        .roots(initialRoots)
                         .build();
                 shutdown.addShutdownTask(client::close);
                 return client;
@@ -112,7 +121,9 @@ public class McpRecorder {
                     McpClientName.Literal qualifier = McpClientName.Literal.of(mcpClientName);
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
-                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL));
+                boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
+                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL),
+                        exposeResourcesAsTools);
             }
         };
     }
