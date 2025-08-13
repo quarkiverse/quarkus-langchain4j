@@ -64,7 +64,8 @@ public class QuarkusRestApiResource {
     @Path("chat/sync")
     public String chatSync() {
         return restApi.blockingChatCompletion(
-                createChatCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"),
+                createChatCompletionRequest(
+                        "Which one of these languages is more susceptible to segmentation fault: Java, Go, C++ or Rust?"),
                 OpenAiRestApi.ApiMetadata.builder()
                         .openAiApiKey(token)
                         .organizationId(organizationId)
@@ -76,7 +77,7 @@ public class QuarkusRestApiResource {
     @Path("chat/async")
     public Uni<String> chatAsync() {
         return restApi
-                .createChatCompletion(createChatCompletionRequest("Write a short 1 paragraph funny poem about Unicode"),
+                .createChatCompletion(createChatCompletionRequest("Write a short definition of Unicode"),
                         OpenAiRestApi.ApiMetadata.builder()
                                 .openAiApiKey(token)
                                 .organizationId(organizationId)
@@ -122,7 +123,8 @@ public class QuarkusRestApiResource {
     @Path("language/sync")
     public String languageSync() {
         return restApi.blockingCompletion(
-                createCompletionRequest("Write a short 1 paragraph funny poem about segmentation fault"),
+                createCompletionRequest(
+                        "Which one of these languages is more susceptible to segmentation fault: Java, Go, C++ or Rust?"),
                 OpenAiRestApi.ApiMetadata.builder()
                         .openAiApiKey(token)
                         .organizationId(organizationId)
@@ -134,7 +136,7 @@ public class QuarkusRestApiResource {
     @Path("language/async")
     public Uni<String> languageAsync() {
         return restApi
-                .completion(createCompletionRequest("Write a short 1 paragraph funny poem about Unicode"),
+                .completion(createCompletionRequest("Write a short definition of Unicode"),
                         OpenAiRestApi.ApiMetadata.builder()
                                 .openAiApiKey(token)
                                 .organizationId(organizationId)

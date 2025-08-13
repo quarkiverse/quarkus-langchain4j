@@ -1,8 +1,7 @@
 package org.acme.example.openai.chat;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -16,8 +15,11 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.sse.SseEventSource;
 
+import org.acme.example.openai.TestUtils;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -37,11 +39,12 @@ public class ChatLanguageModelResourceTest {
                 .get("blocking")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("1969"));
     }
 
     @Test
-    @Disabled("The Mock API does not handle streaming properly")
+    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement moderations")
+    @Disabled("https://github.com/quarkiverse/quarkus-langchain4j/issues/1693")
     public void sse() throws Exception {
         Client client = ClientBuilder.newBuilder().build();
         WebTarget target = client.target(url.toString() + "/streaming");
@@ -55,7 +58,10 @@ public class ChatLanguageModelResourceTest {
                     res::completeExceptionally,
                     () -> res.complete(collect));
             eventSource.open();
-            assertThat(res.get(30, TimeUnit.SECONDS)).isNotEmpty();
+            List<String> result = res.get(30, TimeUnit.SECONDS);
+            assertFalse(result.isEmpty());
+            String wholeAnswer = result.stream().reduce("", String::concat);
+            MatcherAssert.assertThat(wholeAnswer, TestUtils.containsStringOrMock("Java"));
         }
     }
 
@@ -66,7 +72,7 @@ public class ChatLanguageModelResourceTest {
                 .get("template")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("bake"));
     }
 
     @Test
@@ -76,17 +82,17 @@ public class ChatLanguageModelResourceTest {
                 .get("structuredPrompt")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("Instructions"));
     }
 
     @Test
-    @Disabled("flaky")
+    @Disabled("https://github.com/quarkiverse/quarkus-langchain4j/issues/1695")
     public void memory() {
         given()
                 .baseUri(url.toString())
                 .get("memory")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("Finland"));
     }
 }
