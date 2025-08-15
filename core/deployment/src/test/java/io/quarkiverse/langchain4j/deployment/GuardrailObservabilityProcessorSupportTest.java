@@ -19,22 +19,22 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.Guardrail;
+import dev.langchain4j.guardrail.GuardrailRequest;
+import dev.langchain4j.guardrail.GuardrailResult;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.TransformType;
-import io.quarkiverse.langchain4j.guardrails.Guardrail;
-import io.quarkiverse.langchain4j.guardrails.GuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.GuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 
 class GuardrailObservabilityProcessorSupportTest {
     private record ClassInfoMapping(Class<?> clazz, boolean shouldHaveGuardrailValidateMethodWithParams,
@@ -86,11 +86,11 @@ class GuardrailObservabilityProcessorSupportTest {
             new ClassInfoMapping(IGRedefiningBothValidateMethods.class, true, true, false),
             new ClassInfoMapping(OGRedefiningBothValidateMethods.class, true, false, true),
             ClassInfoMapping.somethingElse(Guardrail.class),
-            ClassInfoMapping.somethingElse(GuardrailParams.class),
+            ClassInfoMapping.somethingElse(GuardrailRequest.class),
             ClassInfoMapping.somethingElse(GuardrailResult.class),
-            ClassInfoMapping.somethingElse(OutputGuardrailParams.class),
+            ClassInfoMapping.somethingElse(OutputGuardrailRequest.class),
             ClassInfoMapping.somethingElse(OutputGuardrailResult.class),
-            ClassInfoMapping.somethingElse(InputGuardrailParams.class),
+            ClassInfoMapping.somethingElse(InputGuardrailRequest.class),
             ClassInfoMapping.somethingElse(InputGuardrailResult.class),
             ClassInfoMapping.somethingElse(InputGuardrails.class),
             ClassInfoMapping.somethingElse(OutputGuardrails.class),
@@ -230,7 +230,7 @@ class GuardrailObservabilityProcessorSupportTest {
     @ApplicationScoped
     public static class IGDirectlyImplementInputGuardrailWithParams implements InputGuardrail {
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             return success();
         }
     }
@@ -238,7 +238,7 @@ class GuardrailObservabilityProcessorSupportTest {
     @ApplicationScoped
     public static class OGDirectlyImplementOutputGuardrailWithParams implements OutputGuardrail {
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             return success();
         }
     }
@@ -275,7 +275,7 @@ class GuardrailObservabilityProcessorSupportTest {
         }
 
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             return success();
         }
     }
@@ -288,14 +288,14 @@ class GuardrailObservabilityProcessorSupportTest {
         }
 
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             return success();
         }
     }
 
     public static abstract class AbstractOGImplementingValidateWithParams implements OutputGuardrail {
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             return success();
         }
     }
@@ -309,7 +309,7 @@ class GuardrailObservabilityProcessorSupportTest {
 
     public static abstract class AbstractIGImplementingValidateWithParams implements InputGuardrail {
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest params) {
             return success();
         }
     }

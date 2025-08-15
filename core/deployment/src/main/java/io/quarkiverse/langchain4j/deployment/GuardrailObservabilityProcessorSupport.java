@@ -10,21 +10,64 @@ import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.data.message.UserMessage;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 
 final class GuardrailObservabilityProcessorSupport {
     private static final Logger LOG = Logger.getLogger(GuardrailObservabilityProcessorSupport.class);
-    private static final DotName INPUT_GUARDRAIL_PARAMS = DotName.createSimple(InputGuardrailParams.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_INPUT_GUARDRAIL_PARAMS = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.InputGuardrailParams.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_INPUT_GUARDRAIL_RESULT = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.InputGuardrailResult.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_OUTPUT_GUARDRAIL_PARAMS = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_OUTPUT_GUARDRAIL_RESULT = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_INPUT_GUARDRAIL = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.InputGuardrail.class);
+
+    /**
+     * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private static final DotName QUARKUS_OUTPUT_GUARDRAIL = DotName
+            .createSimple(io.quarkiverse.langchain4j.guardrails.OutputGuardrail.class);
+    private static final DotName INPUT_GUARDRAIL_REQUEST = DotName.createSimple(InputGuardrailRequest.class);
     private static final DotName INPUT_GUARDRAIL_RESULT = DotName.createSimple(InputGuardrailResult.class);
-    private static final DotName OUTPUT_GUARDRAIL_PARAMS = DotName.createSimple(OutputGuardrailParams.class);
+    private static final DotName OUTPUT_GUARDRAIL_REQUEST = DotName.createSimple(OutputGuardrailRequest.class);
     private static final DotName OUTPUT_GUARDRAIL_RESULT = DotName.createSimple(OutputGuardrailResult.class);
     private static final DotName INPUT_GUARDRAIL = DotName.createSimple(InputGuardrail.class);
     private static final DotName OUTPUT_GUARDRAIL = DotName.createSimple(OutputGuardrail.class);
+
     static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
     static final DotName WITH_SPAN = DotName.createSimple("io.opentelemetry.instrumentation.annotations.WithSpan");
@@ -37,11 +80,17 @@ final class GuardrailObservabilityProcessorSupport {
     }
 
     enum GuardrailType {
+        QUARKUS_INPUT,
+        QUARKUS_OUTPUT,
         INPUT,
         OUTPUT;
 
         static Optional<GuardrailType> from(IndexView indexView, ClassInfo classToCheck) {
-            if (indexView.getAllKnownImplementors(INPUT_GUARDRAIL).contains(classToCheck)) {
+            if (indexView.getAllKnownImplementors(QUARKUS_INPUT_GUARDRAIL).contains(classToCheck)) {
+                return Optional.of(QUARKUS_INPUT);
+            } else if (indexView.getAllKnownImplementors(QUARKUS_OUTPUT_GUARDRAIL).contains(classToCheck)) {
+                return Optional.of(QUARKUS_OUTPUT);
+            } else if (indexView.getAllKnownImplementors(INPUT_GUARDRAIL).contains(classToCheck)) {
                 return Optional.of(INPUT);
             } else if (indexView.getAllKnownImplementors(OUTPUT_GUARDRAIL).contains(classToCheck)) {
                 return Optional.of(OUTPUT);
@@ -102,16 +151,18 @@ final class GuardrailObservabilityProcessorSupport {
         }
 
         var isOtherValidateMethodVariant = switch (guardrailType) {
-            case INPUT -> isInputGuardrailValidateMethodWithUserMessage(methodInfo);
-            case OUTPUT -> isOutputGuardrailValidateMethodWithAiMessage(methodInfo);
+            case QUARKUS_INPUT, INPUT -> isInputGuardrailValidateMethodWithUserMessage(methodInfo);
+            case QUARKUS_OUTPUT, OUTPUT -> isOutputGuardrailValidateMethodWithAiMessage(methodInfo);
         };
 
         if (isOtherValidateMethodVariant && !doesMethodAlreadyHaveTransformationAnnotation(methodInfo, transformType)) {
             // If this is the other method variant, we need to ensure that the
             // variant with the params isn't also present on the method's declaring class
             var paramType = switch (guardrailType) {
-                case INPUT -> Type.parse(INPUT_GUARDRAIL_PARAMS.toString());
-                case OUTPUT -> Type.parse(OUTPUT_GUARDRAIL_PARAMS.toString());
+                case QUARKUS_INPUT -> Type.parse(QUARKUS_INPUT_GUARDRAIL_PARAMS.toString());
+                case QUARKUS_OUTPUT -> Type.parse(QUARKUS_OUTPUT_GUARDRAIL_PARAMS.toString());
+                case INPUT -> Type.parse(INPUT_GUARDRAIL_REQUEST.toString());
+                case OUTPUT -> Type.parse(OUTPUT_GUARDRAIL_REQUEST.toString());
             };
 
             var otherValidateMethod = methodDeclaringClass.method("validate", paramType);
@@ -129,9 +180,16 @@ final class GuardrailObservabilityProcessorSupport {
      * Checks the method meets <strong>ALL</strong> the following conditions:
      * <ul>
      * <li>The method's name is {@link #VALIDATE_METHOD_NAME}</li>
-     * <li><strong>IF</strong> the method's single parameter's type is {@link InputGuardrailParams} then the return type must be
+     * <li><strong>IF</strong> the method's single parameter's type is
+     * {@link io.quarkiverse.langchain4j.guardrails.InputGuardrailParams} then the return type must be
+     * {@link io.quarkiverse.langchain4j.guardrails.InputGuardrailResult}</li>
+     * <li><strong>IF</strong> the method's single parameter's type is
+     * {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams} then the return type must
+     * be {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult}</li>
+     * <li><strong>IF</strong> the method's single parameter's type is {@link InputGuardrailRequest} then the return type must
+     * be
      * {@link InputGuardrailResult}</li>
-     * <li><strong>IF</strong> the method's single parameter's type is {@link OutputGuardrailParams} then the return type must
+     * <li><strong>IF</strong> the method's single parameter's type is {@link OutputGuardrailRequest} then the return type must
      * be {@link OutputGuardrailResult}</li>
      * </ul>
      */
@@ -143,7 +201,8 @@ final class GuardrailObservabilityProcessorSupport {
      * Checks the method meets <strong>ALL</strong> the following conditions:
      * <ul>
      * <li>The method's name is {@link #VALIDATE_METHOD_NAME}</li>
-     * <li>The method's return type is {@link InputGuardrailResult}</li>
+     * <li>The method's return type is {@link io.quarkiverse.langchain4j.guardrails.InputGuardrailResult} or
+     * {@link InputGuardrailResult}</li>
      * <li>The method's single parameter's type is {@link dev.langchain4j.data.message.UserMessage}</li>
      * </ul>
      */
@@ -156,7 +215,8 @@ final class GuardrailObservabilityProcessorSupport {
      * Checks the method meets <strong>ALL</strong> the following conditions:
      * <ul>
      * <li>The method's name is {@link #VALIDATE_METHOD_NAME}</li>
-     * <li>The method's return type is {@link OutputGuardrailResult}</li>
+     * <li>The method's return type is {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult} or
+     * {@link OutputGuardrailResult}</li>
      * <li>The method's single parameter's type is {@link dev.langchain4j.data.message.AiMessage}</li>
      * </ul>
      */
@@ -168,9 +228,16 @@ final class GuardrailObservabilityProcessorSupport {
     /**
      * Checks the method meets <strong>ALL</strong> the following conditions:
      * <ul>
-     * <li><strong>IF</strong> the method's single parameter's type is {@link InputGuardrailParams} then the return type must be
+     * <li><strong>IF</strong> the method's single parameter's type is
+     * {@link io.quarkiverse.langchain4j.guardrails.InputGuardrailParams} then the return type must be
+     * {@link io.quarkiverse.langchain4j.guardrails.InputGuardrailResult}</li>
+     * <li><strong>IF</strong> the method's single parameter's type is
+     * {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams} then the return type must
+     * be {@link io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult}</li>
+     * <li><strong>IF</strong> the method's single parameter's type is {@link InputGuardrailRequest} then the return type must
+     * be
      * {@link InputGuardrailResult}</li>
-     * <li><strong>IF</strong> the method's single parameter's type is {@link OutputGuardrailParams} then the return type must
+     * <li><strong>IF</strong> the method's single parameter's type is {@link OutputGuardrailRequest} then the return type must
      * be {@link OutputGuardrailResult}</li>
      * </ul>
      */
@@ -187,8 +254,13 @@ final class GuardrailObservabilityProcessorSupport {
             // Also check the return type
             var returnType = methodInfo.returnType().name();
 
-            return (INPUT_GUARDRAIL_PARAMS.equals(paramTypeName) && INPUT_GUARDRAIL_RESULT.equals(returnType)) ||
-                    (OUTPUT_GUARDRAIL_PARAMS.equals(paramTypeName) && OUTPUT_GUARDRAIL_RESULT.equals(returnType));
+            return (QUARKUS_INPUT_GUARDRAIL_PARAMS.equals(paramTypeName) && QUARKUS_INPUT_GUARDRAIL_RESULT.equals(returnType))
+                    ||
+                    (QUARKUS_OUTPUT_GUARDRAIL_PARAMS.equals(paramTypeName)
+                            && QUARKUS_OUTPUT_GUARDRAIL_RESULT.equals(returnType))
+                    ||
+                    (INPUT_GUARDRAIL_REQUEST.equals(paramTypeName) && INPUT_GUARDRAIL_RESULT.equals(returnType)) ||
+                    (OUTPUT_GUARDRAIL_REQUEST.equals(paramTypeName) && OUTPUT_GUARDRAIL_RESULT.equals(returnType));
         }
 
         return false;
@@ -207,7 +279,8 @@ final class GuardrailObservabilityProcessorSupport {
             var returnType = methodInfo.returnType().name();
 
             return paramType.equals(paramTypeName) &&
-                    (INPUT_GUARDRAIL_RESULT.equals(returnType) || OUTPUT_GUARDRAIL_RESULT.equals(returnType));
+                    (QUARKUS_INPUT_GUARDRAIL_RESULT.equals(returnType) || QUARKUS_OUTPUT_GUARDRAIL_RESULT.equals(returnType) ||
+                            INPUT_GUARDRAIL_RESULT.equals(returnType) || OUTPUT_GUARDRAIL_RESULT.equals(returnType));
         }
 
         return false;

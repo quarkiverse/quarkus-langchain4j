@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -25,11 +27,9 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
@@ -75,7 +75,6 @@ public class OutputGuardrailChainOnStreamedResponseTest {
     @ActivateRequestContext
     void testThatRetryRestartTheChain() {
         aiService.failingFirstTwo("1", "foo").collect().asList().await().indefinitely();
-        ;
         assertThat(firstGuardrail.spy()).isEqualTo(2);
         assertThat(secondGuardrail.spy()).isEqualTo(1);
         assertThat(failingGuardrail.spy()).isEqualTo(2);
@@ -105,7 +104,6 @@ public class OutputGuardrailChainOnStreamedResponseTest {
     @ActivateRequestContext
     void testThatRetryRestartTheChainWithPassThroughAccumulator() {
         aiService.failingFirstTwoWithPassThroughAccumulator("1", "foo").collect().asList().await().indefinitely();
-        ;
         assertThat(firstGuardrail.spy()).isEqualTo(4);
         assertThat(secondGuardrail.spy()).isEqualTo(3);
         assertThat(failingGuardrail.spy()).isEqualTo(4);

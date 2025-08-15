@@ -35,7 +35,11 @@ import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class InputAndOutputGuardrailsTest {
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
+public class QuarkusInputAndDeclarativeAiServiceOutputGuardrailsTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
