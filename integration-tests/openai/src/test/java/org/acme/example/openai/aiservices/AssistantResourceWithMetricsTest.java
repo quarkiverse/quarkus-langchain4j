@@ -1,7 +1,6 @@
 package org.acme.example.openai.aiservices;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.URL;
@@ -9,6 +8,7 @@ import java.util.Collection;
 
 import jakarta.inject.Inject;
 
+import org.acme.example.openai.TestUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +41,7 @@ class AssistantResourceWithMetricsTest {
                 .get("a1")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("test"));
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")
@@ -66,7 +66,7 @@ class AssistantResourceWithMetricsTest {
                 .get("a2")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("test"));
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")
@@ -92,7 +92,7 @@ class AssistantResourceWithMetricsTest {
                 .get("a2c2")
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("test"));
 
         waitForMeters(registry.find("a2c2-timed").timers(), 1);
         waitForMeters(registry.find("a2c2-counted")

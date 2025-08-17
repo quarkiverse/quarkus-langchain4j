@@ -26,6 +26,6 @@ public class EmbeddingModelResource {
     @Path("blocking")
     @Produces("text/plain")
     public List<Float> blocking() {
-        return embeddingModel.embed("This is some text").content().vectorAsList();
+        return embeddingModel.embed("What is the last name of the author of Linux?").content().vectorAsList();
     }
 }

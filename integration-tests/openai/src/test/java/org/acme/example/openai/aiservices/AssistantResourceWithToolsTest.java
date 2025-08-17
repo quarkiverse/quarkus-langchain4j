@@ -1,10 +1,10 @@
 package org.acme.example.openai.aiservices;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
 
 import java.net.URL;
 
+import org.acme.example.openai.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -26,6 +26,6 @@ public class AssistantResourceWithToolsTest {
                 .get()
                 .then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("test"));
     }
 }

@@ -3,12 +3,12 @@ package org.acme.example.openai.aiservices;
 import static io.restassured.RestAssured.get;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.containsString;
 
 import java.time.Duration;
 
 import jakarta.inject.Inject;
 
+import org.acme.example.openai.TestUtils;
 import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractIGImplementingValidateWithParams;
 import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractIGImplementingValidateWithUserMessage;
 import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractOGImplementingValidateWithAiMessage;
@@ -42,7 +42,7 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
     void guardrailMetricsAvailable() {
         get("assistant-with-guardrails-observability").then()
                 .statusCode(200)
-                .body(containsString("MockGPT"));
+                .body(TestUtils.containsStringOrMock("test"));
 
         await()
                 .atMost(Duration.ofSeconds(10))
