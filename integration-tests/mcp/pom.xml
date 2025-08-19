@@ -50,6 +50,12 @@
             <version>${quarkus-langchain4j.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.smallrye.certs</groupId>
+            <artifactId>smallrye-certificate-generator-junit5</artifactId>
+            <version>${smallrye-certificate-generator.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Make sure the deployment artifact is built before executing this module -->
         <dependency>

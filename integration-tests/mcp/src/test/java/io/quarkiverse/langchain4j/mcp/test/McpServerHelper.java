@@ -3,7 +3,9 @@ package io.quarkiverse.langchain4j.mcp.test;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -19,15 +21,26 @@ public class McpServerHelper {
 
     private static final Logger log = LoggerFactory.getLogger(McpServerHelper.class);
 
-    static Process startServerHttp(String scriptName) throws Exception {
+    public static Process startServerHttp(String scriptName) throws Exception {
         return startServerHttp(scriptName, 8082);
     }
 
-    static Process startServerHttp(String scriptName, int port) throws Exception {
+    public static Process startServerHttp(String scriptName, int port) throws Exception {
+        return startServerHttp(scriptName, port, port + 1000, new String[] {});
+    }
+
+    public static Process startServerHttp(String scriptName, int port, int sslPort, String[] extraArgs) throws Exception {
         skipTestsIfJbangNotAvailable();
         String path = getPathToScript(scriptName);
-        String[] command = new String[] { getJBangCommand(), "--quiet", "--fresh", "run", "-Dquarkus.http.port=" + port, path };
-        log.info("Starting the MCP server using command: " + Arrays.toString(command));
+        List<String> command = new ArrayList<>();
+        command.add(getJBangCommand());
+        command.add("--quiet");
+        command.add("--fresh");
+        command.addAll(Arrays.asList(extraArgs));
+        command.add("-Dquarkus.http.ssl-port=" + sslPort);
+        command.add("-Dquarkus.http.port=" + port);
+        command.add(path);
+        log.info("Starting the MCP server using command: " + command);
         Process process = new ProcessBuilder().command(command).inheritIO().start();
         waitForPort(port, 120);
         log.info("MCP server has started");
@@ -49,7 +62,7 @@ public class McpServerHelper {
         return command;
     }
 
-    static void skipTestsIfJbangNotAvailable() {
+    public static void skipTestsIfJbangNotAvailable() {
         String command = getJBangCommand();
         try {
             new ProcessBuilder().command(command, "--version").start().waitFor();

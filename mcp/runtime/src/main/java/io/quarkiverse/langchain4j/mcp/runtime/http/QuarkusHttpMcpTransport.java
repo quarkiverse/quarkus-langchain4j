@@ -23,6 +23,7 @@ import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
+import io.quarkus.tls.TlsConfiguration;
 import io.smallrye.mutiny.Uni;
 
 public class QuarkusHttpMcpTransport implements McpTransport {
@@ -33,6 +34,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private final Duration timeout;
     private final boolean logResponses;
     private final boolean logRequests;
+    private final TlsConfiguration tlsConfiguration;
 
     // this is obtained from the server after initializing the SSE channel
     private volatile String postUrl;
@@ -46,6 +48,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     public QuarkusHttpMcpTransport(QuarkusHttpMcpTransport.Builder builder) {
         sseUrl = ensureNotNull(builder.sseUrl, "Missing SSE endpoint URL");
         timeout = getOrDefault(builder.timeout, Duration.ofSeconds(60));
+        tlsConfiguration = builder.tlsConfiguration;
 
         this.logRequests = builder.logRequests;
         this.logResponses = builder.logResponses;
@@ -56,6 +59,9 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                 .readTimeout(timeout.toSeconds(), TimeUnit.SECONDS)
                 .loggingScope(LoggingScope.ALL)
                 .register(new JacksonBasicMessageBodyReader(QuarkusJsonCodecFactory.ObjectMapperHolder.MAPPER));
+        if (tlsConfiguration != null) {
+            clientBuilder.tlsConfiguration(tlsConfiguration);
+        }
 
         this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
         if (mcpClientAuthProvider != null) {
@@ -83,6 +89,9 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
+        }
+        if (tlsConfiguration != null) {
+            builder.tlsConfiguration(tlsConfiguration);
         }
 
         postEndpoint = builder
@@ -188,6 +197,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         private Duration timeout;
         private boolean logRequests = false;
         private boolean logResponses = false;
+        private TlsConfiguration tlsConfiguration;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -215,6 +225,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
         public QuarkusHttpMcpTransport.Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder tlsConfiguration(TlsConfiguration tlsConfiguration) {
+            this.tlsConfiguration = tlsConfiguration;
             return this;
         }
 
