@@ -72,6 +72,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-expose-resources-as-tools[`quarkus.langchain4j.mcp.expose-resources-as-tools`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.expose-resources-as-tools+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether resources should be exposed as MCP tools.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_EXPOSE_RESOURCES_AS_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_EXPOSE_RESOURCES_AS_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default
@@ -264,6 +285,48 @@ endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10S`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots[`quarkus.langchain4j.mcp."client-name".roots`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".roots+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The initial list of MCP roots that the client can present to the server. The list can be later updated programmatically during runtime. The list is formatted as key-value pairs separated by commas. For example: workspace1=/path/to/workspace1,workspace2=/path/to/workspace2
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ROOTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ROOTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tls-configuration-name[`quarkus.langchain4j.mcp."client-name".tls-configuration-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration (bucket) used for client authentication in the TLS registry. This does not have any effect when the stdio transport is used.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
 
 
 |===

@@ -75,4 +75,10 @@ public interface McpClientRuntimeConfig {
      */
     Optional<List<String>> roots();
 
+    /**
+     * The name of the TLS configuration (bucket) used for client authentication in the TLS registry.
+     * This does not have any effect when the stdio transport is used.
+     */
+    Optional<String> tlsConfigurationName();
+
 }
