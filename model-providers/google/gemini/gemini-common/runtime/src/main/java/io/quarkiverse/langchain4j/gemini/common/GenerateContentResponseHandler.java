@@ -21,10 +21,11 @@ public final class GenerateContentResponseHandler {
 
         StringBuilder text = new StringBuilder();
         List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
-        for (GenerateContentResponse.Candidate.Part part : parts) {
-            text.append(part.text());
+        if (parts != null && !parts.isEmpty()) {
+            for (GenerateContentResponse.Candidate.Part part : parts) {
+                text.append(part.text());
+            }
         }
-
         return text.toString();
     }
 
