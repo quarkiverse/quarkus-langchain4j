@@ -35,11 +35,12 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
     @BeforeAll
     static void addSimpleRegistry() {
         Metrics.globalRegistry.add(new SimpleMeterRegistry());
+        Metrics.globalRegistry.clear();
     }
 
     @Test
     void guardrailMetricsAvailable() {
-        get("/assistant-with-guardrails-observability").then()
+        get("assistant-with-guardrails-observability").then()
                 .statusCode(200)
                 .body(TestUtils.containsStringOrMock("test"));
 

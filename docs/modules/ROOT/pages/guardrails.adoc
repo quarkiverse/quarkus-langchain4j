@@ -3,6 +3,89 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
+[IMPORTANT]
+.Quarkus-specific implementation deprecation
+====
+The Quarkus-specific guardrail implementation is deprecated in favor of the https://docs.langchain4j.dev/tutorials/guardrails[LangChain4j-specific implementation]. If you are currently
+using the Quarkus specific guardrail implementation, you should migrate to the upstream implementation.
+
+In most cases the switch is simply to change package imports from `io.quarkiverse.langchain4j.guardrails` to `dev.langchain4j.guardrail` or `dev.langchain4j.service.guardrail`.
+There are a few differences in the APIs, but the class/interface names are mostly the same.
+
+In fact, the https://docs.langchain4j.dev/tutorials/guardrails[upstream implementation] was backported from the Quarkus implementation!
+
+Both the Quarkus-specific implementation and the upstream implementation will be supported in Quarkus for a few releases, but eventually the Quarkus-specific implementation will be removed.
+
+There will also be deprecation warnings printed to the console that look similar to this:
+
+```
+WARN  [io.qua.lan.dep.AiServicesProcessor] (build-44)
+================== DEPRECATION WARNING ==================
+The following Quarkus-specific output guardrail classes have been discovered on the method (java.lang.String hi(java.lang.String mem)) in the class (io.quarkiverse.langchain4j.test.guardrails.QuarkusOutputGuardrailTest$MyAiService). Please move to the new upstream guardrails.
+io.quarkiverse.langchain4j.test.guardrails.QuarkusOutputGuardrailTest$OKGuardrail
+```
+====
+
+== Guardrail Scopes
+
+Guardrails MUST be CDI beans. They can be in any CDI scope, including request scope, application scope, or session scope.
+
+The scope of the guardrail is important as it defines the lifecycle of the guardrail, especially when the guardrail is stateful.
+
+== Output Guardrails configuration
+
+By default, Quarkus Langchain4J will limit the number of retries to `3` (the default in upstream LangChain4j is `2`).
+This is configurable using the `quarkus.langchain4j.guardrails.max-retries` configuration property:
+
+[source,properties]
+----
+quarkus.langchain4j.guardrails.max-retries=5
+----
+
+NOTE: Setting `quarkus.langchain4j.guardrails.max-retries` to 0 disables retries.
+
+Configuration can also be https://docs.langchain4j.dev/tutorials/guardrails#configuration[set in the `@OutputGuardrails` annotation directly], which will override any defaults set
+for a specific operation.
+
+== Output Guardrails for Streamed Responses
+
+Output guardrails can be applied to methods that return `Multi` or `TokenStream`.
+By default, Quarkus will automatically assemble the full response before executing the guardrail chain.
+Keep in mind that this may have a performance impact when handling large responses.
+
+To control when the guardrail chain is invoked during streaming, configure an accumulator:
+
+[source, java]
+----
+@UserMessage("...")
+@OutputGuardrails(MyGuardrail.class)
+@OutputGuardrailAccumulator(PassThroughAccumulator.class) // Defines the accumulator
+Multi<String> ask();
+----
+
+The `@OutputGuardrailAccumulator` annotation allows you to specify a custom accumulator.
+The accumulator must implement the `io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator` interface and be exposed as a CDI bean.
+The following is an example of a pass-through accumulator that does not accumulate tokens:
+
+[source,java]
+----
+@ApplicationScoped
+public class PassThroughAccumulator implements OutputTokenAccumulator {
+
+    @Override
+    public Multi<String> accumulate(Multi<String> tokens) {
+        return tokens; // Passes the tokens through without accumulating
+    }
+}
+----
+
+You can create accumulators based on various criteria, such as the number of tokens, a specific separator, or time intervals.
+
+When an accumulator is set, the output guardrail chain is invoked for **each item** emitted by the `Multi` returned by the `accumulate` method.
+
+In the case of a retry, the accumulator is called again with the new response, restarting the stream from the beginning. The same behavior applies for reprompts.
+
+== Deprecated Quarkus-specific features
 Guardrails are mechanisms that validate the user input and the output of an LLM to ensure it meets your expectations.
 Typically, you can:
 
@@ -16,11 +99,11 @@ If an output guardrail fails, the system may retry or reprompt to improve the re
 
 image::guardrails.png[width=600,align="center"]
 
-== Input Guardrails
+=== Input Guardrails
 
 Input guardrails are _functions_ invoked before the LLM is called.
 
-=== Implementing Input Guardrails
+==== Implementing Input Guardrails
 
 Input guardrails are implemented as CDI beans and must implement the `io.quarkiverse.langchain4j.guardrails.InputGuardrail` interface:
 
@@ -91,7 +174,7 @@ Simple guardrails can use this method.
 The second one is used for more complex guardrails that need more information, like the memory or the augmentation results.
 For example, they can check whether enough documents are present in the augmentation results, or whether the user is repeating the same question.
 
-==== Input Guardrails Outcome
+===== Input Guardrails Outcome
 
 Input guardrails can have three outcomes:
 
@@ -99,14 +182,14 @@ Input guardrails can have three outcomes:
 - _fail_ – The input is invalid, but the next guardrail is still executed to accumulate all potential validation issues.
 - _fatal_ - The input is invalid, the next guardrail is **not** executed, and the error is rethrown. The LLM is not called.
 
-==== Input Guardrails Scopes
+===== Input Guardrails Scopes
 
 Input guardrails are CDI beans.
 They can be in any CDI scope, including request scope, application scope, or session scope.
 
 The CDI scope of a guardrail defines its lifecycle, which is particularly important when the guardrail maintains state.
 
-=== Declaring Input Guardrails
+==== Declaring Input Guardrails
 
 Input guardrails are declared on the AI Service interface.
 You can declare input guardrails in two ways:
@@ -138,7 +221,7 @@ public interface ChatBot {
 }
 ----
 
-==== Input Guardrail Chain
+===== Input Guardrail Chain
 
 You can declare multiple guardrails.
 In this case, a chain is created, and the guardrails are executed in the order they are declared.
@@ -194,11 +277,11 @@ public class VerifyHeroFormat implements InputGuardrail {
 }
 ----
 
-== Output Guardrails
+=== Output Guardrails
 
 Output guardrails are _functions_ invoked once the LLM has produced its output.
 
-=== Implementing Output Guardrails
+==== Implementing Output Guardrails
 
 Output guardrails are implemented as CDI beans and must implement the `io.quarkiverse.langchain4j.guardrails.OutputGuardrail` interface:
 
@@ -301,7 +384,7 @@ The second signature is used when the guardrail needs more information, like the
 Note that the guardrail cannot modify the memory or the augmentation results.
 The <<_detecting_hallucinations_in_the_rag_context>> section gives an example of guardrail using the augmented results.
 
-==== Output Guardrails Outcome
+===== Output Guardrails Outcome
 
 Output guardrails can have six outcomes:
 
@@ -327,24 +410,7 @@ return retry("Invalid JSON");
 return reprompt("Invalid JSON", "Make sure you return a valid JSON object");
 ----
 
-By default, Quarkus Langchain4J will limit the number of retries to 3.
-This is configurable using the `quarkus.langchain4j.guardrails.max-retries` configuration property:
-
-[source,properties]
-----
-quarkus.langchain4j.guardrails.max-retries=5
-----
-
-NOTE: Setting `quarkus.langchain4j.guardrails.max-retries` to 0 disables retries.
-
-==== Output Guardrails Scopes
-
-Output guardrails are CDI beans.
-They can be in any CDI scope, including request scope, application scope, or session scope.
-
-The scope of the guardrail is important as it defines the lifecycle of the guardrail, especially when the guardrail is stateful.
-
-=== Declaring Output Guardrails
+==== Declaring Output Guardrails
 
 Output guardrails are declared on the AI Service interface. You can declare output guardrails in two ways:
 
@@ -375,7 +441,7 @@ public interface ChatBot {
 }
 ----
 
-==== Output Guardrail Chain
+===== Output Guardrail Chain
 
 You can declare multiple guardrails.
 In this case, a chain is created, and the guardrails are executed in the order they are declared.
@@ -407,45 +473,6 @@ Then, the `ConsistentStoryGuardrail` is executed to check that the story is cons
 
 If the `JsonGuardrail` fails, the `ConsistentStoryGuardrail` is not executed.
 However, if the `ConsistentStoryGuardrail` fails with a retry or reprompt, the `JsonGuardrail` is executed again with the new response.
-
-=== Output Guardrails for Streamed Responses
-
-Output guardrails can be applied to methods that return `Multi`, but not to those returning `TokenStream`.
-By default, Quarkus will automatically assemble the full response before executing the guardrail chain.
-Keep in mind that this may have a performance impact when handling large responses.
-
-To control when the guardrail chain is invoked during streaming, configure an accumulator:
-
-[source, java]
-----
-@UserMessage("...")
-@OutputGuardrails(MyGuardrail.class)
-@OutputGuardrailAccumulator(PassThroughAccumulator.class) // Defines the accumulator
-Multi<String> ask();
-----
-
-The `@OutputGuardrailAccumulator` annotation allows you to specify a custom accumulator.
-The accumulator must implement the `io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator` interface and be exposed as a CDI bean.
-The following is an example of a pass-through accumulator that does not accumulate tokens:
-
-[source,java]
-----
-@ApplicationScoped
-public class PassThroughAccumulator implements OutputTokenAccumulator {
-
-    @Override
-    public Multi<String> accumulate(Multi<String> tokens) {
-        return tokens; // Passes the tokens through without accumulating
-    }
-}
-----
-
-You can create accumulators based on various criteria, such as the number of tokens, a specific separator, or time intervals.
-
-When an accumulator is set, the output guardrail chain is invoked for **each item** emitted by the `Multi` returned by the `accumulate` method.
-
-In the case of a retry, the accumulator is called again with the new response, restarting the stream from the beginning.
-The same behavior applies for reprompts.
 
 [#_detecting_hallucinations_in_the_rag_context]
 === Detecting Hallucinations in the RAG Context
@@ -515,7 +542,7 @@ public class HallucinationGuard implements OutputGuardrail {
 }
 ----
 
-=== Rewriting the LLM output
+==== Rewriting the LLM output
 It may happen that the output generated by the LLM is not completely satisfying, but it can be programmatically adjusted instead of attempting a retry or a reprompt, both implying a costly, time consuming and less reliable new interaction with the LLM. For instance, it is quite common that an LLM produces the json of the data object that it is required to extract from the user prompt, but appends some unwanted explanation to it, making the json unparsable, something like
 
 [source]
@@ -629,7 +656,7 @@ public class CustomersExtractionOutputGuardrail extends AbstractJsonExtractorOut
 }
 ----
 
-=== Unit testing
+==== Unit testing
 Output guardrails can also be unit tested using provided AssertJ-based helpers.
 A set of AssertJ custom assertions (following https://assertj.github.io/doc/#assertj-core-custom-assertions-entry-point[AssertJ's custom assertions pattern]) are available to help you unit test your guardrails.
 
@@ -856,7 +883,7 @@ class EmailContainsRequiredInformationOutputGuardrailTests {
 
 See https://github.com/quarkiverse/quarkus-langchain4j/blob/main/testing/core/src/main/java/io/quarkiverse/langchain4j/guardrails/OutputGuardrailResultAssert.java[`OutputGuardrailResultAssert.java`] for more information about the different kinds of asserts you can do.
 
-== Summary
+=== Summary
 
 Guardrails in Quarkus LangChain4j provide a declarative and extensible way to validate both input and output around LLM invocations.
 

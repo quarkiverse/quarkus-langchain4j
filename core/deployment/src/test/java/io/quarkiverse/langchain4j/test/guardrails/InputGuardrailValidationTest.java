@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailException;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -28,17 +32,14 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 
-public class InputGuardrailValidationTest {
+public class InputGuardrailValidationTest extends TokenStreamExecutor {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -60,7 +61,7 @@ public class InputGuardrailValidationTest {
     @ActivateRequestContext
     void testKo() {
         assertThatThrownBy(() -> aiService.ko("2"))
-                .isInstanceOf(GuardrailException.class)
+                .isInstanceOf(InputGuardrailException.class)
                 .hasMessageContaining("KO");
     }
 
@@ -77,7 +78,23 @@ public class InputGuardrailValidationTest {
     @ActivateRequestContext
     void testKoMulti() {
         assertThatThrownBy(() -> aiService.koMulti("2").subscribe().asIterable())
-                .isInstanceOf(GuardrailException.class)
+                .isInstanceOf(InputGuardrailException.class)
+                .hasMessageContaining("KO");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testOkTokenStream() throws InterruptedException {
+        var strings = execute(() -> aiService.okTokenStream("1"));
+
+        assertThat(strings).isEqualTo("Streaming hi !");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testKoTokenStream() {
+        assertThatThrownBy(() -> aiService.koMulti("2"))
+                .isInstanceOf(InputGuardrailException.class)
                 .hasMessageContaining("KO");
     }
 
@@ -88,7 +105,7 @@ public class InputGuardrailValidationTest {
     @ActivateRequestContext
     void testFatalException() {
         assertThatThrownBy(() -> aiService.fatal("5"))
-                .isInstanceOf(GuardrailException.class)
+                .isInstanceOf(InputGuardrailException.class)
                 .hasMessageContaining("Fatal");
         assertThat(fatal.spy()).isEqualTo(1);
     }
@@ -118,6 +135,14 @@ public class InputGuardrailValidationTest {
         @UserMessage("Say Hi!")
         @InputGuardrails(KOGuardrail.class)
         Multi<String> koMulti(@MemoryId String mem);
+
+        @UserMessage("Say Hi!")
+        @InputGuardrails(OKGuardrail.class)
+        TokenStream okTokenStream(@MemoryId String mem);
+
+        @UserMessage("Say Hi!")
+        @InputGuardrails(KOGuardrail.class)
+        TokenStream koTokenStream(@MemoryId String mem);
 
         @UserMessage("Say Hi!")
         @InputGuardrails(KOFatalGuardrail.class)
@@ -181,15 +206,16 @@ public class InputGuardrailValidationTest {
         AtomicInteger spy = new AtomicInteger(0);
 
         @Override
-        public InputGuardrailResult validate(InputGuardrailParams params) {
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
             spy.incrementAndGet();
-            if (params.memory().messages().isEmpty()) {
-                assertThat(params.userMessage().singleText()).isEqualTo("foo");
+            var messages = request.requestParams().chatMemory().messages();
+            if (messages.isEmpty()) {
+                assertThat(request.userMessage().singleText()).isEqualTo("foo");
             }
-            if (params.memory().messages().size() == 2) {
-                assertThat(chatMessageToText(params.memory().messages().get(0))).isEqualTo("foo");
-                assertThat(chatMessageToText(params.memory().messages().get(1))).isEqualTo("Hi!");
-                assertThat(params.userMessage().singleText()).isEqualTo("bar");
+            if (messages.size() == 2) {
+                assertThat(chatMessageToText(messages.get(0))).isEqualTo("foo");
+                assertThat(chatMessageToText(messages.get(1))).isEqualTo("Hi!");
+                assertThat(request.userMessage().singleText()).isEqualTo("bar");
             }
             return success();
         }

@@ -2,13 +2,16 @@ package io.quarkiverse.langchain4j.deployment.items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkus.builder.item.MultiBuildItem;
@@ -19,27 +22,70 @@ import io.quarkus.builder.item.MultiBuildItem;
 public final class AiServicesMethodBuildItem extends MultiBuildItem {
 
     private final MethodInfo methodInfo;
-    private final List<String> outputGuardrails;
-    private final List<String> inputGuardrails;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private final List<String> quarkusOutputGuardrailClassNames;
+
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    private final List<String> quarkusInputGuardrailClassNames;
+    private final InputGuardrailsLiteral inputGuardrails;
+    private final OutputGuardrailsLiteral outputGuardrails;
     private final AiServiceMethodCreateInfo methodCreateInfo;
     private final String responseAugmenter;
 
-    public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> inputGuardrails, List<String> outputGuardrails,
+    public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> quarkusInputGuardrailClassNames,
+            List<String> quarkusOutputGuardrailClassNames,
+            InputGuardrailsLiteral inputGuardrails, OutputGuardrailsLiteral outputGuardrails,
             String responseAugmenter,
             AiServiceMethodCreateInfo methodCreateInfo) {
         this.methodInfo = methodInfo;
+        this.quarkusInputGuardrailClassNames = quarkusInputGuardrailClassNames;
+        this.quarkusOutputGuardrailClassNames = quarkusOutputGuardrailClassNames;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.responseAugmenter = responseAugmenter;
         this.methodCreateInfo = methodCreateInfo;
     }
 
-    public List<String> getOutputGuardrails() {
-        return outputGuardrails;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<String> getQuarkusOutputGuardrailClassNames() {
+        return quarkusOutputGuardrailClassNames;
     }
 
-    public List<String> getInputGuardrails() {
-        return inputGuardrails;
+    /**
+     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+     */
+    @Deprecated(forRemoval = true)
+    public List<String> getQuarkusInputGuardrailClassNames() {
+        return quarkusInputGuardrailClassNames;
+    }
+
+    public Optional<InputGuardrailsLiteral> getInputGuardrails() {
+        return Optional.ofNullable(inputGuardrails);
+    }
+
+    public Optional<OutputGuardrailsLiteral> getOutputGuardrails() {
+        return Optional.ofNullable(outputGuardrails);
+    }
+
+    public boolean hasInputGuardrails() {
+        return getInputGuardrails()
+                .map(InputGuardrailsLiteral::hasGuardrails)
+                .orElse(false);
+    }
+
+    public boolean hasOutputGuardrails() {
+        return getOutputGuardrails()
+                .map(OutputGuardrailsLiteral::hasGuardrails)
+                .orElse(false);
     }
 
     public MethodInfo getMethodInfo() {
