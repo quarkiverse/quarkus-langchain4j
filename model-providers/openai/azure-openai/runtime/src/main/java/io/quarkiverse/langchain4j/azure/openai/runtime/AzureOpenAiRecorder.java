@@ -89,8 +89,8 @@ public class AzureOpenAiRecorder {
 
             azureAiConfig.proxyHost().ifPresent(host -> {
                 builder.proxy(new Proxy(
-                    Type.valueOf(azureAiConfig.proxyType()),
-                    new InetSocketAddress(host, azureAiConfig.proxyPort())));
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
             });
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
@@ -143,8 +143,8 @@ public class AzureOpenAiRecorder {
 
             azureAiConfig.proxyHost().ifPresent(host -> {
                 builder.proxy(new Proxy(
-                    Type.valueOf(azureAiConfig.proxyType()),
-                    new InetSocketAddress(host, azureAiConfig.proxyPort())));
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
             });
 
             if (chatModelConfig.maxTokens().isPresent()) {
@@ -192,8 +192,8 @@ public class AzureOpenAiRecorder {
 
             azureAiConfig.proxyHost().ifPresent(host -> {
                 builder.proxy(new Proxy(
-                    Type.valueOf(azureAiConfig.proxyType()),
-                    new InetSocketAddress(host, azureAiConfig.proxyPort())));
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
             });
 
             return new Function<>() {
