@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -44,6 +46,17 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
+            if (builder.proxy != null) {
+                if (builder.proxy.type() != Proxy.Type.HTTP) {
+                    throw new IllegalArgumentException("Only HTTP type proxy is supported");
+                }
+                if (!(builder.proxy.address() instanceof InetSocketAddress)) {
+                    throw new IllegalArgumentException("Unsupported proxy type");
+                }
+                InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
+                restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
+            }
+
             if (builder.logRequests || builder.logResponses) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
                 restApiBuilder.clientLogger(new VertxAiGeminiRestApi.VertxAiClientLogger(builder.logRequests,
@@ -81,6 +94,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
         private Boolean logRequests = false;
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
+        private Proxy proxy;
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
@@ -149,6 +163,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
         public Builder listeners(List<ChatModelListener> listeners) {
             this.listeners = listeners;
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
+            this.proxy = proxy;
             return this;
         }
 

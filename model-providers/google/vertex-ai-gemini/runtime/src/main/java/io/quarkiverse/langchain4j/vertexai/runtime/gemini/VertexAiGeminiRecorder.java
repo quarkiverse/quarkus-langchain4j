@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -61,6 +64,12 @@ public class VertexAiGeminiRecorder {
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), vertexAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), vertexAiConfig.logResponses()));
 
+            vertexAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                    Type.valueOf(vertexAiConfig.proxyType()),
+                    new InetSocketAddress(host, vertexAiConfig.proxyPort())));
+            });
+
             if (embeddingModelConfig.outputDimension().isPresent()) {
                 builder.dimension(embeddingModelConfig.outputDimension().get());
             }
@@ -99,6 +108,12 @@ public class VertexAiGeminiRecorder {
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
+
+            vertexAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                    Type.valueOf(vertexAiConfig.proxyType()),
+                    new InetSocketAddress(host, vertexAiConfig.proxyPort())));
+            });
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());
@@ -158,6 +173,12 @@ public class VertexAiGeminiRecorder {
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
+
+            vertexAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                    Type.valueOf(vertexAiConfig.proxyType()),
+                    new InetSocketAddress(host, vertexAiConfig.proxyPort())));
+            });
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature(chatModelConfig.temperature().getAsDouble());

@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.vertexai.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -50,6 +53,12 @@ public class VertexAiRecorder {
                     .topP(chatModelConfig.topP())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), vertexAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), vertexAiConfig.logResponses()));
+
+            vertexAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                    Type.valueOf(vertexAiConfig.proxyType()),
+                    new InetSocketAddress(host, vertexAiConfig.proxyPort())));
+            });
 
             // TODO: add the rest of the properties
 

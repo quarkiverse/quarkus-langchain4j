@@ -6,6 +6,8 @@ import static dev.langchain4j.data.message.ChatMessageType.USER;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -53,6 +55,18 @@ public class VertexAiChatLanguageModel implements ChatModel {
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
+
+
+            if (builder.proxy != null) {
+                if (builder.proxy.type() != Proxy.Type.HTTP) {
+                    throw new IllegalArgumentException("Only HTTP type proxy is supported");
+                }
+                if (!(builder.proxy.address() instanceof InetSocketAddress)) {
+                    throw new IllegalArgumentException("Unsupported proxy type");
+                }
+                InetSocketAddress socketAddress = (InetSocketAddress) builder.proxy.address();
+                restApiBuilder.proxyAddress(socketAddress.getHostName(), socketAddress.getPort());
+            }
 
             if (builder.logRequests || builder.logResponses) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
@@ -115,6 +129,7 @@ public class VertexAiChatLanguageModel implements ChatModel {
         private Duration timeout = Duration.ofSeconds(10);
         private Boolean logRequests = false;
         private Boolean logResponses = false;
+        private Proxy proxy;
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
@@ -173,6 +188,11 @@ public class VertexAiChatLanguageModel implements ChatModel {
 
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder proxy(Proxy proxy) {
+            this.proxy = proxy;
             return this;
         }
 
