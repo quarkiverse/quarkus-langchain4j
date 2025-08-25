@@ -25,7 +25,7 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
     private AiGeminiChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners);
+                builder.listeners, builder.thinkingBudget, builder.includeThoughts);
 
         this.apiMetadata = AiGeminiRestApi.ApiMetadata
                 .builder()
@@ -81,6 +81,8 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
         private Boolean logRequests = false;
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
+        private Long thinkingBudget;
+        private boolean includeThoughts = false;
 
         public Builder configName(String configName) {
             this.configName = configName;
@@ -144,6 +146,16 @@ public class AiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         public Builder listeners(List<ChatModelListener> listeners) {
             this.listeners = listeners;
+            return this;
+        }
+
+        public Builder thinkingBudget(Long thinkingBudget) {
+            this.thinkingBudget = thinkingBudget;
+            return this;
+        }
+
+        public Builder includeThoughts(Boolean includeThoughts) {
+            this.includeThoughts = includeThoughts;
             return this;
         }
 
