@@ -23,10 +23,10 @@ import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
-import io.quarkiverse.langchain4j.bedrock.runtime.BedrockConverseStreamingChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
@@ -61,7 +61,7 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
         // when
 
         // then
-        assertThat(ClientProxy.unwrap(streamingChatModel)).isInstanceOf(BedrockConverseStreamingChatModel.class);
+        assertThat(ClientProxy.unwrap(streamingChatModel)).isInstanceOf(BedrockStreamingChatModel.class);
     }
 
     @Test

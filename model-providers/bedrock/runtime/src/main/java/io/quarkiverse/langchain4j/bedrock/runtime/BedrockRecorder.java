@@ -129,48 +129,36 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
-            Supplier<StreamingChatModel> supplier;
-            if (modelId.contains("anthropic")) {
+            var paramsBuilder = ChatRequestParameters.builder()
+                    .maxOutputTokens(modelConfig.maxTokens());
 
-                var paramsBuilder = ChatRequestParameters.builder()
-                        .maxOutputTokens(modelConfig.maxTokens());
-
-                if (modelConfig.temperature().isPresent()) {
-                    paramsBuilder.temperature(modelConfig.temperature().getAsDouble());
-                }
-
-                if (modelConfig.topP().isPresent()) {
-                    paramsBuilder.topP(modelConfig.topP().getAsDouble());
-                }
-
-                if (modelConfig.topK().isPresent()) {
-                    paramsBuilder.topK(modelConfig.topK().getAsInt());
-                }
-
-                if (modelConfig.stopSequences().isPresent()) {
-                    paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
-                }
-
-                var builder = BedrockStreamingChatModel.builder()
-                        .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
-                        .client(clientBuilder.build())
-                        .defaultRequestParameters(paramsBuilder.build());
-
-                supplier = new Supplier<StreamingChatModel>() {
-                    @Override
-                    public StreamingChatModel get() {
-                        return builder.build();
-                    }
-                };
-            } else {
-                var client = clientBuilder.build();
-                supplier = new Supplier<StreamingChatModel>() {
-                    @Override
-                    public StreamingChatModel get() {
-                        return new BedrockConverseStreamingChatModel(client, modelId, modelConfig);
-                    }
-                };
+            if (modelConfig.temperature().isPresent()) {
+                paramsBuilder.temperature(modelConfig.temperature().getAsDouble());
             }
+
+            if (modelConfig.topP().isPresent()) {
+                paramsBuilder.topP(modelConfig.topP().getAsDouble());
+            }
+
+            if (modelConfig.topK().isPresent()) {
+                paramsBuilder.topK(modelConfig.topK().getAsInt());
+            }
+
+            if (modelConfig.stopSequences().isPresent()) {
+                paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+            }
+
+            var builder = BedrockStreamingChatModel.builder()
+                    .modelId(modelConfig.modelId().orElse("anthropic.claude-v2"))
+                    .client(clientBuilder.build())
+                    .defaultRequestParameters(paramsBuilder.build());
+
+            Supplier<StreamingChatModel> supplier = new Supplier<StreamingChatModel>() {
+                @Override
+                public StreamingChatModel get() {
+                    return builder.build();
+                }
+            };
 
             return supplier;
         } else {
