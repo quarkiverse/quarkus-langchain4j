@@ -46,7 +46,9 @@ public class OllamaContainer extends org.testcontainers.ollama.OllamaContainer {
         super.withLabel(OllamaDevServicesProcessor.DEV_SERVICE_LABEL, OllamaDevServicesProcessor.PROVIDER)
                 .withStartupTimeout(Duration.ofMinutes(1));
 
-        var localOllamaDir = Paths.get(System.getProperty("user.home"), ".ollama").normalize();
+        // if the OLLAMA_MODELS env var is set, use it - see https://github.com/ollama/ollama/blob/main/docs%2Ffaq.md#how-do-i-configure-ollama-server
+        var localOllamaDir = (System.getenv("OLLAMA_MODELS") != null ? Paths.get(System.getenv("OLLAMA_MODELS"))
+                : Paths.get(System.getProperty("user.home"), ".ollama")).normalize();
         createLocalOllamaDirIfNeeded(localOllamaDir);
 
         if (Files.isDirectory(localOllamaDir)) {
