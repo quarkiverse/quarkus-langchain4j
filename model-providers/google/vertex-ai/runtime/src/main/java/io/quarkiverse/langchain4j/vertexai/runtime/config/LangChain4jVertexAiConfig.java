@@ -68,6 +68,23 @@ public interface LangChain4jVertexAiConfig {
         Boolean enableIntegration();
 
         /**
+         * The Proxy type
+         */
+        @WithDefault("HTTP")
+        String proxyType();
+
+        /**
+         * The Proxy host
+         */
+        Optional<String> proxyHost();
+
+        /**
+         * The Proxy port
+         */
+        @WithDefault("3128")
+        Integer proxyPort();
+
+        /**
          * Whether the Vertex AI client should log requests
          */
         @ConfigDocDefault("false")
