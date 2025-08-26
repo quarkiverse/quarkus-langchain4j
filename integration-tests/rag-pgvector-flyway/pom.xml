@@ -10,7 +10,7 @@
   <name>Quarkus LangChain4j - Integration Tests - RAG With PgVector and Flyway</name>
   <properties>
     <skipITs>true</skipITs>
-    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>1.1.2</quarkus-langchain4j.version>
   </properties>
   <dependencies>
     <dependency>

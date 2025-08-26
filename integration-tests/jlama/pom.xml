@@ -10,7 +10,7 @@
     <name>Quarkus LangChain4j - Integration Tests - Jlama</name>
     <properties>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.1.2</quarkus-langchain4j.version>
         <maven.compiler.release>21</maven.compiler.release>
         <quarkus.version>3.18.0</quarkus.version>
     </properties>
