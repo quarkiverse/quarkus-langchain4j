@@ -38,8 +38,10 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.audio.Audio;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
@@ -727,6 +729,7 @@ public class AiServiceMethodImplementationSupport {
 
         String userName = null;
         ImageContent imageContent = null;
+        AudioContent audioContent = null;
         PdfFileContent pdfFileContent = null;
         if (userMessageInfo.userNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
@@ -749,6 +752,26 @@ public class AiServiceMethodImplementationSupport {
             } else {
                 throw new IllegalStateException("Unsupported parameter type '" + imageParamValue.getClass()
                         + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                        + createInfo.getMethodName());
+            }
+        }
+        if (userMessageInfo.audioParamPosition().isPresent()) {
+            Object audioParamValue = methodArgs[userMessageInfo.audioParamPosition().get()];
+            if (audioParamValue instanceof String s) {
+                audioContent = AudioContent.from(s);
+            } else if (audioParamValue instanceof URI u) {
+                audioContent = AudioContent.from(u);
+            } else if (audioParamValue instanceof URL u) {
+                try {
+                    audioContent = AudioContent.from(u.toURI());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (audioParamValue instanceof Audio a) {
+                audioContent = AudioContent.from(a);
+            } else {
+                throw new IllegalStateException("Unsupported parameter type '" + audioParamValue.getClass()
+                        + "' annotated with @AudioUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
                         + createInfo.getMethodName());
             }
         }
@@ -804,7 +827,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
-            return createUserMessage(userName, imageContent, pdfFileContent, prompt.text());
+            return createUserMessage(userName, imageContent, audioContent, pdfFileContent, prompt.text());
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
@@ -818,6 +841,7 @@ public class AiServiceMethodImplementationSupport {
 
             String text = toString(argValue);
             return createUserMessage(userName, imageContent,
+                    audioContent,
                     pdfFileContent, text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
                             : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
@@ -843,12 +867,16 @@ public class AiServiceMethodImplementationSupport {
         return variables;
     }
 
-    private static UserMessage createUserMessage(String name, ImageContent imageContent, PdfFileContent pdfFileContent,
+    private static UserMessage createUserMessage(String name, ImageContent imageContent, AudioContent audioContent,
+            PdfFileContent pdfFileContent,
             String text) {
         List<dev.langchain4j.data.message.Content> contents = new ArrayList<>();
         contents.add(TextContent.from(text));
         if (imageContent != null) {
             contents.add(imageContent);
+        }
+        if (audioContent != null) {
+            contents.add(audioContent);
         }
         if (pdfFileContent != null) {
             contents.add(pdfFileContent);
