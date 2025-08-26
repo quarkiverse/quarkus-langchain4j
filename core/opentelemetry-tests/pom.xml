@@ -5,12 +5,12 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-core-parent</artifactId>
-        <version>1.1.2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
 
     <artifactId>quarkus-langchain4j-core-opentelemetry-tests</artifactId>
     <name>Quarkus LangChain4j - Core - OpenTelemetry Tests</name>
-    <version>1.1.2</version>
+    <version>999-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
