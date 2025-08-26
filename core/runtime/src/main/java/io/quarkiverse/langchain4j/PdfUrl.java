@@ -17,11 +17,10 @@ import java.lang.annotation.Target;
  * <pre>
  * {@code
  * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
- * public interface ImageDescriber {
+ * public interface PdfDescriber {
  *
  *     @UserMessage("Analyze the following content")
  *     String describe(@PdfUrl String url);
- * }
  * }
  * </pre>
  *
