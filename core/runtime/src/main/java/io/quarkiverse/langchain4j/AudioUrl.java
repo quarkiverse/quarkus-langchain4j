@@ -7,8 +7,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is useful when an AiService is meant to describe an image as the value of the method parameter annotated
- * with @ImageUrl
+ * This annotation is useful when an AiService is meant to describe an audio as the value of the method parameter annotated
+ * with @AudioUrl
  * will be used as an {@link dev.langchain4j.data.message.AudioContent}.
  * <p>
  * <p>
