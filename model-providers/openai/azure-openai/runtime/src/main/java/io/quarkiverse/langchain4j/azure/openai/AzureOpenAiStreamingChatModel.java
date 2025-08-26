@@ -234,6 +234,9 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return;
         }
         Delta delta = choices.get(0).delta();
+        if (delta == null) {
+            return;
+        }
         String content = delta.content();
         if (content != null) {
             handler.onPartialResponse(content);
