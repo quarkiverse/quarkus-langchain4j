@@ -101,6 +101,10 @@ public class ToolProcessor {
 
     private static final Logger log = Logger.getLogger(ToolProcessor.class);
 
+    private static final List<DotName> JAVA_TIME_NAMES = List.of(
+            DotNames.INSTANT, DotNames.LOCAL_DATE, DotNames.LOCAL_DATE_TIME, DotNames.LOCAL_TIME,
+            DotNames.OFFSET_DATE_TIME, DotNames.OFFSET_TIME, DotNames.YEAR, DotNames.YEAR_MONTH);
+
     @BuildStep
     public void telemetry(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
         var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
@@ -557,6 +561,11 @@ public class ToolProcessor {
             return JsonNumberSchema.builder().description(description).build();
         }
 
+        if (JAVA_TIME_NAMES.stream().anyMatch(typeName::equals)) {
+            // TODO In the future we can implement parsing validation with patterns
+            return JsonStringSchema.builder().description(description).build();
+        }
+
         // TODO something else?
         if (type.kind() == Type.Kind.ARRAY || DotNames.LIST.equals(typeName) || DotNames.SET.equals(typeName)) {
             ParameterizedType parameterizedType = type.kind() == Type.Kind.PARAMETERIZED_TYPE ? type.asParameterizedType()
@@ -587,7 +596,12 @@ public class ToolProcessor {
                     .description(Optional.ofNullable(description).orElseGet(() -> descriptionFrom(type)));
 
             ClassInfo targetClass = index.getClassByName(type.name());
-            buildSchema(index, builder, targetClass);
+
+            if (targetClass != null) {
+                buildSchema(index, builder, targetClass);
+            } else {
+                log.warnf("The type '%s' could not be accessed from the index", type.name());
+            }
 
             return builder.build();
         }
@@ -602,7 +616,7 @@ public class ToolProcessor {
                 buildSchema(index, builder, superClass);
             }
         }
-        Optional.ofNullable(targetClass)
+        Optional.of(targetClass)
                 .map(ClassInfo::fields)
                 .orElseGet(List::of)
                 .forEach(field -> {
