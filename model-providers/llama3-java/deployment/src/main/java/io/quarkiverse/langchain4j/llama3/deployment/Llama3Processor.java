@@ -51,9 +51,9 @@ import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedPackageBuil
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
+import io.quarkus.deployment.pkg.PackageConfig.JarConfig.JarType;
 import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.JarBuildItem;
-import io.quarkus.deployment.pkg.steps.JarResultBuildStep;
 import io.quarkus.deployment.pkg.steps.NativeBuild;
 
 public class Llama3Processor {
@@ -251,11 +251,11 @@ public class Llama3Processor {
             return;
         }
 
-        Path jarPath = jarBuildItem.get().getPath();
-        if (!JarResultBuildStep.QUARKUS_RUN_JAR.equals(jarPath.getFileName().toString())) {
+        if (jarBuildItem.get().getType() != JarType.FAST_JAR) {
             return;
         }
 
+        Path jarPath = jarBuildItem.get().getPath();
         Path quarkusAppDir = jarPath.getParent();
         Path jlamaInQuarkusAppDir = quarkusAppDir.resolve("llama3");
 
