@@ -7,9 +7,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is useful when an AiService is meant to describe an image as the value of the method parameter annotated
- * with @PdfUrl
- * will be used as an {@link dev.langchain4j.data.message.PdfFileContent}.
+ * This annotation is useful when an AiService is meant to describe an audio as the value of the method parameter annotated
+ * with @AudioUrl
+ * will be used as an {@link dev.langchain4j.data.message.AudioContent}.
  * <p>
  * <p>
  * The following code contains an example of how this can be used:
@@ -17,24 +17,24 @@ import java.lang.annotation.Target;
  * <pre>
  * {@code
  * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
- * public interface PdfDescriber {
+ * public interface AudioDescriber {
  *
- *     @UserMessage("Analyze the following content")
- *     String describe(@PdfUrl String url);
+ *     @UserMessage("Describe the audio")
+ *     Report describe(@AudioUrl String url);
  * }
  * </pre>
  *
- * There can be at most one instance of {@code ImageUrl} per method and the supported types are the following:
+ * There can be at most one instance of {@code AudioUrl} per method and the supported types are the following:
  * <ul>
  * <li>String</li>
  * <li>URL</li>
  * <li>URI</li>
- * <li>dev.langchain4j.data.pdf.PdfFile</li>
+ * <li>dev.langchain4j.data.audio.Audio</li>
  * </ul>
  *
  */
 @Retention(RUNTIME)
 @Target({ PARAMETER })
-public @interface PdfUrl {
+public @interface AudioUrl {
 
 }

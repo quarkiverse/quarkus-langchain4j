@@ -49,6 +49,7 @@
     <quarkus-neo4j.version>5.6.0</quarkus-neo4j.version>
     <jlama.version>0.8.4</jlama.version>
     <google-auth-library-oauth2-http.version>1.37.1</google-auth-library-oauth2-http.version>
+    <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
   </properties>
   <dependencyManagement>
     <dependencies>

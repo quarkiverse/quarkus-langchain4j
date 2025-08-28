@@ -1861,6 +1861,11 @@ public class AiServicesProcessor {
             MethodParameterInfo imageUrlParam = method.parameters().get(imageParamPosition.get());
             validateImageUrlParam(imageUrlParam);
         }
+        Optional<Integer> audioParamPosition = determineAudioParamPosition(method);
+        if (audioParamPosition.isPresent()) {
+            MethodParameterInfo audioUrlParam = method.parameters().get(audioParamPosition.get());
+            validateAudioUrlParam(audioUrlParam);
+        }
         Optional<Integer> pdfParamPosition = determinePdfParamPosition(method);
         if (pdfParamPosition.isPresent()) {
             MethodParameterInfo pdfUrlParam = method.parameters().get(pdfParamPosition.get());
@@ -1884,7 +1889,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamPosition, imageParamPosition, pdfParamPosition);
+                    userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1897,11 +1902,11 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamPosition, imageParamPosition, pdfParamPosition);
+                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamPosition, imageParamPosition, pdfParamPosition);
+                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
                 }
             } else {
                 int numOfMethodParamsUsedInSystemMessage = 0;
@@ -1922,7 +1927,7 @@ public class AiServicesProcessor {
                     }
                     if (method.parametersCount() == 1) {
                         return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
-                                imageParamPosition, pdfParamPosition);
+                                imageParamPosition, audioParamPosition, pdfParamPosition);
                     }
                     throw illegalConfigurationForMethod(
                             "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
@@ -1930,7 +1935,7 @@ public class AiServicesProcessor {
                 } else {
                     // all method parameters are present in the system message, so there is no user message
                     return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty(),
-                            Optional.empty(), Optional.empty());
+                            Optional.empty(), Optional.empty(), Optional.empty());
                 }
             }
         }
@@ -1947,6 +1952,28 @@ public class AiServicesProcessor {
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
+    private static Optional<Integer> determineAudioParamPosition(MethodInfo method) {
+        Optional<Integer> result = method.annotations(LangChain4jDotNames.AUDIO_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (result.isPresent()) {
+            return result;
+        }
+        // we don't need @AudioUrl if the parameter is of type Image
+        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.AUDIO))
+                .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    private static Optional<Integer> determinePdfParamPosition(MethodInfo method) {
+        Optional<Integer> result = method.annotations(LangChain4jDotNames.PDF_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (result.isPresent()) {
+            return result;
+        }
+        // we don't need @PdfUrl if the parameter is of type PdfFile
+        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
+                .map(pi -> (int) pi.position()).findFirst();
+    }
+
     private void validateImageUrlParam(MethodParameterInfo param) {
         if (param == null) {
             throw new IllegalArgumentException("Unhandled @ImageUrl annotation");
@@ -1960,15 +1987,17 @@ public class AiServicesProcessor {
         throw new IllegalArgumentException("Unhandled @ImageUrl type '" + type.name() + "'");
     }
 
-    private static Optional<Integer> determinePdfParamPosition(MethodInfo method) {
-        Optional<Integer> result = method.annotations(LangChain4jDotNames.PDF_URL).stream().filter(
-                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
-        if (result.isPresent()) {
-            return result;
+    private void validateAudioUrlParam(MethodParameterInfo param) {
+        if (param == null) {
+            throw new IllegalArgumentException("Unhandled @ImageUrl annotation");
         }
-        // we don't need @PdfUrl if the parameter is of type PdfFile
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
-                .map(pi -> (int) pi.position()).findFirst();
+        Type type = param.type();
+        DotName typeName = type.name();
+        if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
+                || typeName.equals(LangChain4jDotNames.AUDIO)) {
+            return;
+        }
+        throw new IllegalArgumentException("Unhandled @AudioUrl type '" + type.name() + "'");
     }
 
     private void validatePdfUrlParam(MethodParameterInfo param) {

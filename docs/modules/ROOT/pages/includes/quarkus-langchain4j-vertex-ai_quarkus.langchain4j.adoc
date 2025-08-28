@@ -154,6 +154,69 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`true`
 
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-type[`quarkus.langchain4j.vertexai.proxy-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.proxy-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`HTTP`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-host[`quarkus.langchain4j.vertexai.proxy-host`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.proxy-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy host
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-port]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-port[`quarkus.langchain4j.vertexai.proxy-port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai.proxy-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy port
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`3128`
+
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests[`quarkus.langchain4j.vertexai.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.vertexai.log-requests+++[]
@@ -761,6 +824,69 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`true`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-type[`quarkus.langchain4j.vertexai."model-name".proxy-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".proxy-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy type
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`HTTP`
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-host[`quarkus.langchain4j.vertexai."model-name".proxy-host`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".proxy-host+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy host
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_HOST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_HOST+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-port]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-port[`quarkus.langchain4j.vertexai."model-name".proxy-port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.vertexai."model-name".proxy-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Proxy port
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`3128`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests[`quarkus.langchain4j.vertexai."model-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]

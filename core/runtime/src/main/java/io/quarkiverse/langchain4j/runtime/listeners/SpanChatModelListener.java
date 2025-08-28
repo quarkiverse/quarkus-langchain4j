@@ -50,8 +50,9 @@ public class SpanChatModelListener implements ChatModelListener {
         ChatRequest request = requestContext.chatRequest();
         Span span = tracer.spanBuilder("completion " + request.parameters().modelName())
                 .setAttribute("gen_ai.request.model", request.parameters().modelName())
-                .setAttribute("gen_ai.request.temperature", request.parameters().temperature())
-                .setAttribute("gen_ai.request.top_p", request.parameters().topP())
+                .setAttribute("gen_ai.request.temperature",
+                        request.parameters().temperature() != null ? request.parameters().temperature() : 0D)
+                .setAttribute("gen_ai.request.top_p", request.parameters().topP() != null ? request.parameters().topP() : 0D)
                 .startSpan();
         Scope scope = span.makeCurrent();
 

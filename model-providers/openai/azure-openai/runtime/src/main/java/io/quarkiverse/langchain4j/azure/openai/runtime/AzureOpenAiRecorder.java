@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.azure.openai.runtime;
 
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -84,6 +87,11 @@ public class AzureOpenAiRecorder {
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
+            azureAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
+            });
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
@@ -133,6 +141,12 @@ public class AzureOpenAiRecorder {
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null));
 
+            azureAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
+            });
+
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
@@ -175,6 +189,12 @@ public class AzureOpenAiRecorder {
                     .maxRetries(azureAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), azureAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), azureAiConfig.logResponses()));
+
+            azureAiConfig.proxyHost().ifPresent(host -> {
+                builder.proxy(new Proxy(
+                        Type.valueOf(azureAiConfig.proxyType()),
+                        new InetSocketAddress(host, azureAiConfig.proxyPort())));
+            });
 
             return new Function<>() {
                 @Override

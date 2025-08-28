@@ -31,6 +31,7 @@ import dev.langchain4j.service.guardrail.OutputGuardrails;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
+import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.CreatedAware;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
@@ -69,6 +70,7 @@ public class LangChain4jDotNames {
     public static final DotName AI_MESSAGE = DotName.createSimple(AiMessage.class);
     static final DotName USER_NAME = DotName.createSimple(UserName.class);
     static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
+    static final DotName AUDIO_URL = DotName.createSimple(AudioUrl.class);
     static final DotName PDF_URL = DotName.createSimple(PdfUrl.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
@@ -125,6 +127,7 @@ public class LangChain4jDotNames {
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
+    static final DotName AUDIO = DotName.createSimple(dev.langchain4j.data.audio.Audio.class);
     static final DotName PDF_FILE = DotName.createSimple(PdfFile.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
     static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);

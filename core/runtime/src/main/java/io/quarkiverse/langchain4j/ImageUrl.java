@@ -17,12 +17,11 @@ import java.lang.annotation.Target;
  * <pre>
  * {@code
  * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
- * public interface PdfDescriber {
+ * public interface ImageDescriber {
  *
  *     @UserMessage("This is image was reported on a GitHub issue. If this is a snippet of Java code, please respond"
  *             + " with only the Java code. If it is not, respond with 'NOT AN IMAGE'")
  *     Report describe(@ImageUrl String url);
- * }
  * }
  * </pre>
  *

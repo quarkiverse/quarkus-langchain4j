@@ -197,6 +197,21 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
+        public String proxyType() {
+            return "HTTP";
+        }
+
+        @Override
+        public Optional<String> proxyHost() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Integer proxyPort() {
+            return 0;
+        }
+
+        @Override
         public ChatModelConfig chatModel() {
             return new ChatModelConfig() {
                 @Override
