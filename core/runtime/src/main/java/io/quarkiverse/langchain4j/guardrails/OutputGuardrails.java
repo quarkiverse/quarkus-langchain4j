@@ -23,7 +23,10 @@ import java.lang.annotation.Target;
  * <p>
  * When several guardrails are applied, the order of the guardrails is important. Note that in case of retry or reprompt,
  * all the guardrails will be re-applied to the new response.
+ *
+ * @deprecated Use {@link dev.langchain4j.service.guardrail.OutputGuardrails} instead
  */
+@Deprecated(forRemoval = true)
 @Retention(RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface OutputGuardrails {

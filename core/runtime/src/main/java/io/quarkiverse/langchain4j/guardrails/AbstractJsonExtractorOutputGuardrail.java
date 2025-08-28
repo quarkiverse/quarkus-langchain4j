@@ -8,6 +8,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import dev.langchain4j.data.message.AiMessage;
 
+/**
+ * @deprecated Use {@link dev.langchain4j.guardrail.JsonExtractorOutputGuardrail} instead
+ */
+@Deprecated(forRemoval = true)
 public abstract class AbstractJsonExtractorOutputGuardrail implements OutputGuardrail {
 
     @Inject

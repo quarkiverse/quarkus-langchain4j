@@ -24,7 +24,10 @@ import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailException;
  * <p>
  * When several guardrails are applied, the order of the guardrails is important, as the guardrails are applied in the
  * order they are listed.
+ *
+ * @deprecated Use {@link dev.langchain4j.service.guardrail.InputGuardrails} instead
  */
+@Deprecated(forRemoval = true)
 @Retention(RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface InputGuardrails {

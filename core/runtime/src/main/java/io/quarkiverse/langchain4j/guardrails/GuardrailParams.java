@@ -6,7 +6,10 @@ import dev.langchain4j.rag.AugmentationResult;
 /**
  * Represents the parameter passed to {@link Guardrail#validate(GuardrailParams)}} in order to validate an interaction between a
  * user and the LLM.
+ *
+ * @deprecated Use {@link dev.langchain4j.guardrail.GuardrailRequestParams} instead
  */
+@Deprecated(forRemoval = true)
 public interface GuardrailParams {
 
     /**

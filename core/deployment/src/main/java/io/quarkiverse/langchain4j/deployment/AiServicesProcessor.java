@@ -3,10 +3,10 @@ package io.quarkiverse.langchain4j.deployment;
 import static dev.langchain4j.service.IllegalConfigurationException.illegalConfiguration;
 import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigurationForMethod;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.INPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.OUTPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_INPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
@@ -38,6 +38,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.tools.Tool;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
@@ -46,6 +49,7 @@ import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
 import jakarta.interceptor.InterceptorBinding;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -66,7 +70,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
-import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.guardrail.OutputGuardrail;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
@@ -75,6 +79,8 @@ import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceInputGuardrails;
+import io.quarkiverse.langchain4j.deployment.DeclarativeAiServiceBuildItem.DeclarativeAiServiceOutputGuardrails;
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.devui.ToolProviderInfo;
 import io.quarkiverse.langchain4j.deployment.items.AiServicesMethodBuildItem;
@@ -83,8 +89,9 @@ import io.quarkiverse.langchain4j.deployment.items.MethodParameterIgnoredAnnotat
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.ToolQualifierProvider;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.runtime.AiServicesRecorder;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -101,6 +108,9 @@ import io.quarkiverse.langchain4j.runtime.aiservice.MetricsCountedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.MetricsTimedWrapper;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SpanWrapper;
+import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
+import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
+import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
@@ -440,7 +450,10 @@ public class AiServicesProcessor {
                             toolProviderClassName,
                             beanName(declarativeAiServiceClassInfo),
                             toolHallucinationStrategy(instance),
+                            classInputGuardrails(declarativeAiServiceClassInfo, index),
+                            classOutputGuardrails(declarativeAiServiceClassInfo, index),
                             maxSequentialToolInvocations));
+
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
 
@@ -519,6 +532,40 @@ public class AiServicesProcessor {
             }
         }
         return chatMemoryProviderSupplierClassDotName;
+    }
+
+    private static DeclarativeAiServiceInputGuardrails classInputGuardrails(ClassInfo aiServiceClassInfo, IndexView index) {
+        var inputGuardrailsAnnotation = Optional
+                .ofNullable(aiServiceClassInfo.annotation(LangChain4jDotNames.INPUT_GUARDRAILS));
+        return new DeclarativeAiServiceInputGuardrails(classGuardrails(inputGuardrailsAnnotation, index));
+    }
+
+    private static DeclarativeAiServiceOutputGuardrails classOutputGuardrails(ClassInfo aiServiceClassInfo, IndexView index) {
+        var outputGuardrailsAnnotation = Optional
+                .ofNullable(aiServiceClassInfo.annotation(LangChain4jDotNames.OUTPUT_GUARDRAILS));
+        var maxRetries = outputGuardrailsAnnotation
+                .map(a -> a.value("maxRetries"))
+                .map(AnnotationValue::asInt)
+                .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
+
+        return new DeclarativeAiServiceOutputGuardrails(classGuardrails(outputGuardrailsAnnotation, index), maxRetries);
+    }
+
+    private static List<ClassInfo> classGuardrails(Optional<AnnotationInstance> annotation, IndexView index) {
+        return gatherGuardrailsStream(annotation)
+                .map(Type::name)
+                .map(index::getClassByName)
+                .toList();
+    }
+
+    private static InputGuardrailsLiteral classInputGuardrails(DeclarativeAiServiceBuildItem declarativeAiServiceBuildItem) {
+        return new InputGuardrailsLiteral(declarativeAiServiceBuildItem.getInputGuardrails().asClassNames());
+    }
+
+    private static OutputGuardrailsLiteral classOutputGuardrails(DeclarativeAiServiceBuildItem declarativeAiServiceBuildItem) {
+        return new OutputGuardrailsLiteral(
+                declarativeAiServiceBuildItem.getOutputGuardrails().asClassNames(),
+                declarativeAiServiceBuildItem.getOutputGuardrails().maxRetries());
     }
 
     private static List<ClassInfo> tools(AnnotationInstance instance, IndexView index) {
@@ -756,6 +803,8 @@ public class AiServicesProcessor {
                                     injectModerationModelBean,
                                     injectImageModel,
                                     toolHallucinationStrategyClassName,
+                                    classInputGuardrails(bi),
+                                    classOutputGuardrails(bi),
                                     maxSequentialToolInvocations)))
                     .setRuntimeInit()
                     .addQualifier()
@@ -868,6 +917,11 @@ public class AiServicesProcessor {
 
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                            new Type[] { ClassType.create(io.quarkiverse.langchain4j.guardrails.OutputGuardrail.class) }, null))
+                    .done();
+
+            configurator
+                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
                     .done();
 
@@ -913,8 +967,23 @@ public class AiServicesProcessor {
     public void markUsedGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = new ArrayList<>(method.getOutputGuardrails());
-            list.addAll(method.getInputGuardrails());
+            List<String> list = new ArrayList<>(method.getQuarkusOutputGuardrailClassNames());
+            list.addAll(method.getQuarkusInputGuardrailClassNames());
+
+            method.getInputGuardrails()
+                    .map(InputGuardrailsLiteral::value)
+                    .map(Arrays::stream)
+                    .orElseGet(Stream::of)
+                    .map(Class::getName)
+                    .forEach(list::add);
+
+            method.getOutputGuardrails()
+                    .map(OutputGuardrailsLiteral::value)
+                    .map(Arrays::stream)
+                    .orElseGet(Stream::of)
+                    .map(Class::getName)
+                    .forEach(list::add);
+
             for (String cn : list) {
                 unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(DotName.createSimple(cn)));
             }
@@ -994,8 +1063,23 @@ public class AiServicesProcessor {
             BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> errors) {
 
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = new ArrayList<>(method.getOutputGuardrails());
-            list.addAll(method.getInputGuardrails());
+            List<String> list = new ArrayList<>(method.getQuarkusOutputGuardrailClassNames());
+            list.addAll(method.getQuarkusInputGuardrailClassNames());
+
+            method.getInputGuardrails()
+                    .map(InputGuardrailsLiteral::value)
+                    .map(Arrays::stream)
+                    .orElseGet(Stream::of)
+                    .map(Class::getName)
+                    .forEach(list::add);
+
+            method.getOutputGuardrails()
+                    .map(OutputGuardrailsLiteral::value)
+                    .map(Arrays::stream)
+                    .orElseGet(Stream::of)
+                    .map(Class::getName)
+                    .forEach(list::add);
+
             for (String cn : list) {
                 if (synthesisFinished.beanStream().withBeanType(DotName.createSimple(cn)).isEmpty()) {
                     errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
@@ -1023,12 +1107,23 @@ public class AiServicesProcessor {
                                             method.getMethodInfo().name()))));
                 }
 
-                // Check that the method have output guardrails
-                if (method.getOutputGuardrails().isEmpty()) {
-                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
-                            new DeploymentException("OutputGuardrailAccumulator used without OutputGuardrails in method `%s.%s`"
-                                    .formatted(method.getMethodInfo().declaringClass().toString(),
-                                            method.getMethodInfo().name()))));
+                // Check that the method has output guardrails
+                if (method.getQuarkusOutputGuardrailClassNames().isEmpty() && !method.hasOutputGuardrails()) {
+                    if (method.getQuarkusOutputGuardrailClassNames().isEmpty()) {
+                        errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                                new DeploymentException(
+                                        "OutputGuardrailAccumulator used without io.quarkiverse.langchain4j.guardrails.OutputGuardrails in method `%s.%s`"
+                                                .formatted(method.getMethodInfo().declaringClass().toString(),
+                                                        method.getMethodInfo().name()))));
+                    }
+
+                    if (!method.hasOutputGuardrails()) {
+                        errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                                new DeploymentException(
+                                        "OutputGuardrailAccumulator used without dev.langchain4j.service.guardrail.OutputGuardrails in method `%s.%s`"
+                                                .formatted(method.getMethodInfo().declaringClass().toString(),
+                                                        method.getMethodInfo().name()))));
+                    }
                 }
             }
         }
@@ -1315,8 +1410,10 @@ public class AiServicesProcessor {
                             mc.returnValue(resultHandle);
 
                             aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
-                                    methodCreateInfo.getInputGuardrailsClassNames(),
-                                    methodCreateInfo.getOutputGuardrailsClassNames(),
+                                    methodCreateInfo.getQuarkusInputGuardrailsClassNames(),
+                                    methodCreateInfo.getQuarkusOutputGuardrailsClassNames(),
+                                    methodCreateInfo.getInputGuardrails(),
+                                    methodCreateInfo.getOutputGuardrails(),
                                     methodCreateInfo.getResponseAugmenterClassName(),
                                     methodCreateInfo));
                         }
@@ -1341,7 +1438,21 @@ public class AiServicesProcessor {
                     }
 
                 }
-                perClassMetadata.put(ifaceName, new AiServiceClassCreateInfo(perMethodMetadata, implClassName));
+
+                var aiServiceBuildItem = declarativeAiServiceItems.stream()
+                        .filter(bi -> bi.getServiceClassInfo().equals(iface))
+                        .findFirst();
+
+                var inputGuardrails = aiServiceBuildItem
+                        .map(AiServicesProcessor::classInputGuardrails)
+                        .orElse(null);
+
+                var outputGuardrails = aiServiceBuildItem
+                        .map(AiServicesProcessor::classOutputGuardrails)
+                        .orElse(null);
+
+                perClassMetadata.put(ifaceName,
+                        new AiServiceClassCreateInfo(perMethodMetadata, implClassName, inputGuardrails, outputGuardrails));
                 // make the constructor accessible reflectively since that is how we create the instance
                 reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(implClassName).build());
             }
@@ -1480,8 +1591,36 @@ public class AiServicesProcessor {
 
         List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
 
-        List<String> outputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, OUTPUT_GUARDRAILS);
-        List<String> inputGuardrails = AiServicesMethodBuildItem.gatherGuardrails(method, INPUT_GUARDRAILS);
+        /**
+         * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        List<String> quarkusOutputGuardrailClasses = AiServicesMethodBuildItem.gatherGuardrails(method,
+                QUARKUS_OUTPUT_GUARDRAILS);
+
+        var guardrailDeprecationWarning = """
+
+                ================== DEPRECATION WARNING ==================
+                The following Quarkus-specific %s guardrail classes have been discovered on the method (%s) in the class (%s). Please move to the new upstream guardrails.
+                %s
+                """;
+
+        if (!quarkusOutputGuardrailClasses.isEmpty()) {
+            log.warnf(guardrailDeprecationWarning, "output", method, method.declaringClass(),
+                    String.join("\n", quarkusOutputGuardrailClasses));
+        }
+
+        /**
+         * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
+         */
+        @Deprecated(forRemoval = true)
+        List<String> quarkusInputGuardrailClassess = AiServicesMethodBuildItem.gatherGuardrails(method,
+                QUARKUS_INPUT_GUARDRAILS);
+
+        if (!quarkusInputGuardrailClassess.isEmpty()) {
+            log.warnf(guardrailDeprecationWarning, "input", method, method.declaringClass(),
+                    String.join("\n", quarkusInputGuardrailClassess));
+        }
 
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
 
@@ -1491,12 +1630,64 @@ public class AiServicesProcessor {
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
                 methodToolClassInfo.keySet());
 
+        var methodReturnTypeSignature = returnTypeSignature(method.returnType(),
+                new TypeArgMapper(method.declaringClass(), index));
+
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
-                userMessageInfo, memoryIdParamPosition, requiresModeration,
-                returnTypeSignature(method.returnType(), new TypeArgMapper(method.declaringClass(), index)),
+                userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
-                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution, inputGuardrails,
-                outputGuardrails, accumulatorClassName, responseAugmenterClassName);
+                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution, quarkusInputGuardrailClassess,
+                quarkusOutputGuardrailClasses,
+                accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
+                gatherOutputGuardrails(method, methodReturnTypeSignature));
+    }
+
+    private static InputGuardrailsLiteral gatherInputGuardrails(MethodInfo method) {
+        return new InputGuardrailsLiteral(
+                gatherGuardrails(getGuardrailsAnnotation(method, LangChain4jDotNames.INPUT_GUARDRAILS)));
+    }
+
+    private static OutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo method, String methodReturnTypeSignature) {
+        var annotationInstance = getGuardrailsAnnotation(method, LangChain4jDotNames.OUTPUT_GUARDRAILS);
+        var methodReturnsMulti = TypeUtil.isMulti(TypeSignatureParser.parse(methodReturnTypeSignature));
+        var maxRetriesAsSetByConfig = annotationInstance
+                .map(v -> v.value("maxRetries"))
+                .map(AnnotationValue::asInt)
+                .or(() -> ConfigProvider.getConfig().getOptionalValue("quarkus.langchain4j.guardrails.max-retries",
+                        Integer.class))
+                .orElse(GuardrailsConfig.MAX_RETRIES_DEFAULT);
+
+        // If the method returns a Multi, then we don't want the guardrail service to perform any retries on its own
+        // Instead we'll store the value as a config value and we'll have the multi itself perform the retries
+        // based on the number of retries configured, either on the annotation or set through config
+        return new OutputGuardrailsLiteral(
+                gatherGuardrails(annotationInstance),
+                methodReturnsMulti ? 0 : maxRetriesAsSetByConfig,
+                maxRetriesAsSetByConfig);
+    }
+
+    private static Optional<AnnotationInstance> getGuardrailsAnnotation(MethodInfo methodInfo, DotName annotation) {
+        return Optional.ofNullable(methodInfo.annotation(annotation))
+                .or(() -> getGuardrailsAnnotation(methodInfo.declaringClass(), annotation));
+    }
+
+    private static Optional<AnnotationInstance> getGuardrailsAnnotation(ClassInfo classInfo, DotName annotation) {
+        return Optional.ofNullable(classInfo.declaredAnnotation(annotation));
+    }
+
+    private static Stream<Type> gatherGuardrailsStream(Optional<AnnotationInstance> annotation) {
+        return annotation
+                .map(AnnotationInstance::value)
+                .map(AnnotationValue::asClassArray)
+                .map(Arrays::stream)
+                .orElseGet(Stream::of)
+                .distinct();
+    }
+
+    private static List<String> gatherGuardrails(Optional<AnnotationInstance> annotation) {
+        return gatherGuardrailsStream(annotation)
+                .map(t -> t.name().toString())
+                .toList();
     }
 
     private Optional<JsonSchema> jsonSchemaFrom(java.lang.reflect.Type returnType) {

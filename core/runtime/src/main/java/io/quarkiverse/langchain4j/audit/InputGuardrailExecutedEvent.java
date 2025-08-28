@@ -5,6 +5,10 @@ import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
 import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
 
+/**
+ * @deprecated This will be replaced with an alternate version when the upstream guardrail implementation is merged
+ */
+@Deprecated(forRemoval = true)
 public interface InputGuardrailExecutedEvent
         extends GuardrailExecutedEvent<InputGuardrailParams, InputGuardrailResult, InputGuardrail> {
     /**

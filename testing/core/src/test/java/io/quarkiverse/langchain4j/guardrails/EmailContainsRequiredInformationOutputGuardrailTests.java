@@ -17,6 +17,10 @@ import dev.langchain4j.data.message.AiMessage;
 import io.quarkiverse.langchain4j.guardrails.GuardrailResult.Result;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult.Failure;
 
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
 class EmailContainsRequiredInformationOutputGuardrailTests {
     private static final String CLAIM_NUMBER = "CLM195501";
     private static final String CLAIM_STATUS = "denied";
