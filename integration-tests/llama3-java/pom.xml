@@ -4,13 +4,13 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>1.1.3</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-test-llama3-java</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - Llama3 Java</name>
     <properties>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>1.1.3</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
         <maven.compiler.release>21</maven.compiler.release>
         <quarkus.version>3.18.0</quarkus.version>
     </properties>
