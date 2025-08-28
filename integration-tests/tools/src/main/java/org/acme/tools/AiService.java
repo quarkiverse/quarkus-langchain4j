@@ -8,4 +8,7 @@ import io.quarkiverse.langchain4j.ToolBox;
 public interface AiService {
     @ToolBox(Calculator.class)
     public String chat(@UserMessage String message);
+
+    @ToolBox(Calendar.class)
+    String calendarChat(@UserMessage String message);
 }
