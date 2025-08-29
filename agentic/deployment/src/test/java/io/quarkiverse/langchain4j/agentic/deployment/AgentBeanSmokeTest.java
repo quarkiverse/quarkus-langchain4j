@@ -1,0 +1,33 @@
+package io.quarkiverse.langchain4j.agentic.deployment;
+
+import jakarta.inject.Inject;
+
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
+import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
+import io.quarkus.test.QuarkusUnitTest;
+
+public class AgentBeanSmokeTest extends OpenAiBaseTest {
+
+    @RegisterExtension
+    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+            .setArchiveProducer(
+                    () -> ShrinkWrap.create(JavaArchive.class)
+                            .addClasses(Agents.class))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
+                    WiremockAware.wiremockUrlForConfig("/v1"));
+
+    @Inject
+    Agents.ExpertRouterAgent expertRouterAgent;
+
+    @Test
+    public void test() {
+        Assertions.assertNotNull(expertRouterAgent);
+    }
+}

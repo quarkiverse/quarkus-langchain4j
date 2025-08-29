@@ -12,6 +12,7 @@
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
+    <module>agentic</module>
     <module>core</module>
     <module>embedding-stores</module>
     <module>mcp</module>

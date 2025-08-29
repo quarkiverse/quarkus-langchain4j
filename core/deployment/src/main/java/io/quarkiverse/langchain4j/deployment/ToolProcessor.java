@@ -114,10 +114,22 @@ public class ToolProcessor {
     }
 
     @BuildStep
+    public PreventToolValidationErrorBuildItem defaultPreventToolValidationError() {
+        return new PreventToolValidationErrorBuildItem(new Predicate<ClassInfo>() {
+            @Override
+            public boolean test(ClassInfo classInfo) {
+                return classInfo.hasAnnotation(LangChain4jDotNames.REGISTER_AI_SERVICES)
+                        || classInfo.hasAnnotation(DotNames.REGISTER_REST_CLIENT);
+            }
+        });
+    }
+
+    @BuildStep
     public void handleTools(
             BuildProducer<ToolMethodBuildItem> toolMethodBuildItemProducer,
             CombinedIndexBuildItem indexBuildItem,
             CurateOutcomeBuildItem curateOutcomeBuildItem,
+            List<PreventToolValidationErrorBuildItem> preventToolValidationErrorItems,
             BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer,
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
@@ -134,6 +146,10 @@ public class ToolProcessor {
         List<String> generatedArgumentMapperClasses = new ArrayList<>();
 
         if (!instances.isEmpty()) {
+            Predicate<ClassInfo> preventToolValidationError = (ci) -> false;
+            for (PreventToolValidationErrorBuildItem bi : preventToolValidationErrorItems) {
+                preventToolValidationError = preventToolValidationError.or(bi.getPredicate());
+            }
             ClassOutput classOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
 
             Map<DotName, List<MethodInfo>> methodsPerClass = new HashMap<>();
@@ -148,8 +164,7 @@ public class ToolProcessor {
                 boolean causeValidationError = false;
                 if (classInfo.isInterface()) {
 
-                    if (classInfo.hasAnnotation(LangChain4jDotNames.REGISTER_AI_SERVICES) || classInfo.hasAnnotation(
-                            DotNames.REGISTER_REST_CLIENT)) {
+                    if (preventToolValidationError.test(classInfo)) {
                         // we allow tools on method of these interfaces because we know they will be beans
                     } else {
                         causeValidationError = true;
