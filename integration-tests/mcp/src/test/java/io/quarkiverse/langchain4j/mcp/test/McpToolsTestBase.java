@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.exception.ToolExecutionException;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
 import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
@@ -87,9 +90,8 @@ public abstract class McpToolsTestBase {
                 .name("echoString")
                 .arguments("{\"input\": 1}") // wrong argument type
                 .build();
-        String toolExecutionResultString = executor.execute(toolExecutionRequest, null);
-        assertThat(toolExecutionResultString)
-                .isEqualTo("There was an error executing the tool. Message: Internal error. Code: -32603");
+        assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
+                .isInstanceOf(ToolExecutionException.class);
     }
 
     @Test
@@ -100,10 +102,9 @@ public abstract class McpToolsTestBase {
                 .name("THIS-TOOL-DOES-NOT-EXIST")
                 .arguments("{\"input\": 1}")
                 .build();
-        String toolExecutionResultString = executor.execute(toolExecutionRequest, null);
-        assertThat(toolExecutionResultString)
-                .isEqualTo("There was an error executing the tool. "
-                        + "Message: Invalid tool name: THIS-TOOL-DOES-NOT-EXIST. Code: -32602");
+        assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
+                .isInstanceOf(ToolArgumentsException.class)
+                .hasMessageContaining("THIS-TOOL-DOES-NOT-EXIST");
     }
 
     @Test
@@ -111,9 +112,8 @@ public abstract class McpToolsTestBase {
         ToolProviderResult toolProviderResult = toolProvider.provideTools(null);
         ToolExecutor executor = toolProviderResult.toolExecutorByName("error");
         ToolExecutionRequest toolExecutionRequest = ToolExecutionRequest.builder().name("error").arguments("{}").build();
-        String toolExecutionResultString = executor.execute(toolExecutionRequest, null);
-        assertThat(toolExecutionResultString)
-                .isEqualTo("There was an error executing the tool. Message: Internal error. Code: -32603");
+        assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
+                .isInstanceOf(ToolExecutionException.class);
     }
 
     @Test
@@ -124,9 +124,8 @@ public abstract class McpToolsTestBase {
                 .name("errorResponse")
                 .arguments("{}")
                 .build();
-        String toolExecutionResultString = executor.execute(toolExecutionRequest, null);
-        assertThat(toolExecutionResultString)
-                .isEqualTo("There was an error executing the tool. The tool returned: This is an actual error");
+        assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
+                .isInstanceOf(ToolExecutionException.class);
     }
 
     @Test
