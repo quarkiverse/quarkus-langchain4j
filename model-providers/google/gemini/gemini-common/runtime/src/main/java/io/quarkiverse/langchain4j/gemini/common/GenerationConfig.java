@@ -11,6 +11,7 @@ public class GenerationConfig {
     private final String responseMimeType;
     private final Schema responseSchema;
     private final List<String> stopSequences;
+    private final ThinkingConfig thinkingConfig;
 
     public GenerationConfig(Builder builder) {
         this.temperature = builder.temperature;
@@ -20,6 +21,7 @@ public class GenerationConfig {
         this.responseMimeType = builder.responseMimeType;
         this.responseSchema = builder.responseSchema;
         this.stopSequences = builder.stopSequences;
+        this.thinkingConfig = builder.thinkingConfig;
     }
 
     public Double getTemperature() {
@@ -50,6 +52,10 @@ public class GenerationConfig {
         return stopSequences;
     }
 
+    public ThinkingConfig getThinkingConfig() {
+        return thinkingConfig;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -63,6 +69,7 @@ public class GenerationConfig {
         private String responseMimeType;
         private Schema responseSchema;
         private List<String> stopSequences;
+        private ThinkingConfig thinkingConfig;
 
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
@@ -96,6 +103,11 @@ public class GenerationConfig {
 
         public Builder stopSequences(List<String> stopSequences) {
             this.stopSequences = stopSequences;
+            return this;
+        }
+
+        public Builder thinkingConfig(ThinkingConfig thinkingConfig) {
+            this.thinkingConfig = thinkingConfig;
             return this;
         }
 

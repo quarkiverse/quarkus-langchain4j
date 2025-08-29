@@ -11,7 +11,7 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
 
         }
 
-        public record Part(String text, FunctionCall functionCall) {
+        public record Part(String text, FunctionCall functionCall, Boolean thought) {
 
         }
 
