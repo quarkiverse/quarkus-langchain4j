@@ -4,6 +4,9 @@ import java.util.Map;
 
 import jakarta.enterprise.util.AnnotationLiteral;
 
+import io.quarkiverse.langchain4j.guardrails.InputGuardrailsLiteral;
+import io.quarkiverse.langchain4j.guardrails.OutputGuardrailsLiteral;
+
 public record DeclarativeAiServiceCreateInfo(
         String serviceClassName,
         String languageModelSupplierClassName,
@@ -22,5 +25,7 @@ public record DeclarativeAiServiceCreateInfo(
         boolean needsModerationModel,
         boolean needsImageModel,
         String toolHallucinationStrategyClassName,
+        InputGuardrailsLiteral inputGuardrails,
+        OutputGuardrailsLiteral outputGuardrails,
         Integer maxSequentialToolInvocations) {
 }

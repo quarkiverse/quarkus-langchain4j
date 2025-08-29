@@ -16,17 +16,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.guardrail.InputGuardrailResult;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -189,23 +189,23 @@ public class InputGuardrailPromptTemplateTest {
     @RequestScoped
     public static class GuardrailValidation implements InputGuardrail {
 
-        InputGuardrailParams params;
+        InputGuardrailRequest request;
 
-        public InputGuardrailResult validate(InputGuardrailParams params) {
-            this.params = params;
+        public InputGuardrailResult validate(InputGuardrailRequest request) {
+            this.request = request;
             return success();
         }
 
         public String spyUserMessageTemplate() {
-            return params.userMessageTemplate();
+            return request.requestParams().userMessageTemplate();
         }
 
         public String spyUserMessageText() {
-            return params.userMessage().singleText();
+            return request.userMessage().singleText();
         }
 
         public Map<String, Object> spyVariables() {
-            return params.variables();
+            return request.requestParams().variables();
         }
     }
 

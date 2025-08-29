@@ -19,7 +19,9 @@ import dev.langchain4j.rag.AugmentationResult;
  * @param augmentationResult the augmentation result, can be {@code null}
  * @param userMessageTemplate the user message template, cannot be {@code null}
  * @param variables the variable to be used with userMessageTemplate, cannot be {@code null}
+ * @deprecated Use {@link dev.langchain4j.guardrail.InputGuardrailRequest} instead
  */
+@Deprecated(forRemoval = true)
 public record InputGuardrailParams(UserMessage userMessage, ChatMemory memory,
         AugmentationResult augmentationResult, String userMessageTemplate,
         Map<String, Object> variables) implements GuardrailParams {
