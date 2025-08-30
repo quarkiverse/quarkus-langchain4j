@@ -5,7 +5,7 @@ metadata:
   keywords:
     - ai
     - langchain4j
-  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/rag-easy-rag.html"
   categories:
     - "ai"
   status: "preview"
