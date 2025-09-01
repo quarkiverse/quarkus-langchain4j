@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Test;
 import dev.langchain4j.data.message.AiMessage;
 import io.quarkiverse.langchain4j.guardrails.GuardrailResult.Result;
 
+/**
+ * @deprecated These tests will go away once the Quarkus-specific guardrail implementation has been fully removed
+ */
+@Deprecated(forRemoval = true)
 class EmailStartsAppropriatelyOutputGuardrailTests {
     EmailStartsAppropriatelyOutputGuardrail guardrail = spy(new EmailStartsAppropriatelyOutputGuardrail());
 

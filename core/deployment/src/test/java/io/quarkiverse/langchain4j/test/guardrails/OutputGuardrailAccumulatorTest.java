@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.guardrail.OutputGuardrailResult;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -27,12 +30,9 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.OutputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrails;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -188,9 +188,9 @@ public class OutputGuardrailAccumulatorTest {
         }
 
         @Override
-        public OutputGuardrailResult validate(OutputGuardrailParams params) {
+        public OutputGuardrailResult validate(OutputGuardrailRequest request) {
             count.incrementAndGet();
-            chunks.add(params.responseFromLLM().text());
+            chunks.add(request.responseFromLLM().aiMessage().text());
             return success();
         }
     }

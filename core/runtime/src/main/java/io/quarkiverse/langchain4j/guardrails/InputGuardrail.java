@@ -10,8 +10,11 @@ import io.smallrye.common.annotation.Experimental;
  * safe and meets the expectations of the model.
  * <p>
  * Implementation should be exposed as a CDI bean, and the class name configured in {@link InputGuardrails#value()} annotation.
+ *
+ * @deprecated Use {@link dev.langchain4j.guardrail.InputGuardrail} instead
  */
 @Experimental("This feature is experimental and the API is subject to change")
+@Deprecated(forRemoval = true)
 public interface InputGuardrail extends Guardrail<InputGuardrailParams, InputGuardrailResult> {
 
     /**
