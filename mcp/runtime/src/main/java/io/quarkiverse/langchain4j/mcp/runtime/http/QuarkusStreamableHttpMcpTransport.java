@@ -30,6 +30,7 @@ import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
@@ -70,7 +71,9 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
-        return execute(request, request.getId()).onItem()
+        return execute(request, request.getId())
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .onItem()
                 .transformToUni(
                         response -> execute(new McpInitializationNotification(), null).onItem().transform(ignored -> response))
                 .subscribeAsCompletionStage();
