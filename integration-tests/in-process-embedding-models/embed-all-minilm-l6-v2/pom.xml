@@ -12,7 +12,7 @@
     <name>Quarkus LangChain4j - Integration Tests - embeddings-all-minilm-l6-v2</name>
 
     <properties>
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.2.0.CR1</quarkus-langchain4j.version>
     </properties>
 
     <dependencies>    
