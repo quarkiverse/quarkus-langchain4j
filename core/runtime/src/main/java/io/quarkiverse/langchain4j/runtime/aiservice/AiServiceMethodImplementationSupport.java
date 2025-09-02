@@ -76,6 +76,7 @@ import dev.langchain4j.service.AiServiceTokenStream;
 import dev.langchain4j.service.AiServiceTokenStreamParameters;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
@@ -321,6 +322,10 @@ public class AiServiceMethodImplementationSupport {
                     .context(context)
                     .memoryId(memoryId)
                     .methodKey(methodCreateInfo)
+                    .toolArgumentsErrorHandler((e, c) -> {
+                        throw new RuntimeException(e);
+                    })
+                    .toolExecutionErrorHandler((e, c) -> ToolErrorHandlerResult.text(e.getMessage()))
                     .commonGuardrailParams(
                             GuardrailRequestParams.builder()
                                     .chatMemory(committableChatMemory)
