@@ -19,7 +19,6 @@
         <skipITs>true</skipITs>
         <kotlin.version>2.1.21</kotlin.version>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
-        <quarkus-langchain4j.version>1.2.0.CR1</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>
@@ -39,9 +38,9 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>io.quarkiverse.langchain4j</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-langchain4j-bom</artifactId>
-                <version>${quarkus-langchain4j.version}</version>
+                <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -75,21 +74,6 @@
             <artifactId>quarkus-mailpit</artifactId>
             <version>1.2.2</version>
         </dependency>
-
-        <!-- Minimal dependencies to constrain the build -->
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-            <scope>test</scope>
-            <type>pom</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
@@ -97,7 +81,7 @@
 
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <extensions>true</extensions>
