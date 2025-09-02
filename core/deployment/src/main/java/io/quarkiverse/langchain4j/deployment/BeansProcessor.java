@@ -145,9 +145,7 @@ public class BeansProcessor {
                 requestedImageModels.add(modelName);
             }
         }
-        for (
-
-        var bi : requestChatModelBeanItems) {
+        for (var bi : requestChatModelBeanItems) {
             requestedChatModels.add(bi.getConfigName());
         }
         for (var bi : requestModerationModelBeanBuildItems) {
