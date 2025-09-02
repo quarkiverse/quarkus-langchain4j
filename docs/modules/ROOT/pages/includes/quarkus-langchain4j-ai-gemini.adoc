@@ -382,6 +382,50 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
 
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-include-thoughts]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-include-thoughts[`quarkus.langchain4j.ai.gemini.chat-model.thinking.include-thoughts`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini.chat-model.thinking.include-thoughts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls whether thought summaries are enabled. Thought summaries are synthesized versions of the model's raw thoughts and offer insights into the model's internal reasoning process.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_INCLUDE_THOUGHTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_INCLUDE_THOUGHTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-budget[`quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-budget`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-budget+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinkingBudget parameter guides the model on the number of thinking tokens to use when generating a response. A higher token count generally allows for more detailed reasoning, which can be beneficial for tackling more complex tasks. If latency is more important, use a lower budget or disable thinking by setting thinkingBudget to 0. Setting the thinkingBudget to -1 turns on dynamic thinking, meaning the model will adjust the budget based on the complexity of the request.
+
+The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the model might overflow or underflow the token budget. See link:https://ai.google.dev/gemini-api/docs/thinking#set-budget[Gemini API docs] for more details.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_BUDGET+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|
+
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id[`quarkus.langchain4j.ai.gemini.embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ai.gemini.embedding-model.model-id+++[]
@@ -844,6 +888,50 @@ endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
 |`10s`
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-include-thoughts]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-include-thoughts[`quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.include-thoughts`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.include-thoughts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Controls whether thought summaries are enabled. Thought summaries are synthesized versions of the model's raw thoughts and offer insights into the model's internal reasoning process.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_INCLUDE_THOUGHTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_INCLUDE_THOUGHTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-budget[`quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.thinking-budget`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.thinking-budget+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinkingBudget parameter guides the model on the number of thinking tokens to use when generating a response. A higher token count generally allows for more detailed reasoning, which can be beneficial for tackling more complex tasks. If latency is more important, use a lower budget or disable thinking by setting thinkingBudget to 0. Setting the thinkingBudget to -1 turns on dynamic thinking, meaning the model will adjust the budget based on the complexity of the request.
+
+The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the model might overflow or underflow the token budget. See link:https://ai.google.dev/gemini-api/docs/thinking#set-budget[Gemini API docs] for more details.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++`
+endif::add-copy-button-to-env-var[]
+--
+|long
+|
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
