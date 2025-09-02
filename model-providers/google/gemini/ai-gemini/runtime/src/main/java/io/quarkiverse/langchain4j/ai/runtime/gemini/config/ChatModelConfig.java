@@ -4,7 +4,9 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 
+import io.quarkiverse.langchain4j.gemini.common.ThinkingConfig;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -93,4 +95,33 @@ public interface ChatModelConfig {
     @WithDefault("${quarkus.langchain4j.ai.gemini.timeout}")
     Optional<Duration> timeout();
 
+    /**
+     * Thought related configuration
+     */
+    ThinkingConfig thinking();
+
+    interface ThinkingConfig {
+
+        /**
+         * Controls whether thought summaries are enabled.
+         * Thought summaries are synthesized versions of the model's raw thoughts and offer insights into the model's internal
+         * reasoning process.
+         */
+        @WithDefault("false")
+        boolean includeThoughts();
+
+        /**
+         * The thinkingBudget parameter guides the model on the number of thinking tokens to use when generating a response.
+         * A higher token count generally allows for more detailed reasoning, which can be beneficial for tackling more complex
+         * tasks.
+         * If latency is more important, use a lower budget or disable thinking by setting thinkingBudget to 0.
+         * Setting the thinkingBudget to -1 turns on dynamic thinking, meaning the model will adjust the budget based on the
+         * complexity of the request.
+         * <p>
+         * The thinkingBudget is only supported in Gemini 2.5 Flash, 2.5 Pro, and 2.5 Flash-Lite. Depending on the prompt, the
+         * model might overflow or underflow the token budget.
+         * See <a href="https://ai.google.dev/gemini-api/docs/thinking#set-budget">Gemini API docs</a> for more details.
+         */
+        OptionalLong thinkingBudget();
+    }
 }

@@ -36,8 +36,9 @@ import dev.langchain4j.model.output.TokenUsage;
 public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implements ChatModel {
 
     public GeminiChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
-            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners);
+            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
+            boolean includeThoughts) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, thinkingBudget, includeThoughts);
     }
 
     @Override
@@ -56,7 +57,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
     public ChatResponse chat(ChatRequest chatRequest) {
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
-        GenerationConfig generationConfig = GenerationConfig.builder()
+        GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
                 .responseMimeType(computeMimeType(effectiveResponseFormat))
                 .responseSchema(effectiveResponseFormat != null
@@ -65,8 +66,11 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
-                .topP(getOrDefault(requestParameters.topP(), this.topP))
-                .build();
+                .topP(getOrDefault(requestParameters.topP(), this.topP));
+        if (includeThoughts) {
+            generationConfigBuilder.thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts));
+        }
+        GenerationConfig generationConfig = generationConfigBuilder.build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
                 generationConfig);
 

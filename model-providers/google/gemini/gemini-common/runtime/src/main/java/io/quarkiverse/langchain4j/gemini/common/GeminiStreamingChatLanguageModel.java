@@ -36,7 +36,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
     public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners);
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, null, false);
     }
 
     @Override

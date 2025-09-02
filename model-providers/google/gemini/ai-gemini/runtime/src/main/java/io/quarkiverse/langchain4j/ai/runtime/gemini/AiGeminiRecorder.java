@@ -16,6 +16,7 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import io.quarkiverse.langchain4j.ai.runtime.gemini.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -108,6 +109,13 @@ public class AiGeminiRecorder {
             }
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
+            }
+            ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
+            if (thinkingConfig.includeThoughts()) {
+                builder.includeThoughts(thinkingConfig.includeThoughts());
+            }
+            if (thinkingConfig.thinkingBudget().isPresent()) {
+                builder.thinkingBudget(thinkingConfig.thinkingBudget().getAsLong());
             }
 
             // TODO: add the rest of the properties
