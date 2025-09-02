@@ -8,7 +8,7 @@
   </parent>
   <groupId>io.quarkiverse.langchain4j</groupId>
   <artifactId>quarkus-langchain4j-parent</artifactId>
-  <version>999-SNAPSHOT</version>
+  <version>1.2.0.CR1</version>
   <packaging>pom</packaging>
   <name>Quarkus LangChain4j - Parent</name>
   <modules>
@@ -32,7 +32,7 @@
     <connection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-langchain4j.git</developerConnection>
     <url>https://github.com/quarkiverse/quarkus-langchain4j</url>
-    <tag>HEAD</tag>
+    <tag>1.2.0.CR1</tag>
   </scm>
   <properties>
     <quarkus.version>3.20.0</quarkus.version>
