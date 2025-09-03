@@ -67,7 +67,7 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
                 .topP(getOrDefault(requestParameters.topP(), this.topP));
-        if (includeThoughts) {
+        if (thinkingBudget != null || includeThoughts) {
             generationConfigBuilder.thinkingConfig(new ThinkingConfig(thinkingBudget, includeThoughts));
         }
         GenerationConfig generationConfig = generationConfigBuilder.build();
