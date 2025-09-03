@@ -91,11 +91,17 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
             GenerateContentResponse response = generateContext(request);
 
             String text = GenerateContentResponseHandler.getText(response);
+            String thoughts = includeThoughts ? GenerateContentResponseHandler
+                    .getThoughts(response) : null;
             List<ToolExecutionRequest> toolExecutionRequests = GenerateContentResponseHandler
                     .getToolExecutionRequests(response);
-            AiMessage aiMessage = toolExecutionRequests.isEmpty()
-                    ? aiMessage(text)
-                    : aiMessage(text, toolExecutionRequests);
+            AiMessage.Builder aiMessageBuilder = AiMessage.builder()
+                    .text(text)
+                    .thinking(thoughts);
+            if (!toolExecutionRequests.isEmpty()) {
+                aiMessageBuilder.toolExecutionRequests(toolExecutionRequests);
+            }
+            AiMessage aiMessage = aiMessageBuilder.build();
 
             final TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
             final FinishReason finishReason = FinishReasonMapper.map(GenerateContentResponseHandler.getFinishReason(response));
