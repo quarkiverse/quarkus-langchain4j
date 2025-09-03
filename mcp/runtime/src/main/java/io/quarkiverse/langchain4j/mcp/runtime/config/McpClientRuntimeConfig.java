@@ -81,4 +81,12 @@ public interface McpClientRuntimeConfig {
      */
     Optional<String> tlsConfigurationName();
 
+    /**
+     * Whether to cache the tool list obtained from the MCP server.
+     * When set to true (the default), the tool list is cached until the server notifies of changes
+     * or the cache is manually evicted. When false, the client always fetches a fresh tool list from the server.
+     * This is useful when using MCP servers that don't support tool list change notifications.
+     */
+    Optional<Boolean> cacheToolList();
+
 }

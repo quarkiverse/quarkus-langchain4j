@@ -118,6 +118,7 @@ public class McpRecorder {
                         // TODO: it should be possible to choose a log handler class via configuration
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
+                        .cacheToolList(runtimeConfig.cacheToolList().orElse(true))
                         .build();
                 shutdown.addShutdownTask(client::close);
                 return client;
