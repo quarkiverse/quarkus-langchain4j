@@ -25,7 +25,33 @@ public final class GenerateContentResponseHandler {
                 List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
                 if (parts != null && !parts.isEmpty()) {
                     for (GenerateContentResponse.Candidate.Part part : parts) {
-                        text.append(part.text());
+                        if (part.thought() == null || !part.thought()) {
+                            text.append(part.text());
+                        }
+                    }
+                }
+            }
+        }
+        return text.toString();
+    }
+
+    public static String getThoughts(GenerateContentResponse response) {
+        GenerateContentResponse.FinishReason finishReason = getFinishReason(response);
+        if (finishReason == GenerateContentResponse.FinishReason.SAFETY) {
+            throw new IllegalArgumentException("The response is blocked due to safety reason.");
+        } else if (finishReason == GenerateContentResponse.FinishReason.RECITATION) {
+            throw new IllegalArgumentException("The response is blocked due to unauthorized citations.");
+        }
+
+        StringBuilder text = new StringBuilder();
+        if (response.candidates() != null && !response.candidates().isEmpty()) {
+            if (response.candidates().get(0).content() != null) {
+                List<GenerateContentResponse.Candidate.Part> parts = response.candidates().get(0).content().parts();
+                if (parts != null && !parts.isEmpty()) {
+                    for (GenerateContentResponse.Candidate.Part part : parts) {
+                        if (part.thought() != null && part.thought()) {
+                            text.append(part.text());
+                        }
                     }
                 }
             }
