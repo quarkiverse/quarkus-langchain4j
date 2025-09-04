@@ -12,17 +12,25 @@ import io.quarkiverse.langchain4j.llama3.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3FixedRuntimeConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3RuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class Llama3Recorder {
 
-    public Supplier<ChatModel> chatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
-            LangChain4jLlama3FixedRuntimeConfig fixedRuntimeConfig,
-            String configName) {
-        LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(runtimeConfig, configName);
+    private final RuntimeValue<LangChain4jLlama3RuntimeConfig> runtimeConfig;
+    private final RuntimeValue<LangChain4jLlama3FixedRuntimeConfig> fixedRuntimeConfig;
+
+    public Llama3Recorder(RuntimeValue<LangChain4jLlama3RuntimeConfig> runtimeConfig,
+            RuntimeValue<LangChain4jLlama3FixedRuntimeConfig> fixedRuntimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+        this.fixedRuntimeConfig = fixedRuntimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(configName);
         LangChain4jLlama3FixedRuntimeConfig.Llama3Config llama3FixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
-                fixedRuntimeConfig, configName);
+                configName);
 
         if (llama3Config.enableIntegration()) {
             ChatModelConfig chatModelConfig = llama3Config.chatModel();
@@ -32,7 +40,7 @@ public class Llama3Recorder {
                     .quantization(llama3FixedRuntimeConfig.chatModel().quantization())
                     .logRequests(llama3Config.logRequests().orElse(false))
                     .logResponses(llama3Config.logResponses().orElse(false))
-                    .modelCachePath(fixedRuntimeConfig.modelsPath());
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -57,12 +65,10 @@ public class Llama3Recorder {
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jLlama3RuntimeConfig runtimeConfig,
-            LangChain4jLlama3FixedRuntimeConfig fixedRuntimeConfig,
-            String configName) {
-        LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(runtimeConfig, configName);
+    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config = correspondingJlamaConfig(configName);
         LangChain4jLlama3FixedRuntimeConfig.Llama3Config llama3FixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
-                fixedRuntimeConfig, configName);
+                configName);
 
         if (llama3Config.enableIntegration()) {
             ChatModelConfig chatModelConfig = llama3Config.chatModel();
@@ -72,7 +78,7 @@ public class Llama3Recorder {
                     .quantization(llama3FixedRuntimeConfig.chatModel().quantization())
                     .logRequests(llama3Config.logRequests().orElse(false))
                     .logResponses(llama3Config.logResponses().orElse(false))
-                    .modelCachePath(fixedRuntimeConfig.modelsPath());
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
             if (chatModelConfig.temperature().isPresent()) {
                 builder.temperature((float) chatModelConfig.temperature().getAsDouble());
@@ -97,26 +103,23 @@ public class Llama3Recorder {
         }
     }
 
-    private LangChain4jLlama3RuntimeConfig.Llama3Config correspondingJlamaConfig(
-            LangChain4jLlama3RuntimeConfig runtimeConfig,
-            String configName) {
+    private LangChain4jLlama3RuntimeConfig.Llama3Config correspondingJlamaConfig(String configName) {
         LangChain4jLlama3RuntimeConfig.Llama3Config llama3Config;
         if (NamedConfigUtil.isDefault(configName)) {
-            llama3Config = runtimeConfig.defaultConfig();
+            llama3Config = runtimeConfig.getValue().defaultConfig();
         } else {
-            llama3Config = runtimeConfig.namedConfig().get(configName);
+            llama3Config = runtimeConfig.getValue().namedConfig().get(configName);
         }
         return llama3Config;
     }
 
     private LangChain4jLlama3FixedRuntimeConfig.Llama3Config correspondingJlamaFixedRuntimeConfig(
-            LangChain4jLlama3FixedRuntimeConfig runtimeConfig,
             String configName) {
         LangChain4jLlama3FixedRuntimeConfig.Llama3Config llama3Config;
         if (NamedConfigUtil.isDefault(configName)) {
-            llama3Config = runtimeConfig.defaultConfig();
+            llama3Config = fixedRuntimeConfig.getValue().defaultConfig();
         } else {
-            llama3Config = runtimeConfig.namedConfig().get(configName);
+            llama3Config = fixedRuntimeConfig.getValue().namedConfig().get(configName);
         }
         return llama3Config;
     }
