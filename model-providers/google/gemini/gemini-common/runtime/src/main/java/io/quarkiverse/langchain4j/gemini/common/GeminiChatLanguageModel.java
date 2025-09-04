@@ -97,10 +97,8 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                     .getToolExecutionRequests(response);
             AiMessage.Builder aiMessageBuilder = AiMessage.builder()
                     .text(text)
-                    .thinking(thoughts);
-            if (!toolExecutionRequests.isEmpty()) {
-                aiMessageBuilder.toolExecutionRequests(toolExecutionRequests);
-            }
+                    .thinking(thoughts)
+                    .toolExecutionRequests(toolExecutionRequests);
             AiMessage aiMessage = aiMessageBuilder.build();
 
             final TokenUsage tokenUsage = GenerateContentResponseHandler.getTokenUsage(response.usageMetadata());
