@@ -31,7 +31,6 @@ import io.quarkiverse.langchain4j.llama3.runtime.Llama3Recorder;
 import io.quarkiverse.langchain4j.llama3.runtime.NameAndQuantization;
 import io.quarkiverse.langchain4j.llama3.runtime.config.ChatModelFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3FixedRuntimeConfig;
-import io.quarkiverse.langchain4j.llama3.runtime.config.LangChain4jLlama3RuntimeConfig;
 import io.quarkiverse.langchain4j.llama3.runtime.graal.Llama3Feature;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -88,13 +87,10 @@ public class Llama3Processor {
         }
     }
 
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void generateBeans(Llama3Recorder recorder,
             List<SelectedChatModelProviderBuildItem> selectedChatItem,
-            LangChain4jLlama3RuntimeConfig runtimeConfig,
-            LangChain4jLlama3FixedRuntimeConfig fixedRuntimeConfig,
             BuildProducer<SyntheticBeanBuildItem> beanProducer) {
 
         for (var selected : selectedChatItem) {
@@ -102,7 +98,7 @@ public class Llama3Processor {
                 String configName = selected.getConfigName();
                 var builder = SyntheticBeanBuildItem.configure(CHAT_MODEL).setRuntimeInit().defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(runtimeConfig, fixedRuntimeConfig, configName));
+                        .supplier(recorder.chatModel(configName));
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
@@ -111,7 +107,7 @@ public class Llama3Processor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(runtimeConfig, fixedRuntimeConfig, configName));
+                        .supplier(recorder.streamingChatModel(configName));
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }
