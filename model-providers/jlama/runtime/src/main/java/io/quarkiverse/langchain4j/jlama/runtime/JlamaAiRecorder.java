@@ -15,17 +15,24 @@ import io.quarkiverse.langchain4j.jlama.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaConfig;
 import io.quarkiverse.langchain4j.jlama.runtime.config.LangChain4jJlamaFixedRuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class JlamaAiRecorder {
+    private final RuntimeValue<LangChain4jJlamaConfig> runtimeConfig;
+    private final RuntimeValue<LangChain4jJlamaFixedRuntimeConfig> fixedRuntimeConfig;
 
-    public Supplier<ChatModel> chatModel(LangChain4jJlamaConfig runtimeConfig,
-            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
-            String configName) {
-        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+    public JlamaAiRecorder(RuntimeValue<LangChain4jJlamaConfig> runtimeConfig,
+            RuntimeValue<LangChain4jJlamaFixedRuntimeConfig> fixedRuntimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+        this.fixedRuntimeConfig = fixedRuntimeConfig;
+    }
+
+    public Supplier<ChatModel> chatModel(String configName) {
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
-                fixedRuntimeConfig, configName);
+                configName);
 
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
@@ -33,7 +40,7 @@ public class JlamaAiRecorder {
             String modelName = jlamaFixedRuntimeConfig.chatModel().modelName();
             var builder = JlamaChatModel.builder()
                     .modelName(modelName)
-                    .modelCachePath(fixedRuntimeConfig.modelsPath());
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
             jlamaConfig.logRequests().ifPresent(builder::logRequests);
             jlamaConfig.logResponses().ifPresent(builder::logResponses);
@@ -57,19 +64,16 @@ public class JlamaAiRecorder {
         }
     }
 
-    public Supplier<StreamingChatModel> streamingChatModel(LangChain4jJlamaConfig runtimeConfig,
-            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
-            String configName) {
-        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
-                fixedRuntimeConfig, configName);
-
+                configName);
         if (jlamaConfig.enableIntegration()) {
             ChatModelConfig chatModelConfig = jlamaConfig.chatModel();
 
             var builder = JlamaStreamingChatModel.builder()
                     .modelName(jlamaFixedRuntimeConfig.chatModel().modelName())
-                    .modelCachePath(fixedRuntimeConfig.modelsPath());
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
             chatModelConfig.temperature().ifPresent(temp -> builder.temperature((float) temp));
 
@@ -89,17 +93,15 @@ public class JlamaAiRecorder {
         }
     }
 
-    public Supplier<EmbeddingModel> embeddingModel(LangChain4jJlamaConfig runtimeConfig,
-            LangChain4jJlamaFixedRuntimeConfig fixedRuntimeConfig,
-            String configName) {
-        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(runtimeConfig, configName);
+    public Supplier<EmbeddingModel> embeddingModel(String configName) {
+        LangChain4jJlamaConfig.JlamaConfig jlamaConfig = correspondingJlamaConfig(configName);
         LangChain4jJlamaFixedRuntimeConfig.JlamaConfig jlamaFixedRuntimeConfig = correspondingJlamaFixedRuntimeConfig(
-                fixedRuntimeConfig, configName);
+                configName);
 
         if (jlamaConfig.enableIntegration()) {
             var builder = JlamaEmbeddingModel.builder()
                     .modelName(jlamaFixedRuntimeConfig.embeddingModel().modelName())
-                    .modelCachePath(fixedRuntimeConfig.modelsPath());
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
             return new Supplier<>() {
                 @Override
@@ -117,17 +119,15 @@ public class JlamaAiRecorder {
         }
     }
 
-    private LangChain4jJlamaConfig.JlamaConfig correspondingJlamaConfig(LangChain4jJlamaConfig runtimeConfig,
-            String configName) {
-        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
-                : runtimeConfig.namedConfig().get(configName);
+    private LangChain4jJlamaConfig.JlamaConfig correspondingJlamaConfig(String configName) {
+        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.getValue().defaultConfig()
+                : runtimeConfig.getValue().namedConfig().get(configName);
     }
 
     private LangChain4jJlamaFixedRuntimeConfig.JlamaConfig correspondingJlamaFixedRuntimeConfig(
-            LangChain4jJlamaFixedRuntimeConfig runtimeConfig,
             String configName) {
-        return NamedConfigUtil.isDefault(configName) ? runtimeConfig.defaultConfig()
-                : runtimeConfig.namedConfig().get(configName);
+        return NamedConfigUtil.isDefault(configName) ? fixedRuntimeConfig.getValue().defaultConfig()
+                : fixedRuntimeConfig.getValue().namedConfig().get(configName);
     }
 
 }
