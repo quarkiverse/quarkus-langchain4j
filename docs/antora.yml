@@ -1,5 +1,5 @@
 name: quarkus-langchain4j
-title: Quarkus LangChain4j
+title: LangChain4j
 version: dev
 nav:
   - modules/ROOT/nav.adoc
