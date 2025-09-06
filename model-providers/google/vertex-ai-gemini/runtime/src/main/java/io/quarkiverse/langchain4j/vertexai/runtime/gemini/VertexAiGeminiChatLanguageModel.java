@@ -39,6 +39,10 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         try {
             String baseUrl = builder.baseUrl.orElse(String.format("https://%s-aiplatform.googleapis.com", builder.location));
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+            baseUrl += builder.apiVersion;
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
@@ -80,6 +84,7 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
     public static final class Builder {
 
         private Optional<String> baseUrl = Optional.empty();
+        private String apiVersion;
         private String projectId;
         private String location;
         private String modelId;
@@ -97,6 +102,11 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
             return this;
         }
 
