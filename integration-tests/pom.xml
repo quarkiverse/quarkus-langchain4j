@@ -45,6 +45,7 @@
       </activation>
       <modules>
         <module>jlama</module>
+        <module>gpu-llama3</module>
       </modules>
     </profile>
     <profile>
@@ -109,6 +110,11 @@
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-gpullama3</artifactId>
+                        <version>${quarkus-langchain4j.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-hugging-face</artifactId>
                         <version>999-SNAPSHOT</version>
                     </dependency>
@@ -122,6 +128,11 @@
                         <artifactId>quarkus-langchain4j-llama3-java</artifactId>
                         <version>999-SNAPSHOT</version>
                     </dependency>
+                  <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+                    <version>999-SNAPSHOT</version>
+                  </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-mcp</artifactId>
