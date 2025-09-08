@@ -5,14 +5,14 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-in-process-embedding-models</artifactId>
-        <version>1.1.4</version>
+        <version>999-SNAPSHOT</version>
     </parent>
 
     <artifactId>quarkus-langchain4j-integration-test-embed-all-minilm-l6-v2</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - embeddings-all-minilm-l6-v2</name>
 
     <properties>
-        <quarkus-langchain4j.version>1.1.4</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
 
     <dependencies>    
