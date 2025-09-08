@@ -2,13 +2,18 @@ package io.quarkiverse.langchain4j.mcp.test;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.util.ArrayList;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.assertj.core.util.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +53,30 @@ public class McpServerHelper {
     }
 
     static String getPathToScript(String script) {
-        return ClassLoader.getSystemResource(script)
-                .getFile()
-                .substring(isWindows() ? 1 : 0)
-                .replace("/", File.separator);
+        InputStream scriptAsStream = ClassLoader.getSystemResourceAsStream(script);
+        if (scriptAsStream == null) {
+            throw new RuntimeException("Unable to find script " + script);
+        } else if (scriptAsStream instanceof BufferedInputStream) {
+            // the script path points at a regular file,
+            // so just return its full path
+            return ClassLoader.getSystemResource(script)
+                    .getFile()
+                    .substring(isWindows() ? 1 : 0)
+                    .replace("/", File.separator);
+        } else {
+            // the script path points at a file that is inside a JAR
+            // so we unzip it into a temporary file
+            File folder = Files.newTemporaryFolder();
+            folder.deleteOnExit();
+            Path tmpFilePath = Path.of(folder.getAbsolutePath(), script);
+            try {
+                java.nio.file.Files.copy(scriptAsStream, tmpFilePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return tmpFilePath.toString();
+        }
+
     }
 
     static String getJBangCommand() {
