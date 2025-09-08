@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mcp.test;
 
+import static io.quarkiverse.langchain4j.mcp.test.McpServerHelper.copyMcpServerScriptToSrcTestResourcesIfItsNotThereAlready;
 import static io.quarkiverse.langchain4j.mcp.test.McpServerHelper.skipTestsIfJbangNotAvailable;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -24,6 +25,7 @@ class McpResourcesStdioTransportTest extends McpResourcesTestBase {
 
     @BeforeAll
     static void setup() throws Exception {
+        copyMcpServerScriptToSrcTestResourcesIfItsNotThereAlready("resources_mcp_server.java");
         skipTestsIfJbangNotAvailable();
     }
 
