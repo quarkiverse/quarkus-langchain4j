@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -67,7 +68,10 @@ public class BedrockRecorder {
             }
 
             if (modelConfig.stopSequences().isPresent()) {
-                paramBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+                List<String> stopSequences = modelConfig.stopSequences().get();
+                if (!stopSequences.isEmpty()) {
+                    paramBuilder.stopSequences(stopSequences.toArray(new String[0]));
+                }
             }
 
             var clientBuilder = BedrockRuntimeClient.builder();
