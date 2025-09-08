@@ -20,52 +20,21 @@ import io.quarkus.builder.item.MultiBuildItem;
  * A build item representing a method from an AI service.
  */
 public final class AiServicesMethodBuildItem extends MultiBuildItem {
-
     private final MethodInfo methodInfo;
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    private final List<String> quarkusOutputGuardrailClassNames;
-
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    private final List<String> quarkusInputGuardrailClassNames;
     private final InputGuardrailsLiteral inputGuardrails;
     private final OutputGuardrailsLiteral outputGuardrails;
     private final AiServiceMethodCreateInfo methodCreateInfo;
     private final String responseAugmenter;
 
-    public AiServicesMethodBuildItem(MethodInfo methodInfo, List<String> quarkusInputGuardrailClassNames,
-            List<String> quarkusOutputGuardrailClassNames,
-            InputGuardrailsLiteral inputGuardrails, OutputGuardrailsLiteral outputGuardrails,
+    public AiServicesMethodBuildItem(MethodInfo methodInfo, InputGuardrailsLiteral inputGuardrails,
+            OutputGuardrailsLiteral outputGuardrails,
             String responseAugmenter,
             AiServiceMethodCreateInfo methodCreateInfo) {
         this.methodInfo = methodInfo;
-        this.quarkusInputGuardrailClassNames = quarkusInputGuardrailClassNames;
-        this.quarkusOutputGuardrailClassNames = quarkusOutputGuardrailClassNames;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.responseAugmenter = responseAugmenter;
         this.methodCreateInfo = methodCreateInfo;
-    }
-
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    public List<String> getQuarkusOutputGuardrailClassNames() {
-        return quarkusOutputGuardrailClassNames;
-    }
-
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    public List<String> getQuarkusInputGuardrailClassNames() {
-        return quarkusInputGuardrailClassNames;
     }
 
     public Optional<InputGuardrailsLiteral> getInputGuardrails() {
