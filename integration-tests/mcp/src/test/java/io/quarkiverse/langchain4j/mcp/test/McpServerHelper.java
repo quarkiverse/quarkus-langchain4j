@@ -4,15 +4,16 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.util.ArrayList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.util.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,7 @@ public class McpServerHelper {
             folder.deleteOnExit();
             Path tmpFilePath = Path.of(folder.getAbsolutePath(), script);
             try {
+                log.info("Temporarily copying " + ClassLoader.getSystemResource(script) + " to " + tmpFilePath);
                 java.nio.file.Files.copy(scriptAsStream, tmpFilePath);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -97,6 +99,29 @@ public class McpServerHelper {
                     + "The command may be overridden via the system property 'jbang.command'";
             log.warn(message, e);
             assumeTrue(false, message);
+        }
+    }
+
+    /**
+     * This is a hacky way to get the tests working in the Platform CI where the JBang scripts
+     * are not in 'src/test/resources' as the test expects them, but rather inside the test suite's
+     * test-jar artifact, so this method temporarily copies them to src/test/resources.
+     */
+    static void copyMcpServerScriptToSrcTestResourcesIfItsNotThereAlready(String script) {
+        Path path = Path.of("src", "test", "resources", script);
+        if (!java.nio.file.Files.exists(path)) {
+            InputStream scriptAsStream = ClassLoader.getSystemResourceAsStream(script);
+            if (scriptAsStream == null) {
+                throw new RuntimeException("Unable to find script " + script);
+            }
+            try {
+                log.info("Temporarily copying " + ClassLoader.getSystemResource(script) + " to " + path);
+                FileUtils.forceMkdirParent(path.toFile());
+                java.nio.file.Files.copy(scriptAsStream, path);
+                path.toFile().deleteOnExit();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
