@@ -92,13 +92,10 @@ import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionCompleteEv
 import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionFailureEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultResponseFromLLMReceivedEvent;
 import io.quarkiverse.langchain4j.audit.internal.DefaultToolExecutedEvent;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailParams;
-import io.quarkiverse.langchain4j.guardrails.OutputGuardrailResult;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
-import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.GuardrailRetryException;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
@@ -242,14 +239,9 @@ public class AiServiceMethodImplementationSupport {
                                 ChatMessage augmentedUserMessage = ar.chatMessage();
 
                                 ChatMemory memory = context.chatMemoryService.getChatMemory(memoryId);
-                                /**
-                                 * @deprecated Deprecated in favor of upstream implementation
-                                 */
-                                UserMessage guardrailsMessage = GuardrailsSupport.invokeInputGuardRails(methodCreateInfo,
+                                UserMessage guardrailsMessage = GuardrailsSupport.executeInputGuardrails(
+                                        context.guardrailService(),
                                         (UserMessage) augmentedUserMessage,
-                                        memory, ar, templateVariables, beanManager, auditSourceInfo);
-                                guardrailsMessage = GuardrailsSupport.executeInputGuardrails(context.guardrailService(),
-                                        guardrailsMessage,
                                         methodCreateInfo, memory, ar, templateVariables);
                                 List<ChatMessage> messagesToSend = messagesToSend(guardrailsMessage, needsMemorySeed);
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
@@ -284,12 +276,6 @@ public class AiServiceMethodImplementationSupport {
 
         var guardrailService = context.guardrailService();
         var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null;
-
-        /**
-         * @deprecated Deprecated in favor of upstream implementation
-         */
-        userMessage = GuardrailsSupport.invokeInputGuardRails(methodCreateInfo, userMessage, chatMemory, augmentationResult,
-                templateVariables, beanManager, auditSourceInfo);
 
         userMessage = GuardrailsSupport.executeInputGuardrails(guardrailService, userMessage, methodCreateInfo, chatMemory,
                 augmentationResult, templateVariables);
@@ -342,79 +328,26 @@ public class AiServiceMethodImplementationSupport {
 
         if (isMulti) {
             committableChatMemory.commit(); // for streaming cases, we really have to commit because all alternatives are worse
-            var hasQuarkusOutputGuardrails = !methodCreateInfo.getQuarkusOutputGuardrailsClassNames().isEmpty();
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
             Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, memoryId,
                     methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
 
-            if (hasQuarkusOutputGuardrails || hasUpstreamGuardrails) {
+            if (hasUpstreamGuardrails) {
                 stream = stream.filter(o -> o instanceof ChatEvent)
                         .map(ChatEvent.class::cast)
-                        .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo));
-
-                if (hasQuarkusOutputGuardrails) {
-                    stream = stream.map(chunk -> {
-                        ChatEvent.AccumulatedResponseEvent accumulatedChunk = (ChatEvent.AccumulatedResponseEvent) chunk;
-                        OutputGuardrailResult result;
-                        try {
-                            result = GuardrailsSupport.invokeOutputGuardRails(methodCreateInfo,
-                                    new OutputGuardrailParams(AiMessage.from(accumulatedChunk.getMessage()), chatMemory,
-                                            actualAugmentationResult,
-                                            methodCreateInfo.getUserMessageTemplate(),
-                                            Collections.unmodifiableMap(templateVariables)),
-                                    beanManager, auditSourceInfo);
-                        } catch (Exception e) {
-                            throw new GuardrailException(e.getMessage(), e);
-                        }
-
-                        if (!result.isSuccess()) {
-                            if (!result.isRetry()) {
-                                throw new GuardrailException(result.toString(), result.getFirstFailureException());
-                            } else if (result.getReprompt() != null) {
-                                committableChatMemory.add(new UserMessage(result.getReprompt()));
-                                throw new GuardrailsSupport.GuardrailRetryException();
-                            } else {
-                                // Retry without re-prompting
-                                throw new GuardrailsSupport.GuardrailRetryException();
-                            }
-                        } else {
-                            if (result.hasRewrittenResult()) {
-                                throw new GuardrailException(
-                                        "Attempting to rewrite the LLM output while streaming is not allowed");
-                            }
-
-                            if (isStringMulti) {
-                                return accumulatedChunk.getMessage();
-                            }
-
-                            return chunk;
-                        }
-                    })
-                            // Retry logic:
-                            // 1. retry only on the custom RetryException
-                            // 2. If we still have a RetryException afterward, we fail.
-                            .onFailure(GuardrailRetryException.class)
-                            .retry()
-                            .atMost(methodCreateInfo.getQuarkusGuardrailsMaxRetry())
-                            .onFailure(GuardrailRetryException.class)
-                            .transform(t -> new GuardrailException(
-                                    "Output validation failed. The guardrails have reached the maximum number of retries"));
-                }
-
-                if (hasUpstreamGuardrails) {
-                    stream = stream.map(
-                            new OutputGuardrailStreamingMapper(
-                                    guardrailService,
-                                    methodCreateInfo,
-                                    committableChatMemory,
-                                    actualAugmentationResult,
-                                    templateVariables,
-                                    isStringMulti))
-                            .onFailure(GuardrailsSupport::isOutputGuardrailRetry)
-                            .retry()
-                            .atMost(methodCreateInfo.getOutputGuardrails().getMaxRetriesAsSetByConfig());
-                }
+                        .plug(s -> GuardrailsSupport.accumulate(s, methodCreateInfo))
+                        .map(
+                                new OutputGuardrailStreamingMapper(
+                                        guardrailService,
+                                        methodCreateInfo,
+                                        committableChatMemory,
+                                        actualAugmentationResult,
+                                        templateVariables,
+                                        isStringMulti))
+                        .onFailure(GuardrailsSupport::isOutputGuardrailRetry)
+                        .retry()
+                        .atMost(methodCreateInfo.getOutputGuardrails().getMaxRetriesAsSetByConfig());
             } else {
                 stream = stream.filter(event -> !isStringMulti || event instanceof ChatEvent.PartialResponseEvent)
                         .map(event -> {
@@ -516,23 +449,9 @@ public class AiServiceMethodImplementationSupport {
         }
 
         String userMessageTemplate = methodCreateInfo.getUserMessageTemplate();
-
-        /**
-         * @deprecated Deprecated in favor of upstream implementation
-         */
-        var guardrailResponse = GuardrailsSupport.invokeOutputGuardRails(methodCreateInfo, committableChatMemory,
-                context.effectiveChatModel(methodCreateInfo, methodArgs),
-                response,
-                toolSpecifications,
-                new OutputGuardrailParams(response.aiMessage(), committableChatMemory, augmentationResult, userMessageTemplate,
-                        Collections.unmodifiableMap(templateVariables)),
-                beanManager, auditSourceInfo);
-
-        response = guardrailResponse.response();
-        Object guardrailResult = guardrailResponse
-                .getRewrittenResult();
-        guardrailResult = GuardrailsSupport.executeOutputGuardrails(guardrailService, methodCreateInfo, response, chatExecutor,
-                committableChatMemory, augmentationResult, templateVariables, guardrailResult);
+        var guardrailResult = GuardrailsSupport.executeOutputGuardrails(guardrailService, methodCreateInfo, response,
+                chatExecutor,
+                committableChatMemory, augmentationResult, templateVariables);
 
         // everything worked as expected so let's commit the messages
         committableChatMemory.commit();
@@ -580,40 +499,12 @@ public class AiServiceMethodImplementationSupport {
         return toolExecutionResultMessage;
     }
 
-    /**
-     * @deprecated Deprecated in favor of upstream implementation
-     */
-    @Deprecated(forRemoval = true)
-    private static ChatResponse executeRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,
-            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
-        var chatRequest = ChatRequest.builder()
-                .messages(messagesToSend)
-                .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
-                .build();
-
-        return chatModel.chat(chatRequest);
-    }
-
     private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend, ChatModel chatModel,
             List<ToolSpecification> toolSpecifications) {
         return ChatRequest.builder()
                 .messages(messagesToSend)
                 .parameters(constructStructuredResponseParams(toolSpecifications, jsonSchema).build())
                 .build();
-    }
-
-    /**
-     * @deprecated Deprecated in favor of upstream implementation
-     */
-    @Deprecated(forRemoval = true)
-    private static ChatResponse executeRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
-            List<ToolSpecification> toolSpecifications) {
-        var chatRequest = ChatRequest.builder()
-                .messages(messagesToSend);
-        if (toolSpecifications != null) {
-            chatRequest.toolSpecifications(toolSpecifications);
-        }
-        return chatModel.chat(chatRequest.build());
     }
 
     static ChatRequest createChatRequest(List<ChatMessage> messagesToSend, ChatModel chatModel,
@@ -625,19 +516,6 @@ public class AiServiceMethodImplementationSupport {
             chatRequest.toolSpecifications(toolSpecifications);
         }
         return chatRequest.build();
-    }
-
-    /**
-     * @deprecated Deprecated in favor of upstream implementation
-     */
-    @Deprecated(forRemoval = true)
-    static ChatResponse executeRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
-            ChatModel chatModel, List<ToolSpecification> toolSpecifications) {
-        var jsonSchema = supportsJsonSchema(chatModel) ? methodCreateInfo.getResponseSchemaInfo().structuredOutputSchema()
-                : Optional.<JsonSchema> empty();
-
-        return jsonSchema.isPresent() ? executeRequest(jsonSchema.get(), messagesToSend, chatModel, toolSpecifications)
-                : executeRequest(messagesToSend, chatModel, toolSpecifications);
     }
 
     static ChatRequest createChatRequest(AiServiceMethodCreateInfo methodCreateInfo, List<ChatMessage> messagesToSend,
@@ -661,12 +539,6 @@ public class AiServiceMethodImplementationSupport {
             QuarkusAiServiceContext context,
             Optional<SystemMessage> systemMessage, UserMessage userMessage,
             Object memoryId, Type returnType, Map<String, Object> templateVariables, AuditSourceInfo auditSourceInfo) {
-        String imagePrompt;
-        if (systemMessage.isPresent()) {
-            imagePrompt = systemMessage.get().text() + "\n" + userMessage.singleText();
-        } else {
-            imagePrompt = userMessage.singleText();
-        }
 
         var beanManager = Arc.container().beanManager();
 
@@ -678,9 +550,13 @@ public class AiServiceMethodImplementationSupport {
         AugmentationResult augmentationResult = null;
 
         // TODO: we can only support input guardrails for now as it is tied to AiMessage
-        GuardrailsSupport.invokeInputGuardRails(methodCreateInfo, userMessage,
-                context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null,
-                augmentationResult, templateVariables, beanManager, auditSourceInfo);
+        var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null;
+        var um = GuardrailsSupport.executeInputGuardrails(context.guardrailService(), userMessage, methodCreateInfo, chatMemory,
+                augmentationResult, templateVariables);
+
+        var imagePrompt = systemMessage
+                .map(sm -> "%s\n%s".formatted(sm.text(), um.singleText()))
+                .orElseGet(um::singleText);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
 

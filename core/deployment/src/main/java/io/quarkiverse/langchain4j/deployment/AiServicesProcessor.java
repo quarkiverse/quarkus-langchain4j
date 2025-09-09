@@ -5,8 +5,6 @@ import static io.quarkiverse.langchain4j.deployment.ExceptionUtil.illegalConfigu
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.BEAN_IF_EXISTS_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_ID;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_INPUT_GUARDRAILS;
-import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.QUARKUS_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
@@ -917,11 +915,6 @@ public class AiServicesProcessor {
 
             configurator
                     .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                            new Type[] { ClassType.create(io.quarkiverse.langchain4j.guardrails.OutputGuardrail.class) }, null))
-                    .done();
-
-            configurator
-                    .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
                             new Type[] { ClassType.create(OutputGuardrail.class) }, null))
                     .done();
 
@@ -967,8 +960,7 @@ public class AiServicesProcessor {
     public void markUsedGuardRailsUnremovable(List<AiServicesMethodBuildItem> methods,
             BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = new ArrayList<>(method.getQuarkusOutputGuardrailClassNames());
-            list.addAll(method.getQuarkusInputGuardrailClassNames());
+            List<String> list = new ArrayList<>();
 
             method.getInputGuardrails()
                     .map(InputGuardrailsLiteral::value)
@@ -1063,8 +1055,7 @@ public class AiServicesProcessor {
             BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> errors) {
 
         for (AiServicesMethodBuildItem method : methods) {
-            List<String> list = new ArrayList<>(method.getQuarkusOutputGuardrailClassNames());
-            list.addAll(method.getQuarkusInputGuardrailClassNames());
+            List<String> list = new ArrayList<>();
 
             method.getInputGuardrails()
                     .map(InputGuardrailsLiteral::value)
@@ -1108,22 +1099,12 @@ public class AiServicesProcessor {
                 }
 
                 // Check that the method has output guardrails
-                if (method.getQuarkusOutputGuardrailClassNames().isEmpty() && !method.hasOutputGuardrails()) {
-                    if (method.getQuarkusOutputGuardrailClassNames().isEmpty()) {
-                        errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
-                                new DeploymentException(
-                                        "OutputGuardrailAccumulator used without io.quarkiverse.langchain4j.guardrails.OutputGuardrails in method `%s.%s`"
-                                                .formatted(method.getMethodInfo().declaringClass().toString(),
-                                                        method.getMethodInfo().name()))));
-                    }
-
-                    if (!method.hasOutputGuardrails()) {
-                        errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
-                                new DeploymentException(
-                                        "OutputGuardrailAccumulator used without dev.langchain4j.service.guardrail.OutputGuardrails in method `%s.%s`"
-                                                .formatted(method.getMethodInfo().declaringClass().toString(),
-                                                        method.getMethodInfo().name()))));
-                    }
+                if (!method.hasOutputGuardrails()) {
+                    errors.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new DeploymentException(
+                                    "OutputGuardrailAccumulator used without dev.langchain4j.service.guardrail.OutputGuardrails in method `%s.%s`"
+                                            .formatted(method.getMethodInfo().declaringClass().toString(),
+                                                    method.getMethodInfo().name()))));
                 }
             }
         }
@@ -1410,8 +1391,6 @@ public class AiServicesProcessor {
                             mc.returnValue(resultHandle);
 
                             aiServicesMethodProducer.produce(new AiServicesMethodBuildItem(methodInfo,
-                                    methodCreateInfo.getQuarkusInputGuardrailsClassNames(),
-                                    methodCreateInfo.getQuarkusOutputGuardrailsClassNames(),
                                     methodCreateInfo.getInputGuardrails(),
                                     methodCreateInfo.getOutputGuardrails(),
                                     methodCreateInfo.getResponseAugmenterClassName(),
@@ -1590,40 +1569,7 @@ public class AiServicesProcessor {
                         ToolQualifierProvider.BuildItem::getProvider).toList());
 
         List<String> methodMcpClientNames = gatherMethodMcpClientNames(method);
-
-        /**
-         * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-         */
-        @Deprecated(forRemoval = true)
-        List<String> quarkusOutputGuardrailClasses = AiServicesMethodBuildItem.gatherGuardrails(method,
-                QUARKUS_OUTPUT_GUARDRAILS);
-
-        var guardrailDeprecationWarning = """
-
-                ================== DEPRECATION WARNING ==================
-                The following Quarkus-specific %s guardrail classes have been discovered on the method (%s) in the class (%s). Please move to the new upstream guardrails.
-                %s
-                """;
-
-        if (!quarkusOutputGuardrailClasses.isEmpty()) {
-            log.warnf(guardrailDeprecationWarning, "output", method, method.declaringClass(),
-                    String.join("\n", quarkusOutputGuardrailClasses));
-        }
-
-        /**
-         * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-         */
-        @Deprecated(forRemoval = true)
-        List<String> quarkusInputGuardrailClassess = AiServicesMethodBuildItem.gatherGuardrails(method,
-                QUARKUS_INPUT_GUARDRAILS);
-
-        if (!quarkusInputGuardrailClassess.isEmpty()) {
-            log.warnf(guardrailDeprecationWarning, "input", method, method.declaringClass(),
-                    String.join("\n", quarkusInputGuardrailClassess));
-        }
-
         String accumulatorClassName = AiServicesMethodBuildItem.gatherAccumulator(method);
-
         String responseAugmenterClassName = AiServicesMethodBuildItem.gatherResponseAugmenter(method);
 
         //  Detect if tools execution may block the caller thread.
@@ -1636,8 +1582,7 @@ public class AiServicesProcessor {
         return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
-                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution, quarkusInputGuardrailClassess,
-                quarkusOutputGuardrailClasses,
+                methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution,
                 accumulatorClassName, responseAugmenterClassName, gatherInputGuardrails(method),
                 gatherOutputGuardrails(method, methodReturnTypeSignature));
     }

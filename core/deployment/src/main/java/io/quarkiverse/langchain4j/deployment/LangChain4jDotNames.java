@@ -49,18 +49,6 @@ public class LangChain4jDotNames {
     public static final DotName IMAGE_MODEL = DotName.createSimple(ImageModel.class);
     public static final DotName CHAT_MESSAGE = DotName.createSimple(ChatMessage.class);
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    public static final DotName QUARKUS_OUTPUT_GUARDRAILS = DotName
-            .createSimple(io.quarkiverse.langchain4j.guardrails.OutputGuardrails.class);
-    /**
-     * @deprecated Will go away once the Quarkus-specific guardrail implementation has been fully removed
-     */
-    @Deprecated(forRemoval = true)
-    public static final DotName QUARKUS_INPUT_GUARDRAILS = DotName
-            .createSimple(io.quarkiverse.langchain4j.guardrails.InputGuardrails.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
     public static final DotName INPUT_GUARDRAILS = DotName.createSimple(InputGuardrails.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);

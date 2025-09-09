@@ -23,12 +23,12 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailResult;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrail;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrailResult;
-import io.quarkiverse.langchain4j.guardrails.InputGuardrails;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
