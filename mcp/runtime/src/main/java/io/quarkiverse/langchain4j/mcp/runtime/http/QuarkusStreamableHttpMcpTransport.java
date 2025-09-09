@@ -118,6 +118,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         RequestOptions options = new RequestOptions()
                 .setAbsoluteURI(url)
                 .addHeader("Accept", "application/json,text/event-stream")
+                .addHeader("Content-Type", "application/json")
                 .setMethod(HttpMethod.POST);
         if (mcpSessionId.get() != null) {
             options.addHeader("Mcp-Session-Id", mcpSessionId.get());
