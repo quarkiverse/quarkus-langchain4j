@@ -7,7 +7,7 @@ import org.jboss.jandex.ClassInfo;
 import io.quarkus.builder.item.MultiBuildItem;
 
 /**
- * TODO
+ * A build item that prevents the default validation exception from being thrown for invalid AiService methods
  */
 public final class PreventToolValidationErrorBuildItem extends MultiBuildItem {
 

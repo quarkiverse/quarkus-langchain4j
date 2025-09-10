@@ -15,12 +15,14 @@ public final class DetectedAiAgentBuildItem extends MultiBuildItem {
     private final ClassInfo iface;
     private final List<MethodInfo> agenticMethods;
     private final MethodInfo chatModelSupplier;
+    private final List<MethodInfo> mcpToolBoxMethods;
 
     public DetectedAiAgentBuildItem(ClassInfo iface, List<MethodInfo> agenticMethods,
-            MethodInfo chatModelSupplier) {
+            MethodInfo chatModelSupplier, List<MethodInfo> mcpToolBoxMethods) {
         this.iface = iface;
         this.agenticMethods = agenticMethods;
         this.chatModelSupplier = chatModelSupplier;
+        this.mcpToolBoxMethods = mcpToolBoxMethods;
     }
 
     public ClassInfo getIface() {
@@ -33,5 +35,9 @@ public final class DetectedAiAgentBuildItem extends MultiBuildItem {
 
     public MethodInfo getChatModelSupplier() {
         return chatModelSupplier;
+    }
+
+    public List<MethodInfo> getMcpToolBoxMethods() {
+        return mcpToolBoxMethods;
     }
 }

@@ -21,12 +21,19 @@ import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
+import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
+import io.quarkiverse.langchain4j.deployment.AnnotationsImpliesAiServiceBuildItem;
+import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.FallbackToDummyUserMessageBuildItem;
 import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem;
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
+import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -54,7 +61,10 @@ public class AgenticProcessor {
                     .filter(m -> Modifier.isStatic(m.flags()) && m.hasAnnotation(
                             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER))
                     .findFirst();
-            producer.produce(new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null)));
+
+            List<MethodInfo> mcpToolBoxMethods = methods.stream().filter(mi -> mi.hasAnnotation(DotNames.MCP_TOOLBOX)).toList();
+            producer.produce(
+                    new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null), mcpToolBoxMethods));
         });
     }
 
@@ -74,6 +84,58 @@ public class AgenticProcessor {
     }
 
     @BuildStep
+    AnnotationsImpliesAiServiceBuildItem implyAiService() {
+        return new AnnotationsImpliesAiServiceBuildItem(AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS);
+    }
+
+    @BuildStep
+    SkipOutputFormatInstructionsBuildItem skipOutputInstructions() {
+        return new SkipOutputFormatInstructionsBuildItem(new Predicate<>() {
+            @Override
+            public boolean test(MethodInfo methodInfo) {
+                for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+                    if (methodInfo.hasAnnotation(dotName)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    @BuildStep
+    FallbackToDummyUserMessageBuildItem fallbackToDummyUserMessage() {
+        return new FallbackToDummyUserMessageBuildItem(new Predicate<>() {
+            @Override
+            public boolean test(MethodInfo methodInfo) {
+                for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+                    if (methodInfo.hasAnnotation(dotName)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    void mcpToolBoxSupport(List<DetectedAiAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder) {
+        Set<String> agentsWithMcpToolBox = new HashSet<>();
+        for (DetectedAiAgentBuildItem bi : detectedAgentBuildItems) {
+            if (!bi.getMcpToolBoxMethods().isEmpty()) {
+                if ((bi.getMcpToolBoxMethods().size() != 1) && (bi.getAgenticMethods().size() > 1)) {
+                    throw new IllegalConfigurationException(
+                            "Currently, @McpToolBox can only be used on an Agent if the agent has a single method. This restriction will be lifted in the future. Offending class is '"
+                                    + bi.getIface().name() + "'");
+                }
+                agentsWithMcpToolBox.add(bi.getIface().name().toString());
+            }
+        }
+        recorder.setAgentsWithMcpToolBox(agentsWithMcpToolBox);
+    }
+
+    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
@@ -87,6 +149,7 @@ public class AgenticProcessor {
             AiAgentCreateInfo.ChatModelInfo chatModelInfo = detectedAiAgentBuildItem.getChatModelSupplier() != null
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
+
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
                     .configure(detectedAiAgentBuildItem.getIface().name())
                     .forceApplicationClass()
@@ -105,6 +168,8 @@ public class AgenticProcessor {
                 beanConfigurator.addInjectionPoint(
                         ClassType.create(DotName.createSimple(dev.langchain4j.model.chat.ChatModel.class)), qualifier);
             }
+            beanConfigurator.addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                    new Type[] { ClassType.create(DotNames.TOOL_PROVIDER) }, null));
             syntheticBeanProducer.produce(beanConfigurator.done());
         }
         requestedChatModelNames.forEach(name -> requestChatModelBeanProducer.produce(new RequestChatModelBeanBuildItem(name)));

@@ -46,8 +46,9 @@ class JandexUtil {
                 if (classInfo == null) {
                     log.warn("'" + name
                             + "' used for creating an AiService is not an interface. Attempting to create an AiService using this class will fail");
+                } else {
+                    directSuperInterfaces.add(classInfo);
                 }
-                directSuperInterfaces.add(classInfo);
             }
             for (ClassInfo directSubInterface : directSuperInterfaces) {
                 result.add(directSubInterface);
