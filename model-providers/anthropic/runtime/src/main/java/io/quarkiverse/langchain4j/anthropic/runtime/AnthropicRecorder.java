@@ -62,6 +62,22 @@ public class AnthropicRecorder {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
             }
 
+            if (chatModelConfig.thinkingType().isPresent()) {
+                builder.thinkingType(chatModelConfig.thinkingType().get());
+            }
+
+            if (chatModelConfig.thinkingBudgetTokens().isPresent()) {
+                builder.thinkingBudgetTokens(chatModelConfig.thinkingBudgetTokens().get());
+            }
+
+            if (chatModelConfig.returnThinking().isPresent()) {
+                builder.returnThinking(chatModelConfig.returnThinking().get());
+            }
+
+            if (chatModelConfig.sendThinking().isPresent()) {
+                builder.sendThinking(chatModelConfig.sendThinking().get());
+            }
+
             return new Supplier<>() {
                 @Override
                 public ChatModel get() {
@@ -110,6 +126,22 @@ public class AnthropicRecorder {
 
             if (chatModelConfig.stopSequences().isPresent()) {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
+            }
+
+            if (chatModelConfig.thinkingType().isPresent()) {
+                builder.thinkingType(chatModelConfig.thinkingType().get());
+            }
+
+            if (chatModelConfig.thinkingBudgetTokens().isPresent()) {
+                builder.thinkingBudgetTokens(chatModelConfig.thinkingBudgetTokens().get());
+            }
+
+            if (chatModelConfig.returnThinking().isPresent()) {
+                builder.returnThinking(chatModelConfig.returnThinking().get());
+            }
+
+            if (chatModelConfig.sendThinking().isPresent()) {
+                builder.sendThinking(chatModelConfig.sendThinking().get());
             }
 
             return new Supplier<>() {
