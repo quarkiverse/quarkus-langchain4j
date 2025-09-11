@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.bedrock.runtime;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -89,8 +90,21 @@ public class BedrockConverseStreamingChatModel implements StreamingChatModel {
         };
     }
 
+    /**
+     * Transforms {@link ChatRequest} messages into Bedrock {@link Message}s.
+     *
+     * <p>
+     * Bedrock requires that all USER messages appear before ASSISTANT (and any other roles).
+     * To satisfy this strict ordering requirement, we sort the transformed messages
+     * so that USER messages always come first while preserving the relative order
+     * within each role.
+     * </p>
+     */
     private List<Message> toBedrockMessages(final ChatRequest chatRequest) {
-        return chatRequest.messages().stream().map(this.messageTransformer()).toList();
+        return chatRequest.messages().stream()
+                .map(this.messageTransformer())
+                .sorted(Comparator.comparingInt(m -> ConversationRole.USER.equals(m.role()) ? 0 : 1))
+                .toList();
     }
 
     private Function<ChatMessage, Message> messageTransformer() {
