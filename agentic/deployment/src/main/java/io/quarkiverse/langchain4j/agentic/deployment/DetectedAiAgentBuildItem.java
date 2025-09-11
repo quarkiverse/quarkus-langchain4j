@@ -10,13 +10,13 @@ import io.quarkus.builder.item.MultiBuildItem;
 /**
  * A build item that contains all the metadata discovered for Agents
  */
-public final class DetectedAgentBuildItem extends MultiBuildItem {
+public final class DetectedAiAgentBuildItem extends MultiBuildItem {
 
     private final ClassInfo iface;
     private final List<MethodInfo> agenticMethods;
     private final MethodInfo chatModelSupplier;
 
-    public DetectedAgentBuildItem(ClassInfo iface, List<MethodInfo> agenticMethods,
+    public DetectedAiAgentBuildItem(ClassInfo iface, List<MethodInfo> agenticMethods,
             MethodInfo chatModelSupplier) {
         this.iface = iface;
         this.agenticMethods = agenticMethods;

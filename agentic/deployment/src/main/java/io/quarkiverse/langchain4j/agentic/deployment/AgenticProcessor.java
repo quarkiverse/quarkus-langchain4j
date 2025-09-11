@@ -40,7 +40,7 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 public class AgenticProcessor {
 
     @BuildStep
-    void detectAgents(CombinedIndexBuildItem indexBuildItem, BuildProducer<DetectedAgentBuildItem> producer) {
+    void detectAgents(CombinedIndexBuildItem indexBuildItem, BuildProducer<DetectedAiAgentBuildItem> producer) {
         IndexView index = indexBuildItem.getIndex();
 
         Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap = new HashMap<>();
@@ -54,7 +54,7 @@ public class AgenticProcessor {
                     .filter(m -> Modifier.isStatic(m.flags()) && m.hasAnnotation(
                             AgenticLangChain4jDotNames.CHAT_MODEL_SUPPLIER))
                     .findFirst();
-            producer.produce(new DetectedAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null)));
+            producer.produce(new DetectedAiAgentBuildItem(classInfo, methods, chatModelSupplier.orElse(null)));
         });
     }
 
@@ -75,23 +75,24 @@ public class AgenticProcessor {
 
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
-    void cdiSupport(List<DetectedAgentBuildItem> detectedAgentBuildItems, AgenticRecorder recorder,
+    void cdiSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems, AgenticRecorder recorder,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeanProducer,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer) {
 
         Set<String> requestedChatModelNames = new HashSet<>();
-        for (DetectedAgentBuildItem detectedAgentBuildItem : detectedAgentBuildItems) {
+        for (DetectedAiAgentBuildItem detectedAiAgentBuildItem : detectedAiAgentBuildItems) {
             String chatModelName = NamedConfigUtil.DEFAULT_NAME; // TODO: we need to fix this and provide a way to let the user pick the name of the chat model
             requestedChatModelNames.add(chatModelName);
 
-            AiAgentCreateInfo.ChatModelInfo chatModelInfo = detectedAgentBuildItem.getChatModelSupplier() != null
+            AiAgentCreateInfo.ChatModelInfo chatModelInfo = detectedAiAgentBuildItem.getChatModelSupplier() != null
                     ? new AiAgentCreateInfo.ChatModelInfo.FromAnnotation()
                     : new AiAgentCreateInfo.ChatModelInfo.FromBeanWithName(chatModelName);
             SyntheticBeanBuildItem.ExtendedBeanConfigurator beanConfigurator = SyntheticBeanBuildItem
-                    .configure(detectedAgentBuildItem.getIface().name())
+                    .configure(detectedAiAgentBuildItem.getIface().name())
                     .forceApplicationClass()
                     .createWith(recorder
-                            .createAiAgent(new AiAgentCreateInfo(detectedAgentBuildItem.getIface().toString(), chatModelInfo)))
+                            .createAiAgent(
+                                    new AiAgentCreateInfo(detectedAiAgentBuildItem.getIface().toString(), chatModelInfo)))
                     .setRuntimeInit()
                     .scope(ApplicationScoped.class);
             if (chatModelInfo instanceof AiAgentCreateInfo.ChatModelInfo.FromBeanWithName f) {
@@ -110,10 +111,10 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    void nativeSupport(List<DetectedAgentBuildItem> detectedAgentBuildItems,
+    void nativeSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<NativeImageProxyDefinitionBuildItem> proxyProducer) {
-        String[] agentClassNames = detectedAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
+        String[] agentClassNames = detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
                 .toArray(String[]::new);
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(agentClassNames).methods(true).fields(false).build());
         proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(agentClassNames));
@@ -127,6 +128,10 @@ public class AgenticProcessor {
                 continue;
             }
             MethodInfo methodInfo = ai.target().asMethod();
+            if (!methodInfo.declaringClass().isInterface()) {
+                // we need to skio non-AI agents (https://docs.langchain4j.dev/tutorials/agents/#non-ai-agents)
+                continue;
+            }
             ClassInfo iface = methodInfo.declaringClass();
             addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
             index.getAllKnownSubinterfaces(iface.name()).forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
