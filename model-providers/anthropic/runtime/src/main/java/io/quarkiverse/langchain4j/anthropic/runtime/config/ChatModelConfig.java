@@ -77,12 +77,12 @@ public interface ChatModelConfig {
     Optional<Boolean> logResponses();
 
     /**
-     * Thinking type to enable Claude's reasoning tokens
+     * The thinking type to enable Claude's reasoning process
      */
     Optional<String> thinkingType();
 
     /**
-     * Token budget for the model's thinking process
+     * The token budget for the model's thinking process
      */
     Optional<Integer> thinkingBudgetTokens();
 
