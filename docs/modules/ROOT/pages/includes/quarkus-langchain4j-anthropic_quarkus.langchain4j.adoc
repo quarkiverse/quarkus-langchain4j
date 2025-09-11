@@ -370,6 +370,90 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type[`quarkus.langchain4j.anthropic.chat-model.thinking.type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking type to enable Claude's reasoning process
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-budget-tokens]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-budget-tokens[`quarkus.langchain4j.anthropic.chat-model.thinking.budget-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.budget-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The token budget for the model's thinking process
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_BUDGET_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_BUDGET_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-return-thinking]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-return-thinking[`quarkus.langchain4j.anthropic.chat-model.thinking.return-thinking`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.return-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether thinking results should be returned in the response
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_RETURN_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_RETURN_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-send-thinking]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-send-thinking[`quarkus.langchain4j.anthropic.chat-model.thinking.send-thinking`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.send-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether previously stored thinking should be sent in follow-up requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_SEND_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_SEND_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
 h|[[quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic]] [.section-name.section-level0]##link:#quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic[Named model config]##
 h|Type
 h|Default
@@ -715,6 +799,90 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`false`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The thinking type to enable Claude's reasoning process
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-budget-tokens]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-budget-tokens[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.budget-tokens`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.budget-tokens+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The token budget for the model's thinking process
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_BUDGET_TOKENS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_BUDGET_TOKENS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-return-thinking]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-return-thinking[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.return-thinking`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.return-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether thinking results should be returned in the response
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_RETURN_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_RETURN_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-send-thinking]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-send-thinking[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.send-thinking`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.send-thinking+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether previously stored thinking should be sent in follow-up requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_SEND_THINKING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_SEND_THINKING+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
 
 
 |===
