@@ -9,9 +9,13 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassType;
+import org.jboss.jandex.ParameterizedType;
+import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.bedrock.runtime.BedrockRecorder;
+import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.EmbeddingModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
@@ -69,22 +73,30 @@ public class BedrockProcessor {
         for (var selected : selectedChatItem) {
             if (PROVIDER.equals(selected.getProvider())) {
                 String configName = selected.getConfigName();
+                var chatModel = recorder.chatModel(configName);
                 var builder = SyntheticBeanBuildItem
                         .configure(CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.chatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(
+                                DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .createWith(chatModel);
 
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
 
+                var streamingChatModel = recorder.streamingChatModel(configName);
                 var streamingBuilder = SyntheticBeanBuildItem
                         .configure(STREAMING_CHAT_MODEL)
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .supplier(recorder.streamingChatModel(configName));
+                        .addInjectionPoint(ParameterizedType.create(
+                                DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.CHAT_MODEL_LISTENER) }, null))
+                        .createWith(streamingChatModel);
                 addQualifierIfNecessary(streamingBuilder, configName);
                 beanProducer.produce(streamingBuilder.done());
             }

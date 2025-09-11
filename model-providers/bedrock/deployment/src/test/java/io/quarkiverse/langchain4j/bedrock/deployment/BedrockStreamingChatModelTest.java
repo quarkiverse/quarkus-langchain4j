@@ -18,6 +18,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,8 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(TestCredentialsProvider.class)
-                    .addClass(BedrockStreamHelper.class))
+                    .addClass(BedrockStreamHelper.class)
+                    .addClass(CountingChatModelListener.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "amazon.titan-text-express-v1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
@@ -53,6 +55,14 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
 
     @Inject
     StreamingChatModel streamingChatModel;
+
+    @Inject
+    CountingChatModelListener listener;
+
+    @BeforeEach
+    void reset_listener_counters() {
+        listener.reset();
+    }
 
     @Test
     void should_create_bedrock_model() {
@@ -93,5 +103,8 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
         assertThat(response.metadata().finishReason()).isEqualTo(FinishReason.STOP);
         assertThat(response.metadata().modelName()).isEqualTo("amazon.titan-text-express-v1");
         assertThat(response.metadata().tokenUsage()).isEqualTo(new TokenUsage(10, 17));
+        assertThat(listener.onRequestCount()).isEqualTo(1);
+        assertThat(listener.onResponseCount()).isEqualTo(1);
+        assertThat(listener.onErrorCount()).isEqualTo(0);
     }
 }
