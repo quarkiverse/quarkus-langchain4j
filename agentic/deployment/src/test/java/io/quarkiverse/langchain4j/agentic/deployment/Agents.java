@@ -2,6 +2,11 @@ package io.quarkiverse.langchain4j.agentic.deployment;
 
 import java.util.List;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import org.jboss.logging.Logger;
+
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
@@ -297,5 +302,20 @@ public class Agents {
 
         @Agent
         List<EveningPlan> plan(@V("mood") String mood);
+    }
+
+    @ApplicationScoped
+    public static class NoneAiAgent {
+
+        @Inject
+        Logger logger;
+
+        @Agent(value = "Produces a Goodbye", outputName = "goodbye")
+        public String goodBye() {
+            logger.info("Good Bye");
+
+            return "Good Bye";
+        }
+
     }
 }
