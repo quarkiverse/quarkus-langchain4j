@@ -77,24 +77,33 @@ public interface ChatModelConfig {
     Optional<Boolean> logResponses();
 
     /**
-     * The thinking type to enable Claude's reasoning process
+     * Thinking related configuration
      */
-    Optional<String> thinkingType();
+    ThinkingConfig thinking();
 
-    /**
-     * The token budget for the model's thinking process
-     */
-    Optional<Integer> thinkingBudgetTokens();
+    @ConfigGroup
+    interface ThinkingConfig {
 
-    /**
-     * Whether thinking results should be returned in the response
-     */
-    @ConfigDocDefault("false")
-    Optional<Boolean> returnThinking();
+        /**
+         * The thinking type to enable Claude's reasoning process
+         */
+        Optional<String> type();
 
-    /**
-     * Whether previously stored thinking should be sent in follow-up requests
-     */
-    @ConfigDocDefault("true")
-    Optional<Boolean> sendThinking();
+        /**
+         * The token budget for the model's thinking process
+         */
+        Optional<Integer> budgetTokens();
+
+        /**
+         * Whether thinking results should be returned in the response
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> returnThinking();
+
+        /**
+         * Whether previously stored thinking should be sent in follow-up requests
+         */
+        @ConfigDocDefault("true")
+        Optional<Boolean> sendThinking();
+    }
 }

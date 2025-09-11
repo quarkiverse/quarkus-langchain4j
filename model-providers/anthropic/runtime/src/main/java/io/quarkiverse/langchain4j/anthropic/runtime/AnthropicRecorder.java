@@ -11,6 +11,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.runtime.RuntimeValue;
@@ -62,20 +63,21 @@ public class AnthropicRecorder {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
             }
 
-            if (chatModelConfig.thinkingType().isPresent()) {
-                builder.thinkingType(chatModelConfig.thinkingType().get());
+            ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
+            if (thinkingConfig.type().isPresent()) {
+                builder.thinkingType(thinkingConfig.type().get());
             }
 
-            if (chatModelConfig.thinkingBudgetTokens().isPresent()) {
-                builder.thinkingBudgetTokens(chatModelConfig.thinkingBudgetTokens().get());
+            if (thinkingConfig.budgetTokens().isPresent()) {
+                builder.thinkingBudgetTokens(thinkingConfig.budgetTokens().get());
             }
 
-            if (chatModelConfig.returnThinking().isPresent()) {
-                builder.returnThinking(chatModelConfig.returnThinking().get());
+            if (thinkingConfig.returnThinking().isPresent()) {
+                builder.returnThinking(thinkingConfig.returnThinking().get());
             }
 
-            if (chatModelConfig.sendThinking().isPresent()) {
-                builder.sendThinking(chatModelConfig.sendThinking().get());
+            if (thinkingConfig.sendThinking().isPresent()) {
+                builder.sendThinking(thinkingConfig.sendThinking().get());
             }
 
             return new Supplier<>() {
@@ -128,20 +130,21 @@ public class AnthropicRecorder {
                 builder.stopSequences(chatModelConfig.stopSequences().get());
             }
 
-            if (chatModelConfig.thinkingType().isPresent()) {
-                builder.thinkingType(chatModelConfig.thinkingType().get());
+            ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
+            if (thinkingConfig.type().isPresent()) {
+                builder.thinkingType(thinkingConfig.type().get());
             }
 
-            if (chatModelConfig.thinkingBudgetTokens().isPresent()) {
-                builder.thinkingBudgetTokens(chatModelConfig.thinkingBudgetTokens().get());
+            if (thinkingConfig.budgetTokens().isPresent()) {
+                builder.thinkingBudgetTokens(thinkingConfig.budgetTokens().get());
             }
 
-            if (chatModelConfig.returnThinking().isPresent()) {
-                builder.returnThinking(chatModelConfig.returnThinking().get());
+            if (thinkingConfig.returnThinking().isPresent()) {
+                builder.returnThinking(thinkingConfig.returnThinking().get());
             }
 
-            if (chatModelConfig.sendThinking().isPresent()) {
-                builder.sendThinking(chatModelConfig.sendThinking().get());
+            if (thinkingConfig.sendThinking().isPresent()) {
+                builder.sendThinking(thinkingConfig.sendThinking().get());
             }
 
             return new Supplier<>() {
