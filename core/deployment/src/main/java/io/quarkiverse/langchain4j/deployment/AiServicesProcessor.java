@@ -110,6 +110,7 @@ import io.quarkiverse.langchain4j.runtime.config.GuardrailsConfig;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.quarkiverse.langchain4j.spi.PromptTemplateFactoryContentFilterProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InstanceHandle;
@@ -228,6 +229,8 @@ public class AiServicesProcessor {
 
         serviceProviderProducer.produce(new ServiceProviderBuildItem(DefaultMemoryIdProvider.class.getName(),
                 RequestScopeStateDefaultMemoryIdProvider.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                PromptTemplateFactoryContentFilterProvider.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
@@ -1556,7 +1559,7 @@ public class AiServicesProcessor {
             }
         }
 
-        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates, ignoredPredicates);
+        List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(method, allowedPredicates, ignoredPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
                 systemMessageInfo, fallbackToDummyUserMessagePredicate);
@@ -1707,15 +1710,15 @@ public class AiServicesProcessor {
         return AsmUtil.getSignature(returnType, typeArgMapper);
     }
 
-    private List<TemplateParameterInfo> gatherTemplateParamInfo(List<MethodParameterInfo> params,
+    private List<TemplateParameterInfo> gatherTemplateParamInfo(MethodInfo method,
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
             Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
-        if (params.isEmpty()) {
+        if (method.parameters().isEmpty()) {
             return Collections.emptyList();
         }
 
         List<TemplateParameterInfo> templateParams = new ArrayList<>();
-        for (MethodParameterInfo param : params) {
+        for (MethodParameterInfo param : method.parameters()) {
 
             if (isParameterAllowedAsTemplateVariable(param, allowedPredicates, ignoredPredicates)) {
                 templateParams.add(new TemplateParameterInfo(param.position(), param.name()));
@@ -1731,11 +1734,14 @@ public class AiServicesProcessor {
         }
 
         if (!templateParams.isEmpty() && templateParams.stream().map(TemplateParameterInfo::name).allMatch(Objects::isNull)) {
-            log.warn(
-                    "The application has been compiled without the '-parameters' being set flag on javac. Make sure your build tool is configured to pass this flag to javac, otherwise Quarkus LangChain4j is unlikely to work properly without it.");
+            if (!method.declaringClass().name().toString().startsWith("dev.langchain4j")) { // ignore langchain4j support classes
+                log.warn(
+                        "The application has been compiled without the '-parameters' being set flag on javac. Make sure your build tool is configured to pass this flag to javac, otherwise Quarkus LangChain4j is unlikely to work properly without it.");
+            }
+
         }
 
-        if ((templateParams.size() == 1) && (params.size() == 1)) {
+        if ((templateParams.size() == 1) && (method.parameters().size() == 1)) {
             // the special 'it' param is supported when the method only has one parameter
             templateParams.add(new TemplateParameterInfo(0, "it"));
         }

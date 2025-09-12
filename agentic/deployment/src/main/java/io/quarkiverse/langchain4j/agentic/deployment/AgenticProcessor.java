@@ -41,10 +41,16 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class AgenticProcessor {
+
+    @BuildStep
+    void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
+        producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-agentic"));
+    }
 
     @BuildStep
     void detectAgents(CombinedIndexBuildItem indexBuildItem, BuildProducer<DetectedAiAgentBuildItem> producer) {
@@ -90,6 +96,8 @@ public class AgenticProcessor {
 
     @BuildStep
     SkipOutputFormatInstructionsBuildItem skipOutputInstructions() {
+        Set<DotName> skippedReturnTypes = Set.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE,
+                AgenticLangChain4jDotNames.RESULT_WITH_AGENTIC_SCOPE);
         return new SkipOutputFormatInstructionsBuildItem(new Predicate<>() {
             @Override
             public boolean test(MethodInfo methodInfo) {
@@ -98,7 +106,7 @@ public class AgenticProcessor {
                         return true;
                     }
                 }
-                return false;
+                return skippedReturnTypes.contains(methodInfo.returnType().name());
             }
         });
     }

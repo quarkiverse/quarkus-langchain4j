@@ -29,9 +29,13 @@ public class AgentBeanSmokeTest extends OpenAiBaseTest {
     @Inject
     Agents.NoneAiAgent noneAiAgent;
 
+    @Inject
+    Agents.SupervisorStoryCreator supervisorStoryCreator;
+
     @Test
     public void test() {
         Assertions.assertNotNull(expertRouterAgent);
         Assertions.assertNotNull(noneAiAgent);
+        Assertions.assertNotNull(supervisorStoryCreator);
     }
 }

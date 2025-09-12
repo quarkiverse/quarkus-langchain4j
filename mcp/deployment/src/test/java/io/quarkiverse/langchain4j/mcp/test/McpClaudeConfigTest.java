@@ -64,6 +64,7 @@ public class McpClaudeConfigTest {
                             """),
                             "mcp-config.json"))
             .overrideConfigKey("quarkus.langchain4j.mcp.config-file", "mcp-config.json")
+            .overrideConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.transport-type", "http")
             .overrideConfigKey("quarkus.langchain4j.mcp.client1.url", "http://localhost:8081/mock-mcp/sse")
             .overrideConfigKey("quarkus.langchain4j.mcp.\"file.system\".log-requests", "true")

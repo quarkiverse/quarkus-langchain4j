@@ -689,14 +689,20 @@ public class AiServiceMethodImplementationSupport {
         Map<String, Object> templateParams = new HashMap<>();
         Map<String, Integer> nameToParamPosition = systemMessageInfo.nameToParamPosition();
         for (var entry : nameToParamPosition.entrySet()) {
-            templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
+            if (entry.getKey() != null) {
+                templateParams.put(entry.getKey(), methodArgs[entry.getValue()]);
+            }
         }
 
         templateParams.put(ResponseSchemaUtil.templateParam(),
                 createInfo.getResponseSchemaInfo().outputFormatInstructions());
         templateParams.put("chat_memory", previousChatMessages);
-        Prompt prompt = PromptTemplate.from(systemMessageInfo.text().get()).apply(templateParams);
-        return Optional.of(prompt.toSystemMessage());
+        Optional<String> maybeText = systemMessageInfo.text();
+        if (maybeText.isPresent()) {
+            return Optional.of(PromptTemplate.from(maybeText.get()).apply(templateParams).toSystemMessage());
+        } else {
+            return Optional.empty();
+        }
     }
 
     private static UserMessage prepareUserMessage(AiServiceContext context, AiServiceMethodCreateInfo createInfo,
@@ -836,7 +842,9 @@ public class AiServiceMethodImplementationSupport {
 
             for (var entry : nameToParamPosition.entrySet()) {
                 Object value = transformTemplateParamValue(methodArgs[entry.getValue()]);
-                variables.put(entry.getKey(), value);
+                if (entry.getKey() != null) {
+                    variables.put(entry.getKey(), value);
+                }
             }
         }
 
