@@ -1,11 +1,17 @@
 package io.quarkiverse.langchain4j;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import dev.langchain4j.spi.ServiceHelper;
 import dev.langchain4j.spi.prompt.PromptTemplateFactory;
+import io.quarkiverse.langchain4j.spi.PromptTemplateFactoryContentFilterProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.impl.LazyValue;
 import io.quarkus.qute.Engine;
@@ -41,6 +47,17 @@ public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
 
     public static class MustacheTemplateVariableStyleParserHook implements ParserHook {
 
+        private static final List<Function<String, String>> customContentFilters;
+        static {
+            List<Function<String, String>> ccf = new ArrayList<>();
+            Collection<PromptTemplateFactoryContentFilterProvider> promptTemplateFactoryContentFilterProviders = ServiceHelper
+                    .loadFactories(PromptTemplateFactoryContentFilterProvider.class);
+            for (PromptTemplateFactoryContentFilterProvider p : promptTemplateFactoryContentFilterProviders) {
+                ccf.add(p.getContentFilter());
+            }
+            customContentFilters = Collections.unmodifiableList(ccf);
+        }
+
         @Override
         public void beforeParsing(ParserHelper parserHelper) {
             parserHelper.addContentFilter(new Function<String, String>() {
@@ -49,6 +66,9 @@ public class QuarkusPromptTemplateFactory implements PromptTemplateFactory {
                     return contents.replace("{{", "{").replace("}}", "}");
                 }
             });
+            for (Function<String, String> customContentFilter : customContentFilters) {
+                parserHelper.addContentFilter(customContentFilter);
+            }
         }
     }
 

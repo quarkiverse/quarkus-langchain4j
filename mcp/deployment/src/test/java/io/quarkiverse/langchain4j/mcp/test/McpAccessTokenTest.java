@@ -32,6 +32,7 @@ public class McpAccessTokenTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AbstractMockHttpMcpServer.class, MockHttpMcpAccessTokenServer.class)
                     .addAsResource(new StringAsset("""
+                            quarkus.langchain4j.openai.api-key=whatever
                             quarkus.langchain4j.mcp.client1.transport-type=http
                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-access-token-mcp/sse
                             """),

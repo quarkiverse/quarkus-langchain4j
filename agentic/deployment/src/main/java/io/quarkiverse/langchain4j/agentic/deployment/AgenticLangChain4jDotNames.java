@@ -12,6 +12,8 @@ import dev.langchain4j.agentic.declarative.ParallelAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 
 public final class AgenticLangChain4jDotNames {
 
@@ -27,6 +29,8 @@ public final class AgenticLangChain4jDotNames {
             PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT);
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
+    public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);
+    public static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName.createSimple(ResultWithAgenticScope.class);
 
     private AgenticLangChain4jDotNames() {
     }

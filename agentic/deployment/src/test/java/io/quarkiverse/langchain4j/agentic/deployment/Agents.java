@@ -10,8 +10,15 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
+import dev.langchain4j.agentic.declarative.ExitCondition;
+import dev.langchain4j.agentic.declarative.LoopAgent;
+import dev.langchain4j.agentic.declarative.SequenceAgent;
+import dev.langchain4j.agentic.declarative.SubAgent;
+import dev.langchain4j.agentic.declarative.SupervisorAgent;
+import dev.langchain4j.agentic.declarative.SupervisorRequest;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -317,5 +324,43 @@ public class Agents {
             return "Good Bye";
         }
 
+    }
+
+    public interface StoryCreator {
+
+        @SequenceAgent(outputName = "story", subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputName = "story"),
+                @SubAgent(type = AudienceEditor.class, outputName = "story"),
+                @SubAgent(type = StyleEditor.class, outputName = "story")
+        })
+        String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
+    }
+
+    public interface StyleReviewLoopAgent {
+
+        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputName = "story", maxIterations = 5, subAgents = {
+                @SubAgent(type = StyleScorer.class, outputName = "score"),
+                @SubAgent(type = StyleEditor.class, outputName = "story")
+        })
+        String write(@V("story") String story);
+
+        @ExitCondition
+        static boolean exit(@V("score") double score) {
+            return score >= 0.8;
+        }
+    }
+
+    public interface SupervisorStoryCreator {
+
+        @SupervisorAgent(outputName = "story", responseStrategy = SupervisorResponseStrategy.LAST, subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputName = "story"),
+                @SubAgent(type = StyleReviewLoopAgent.class, outputName = "story")
+        })
+        ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
+
+        @SupervisorRequest
+        static String request(@V("topic") String topic, @V("style") String style) {
+            return "Write a story about " + topic + " in " + style + " style";
+        }
     }
 }

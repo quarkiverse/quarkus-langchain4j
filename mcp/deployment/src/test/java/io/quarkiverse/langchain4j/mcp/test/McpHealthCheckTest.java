@@ -24,6 +24,7 @@ public class McpHealthCheckTest {
                     .addAsResource(
                             new StringAsset(
                                     """
+                                            quarkus.langchain4j.openai.api-key=whatever
                                             quarkus.langchain4j.mcp.client1.transport-type=http
                                             quarkus.langchain4j.mcp.client1.url=http://localhost:8081/mock-mcp/sse
                                             quarkus.langchain4j.mcp.client1.log-requests=true
