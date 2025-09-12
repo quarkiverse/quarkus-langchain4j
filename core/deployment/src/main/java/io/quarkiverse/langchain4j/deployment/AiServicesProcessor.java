@@ -1148,6 +1148,13 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
+    AnnotationsImpliesAiServiceBuildItem implyAiService() {
+        return new AnnotationsImpliesAiServiceBuildItem(
+                List.of(LangChain4jDotNames.SYSTEM_MESSAGE, LangChain4jDotNames.USER_MESSAGE,
+                        LangChain4jDotNames.MODERATE));
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleAiServices(
             LangChain4jBuildConfig config,
@@ -1167,7 +1174,10 @@ public class AiServicesProcessor {
             Optional<MetricsCapabilityBuildItem> metricsCapability,
             Capabilities capabilities,
             List<ToolMethodBuildItem> tools,
-            List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems) {
+            List<ToolQualifierProvider.BuildItem> toolQualifierProviderItems,
+            List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
+            List<SkipOutputFormatInstructionsBuildItem> skipOutputFormatInstructionsItems,
+            List<FallbackToDummyUserMessageBuildItem> fallbackToDummyUserMessageItems) {
 
         IndexView index = indexBuildItem.getIndex();
 
@@ -1211,7 +1221,8 @@ public class AiServicesProcessor {
 
         Set<String> detectedForCreate = new HashSet<>(nameToUsed.keySet());
         addCreatedAware(index, detectedForCreate);
-        addIfacesWithMessageAnns(index, detectedForCreate);
+        addIfacesWithMessageAnns(index, annotationsImpliesAiServiceItems.stream()
+                .flatMap(bi -> bi.getAnnotationNames().stream()).collect(Collectors.toList()), detectedForCreate);
         Set<String> registeredAiServiceClassNames = declarativeAiServiceItems.stream()
                 .map(bi -> bi.getServiceClassInfo().name().toString()).collect(
                         Collectors.toUnmodifiableSet());
@@ -1342,7 +1353,13 @@ public class AiServicesProcessor {
                                 config.responseSchema(),
                                 allowedPredicates,
                                 ignoredPredicates,
-                                tools, toolQualifierProviderItems);
+                                tools, toolQualifierProviderItems,
+                                skipOutputFormatInstructionsItems.stream().map(
+                                        SkipOutputFormatInstructionsBuildItem::getPredicate)
+                                        .reduce(mi -> false, Predicate::or),
+                                fallbackToDummyUserMessageItems.stream().map(
+                                        FallbackToDummyUserMessageBuildItem::getPredicate)
+                                        .reduce(mi -> false, Predicate::or));
                         if (!methodCreateInfo.getToolClassInfo().isEmpty()) {
                             if ((matchingBI != null)
                                     && matchingBI.getChatMemoryProviderSupplierClassDotName() == null) {
@@ -1482,9 +1499,7 @@ public class AiServicesProcessor {
                 + Arrays.toString(methodInfo.parameters().stream().map(mp -> mp.type().name().toString()).toArray()) + ')';
     }
 
-    private void addIfacesWithMessageAnns(IndexView index, Set<String> detectedForCreate) {
-        List<DotName> annotations = List.of(LangChain4jDotNames.SYSTEM_MESSAGE, LangChain4jDotNames.USER_MESSAGE,
-                LangChain4jDotNames.MODERATE);
+    private void addIfacesWithMessageAnns(IndexView index, List<DotName> annotations, Set<String> detectedForCreate) {
         for (DotName annotation : annotations) {
             Collection<AnnotationInstance> instances = index.getAnnotations(annotation);
             for (AnnotationInstance instance : instances) {
@@ -1522,7 +1537,9 @@ public class AiServicesProcessor {
             Collection<Predicate<AnnotationInstance>> allowedPredicates,
             Collection<Predicate<AnnotationInstance>> ignoredPredicates,
             List<ToolMethodBuildItem> tools,
-            List<ToolQualifierProvider.BuildItem> toolQualifierProviders) {
+            List<ToolQualifierProvider.BuildItem> toolQualifierProviders,
+            Predicate<MethodInfo> skipOutputFormatInstructionsPredicate,
+            Predicate<MethodInfo> fallbackToDummyUserMessagePredicate) {
         validateReturnType(method);
 
         boolean requiresModeration = method.hasAnnotation(LangChain4jDotNames.MODERATE);
@@ -1532,15 +1549,17 @@ public class AiServicesProcessor {
 
         // TODO give user ability to provide custom OutputParser
         String outputFormatInstructions = "";
-        Optional<JsonSchema> structuredOutputSchema = Optional.empty();
-        if (!returnType.equals(Multi.class)) {
-            outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
+        if (!skipOutputFormatInstructionsPredicate.test(method)) {
+            Optional<JsonSchema> structuredOutputSchema = Optional.empty();
+            if (!returnType.equals(Multi.class)) {
+                outputFormatInstructions = SERVICE_OUTPUT_PARSER.outputFormatInstructions(returnType);
+            }
         }
 
         List<TemplateParameterInfo> templateParams = gatherTemplateParamInfo(params, allowedPredicates, ignoredPredicates);
         Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo = gatherSystemMessageInfo(method, templateParams);
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = gatherUserMessageInfo(method, templateParams,
-                systemMessageInfo);
+                systemMessageInfo, fallbackToDummyUserMessagePredicate);
 
         AiServiceMethodCreateInfo.ResponseSchemaInfo responseSchemaInfo = ResponseSchemaInfo.of(generateResponseSchema,
                 systemMessageInfo,
@@ -1797,7 +1816,8 @@ public class AiServicesProcessor {
 
     private AiServiceMethodCreateInfo.UserMessageInfo gatherUserMessageInfo(MethodInfo method,
             List<TemplateParameterInfo> templateParams,
-            Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo) {
+            Optional<AiServiceMethodCreateInfo.TemplateInfo> systemMessageInfo,
+            Predicate<MethodInfo> fallbackToDummyUserMesage) {
 
         Optional<Integer> userNameParamPosition = method.annotations(LangChain4jDotNames.USER_NAME).stream().filter(
                 IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
@@ -1874,6 +1894,14 @@ public class AiServicesProcessor {
                         return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
                                 imageParamPosition, audioParamPosition, pdfParamPosition);
                     }
+
+                    if (fallbackToDummyUserMesage.test(method)) {
+                        return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
+                                AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(), Optional.empty());
+                    }
+
                     throw illegalConfigurationForMethod(
                             "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
                             method);
@@ -2128,8 +2156,7 @@ public class AiServicesProcessor {
     }
 
     private List<String> gatherMethodMcpClientNames(MethodInfo method) {
-        // Using the class name to keep the McpToolBox annotation in the mcp module
-        AnnotationInstance mcpToolBoxInstance = method.declaredAnnotation("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
+        AnnotationInstance mcpToolBoxInstance = method.declaredAnnotation(DotNames.MCP_TOOLBOX);
         if (mcpToolBoxInstance == null) {
             return null;
         }

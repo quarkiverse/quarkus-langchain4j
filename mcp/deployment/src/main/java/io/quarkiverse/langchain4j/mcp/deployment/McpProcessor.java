@@ -26,7 +26,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.service.tool.ToolProvider;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
@@ -58,7 +57,6 @@ public class McpProcessor {
 
     private static final DotName MCP_CLIENT = DotName.createSimple(McpClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
-    private static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
     private static final DotName TRACER = DotName.createSimple(Tracer.class);
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -158,8 +156,7 @@ public class McpProcessor {
             // generate a tool provider if configured to do so
             if (mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
                 SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
-                        .configure(TOOL_PROVIDER)
-                        .addType(ClassType.create(TOOL_PROVIDER))
+                        .configure(DotNames.TOOL_PROVIDER)
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()

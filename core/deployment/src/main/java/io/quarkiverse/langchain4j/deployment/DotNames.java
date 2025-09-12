@@ -21,6 +21,7 @@ import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
@@ -80,6 +81,9 @@ public class DotNames {
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);
+    // Using the class name to keep the McpToolBox annotation in the mcp module
+    public static final DotName MCP_TOOLBOX = DotName.createSimple("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
+    public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
     public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);
 
     public static final DotName REGISTER_REST_CLIENT = DotName.createSimple(RegisterRestClient.class);

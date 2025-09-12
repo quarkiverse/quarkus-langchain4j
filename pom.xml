@@ -39,6 +39,7 @@
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.4.0</langchain4j.version>
     <langchain4j-beta.version>1.4.0-beta10</langchain4j-beta.version>
+    <langchain4j-agentic.version>1.4.1-beta10</langchain4j-agentic.version>
     <langchain4j-community.version>1.4.0-beta10</langchain4j-community.version>
     <langchain4j-embeddings.version>1.4.0-beta10</langchain4j-embeddings.version>
     <quarkus-antora.version>2.2.0</quarkus-antora.version>
@@ -67,6 +68,11 @@
         <version>${langchain4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-agentic</artifactId>
+        <version>${langchain4j-agentic.version}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
