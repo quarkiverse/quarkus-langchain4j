@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,8 @@ class BedrockChatModelTest extends BedrockTestBase {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClass(TestCredentialsProvider.class))
+                    .addClass(TestCredentialsProvider.class)
+                    .addClass(CountingChatModelListener.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.model-id", "amazon.titan-text-express-v1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.region", "eu-central-1")
             .overrideRuntimeConfigKey("quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override",
@@ -40,6 +42,14 @@ class BedrockChatModelTest extends BedrockTestBase {
 
     @Inject
     ChatModel chatModel;
+
+    @Inject
+    CountingChatModelListener listener;
+
+    @BeforeEach
+    void reset_listener_counters() {
+        listener.reset();
+    }
 
     @Test
     void should_create_bedrock_model() {
@@ -87,5 +97,8 @@ class BedrockChatModelTest extends BedrockTestBase {
 
         // then
         assertThat(response).isNotNull().isEqualTo("Hello, I am good. How are you today?");
+        assertThat(listener.onRequestCount()).isEqualTo(1);
+        assertThat(listener.onResponseCount()).isEqualTo(1);
+        assertThat(listener.onErrorCount()).isEqualTo(0);
     }
 }
