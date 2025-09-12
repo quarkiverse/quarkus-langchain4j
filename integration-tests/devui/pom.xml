@@ -10,19 +10,16 @@
     <name>Quarkus LangChain4j - Integration Tests - Dev UI</name>
     <properties>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
     <dependencies>
         <!-- The test needs an embedding store and an embedding model -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-chroma</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-all-minilm-l6-v2-q</artifactId>
-            <version>${langchain4j-embeddings.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>dev.langchain4j</groupId>
