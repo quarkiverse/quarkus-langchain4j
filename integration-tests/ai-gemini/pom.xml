@@ -10,7 +10,6 @@
   <name>Quarkus LangChain4j - Integration Tests - AI Gemini</name>
   <properties>
     <skipITs>true</skipITs>
-    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -20,7 +19,6 @@
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
-      <version>${quarkus-langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -43,7 +41,6 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

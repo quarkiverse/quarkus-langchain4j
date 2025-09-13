@@ -10,19 +10,16 @@
     <name>Quarkus LangChain4j - Integration Tests - Dev UI - Multiple embedding models</name>
     <properties>
         <skipITs>true</skipITs>
-        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
     <dependencies>
         <!-- The test needs an embedding store and two embedding models -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-chroma</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-openai</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
