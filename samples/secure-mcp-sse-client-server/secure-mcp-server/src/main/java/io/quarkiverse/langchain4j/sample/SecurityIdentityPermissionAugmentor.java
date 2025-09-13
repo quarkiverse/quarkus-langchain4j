@@ -25,6 +25,9 @@ public class SecurityIdentityPermissionAugmentor implements SecurityIdentityAugm
 
         @ActivateRequestContext
         public SecurityIdentity augment(SecurityIdentity securityIdentity) {
+            if (securityIdentity.isAnonymous()) {
+                return securityIdentity;
+            }
             Identity identity = Identity.findByName(securityIdentity.getPrincipal().getName());
             
             QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(securityIdentity);
