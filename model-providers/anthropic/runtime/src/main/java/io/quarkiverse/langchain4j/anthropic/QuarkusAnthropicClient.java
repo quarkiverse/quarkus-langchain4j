@@ -20,7 +20,9 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.ToolCallBuilder;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
@@ -115,6 +117,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final AtomicInteger inputTokenCount = new AtomicInteger();
         private final AtomicInteger outputTokenCount = new AtomicInteger();
 
+        private volatile String currentContentBlockStartType;
+        private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
+
         private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler) {
             this.handler = handler;
         }
@@ -169,30 +174,53 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleContentBlockStart(AnthropicStreamingData data) {
-            if ((data.contentBlock != null) && "text".equals(data.contentBlock.type)) {
+            if (data.contentBlock == null) {
+                return;
+            }
+
+            this.currentContentBlockStartType = data.contentBlock.type;
+
+            if ("text".equals(currentContentBlockStartType)) {
                 var text = data.contentBlock.text;
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
                     handler.onPartialResponse(text);
                 }
+            } else if ("tool_use".equals(currentContentBlockStartType)) {
+                toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
+                toolCallBuilder.updateId(data.contentBlock.id);
+                toolCallBuilder.updateName(data.contentBlock.name);
             }
         }
 
         private void handleContentBlockDelta(AnthropicStreamingData data) {
-            if ((data.delta != null) && "text_delta".equals(data.delta.type)) {
+            if (data.delta == null) {
+                return;
+            }
+
+            if ("text".equals(currentContentBlockStartType)) {
                 var text = data.delta.text;
 
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
                     handler.onPartialResponse(text);
                 }
+            } else if ("tool_use".equals(currentContentBlockStartType)) {
+                String partialJson = data.delta.partialJson;
+                if (isNotNullOrEmpty(partialJson)) {
+                    toolCallBuilder.appendArguments(partialJson);
+                }
             }
         }
 
         private void handleContentBlockStop() {
-            contents.add(contentBuilder.get().toString());
-            contentBuilder.set(new StringBuffer());
+            if ("text".equals(currentContentBlockStartType)) {
+                contents.add(contentBuilder.get().toString());
+                contentBuilder.set(new StringBuffer());
+            } else if ("tool_use".equals(currentContentBlockStartType)) {
+                toolCallBuilder.buildAndReset();
+            }
         }
 
         private void handleMessageDelta(AnthropicStreamingData data) {
@@ -210,8 +238,18 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleMessageStop() {
+            List<ToolExecutionRequest> toolExecutionRequests = List.of();
+            if (toolCallBuilder.hasRequests()) {
+                toolExecutionRequests = toolCallBuilder.allRequests();
+            }
+
+            AiMessage aiMessage = AiMessage.builder()
+                    .text(String.join("\n", contents))
+                    .toolExecutionRequests(toolExecutionRequests)
+                    .build();
+
             ChatResponse response = ChatResponse.builder()
-                    .aiMessage(AiMessage.from(String.join("\n", contents)))
+                    .aiMessage(aiMessage)
                     .tokenUsage(new TokenUsage(inputTokenCount.get(), outputTokenCount.get()))
                     .finishReason(toFinishReason(stopReason))
                     .build();
