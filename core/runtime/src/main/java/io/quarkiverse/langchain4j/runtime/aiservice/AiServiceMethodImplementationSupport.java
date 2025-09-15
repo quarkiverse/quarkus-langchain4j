@@ -368,7 +368,8 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("Attempting to obtain AI response");
 
-        ChatRequest chatRequest = createChatRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications);
+        ChatRequest chatRequest = context.chatRequestTransformer
+                .apply(createChatRequest(context, methodCreateInfo, methodArgs, messagesToSend, toolSpecifications), memoryId);
         ChatExecutor chatExecutor = ChatExecutor.builder(context.effectiveChatModel(methodCreateInfo, methodArgs))
                 .chatRequest(chatRequest)
                 .build();
