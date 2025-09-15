@@ -65,6 +65,7 @@ public class OpenAiRecorder {
         this.runtimeConfig = runtimeConfig;
     }
 
+    @SuppressWarnings("deprecation")
     public Function<SyntheticCreationalContext<ChatModel>, ChatModel> chatModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
@@ -103,6 +104,9 @@ public class OpenAiRecorder {
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
             }
+            if (chatModelConfig.maxCompletionTokens().isPresent()) {
+                builder.maxCompletionTokens(chatModelConfig.maxCompletionTokens().get());
+            }
 
             return new Function<>() {
                 @Override
@@ -124,6 +128,7 @@ public class OpenAiRecorder {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         LangChain4jOpenAiConfig.OpenAiConfig openAiConfig = correspondingOpenAiConfig(runtimeConfig.getValue(), configName);
 
@@ -158,6 +163,9 @@ public class OpenAiRecorder {
 
             if (chatModelConfig.maxTokens().isPresent()) {
                 builder.maxTokens(chatModelConfig.maxTokens().get());
+            }
+            if (chatModelConfig.maxCompletionTokens().isPresent()) {
+                builder.maxCompletionTokens(chatModelConfig.maxCompletionTokens().get());
             }
 
             return new Function<>() {
