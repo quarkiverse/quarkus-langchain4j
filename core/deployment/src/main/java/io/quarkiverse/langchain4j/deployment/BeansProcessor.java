@@ -71,6 +71,7 @@ public class BeansProcessor {
     @BuildStep
     void indexDependencies(BuildProducer<IndexDependencyBuildItem> producer) {
         producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j-core"));
+        producer.produce(new IndexDependencyBuildItem("dev.langchain4j", "langchain4j"));
     }
 
     @BuildStep

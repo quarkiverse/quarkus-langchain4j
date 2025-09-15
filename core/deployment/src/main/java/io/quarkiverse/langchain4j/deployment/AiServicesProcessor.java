@@ -69,9 +69,11 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.Moderate;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import io.quarkiverse.langchain4j.ModelName;
@@ -177,9 +179,16 @@ public class AiServicesProcessor {
 
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "removeChatMemoryIds", void.class, Object[].class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_EVICT_CHAT_MEMORY = MethodDescriptor.ofMethod(
+            QuarkusAiServiceContext.class, "evictChatMemory", boolean.class, Object.class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY = MethodDescriptor.ofMethod(
+            QuarkusAiServiceContext.class, "getChatMemory", ChatMemory.class, Object.class);
 
     public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
             .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
+
+    private static final DotName CHAT_MEMORY_ACCESS = DotName.createSimple(
+            ChatMemoryAccess.class);
 
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
@@ -1267,7 +1276,8 @@ public class AiServicesProcessor {
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
                 List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
-                JandexUtil.getAllSuperinterfaces(iface, index).forEach(ci -> allMethods.addAll(ci.methods()));
+                JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
+                        CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
 
                 List<MethodInfo> methodsToImplement = new ArrayList<>();
                 Map<String, AiServiceMethodCreateInfo> perMethodMetadata = new HashMap<>();
@@ -1291,7 +1301,7 @@ public class AiServicesProcessor {
                 ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
                         .classOutput(isRegisteredService ? generatedBeanOutput : generatedClassOutput)
                         .className(implClassName)
-                        .interfaces(ifaceName, ChatMemoryRemovable.class.getName());
+                        .interfaces(ifaceName, ChatMemoryRemovable.class.getName(), ChatMemoryAccess.class.getName());
                 if (isRegisteredService) {
                     classCreatorBuilder.interfaces(AutoCloseable.class);
                 }
@@ -1427,6 +1437,7 @@ public class AiServicesProcessor {
                         mc.returnVoid();
                     }
 
+                    // methods from ChatMemoryRemovable
                     {
                         MethodCreator mc = classCreator.getMethodCreator(
                                 MethodDescriptor.ofMethod(implClassName, "remove", void.class, Object[].class));
@@ -1434,6 +1445,25 @@ public class AiServicesProcessor {
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS, contextHandle,
                                 mc.getMethodParam(0));
                         mc.returnVoid();
+                    }
+
+                    // methods from ChatMemoryAccess
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "evictChatMemory", boolean.class, Object.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        ResultHandle result = mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_EVICT_CHAT_MEMORY,
+                                contextHandle,
+                                mc.getMethodParam(0));
+                        mc.returnValue(result);
+                    }
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "getChatMemory", ChatMemory.class, Object.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        ResultHandle result = mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY, contextHandle,
+                                mc.getMethodParam(0));
+                        mc.returnValue(result);
                     }
 
                 }
