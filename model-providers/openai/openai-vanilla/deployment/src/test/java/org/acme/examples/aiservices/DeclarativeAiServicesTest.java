@@ -59,6 +59,7 @@ import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
@@ -642,5 +643,71 @@ public class DeclarativeAiServicesTest extends OpenAiBaseTest {
         assertThat(result).isEqualTo("canned");
 
         assertThat(wiremock().getServeEvents()).hasSize(0);
+    }
+
+    @RegisterAiService
+    public interface HasChatMemoryAccess extends ChatMemoryAccess {
+        String chat(@MemoryId Integer memoryId, @UserMessage String text);
+    }
+
+    @Inject
+    HasChatMemoryAccess hasChatMemoryAccess;
+
+    @Test
+    @ActivateRequestContext
+    public void test_chat_memory_access() {
+        int firstMemoryId = 111;
+        int secondMemoryId = 222;
+
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId)).isNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(secondMemoryId)).isNull();
+
+        /* **** First request for user 1 **** */
+        String firstMessageFromFirstUser = "Hello, my name is Klaus";
+        setChatCompletionMessageContent("Nice to meet you Klaus");
+        String firstAiResponseToFirstUser = hasChatMemoryAccess.chat(firstMemoryId, firstMessageFromFirstUser);
+
+        // assert response
+        assertThat(firstAiResponseToFirstUser).isEqualTo("Nice to meet you Klaus");
+
+        // assert getChatMemory
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId)).isNotNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId).messages()).hasSize(2);
+
+        /* **** First request for user 2 **** */
+        resetRequests();
+
+        String firstMessageFromSecondUser = "Hello, my name is Francine";
+        setChatCompletionMessageContent("Nice to meet you Francine");
+        String firstAiResponseToSecondUser = hasChatMemoryAccess.chat(secondMemoryId, firstMessageFromSecondUser);
+
+        // assert response
+        assertThat(firstAiResponseToSecondUser).isEqualTo("Nice to meet you Francine");
+
+        // assert getChatMemory
+        assertThat(hasChatMemoryAccess.getChatMemory(secondMemoryId)).isNotNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(secondMemoryId).messages()).hasSize(2);
+
+        /* **** Second request for user 1 **** */
+        resetRequests();
+
+        String secondsMessageFromFirstUser = "What is my name?";
+        setChatCompletionMessageContent("Your name is Klaus");
+        String secondAiMessageToFirstUser = hasChatMemoryAccess.chat(firstMemoryId, secondsMessageFromFirstUser);
+
+        // assert response
+        assertThat(secondAiMessageToFirstUser).contains("Klaus");
+
+        // assert getChatMemory
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId)).isNotNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId).messages()).hasSize(4);
+
+        // evict memory
+        hasChatMemoryAccess.evictChatMemory(secondMemoryId);
+
+        // assert memory state after eviction
+        assertThat(hasChatMemoryAccess.getChatMemory(secondMemoryId)).isNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId)).isNotNull();
+        assertThat(hasChatMemoryAccess.getChatMemory(firstMemoryId).messages()).hasSize(4);
     }
 }

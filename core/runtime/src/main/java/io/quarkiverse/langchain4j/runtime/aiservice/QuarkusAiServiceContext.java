@@ -50,6 +50,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
      * memories
      * via {@link io.quarkiverse.langchain4j.ChatMemoryRemover}
      */
+    @SuppressWarnings("unused")
     public void removeChatMemoryIds(Object... ids) {
         if (!hasChatMemory()) {
             return;
@@ -60,6 +61,28 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 chatMemory.clear();
             }
         }
+    }
+
+    /**
+     * Used to support the implementation of {@link dev.langchain4j.service.memory.ChatMemoryAccess#evictChatMemory(Object)}
+     */
+    @SuppressWarnings("unused")
+    public boolean evictChatMemory(Object id) {
+        if (!hasChatMemory()) {
+            return false;
+        }
+        return chatMemoryService.evictChatMemory(id) != null;
+    }
+
+    /**
+     * Used to support the implementation of {@link dev.langchain4j.service.memory.ChatMemoryAccess#getChatMemory(Object)}
+     */
+    @SuppressWarnings("unused")
+    public ChatMemory getChatMemory(Object id) {
+        if (!hasChatMemory()) {
+            return null;
+        }
+        return chatMemoryService.getChatMemory(id);
     }
 
     public ChatModel effectiveChatModel(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
