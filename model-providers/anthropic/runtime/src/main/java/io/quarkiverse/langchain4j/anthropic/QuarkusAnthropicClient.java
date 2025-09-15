@@ -262,23 +262,30 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleMessageStop() {
+            ChatResponse response = build();
+            handler.onCompleteResponse(response);
+        }
+
+        private ChatResponse build() {
             List<ToolExecutionRequest> toolExecutionRequests = List.of();
             if (toolCallBuilder.hasRequests()) {
                 toolExecutionRequests = toolCallBuilder.allRequests();
             }
 
+            String text = contents.stream()
+                    .filter(content -> !content.isEmpty())
+                    .collect(joining("\n"));
+
             AiMessage aiMessage = AiMessage.builder()
-                    .text(String.join("\n", contents))
+                    .text(isNullOrEmpty(text) ? null : text)
                     .toolExecutionRequests(toolExecutionRequests)
                     .build();
 
-            ChatResponse response = ChatResponse.builder()
+            return ChatResponse.builder()
                     .aiMessage(aiMessage)
                     .tokenUsage(new TokenUsage(inputTokenCount.get(), outputTokenCount.get()))
                     .finishReason(toFinishReason(stopReason))
                     .build();
-
-            handler.onCompleteResponse(response);
         }
 
         private void handleError(AnthropicStreamingData data) {
