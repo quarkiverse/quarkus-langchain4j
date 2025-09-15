@@ -39,8 +39,17 @@ public interface ChatModelConfig {
      * The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed
      * the model's context length.
      * Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+     *
+     * @deprecated For newer OpenAI models, use {@code maxCompletionTokens} instead
      */
+    @Deprecated
     Optional<Integer> maxTokens();
+
+    /**
+     * An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and
+     * reasoning tokens.
+     */
+    Optional<Integer> maxCompletionTokens();
 
     /**
      * Number between -2.0 and 2.0.
