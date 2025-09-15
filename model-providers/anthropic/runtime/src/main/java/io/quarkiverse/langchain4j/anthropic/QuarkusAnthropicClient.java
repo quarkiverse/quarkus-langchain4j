@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.anthropic;
 
+import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onCompleteToolCall;
+import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onPartialToolCall;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.toFinishReason;
@@ -34,6 +36,8 @@ import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClient;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClientBuilderFactory;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.CompleteToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -210,6 +214,14 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 String partialJson = data.delta.partialJson;
                 if (isNotNullOrEmpty(partialJson)) {
                     toolCallBuilder.appendArguments(partialJson);
+
+                    PartialToolCall partialToolRequest = PartialToolCall.builder()
+                            .index(toolCallBuilder.index())
+                            .id(toolCallBuilder.id())
+                            .name(toolCallBuilder.name())
+                            .partialArguments(partialJson)
+                            .build();
+                    onPartialToolCall(handler, partialToolRequest);
                 }
             }
         }
@@ -219,7 +231,19 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 contents.add(contentBuilder.get().toString());
                 contentBuilder.set(new StringBuffer());
             } else if ("tool_use".equals(currentContentBlockStartType)) {
-                toolCallBuilder.buildAndReset();
+                CompleteToolCall completeToolCall = toolCallBuilder.buildAndReset();
+
+                if (completeToolCall.toolExecutionRequest().arguments().equals("{}")) {
+                    PartialToolCall partialToolRequest = PartialToolCall.builder()
+                            .index(completeToolCall.index())
+                            .id(completeToolCall.toolExecutionRequest().id())
+                            .name(completeToolCall.toolExecutionRequest().name())
+                            .partialArguments(completeToolCall.toolExecutionRequest().arguments())
+                            .build();
+                    onPartialToolCall(handler, partialToolRequest);
+                }
+
+                onCompleteToolCall(handler, completeToolCall);
             }
         }
 
