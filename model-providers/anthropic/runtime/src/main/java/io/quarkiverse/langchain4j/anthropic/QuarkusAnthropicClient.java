@@ -1,9 +1,13 @@
 package io.quarkiverse.langchain4j.anthropic;
 
 import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onCompleteToolCall;
+import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onPartialThinking;
 import static dev.langchain4j.internal.InternalStreamingChatResponseHandlerUtils.onPartialToolCall;
+import static dev.langchain4j.internal.Utils.isNotNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNotNullOrEmpty;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
+import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.REDACTED_THINKING_KEY;
+import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.THINKING_SIGNATURE_KEY;
 import static dev.langchain4j.model.anthropic.internal.mapper.AnthropicMapper.toFinishReason;
 import static java.util.Collections.synchronizedList;
 import static java.util.stream.Collectors.joining;
@@ -12,7 +16,9 @@ import static java.util.stream.StreamSupport.stream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +41,7 @@ import dev.langchain4j.model.anthropic.internal.api.AnthropicToolUseContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClient;
 import dev.langchain4j.model.anthropic.internal.client.AnthropicClientBuilderFactory;
+import dev.langchain4j.model.anthropic.internal.client.AnthropicCreateMessageOptions;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.CompleteToolCall;
 import dev.langchain4j.model.chat.response.PartialToolCall;
@@ -80,10 +87,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     @Override
-    public void createMessage(AnthropicCreateMessageRequest request, StreamingChatResponseHandler handler) {
+    public void createMessage(AnthropicCreateMessageRequest request,
+            AnthropicCreateMessageOptions options,
+            StreamingChatResponseHandler handler) {
         restApi.streamMessage(request, createMetadata(request))
                 .subscribe()
-                .withSubscriber(new AnthropicStreamingSubscriber(handler));
+                .withSubscriber(new AnthropicStreamingSubscriber(handler, options));
+    }
+
+    @Override
+    public void createMessage(AnthropicCreateMessageRequest request, StreamingChatResponseHandler handler) {
+        createMessage(request, new AnthropicCreateMessageOptions(false), handler);
     }
 
     private AnthropicRestApi.ApiMetadata createMetadata(AnthropicCreateMessageRequest request) {
@@ -124,8 +138,15 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private volatile String currentContentBlockStartType;
         private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
 
-        private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler) {
+        private final List<String> thinkings = synchronizedList(new ArrayList<>());
+        private final StringBuffer thinkingBuilder = new StringBuffer();
+        private final List<String> thinkingSignatures = synchronizedList(new ArrayList<>());
+        private final List<String> redactedThinkings = synchronizedList(new ArrayList<>());
+        private final AnthropicCreateMessageOptions options;
+
+        private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler, AnthropicCreateMessageOptions options) {
             this.handler = handler;
+            this.options = options;
         }
 
         @Override
@@ -191,6 +212,21 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                     contentBuilder.get().append(text);
                     handler.onPartialResponse(text);
                 }
+            } else if ("thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
+                String thinking = data.contentBlock.thinking;
+                if (isNotNullOrEmpty(thinking)) {
+                    thinkingBuilder.append(thinking);
+                    onPartialThinking(handler, thinking);
+                }
+                String signature = data.contentBlock.signature;
+                if (isNotNullOrEmpty(signature)) {
+                    thinkingSignatures.add(signature);
+                }
+            } else if ("redacted_thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
+                String redactedThinking = data.contentBlock.data;
+                if (isNotNullOrEmpty(redactedThinking)) {
+                    redactedThinkings.add(redactedThinking);
+                }
             } else if ("tool_use".equals(currentContentBlockStartType)) {
                 toolCallBuilder.updateIndex(toolCallBuilder.index() + 1);
                 toolCallBuilder.updateId(data.contentBlock.id);
@@ -209,6 +245,21 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 if (isNotNullOrEmpty(text)) {
                     contentBuilder.get().append(text);
                     handler.onPartialResponse(text);
+                }
+            } else if ("thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
+                String thinking = data.delta.thinking;
+                if (isNotNullOrEmpty(thinking)) {
+                    thinkingBuilder.append(thinking);
+                    onPartialThinking(handler, thinking);
+                }
+                String signature = data.delta.signature;
+                if (isNotNullOrEmpty(signature)) {
+                    thinkingSignatures.add(signature);
+                }
+            } else if ("redacted_thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
+                String redactedThinking = data.delta.data;
+                if (isNotNullOrEmpty(redactedThinking)) {
+                    redactedThinkings.add(redactedThinking);
                 }
             } else if ("tool_use".equals(currentContentBlockStartType)) {
                 String partialJson = data.delta.partialJson;
@@ -230,6 +281,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
             if ("text".equals(currentContentBlockStartType)) {
                 contents.add(contentBuilder.get().toString());
                 contentBuilder.set(new StringBuffer());
+            } else if ("thinking".equals(currentContentBlockStartType) && options.returnThinking()) {
+                thinkings.add(thinkingBuilder.toString());
+                thinkingBuilder.setLength(0);
             } else if ("tool_use".equals(currentContentBlockStartType)) {
                 CompleteToolCall completeToolCall = toolCallBuilder.buildAndReset();
 
@@ -276,9 +330,26 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                     .filter(content -> !content.isEmpty())
                     .collect(joining("\n"));
 
+            String thinking = thinkings.stream()
+                    .filter(content -> !content.isEmpty())
+                    .collect(joining("\n"));
+
+            Map<String, Object> attributes = new HashMap<>();
+            String thinkingSignature = thinkingSignatures.stream()
+                    .filter(content -> !content.isEmpty())
+                    .collect(joining("\n"));
+            if (isNotNullOrBlank(thinkingSignature)) {
+                attributes.put(THINKING_SIGNATURE_KEY, thinkingSignature);
+            }
+            if (!redactedThinkings.isEmpty()) {
+                attributes.put(REDACTED_THINKING_KEY, redactedThinkings);
+            }
+
             AiMessage aiMessage = AiMessage.builder()
                     .text(isNullOrEmpty(text) ? null : text)
+                    .thinking(isNullOrEmpty(thinking) ? null : thinking)
                     .toolExecutionRequests(toolExecutionRequests)
+                    .attributes(attributes.isEmpty() ? null : attributes)
                     .build();
 
             return ChatResponse.builder()
