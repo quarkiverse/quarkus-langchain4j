@@ -11,15 +11,21 @@
     <artifactId>quarkus-langchain4j-integration-test-embed-bge-small-en-v15</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - embeddings-bge-small-en-v15</name>
 
+    <properties>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-embeddings-bge-small-en-v15</artifactId>
+            <version>${langchain4j-embeddings.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
         </dependency>
 
         <dependency>
@@ -40,6 +46,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
