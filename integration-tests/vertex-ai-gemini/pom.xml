@@ -4,13 +4,13 @@
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-    <version>1.2.0.CR2</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-test-vertex-ai-gemini</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - Vertex AI Gemini</name>
   <properties>
     <skipITs>true</skipITs>
-    <quarkus-langchain4j.version>1.2.0.CR2</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
   </properties>
   <dependencies>
     <dependency>
