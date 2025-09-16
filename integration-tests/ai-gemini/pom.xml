@@ -10,7 +10,7 @@
   <name>Quarkus LangChain4j - Integration Tests - AI Gemini</name>
   <properties>
     <skipITs>true</skipITs>
-    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
+    <quarkus-langchain4j.version>1.2.0.CR2</quarkus-langchain4j.version>
   </properties>
   <dependencies>
     <dependency>
