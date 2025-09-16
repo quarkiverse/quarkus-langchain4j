@@ -559,7 +559,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_CHAT_MODEL_TOOL_CHOICE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`auto`, `required`
+a|`auto`, `required`, `none`
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx.chat-model.tool-choice-name`]##
@@ -2075,7 +2075,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__CHAT_MODEL_TOOL_CHOICE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`auto`, `required`
+a|`auto`, `required`, `none`
 |
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-chat-model-tool-choice-name[`quarkus.langchain4j.watsonx."model-name".chat-model.tool-choice-name`]##

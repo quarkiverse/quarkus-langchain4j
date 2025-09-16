@@ -406,22 +406,22 @@ endif::add-copy-button-to-env-var[]
 |double
 |`1.0`
 
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-tokens[`quarkus.langchain4j.openai.chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-max-completion-tokens[`quarkus.langchain4j.openai.chat-model.max-completion-tokens`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.max-tokens+++[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.max-completion-tokens+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed the model's context length. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MAX_TOKENS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MAX_COMPLETION_TOKENS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MAX_TOKENS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_MAX_COMPLETION_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
@@ -1289,22 +1289,22 @@ endif::add-copy-button-to-env-var[]
 |double
 |`1.0`
 
-a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-max-tokens[`quarkus.langchain4j.openai."model-name".chat-model.max-tokens`]##
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-max-completion-tokens]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-max-completion-tokens[`quarkus.langchain4j.openai."model-name".chat-model.max-completion-tokens`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.max-tokens+++[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.max-completion-tokens+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed the model's context length. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+An upper bound for the number of tokens that can be generated for a completion, including visible output tokens and reasoning tokens.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_COMPLETION_TOKENS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_TOKENS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_MAX_COMPLETION_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
