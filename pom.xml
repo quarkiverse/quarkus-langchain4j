@@ -79,6 +79,11 @@
         <artifactId>quarkus-extension-processor</artifactId>
         <version>${quarkus.extension-processor.version}</version>
       </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
   <build>

@@ -10,7 +10,6 @@
   <name>Quarkus LangChain4j - Integration Tests - RAG</name>
   <properties>
     <skipITs>true</skipITs>
-    <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -20,14 +19,12 @@
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-      <version>${langchain4j-embeddings.version}</version>
     </dependency>
     <!-- The tests use a mock ChatModel, but we still need to include an
       extension with a chat model to satisfy the build -->
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai</artifactId>
-      <version>${quarkus-langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -42,7 +39,6 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -55,7 +51,7 @@
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-      <version>${quarkus-langchain4j.version}</version>
+      <version>999-SNAPSHOT</version>
       <type>pom</type>
       <scope>test</scope>
       <exclusions>
