@@ -22,7 +22,7 @@ public class GpuLlama3Recorder {
         var fixed = fixedRuntimeConfig.defaultConfig();
 
         if (cfg.enableIntegration()) {
-            var builder = GpuLlama3ChatModel
+            var builder = GPULlama3ChatModel
                     .builder()
                     .modelPath(Paths.get(fixed.modelPath()));
 
@@ -33,7 +33,7 @@ public class GpuLlama3Recorder {
     }
 
     public RuntimeValue<ChatModel> create(GpuLlama3Config config) {
-        GpuLlama3ChatModel model = GpuLlama3ChatModel.builder()
+        GPULlama3ChatModel model = GPULlama3ChatModel.builder()
                 .modelPath(Path.of(config.defaultConfig().modelPath()))
                 .build();
         return new RuntimeValue<>(model);
