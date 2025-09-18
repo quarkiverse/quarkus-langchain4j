@@ -1,13 +1,14 @@
 package io.quarkiverse.langchain4j.gpullama3.runtime;
 
+import static dev.langchain4j.internal.Utils.getOrDefault;
+
 import java.nio.file.Path;
+
+import org.beehive.gpullama3.Options;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import org.beehive.gpullama3.Options;
-
-import static dev.langchain4j.internal.Utils.getOrDefault;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
 
@@ -102,4 +103,3 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         }
     }
 }
-
