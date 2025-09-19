@@ -44,7 +44,10 @@ public class JaxRsSdkHttpClientExecutable implements ExecutableHttpRequest {
         }
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            throw new ClientWebApplicationException(response.getStatus());
+            final String errBody = readErrorBody(response);
+            final int statusCode = response.getStatus();
+            response.close();
+            throw new ClientWebApplicationException(errBody, statusCode);
         }
 
         return createSdkResponse(response);
@@ -95,5 +98,14 @@ public class JaxRsSdkHttpClientExecutable implements ExecutableHttpRequest {
             case PATCH -> invocationBuilder.method("PATCH", Entity.entity(inputStream, contentType));
             case OPTIONS -> invocationBuilder.options();
         };
+    }
+
+    private static String readErrorBody(Response r) {
+        try {
+            final String s = r.readEntity(String.class);
+            return s != null ? s : "";
+        } catch (Exception e) {
+            return "<unreadable body>";
+        }
     }
 }
