@@ -115,8 +115,10 @@ import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkiverse.langchain4j.spi.PromptTemplateFactoryContentFilterProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
+import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.AnnotationsTransformerBuildItem;
 import io.quarkus.arc.deployment.CustomScopeAnnotationsBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanBuildItem;
 import io.quarkus.arc.deployment.GeneratedBeanGizmoAdaptor;
@@ -324,6 +326,7 @@ public class AiServicesProcessor {
     @BuildStep
     public void findDeclarativeServices(CombinedIndexBuildItem indexBuildItem,
             CustomScopeAnnotationsBuildItem customScopes,
+            List<AnnotationsImpliesAiServiceBuildItem> annotationsImpliesAiServiceItems,
             BuildProducer<RequestChatModelBeanBuildItem> requestChatModelBeanProducer,
             BuildProducer<RequestModerationModelBeanBuildItem> requestModerationModelBeanProducer,
             BuildProducer<RequestImageModelBeanBuildItem> requestImageModelBeanProducer,
@@ -338,11 +341,29 @@ public class AiServicesProcessor {
         Set<String> imageModelNames = new HashSet<>();
         List<ToolProviderInfo> toolProviderInfos = new ArrayList<>();
         ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
-        for (AnnotationInstance instance : index.getAnnotations(LangChain4jDotNames.REGISTER_AI_SERVICES)) {
+
+        Set<DotName> annotationsThatImplyAiService = annotationsImpliesAiServiceItems.stream().flatMap(
+                bi -> bi.getAnnotationNames().stream())
+                .collect(Collectors.toSet());
+
+        Collection<AnnotationInstance> registerAiServicesInstances = new ArrayList<>(
+                index.getAnnotations(REGISTER_AI_SERVICES));
+
+        Set<AnnotationInstance> impliedRegisterAiServiceInstance = determinedImpliedRegisterAiService(
+                annotationsThatImplyAiService, index);
+        Set<DotName> impliedRegisterAiServiceTarget = impliedRegisterAiServiceInstance.stream()
+                .map(ai -> ai.target().asClass().name()).collect(Collectors.toSet());
+        registerAiServicesInstances.addAll(impliedRegisterAiServiceInstance);
+        Set<DotName> alreadyHandled = new HashSet<>();
+        for (AnnotationInstance instance : registerAiServicesInstances) {
             if (instance.target().kind() != AnnotationTarget.Kind.CLASS) {
                 continue; // should never happen
             }
             ClassInfo declarativeAiServiceClassInfo = instance.target().asClass();
+            if (alreadyHandled.contains(declarativeAiServiceClassInfo.name())) {
+                continue;
+            }
+            alreadyHandled.add(declarativeAiServiceClassInfo.name());
 
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
@@ -462,7 +483,9 @@ public class AiServicesProcessor {
                             toolHallucinationStrategy(instance),
                             classInputGuardrails(declarativeAiServiceClassInfo, index),
                             classOutputGuardrails(declarativeAiServiceClassInfo, index),
-                            maxSequentialToolInvocations));
+                            maxSequentialToolInvocations,
+                            // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
+                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name())));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -478,6 +501,35 @@ public class AiServicesProcessor {
         for (String imageModelName : imageModelNames) {
             requestImageModelBeanProducer.produce(new RequestImageModelBeanBuildItem(imageModelName));
         }
+    }
+
+    private static Set<AnnotationInstance> determinedImpliedRegisterAiService(Set<DotName> annotationsThatImplyAiService,
+            IndexView index) {
+        Set<AnnotationInstance> impliedDefaultRegisterAiService = new HashSet<>();
+        for (DotName ann : annotationsThatImplyAiService) {
+            index.getAnnotations(ann).forEach(instance -> {
+                ClassInfo ci;
+                switch (instance.target().kind()) {
+                    case METHOD -> {
+                        ci = instance.target().asMethod().declaringClass();
+                    }
+                    case CLASS -> {
+                        ci = instance.target().asClass();
+                    }
+                    case FIELD -> {
+                        ci = instance.target().asField().declaringClass();
+                    }
+                    default -> {
+                        ci = null;
+                    }
+                }
+                if (ci == null) {
+                    return;
+                }
+                impliedDefaultRegisterAiService.add(AnnotationInstance.builder(REGISTER_AI_SERVICES).buildWithTarget(ci));
+            });
+        }
+        return impliedDefaultRegisterAiService;
     }
 
     private static String chatModelName(AnnotationInstance instance, DotName chatLanguageModelSupplierClassDotName,
@@ -793,6 +845,7 @@ public class AiServicesProcessor {
             String moderationModelName = bi.getModerationModelName();
             SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
                     .configure(QuarkusAiServiceContext.class)
+                    .unremovable()
                     .forceApplicationClass()
                     .createWith(recorder.createDeclarativeAiService(
                             new DeclarativeAiServiceCreateInfo(
@@ -1167,6 +1220,11 @@ public class AiServicesProcessor {
     }
 
     @BuildStep
+    public void annotationTransformations(BuildProducer<AnnotationsTransformerBuildItem> producer) {
+
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     public void handleAiServices(
             LangChain4jBuildConfig config,
@@ -1318,6 +1376,9 @@ public class AiServicesProcessor {
                         if (matchingBI.getBeanName().isPresent()) {
                             classCreator.addAnnotation(
                                     AnnotationInstance.builder(NAMED).add("value", matchingBI.getBeanName().get()).build());
+                        }
+                        if (matchingBI.isMakeDefaultBean()) {
+                            classCreator.addAnnotation(DefaultBean.class);
                         }
                     }
 

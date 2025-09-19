@@ -34,6 +34,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DeclarativeAiServiceInputGuardrails inputGuardrails;
     private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
     private final Integer maxSequentialToolInvocations;
+    private final boolean makeDefaultBean;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -55,7 +56,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
-            Integer maxSequentialToolInvocations) {
+            Integer maxSequentialToolInvocations, boolean makeDefaultBean) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -76,6 +77,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
+        this.makeDefaultBean = makeDefaultBean;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -152,6 +154,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DeclarativeAiServiceOutputGuardrails getOutputGuardrails() {
         return outputGuardrails;
+    }
+
+    public boolean isMakeDefaultBean() {
+        return makeDefaultBean;
     }
 
     public record DeclarativeAiServiceInputGuardrails(List<ClassInfo> inputGuardrailClassInfos) {

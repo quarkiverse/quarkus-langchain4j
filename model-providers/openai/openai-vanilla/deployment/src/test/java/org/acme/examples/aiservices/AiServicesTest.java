@@ -58,6 +58,7 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.runtime.LangChain4jUtil;
+import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiServicesTest extends OpenAiBaseTest {
@@ -68,7 +69,8 @@ public class AiServicesTest extends OpenAiBaseTest {
                     () -> ShrinkWrap.create(JavaArchive.class)
                             .addAsResource("messages/recipe-user.txt")
                             .addAsResource("messages/translate-user.txt")
-                            .addAsResource("messages/translate-system"));
+                            .addAsResource("messages/translate-system"))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever");
 
     private OpenAiChatModel createChatModel() {
         return OpenAiChatModel.builder().baseUrl(resolvedWiremockUrl("/v1"))
@@ -93,6 +95,11 @@ public class AiServicesTest extends OpenAiBaseTest {
     void setup() {
         resetRequests();
         resetMappings();
+        clearDefaultMemory();
+    }
+
+    private void clearDefaultMemory() {
+        Arc.container().instance(ChatMemoryStore.class).get().deleteMessages("default");
     }
 
     interface Assistant {
@@ -312,6 +319,7 @@ public class AiServicesTest extends OpenAiBaseTest {
 
                     resetRequests();
                     resetMappings();
+                    clearDefaultMemory();
 
                     setChatCompletionMessageContent(value);
                     Chef chef = AiServices.create(Chef.class, createChatModel());
