@@ -61,6 +61,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                 isCallerRunningOnWorkerThread);
         TokenStream tokenStream = stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
+                .onPartialThinking(thinking -> processor.onNext(new ChatEvent.PartialThinkingEvent(thinking.text())))
                 .onCompleteResponse(message -> {
                     processor.onNext(new ChatEvent.ChatCompletedEvent(message));
                     processor.onComplete();

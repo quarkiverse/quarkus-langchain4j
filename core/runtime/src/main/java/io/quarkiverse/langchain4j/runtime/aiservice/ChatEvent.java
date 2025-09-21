@@ -23,6 +23,7 @@ import dev.langchain4j.service.tool.ToolExecution;
  * @see PartialResponseEvent
  * @see ContentFetchedEvent
  * @see AccumulatedResponseEvent
+ * @see PartialThinkingEvent
  */
 public class ChatEvent {
 
@@ -49,7 +50,11 @@ public class ChatEvent {
         /**
          * Indicates that responses have been accumulated when using Output Guardrails
          */
-        AccumulatedResponse
+        AccumulatedResponse,
+        /**
+         * Indicates that a partial thinking/reasoning chunk has been received (experimental).
+         */
+        PartialThinking
 
     }
 
@@ -225,6 +230,40 @@ public class ChatEvent {
          */
         public ChatResponseMetadata getMetadata() {
             return metadata;
+        }
+    }
+
+    /**
+     * Event emitted when a partial thinking/reasoning chunk is received during streaming.
+     * This event is typically used when the AI service streams its internal reasoning
+     * process separately from the main response content. This is an experimental feature
+     * and may not be supported by all models.
+     *
+     * <p>
+     * Thinking events allow observing the model's reasoning process, which can be useful
+     * for debugging, auditing, or understanding how the model arrived at its response.
+     * </p>
+     */
+    public static class PartialThinkingEvent extends ChatEvent {
+        private final String text;
+
+        /**
+         * Constructs a new PartialThinkingEvent with the given thinking text.
+         *
+         * @param text a partial piece of the AI's thinking/reasoning text
+         */
+        public PartialThinkingEvent(String text) {
+            super(ChatEventType.PartialThinking);
+            this.text = text;
+        }
+
+        /**
+         * Returns the partial thinking text.
+         *
+         * @return the thinking/reasoning text chunk
+         */
+        public String getText() {
+            return text;
         }
     }
 

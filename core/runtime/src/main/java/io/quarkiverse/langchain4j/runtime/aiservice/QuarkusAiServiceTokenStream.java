@@ -15,6 +15,7 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
@@ -44,6 +45,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final boolean switchToWorkerForEmission;
 
     private Consumer<String> partialResponseHandler;
+    private Consumer<PartialThinking> partialThinkingHandler;
     private Consumer<List<Content>> contentsHandler;
     private Consumer<Throwable> errorHandler;
     private Consumer<Response<AiMessage>> completionHandler;
@@ -51,6 +53,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private Consumer<ChatResponse> completeResponseHandler;
 
     private int onPartialResponseInvoked;
+    private int onPartialThinkingInvoked;
     private int onCompleteResponseInvoked;
     private int onRetrievedInvoked;
     private int onErrorInvoked;
@@ -80,6 +83,13 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     public TokenStream onPartialResponse(Consumer<String> partialResponseHandler) {
         this.partialResponseHandler = partialResponseHandler;
         this.onPartialResponseInvoked++;
+        return this;
+    }
+
+    @Override
+    public TokenStream onPartialThinking(Consumer<PartialThinking> partialThinkingHandler) {
+        this.partialThinkingHandler = partialThinkingHandler;
+        this.onPartialThinkingInvoked++;
         return this;
     }
 
@@ -130,6 +140,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 context,
                 memoryId,
                 partialResponseHandler,
+                partialThinkingHandler,
                 toolExecuteHandler,
                 completeResponseHandler,
                 completionHandler,
@@ -173,6 +184,10 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         if (toolExecuteInvoked > 1) {
             throw new IllegalConfigurationException("onToolExecuted can be invoked on TokenStream at most 1 time");
+        }
+
+        if (onPartialThinkingInvoked > 1) {
+            throw new IllegalConfigurationException("onPartialThinking can be invoked on TokenStream at most 1 time");
         }
 
         if (onErrorInvoked + ignoreErrorsInvoked != 1) {
