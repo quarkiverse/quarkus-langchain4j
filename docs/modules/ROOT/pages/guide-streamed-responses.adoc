@@ -63,9 +63,12 @@ When using a `Multi<ChatEvent>` each emitted item is a subclass of `ChatEvent` w
 
 * `PartialResponseEvent` - A partial text token from the main response
 * `PartialThinkingEvent` - A partial thinking/reasoning text chunk (experimental)
+* `BeforeToolExecutionEvent` - Emitted before a tool is executed
 * `ToolExecutedEvent` - Tool execution metadata
 * `ContentFetchedEvent` - Content retrieved from RAG sources
 * `ChatCompletedEvent` - The final LLM response
+
+NOTE: When tools are used, the event flow is: `BeforeToolExecutionEvent` → (tool execution) → `ToolExecutedEvent`. This allows monitoring both before and after tool execution phases.
 
 [source,java]
 ----
