@@ -34,7 +34,7 @@ To incorporate Quarkus LangChain4j into your Quarkus project, add the following 
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-openai</artifactId>
-    <version>1.2.0.CR2</version>
+    <version>1.2.0.CR3</version>
 </dependency>
 ```
 
@@ -44,7 +44,7 @@ or, to use Ollama:
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-ollama</artifactId>
-    <version>1.2.0.CR2</version>
+    <version>1.2.0.CR3</version>
 </dependency>
 ```
 
