@@ -61,11 +61,14 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                 isCallerRunningOnWorkerThread);
         TokenStream tokenStream = stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
+                .onPartialThinking(thinking -> processor.onNext(new ChatEvent.PartialThinkingEvent(thinking.text())))
                 .onCompleteResponse(message -> {
                     processor.onNext(new ChatEvent.ChatCompletedEvent(message));
                     processor.onComplete();
                 })
                 .onRetrieved(content -> processor.onNext(new ChatEvent.ContentFetchedEvent(content)))
+                .beforeToolExecution(
+                        beforeExecution -> processor.onNext(new ChatEvent.BeforeToolExecutionEvent(beforeExecution.request())))
                 .onToolExecuted(execution -> processor.onNext(new ChatEvent.ToolExecutedEvent(execution)))
                 .onError(processor::onError);
         // This is equivalent to "run subscription on worker thread"

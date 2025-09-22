@@ -59,7 +59,16 @@ quarkus.langchain4j.ollama.chat-model.model-name=qwen3:1.7b
 
 To enable streaming, your AI service method must return a `Multi<String>` or a `Multi<ChatEvent>`.
 When using a `Multi<String>` each emitted item represents a token or part of the final response.
-When using a `Multi<ChatEvent>` each emitted item is a subclass of `ChatEvent` - ToolExecutedEvent (Tool execution metadata), PartialResponseEvent (A partial token), ContentFetchedEvent (When using Rag) and ChatCompletedEvent (The final LLM response).
+When using a `Multi<ChatEvent>` each emitted item is a subclass of `ChatEvent` with different event types:
+
+* `PartialResponseEvent` - A partial text token from the main response
+* `PartialThinkingEvent` - A partial thinking/reasoning text chunk (experimental)
+* `BeforeToolExecutionEvent` - Emitted before a tool is executed
+* `ToolExecutedEvent` - Tool execution metadata
+* `ContentFetchedEvent` - Content retrieved from RAG sources
+* `ChatCompletedEvent` - The final LLM response
+
+NOTE: When tools are used, the event flow is: `BeforeToolExecutionEvent` → (tool execution) → `ToolExecutedEvent`. This allows monitoring both before and after tool execution phases.
 
 [source,java]
 ----

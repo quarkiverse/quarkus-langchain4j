@@ -15,12 +15,14 @@ import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
@@ -44,17 +46,21 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final boolean switchToWorkerForEmission;
 
     private Consumer<String> partialResponseHandler;
+    private Consumer<PartialThinking> partialThinkingHandler;
     private Consumer<List<Content>> contentsHandler;
     private Consumer<Throwable> errorHandler;
     private Consumer<Response<AiMessage>> completionHandler;
+    private Consumer<BeforeToolExecution> beforeToolExecutionHandler;
     private Consumer<ToolExecution> toolExecuteHandler;
     private Consumer<ChatResponse> completeResponseHandler;
 
     private int onPartialResponseInvoked;
+    private int onPartialThinkingInvoked;
     private int onCompleteResponseInvoked;
     private int onRetrievedInvoked;
     private int onErrorInvoked;
     private int ignoreErrorsInvoked;
+    private int beforeToolExecutionInvoked;
     private int toolExecuteInvoked;
 
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
@@ -84,9 +90,23 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     }
 
     @Override
+    public TokenStream onPartialThinking(Consumer<PartialThinking> partialThinkingHandler) {
+        this.partialThinkingHandler = partialThinkingHandler;
+        this.onPartialThinkingInvoked++;
+        return this;
+    }
+
+    @Override
     public TokenStream onRetrieved(Consumer<List<Content>> contentsHandler) {
         this.contentsHandler = contentsHandler;
         this.onRetrievedInvoked++;
+        return this;
+    }
+
+    @Override
+    public TokenStream beforeToolExecution(Consumer<BeforeToolExecution> beforeToolExecutionHandler) {
+        this.beforeToolExecutionHandler = beforeToolExecutionHandler;
+        this.beforeToolExecutionInvoked++;
         return this;
     }
 
@@ -130,6 +150,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 context,
                 memoryId,
                 partialResponseHandler,
+                partialThinkingHandler,
+                beforeToolExecutionHandler,
                 toolExecuteHandler,
                 completeResponseHandler,
                 completionHandler,
@@ -173,6 +195,14 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         if (toolExecuteInvoked > 1) {
             throw new IllegalConfigurationException("onToolExecuted can be invoked on TokenStream at most 1 time");
+        }
+
+        if (beforeToolExecutionInvoked > 1) {
+            throw new IllegalConfigurationException("beforeToolExecution can be invoked on TokenStream at most 1 time");
+        }
+
+        if (onPartialThinkingInvoked > 1) {
+            throw new IllegalConfigurationException("onPartialThinking can be invoked on TokenStream at most 1 time");
         }
 
         if (onErrorInvoked + ignoreErrorsInvoked != 1) {

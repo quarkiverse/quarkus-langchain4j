@@ -26,10 +26,12 @@ import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
+import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
@@ -47,7 +49,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final Object memoryId;
 
     private final Consumer<String> partialResponseHandler;
+    private final Consumer<PartialThinking> partialThinkingHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
+    private final Consumer<BeforeToolExecution> beforeToolExecutionHandler;
     private final Consumer<ToolExecution> toolExecuteHandler;
     private final Consumer<ChatResponse> completeResponseHandler;
     private final Consumer<Throwable> errorHandler;
@@ -65,6 +69,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
             Object memoryId,
             Consumer<String> partialResponseHandler,
+            Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ToolExecution> toolExecuteHandler,
             Consumer<ChatResponse> completeResponseHandler,
             Consumer<Response<AiMessage>> completionHandler,
@@ -80,6 +86,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.memoryId = ensureNotNull(memoryId, "memoryId");
 
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
+        this.partialThinkingHandler = partialThinkingHandler;
+        this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
         this.toolExecuteHandler = toolExecuteHandler;
@@ -105,6 +113,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     public QuarkusAiServiceStreamingResponseHandler(AiServiceContext context, Object memoryId,
             Consumer<String> partialResponseHandler,
+            Consumer<PartialThinking> partialThinkingHandler,
+            Consumer<BeforeToolExecution> beforeToolExecutionHandler,
             Consumer<ToolExecution> toolExecuteHandler, Consumer<ChatResponse> completeResponseHandler,
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
@@ -114,6 +124,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.context = context;
         this.memoryId = memoryId;
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
+        this.partialThinkingHandler = partialThinkingHandler;
+        this.beforeToolExecutionHandler = beforeToolExecutionHandler;
         this.toolExecuteHandler = toolExecuteHandler;
         this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
@@ -137,6 +149,18 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             }
         });
 
+    }
+
+    @Override
+    public void onPartialThinking(PartialThinking partialThinking) {
+        if (partialThinkingHandler != null) {
+            execute(new Runnable() {
+                @Override
+                public void run() {
+                    partialThinkingHandler.accept(partialThinking);
+                }
+            });
+        }
     }
 
     private void executeTools(Runnable runnable) {
@@ -181,6 +205,14 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 public void run() {
                     addToMemory(aiMessage);
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                        // Call before tool execution handler
+                        if (beforeToolExecutionHandler != null) {
+                            BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
+                                    .request(toolExecutionRequest)
+                                    .build();
+                            beforeToolExecutionHandler.accept(beforeToolExecution);
+                        }
+
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
                         String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
@@ -219,6 +251,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             context,
                             memoryId,
                             partialResponseHandler,
+                            partialThinkingHandler,
+                            beforeToolExecutionHandler,
                             toolExecuteHandler,
                             completeResponseHandler,
                             completionHandler,
