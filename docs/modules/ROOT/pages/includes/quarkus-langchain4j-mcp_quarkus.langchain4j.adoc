@@ -350,6 +350,137 @@ endif::add-copy-button-to-env-var[]
 |
 
 
+h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client[Configured MCP registry clients]##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-base-url[`quarkus.langchain4j.mcp.registry-client."registry-client-name".base-url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".base-url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The base URL of the MCP registry, without the API version segment. The default value points at the official registry (https://registry.modelcontextprotocol.io).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__BASE_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__BASE_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`https://registry.modelcontextprotocol.io`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-requests[`quarkus.langchain4j.mcp.registry-client."registry-client-name".log-requests`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-requests+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to log requests
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__LOG_REQUESTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__LOG_REQUESTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-log-responses[`quarkus.langchain4j.mcp.registry-client."registry-client-name".log-responses`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".log-responses+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to log responses
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__LOG_RESPONSES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-tls-configuration-name[`quarkus.langchain4j.mcp.registry-client."registry-client-name".tls-configuration-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration (bucket) that this MCP client registry will use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-read-timeout[`quarkus.langchain4j.mcp.registry-client."registry-client-name".read-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".read-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The read timeout for the MCP registry's underlying http client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__READ_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__READ_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`10s`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout[`quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The connect timeout for the MCP registry's underlying http client
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`10s`
+
+
 |===
 
 ifndef::no-duration-note[]

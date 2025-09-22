@@ -9,6 +9,7 @@ import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 import io.smallrye.config.WithParentName;
 
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
@@ -22,6 +23,14 @@ public interface McpRuntimeConfiguration {
     @ConfigDocMapKey("client-name")
     @WithParentName
     Map<String, McpClientRuntimeConfig> clients();
+
+    /**
+     * Configured MCP registry clients
+     */
+    @ConfigDocSection
+    @ConfigDocMapKey("registry-client-name")
+    @WithName("registry-client")
+    Map<String, McpRegistryClientRuntimeConfig> registryClients();
 
     /**
      * Whether resources should be exposed as MCP tools.

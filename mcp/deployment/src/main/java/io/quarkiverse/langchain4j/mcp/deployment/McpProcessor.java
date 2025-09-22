@@ -26,12 +26,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
+import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
@@ -56,7 +58,9 @@ public class McpProcessor {
     private static final Logger log = Logger.getLogger(McpProcessor.class);
 
     private static final DotName MCP_CLIENT = DotName.createSimple(McpClient.class);
+    private static final DotName MCP_REGISTRY_CLIENT = DotName.createSimple(McpRegistryClient.class);
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
+    private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName TRACER = DotName.createSimple(Tracer.class);
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -175,6 +179,30 @@ public class McpProcessor {
                         true));
             }
         }
+    }
+
+    @BuildStep
+    @Record(RUNTIME_INIT)
+    public void registerRegistryClients(
+            McpBuildTimeConfiguration mcpBuildTimeConfiguration,
+            BuildProducer<SyntheticBeanBuildItem> beanProducer,
+            McpRecorder recorder) {
+        mcpBuildTimeConfiguration.registryClients().forEach((clientName, x) -> {
+            AnnotationInstance qualifier = AnnotationInstance.builder(MCP_REGISTRY_CLIENT_NAME)
+                    .add("value", clientName)
+                    .build();
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(MCP_REGISTRY_CLIENT)
+                    .addQualifier(qualifier)
+                    .defaultBean()
+                    .setRuntimeInit()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .supplier(
+                            recorder.mcpRegistryClientSupplier(clientName))
+                    .done());
+        });
+
     }
 
     @BuildStep
