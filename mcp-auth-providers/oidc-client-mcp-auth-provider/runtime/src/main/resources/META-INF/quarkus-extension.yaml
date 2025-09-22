@@ -1,6 +1,6 @@
-name: LangChain4j OpenId Connect (OIDC) Client ModelAuthProvider
+name: LangChain4j McpClientAuthProvider that acquires access tokens using OAuth2 grants such as 'client_credentials'.
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides McpClientAuthProvider which uses OIDC client to acquire access tokens
+description: Provides McpClientAuthProvider implementation that uses the quarkus-oidc-client extension to acquire access tokens using OAuth2 grants such as 'client_credentials' and propagate them to MCP servers.
 metadata:
   keywords:
     - ai
