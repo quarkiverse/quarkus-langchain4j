@@ -22,6 +22,7 @@ import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
@@ -49,6 +50,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private Consumer<List<Content>> contentsHandler;
     private Consumer<Throwable> errorHandler;
     private Consumer<Response<AiMessage>> completionHandler;
+    private Consumer<BeforeToolExecution> beforeToolExecutionHandler;
     private Consumer<ToolExecution> toolExecuteHandler;
     private Consumer<ChatResponse> completeResponseHandler;
 
@@ -58,6 +60,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private int onRetrievedInvoked;
     private int onErrorInvoked;
     private int ignoreErrorsInvoked;
+    private int beforeToolExecutionInvoked;
     private int toolExecuteInvoked;
 
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
@@ -97,6 +100,13 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     public TokenStream onRetrieved(Consumer<List<Content>> contentsHandler) {
         this.contentsHandler = contentsHandler;
         this.onRetrievedInvoked++;
+        return this;
+    }
+
+    @Override
+    public TokenStream beforeToolExecution(Consumer<BeforeToolExecution> beforeToolExecutionHandler) {
+        this.beforeToolExecutionHandler = beforeToolExecutionHandler;
+        this.beforeToolExecutionInvoked++;
         return this;
     }
 
@@ -141,6 +151,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 memoryId,
                 partialResponseHandler,
                 partialThinkingHandler,
+                beforeToolExecutionHandler,
                 toolExecuteHandler,
                 completeResponseHandler,
                 completionHandler,
@@ -184,6 +195,10 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         if (toolExecuteInvoked > 1) {
             throw new IllegalConfigurationException("onToolExecuted can be invoked on TokenStream at most 1 time");
+        }
+
+        if (beforeToolExecutionInvoked > 1) {
+            throw new IllegalConfigurationException("beforeToolExecution can be invoked on TokenStream at most 1 time");
         }
 
         if (onPartialThinkingInvoked > 1) {

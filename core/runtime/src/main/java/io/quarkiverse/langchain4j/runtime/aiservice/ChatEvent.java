@@ -2,6 +2,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.util.List;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.rag.content.Content;
@@ -20,6 +21,7 @@ import dev.langchain4j.service.tool.ToolExecution;
  *
  * @see ChatCompletedEvent
  * @see ToolExecutedEvent
+ * @see BeforeToolExecutionEvent
  * @see PartialResponseEvent
  * @see ContentFetchedEvent
  * @see AccumulatedResponseEvent
@@ -39,6 +41,10 @@ public class ChatEvent {
          * Indicates that a tool has been executed during the chat conversation.
          */
         ToolExecuted,
+        /**
+         * Indicates that a tool is about to be executed during the chat conversation.
+         */
+        BeforeToolExecution,
         /**
          * Indicates that a partial response chunk has been received (used in streaming scenarios).
          */
@@ -132,6 +138,34 @@ public class ChatEvent {
          */
         public ToolExecution getExecution() {
             return execution;
+        }
+    }
+
+    /**
+     * Event emitted when a tool is about to be executed during a chat conversation.
+     * This event is triggered before the tool execution begins, allowing for monitoring,
+     * logging, or preparation steps before the actual tool invocation.
+     */
+    public static class BeforeToolExecutionEvent extends ChatEvent {
+        private final ToolExecutionRequest request;
+
+        /**
+         * Constructs a new BeforeToolExecutionEvent with the given tool execution request.
+         *
+         * @param request the tool execution request that is about to be executed
+         */
+        public BeforeToolExecutionEvent(ToolExecutionRequest request) {
+            super(ChatEventType.BeforeToolExecution);
+            this.request = request;
+        }
+
+        /**
+         * Returns the tool execution request that is about to be executed.
+         *
+         * @return the tool execution request
+         */
+        public ToolExecutionRequest getRequest() {
+            return request;
         }
     }
 
