@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-    <version>1.2.0.CR3</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-test-rag-pgvector-flyway</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - RAG With PgVector and Flyway</name>
@@ -59,7 +59,7 @@
     <dependency>
       <groupId>io.quarkiverse.langchain4j</groupId>
       <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-      <version>1.2.0.CR3</version>
+      <version>999-SNAPSHOT</version>
       <type>pom</type>
       <scope>test</scope>
       <exclusions>
