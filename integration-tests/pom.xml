@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>1.2.0.CR3</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - Parent</name>
@@ -67,99 +67,99 @@
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-parent</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                         <type>pom</type>
                         <scope>import</scope>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-ai-gemini</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-anthropic</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-azure-openai</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-chroma</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-cohere</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-core</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-easy-rag</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-hugging-face</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-jlama</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-llama3-java</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-mcp</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-ollama</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-openai</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-openshift-ai</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-pgvector</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-vertex-ai-gemini</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-watsonx</artifactId>
-                        <version>999-SNAPSHOT</version>
+                        <version>1.2.0.CR3</version>
                     </dependency>
                     <dependency>
                         <groupId>com.github.tjake</groupId>
