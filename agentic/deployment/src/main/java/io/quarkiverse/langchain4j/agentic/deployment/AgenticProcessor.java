@@ -97,15 +97,12 @@ public class AgenticProcessor {
     @BuildStep
     SkipOutputFormatInstructionsBuildItem skipOutputInstructions() {
         Set<DotName> skippedReturnTypes = Set.of(AgenticLangChain4jDotNames.AGENTIC_SCOPE,
-                AgenticLangChain4jDotNames.RESULT_WITH_AGENTIC_SCOPE);
+                AgenticLangChain4jDotNames.RESULT_WITH_AGENTIC_SCOPE, DotName.OBJECT_NAME,
+                // this one is just a hack....
+                io.quarkus.arc.processor.DotNames.LIST);
         return new SkipOutputFormatInstructionsBuildItem(new Predicate<>() {
             @Override
             public boolean test(MethodInfo methodInfo) {
-                for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-                    if (methodInfo.hasAnnotation(dotName)) {
-                        return true;
-                    }
-                }
                 return skippedReturnTypes.contains(methodInfo.returnType().name());
             }
         });
