@@ -526,6 +526,9 @@ public class AiServicesProcessor {
                 if (ci == null) {
                     return;
                 }
+                if (!ci.isInterface()) {
+                    return;
+                }
                 impliedDefaultRegisterAiService.add(AnnotationInstance.builder(REGISTER_AI_SERVICES).buildWithTarget(ci));
             });
         }
