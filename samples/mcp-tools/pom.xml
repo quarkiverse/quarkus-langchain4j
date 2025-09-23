@@ -15,25 +15,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <quarkus.platform.version>3.20.0</quarkus.platform.version>
+        <quarkus.platform.version>3.26.4</quarkus.platform.version>
         <skipITs>true</skipITs>
+        <skipTests>true</skipTests>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
-        <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>${quarkus.platform.group-id}</groupId>
-                <artifactId>${quarkus.platform.artifact-id}</artifactId>
-                <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <dependencies>
+   <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
@@ -46,16 +34,16 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-mcp</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-        </dependency>
+       <dependency>
+           <groupId>io.quarkus</groupId>
+           <artifactId>quarkus-junit5</artifactId>
+           <scope>test</scope>
+       </dependency>
+       <dependency>
+           <groupId>org.awaitility</groupId>
+           <artifactId>awaitility</artifactId>
+           <scope>test</scope>
+       </dependency>
 
         <!-- UI -->
         <dependency>
@@ -75,39 +63,11 @@
             <version>0.2.1</version>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- Minimal dependencies to constrain the build -->
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-            <scope>test</scope>
-            <type>pom</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
-            <version>${quarkus-langchain4j.version}</version>
-            <scope>test</scope>
-            <type>pom</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <executions>
@@ -136,6 +96,76 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>default-project-deps</id>
+            <activation>
+                <property>
+                    <name>!platform-deps</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-openai</artifactId>
+                    <version>${quarkus-langchain4j.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-mcp</artifactId>
+                    <version>${quarkus-langchain4j.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>platform-deps</id>
+            <activation>
+                <property>
+                    <name>platform-deps</name>
+                </property>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>quarkus-langchain4j-bom</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-openai</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-mcp</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>native</id>
             <activation>
@@ -167,7 +197,8 @@
                 </plugins>
             </build>
             <properties>
-                <quarkus.package.type>native</quarkus.package.type>
+                <skipITs>false</skipITs>
+                <quarkus.native.enabled>true</quarkus.native.enabled>
             </properties>
         </profile>
 
