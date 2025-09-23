@@ -373,6 +373,16 @@
         <module>docs</module>
       </modules>
     </profile>
-
+    <profile>
+        <id>samples</id>
+        <activation>
+            <property>
+                <name>samples</name>
+            </property>
+        </activation>
+        <modules>
+            <module>samples</module>
+        </modules>
+    </profile>
   </profiles>
 </project>
