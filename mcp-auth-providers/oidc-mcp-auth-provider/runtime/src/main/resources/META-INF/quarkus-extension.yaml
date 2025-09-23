@@ -1,6 +1,6 @@
-name: LangChain4j OpenId Connect (OIDC) ModelAuthProvider
+name: LangChain4j McpClientAuthProvider that can propagate OpenId Connect (OIDC) and OAuth2 authorization code flow or bearer access tokens.
 artifact: ${project.groupId}:${project.artifactId}:${project.version}
-description: Provides McpClientAuthProvider which uses OIDC bearer or authorization code flow access tokens
+description: Provides McpClientAuthProvider implementation that can be used to collect authorization code flow or bearer access tokens verified by the quarkus-oidc extension and propagate them to MCP servers.
 metadata:
   keywords:
     - ai
