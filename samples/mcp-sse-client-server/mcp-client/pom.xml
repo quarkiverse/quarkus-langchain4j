@@ -19,8 +19,6 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.21.2</quarkus.platform.version>
 
-        <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
-
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.0</surefire-plugin.version>
     </properties>
@@ -28,16 +26,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.quarkus.platform</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-bom</artifactId>
                 <version>${quarkus.platform.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.quarkiverse.langchain4j</groupId>
-                <artifactId>quarkus-langchain4j-bom</artifactId>
-                <version>${quarkus-langchain4j.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -151,6 +142,47 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>default-project-deps</id>
+            <activation>
+                <property>
+                    <name>!platform-deps</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-bom</artifactId>
+                        <version>${quarkus-langchain4j.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
+        <profile>
+            <id>platform-deps</id>
+            <activation>
+                <property>
+                    <name>platform-deps</name>
+                </property>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>quarkus-langchain4j-bom</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+        </profile>
         <profile>
             <id>native</id>
             <activation>

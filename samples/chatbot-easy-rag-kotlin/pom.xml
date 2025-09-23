@@ -22,7 +22,6 @@
     <quarkus.platform.version>3.22.3</quarkus.platform.version>
     <kotest.version>5.9.1</kotest.version>
     <kotlinx-datetime.version>0.6.2</kotlinx-datetime.version>
-    <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
   </properties>
 
@@ -39,13 +38,6 @@
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
         <version>${quarkus.platform.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-bom</artifactId>
-        <version>${quarkus-langchain4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -163,34 +155,6 @@
       <version>0.4.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Minimal dependencies to constrain the build -->
-    <dependency>
-      <groupId>io.quarkiverse.langchain4j</groupId>
-      <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-      <version>${quarkus-langchain4j.version}</version>
-      <scope>test</scope>
-      <type>pom</type>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.langchain4j</groupId>
-      <artifactId>quarkus-langchain4j-easy-rag-deployment</artifactId>
-      <version>${quarkus-langchain4j.version}</version>
-      <scope>test</scope>
-      <type>pom</type>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-test-junit5</artifactId>
@@ -210,7 +174,7 @@
     <plugins>
 
       <plugin>
-        <groupId>io.quarkus</groupId>
+        <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus.platform.version}</version>
         <extensions>true</extensions>
@@ -298,6 +262,47 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>default-project-deps</id>
+      <activation>
+        <property>
+          <name>!platform-deps</name>
+        </property>
+      </activation>
+      <properties>
+        <quarkus-langchain4j.version>1.2.0.CR3</quarkus-langchain4j.version>
+      </properties>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-bom</artifactId>
+            <version>${quarkus-langchain4j.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
+    <profile>
+      <id>platform-deps</id>
+      <activation>
+        <property>
+          <name>platform-deps</name>
+        </property>
+      </activation>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>${quarkus.platform.group-id}</groupId>
+            <artifactId>quarkus-langchain4j-bom</artifactId>
+            <version>${quarkus.platform.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
     <profile>
       <id>native</id>
       <activation>
