@@ -17,21 +17,9 @@
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.version>3.20.0</quarkus.platform.version>
     <skipITs>true</skipITs>
+    <skipTests>true</skipTests>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
-    <quarkus-langchain4j.version>1.2.1</quarkus-langchain4j.version>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>${quarkus.platform.group-id}</groupId>
-        <artifactId>${quarkus.platform.artifact-id}</artifactId>
-        <version>${quarkus.platform.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -47,31 +35,15 @@
       <artifactId>quarkus-jdbc-postgresql</artifactId>
     </dependency>
     <dependency>
-        <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-openai</artifactId>
-        <version>${quarkus-langchain4j.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-pgvector</artifactId>
-        <version>${quarkus-langchain4j.version}</version>
-    </dependency>
-
-
-    <!-- Minimal dependencies to constrain the build -->
-    <dependency>
-        <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-        <version>${quarkus-langchain4j.version}</version>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-junit5</artifactId>
         <scope>test</scope>
-        <type>pom</type>
-        <exclusions>
-            <exclusion>
-                <groupId>*</groupId>
-                <artifactId>*</artifactId>
-            </exclusion>
-        </exclusions>
     </dependency>
+      <dependency>
+          <groupId>io.rest-assured</groupId>
+          <artifactId>rest-assured</artifactId>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
    <build>
@@ -107,6 +79,76 @@
 
     <profiles>
         <profile>
+            <id>default-project-deps</id>
+            <activation>
+                <property>
+                    <name>!platform-deps</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus-langchain4j.version>1.2.1</quarkus-langchain4j.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-openai</artifactId>
+                    <version>${quarkus-langchain4j.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-pgvector</artifactId>
+                    <version>${quarkus-langchain4j.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>platform-deps</id>
+            <activation>
+                <property>
+                    <name>platform-deps</name>
+                </property>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>${quarkus.platform.group-id}</groupId>
+                        <artifactId>quarkus-langchain4j-bom</artifactId>
+                        <version>${quarkus.platform.version}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-openai</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>io.quarkiverse.langchain4j</groupId>
+                    <artifactId>quarkus-langchain4j-pgvector</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>native</id>
             <activation>
                 <property>
@@ -137,6 +179,7 @@
                 </plugins>
             </build>
             <properties>
+                <skipITs>false</skipITs>
                 <quarkus.package.type>native</quarkus.package.type>
             </properties>
         </profile>
