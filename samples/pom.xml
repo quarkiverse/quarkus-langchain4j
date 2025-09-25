@@ -21,6 +21,7 @@
         <module>fraud-detection</module>
         <module>mcp-tools</module>
         <module>mcp-sse-client-server</module>
+        <module>movie-similarity-search</module>
         <module>secure-mcp-sse-client-server</module>
         <module>secure-mcp-cmd-client-server</module>
         <module>review-triage</module>
