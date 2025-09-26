@@ -51,6 +51,7 @@ public class OpenAiProcessor {
 
     private static final String FEATURE = "langchain4j-openai";
     private static final String PROVIDER = "openai";
+    private static final String OPEN_AI_EMBEDDING_DESERIALIZER = "dev.langchain4j.model.openai.internal.embedding.OpenAiEmbeddingDeserializer";
 
     @BuildStep
     FeatureBuildItem feature() {
@@ -187,5 +188,6 @@ public class OpenAiProcessor {
                         QuarkusOpenAiStreamingChatModelBuilderFactory.class.getName()));
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(PropertyNamingStrategies.SnakeCaseStrategy.class).build());
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(OPEN_AI_EMBEDDING_DESERIALIZER).build());
     }
 }
