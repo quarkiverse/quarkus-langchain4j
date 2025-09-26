@@ -30,7 +30,7 @@ public abstract class McpRootsTestBase {
                 .name("assertRoots")
                 .arguments("{}")
                 .build();
-        String result = mcpClient.executeTool(toolExecutionRequest);
+        String result = mcpClient.executeTool(toolExecutionRequest).resultText();
         assertThat(result).isEqualTo("OK");
 
         // now update the roots
@@ -43,7 +43,7 @@ public abstract class McpRootsTestBase {
                 .name("assertRootsAfterUpdate")
                 .arguments("{}")
                 .build();
-        result = mcpClient.executeTool(toolExecutionRequest);
+        result = mcpClient.executeTool(toolExecutionRequest).resultText();
         assertThat(result).isEqualTo("OK");
     }
 }
