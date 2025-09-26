@@ -50,6 +50,7 @@ public class AiGeminiRecorder {
             var builder = AiGeminiEmbeddingModel.builder()
                     .configName(configName)
                     .baseUrl(baseUrl)
+                    .apiVersion(aiConfig.apiVersion())
                     .key(apiKey)
                     .modelId(embeddingModelConfig.modelId())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
@@ -92,6 +93,7 @@ public class AiGeminiRecorder {
             String apiKey = aiConfig.apiKey().orElse(null);
             var builder = AiGeminiChatLanguageModel.builder()
                     .baseUrl(baseUrl)
+                    .apiVersion(aiConfig.apiVersion())
                     .key(apiKey)
                     .modelId(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())

@@ -36,6 +36,10 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
 
         try {
             String baseUrl = builder.baseUrl.orElse("https://generativelanguage.googleapis.com");
+            if (!baseUrl.endsWith("/")) {
+                baseUrl += "/";
+            }
+            baseUrl += builder.apiVersion;
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder()
                     .baseUri(new URI(baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
@@ -81,6 +85,7 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
     public static final class Builder {
 
         private Optional<String> baseUrl = Optional.empty();
+        private String apiVersion;
         private String projectId;
         private String location;
         private String modelId;
@@ -94,6 +99,11 @@ public class VertexAiGeminiEmbeddingModel extends GeminiEmbeddingModel {
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder apiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
             return this;
         }
 

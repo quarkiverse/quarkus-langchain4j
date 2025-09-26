@@ -44,7 +44,7 @@ public class AiGeminiEmbeddingModelAuthProviderSmokeTest extends WiremockAware {
     void testBatch() {
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:batchEmbedContents", EMBED_MODEL_ID)))
+                        String.format("/v1/models/%s:batchEmbedContents", EMBED_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
@@ -89,7 +89,7 @@ public class AiGeminiEmbeddingModelAuthProviderSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:embedContent", EMBED_MODEL_ID)))
+                        String.format("/v1/models/%s:embedContent", EMBED_MODEL_ID)))
                         .withHeader("Authorization", equalTo("Bearer " + API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")

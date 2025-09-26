@@ -23,8 +23,9 @@ import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
+public class AiGeminiEmbeddingModelV1BetaSmokeTest extends WiremockAware {
 
+    private static final String API_VERSION = "v1Beta";
     private static final String API_KEY = "dummy";
     private static final String EMBED_MODEL_ID = "text-embedding-004";
 
@@ -32,6 +33,7 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
+            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-version", API_VERSION)
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
 
@@ -42,8 +44,8 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     void testBatch() {
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1/models/%s:batchEmbedContents?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/%s/models/%s:batchEmbedContents?key=%s",
+                                API_VERSION, EMBED_MODEL_ID, API_KEY)))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -87,8 +89,8 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1/models/%s:embedContent?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/%s/models/%s:embedContent?key=%s",
+                                API_VERSION, EMBED_MODEL_ID, API_KEY)))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""

@@ -61,6 +61,12 @@ public interface LangChain4jVertexAiGeminiConfig {
         Optional<String> baseUrl();
 
         /**
+         * The API version to use for this operation.
+         */
+        @WithDefault("v1")
+        String apiVersion();
+
+        /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Vertex AI Gemini
          * provider.
          * Set to {@code false} to disable all requests.
