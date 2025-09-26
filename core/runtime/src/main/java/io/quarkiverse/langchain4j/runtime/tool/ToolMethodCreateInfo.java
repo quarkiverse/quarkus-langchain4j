@@ -1,12 +1,14 @@
 package io.quarkiverse.langchain4j.runtime.tool;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolSpecification;
 
 public record ToolMethodCreateInfo(String methodName,
         String invokerClassName,
         ToolSpecification toolSpecification,
         String argumentMapperClassName,
-        ExecutionModel executionModel) {
+        ExecutionModel executionModel,
+        ReturnBehavior returnBehavior) {
 
     public enum ExecutionModel {
         BLOCKING,

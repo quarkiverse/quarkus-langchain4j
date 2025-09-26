@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.test.tools;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
@@ -32,7 +35,9 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.MemoryId;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
@@ -255,15 +260,49 @@ public class ToolExecutionModelTest {
         assertThat(failure.get()).hasMessageContaining("Cannot execute virtual thread tools on event loop thread");
     }
 
+    @Test
+    @ActivateRequestContext
+    void testImmediate() {
+        // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        String uuid = UUID.randomUUID().toString();
+        Result<String> r = aiService.helloResult("abc", "hiImmediate - " + uuid);
+        assertNull(r.content());
+        assertThat(r.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
+        assertThat(r.toolExecutions()).hasSize(1);
+        assertThat(r.toolExecutions().get(0).result()).contains("hiImmediate");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testImmediateNotResult() {
+        // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        // Tests failure when AiService does not return a Result
+        String uuid = UUID.randomUUID().toString();
+        try {
+            var r = aiService.hello("abc", "hiImmediate - " + uuid);
+            fail("Should have thrown an exception");
+        } catch (IllegalConfigurationException e) {
+            // good!
+        }
+    }
+
     @RegisterAiService(chatLanguageModelSupplier = MyChatModelSupplier.class, chatMemoryProviderSupplier = MyMemoryProviderSupplier.class)
     public interface MyAiService {
 
         @ToolBox(MyTool.class)
         String hello(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
+
+        @ToolBox(MyTool.class)
+        Result<String> helloResult(@MemoryId String memoryId, @UserMessage String userMessageContainingTheToolId);
     }
 
     @Singleton
     public static class MyTool {
+        @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        public String hiImmediate(String m) {
+            return "hiImmediate";
+        }
+
         @Tool
         public String hi(String m) {
             return m + " " + Thread.currentThread();
