@@ -20,7 +20,7 @@ public interface ChatModelConfig {
      * @see <a href=
      *      "https://ai.google.dev/gemini-api/docs/models/gemini">https://ai.google.dev/gemini-api/docs/models/gemini</a>
      */
-    @WithDefault("gemini-1.5-flash")
+    @WithDefault("gemini-2.5-flash")
     String modelId();
 
     /**
@@ -54,7 +54,7 @@ public interface ChatModelConfig {
      * <p>
      * Range: 0.0 - 1.0
      * <p>
-     * gemini-1.0-pro and gemini-1.5-pro don't support topK
+     * Default for gemini-2.5-flash: 0.95
      */
     OptionalDouble topP();
 
@@ -70,9 +70,7 @@ public interface ChatModelConfig {
      * <p>
      * Range: 1-40
      * <p>
-     * Default for gemini-1.5-pro: 0.94
-     * <p>
-     * Default for gemini-1.0-pro: 1
+     * gemini-2.5-flash doesn't support topK
      */
     OptionalInt topK();
 
