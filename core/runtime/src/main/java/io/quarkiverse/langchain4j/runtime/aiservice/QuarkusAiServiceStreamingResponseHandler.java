@@ -33,6 +33,7 @@ import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.vertx.core.Context;
 
@@ -220,7 +221,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                                 toolExecutionRequest,
                                 toolExecutionResult);
                         ToolExecution toolExecution = ToolExecution.builder()
-                                .request(toolExecutionRequest).result(toolExecutionResult)
+                                .request(toolExecutionRequest)
+                                .result(ToolExecutionResult.builder().resultText(toolExecutionResult).build())
                                 .build();
                         if (toolExecuteHandler != null) {
                             toolExecuteHandler.accept(toolExecution);
