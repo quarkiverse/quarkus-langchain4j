@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-1.5-flash`
+|`gemini-2.5-flash`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature[`quarkus.langchain4j.ai.gemini.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -275,7 +275,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-1.0-pro and gemini-1.5-pro don't support topK
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -304,9 +304,8 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-1.5-pro: 0.94
+Default for gemini-2.5-flash: 0.95
 
-Default for gemini-1.0-pro: 1
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -722,7 +721,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-1.5-flash`
+|`gemini-2.5-flash`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature[`quarkus.langchain4j.ai.gemini."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -782,7 +781,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-1.0-pro and gemini-1.5-pro don't support topK
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -811,9 +810,8 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-1.5-pro: 0.94
+Default for gemini-2.5-flash: 0.95
 
-Default for gemini-1.0-pro: 1
 
 
 ifdef::add-copy-button-to-env-var[]

@@ -299,7 +299,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_MODEL_I
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-1.5-pro`
+|`gemini-2.5-flash`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-chat-model-temperature[`quarkus.langchain4j.vertexai.gemini.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -313,13 +313,10 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
-Range for gemini-1.0-pro-001
+Range for gemini-2.5-flash: 0.0 - 2.0
 
-Range for gemini-1.0-pro-002, gemini-1.5-pro: 0.0 - 2.0
+Default for gemini-2.5-flash: 1.0
 
-Default for gemini-1.5-pro and gemini-1.0-pro-002: 1.0
-
-Default for gemini-1.0-pro-001: 0.9
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -367,7 +364,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-1.0-pro and gemini-1.5-pro don't support topK
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -396,9 +393,8 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-1.5-pro: 0.94
+Default for gemini-2.5-flash: 0.95
 
-Default for gemini-1.0-pro: 1
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -854,7 +850,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI__MODEL_NAME__CHAT_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-1.5-pro`
+|`gemini-2.5-flash`
 
 a| [[quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai-gemini_quarkus-langchain4j-vertexai-gemini-model-name-chat-model-temperature[`quarkus.langchain4j.vertexai.gemini."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -868,13 +864,11 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
-Range for gemini-1.0-pro-001
 
-Range for gemini-1.0-pro-002, gemini-1.5-pro: 0.0 - 2.0
+Range for gemini-2.5-flash: 0.0 - 2.0
 
-Default for gemini-1.5-pro and gemini-1.0-pro-002: 1.0
+Default for gemini-2.5-flash: 1.0
 
-Default for gemini-1.0-pro-001: 0.9
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -922,7 +916,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-1.0-pro and gemini-1.5-pro don't support topK
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -951,9 +945,8 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-1.5-pro: 0.94
+Default for gemini-2.5-flash: 0.95
 
-Default for gemini-1.0-pro: 1
 
 
 ifdef::add-copy-button-to-env-var[]

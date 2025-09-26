@@ -23,7 +23,7 @@ import io.quarkus.test.QuarkusUnitTest;
 public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "dummy";
-    private static final String CHAT_MODEL_ID = "gemini-1.5-flash";
+    private static final String CHAT_MODEL_ID = "gemini-2.5-flash";
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
