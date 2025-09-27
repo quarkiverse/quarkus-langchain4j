@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.mcp.client.*;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 
 public abstract class McpTlsTestBase {
@@ -25,7 +26,8 @@ public abstract class McpTlsTestBase {
                 .name("echoString")
                 .arguments("{\"input\": \"abc\"}")
                 .build();
-        Assertions.assertThat(mcpClient.executeTool(toolExecutionRequest)).isEqualTo("abc");
+        Assertions.assertThat(mcpClient.executeTool(toolExecutionRequest))
+                .isEqualTo(ToolExecutionResult.builder().resultText("abc").isError(false).build());
     }
 
     @Test

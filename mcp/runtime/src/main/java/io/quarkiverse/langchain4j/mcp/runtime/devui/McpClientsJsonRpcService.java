@@ -56,7 +56,7 @@ public class McpClientsJsonRpcService {
                 .name(toolName)
                 .arguments(arguments)
                 .build();
-        return clients.get(clientName).executeTool(request);
+        return clients.get(clientName).executeTool(request).resultText();
     }
 
     private McpClientInfo buildClientInfo(McpClient client) {

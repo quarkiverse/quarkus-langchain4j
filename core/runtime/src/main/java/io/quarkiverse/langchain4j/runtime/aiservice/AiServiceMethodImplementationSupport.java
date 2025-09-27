@@ -53,6 +53,7 @@ import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -325,7 +326,7 @@ public class AiServiceMethodImplementationSupport {
                     .toolExecutors(toolExecutors)
                     .retrievedContents((augmentationResult != null ? augmentationResult.contents() : null))
                     .context(context)
-                    .memoryId(memoryId)
+                    .invocationContext(InvocationContext.builder().chatMemoryId(memoryId).build())
                     .methodKey(methodCreateInfo)
                     .toolArgumentsErrorHandler((e, c) -> {
                         throw new RuntimeException(e);
@@ -337,6 +338,11 @@ public class AiServiceMethodImplementationSupport {
                                     .augmentationResult(augmentationResult)
                                     .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
                                     .variables(templateVariables)
+                                    .invocationContext(InvocationContext.builder()
+                                            .interfaceName(methodCreateInfo.getInterfaceName())
+                                            .methodName(methodCreateInfo.getMethodName())
+                                            .chatMemoryId(committableChatMemory.id())
+                                            .build())
                                     .build())
                     .build();
             return new AiServiceTokenStream(aiServiceTokenStreamParams);
@@ -433,7 +439,9 @@ public class AiServiceMethodImplementationSupport {
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
 
                 ToolExecutionResultMessage toolExecutionResultMessage = toolExecutor == null
-                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
+                        ? new ToolExecutionResultMessage(toolExecutionRequest.id(),
+                                toolExecutionRequest.name(),
+                                context.toolService.applyToolHallucinationStrategy(toolExecutionRequest).resultText())
                         : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, memoryId, beanManager);
 
                 ToolExecution toolExecution = ToolExecution.builder()

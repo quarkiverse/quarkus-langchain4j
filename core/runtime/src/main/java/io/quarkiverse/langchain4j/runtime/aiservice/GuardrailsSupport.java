@@ -14,6 +14,7 @@ import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.OutputGuardrailException;
 import dev.langchain4j.guardrail.OutputGuardrailRequest;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
@@ -40,6 +41,11 @@ public class GuardrailsSupport {
                                     .augmentationResult(augmentationResult)
                                     .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
                                     .variables(templateVariables)
+                                    .invocationContext(InvocationContext.builder()
+                                            .interfaceName(methodCreateInfo.getInterfaceName())
+                                            .methodName(methodCreateInfo.getMethodName())
+                                            .chatMemoryId(chatMemory.id())
+                                            .build())
                                     .build())
                     .build();
 
@@ -65,6 +71,11 @@ public class GuardrailsSupport {
                                     .augmentationResult(augmentationResult)
                                     .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
                                     .variables(templateVariables)
+                                    .invocationContext(InvocationContext.builder()
+                                            .interfaceName(methodCreateInfo.getInterfaceName())
+                                            .methodName(methodCreateInfo.getMethodName())
+                                            .chatMemoryId(committableChatMemory.id())
+                                            .build())
                                     .build())
                     .build();
 
