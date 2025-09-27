@@ -52,7 +52,8 @@ public class ToolsRecorder {
                 toolSpecifications.add(toolSpecification);
                 QuarkusToolExecutor.Context executorContext = new QuarkusToolExecutor.Context(objectWithTool,
                         invokerClassName, methodCreateInfo.methodName(),
-                        methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel());
+                        methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel(),
+                        methodCreateInfo.returnBehavior());
                 toolExecutors.put(toolSpecification.name(), toolExecutorFactory.create(executorContext));
             }
         }

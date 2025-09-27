@@ -40,6 +40,7 @@ import org.objectweb.asm.Opcodes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -230,6 +231,7 @@ public class ToolProcessor {
                             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
                                     .addBeanClass(className.toString())
                                     .setUnremovable().build());
+                            ;
                         }
                     }
 
@@ -238,6 +240,11 @@ public class ToolProcessor {
 
                     String toolName = getToolName(nameValue, toolMethod);
                     String toolDescription = getToolDescription(descriptionValue);
+                    AnnotationValue returnBehavior = instance.value("returnBehavior");
+                    ReturnBehavior returnBehaviorEnum = ReturnBehavior.TO_LLM;
+                    if (returnBehavior != null) {
+                        returnBehaviorEnum = ReturnBehavior.valueOf(returnBehavior.asEnum());
+                    }
 
                     ToolSpecification.Builder builder = ToolSpecification.builder()
                             .name(toolName)
@@ -284,7 +291,8 @@ public class ToolProcessor {
                     ToolSpecification toolSpecification = builder.build();
                     ToolMethodCreateInfo methodCreateInfo = new ToolMethodCreateInfo(
                             toolMethod.name(), invokerClassName,
-                            toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod));
+                            toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod),
+                            returnBehaviorEnum);
 
                     validateExecutionModel(methodCreateInfo, toolMethod, validation);
 

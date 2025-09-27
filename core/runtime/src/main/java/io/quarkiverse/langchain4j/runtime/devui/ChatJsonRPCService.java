@@ -116,7 +116,8 @@ public class ChatJsonRPCService {
                     }
                     QuarkusToolExecutor.Context executorContext = new QuarkusToolExecutor.Context(objectWithTool,
                             methodCreateInfo.invokerClassName(), methodCreateInfo.methodName(),
-                            methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel());
+                            methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel(),
+                            methodCreateInfo.returnBehavior());
                     toolExecutors.put(methodCreateInfo.toolSpecification().name(),
                             toolExecutorFactory.create(executorContext));
                     toolSpecifications.add(methodCreateInfo.toolSpecification());

@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -26,7 +27,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
     private final Context context;
 
     public record Context(Object tool, String toolInvokerName, String methodName, String argumentMapperClassName,
-            ToolMethodCreateInfo.ExecutionModel executionModel) {
+            ToolMethodCreateInfo.ExecutionModel executionModel, ReturnBehavior returnBehavior) {
     }
 
     public interface Wrapper {
@@ -37,6 +38,10 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     public QuarkusToolExecutor(Context context) {
         this.context = context;
+    }
+
+    public ReturnBehavior returnBehavior() {
+        return context.returnBehavior;
     }
 
     public String execute(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
