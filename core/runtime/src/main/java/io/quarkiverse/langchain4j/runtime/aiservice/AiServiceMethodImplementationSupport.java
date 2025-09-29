@@ -82,6 +82,7 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.output.ServiceOutputParser;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
@@ -446,7 +447,7 @@ public class AiServiceMethodImplementationSupport {
 
                 ToolExecution toolExecution = ToolExecution.builder()
                         .request(toolExecutionRequest)
-                        .result(toolExecutionResultMessage.text())
+                        .result(ToolExecutionResult.builder().resultText(toolExecutionResultMessage.text()).build())
                         .build();
                 toolExecutions.add(toolExecution);
                 if (toolExecutor instanceof QuarkusToolExecutor) {
