@@ -275,7 +275,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-2.5-flash doesn't support topK
+Default for gemini-2.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -304,8 +304,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-2.5-flash: 0.95
-
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -781,7 +780,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-2.5-flash doesn't support topK
+Default for gemini-2.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -810,8 +809,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-2.5-flash: 0.95
-
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]

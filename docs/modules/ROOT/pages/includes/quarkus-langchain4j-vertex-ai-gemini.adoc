@@ -318,7 +318,6 @@ Range for gemini-2.5-flash: 0.0 - 2.0
 Default for gemini-2.5-flash: 1.0
 
 
-
 ifdef::add-copy-button-to-env-var[]
 Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_VERTEXAI_GEMINI_CHAT_MODEL_TEMPERATURE+++[]
 endif::add-copy-button-to-env-var[]
@@ -364,7 +363,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-2.5-flash doesn't support topK
+Default for gemini-2.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -393,8 +392,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-2.5-flash: 0.95
-
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -864,11 +862,9 @@ The temperature is used for sampling during response generation, which occurs wh
 
 If the model returns a response that's too generic, too short, or the model gives a fallback response, try increasing the temperature.
 
-
 Range for gemini-2.5-flash: 0.0 - 2.0
 
 Default for gemini-2.5-flash: 1.0
-
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -916,7 +912,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 0.0 - 1.0
 
-gemini-2.5-flash doesn't support topK
+Default for gemini-2.5-flash: 0.95
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -945,8 +941,7 @@ Specify a lower value for less random responses and a higher value for more rand
 
 Range: 1-40
 
-Default for gemini-2.5-flash: 0.95
-
+gemini-2.5-flash doesn't support topK
 
 
 ifdef::add-copy-button-to-env-var[]
