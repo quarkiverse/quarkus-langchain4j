@@ -435,6 +435,7 @@ public class AiServiceMethodImplementationSupport {
 
             boolean immediateToolReturn = true;
             List<ToolExecution> toolExecutions = new ArrayList<>();
+            List<ToolExecutionResultMessage> toolResults = new ArrayList<>();
             for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
@@ -450,13 +451,16 @@ public class AiServiceMethodImplementationSupport {
                         .result(ToolExecutionResult.builder().resultText(toolExecutionResultMessage.text()).build())
                         .build();
                 toolExecutions.add(toolExecution);
+                toolResults.add(toolExecutionResultMessage);
                 if (toolExecutor instanceof QuarkusToolExecutor) {
                     immediateToolReturn = ((QuarkusToolExecutor) toolExecutor).returnBehavior() == ReturnBehavior.IMMEDIATE;
                 } else {
                     immediateToolReturn = false;
                 }
 
-                committableChatMemory.add(toolExecutionResultMessage);
+            }
+            for (ToolExecutionResultMessage toolResult : toolResults) {
+                committableChatMemory.add(toolResult);
             }
             if (immediateToolReturn) {
                 if (!TypeUtil.isResult(returnType)) {
