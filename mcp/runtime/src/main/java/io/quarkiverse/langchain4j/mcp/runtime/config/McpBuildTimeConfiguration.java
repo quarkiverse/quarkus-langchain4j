@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocIgnore;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigPhase;
@@ -24,6 +25,14 @@ public interface McpBuildTimeConfiguration {
     @ConfigDocMapKey("client-name")
     @WithParentName
     Map<String, McpClientBuildTimeConfig> clients();
+
+    /**
+     * Configured MCP registry clients.
+     * This map is only used to capture the configured clients' keys at build time.
+     */
+    @ConfigDocIgnore
+    @WithName("registry-client")
+    Map<String, Map<String, String>> registryClients();
 
     /**
      * Whether the MCP extension should automatically generate a ToolProvider that

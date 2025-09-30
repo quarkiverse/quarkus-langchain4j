@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.mcp.runtime;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,12 +18,12 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
+import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
+import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.opentelemetry.api.trace.Tracer;
-import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientRuntimeConfig;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpRuntimeConfiguration;
-import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
+import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
+import io.quarkiverse.langchain4j.mcp.runtime.config.*;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusHttpMcpTransport;
 import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
 import io.quarkus.arc.Arc;
@@ -73,7 +74,7 @@ public class McpRecorder {
                         initialRoots.add(new McpRoot(split[0], split[1]));
                     }
                 }
-                Optional<TlsConfiguration> tlsConfiguration = resolveTlsConfiguration(runtimeConfig);
+                Optional<TlsConfiguration> tlsConfiguration = resolveTlsConfiguration(runtimeConfig.tlsConfigurationName());
                 transport = switch (mcpTransportType) {
                     case STDIO -> {
                         List<String> command = runtimeConfig.command().orElseThrow(() -> new ConfigurationException(
@@ -143,16 +144,16 @@ public class McpRecorder {
         };
     }
 
-    private Optional<TlsConfiguration> resolveTlsConfiguration(McpClientRuntimeConfig runtimeConfig) {
+    private Optional<TlsConfiguration> resolveTlsConfiguration(Optional<String> tlsConfigurationName) {
         if (Arc.container() != null) {
             TlsConfigurationRegistry tlsConfigurationRegistry = Arc.container().select(TlsConfigurationRegistry.class).orNull();
             if (tlsConfigurationRegistry != null) {
-                if (runtimeConfig.tlsConfigurationName().isPresent()) {
+                if (tlsConfigurationName.isPresent()) {
                     // explicit TLS config
                     Optional<TlsConfiguration> namedConfig = TlsConfiguration.from(tlsConfigurationRegistry,
-                            runtimeConfig.tlsConfigurationName());
+                            tlsConfigurationName);
                     if (namedConfig.isEmpty()) {
-                        throw new ConfigurationException("TLS configuration '" + runtimeConfig.tlsConfigurationName().get()
+                        throw new ConfigurationException("TLS configuration '" + tlsConfigurationName.get()
                                 + "' was specified, but it does not exist.");
                     }
                     return namedConfig;
@@ -161,12 +162,37 @@ public class McpRecorder {
                     return tlsConfigurationRegistry.getDefault();
                 }
             } else {
-                if (runtimeConfig.tlsConfigurationName().isPresent()) {
-                    throw new ConfigurationException("TLS configuration '" + runtimeConfig.tlsConfigurationName().get()
+                if (tlsConfigurationName.isPresent()) {
+                    throw new ConfigurationException("TLS configuration '" + tlsConfigurationName.get()
                             + "' was specified, but no TLS configuration registry could be found.");
                 }
             }
         }
         return Optional.empty();
     }
+
+    public Supplier<McpRegistryClient> mcpRegistryClientSupplier(String key) {
+        return new Supplier<McpRegistryClient>() {
+            @Override
+            public McpRegistryClient get() {
+                McpRegistryClientRuntimeConfig clientRuntimeConfig = mcpRuntimeConfiguration.getValue().registryClients()
+                        .get(key);
+                JaxRsHttpClientBuilder httpClientBuilder = new JaxRsHttpClientBuilder();
+                Optional<TlsConfiguration> tlsConfiguration = resolveTlsConfiguration(
+                        clientRuntimeConfig.tlsConfigurationName());
+                if (tlsConfiguration.isPresent()) {
+                    httpClientBuilder.tlsConfiguration(tlsConfiguration.get());
+                }
+                httpClientBuilder.connectTimeout(clientRuntimeConfig.connectTimeout().orElse(Duration.ofSeconds(10)));
+                httpClientBuilder.readTimeout(clientRuntimeConfig.readTimeout().orElse(Duration.ofSeconds(10)));
+                return DefaultMcpRegistryClient.builder()
+                        .logResponses(clientRuntimeConfig.logResponses().orElse(false))
+                        .logRequests(clientRuntimeConfig.logRequests().orElse(false))
+                        .baseUrl(clientRuntimeConfig.baseUrl())
+                        .httpClient(httpClientBuilder.build())
+                        .build();
+            }
+        };
+    }
+
 }
