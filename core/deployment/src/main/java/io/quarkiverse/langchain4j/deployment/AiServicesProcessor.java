@@ -69,6 +69,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import dev.langchain4j.guardrail.OutputGuardrail;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -162,6 +163,7 @@ public class AiServicesProcessor {
     private static final DotName TOOLBOX = DotName.createSimple(ToolBox.class);
     public static final DotName MICROMETER_TIMED = DotName.createSimple("io.micrometer.core.annotation.Timed");
     public static final DotName MICROMETER_COUNTED = DotName.createSimple("io.micrometer.core.annotation.Counted");
+    private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
     public static final String DEFAULT_DELIMITER = "\n";
     public static final Predicate<AnnotationInstance> IS_METHOD_PARAMETER_ANNOTATION = ai -> ai.target()
             .kind() == AnnotationTarget.Kind.METHOD_PARAMETER;
@@ -1846,6 +1848,9 @@ public class AiServicesProcessor {
     private boolean isParameterAllowedAsTemplateVariable(
             MethodParameterInfo param, Collection<Predicate<AnnotationInstance>> allowedPredicates,
             Collection<Predicate<AnnotationInstance>> ignoredPredicates) {
+        if (param.type().name().equals(INVOCATION_PARAMETERS)) {
+            return false;
+        }
 
         Collection<MethodParameterAsTemplateVariableAllowance> allowances = param.annotations().stream().map(anno -> {
 
@@ -1974,41 +1979,56 @@ public class AiServicesProcessor {
                             userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
                 }
             } else {
-                int numOfMethodParamsUsedInSystemMessage = 0;
+                Set<String> templateParamNames = Collections.EMPTY_SET;
                 if (systemMessageInfo.isPresent() && systemMessageInfo.get().text().isPresent()) {
-                    Set<String> templateParamNames = TemplateUtil.parts(systemMessageInfo.get().text().get()).stream()
+                    templateParamNames = TemplateUtil.parts(systemMessageInfo.get().text().get()).stream()
                             .flatMap(l -> l.stream().map(
                                     Expression.Part::getName))
                             .collect(Collectors.toSet());
-                    for (MethodParameterInfo parameter : method.parameters()) {
-                        if (templateParamNames.contains(parameter.name())) {
-                            numOfMethodParamsUsedInSystemMessage++;
-                        }
-                    }
                 }
-                if (numOfMethodParamsUsedInSystemMessage != method.parametersCount()) {
-                    if (method.parametersCount() == 0) {
-                        throw illegalConfigurationForMethod("Method should have at least one argument", method);
+                int userMessageParamPosition = -1;
+                int undefinedParams = 0;
+                for (int i = 0; i < method.parametersCount(); i++) {
+                    MethodParameterInfo parameter = method.parameters().get(i);
+                    if (templateParamNames.contains(parameter.name())) {
+                        continue;
+                    } else if (userNameParamPosition.isPresent() && i == userNameParamPosition.get()) {
+                        continue;
+                    } else if (imageParamPosition.isPresent() && i == imageParamPosition.get()) {
+                        continue;
+                    } else if (audioParamPosition.isPresent() && i == audioParamPosition.get()) {
+                        continue;
+                    } else if (pdfParamPosition.isPresent() && i == pdfParamPosition.get()) {
+                        continue;
+                    } else if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
+                        continue;
+                    } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
+                        continue;
                     }
-                    if (method.parametersCount() == 1) {
-                        return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(0, userNameParamPosition,
-                                imageParamPosition, audioParamPosition, pdfParamPosition);
-                    }
+                    undefinedParams++;
+                    if (undefinedParams > 1) {
+                        if (fallbackToDummyUserMesage.test(method)) {
+                            return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
+                                    AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(), Optional.empty());
+                        }
 
-                    if (fallbackToDummyUserMesage.test(method)) {
-                        return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
-                                AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(), Optional.empty());
+                        throw illegalConfigurationForMethod(
+                                "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
+                                method);
                     }
-
-                    throw illegalConfigurationForMethod(
-                            "For methods with multiple parameters, each parameter must be annotated with @V (or match an template parameter by name), @UserMessage, @UserName or @MemoryId",
-                            method);
-                } else {
-                    // all method parameters are present in the system message, so there is no user message
+                    userMessageParamPosition = i;
+                }
+                if (userMessageParamPosition == -1) {
+                    // There is no user message
                     return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty(),
                             Optional.empty(), Optional.empty(), Optional.empty());
+                } else {
+                    return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(userMessageParamPosition,
+                            userNameParamPosition,
+                            imageParamPosition, audioParamPosition, pdfParamPosition);
+
                 }
             }
         }

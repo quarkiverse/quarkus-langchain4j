@@ -270,6 +270,21 @@ public class ToolExecutionModelTest {
         assertThat(r.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
         assertThat(r.toolExecutions()).hasSize(1);
         assertThat(r.toolExecutions().get(0).result()).contains("hiImmediate");
+        assertThat(r.toolExecutions().get(0).resultObject()).isInstanceOf(String.class);
+        assertThat((String) r.toolExecutions().get(0).resultObject()).contains("hiImmediate");
+    }
+
+    @Test
+    @ActivateRequestContext
+    void testImmediateVoid() {
+        // This tests @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        String uuid = UUID.randomUUID().toString();
+        Result<String> r = aiService.helloResult("abc", "hiImmediateVoid - " + uuid);
+        assertNull(r.content());
+        assertThat(r.finishReason()).isEqualTo(FinishReason.TOOL_EXECUTION);
+        assertThat(r.toolExecutions()).hasSize(1);
+        assertThat(r.toolExecutions().get(0).result()).contains("Success");
+        assertThat(r.toolExecutions().get(0).resultObject()).isNull();
     }
 
     @Test
@@ -301,6 +316,10 @@ public class ToolExecutionModelTest {
         @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
         public String hiImmediate(String m) {
             return "hiImmediate";
+        }
+
+        @Tool(returnBehavior = ReturnBehavior.IMMEDIATE)
+        public void hiImmediateVoid(String m) {
         }
 
         @Tool
