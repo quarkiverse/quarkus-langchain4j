@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -29,6 +30,9 @@ import io.quarkus.test.QuarkusUnitTest;
  * We might want to stop depending on it and instead run our own subregistry when we have a suitable SDK
  * available to do that for testing. Another option is to introduce a mock that substitutes it.
  */
+@Disabled("Need to upgrade to a version " +
+        "that contains https://github.com/langchain4j/langchain4j/pull/3793 to be " +
+        "able to fix this test")
 public class McpRegistryClientTest {
 
     private static final Logger log = LoggerFactory.getLogger(McpRegistryClientTest.class);
