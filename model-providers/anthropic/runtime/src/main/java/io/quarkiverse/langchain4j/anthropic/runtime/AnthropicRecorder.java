@@ -141,6 +141,10 @@ public class AnthropicRecorder {
 
             ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
             if (thinkingConfig.type().isPresent()) {
+                if (chatModelConfig.topK().isPresent()) {
+                    LOG.warn("TopK was not configured because thinking was enabled");
+                }
+                builder.topK(null);
                 builder.thinkingType(thinkingConfig.type().get());
             }
 
