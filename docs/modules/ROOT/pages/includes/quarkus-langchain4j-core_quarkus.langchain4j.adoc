@@ -309,6 +309,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments[`quarkus.langchain4j.tracing.include-tool-arguments`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-tool-arguments+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, tool call arguments are included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_ARGUMENTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_ARGUMENTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result[`quarkus.langchain4j.tracing.include-tool-result`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.tracing.include-tool-result+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If enabled, tool call results are included on the generated spans
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_RESULT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_RESULT+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 h|[[quarkus-langchain4j-core_section_quarkus-langchain4j]] [.section-name.section-level0]##link:#quarkus-langchain4j-core_section_quarkus-langchain4j[Default model config]##
 h|Type
 h|Default

@@ -15,4 +15,16 @@ public interface TracingConfig {
      */
     @WithDefault("false")
     Boolean includeCompletion();
+
+    /**
+     * If enabled, tool call arguments are included on the generated spans
+     */
+    @WithDefault("false")
+    Boolean includeToolArguments();
+
+    /**
+     * If enabled, tool call results are included on the generated spans
+     */
+    @WithDefault("false")
+    Boolean includeToolResult();
 }
