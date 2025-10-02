@@ -14,7 +14,6 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
@@ -30,7 +29,7 @@ public class OllamaTextOutputTest extends WiremockAware {
     @Singleton
     @RegisterAiService
     interface AiService {
-        String question(@UserName String text);
+        String question(String text);
     }
 
     @Inject

@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolMemoryId;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -39,12 +41,14 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
         final AtomicReference<String> contentValue = new AtomicReference<>();
         final AtomicReference<Object> memoryIdValue = new AtomicReference<>();
         final AtomicReference<String> content2Value = new AtomicReference<>();
+        final AtomicReference<InvocationParameters> paramsValue = new AtomicReference<>();
 
         @dev.langchain4j.agent.tool.Tool
-        public String doSomething(String content, @ToolMemoryId Object memoryId, String content2) {
+        public String doSomething(String content, @ToolMemoryId Object memoryId, InvocationParameters params, String content2) {
             contentValue.set(content);
             content2Value.set(content2);
             memoryIdValue.set(memoryId);
+            paramsValue.set(params);
             return "ignored";
         }
     }
@@ -52,6 +56,8 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
     public interface Service {
 
         String sayHello(String input);
+
+        String sayHello(@UserMessage String input, InvocationParameters params);
     }
 
     @ApplicationScoped
@@ -70,6 +76,17 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
         }
 
         public void invoke() {
+            InvocationParameters params = new InvocationParameters();
+            params.put("key", "value");
+            String actual = ai.sayHello("ignored...", params);
+            assertThat(actual).isEqualTo("Do something has been called.");
+            assertThat(tool.contentValue.get()).isEqualTo("Hello");
+            assertThat(tool.content2Value.get()).isEqualTo("Hello2");
+            assertThat(tool.memoryIdValue.get()).isEqualTo("default");
+            assertThat(tool.paramsValue.get()).isEqualTo(params);
+        }
+
+        public void invoke2() {
             String actual = ai.sayHello("ignored...");
             assertThat(actual).isEqualTo("Do something has been called.");
             assertThat(tool.contentValue.get()).isEqualTo("Hello");
@@ -92,6 +109,7 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
     @DisplayName("Verify tools invocation when @ToolMemoryId is used")
     void test() {
         app.invoke();
+        app.invoke2();
     }
 
     @BeforeEach

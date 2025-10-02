@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.output.structured.Description;
-import dev.langchain4j.service.UserName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
@@ -38,7 +37,7 @@ public class OllamaJsonOutputTest extends WiremockAware {
     @Singleton
     @RegisterAiService
     interface AiService {
-        Person extractPerson(@UserName String text);
+        Person extractPerson(String text);
     }
 
     @Inject

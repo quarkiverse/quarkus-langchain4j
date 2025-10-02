@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +55,7 @@ import dev.langchain4j.data.pdf.PdfFile;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -222,12 +224,28 @@ public class AiServiceMethodImplementationSupport {
         List<ToolSpecification> effectiveToolSpecifications = toolSpecifications;
         Map<String, ToolExecutor> finalToolExecutors = toolExecutors;
 
+        InvocationParameters invocationParameters = findInvocationParams(methodArgs);
+
+        InvocationContext invocationContext = InvocationContext.builder()
+                .invocationId(UUID.randomUUID())
+                .interfaceName(context.aiServiceClass.getName())
+                .methodName(methodCreateInfo.getMethodName())
+                .methodArguments(methodArgs != null ? Arrays.asList(methodArgs) : List.of())
+                .chatMemoryId(memoryId)
+                .invocationParameters(invocationParameters)
+                .timestampNow()
+                .build();
+
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
             List<ChatMessage> chatMemory = context.hasChatMemory()
                     ? context.chatMemoryService.getChatMemory(memoryId).messages()
                     : null;
-            Metadata metadata = Metadata.from(userMessage, memoryId, chatMemory);
+            Metadata metadata = Metadata.builder()
+                    .chatMessage(userMessage)
+                    .chatMemory(chatMemory)
+                    .invocationContext(invocationContext)
+                    .build();
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
             if (!isMulti) {
@@ -296,7 +314,7 @@ public class AiServiceMethodImplementationSupport {
 
         userMessage = GuardrailsSupport.executeInputGuardrails(guardrailService, userMessage, methodCreateInfo,
                 chatMemory,
-                augmentationResult, templateVariables);
+                augmentationResult, templateVariables, invocationContext);
 
         CommittableChatMemory committableChatMemory;
         List<ChatMessage> messagesToSend;
@@ -339,11 +357,7 @@ public class AiServiceMethodImplementationSupport {
                                     .augmentationResult(augmentationResult)
                                     .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
                                     .variables(templateVariables)
-                                    .invocationContext(InvocationContext.builder()
-                                            .interfaceName(methodCreateInfo.getInterfaceName())
-                                            .methodName(methodCreateInfo.getMethodName())
-                                            .chatMemoryId(committableChatMemory.id())
-                                            .build())
+                                    .invocationContext(invocationContext)
                                     .build())
                     .build();
             return new AiServiceTokenStream(aiServiceTokenStreamParams);
@@ -440,19 +454,19 @@ public class AiServiceMethodImplementationSupport {
                 log.debugv("Attempting to execute tool {0}", toolExecutionRequest);
                 ToolExecutor toolExecutor = toolExecutors.get(toolExecutionRequest.name());
 
-                ToolExecutionResultMessage toolExecutionResultMessage = toolExecutor == null
-                        ? new ToolExecutionResultMessage(toolExecutionRequest.id(),
-                                toolExecutionRequest.name(),
-                                context.toolService.applyToolHallucinationStrategy(toolExecutionRequest).resultText())
-                        : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, memoryId, beanManager);
+                ToolExecutionResult toolExecutionResult = toolExecutor == null
+                        ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
+                        : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, invocationContext, beanManager);
+                ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(toolExecutionRequest,
+                        toolExecutionResult.resultText());
 
                 ToolExecution toolExecution = ToolExecution.builder()
                         .request(toolExecutionRequest)
-                        .result(ToolExecutionResult.builder().resultText(toolExecutionResultMessage.text()).build())
+                        .result(toolExecutionResult)
                         .build();
                 toolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);
-                if (toolExecutor instanceof QuarkusToolExecutor) {
+                if (toolExecutor != null && toolExecutor instanceof QuarkusToolExecutor) {
                     immediateToolReturn = ((QuarkusToolExecutor) toolExecutor).returnBehavior() == ReturnBehavior.IMMEDIATE;
                 } else {
                     immediateToolReturn = false;
@@ -554,17 +568,26 @@ public class AiServiceMethodImplementationSupport {
                 methodCreateInfo, responseAugmenterParam);
     }
 
-    private static ToolExecutionResultMessage executeTool(AuditSourceInfo auditSourceInfo,
-            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, Object memoryId,
+    private static InvocationParameters findInvocationParams(Object[] args) {
+        if (args == null) {
+            return new InvocationParameters();
+        }
+        for (Object arg : args) {
+            if (arg != null && arg instanceof InvocationParameters) {
+                return (InvocationParameters) arg;
+            }
+        }
+        return new InvocationParameters();
+    }
+
+    private static ToolExecutionResult executeTool(AuditSourceInfo auditSourceInfo,
+            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, InvocationContext invocationContext,
             BeanManager beanManager) {
-        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
+        ToolExecutionResult toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
         log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-        ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
-                toolExecutionRequest,
-                toolExecutionResult);
         beanManager.getEvent().select(ToolExecutedEvent.class)
-                .fire(new DefaultToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult));
-        return toolExecutionResultMessage;
+                .fire(new DefaultToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult.resultText()));
+        return toolExecutionResult;
     }
 
     private static ChatRequest createChatRequest(JsonSchema jsonSchema, List<ChatMessage> messagesToSend,

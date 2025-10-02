@@ -44,6 +44,7 @@ import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolMemoryId;
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.json.JsonArraySchema;
 import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
 import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
@@ -90,11 +91,12 @@ public class ToolProcessor {
     private static final DotName TOOL = DotName.createSimple(Tool.class);
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
+    private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
 
     private static final DotName P = DotName.createSimple(dev.langchain4j.agent.tool.P.class);
     private static final DotName DESCRIPTION = DotName.createSimple(Description.class);
     private static final MethodDescriptor METHOD_METADATA_CTOR = MethodDescriptor
-            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class);
+            .ofConstructor(ToolInvoker.MethodMetadata.class, boolean.class, Map.class, Integer.class, Integer.class);
     private static final MethodDescriptor HASHMAP_CTOR = MethodDescriptor.ofConstructor(HashMap.class);
     public static final MethodDescriptor MAP_PUT = MethodDescriptor.ofMethod(Map.class, "put", Object.class, Object.class,
             Object.class);
@@ -254,9 +256,14 @@ public class ToolProcessor {
                     var required = new ArrayList<String>(toolMethod.parametersCount());
 
                     MethodParameterInfo memoryIdParameter = null;
+                    MethodParameterInfo invocationParamsParameter = null;
                     for (MethodParameterInfo parameter : toolMethod.parameters()) {
                         if (parameter.hasAnnotation(TOOL_MEMORY_ID)) {
                             memoryIdParameter = parameter;
+                            continue;
+                        }
+                        if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
+                            invocationParamsParameter = parameter;
                             continue;
                         }
 
@@ -282,7 +289,9 @@ public class ToolProcessor {
                     String methodSignature = createUniqueSignature(toolMethod);
 
                     String invokerClassName = generateInvoker(toolMethod, classOutput, nameToParamPosition,
-                            memoryIdParameter != null ? memoryIdParameter.position() : null, methodSignature);
+                            memoryIdParameter != null ? memoryIdParameter.position() : null,
+                            invocationParamsParameter != null ? invocationParamsParameter.position() : null,
+                            methodSignature);
                     generatedInvokerClasses.add(invokerClassName);
                     String argumentMapperClassName = generateArgumentMapper(toolMethod, classOutput,
                             methodSignature);
@@ -452,7 +461,8 @@ public class ToolProcessor {
     }
 
     private static String generateInvoker(MethodInfo methodInfo, ClassOutput classOutput,
-            Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, String methodSignature) {
+            Map<String, Integer> nameToParamPosition, Short memoryIdParamPosition, Short invocationParamsParamPosition,
+            String methodSignature) {
         String implClassName = methodInfo.declaringClass().name() + "$$QuarkusInvoker$" + methodInfo.name() + "_"
                 + HashUtil.sha1(methodSignature);
         try (ClassCreator classCreator = ClassCreator.builder()
@@ -484,7 +494,7 @@ public class ToolProcessor {
 
             boolean toolReturnsVoid = methodInfo.returnType().kind() == Type.Kind.VOID;
             if (toolReturnsVoid) {
-                invokeMc.returnValue(invokeMc.load("Success"));
+                invokeMc.returnValue(invokeMc.loadNull());
             } else {
                 invokeMc.returnValue(result);
             }
@@ -503,6 +513,9 @@ public class ToolProcessor {
                     methodMetadataMc.load(toolReturnsVoid),
                     nameToParamPositionHandle,
                     memoryIdParamPosition != null ? methodMetadataMc.load(Integer.valueOf(memoryIdParamPosition))
+                            : methodMetadataMc.loadNull(),
+                    invocationParamsParamPosition != null
+                            ? methodMetadataMc.load(Integer.valueOf(invocationParamsParamPosition))
                             : methodMetadataMc.loadNull());
             methodMetadataMc.returnValue(resultHandle);
         }

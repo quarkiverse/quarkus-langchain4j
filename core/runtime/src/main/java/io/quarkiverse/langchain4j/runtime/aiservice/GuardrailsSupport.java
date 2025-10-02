@@ -55,6 +55,30 @@ public class GuardrailsSupport {
         return um;
     }
 
+    static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
+            AiServiceMethodCreateInfo methodCreateInfo, ChatMemory chatMemory, AugmentationResult augmentationResult,
+            Map<String, Object> templateVariables, InvocationContext invocationContext) {
+        var um = userMessage;
+
+        if (guardrailService.hasInputGuardrails(methodCreateInfo)) {
+            var request = InputGuardrailRequest.builder()
+                    .userMessage(userMessage)
+                    .commonParams(
+                            GuardrailRequestParams.builder()
+                                    .chatMemory(chatMemory)
+                                    .augmentationResult(augmentationResult)
+                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
+                                    .variables(templateVariables)
+                                    .invocationContext(invocationContext)
+                                    .build())
+                    .build();
+
+            um = guardrailService.executeGuardrails(methodCreateInfo, request);
+        }
+
+        return um;
+    }
+
     static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
             ChatResponse response, ChatExecutor chatExecutor, CommittableChatMemory committableChatMemory,
             AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
