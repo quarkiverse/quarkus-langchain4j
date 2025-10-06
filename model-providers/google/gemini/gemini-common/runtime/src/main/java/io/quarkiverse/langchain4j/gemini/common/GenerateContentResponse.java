@@ -33,6 +33,10 @@ public record GenerateContentResponse(List<Candidate> candidates, UsageMetadata 
         BLOCKLIST,
         PROHIBITED_CONTENT,
         SPII,
-        MALFORMED_FUNCTION_CALL
+        MALFORMED_FUNCTION_CALL,
+        IMAGE_SAFETY,
+        UNEXPECTED_TOOL_CALL,
+        TOO_MANY_TOOL_CALLS
+
     }
 }
