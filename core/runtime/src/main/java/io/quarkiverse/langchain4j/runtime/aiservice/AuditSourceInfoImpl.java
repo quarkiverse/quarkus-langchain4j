@@ -9,7 +9,10 @@ import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
 
 /**
  * Contains information about the source of an audit event
+ *
+ * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
  */
+@Deprecated(forRemoval = true)
 final class AuditSourceInfoImpl implements AuditSourceInfo {
     private final UUID interactionId = UUID.randomUUID();
     private final String interfaceName;

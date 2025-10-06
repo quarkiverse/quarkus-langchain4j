@@ -5,7 +5,10 @@ import java.util.UUID;
 
 /**
  * Contains information about the source of an audit event
+ *
+ * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
  */
+@Deprecated(forRemoval = true)
 public interface AuditSourceInfo {
     /**
      * The fully-qualified name of the interface where the llm interaction was initialized
