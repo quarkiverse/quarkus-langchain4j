@@ -252,30 +252,62 @@ public class Startup {
 
 == Auditing
 
-IMPORTANT: The Quarkus-specific auditing features have been deprecated. They will be replaced by the https://docs.langchain4j.dev/tutorials/observability#ai-service-observability[LangChain4j AI Service Observability]. Once complete, you will be able to observe the https://docs.langchain4j.dev/tutorials/observability#types-of-events[LangChain4j observability events] as CDI events.
+IMPORTANT: The Quarkus-specific auditing features have been deprecated. They will be replaced by the . Once complete, you will be able to observe the https://docs.langchain4j.dev/tutorials/observability#types-of-events[LangChain4j observability events] as CDI events.
 
-The extension allows users to audit the process of implementing an AiService by observing normal CDI events. The following example shows a class that audits all events.
+The extension allows users to audit the process of implementing an AiService by observing normal CDI events. See the https://docs.langchain4j.dev/tutorials/observability#ai-service-observability[LangChain4j AI Service Observability] tutorial for more information about the types of events that can be observed.
+
+The main difference is that in Quarkus, you do not need to create an implementation of an `AiServiceListener`. Instead, just create a bean class (or multiple bean classes) and observe them using the https://docs.oracle.com/javaee/6/tutorial/doc/gkhic.html[CDI observer pattern].
+
+All the events for a single invocation can be correlated by `event.invocationContext().invocationId()`.
+
+The following example shows a class that audits all events fired by select AI Services.
 
 NOTE: These methods do not all need to live in the same class and the name of the class and the methods do not matter. It is only shown this way for demonstration purposes.
 
+By default, an observer method will be fired from ANY AI Service. If you'd like to scope the observer to a particular AI Service, you can do so using the `io.quarkiverse.langchain4j.observability.AiServiceSelector` annotation.
+
+See an example below:
+
 [source,java]
 ----
+import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
+import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
+import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
+import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
+import dev.langchain4j.observability.api.event.InputGuardrailExecutedEvent;
+import dev.langchain4j.observability.api.event.OutputGuardrailExecutedEvent;
+import dev.langchain4j.observability.api.event.ToolExecutedEvent;
+
+import io.quarkiverse.langchain4j.observability.AiServiceSelector;
+
 @ApplicationScoped
 public class AuditingListener {
-	public void initialMessagesCreated(@Observes InitialMessagesCreatedEvent initialMessagesCreatedEvent) {
-        // Invoked when the original user and system messages have been created
+	public void aiServiceStarted(@Observes AiServiceStartedEvent serviceStartedEvent) {
+        // Invoked when the invocation begins on any AI service
 	}
 
-	public void llmInteractionComplete(@Observes LLMInteractionCompleteEvent llmInteractionCompleteEvent) {
-		// Invoked when the final result of the AiService method has been computed
+    public void assistant1ServiceStarted(@Observes @AiServiceSelector(Assistant1.class) AiServiceStartedEvent serviceStartedEvent) {
+        // Invoked when an invocation begins on the Assistant1 AI service
 	}
 
-	public void llmInteractionFailed(@Observes LLMInteractionFailureEvent llmInteractionFailureEvent) {
+	public void aiServiceCompleted(@Observes AiServiceCompletedEvent serviceCompletedEvent) {
+		// Invoked when the final result of any AiService method has been computed
+	}
+
+    public void assistant1ServiceCompleted(@Observes @AiServiceSelector(Assistant1.class) AiServiceCompletedEvent serviceCompletedEvent) {
+		// Invoked when the final result of the Assistant1 AiService method has been computed
+	}
+
+	public void aiServiceError(@Observes AiServiceErrorEvent serviceErrorEvent) {
 		// Invoked when there was an exception computing the result of the AiService method
 	}
 
-	public void responseFromLLMReceived(@Observes ResponseFromLLMReceivedEvent responseFromLLMReceivedEvent) {
-		// Invoked with a response from an LLM.
+    public void assistant2ServiceError(@Observes @AiServiceSelector(Assistant2.class) AiServiceErrorEvent serviceErrorEvent) {
+		// Invoked when there was an exception computing the result of the Assistant2 AiService method
+	}
+
+	public void serviceResponseReceived(@Observes AiServiceResponseReceivedEvent serviceResponseReceivedEvent) {
+		// Invoked with a response from an LLM on any AI Service.
         // It is important to note that this can be invoked multiple times when tools exist.
 	}
 
@@ -284,13 +316,23 @@ public class AuditingListener {
         // It is important to note that this can be invoked multiple times when tools exist.
 	}
 
+    public void assistant3ToolExecuted(@Observes @AiServiceSelector(Assistant3.class) ToolExecutedEvent toolExecutedEvent) {
+		// Invoked with a tool response from the Assistant3 AI service.
+        // It is important to note that this can be invoked multiple times when tools exist.
+	}
+
     public void inputGuardrailExecuted(@Observes InputGuardrailExecutedEvent inputGuardrailExecutedEvent) {
-        // Invoked after an InputGuardrail is invoked
+        // Invoked after an InputGuardrail is invoked on any AI service
+        // Could be invoked multiple times in a single LLM invocation
+    }
+
+    public void assistant4InputGuardrailExecuted(@Observes @AiServiceSelector(Assistant4.class) InputGuardrailExecutedEvent inputGuardrailExecutedEvent) {
+        // Invoked after an InputGuardrail is invoked on the Assistant4 AI service
         // Could be invoked multiple times in a single LLM invocation
     }
 
     public void outputGuardrailExecuted(@Observes OutputGuardrailExecutedEvent outputGuardrailExecutedEvent) {
-        // Invoked after an OutputGuardrail is invoked
+        // Invoked after an OutputGuardrail is invoked on any AI service
         // Could be invoked multiple times in a single LLM invocation
     }
 }

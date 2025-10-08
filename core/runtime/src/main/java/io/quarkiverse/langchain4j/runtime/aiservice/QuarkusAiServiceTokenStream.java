@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.PartialThinking;
@@ -40,6 +41,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final Map<String, ToolExecutor> toolExecutors;
     private final List<Content> retrievedContents;
     private final AiServiceContext context;
+    private final InvocationContext invocationContext;
     private final Object memoryId;
     private final Context cxtx;
     private final boolean switchToWorkerThreadForToolExecution;
@@ -67,7 +69,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
             List<Content> retrievedContents,
-            AiServiceContext context,
+            AiServiceContext context, InvocationContext invocationContext,
             Object memoryId, Context ctxt, boolean switchToWorkerThreadForToolExecution,
             boolean switchToWorkerForEmission) {
         this.messages = ensureNotEmpty(messages, "messages");
@@ -75,6 +77,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.toolExecutors = copyIfNotNull(toolExecutors);
         this.retrievedContents = retrievedContents;
         this.context = ensureNotNull(context, "context");
+        this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
         ensureNotNull(context.streamingChatModel, "streamingChatModel");
         this.cxtx = ctxt; // If set, it means we need to handle the context propagation.
@@ -148,6 +151,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
                 context,
+                invocationContext,
                 memoryId,
                 partialResponseHandler,
                 partialThinkingHandler,
