@@ -5,6 +5,10 @@ import dev.langchain4j.guardrail.InputGuardrail;
 import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.InputGuardrailResult;
 
+/**
+ * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+ */
+@Deprecated(forRemoval = true)
 public interface InputGuardrailExecutedEvent
         extends GuardrailExecutedEvent<InputGuardrailRequest, InputGuardrailResult, InputGuardrail> {
     /**

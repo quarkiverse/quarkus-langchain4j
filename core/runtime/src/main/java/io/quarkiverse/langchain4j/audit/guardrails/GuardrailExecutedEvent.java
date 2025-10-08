@@ -12,7 +12,9 @@ import io.quarkiverse.langchain4j.audit.LLMInteractionEvent;
  *
  * @param <P> the type of guardrail parameters used in the validation process
  * @param <R> the type of guardrail result produced by the validation process
+ * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
  */
+@Deprecated(forRemoval = true)
 public interface GuardrailExecutedEvent<P extends GuardrailRequest, R extends GuardrailResult<R>, G extends Guardrail<P, R>>
         extends LLMInteractionEvent {
     /**

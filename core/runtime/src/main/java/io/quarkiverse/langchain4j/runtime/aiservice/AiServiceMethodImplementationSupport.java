@@ -156,6 +156,9 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo createInfo = input.createInfo;
         Object[] methodArgs = input.methodArgs;
 
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         var auditSourceInfo = new AuditSourceInfoImpl(createInfo, methodArgs);
         var beanManager = Arc.container().beanManager();
 
@@ -163,11 +166,17 @@ public class AiServiceMethodImplementationSupport {
         try {
             var result = doImplement(createInfo, methodArgs, context, auditSourceInfo);
 
+            /**
+             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+             */
             beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
                     .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, result));
 
             return result;
         } catch (Exception e) {
+            /**
+             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+             */
             beanManager.getEvent().select(LLMInteractionFailureEvent.class)
                     .fire(new DefaultLLMInteractionFailureEvent(auditSourceInfo, e));
 
@@ -197,6 +206,9 @@ public class AiServiceMethodImplementationSupport {
         }
 
         var beanManager = Arc.container().beanManager();
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
                 .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
@@ -420,6 +432,9 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("AI response obtained");
 
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
                 .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
@@ -523,6 +538,9 @@ public class AiServiceMethodImplementationSupport {
             response = effectiveChatModel.chat(chatRequestBuilder.parameters(parametersBuilder.build()).build());
             log.debug("AI response obtained");
 
+            /**
+             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+             */
             beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
                     .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
@@ -585,6 +603,10 @@ public class AiServiceMethodImplementationSupport {
             BeanManager beanManager) {
         ToolExecutionResult toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
         log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         beanManager.getEvent().select(ToolExecutedEvent.class)
                 .fire(new DefaultToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult.resultText()));
         return toolExecutionResult;
@@ -637,6 +659,9 @@ public class AiServiceMethodImplementationSupport {
 
         var beanManager = Arc.container().beanManager();
 
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
                 .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
@@ -657,6 +682,9 @@ public class AiServiceMethodImplementationSupport {
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
 
+        /**
+         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
+         */
         beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
                 .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, imageResponse.content()));
 
