@@ -7,6 +7,8 @@ import java.util.function.BiFunction;
 import jakarta.inject.Singleton;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.quarkus.arc.All;
 import io.quarkus.arc.Unremovable;
 
@@ -29,27 +31,21 @@ public class QuarkusToolExecutorFactory {
             final QuarkusToolExecutor originalTool = new QuarkusToolExecutor(context);
 
             @Override
-            public String execute(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
-                AtomicReference<BiFunction<ToolExecutionRequest, Object, String>> funRef = new AtomicReference<>(
-                        new BiFunction<>() {
-                            @Override
-                            public String apply(ToolExecutionRequest toolExecutionRequest, Object o) {
-                                return originalTool.execute(toolExecutionRequest, memoryId);
-                            }
-                        });
+            public ToolExecutionResult executeWithContext(ToolExecutionRequest toolExecutionRequest,
+                    InvocationContext invocationContext) {
+
+                AtomicReference<BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult>> funRef = new AtomicReference<>(
+                        originalTool::executeWithContext);
 
                 for (QuarkusToolExecutor.Wrapper wrapper : wrappers) {
                     var currentFun = funRef.get();
-                    BiFunction<ToolExecutionRequest, Object, String> newFunction = new BiFunction<>() {
-                        @Override
-                        public String apply(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
-                            return wrapper.wrap(toolExecutionRequest, memoryId, currentFun);
-                        }
-                    };
+                    BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> newFunction = (
+                            toolExecutionRequest1,
+                            invocationContext1) -> wrapper.wrap(toolExecutionRequest1, invocationContext1, currentFun);
                     funRef.set(newFunction);
                 }
 
-                return funRef.get().apply(toolExecutionRequest, memoryId);
+                return funRef.get().apply(toolExecutionRequest, invocationContext);
             }
         };
     }

@@ -7,6 +7,8 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.service.tool.ToolExecutionResult;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -29,8 +31,8 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
     }
 
     @Override
-    public String wrap(ToolExecutionRequest toolExecutionRequest, Object memoryId,
-            BiFunction<ToolExecutionRequest, Object, String> fun) {
+    public ToolExecutionResult wrap(ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext,
+            BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun) {
 
         // from https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md#execute-tool-span
         Span span = tracer.spanBuilder("langchain4j.tools." + toolExecutionRequest.name())
@@ -43,11 +45,11 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
         if (includeArguments) {
             span.setAttribute("gen_ai.tool.call.arguments", toolExecutionRequest.arguments());
         }
-        try (Scope scope = span.makeCurrent()) {
+        try (Scope ignored = span.makeCurrent()) {
             // TODO Handle async method here.
-            var result = fun.apply(toolExecutionRequest, memoryId);
-            if (includeResult) {
-                span.setAttribute("gen_ai.tool.call.result", result);
+            var result = fun.apply(toolExecutionRequest, invocationContext);
+            if (includeResult && result != null) {
+                span.setAttribute("gen_ai.tool.call.result", result.resultText());
             }
             return result;
         } catch (Throwable t) {
