@@ -34,8 +34,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     public interface Wrapper {
 
-        String wrap(ToolExecutionRequest toolExecutionRequest, Object memoryId,
-                BiFunction<ToolExecutionRequest, Object, String> fun);
+        ToolExecutionResult wrap(ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext,
+                BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun);
     }
 
     public QuarkusToolExecutor(Context context) {
@@ -46,6 +46,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
         return context.returnBehavior;
     }
 
+    @Override
     public String execute(ToolExecutionRequest toolExecutionRequest, Object memoryId) {
         return executeWithContext(toolExecutionRequest, InvocationContext.builder().chatMemoryId(memoryId).build())
                 .resultText();
