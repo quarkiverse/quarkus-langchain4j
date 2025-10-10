@@ -52,7 +52,7 @@ public interface TavilyConfig {
      * Whether responses from Tavily should be logged
      */
     @ConfigDocDefault("false")
-    @WithDefault("${quarkus.langchain4j.log-requests}")
+    @WithDefault("${quarkus.langchain4j.log-responses}")
     Optional<Boolean> logResponses();
 
     /**
