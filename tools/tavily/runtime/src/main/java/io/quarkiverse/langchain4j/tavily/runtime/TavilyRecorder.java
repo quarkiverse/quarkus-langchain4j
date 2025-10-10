@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.tavily.runtime;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import io.quarkiverse.langchain4j.tavily.QuarkusTavilyWebSearchEngine;
@@ -27,8 +28,8 @@ public class TavilyRecorder {
                         runtimeConfig.getValue().searchDepth(),
                         runtimeConfig.getValue().includeAnswer(),
                         runtimeConfig.getValue().includeRawContent(),
-                        runtimeConfig.getValue().includeDomains(),
-                        runtimeConfig.getValue().excludeDomains());
+                        runtimeConfig.getValue().includeDomains().orElse(List.of()),
+                        runtimeConfig.getValue().excludeDomains().orElse(List.of()));
             }
         };
     }

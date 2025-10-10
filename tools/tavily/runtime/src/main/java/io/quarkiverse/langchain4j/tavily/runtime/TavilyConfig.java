@@ -77,13 +77,13 @@ public interface TavilyConfig {
     /**
      * A list of domains to specifically include in the search results. Default is [], which includes all domains.
      */
-    @WithDefault("[]")
-    List<String> includeDomains();
+    @ConfigDocDefault("empty list")
+    Optional<List<String>> includeDomains();
 
     /**
      * A list of domains to specifically exclude from the search results. Default is [], which doesn't exclude any domains.
      */
-    @WithDefault("[]")
-    List<String> excludeDomains();
+    @ConfigDocDefault("empty list")
+    Optional<List<String>> excludeDomains();
 
 }
