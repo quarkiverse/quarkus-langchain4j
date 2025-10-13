@@ -3,19 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
+        <artifactId>quarkus-langchain4j-gpullama3-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quarkus-langchain4j-gpu-llama3-deployment</artifactId>
+    <artifactId>quarkus-langchain4j-gpullama3-deployment</artifactId>
     <name>Quarkus LangChain4j - GpuLlama3 - Deployment</name>
 
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-gpu-llama3-runtime</artifactId>
+            <artifactId>quarkus-langchain4j-gpullama3</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -24,12 +25,6 @@
             <artifactId>quarkus-arc-deployment</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-core-deployment</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-core-deployment</artifactId>
@@ -44,13 +39,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-testing-internal</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
