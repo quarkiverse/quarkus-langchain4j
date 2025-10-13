@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -14,11 +13,8 @@ import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.OutputGuardrailException;
 import dev.langchain4j.guardrail.OutputGuardrailRequest;
-import dev.langchain4j.invocation.InvocationContext;
-import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
-import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.service.guardrail.GuardrailService;
 import io.quarkiverse.langchain4j.guardrails.NoopChatExecutor;
 import io.quarkiverse.langchain4j.guardrails.OutputTokenAccumulator;
@@ -28,49 +24,13 @@ import io.smallrye.mutiny.Multi;
 
 public class GuardrailsSupport {
     static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
-            AiServiceMethodCreateInfo methodCreateInfo, ChatMemory chatMemory, AugmentationResult augmentationResult,
-            Map<String, Object> templateVariables) {
+            AiServiceMethodCreateInfo methodCreateInfo, GuardrailRequestParams guardrailRequestParams) {
         var um = userMessage;
 
         if (guardrailService.hasInputGuardrails(methodCreateInfo)) {
             var request = InputGuardrailRequest.builder()
                     .userMessage(userMessage)
-                    .commonParams(
-                            GuardrailRequestParams.builder()
-                                    .chatMemory(chatMemory)
-                                    .augmentationResult(augmentationResult)
-                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
-                                    .variables(templateVariables)
-                                    .invocationContext(InvocationContext.builder()
-                                            .interfaceName(methodCreateInfo.getInterfaceName())
-                                            .methodName(methodCreateInfo.getMethodName())
-                                            .chatMemoryId(chatMemory.id())
-                                            .build())
-                                    .build())
-                    .build();
-
-            um = guardrailService.executeGuardrails(methodCreateInfo, request);
-        }
-
-        return um;
-    }
-
-    static UserMessage executeInputGuardrails(GuardrailService guardrailService, UserMessage userMessage,
-            AiServiceMethodCreateInfo methodCreateInfo, ChatMemory chatMemory, AugmentationResult augmentationResult,
-            Map<String, Object> templateVariables, InvocationContext invocationContext) {
-        var um = userMessage;
-
-        if (guardrailService.hasInputGuardrails(methodCreateInfo)) {
-            var request = InputGuardrailRequest.builder()
-                    .userMessage(userMessage)
-                    .commonParams(
-                            GuardrailRequestParams.builder()
-                                    .chatMemory(chatMemory)
-                                    .augmentationResult(augmentationResult)
-                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
-                                    .variables(templateVariables)
-                                    .invocationContext(invocationContext)
-                                    .build())
+                    .commonParams(guardrailRequestParams)
                     .build();
 
             um = guardrailService.executeGuardrails(methodCreateInfo, request);
@@ -80,8 +40,7 @@ public class GuardrailsSupport {
     }
 
     static <T> T executeOutputGuardrails(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
-            ChatResponse response, ChatExecutor chatExecutor, CommittableChatMemory committableChatMemory,
-            AugmentationResult augmentationResult, Map<String, Object> templateVariables) {
+            ChatResponse response, ChatExecutor chatExecutor, GuardrailRequestParams guardrailRequestParams) {
 
         T result = null;
 
@@ -89,18 +48,7 @@ public class GuardrailsSupport {
             var request = OutputGuardrailRequest.builder()
                     .responseFromLLM(response)
                     .chatExecutor(chatExecutor)
-                    .requestParams(
-                            GuardrailRequestParams.builder()
-                                    .chatMemory(committableChatMemory)
-                                    .augmentationResult(augmentationResult)
-                                    .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
-                                    .variables(templateVariables)
-                                    .invocationContext(InvocationContext.builder()
-                                            .interfaceName(methodCreateInfo.getInterfaceName())
-                                            .methodName(methodCreateInfo.getMethodName())
-                                            .chatMemoryId(committableChatMemory.id())
-                                            .build())
-                                    .build())
+                    .requestParams(guardrailRequestParams)
                     .build();
 
             result = guardrailService.executeGuardrails(methodCreateInfo, request);
@@ -118,20 +66,15 @@ public class GuardrailsSupport {
             implements Function<Object, Object> {
         private final GuardrailService guardrailService;
         private final AiServiceMethodCreateInfo methodCreateInfo;
-        private final CommittableChatMemory committableChatMemory;
-        private final AugmentationResult augmentationResult;
-        private final Map<String, Object> templateVariables;
         private final boolean isStringMulti;
+        private final GuardrailRequestParams guardrailRequestParams;
 
         OutputGuardrailStreamingMapper(GuardrailService guardrailService, AiServiceMethodCreateInfo methodCreateInfo,
-                CommittableChatMemory committableChatMemory, AugmentationResult augmentationResult,
-                Map<String, Object> templateVariables, boolean isStringMulti) {
+                GuardrailRequestParams guardrailRequestParams, boolean isStringMulti) {
             this.guardrailService = guardrailService;
             this.methodCreateInfo = methodCreateInfo;
-            this.committableChatMemory = committableChatMemory;
-            this.augmentationResult = augmentationResult;
-            this.templateVariables = templateVariables;
             this.isStringMulti = isStringMulti;
+            this.guardrailRequestParams = guardrailRequestParams;
         }
 
         private Object apply(ChatEvent chunk) {
@@ -145,9 +88,7 @@ public class GuardrailsSupport {
                                 .aiMessage(AiMessage.from(accumulatedChunk.getMessage()))
                                 .build(),
                         new NoopChatExecutor(),
-                        committableChatMemory,
-                        augmentationResult,
-                        templateVariables);
+                        guardrailRequestParams);
 
                 if (guardrailResult instanceof ChatResponse) {
                     String message = ((ChatResponse) guardrailResult).aiMessage().text();
@@ -172,9 +113,7 @@ public class GuardrailsSupport {
                             .aiMessage(AiMessage.from(chunk))
                             .build(),
                     new NoopChatExecutor(),
-                    committableChatMemory,
-                    augmentationResult,
-                    templateVariables);
+                    guardrailRequestParams);
 
             if (guardrailResult instanceof ChatResponse) {
                 return ((ChatResponse) guardrailResult).aiMessage().text();

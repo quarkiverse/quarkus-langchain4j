@@ -4,6 +4,7 @@ import static io.quarkiverse.langchain4j.QuarkusAiServicesFactory.InstanceHolder
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.observability.AiServiceEvents;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
@@ -122,6 +124,11 @@ public class AiServicesRecorder {
                     // we don't really care about QuarkusAiServices here, all we care about is that it
                     // properly populates QuarkusAiServiceContext which is what we are trying to construct
                     var quarkusAiServices = INSTANCE.create(aiServiceContext);
+
+                    // Populate the AI service listeners
+                    Arrays.stream(AiServiceEvents.values())
+                            .map(event -> event.createListener(serviceClass))
+                            .forEach(quarkusAiServices::registerListener);
 
                     if (info.languageModelSupplierClassName() != null
                             || info.streamingChatLanguageModelSupplierClassName() != null) {

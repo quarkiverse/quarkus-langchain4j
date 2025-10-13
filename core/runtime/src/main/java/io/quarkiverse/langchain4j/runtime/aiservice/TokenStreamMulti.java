@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -22,13 +23,14 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final Map<String, ToolExecutor> toolsExecutors;
     private final List<Content> contents;
     private final QuarkusAiServiceContext context;
+    private final InvocationContext invocationContext;
     private final Object memoryId;
     private final boolean switchToWorkerThreadForToolExecution;
     private final boolean isCallerRunningOnWorkerThread;
 
     TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
-            List<Content> contents, QuarkusAiServiceContext context, Object memoryId,
+            List<Content> contents, QuarkusAiServiceContext context, InvocationContext invocationContext, Object memoryId,
             boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread) {
         // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
         this.messagesToSend = messagesToSend;
@@ -36,6 +38,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         this.toolsExecutors = toolExecutors;
         this.contents = contents;
         this.context = context;
+        this.invocationContext = invocationContext;
         this.memoryId = memoryId;
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.isCallerRunningOnWorkerThread = isCallerRunningOnWorkerThread;
@@ -57,7 +60,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         }
 
         var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                toolsExecutors, contents, context, memoryId, ctxt, switchToWorkerThreadForToolExecution,
+                toolsExecutors, contents, context, invocationContext, memoryId, ctxt, switchToWorkerThreadForToolExecution,
                 isCallerRunningOnWorkerThread);
         TokenStream tokenStream = stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
