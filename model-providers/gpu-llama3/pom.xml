@@ -18,6 +18,5 @@
     <modules>
         <module>runtime</module>
         <module>deployment</module>
-        <module>quarkus-langchain4j-gpu-llama3</module>
     </modules>
 </project>
