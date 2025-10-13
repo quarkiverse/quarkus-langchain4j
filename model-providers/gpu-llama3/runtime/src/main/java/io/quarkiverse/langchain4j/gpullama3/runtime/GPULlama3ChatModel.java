@@ -1,13 +1,15 @@
 package io.quarkiverse.langchain4j.gpullama3.runtime;
 
 import static dev.langchain4j.internal.Utils.getOrDefault;
+import static java.util.Objects.requireNonNull;
 
 import java.nio.file.Path;
 
-import org.beehive.gpullama3.Options;
-
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
@@ -15,17 +17,12 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
     // @formatter:off
     private GPULlama3ChatModel(Builder builder) {
         init(
-                getOrDefault(builder.modelPath, Options.getDefaultOptions().modelPath()),
-                getOrDefault(
-                        builder.temperature,
-                        Double.valueOf(Options.getDefaultOptions().temperature())),
-                getOrDefault(
-                        builder.topP, Double.valueOf(Options.getDefaultOptions().topp())),
-                getOrDefault(builder.seed, Integer.valueOf((int)
-                        Options.getDefaultOptions().seed())),
-                getOrDefault(builder.maxTokens, Options.getDefaultOptions().maxTokens()),
-                getOrDefault(builder.onGPU, Boolean.TRUE),
-                Boolean.FALSE);
+                requireNonNull(builder.modelPath, "modelPath is required and must be specified"),
+                getOrDefault(builder.temperature, 0.1),
+                getOrDefault(builder.topP, 1.0),
+                getOrDefault(builder.seed, 12345),
+                getOrDefault(builder.maxTokens, 512),
+                getOrDefault(builder.onGPU, Boolean.TRUE));
     }
     // @formatter:on
 
@@ -35,9 +32,25 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        ChatRequestValidationUtils.validateMessages(chatRequest.messages());
+        ChatRequestParameters parameters = chatRequest.parameters();
+        ChatRequestValidationUtils.validateParameters(parameters);
+        ChatRequestValidationUtils.validate(parameters.toolChoice());
+        ChatRequestValidationUtils.validate(parameters.responseFormat());
+
         try {
-            // Create and return chat response
-            return this.modelResponse(chatRequest);
+            // Generate a raw response from the model
+            String rawResponse = modelResponse(chatRequest, null);
+
+            // Parse thinking and actual response using the GPULlama3ResponseParser
+            GPULlama3ResponseParser.ParsedResponse parsed = GPULlama3ResponseParser.parseResponse(rawResponse);
+
+            return ChatResponse.builder()
+                    .aiMessage(AiMessage.builder()
+                            .text(parsed.getActualResponse())
+                            .thinking(parsed.getThinkingContent())
+                            .build())
+                    .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate response from GPULlama3", e);
         }
@@ -51,8 +64,6 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
         protected Integer seed;
         protected Integer maxTokens;
         protected Boolean onGPU;
-        protected Boolean stream;
-        protected String modelName;
 
         public Builder() {
             // This is public so it can be extended
@@ -63,18 +74,8 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             return this;
         }
 
-        public Builder modelName(String modelName) {
-            this.modelName = modelName;
-            return this;
-        }
-
         public Builder onGPU(Boolean onGPU) {
             this.onGPU = onGPU;
-            return this;
-        }
-
-        public Builder stream(Boolean stream) {
-            this.stream = stream;
             return this;
         }
 

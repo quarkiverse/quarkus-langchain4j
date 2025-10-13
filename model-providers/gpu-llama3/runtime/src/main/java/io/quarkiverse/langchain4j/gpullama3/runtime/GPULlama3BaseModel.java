@@ -2,45 +2,34 @@ package io.quarkiverse.langchain4j.gpullama3.runtime;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.IntConsumer;
 
-import org.beehive.gpullama3.LlamaApp;
-import org.beehive.gpullama3.Options;
 import org.beehive.gpullama3.auxiliary.LastRunMetrics;
 import org.beehive.gpullama3.inference.sampler.Sampler;
+import org.beehive.gpullama3.inference.state.State;
 import org.beehive.gpullama3.model.Model;
+import org.beehive.gpullama3.model.format.ChatFormat;
 import org.beehive.gpullama3.model.loader.ModelLoader;
+import org.beehive.gpullama3.tornadovm.TornadoVMMasterPlan;
 
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.chat.response.ChatResponse;
 
 abstract class GPULlama3BaseModel {
-    private Path modelPath;
-    private Double temperature;
-    private Double topP;
-    private Integer seed;
+    State state;
+    List<Integer> promptTokens;
+    ChatFormat chatFormat;
+    TornadoVMMasterPlan tornadoVMPlan;
     private Integer maxTokens;
     private Boolean onGPU;
     private Model model;
     private Sampler sampler;
-    private Boolean stream;
-
-    private static String extractSystemPrompt(ChatRequest request) {
-        return request.messages().stream()
-                .filter(m -> m instanceof dev.langchain4j.data.message.SystemMessage)
-                .map(m -> ((dev.langchain4j.data.message.SystemMessage) m).text())
-                .findFirst()
-                .orElse(null); // systemPrompt is optional
-    }
-
-    private static String extractUserPrompt(ChatRequest request) {
-        return request.messages().stream()
-                .filter(m -> m instanceof dev.langchain4j.data.message.UserMessage)
-                .map(m -> ((dev.langchain4j.data.message.UserMessage) m).singleText())
-                .reduce((first, second) -> second) // take the last user message
-                .orElseThrow(() -> new IllegalArgumentException("ChatRequest has no UserMessage"));
-    }
 
     // @formatter:off
     public void init(
@@ -49,20 +38,22 @@ abstract class GPULlama3BaseModel {
             Double topP,
             Integer seed,
             Integer maxTokens,
-            Boolean onGPU,
-            Boolean stream) {
+            Boolean onGPU) {
         this.maxTokens = maxTokens;
         this.onGPU = onGPU;
-        this.modelPath = modelPath;
-        this.temperature = temperature;
-        this.topP = topP;
-        this.seed = seed;
-        this.stream = stream;
 
         try {
             this.model = ModelLoader.loadModel(modelPath, maxTokens, true, onGPU);
-            this.sampler = LlamaApp.selectSampler(
+            this.state = model.createNewState();
+            this.sampler = Sampler.selectSampler(
                     model.configuration().vocabularySize(), temperature.floatValue(), topP.floatValue(), seed);
+            this.chatFormat = model.chatFormat();
+            if (onGPU) {
+                tornadoVMPlan = TornadoVMMasterPlan.initializeTornadoVMPlan(state, model);
+                // cleanup ?
+            } else {
+                tornadoVMPlan = null;
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load model from " + modelPath, e);
         }
@@ -76,51 +67,84 @@ abstract class GPULlama3BaseModel {
         return sampler;
     }
 
-    public ChatResponse modelResponse(ChatRequest request) {
+    public String modelResponse(ChatRequest request, IntConsumer tokenConsumer) {
+        this.promptTokens = new ArrayList<>();
 
-        Options options = new Options(
-                modelPath,
-                extractUserPrompt(request),
-                extractSystemPrompt(request),
-                null, // suffix
-                false, // interactive
-                temperature.floatValue(),
-                topP.floatValue(),
-                seed,
-                maxTokens,
-                stream, // streaming
-                false, // echo
-                onGPU);
+        if (model.shouldAddBeginOfText()) {
+            promptTokens.add(chatFormat.getBeginOfText());
+        }
 
-        String responseText = model.runInstructOnce(sampler, options);
-        // Create AI message from response
-        AiMessage aiMessage = AiMessage.from(responseText);
+        processPromptMessages(request.messages());
 
-        // Create and return chat response
-        return ChatResponse.builder().aiMessage(aiMessage).build();
-    }
+        Set<Integer> stopTokens = chatFormat.getStopTokens();
+        List<Integer> responseTokens;
 
-    public String modelStringResponse(ChatRequest request, Consumer<String> tokeCallBack) {
-        Options options = new Options(
-                modelPath,
-                extractUserPrompt(request),
-                extractSystemPrompt(request),
-                null, // suffix
-                false, // interactive
-                temperature.floatValue(),
-                topP.floatValue(),
-                seed,
-                maxTokens,
-                stream, // streaming
-                false, // echo
-                onGPU);
+        if (onGPU) {
+            responseTokens = model.generateTokensGPU(
+                    state,
+                    0,
+                    promptTokens.subList(0, promptTokens.size()),
+                    stopTokens,
+                    maxTokens,
+                    sampler,
+                    false,
+                    tokenConsumer,
+                    tornadoVMPlan);
+        } else {
+            responseTokens = model.generateTokens(
+                    state,
+                    0,
+                    promptTokens.subList(0, promptTokens.size()),
+                    stopTokens,
+                    maxTokens,
+                    sampler,
+                    false,
+                    tokenConsumer);
+        }
 
-        String responseText = model.runInstructOnceLangChain4J(sampler, options, tokeCallBack);
-        return responseText;
+        Integer stopToken = null;
+        if (!responseTokens.isEmpty() && stopTokens.contains(responseTokens.getLast())) {
+            stopToken = responseTokens.getLast();
+            responseTokens.removeLast();
+        }
+
+        String responseText = model.tokenizer().decode(responseTokens);
+
+        // Add the response content tokens to conversation history
+        promptTokens.addAll(responseTokens);
+
+        // Add the stop token to complete the message
+        if (stopToken != null) {
+            promptTokens.add(stopToken);
+        }
+
+        if (stopToken == null) {
+            return "Ran out of context length...\n Increase context length with by passing to llama-tornado --max-tokens XXX";
+        } else {
+            return responseText;
+        }
     }
     // @formatter:on
 
     public void printLastMetrics() {
         LastRunMetrics.printMetrics();
+    }
+
+    private void processPromptMessages(List<ChatMessage> messageList) {
+        for (ChatMessage msg : messageList) {
+            if (msg instanceof UserMessage userMessage) {
+                promptTokens.addAll(chatFormat.encodeMessage(
+                        new ChatFormat.Message(ChatFormat.Role.USER, userMessage.singleText())));
+            } else if (msg instanceof SystemMessage systemMessage && model.shouldAddSystemPrompt()) {
+                promptTokens.addAll(
+                        chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.SYSTEM, systemMessage.text())));
+            } else if (msg instanceof AiMessage aiMessage) {
+                promptTokens.addAll(
+                        chatFormat.encodeMessage(new ChatFormat.Message(ChatFormat.Role.ASSISTANT, aiMessage.text())));
+            }
+        }
+
+        // EncodeHeader to prime the model to start generating a new assistant response.
+        promptTokens.addAll(chatFormat.encodeHeader(new ChatFormat.Message(ChatFormat.Role.ASSISTANT, "")));
     }
 }
