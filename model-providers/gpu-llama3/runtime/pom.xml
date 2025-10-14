@@ -44,7 +44,7 @@
         <dependency>
             <groupId>io.github.beehive-lab</groupId>
             <artifactId>gpu-llama3</artifactId>
-            <version>0.2.2</version>
+            <version>${gpullama3.version}</version>
         </dependency>
 
     </dependencies>
