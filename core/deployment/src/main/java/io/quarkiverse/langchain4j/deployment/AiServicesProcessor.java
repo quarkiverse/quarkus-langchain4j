@@ -1078,24 +1078,33 @@ public class AiServicesProcessor {
      *
      * @param method the AI method
      * @param tools the tools
+     * @param toolProviderClassDotName the tool provider class name (if configured)
      */
     public boolean detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(
             MethodInfo method,
             List<String> associatedTools,
-            List<ToolMethodBuildItem> tools) {
+            List<ToolMethodBuildItem> tools,
+            DotName toolProviderClassDotName) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
                 || method.returnType().name().equals(DotNames.MULTI);
 
         boolean requireSwitchToWorkerThread = false;
 
-        if (associatedTools.isEmpty()) {
-            // No tools, no need to dispatch
+        if (!reactive) {
+            // We are already on a thread we can block.
             return false;
         }
 
-        if (!reactive) {
-            // We are already on a thread we can block.
+        // If a ToolProvider is configured for a reactive method, assume it may provide blocking tools at runtime
+        if (toolProviderClassDotName != null
+                && !LangChain4jDotNames.NO_TOOL_PROVIDER_SUPPLIER.equals(toolProviderClassDotName)) {
+            // Be conservative: assume ToolProvider may supply blocking tools at runtime
+            return true;
+        }
+
+        if (associatedTools.isEmpty()) {
+            // No tools, no need to dispatch
             return false;
         }
 
@@ -1763,6 +1772,7 @@ public class AiServicesProcessor {
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
             Collection<String> methodToolClassNames) {
         List<String> allTools = new ArrayList<>(methodToolClassNames);
+        DotName toolProviderClassDotName = null;
         // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
         AnnotationInstance annotation = method.declaringClass().annotation(REGISTER_AI_SERVICES);
         if (annotation != null) {
@@ -1770,8 +1780,13 @@ public class AiServicesProcessor {
             if (value != null) {
                 allTools.addAll(Arrays.stream(value.asClassArray()).map(t -> t.name().toString()).toList());
             }
+            // Extract toolProviderSupplier from annotation
+            AnnotationValue toolProviderValue = annotation.value("toolProviderSupplier");
+            if (toolProviderValue != null) {
+                toolProviderClassDotName = toolProviderValue.asClass().name();
+            }
         }
-        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools);
+        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName);
     }
 
     private void validateReturnType(MethodInfo method) {
