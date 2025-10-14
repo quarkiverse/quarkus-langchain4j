@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.gpullama3.runtime;
+package io.quarkiverse.langchain4j.gpullama3;
 
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static java.util.Objects.requireNonNull;

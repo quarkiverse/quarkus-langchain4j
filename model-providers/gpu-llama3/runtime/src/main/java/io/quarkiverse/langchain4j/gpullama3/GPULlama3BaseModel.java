@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.gpullama3.runtime;
+package io.quarkiverse.langchain4j.gpullama3;
 
 import java.io.IOException;
 import java.nio.file.Path;

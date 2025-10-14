@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.gpullama3.runtime;
+package io.quarkiverse.langchain4j.gpullama3;
 
 import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
