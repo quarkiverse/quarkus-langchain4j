@@ -223,6 +223,54 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check[`quarkus.langchain4j.mcp."client-name".microprofile-health-check`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".microprofile-health-check+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether to prefer MicroProfile health checks. Applies to MCP HTTP clients only.
+
+If this property is enabled, an HTTP GET call is made to an MCP Server MicroProfile Health endpoint. MicroProfile Health endpoint URL is calculated by extracting a base URL that has no path component from the `url()` property and adding the `microprofile-health-check-path()` path to it.
+
+Default MCP Client health check that opens a Streamable HTTP or SSE transport channel is attempted when a MicroProfile health check returns an HTTP 404 or other error status.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__MICROPROFILE_HEALTH_CHECK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__MICROPROFILE_HEALTH_CHECK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-microprofile-health-check-path[`quarkus.langchain4j.mcp."client-name".microprofile-health-check-path`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".microprofile-health-check-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Relative path of an MCP Server MicroProfile Health endpoint. This property is effective only when the `microprofile-health-check()` property is enabled.
+
+MicroProfile Health endpoint URL is calculated by extracting the base URL that has no path component from the `url()` property and adding a value of this property to it.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__MICROPROFILE_HEALTH_CHECK_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__MICROPROFILE_HEALTH_CHECK_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`/q/health`
+
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-tool-execution-timeout[`quarkus.langchain4j.mcp."client-name".tool-execution-timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".tool-execution-timeout+++[]

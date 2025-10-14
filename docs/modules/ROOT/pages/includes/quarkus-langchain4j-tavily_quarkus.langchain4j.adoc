@@ -204,7 +204,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-A list of domains to specifically include in the search results. Default is ++[]++, which includes all domains.
+A list of domains to specifically include in the search results. By default all domains are included.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_DOMAINS+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|`[]`
+|`empty list`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains[`quarkus.langchain4j.tavily.exclude-domains`]##
 ifdef::add-copy-button-to-config-props[]
@@ -225,7 +225,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-A list of domains to specifically exclude from the search results. Default is ++[]++, which doesn't exclude any domains.
+A list of domains to specifically exclude from the search results. By default no domains are excluded.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -236,7 +236,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_EXCLUDE_DOMAINS+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|`[]`
+|`empty list`
 
 |===
 
