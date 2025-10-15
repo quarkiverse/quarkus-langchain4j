@@ -6,17 +6,17 @@
 
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-gpullama3-parent</artifactId>
+        <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quarkus-langchain4j-gpullama3-deployment</artifactId>
-    <name>Quarkus LangChain4j - GpuLlama3 - Deployment</name>
+    <artifactId>quarkus-langchain4j-gpu-llama3-deployment</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3 - Deployment</name>
 
     <dependencies>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-gpullama3</artifactId>
+            <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
             <version>${project.version}</version>
         </dependency>
 

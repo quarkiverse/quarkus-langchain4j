@@ -11,8 +11,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>quarkus-langchain4j-gpullama3-parent</artifactId>
-    <name>Quarkus LangChain4j - GpuLlama3.java - Parent</name>
+    <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3.java - Parent</name>
     <packaging>pom</packaging>
 
     <properties>

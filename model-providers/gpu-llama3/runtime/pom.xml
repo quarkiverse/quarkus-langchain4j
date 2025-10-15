@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-gpullama3-parent</artifactId>
+        <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quarkus-langchain4j-gpullama3</artifactId>
-    <name>Quarkus LangChain4j - GpuLlama3 - Runtime</name>
+    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3 - Runtime</name>
 
     <dependencies>
         <dependency>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>io.github.beehive-lab</groupId>
             <artifactId>gpu-llama3</artifactId>
-            <version>${gpullama3.version}</version>
+            <version>${gpu-llama3.version}</version>
         </dependency>
 
     </dependencies>
