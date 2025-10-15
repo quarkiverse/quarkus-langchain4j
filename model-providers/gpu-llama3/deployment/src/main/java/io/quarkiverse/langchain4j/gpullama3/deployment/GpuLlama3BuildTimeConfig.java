@@ -20,7 +20,7 @@ public interface GpuLlama3BuildTimeConfig {
     /**
      * Chat model related settings
      */
-    GpuLlama3ChatModelBuildConfig chatModel();
+    ChatModelBuildConfig chatModel();
 
     /**
      * Embedding model related settings

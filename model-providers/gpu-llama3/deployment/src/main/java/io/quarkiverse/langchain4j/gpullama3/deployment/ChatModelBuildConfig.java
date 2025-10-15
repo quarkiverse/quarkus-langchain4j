@@ -6,7 +6,7 @@ import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 
 @ConfigGroup
-public interface GpuLlama3ChatModelBuildConfig {
+public interface ChatModelBuildConfig {
 
     /**
      * Whether the model should be enabled
