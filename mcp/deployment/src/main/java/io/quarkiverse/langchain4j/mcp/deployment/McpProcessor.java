@@ -29,6 +29,7 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
+import io.quarkiverse.langchain4j.deployment.LangChain4jDotNames;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientHealthCheck;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
@@ -160,7 +161,7 @@ public class McpProcessor {
             // generate a tool provider if configured to do so
             if (mcpBuildTimeConfiguration.generateToolProvider().orElse(true)) {
                 SyntheticBeanBuildItem.ExtendedBeanConfigurator configurator = SyntheticBeanBuildItem
-                        .configure(DotNames.TOOL_PROVIDER)
+                        .configure(LangChain4jDotNames.TOOL_PROVIDER)
                         .setRuntimeInit()
                         .defaultBean()
                         .unremovable()
