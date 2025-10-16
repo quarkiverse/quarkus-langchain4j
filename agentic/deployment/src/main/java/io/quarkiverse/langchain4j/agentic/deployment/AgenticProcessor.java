@@ -8,6 +8,7 @@ import static io.quarkiverse.langchain4j.agentic.deployment.ValidationUtil.valid
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,11 +22,13 @@ import jakarta.enterprise.inject.Default;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.ClassType;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.MethodParameterInfo;
 import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
@@ -42,13 +45,16 @@ import io.quarkiverse.langchain4j.deployment.PreventToolValidationErrorBuildItem
 import io.quarkiverse.langchain4j.deployment.RequestChatModelBeanBuildItem;
 import io.quarkiverse.langchain4j.deployment.SkipOutputFormatInstructionsBuildItem;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
+import io.quarkus.arc.deployment.BeanDiscoveryFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
+import io.quarkus.deployment.annotations.Produce;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
@@ -62,13 +68,16 @@ public class AgenticProcessor {
     }
 
     @BuildStep
-    void detectAgents(CombinedIndexBuildItem indexBuildItem, BuildProducer<DetectedAiAgentBuildItem> producer) {
+    void detectAgents(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<DetectedAiAgentAsMapBuildItem> mapProducer,
+            BuildProducer<DetectedAiAgentBuildItem> producer) {
         IndexView index = indexBuildItem.getIndex();
 
         Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap = new HashMap<>();
         for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
             collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap);
         }
+        mapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
 
         ifaceToAgentMethodsMap.forEach((classInfo, methods) -> {
             Optional<MethodInfo> chatModelSupplier = classInfo.methods().stream()
@@ -493,6 +502,150 @@ public class AgenticProcessor {
 
     private static void addMethodToMap(MethodInfo methodInfo, ClassInfo iface, Map<ClassInfo, List<MethodInfo>> map) {
         map.computeIfAbsent(iface, (k) -> new ArrayList<>()).add(methodInfo);
+    }
+
+    @BuildStep
+    public OutputKeyBuildItem outputKeyItems(DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            BeanDiscoveryFinishedBuildItem beanDiscoveryFinished) {
+        Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
+
+        OutputKeyBuildItem.Builder builder = OutputKeyBuildItem.of();
+        for (var entry : ifaceToAgentMethodsMap.entrySet()) {
+            for (MethodInfo agenticMethod : entry.getValue()) {
+                // handle any agent-related annotation that has the outputKey property specified
+                for (DotName annotation : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
+                    AnnotationInstance agentInstance = agenticMethod.annotation(annotation);
+                    if (agentInstance == null) {
+                        continue;
+                    }
+                    AnnotationValue outputKeyValue = agentInstance.value("outputKey");
+                    if (outputKeyValue != null) {
+                        builder.addKeyType(outputKeyValue.asString(),
+                                determineAgentMethodReturnType(agenticMethod.returnType()));
+                    }
+                }
+                // handle subAgents attribute
+                for (DotName annotation : AgenticLangChain4jDotNames.AGENT_ANNOTATIONS_WITH_SUB_AGENTS) {
+                    AnnotationInstance agentInstance = agenticMethod.annotation(annotation);
+                    if (agentInstance == null) {
+                        continue;
+                    }
+                    AnnotationValue subAgentsValue = agentInstance.value("subAgents");
+                    if (subAgentsValue == null) {
+                        continue;
+                    }
+                    for (AnnotationInstance subAgentInstance : subAgentsValue.asNestedArray()) {
+                        AnnotationValue outputKeyValue = subAgentInstance.value("outputKey");
+                        AnnotationValue typeValue = subAgentInstance.value("type");
+                        if ((outputKeyValue != null) && (typeValue != null)) {
+                            String outputKeyString = outputKeyValue.asString();
+                            DotName subAgentType = typeValue.asClass().name();
+
+                            // in order to determine the type associated with the outputKey, we need to look up
+                            // the interface and check the return type of (the single agent-related) method
+
+                            List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType);
+                            if (subAgentMethods.size() != 1) {
+                                log.warn("Unable to determine type of outputKey '%s' for subagent with type '%s'"
+                                        .formatted(outputKeyString, subAgentType));
+                            } else {
+                                builder.addKeyType(outputKeyString,
+                                        determineAgentMethodReturnType(subAgentMethods.get(0).returnType()));
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+        // we need to know if any of the parameters are passed by the user, so we need to analyze the known usages
+        beanDiscoveryFinished.getInjectionPoints().forEach(ip -> {
+            DotName requiredName = ip.getRequiredType().name();
+            List<MethodInfo> agentMethods = ifaceToAgentMethodsMap.getOrDefault(requiredName, Collections.emptyList());
+            agentMethods.forEach(mi -> {
+                List<MethodParameterInfo> parameters = mi.parameters();
+                parameters.forEach(pi -> {
+                    String parameterName = determineParameterName(pi);
+                    builder.addUserProvidedKey(parameterName);
+                });
+            });
+        });
+
+        return builder.build();
+    }
+
+    private DotName determineAgentMethodReturnType(Type type) {
+        if (AgenticLangChain4jDotNames.RESULT_WITH_AGENTIC_SCOPE.equals(type.name())) {
+            if (type.kind() == Type.Kind.PARAMETERIZED_TYPE) {
+                return type.asParameterizedType().arguments().get(0).name();
+            } else {
+                return DotNames.OBJECT;
+            }
+        }
+        return type.name();
+    }
+
+    /**
+     * The idea here is to check parameters used in agentic methods and if the name matches an output key, the type must match
+     */
+    @BuildStep
+    @Produce(ServiceStartBuildItem.class)
+    public void validateAgenticParameterTypes(CombinedIndexBuildItem indexBuildItem, OutputKeyBuildItem outputKeyBuildItem) {
+        List<DotName> annotationsToCheck = new ArrayList<>(AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.size() + 2);
+        annotationsToCheck.addAll(AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS);
+        annotationsToCheck.add(AgenticLangChain4jDotNames.OUTPUT);
+        annotationsToCheck.add(AgenticLangChain4jDotNames.EXIT_CONDITION);
+
+        IndexView index = indexBuildItem.getIndex();
+
+        annotationsToCheck.forEach(annotation -> {
+            index.getAnnotations(annotation).forEach(instance -> {
+                if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                    return;
+                }
+                MethodInfo method = instance.target().asMethod();
+                // don't validate any of the upstream agents
+                if (method.declaringClass().name().toString().startsWith("dev.langchain4j.agentic")) {
+                    return;
+                }
+                List<MethodParameterInfo> parameters = method.parameters();
+                for (int i = 0; i < parameters.size(); i++) {
+                    MethodParameterInfo parameter = parameters.get(i);
+                    String parameterName = determineParameterName(parameter);
+                    if ((parameterName == null)) {
+                        continue;
+                    }
+                    Type parameterType = parameter.type();
+                    if (AgenticLangChain4jDotNames.AGENTIC_SCOPE.equals(parameterType.name())) {
+                        continue;
+                    }
+                    DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);
+                    if (expectedParameterTypeName == null) {
+                        if (!outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)) {
+                            throw new IllegalConfigurationException(
+                                    "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
+                                            .formatted(
+                                                    parameterName, i, method.declaringClass().name(),
+                                                    method.declaringClass().name()));
+                        }
+                    } else if (!expectedParameterTypeName.equals(parameterType.name())) {
+                        throw new IllegalConfigurationException(
+                                "Parameter no.%d of method '%s' of class '%s' was expected to be of type '%s'".formatted(i,
+                                        method.name(), method.declaringClass().name(), expectedParameterTypeName));
+                    }
+                }
+            });
+        });
+    }
+
+    private String determineParameterName(MethodParameterInfo parameter) {
+        String name = parameter.name();
+        AnnotationInstance vInstance = parameter.annotation(LangChain4jDotNames.V);
+        if (vInstance != null) {
+            name = vInstance.value().asString();
+        }
+        return name;
     }
 
 }
