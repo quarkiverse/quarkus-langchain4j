@@ -13,12 +13,12 @@ import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
-public class GpuLlama3Recorder {
+public class GPULlama3Recorder {
 
     private final RuntimeValue<LangChain4jGPULlama3Config> runtimeConfig;
     private final RuntimeValue<LangChain4jGPULlama3FixedRuntimeConfig> fixedRuntimeConfig;
 
-    public GpuLlama3Recorder(RuntimeValue<LangChain4jGPULlama3Config> runtimeConfig,
+    public GPULlama3Recorder(RuntimeValue<LangChain4jGPULlama3Config> runtimeConfig,
             RuntimeValue<LangChain4jGPULlama3FixedRuntimeConfig> fixedRuntimeConfig) {
         this.runtimeConfig = runtimeConfig;
         this.fixedRuntimeConfig = fixedRuntimeConfig;
