@@ -49,13 +49,13 @@ public class GPULlama3Recorder {
         }
     }
 
-    private LangChain4jGPULlama3Config.GpuLlama3Config correspondingConfig(String configName) {
+    private LangChain4jGPULlama3Config.RuntimeConfig correspondingConfig(String configName) {
         return NamedConfigUtil.isDefault(configName)
                 ? runtimeConfig.getValue().defaultConfig()
                 : runtimeConfig.getValue().namedConfig().get(configName);
     }
 
-    private LangChain4jGPULlama3FixedRuntimeConfig.GpuLlama3Config correspondingFixedConfig(String configName) {
+    private LangChain4jGPULlama3FixedRuntimeConfig.FixedRuntimeConfig correspondingFixedConfig(String configName) {
         return NamedConfigUtil.isDefault(configName)
                 ? fixedRuntimeConfig.getValue().defaultConfig()
                 : fixedRuntimeConfig.getValue().namedConfig().get(configName);
