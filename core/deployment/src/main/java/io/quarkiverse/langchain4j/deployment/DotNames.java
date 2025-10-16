@@ -13,6 +13,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 
 import jakarta.enterprise.inject.Instance;
 
@@ -21,12 +22,10 @@ import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.service.tool.ToolProvider;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.guardrails.OutputGuardrailAccumulator;
 import io.quarkiverse.langchain4j.response.AiResponseAugmenter;
 import io.quarkiverse.langchain4j.response.ResponseAugmenter;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.common.annotation.RunOnVirtualThread;
@@ -35,6 +34,7 @@ import io.smallrye.mutiny.Uni;
 
 public class DotNames {
 
+    public static final DotName VOID = DotName.createSimple(void.class);
     public static final DotName BOOLEAN = DotName.createSimple(Boolean.class);
     public static final DotName PRIMITIVE_BOOLEAN = DotName.createSimple(boolean.class);
     public static final DotName BYTE = DotName.createSimple(Byte.class);
@@ -75,16 +75,15 @@ public class DotNames {
     public static final DotName YEAR_MONTH = DotName.createSimple(YearMonth.class);
 
     public static final DotName OBJECT = DotName.createSimple(Object.class.getName());
+    public static final DotName OBJECT_ARRAY = DotName.createSimple(Object[].class.getName());
     public static final DotName RECORD = DotName.createSimple(Record.class);
     public static final DotName CDI_INSTANCE = DotName.createSimple(Instance.class);
+
+    public static final DotName EXECUTOR = DotName.createSimple(Executor.class);
 
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);
-    // Using the class name to keep the McpToolBox annotation in the mcp module
-    public static final DotName MCP_TOOLBOX = DotName.createSimple("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
-    public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
-    public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);
 
     public static final DotName REGISTER_REST_CLIENT = DotName.createSimple(RegisterRestClient.class);
 

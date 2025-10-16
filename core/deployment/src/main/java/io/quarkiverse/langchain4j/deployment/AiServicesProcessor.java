@@ -816,7 +816,7 @@ public class AiServicesProcessor {
                 if (method.returnType().kind() == Type.Kind.PARAMETERIZED_TYPE) {
                     Type multiType = method.returnType().asParameterizedType().arguments().get(0);
                     if (DotNames.STRING.equals(multiType.name())
-                            || DotNames.CHAT_EVENT.equals(multiType.name())) {
+                            || LangChain4jDotNames.CHAT_EVENT.equals(multiType.name())) {
                         isSupportedResponseType = true;
                     }
                 }
@@ -2291,7 +2291,7 @@ public class AiServicesProcessor {
     }
 
     private List<String> gatherMethodMcpClientNames(MethodInfo method) {
-        AnnotationInstance mcpToolBoxInstance = method.declaredAnnotation(DotNames.MCP_TOOLBOX);
+        AnnotationInstance mcpToolBoxInstance = method.declaredAnnotation(LangChain4jDotNames.MCP_TOOLBOX);
         if (mcpToolBoxInstance == null) {
             return null;
         }
