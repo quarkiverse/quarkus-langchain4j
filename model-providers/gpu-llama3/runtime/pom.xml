@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
+        <version>999-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3 - Runtime</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.beehive-lab</groupId>
+            <artifactId>gpu-llama3</artifactId>
+            <version>${gpu-llama3.version}</version>
+        </dependency>
+
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-extension-maven-plugin</artifactId>
+                <version>${quarkus.version}</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>extension-descriptor</goal>
+                        </goals>
+                        <configuration>
+                            <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>21</release>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.quarkus</groupId>
+                            <artifactId>quarkus-extension-processor</artifactId>
+                            <version>${quarkus.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>tornado</id>
+
+            <properties>
+                <!-- Compile against JDK 21 for Tornado's runtime -->
+                <java.release>21</java.release>
+            </properties>
+
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <release>${java.release}</release>
+                            <compilerArgs>--enable-preview</compilerArgs>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.3</version>
+                        <configuration>
+                            <jvm>${env.TORNADO_JAVA}</jvm>
+
+                            <argLine>
+                                -server
+                                -XX:-UseCompressedOops
+                                -XX:+UnlockExperimentalVMOptions
+                                -XX:+EnableJVMCI
+                                -XX:-UseCompressedClassPointers
+                                --enable-preview
+                                -Djava.library.path=${env.TORNADO_SDK}/lib
+                                --module-path .:${env.TORNADO_SDK}/share/java/tornado
+<!--                                -Duse.tornadovm=true-->
+<!--                                -Xms6g -Xmx6g -Dtornado.device.memory=6GB-->
+                                -Dtornado.load.api.implementation=uk.ac.manchester.tornado.runtime.tasks.TornadoTaskGraph
+                                -Dtornado.load.runtime.implementation=uk.ac.manchester.tornado.runtime.TornadoCoreRuntime
+                                -Dtornado.load.tornado.implementation=uk.ac.manchester.tornado.runtime.common.Tornado
+                                -Dtornado.load.annotation.implementation=uk.ac.manchester.tornado.annotation.ASMClassVisitor
+                                -Dtornado.load.annotation.parallel=uk.ac.manchester.tornado.api.annotations.Parallel
+                                --upgrade-module-path ${env.TORNADO_GRAALJARS}
+                                -XX:+UseParallelGC
+                                @${env.TORNADO_SDK}/etc/exportLists/common-exports
+                                @${env.TORNADO_SDK}/etc/exportLists/opencl-exports
+                                --add-modules ALL-SYSTEM,tornado.runtime,tornado.annotation,tornado.drivers.common,tornado.drivers.opencl
+                            </argLine>
+
+                            <!-- If JPMS/module-path confuses surefire discovery, disable module path -->
+                            <useModulePath>false</useModulePath>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+
+</project>
