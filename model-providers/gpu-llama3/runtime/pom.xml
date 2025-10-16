@@ -61,16 +61,7 @@
                             <goal>extension-descriptor</goal>
                         </goals>
                         <configuration>
-                            <deployment>io.quarkiverse.langchain4j:quarkus-langchain4j-gpu-llama3-deployment:${project.version}</deployment>
-                            <devMode>
-                                <jvmOptions>
-                                    <add-modules>jdk.incubator.vector</add-modules>
-                                    <enable-preview />
-                                    <enable-native-access>ALL-UNNAMED</enable-native-access>
-                                </jvmOptions>
-                                <lockXxJvmOptions>TieredStopAtLevel</lockXxJvmOptions>
-                                <lockJvmOptions>agentlib:jdwp</lockJvmOptions>
-                            </devMode>
+                            <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
                         </configuration>
                     </execution>
                 </executions>
@@ -78,35 +69,18 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <release>21</release>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>io.quarkus</groupId>
                             <artifactId>quarkus-extension-processor</artifactId>
+                            <version>${quarkus.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    <compilerArgs>--enable-preview</compilerArgs>
-                    <release>21</release>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-codestart-jar</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classesDirectory>${project.basedir}/src/main</classesDirectory>
-                            <includes>
-                                <include>codestarts/**</include>
-                            </includes>
-                            <classifier>codestarts</classifier>
-                            <skipIfEmpty>true</skipIfEmpty>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
