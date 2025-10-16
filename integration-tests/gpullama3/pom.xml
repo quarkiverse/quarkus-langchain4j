@@ -7,7 +7,7 @@
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
-    <artifactId>quarkus-langchain4j-integration-test-gpullama3</artifactId>
+    <artifactId>quarkus-langchain4j-integration-test-gpu-llama3</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - GPULlama3</name>
     <properties>
         <skipITs>true</skipITs>
@@ -19,8 +19,8 @@
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-gpullama3</artifactId>
-<!--            <version>999-SNAPSHOT</version>-->
+            <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+            <version>999-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -46,7 +46,7 @@
         <!-- Make sure the deployment artifact is built before executing this module -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
-            <artifactId>quarkus-langchain4j-gpullama3-deployment</artifactId>
+            <artifactId>quarkus-langchain4j-gpu-llama3-deployment</artifactId>
             <version>${quarkus-langchain4j.version}</version>
             <type>pom</type>
             <scope>test</scope>
