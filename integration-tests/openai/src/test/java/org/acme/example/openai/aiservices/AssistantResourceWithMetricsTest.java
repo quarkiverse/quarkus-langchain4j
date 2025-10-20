@@ -41,7 +41,7 @@ class AssistantResourceWithMetricsTest {
                 .get("a1")
                 .then()
                 .statusCode(200)
-                .body(TestUtils.containsStringOrMock("test"));
+                .body(TestUtils.containsStringOrMock("today"));
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")
@@ -66,7 +66,7 @@ class AssistantResourceWithMetricsTest {
                 .get("a2")
                 .then()
                 .statusCode(200)
-                .body(TestUtils.containsStringOrMock("test"));
+                .body(TestUtils.containsStringOrMock("today"));
 
         waitForMeters(
                 registry.find("langchain4j.aiservices.timed")

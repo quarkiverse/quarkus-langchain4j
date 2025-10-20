@@ -22,7 +22,7 @@ public class AssistantResourceWithToolsTest {
     public void get() {
         given()
                 .baseUri(url.toString())
-                .queryParam("message", "This is a test")
+                .queryParam("message", "This is a test. Answer with word 'test', if you get this message")
                 .get()
                 .then()
                 .statusCode(200)
