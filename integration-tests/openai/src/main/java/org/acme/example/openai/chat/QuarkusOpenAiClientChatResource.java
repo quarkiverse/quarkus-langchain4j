@@ -38,7 +38,7 @@ public class QuarkusOpenAiClientChatResource {
     @GET
     @Path("async")
     public Uni<String> async() {
-        var request = MessageUtil.createChatCompletionRequest("Write a short 1 paragraph funny poem about Scrum");
+        var request = MessageUtil.createChatCompletionRequest("Write a short definition of Scrum");
         return Uni.createFrom().emitter(emitter -> {
             quarkusOpenAiClient.chatCompletion(request)
                     .onResponse(res -> emitter.complete(res.content()))
