@@ -17,7 +17,6 @@ import jakarta.ws.rs.sse.SseEventSource;
 
 import org.acme.example.openai.TestUtils;
 import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
@@ -43,8 +42,7 @@ public class ChatLanguageModelResourceTest {
     }
 
     @Test
-    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement moderations")
-    @Disabled("https://github.com/quarkiverse/quarkus-langchain4j/issues/1693")
+    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "The Mock API does not handle streaming properly")
     public void sse() throws Exception {
         Client client = ClientBuilder.newBuilder().build();
         WebTarget target = client.target(url.toString() + "/streaming");
@@ -86,7 +84,7 @@ public class ChatLanguageModelResourceTest {
     }
 
     @Test
-    @Disabled("https://github.com/quarkiverse/quarkus-langchain4j/issues/1695")
+    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "The Mock API does not handle streaming properly")
     public void memory() {
         given()
                 .baseUri(url.toString())
