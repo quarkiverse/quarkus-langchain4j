@@ -13,7 +13,7 @@ import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement moderations")
+@EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "mockgpt does not implement embeddings")
 public class EmbeddingModelResourceTest {
 
     @TestHTTPEndpoint(EmbeddingModelResource.class)
