@@ -26,6 +26,7 @@ import dev.langchain4j.service.tool.ToolExecution;
  * @see ContentFetchedEvent
  * @see AccumulatedResponseEvent
  * @see PartialThinkingEvent
+ * @see IntermediateResponseEvent
  */
 public class ChatEvent {
 
@@ -60,7 +61,11 @@ public class ChatEvent {
         /**
          * Indicates that a partial thinking/reasoning chunk has been received (experimental).
          */
-        PartialThinking
+        PartialThinking,
+        /**
+         * Indicates that an intermediate response has been received during multi-turn interactions.
+         */
+        IntermediateResponse
 
     }
 
@@ -298,6 +303,63 @@ public class ChatEvent {
          */
         public String getText() {
             return text;
+        }
+    }
+
+    /**
+     * Event emitted when an intermediate response is received during multi-turn interactions.
+     * This event occurs when the AI responds with tool execution requests, indicating that
+     * additional turns are needed to complete the conversation.
+     *
+     * <p>
+     * This is particularly useful for:
+     * <ul>
+     * <li>Capturing AI reasoning (thinking) that led to tool execution decisions</li>
+     * <li>Retrieving thinking signatures for validation/auditing</li>
+     * <li>Supporting interleaved thinking (reasoning between tool calls)</li>
+     * <li>Building complete audit trails of AI decision-making</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Example flow with extended thinking:
+     *
+     * <pre>
+     * User: "What's the weather in Auckland?"
+     * → IntermediateResponseEvent: thinking="I should check the time first", tools=[getCurrentTime]
+     * → ToolExecutedEvent: getCurrentTime → "3:45 PM"
+     * → IntermediateResponseEvent: thinking="Now I know it's afternoon, check weather", tools=[getWeather]
+     * → ToolExecutedEvent: getWeather → "Sunny, 72°F"
+     * → ChatCompletedEvent: text="It's 3:45 PM and sunny in Auckland"
+     * </pre>
+     * </p>
+     *
+     * <p>
+     * <b>Note:</b> This event is essential for interleaved thinking to work, as it provides
+     * access to thinking blocks that occur between tool calls.
+     * </p>
+     */
+    public static class IntermediateResponseEvent extends ChatEvent {
+        private final ChatResponse chatResponse;
+
+        /**
+         * Constructs a new IntermediateResponseEvent with the given chat response.
+         *
+         * @param chatResponse the intermediate chat response containing the AI's thinking,
+         *        tool execution requests, and metadata for this turn
+         */
+        public IntermediateResponseEvent(ChatResponse chatResponse) {
+            super(ChatEventType.IntermediateResponse);
+            this.chatResponse = chatResponse;
+        }
+
+        /**
+         * Returns the intermediate chat response.
+         *
+         * @return the chat response containing thinking, tool requests, and attributes for this turn
+         */
+        public ChatResponse getChatResponse() {
+            return chatResponse;
         }
     }
 

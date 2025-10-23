@@ -66,9 +66,10 @@ When using a `Multi<ChatEvent>` each emitted item is a subclass of `ChatEvent` w
 * `BeforeToolExecutionEvent` - Emitted before a tool is executed
 * `ToolExecutedEvent` - Tool execution metadata
 * `ContentFetchedEvent` - Content retrieved from RAG sources
+* `IntermediateResponseEvent` - An intermediate response during multi-turn interactions with tool execution
 * `ChatCompletedEvent` - The final LLM response
 
-NOTE: When tools are used, the event flow is: `BeforeToolExecutionEvent` → (tool execution) → `ToolExecutedEvent`. This allows monitoring both before and after tool execution phases.
+NOTE: When tools are used, the event flow is: `IntermediateResponseEvent` → `BeforeToolExecutionEvent` → (tool execution) → `ToolExecutedEvent` → (recursive LLM call) → `ChatCompletedEvent`. The `IntermediateResponseEvent` captures the AI's thinking and tool execution requests before tools are executed.
 
 [source,java]
 ----
