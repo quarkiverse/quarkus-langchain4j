@@ -53,6 +53,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private Consumer<Throwable> errorHandler;
     private Consumer<Response<AiMessage>> completionHandler;
     private Consumer<BeforeToolExecution> beforeToolExecutionHandler;
+    private Consumer<ChatResponse> intermediateResponseHandler;
     private Consumer<ToolExecution> toolExecuteHandler;
     private Consumer<ChatResponse> completeResponseHandler;
 
@@ -63,6 +64,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private int onErrorInvoked;
     private int ignoreErrorsInvoked;
     private int beforeToolExecutionInvoked;
+    private int onIntermediateResponseInvoked;
     private int toolExecuteInvoked;
 
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
@@ -121,6 +123,13 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     }
 
     @Override
+    public TokenStream onIntermediateResponse(Consumer<ChatResponse> intermediateResponseHandler) {
+        this.intermediateResponseHandler = intermediateResponseHandler;
+        this.onIntermediateResponseInvoked++;
+        return this;
+    }
+
+    @Override
     public TokenStream onCompleteResponse(Consumer<ChatResponse> completionHandler) {
         this.completeResponseHandler = completionHandler;
         this.onCompleteResponseInvoked++;
@@ -156,6 +165,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 partialResponseHandler,
                 partialThinkingHandler,
                 beforeToolExecutionHandler,
+                intermediateResponseHandler,
                 toolExecuteHandler,
                 completeResponseHandler,
                 completionHandler,
@@ -207,6 +217,10 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
 
         if (onPartialThinkingInvoked > 1) {
             throw new IllegalConfigurationException("onPartialThinking can be invoked on TokenStream at most 1 time");
+        }
+
+        if (onIntermediateResponseInvoked > 1) {
+            throw new IllegalConfigurationException("onIntermediateResponse can be invoked on TokenStream at most 1 time");
         }
 
         if (onErrorInvoked + ignoreErrorsInvoked != 1) {

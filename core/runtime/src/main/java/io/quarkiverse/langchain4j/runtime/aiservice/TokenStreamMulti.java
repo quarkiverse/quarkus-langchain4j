@@ -70,6 +70,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                     processor.onComplete();
                 })
                 .onRetrieved(content -> processor.onNext(new ChatEvent.ContentFetchedEvent(content)))
+                .onIntermediateResponse(response -> processor.onNext(new ChatEvent.IntermediateResponseEvent(response)))
                 .beforeToolExecution(
                         beforeExecution -> processor.onNext(new ChatEvent.BeforeToolExecutionEvent(beforeExecution.request())))
                 .onToolExecuted(execution -> processor.onNext(new ChatEvent.ToolExecutedEvent(execution)))

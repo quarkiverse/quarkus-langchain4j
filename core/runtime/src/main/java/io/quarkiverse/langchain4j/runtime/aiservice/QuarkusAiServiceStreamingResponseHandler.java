@@ -59,6 +59,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final Consumer<PartialThinking> partialThinkingHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
     private final Consumer<BeforeToolExecution> beforeToolExecutionHandler;
+    private final Consumer<ChatResponse> intermediateResponseHandler;
     private final Consumer<ToolExecution> toolExecuteHandler;
     private final Consumer<ChatResponse> completeResponseHandler;
     private final Consumer<Throwable> errorHandler;
@@ -79,6 +80,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
+            Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler,
             Consumer<ChatResponse> completeResponseHandler,
             Consumer<Response<AiMessage>> completionHandler,
@@ -97,6 +99,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
+        this.intermediateResponseHandler = intermediateResponseHandler;
         this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
         this.toolExecuteHandler = toolExecuteHandler;
@@ -125,6 +128,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
+            Consumer<ChatResponse> intermediateResponseHandler,
             Consumer<ToolExecution> toolExecuteHandler, Consumer<ChatResponse> completeResponseHandler,
             Consumer<Response<AiMessage>> completionHandler,
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
@@ -137,6 +141,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
         this.partialThinkingHandler = partialThinkingHandler;
         this.beforeToolExecutionHandler = beforeToolExecutionHandler;
+        this.intermediateResponseHandler = intermediateResponseHandler;
         this.toolExecuteHandler = toolExecuteHandler;
         this.completeResponseHandler = completeResponseHandler;
         this.completionHandler = completionHandler;
@@ -245,6 +250,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 @Override
                 public void run() {
                     addToMemory(aiMessage);
+                    if (intermediateResponseHandler != null) {
+                        intermediateResponseHandler.accept(completeResponse);
+                    }
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                         // Call before tool execution handler
                         if (beforeToolExecutionHandler != null) {
@@ -297,6 +305,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             partialResponseHandler,
                             partialThinkingHandler,
                             beforeToolExecutionHandler,
+                            intermediateResponseHandler,
                             toolExecuteHandler,
                             completeResponseHandler,
                             completionHandler,
