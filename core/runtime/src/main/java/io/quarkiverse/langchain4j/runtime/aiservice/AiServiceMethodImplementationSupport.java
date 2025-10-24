@@ -51,7 +51,9 @@ import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.VideoContent;
 import dev.langchain4j.data.pdf.PdfFile;
+import dev.langchain4j.data.video.Video;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.invocation.InvocationContext;
@@ -965,6 +967,7 @@ public class AiServiceMethodImplementationSupport {
         ImageContent imageContent = null;
         AudioContent audioContent = null;
         PdfFileContent pdfFileContent = null;
+        VideoContent videoContent = null;
         if (userMessageInfo.userNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a
@@ -1030,6 +1033,26 @@ public class AiServiceMethodImplementationSupport {
                         + createInfo.getMethodName());
             }
         }
+        if (userMessageInfo.videoParamPosition().isPresent()) {
+            Object videoParamValue = methodArgs[userMessageInfo.videoParamPosition().get()];
+            if (videoParamValue instanceof String s) {
+                videoContent = VideoContent.from(s);
+            } else if (videoParamValue instanceof URI u) {
+                videoContent = VideoContent.from(u);
+            } else if (videoParamValue instanceof URL u) {
+                try {
+                    videoContent = VideoContent.from(u.toURI());
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (videoParamValue instanceof Video v) {
+                videoContent = VideoContent.from(v);
+            } else {
+                throw new IllegalStateException("Unsupported parameter type '" + videoParamValue.getClass()
+                        + "' annotated with @AudioUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                        + createInfo.getMethodName());
+            }
+        }
 
         if (userMessageInfo.template().isPresent()) {
             AiServiceMethodCreateInfo.TemplateInfo templateInfo = userMessageInfo.template().get();
@@ -1063,7 +1086,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
-            return createUserMessage(userName, imageContent, audioContent, pdfFileContent, prompt.text());
+            return createUserMessage(userName, imageContent, audioContent, pdfFileContent, videoContent, prompt.text());
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
@@ -1077,8 +1100,8 @@ public class AiServiceMethodImplementationSupport {
 
             String text = toString(argValue);
             return createUserMessage(userName, imageContent,
-                    audioContent,
-                    pdfFileContent, text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
+                    audioContent, pdfFileContent, videoContent,
+                    text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
                             : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
         } else {
             // create a user message that instructs the model to ignore it's content
@@ -1106,7 +1129,7 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static UserMessage createUserMessage(String name, ImageContent imageContent, AudioContent audioContent,
-            PdfFileContent pdfFileContent,
+            PdfFileContent pdfFileContent, VideoContent videoContent,
             String text) {
         List<dev.langchain4j.data.message.Content> contents = new ArrayList<>();
         contents.add(TextContent.from(text));
@@ -1118,6 +1141,9 @@ public class AiServiceMethodImplementationSupport {
         }
         if (pdfFileContent != null) {
             contents.add(pdfFileContent);
+        }
+        if (videoContent != null) {
+            contents.add(videoContent);
         }
         if (name == null) {
             return UserMessage.userMessage(contents);

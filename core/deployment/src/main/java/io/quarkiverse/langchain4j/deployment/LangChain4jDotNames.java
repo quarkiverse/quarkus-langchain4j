@@ -39,6 +39,7 @@ import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
+import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 
@@ -62,6 +63,7 @@ public class LangChain4jDotNames {
     static final DotName IMAGE_URL = DotName.createSimple(ImageUrl.class);
     static final DotName AUDIO_URL = DotName.createSimple(AudioUrl.class);
     static final DotName PDF_URL = DotName.createSimple(PdfUrl.class);
+    static final DotName VIDEO_URL = DotName.createSimple(VideoUrl.class);
     static final DotName MODERATE = DotName.createSimple(Moderate.class);
     static final DotName MEMORY_ID = DotName.createSimple(MemoryId.class);
     static final DotName DESCRIPTION = DotName.createSimple(Description.class);
@@ -119,6 +121,7 @@ public class LangChain4jDotNames {
     static final DotName IMAGE = DotName.createSimple(Image.class);
     static final DotName AUDIO = DotName.createSimple(dev.langchain4j.data.audio.Audio.class);
     static final DotName PDF_FILE = DotName.createSimple(PdfFile.class);
+    static final DotName VIDEO = DotName.createSimple(dev.langchain4j.data.video.Video.class);
     static final DotName RESULT = DotName.createSimple(Result.class);
     public static final DotName TOOL_PROVIDER = DotName.createSimple(ToolProvider.class);
     // Using the class name to keep the McpToolBox annotation in the mcp module
