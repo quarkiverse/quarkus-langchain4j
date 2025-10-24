@@ -1956,6 +1956,11 @@ public class AiServicesProcessor {
             MethodParameterInfo pdfUrlParam = method.parameters().get(pdfParamPosition.get());
             validatePdfUrlParam(pdfUrlParam);
         }
+        Optional<Integer> videoParamPosition = determineVideoParamPosition(method);
+        if (videoParamPosition.isPresent()) {
+            MethodParameterInfo videoUrlParam = method.parameters().get(videoParamPosition.get());
+            validateVideoUrlParam(videoUrlParam);
+        }
 
         AnnotationInstance userMessageInstance = method.declaredAnnotation(LangChain4jDotNames.USER_MESSAGE);
         if (userMessageInstance != null) {
@@ -1974,7 +1979,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
+                    userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1987,11 +1992,13 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
+                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition,
+                            videoParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition);
+                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition,
+                            videoParamPosition);
                 }
             } else {
                 Set<String> templateParamNames = Collections.EMPTY_SET;
@@ -2026,7 +2033,7 @@ public class AiServicesProcessor {
                             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                                     AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty(),
                                     Optional.empty(),
-                                    Optional.empty(), Optional.empty());
+                                    Optional.empty(), Optional.empty(), Optional.empty());
                         }
 
                         throw illegalConfigurationForMethod(
@@ -2038,11 +2045,11 @@ public class AiServicesProcessor {
                 if (userMessageParamPosition == -1) {
                     // There is no user message
                     return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty(),
-                            Optional.empty(), Optional.empty(), Optional.empty());
+                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(userMessageParamPosition,
                             userNameParamPosition,
-                            imageParamPosition, audioParamPosition, pdfParamPosition);
+                            imageParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
 
                 }
             }
@@ -2079,6 +2086,17 @@ public class AiServicesProcessor {
         }
         // we don't need @PdfUrl if the parameter is of type PdfFile
         return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
+                .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    private static Optional<Integer> determineVideoParamPosition(MethodInfo method) {
+        Optional<Integer> result = method.annotations(LangChain4jDotNames.VIDEO_URL).stream().filter(
+                IS_METHOD_PARAMETER_ANNOTATION).map(METHOD_PARAMETER_POSITION_FUNCTION).findFirst();
+        if (result.isPresent()) {
+            return result;
+        }
+        // we don't need @VideoUrl if the parameter is of type PdfFile
+        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2119,6 +2137,19 @@ public class AiServicesProcessor {
             return;
         }
         throw new IllegalArgumentException("Unhandled @PdfUrl type '" + type.name() + "'");
+    }
+
+    private void validateVideoUrlParam(MethodParameterInfo param) {
+        if (param == null) {
+            throw new IllegalArgumentException("Unhandled @VideoUrl annotation");
+        }
+        Type type = param.type();
+        DotName typeName = type.name();
+        if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
+                || typeName.equals(LangChain4jDotNames.VIDEO)) {
+            return;
+        }
+        throw new IllegalArgumentException("Unhandled @VideoUrl type '" + type.name() + "'");
     }
 
     private Optional<AiServiceMethodCreateInfo.MetricsTimedInfo> gatherMetricsTimedInfo(MethodInfo method,
