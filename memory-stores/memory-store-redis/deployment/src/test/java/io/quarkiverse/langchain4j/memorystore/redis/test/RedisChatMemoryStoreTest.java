@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
@@ -165,6 +166,39 @@ public class RedisChatMemoryStoreTest extends OpenAiBaseTest {
 
         // now assert that our store was used for delete
         assertThat(redisDataSource.key().exists("" + FIRST_MEMORY_ID, "" + SECOND_MEMORY_ID)).isEqualTo(0);
+    }
+
+    @Test
+    void should_persist_ai_message_thinking_field() {
+        // assert the bean type is correct
+        assertThat(chatMemoryStore).isInstanceOf(RedisChatMemoryStore.class);
+
+        // Create an AiMessage with thinking field
+        AiMessage messageWithThinking = AiMessage.builder()
+                .text("The answer is 42")
+                .thinking("Let me reason through this carefully. The question asks about the meaning of life...")
+                .build();
+
+        int memoryId = 999;
+
+        // Store the message
+        chatMemoryStore.updateMessages(memoryId, List.of(messageWithThinking));
+
+        // Retrieve the messages
+        List<ChatMessage> retrievedMessages = chatMemoryStore.getMessages(memoryId);
+
+        // Assert the message was retrieved and the thinking field is preserved
+        assertThat(retrievedMessages).hasSize(1);
+        ChatMessage retrievedMessage = retrievedMessages.get(0);
+        assertThat(retrievedMessage).isInstanceOf(AiMessage.class);
+
+        AiMessage retrievedAiMessage = (AiMessage) retrievedMessage;
+        assertThat(retrievedAiMessage.text()).isEqualTo("The answer is 42");
+        assertThat(retrievedAiMessage.thinking()).isEqualTo(
+                "Let me reason through this carefully. The question asks about the meaning of life...");
+
+        // Clean up
+        chatMemoryStore.deleteMessages(memoryId);
     }
 
 }

@@ -11,6 +11,9 @@ import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,9 +24,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageType;
+import dev.langchain4j.data.message.CustomMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.spi.json.JsonCodecFactory;
 import io.quarkiverse.langchain4j.runtime.jackson.CustomLocalDateDeserializer;
@@ -104,14 +115,67 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
         public static final ObjectWriter WRITER;
 
         static {
+            // Start with Arc container ObjectMapper to preserve Quarkus integration
             MAPPER = Arc.container().instance(ObjectMapper.class).get()
                     .copy()
                     .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
                     .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true)
-                    .registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
+                    .configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
+
+            // Add chat message mixins to preserve thinking field deserialization
+            MAPPER.addMixIn(ChatMessage.class, ChatMessageMixin.class);
+            MAPPER.addMixIn(AiMessage.class, AiMessageMixin.class);
+            MAPPER.addMixIn(UserMessage.class, UserMessageMixin.class);
+            MAPPER.addMixIn(SystemMessage.class, SystemMessageMixin.class);
+            MAPPER.addMixIn(ToolExecutionResultMessage.class, ToolExecutionResultMessageMixin.class);
+            MAPPER.addMixIn(CustomMessage.class, CustomMessageMixin.class);
+
+            // Register Quarkus-specific module
+            MAPPER.registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
+
             WRITER = MAPPER.writerWithDefaultPrettyPrinter();
         }
+    }
+
+    /**
+     * Jackson mixins for chat message deserialization.
+     * These enable proper deserialization of chat messages including the thinking field in AiMessage.
+     * Based on mixins from dev.langchain4j.data.message.JacksonChatMessageJsonCodec.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = SystemMessage.class, name = "SYSTEM"),
+            @JsonSubTypes.Type(value = UserMessage.class, name = "USER"),
+            @JsonSubTypes.Type(value = AiMessage.class, name = "AI"),
+            @JsonSubTypes.Type(value = ToolExecutionResultMessage.class, name = "TOOL_EXECUTION_RESULT"),
+            @JsonSubTypes.Type(value = CustomMessage.class, name = "CUSTOM"),
+    })
+    private abstract static class ChatMessageMixin {
+        @JsonProperty
+        public abstract ChatMessageType type();
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private abstract static class SystemMessageMixin {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(builder = UserMessage.Builder.class)
+    private abstract static class UserMessageMixin {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(builder = AiMessage.Builder.class)
+    private abstract static class AiMessageMixin {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private abstract static class ToolExecutionResultMessageMixin {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private abstract static class CustomMessageMixin {
     }
 
     public static class SnakeCaseObjectMapperHolder {
