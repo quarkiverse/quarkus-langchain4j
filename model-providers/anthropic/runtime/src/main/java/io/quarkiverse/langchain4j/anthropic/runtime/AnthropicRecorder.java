@@ -98,6 +98,15 @@ public class AnthropicRecorder {
                 builder.sendThinking(thinkingConfig.sendThinking().get());
             }
 
+            // Pass caching configuration to builder
+            builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
+            builder.cacheTools(chatModelConfig.cacheTools());
+
+            // Add beta header for interleaved thinking if enabled
+            if (thinkingConfig.interleaved().orElse(false)) {
+                builder.beta("interleaved-thinking-2025-05-14");
+            }
+
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
@@ -170,6 +179,15 @@ public class AnthropicRecorder {
 
             if (thinkingConfig.sendThinking().isPresent()) {
                 builder.sendThinking(thinkingConfig.sendThinking().get());
+            }
+
+            // Pass caching configuration to builder
+            builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
+            builder.cacheTools(chatModelConfig.cacheTools());
+
+            // Add beta header for interleaved thinking if enabled
+            if (thinkingConfig.interleaved().orElse(false)) {
+                builder.beta("interleaved-thinking-2025-05-14");
             }
 
             return new Function<>() {

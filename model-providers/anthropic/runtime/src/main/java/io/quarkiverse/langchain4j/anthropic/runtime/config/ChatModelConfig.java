@@ -78,6 +78,22 @@ public interface ChatModelConfig {
     Optional<Boolean> logResponses();
 
     /**
+     * Cache system messages to reduce costs for repeated prompts.
+     * Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku).
+     * Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+     */
+    @WithDefault("false")
+    Boolean cacheSystemMessages();
+
+    /**
+     * Cache tool definitions to reduce costs.
+     * Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku).
+     * Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+     */
+    @WithDefault("false")
+    Boolean cacheTools();
+
+    /**
      * Thinking related configuration
      */
     ThinkingConfig thinking();
@@ -106,5 +122,12 @@ public interface ChatModelConfig {
          */
         @ConfigDocDefault("true")
         Optional<Boolean> sendThinking();
+
+        /**
+         * Enable interleaved thinking for Claude 4 models, allowing reasoning between tool calls.
+         * Requires Claude 4 model (e.g., claude-opus-4-20250514) and thinking.type: enabled.
+         */
+        @WithDefault("false")
+        Optional<Boolean> interleaved();
     }
 }

@@ -59,11 +59,13 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     public static final String BETA = "tools-2024-04-04";
     private final String apiKey;
     private final String anthropicVersion;
+    private final String configuredBeta;
     private final AnthropicRestApi restApi;
 
     public QuarkusAnthropicClient(Builder builder) {
         this.apiKey = builder.apiKey;
         this.anthropicVersion = builder.version;
+        this.configuredBeta = builder.beta;
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
@@ -104,10 +106,33 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         var builder = AnthropicRestApi.ApiMetadata.builder()
                 .apiKey(apiKey)
                 .anthropicVersion(anthropicVersion);
-        if (hasTools(request)) {
-            builder.beta(BETA);
+
+        String betaHeader = buildBetaHeaderForRequest(request);
+        if (betaHeader != null) {
+            builder.beta(betaHeader);
         }
+
         return builder.build();
+    }
+
+    private String buildBetaHeaderForRequest(AnthropicCreateMessageRequest request) {
+        boolean toolsPresent = hasTools(request);
+
+        // If beta configured, use it (may need to combine with tools beta)
+        if (configuredBeta != null) {
+            // If tools present and tools beta not already in configured header
+            if (toolsPresent && !configuredBeta.contains("tools-")) {
+                return BETA + "," + configuredBeta;
+            }
+            return configuredBeta;
+        }
+
+        // Backward compatibility: default tools beta when tools present
+        if (toolsPresent) {
+            return BETA;
+        }
+
+        return null;
     }
 
     private boolean hasTools(AnthropicCreateMessageRequest request) {
