@@ -10,8 +10,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -28,6 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageType;
@@ -129,6 +132,7 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
             MAPPER.addMixIn(SystemMessage.class, SystemMessageMixin.class);
             MAPPER.addMixIn(ToolExecutionResultMessage.class, ToolExecutionResultMessageMixin.class);
             MAPPER.addMixIn(CustomMessage.class, CustomMessageMixin.class);
+            MAPPER.addMixIn(ToolExecutionRequest.class, ToolExecutionRequestMixin.class);
 
             // Register Quarkus-specific module
             MAPPER.registerModule(SnakeCaseObjectMapperHolder.QuarkusLangChain4jModule.INSTANCE);
@@ -158,6 +162,9 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private abstract static class SystemMessageMixin {
+        @JsonCreator
+        public SystemMessageMixin(@JsonProperty("text") String text) {
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -167,15 +174,31 @@ public class QuarkusJsonCodecFactory implements JsonCodecFactory {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonDeserialize(builder = AiMessage.Builder.class)
+    @JsonPropertyOrder({ "toolExecutionRequests", "text", "attributes", "type" })
     private abstract static class AiMessageMixin {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private abstract static class ToolExecutionResultMessageMixin {
+    @JsonPropertyOrder({ "text", "id", "toolName", "type" })
+    private static class ToolExecutionResultMessageMixin {
+        @JsonCreator
+        public ToolExecutionResultMessageMixin(
+                @JsonProperty("id") String id,
+                @JsonProperty("toolName") String toolName,
+                @JsonProperty("text") String text) {
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private abstract static class CustomMessageMixin {
+    private static class CustomMessageMixin {
+        @JsonCreator
+        public CustomMessageMixin(@JsonProperty("attributes") Map<String, Object> attributes) {
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(builder = ToolExecutionRequest.Builder.class)
+    private abstract static class ToolExecutionRequestMixin {
     }
 
     public static class SnakeCaseObjectMapperHolder {
