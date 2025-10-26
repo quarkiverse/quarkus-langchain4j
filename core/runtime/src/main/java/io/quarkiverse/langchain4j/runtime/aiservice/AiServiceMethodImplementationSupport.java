@@ -32,8 +32,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 
@@ -95,17 +93,6 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
-import io.quarkiverse.langchain4j.audit.AuditSourceInfo;
-import io.quarkiverse.langchain4j.audit.InitialMessagesCreatedEvent;
-import io.quarkiverse.langchain4j.audit.LLMInteractionCompleteEvent;
-import io.quarkiverse.langchain4j.audit.LLMInteractionFailureEvent;
-import io.quarkiverse.langchain4j.audit.ResponseFromLLMReceivedEvent;
-import io.quarkiverse.langchain4j.audit.ToolExecutedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultInitialMessagesCreatedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionCompleteEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultLLMInteractionFailureEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultResponseFromLLMReceivedEvent;
-import io.quarkiverse.langchain4j.audit.internal.DefaultToolExecutedEvent;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
@@ -114,7 +101,6 @@ import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuar
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
-import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
@@ -172,31 +158,12 @@ public class AiServiceMethodImplementationSupport {
                 .timestampNow()
                 .build();
 
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        var auditSourceInfo = new AuditSourceInfoImpl(createInfo, methodArgs);
-        var beanManager = Arc.container().beanManager();
-
         // TODO: add validation
         try {
-            var result = doImplement(createInfo, invocationContext, context, auditSourceInfo);
-
-            /**
-             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-             */
-            // This firing here is actually a bug
-            // It'll go away after https://github.com/quarkiverse/quarkus-langchain4j/issues/1736 is complete
-            beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
-                    .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, result));
+            var result = doImplement(createInfo, invocationContext, context);
 
             return result;
         } catch (Exception e) {
-            /**
-             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-             */
-            beanManager.getEvent().select(LLMInteractionFailureEvent.class)
-                    .fire(new DefaultLLMInteractionFailureEvent(auditSourceInfo, e));
 
             // New firing
             context.eventListenerRegistrar.fireEvent(
@@ -210,7 +177,7 @@ public class AiServiceMethodImplementationSupport {
     }
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
-            QuarkusAiServiceContext context, AuditSourceInfo auditSourceInfo) {
+            QuarkusAiServiceContext context) {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object[] methodArgs = invocationContext.methodArguments().toArray(Object[]::new);
         Object memoryId = invocationContext.chatMemoryId();
@@ -229,15 +196,8 @@ public class AiServiceMethodImplementationSupport {
         if (TypeUtil.isImage(returnType) || TypeUtil.isResultImage(returnType)) {
             return doImplementGenerateImage(methodCreateInfo, context, invocationContext, systemMessage, userMessage, memoryId,
                     returnType,
-                    templateVariables, auditSourceInfo);
+                    templateVariables);
         }
-
-        var beanManager = Arc.container().beanManager();
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
-                .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
 
         // New firing
         context.eventListenerRegistrar.fireEvent(
@@ -476,12 +436,6 @@ public class AiServiceMethodImplementationSupport {
 
         log.debug("AI response obtained");
 
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
-                .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
-
         // New firing
         context.eventListenerRegistrar.fireEvent(
                 AiServiceResponseReceivedEvent.builder()
@@ -522,7 +476,7 @@ public class AiServiceMethodImplementationSupport {
 
                 ToolExecutionResult toolExecutionResult = toolExecutor == null
                         ? context.toolService.applyToolHallucinationStrategy(toolExecutionRequest)
-                        : executeTool(auditSourceInfo, toolExecutionRequest, toolExecutor, invocationContext, beanManager);
+                        : executeTool(toolExecutionRequest, toolExecutor, invocationContext);
 
                 // New firing
                 context.eventListenerRegistrar.fireEvent(
@@ -605,12 +559,6 @@ public class AiServiceMethodImplementationSupport {
 
             response = effectiveChatModel.chat(chatRequestBuilder.parameters(parametersBuilder.build()).build());
             log.debug("AI response obtained");
-
-            /**
-             * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-             */
-            beanManager.getEvent().select(ResponseFromLLMReceivedEvent.class)
-                    .fire(new DefaultResponseFromLLMReceivedEvent(auditSourceInfo, response));
 
             // New firing
             context.eventListenerRegistrar.fireEvent(
@@ -702,17 +650,10 @@ public class AiServiceMethodImplementationSupport {
         return new InvocationParameters();
     }
 
-    private static ToolExecutionResult executeTool(AuditSourceInfo auditSourceInfo,
-            ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor, InvocationContext invocationContext,
-            BeanManager beanManager) {
+    private static ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
+            InvocationContext invocationContext) {
         ToolExecutionResult toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
         log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
-
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        beanManager.getEvent().select(ToolExecutedEvent.class)
-                .fire(new DefaultToolExecutedEvent(auditSourceInfo, toolExecutionRequest, toolExecutionResult.resultText()));
 
         return toolExecutionResult;
     }
@@ -760,15 +701,7 @@ public class AiServiceMethodImplementationSupport {
     private static Object doImplementGenerateImage(AiServiceMethodCreateInfo methodCreateInfo,
             QuarkusAiServiceContext context, InvocationContext invocationContext,
             Optional<SystemMessage> systemMessage, UserMessage userMessage,
-            Object memoryId, Type returnType, Map<String, Object> templateVariables, AuditSourceInfo auditSourceInfo) {
-
-        var beanManager = Arc.container().beanManager();
-
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        beanManager.getEvent().select(InitialMessagesCreatedEvent.class)
-                .fire(new DefaultInitialMessagesCreatedEvent(auditSourceInfo, systemMessage, userMessage));
+            Object memoryId, Type returnType, Map<String, Object> templateVariables) {
 
         // New firing
         context.eventListenerRegistrar.fireEvent(
@@ -801,12 +734,6 @@ public class AiServiceMethodImplementationSupport {
                 .orElseGet(um::singleText);
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
-
-        /**
-         * @deprecated In favor of https://docs.langchain4j.dev/tutorials/observability#ai-service-observability
-         */
-        beanManager.getEvent().select(LLMInteractionCompleteEvent.class)
-                .fire(new DefaultLLMInteractionCompleteEvent(auditSourceInfo, imageResponse.content()));
 
         // New firing
         context.eventListenerRegistrar.fireEvent(

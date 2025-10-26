@@ -252,7 +252,7 @@ public class Startup {
 
 == Auditing
 
-IMPORTANT: The Quarkus-specific auditing features have been deprecated. They will be replaced by the . Once complete, you will be able to observe the https://docs.langchain4j.dev/tutorials/observability#types-of-events[LangChain4j observability events] as CDI events.
+IMPORTANT: The Quarkus-specific auditing features have been deprecated and removed. They have been replaced by https://docs.langchain4j.dev/tutorials/observability#ai-service-observability. You can observe the https://docs.langchain4j.dev/tutorials/observability#types-of-events[LangChain4j observability events] as CDI events.
 
 The extension allows users to audit the process of implementing an AiService by observing normal CDI events. See the https://docs.langchain4j.dev/tutorials/observability#ai-service-observability[LangChain4j AI Service Observability] tutorial for more information about the types of events that can be observed.
 
