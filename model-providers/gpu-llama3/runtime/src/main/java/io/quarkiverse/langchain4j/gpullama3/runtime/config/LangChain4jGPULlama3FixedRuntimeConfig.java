@@ -2,11 +2,11 @@ package io.quarkiverse.langchain4j.gpullama3.runtime.config;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_AND_RUN_TIME_FIXED;
 
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
-import io.quarkus.runtime.annotations.ConfigDocMapKey;
-import io.quarkus.runtime.annotations.ConfigDocSection;
-import io.quarkus.runtime.annotations.ConfigRoot;
+import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefaults;
 import io.smallrye.config.WithParentName;
@@ -38,7 +38,7 @@ public interface LangChain4jGPULlama3FixedRuntimeConfig {
      * Default model config.
      */
     @WithParentName
-    FixedRuntimeConfig defaultConfig();
+    GPULlama3Config defaultConfig();
 
     /**
      * Named model config.
@@ -47,9 +47,17 @@ public interface LangChain4jGPULlama3FixedRuntimeConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, FixedRuntimeConfig> namedConfig();
+    Map<String, GPULlama3Config> namedConfig();
 
-    interface FixedRuntimeConfig {
+    /**
+     * Location on the file-system which serves as a cache for the models
+     *
+     */
+    @ConfigDocDefault("${user.home}/.langchain4j/models")
+    Optional<Path> modelsPath();
+
+    @ConfigGroup
+    interface GPULlama3Config {
 
         /**
          * Chat model related settings

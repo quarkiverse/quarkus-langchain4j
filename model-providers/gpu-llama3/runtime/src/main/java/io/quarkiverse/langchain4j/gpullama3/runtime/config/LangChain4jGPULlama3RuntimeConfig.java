@@ -20,28 +20,16 @@ import io.smallrye.config.WithParentName;
  * This configuration is read at runtime and can be changed without rebuilding the application.
  * It includes dynamic settings such as model parameters (temperature, max tokens),
  * logging preferences, and integration control.
- * <p>
- * Properties can be overridden at runtime through environment variables, system properties,
- * or external configuration files.
- * <p>
- * Example configuration:
- *
- * <pre>
- * quarkus.langchain4j.gpu-llama3.enable-integration=true
- * quarkus.langchain4j.gpu-llama3.chat-model.temperature=0.7
- * quarkus.langchain4j.gpu-llama3.chat-model.max-tokens=512
- * quarkus.langchain4j.gpu-llama3.log-requests=true
- * </pre>
  */
 @ConfigRoot(phase = RUN_TIME)
 @ConfigMapping(prefix = "quarkus.langchain4j.gpu-llama3")
-public interface LangChain4jGPULlama3Config {
+public interface LangChain4jGPULlama3RuntimeConfig {
 
     /**
      * Default model config.
      */
     @WithParentName
-    RuntimeConfig defaultConfig();
+    GPULlama3Config defaultConfig();
 
     /**
      * Named model config.
@@ -50,9 +38,9 @@ public interface LangChain4jGPULlama3Config {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, RuntimeConfig> namedConfig();
+    Map<String, GPULlama3Config> namedConfig();
 
-    interface RuntimeConfig {
+    interface GPULlama3Config {
 
         /**
          * Chat model related settings
@@ -67,14 +55,14 @@ public interface LangChain4jGPULlama3Config {
         Boolean enableIntegration();
 
         /**
-         * Whether GPU Llama3 should log requests
+         * Whether GPULlama3 should log requests
          */
         @ConfigDocDefault("false")
         @WithDefault("${quarkus.langchain4j.log-requests}")
         Optional<Boolean> logRequests();
 
         /**
-         * Whether GPU Llama3 client should log responses
+         * Whether GPULlama3 client should log responses
          */
         @ConfigDocDefault("false")
         @WithDefault("${quarkus.langchain4j.log-responses}")

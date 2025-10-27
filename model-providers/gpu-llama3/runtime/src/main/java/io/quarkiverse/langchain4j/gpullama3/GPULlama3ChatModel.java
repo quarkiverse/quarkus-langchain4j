@@ -1,9 +1,11 @@
 package io.quarkiverse.langchain4j.gpullama3;
 
 import static dev.langchain4j.internal.Utils.getOrDefault;
-import static java.util.Objects.requireNonNull;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
@@ -16,13 +18,22 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
 
     // @formatter:off
     private GPULlama3ChatModel(Builder builder) {
-        init(
-                requireNonNull(builder.modelPath, "modelPath is required and must be specified"),
-                getOrDefault(builder.temperature, 0.1),
-                getOrDefault(builder.topP, 1.0),
-                getOrDefault(builder.seed, 12345),
-                getOrDefault(builder.maxTokens, 512),
-                getOrDefault(builder.onGPU, Boolean.TRUE));
+        GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
+        try {
+            Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
+                    Optional.empty(), Optional.empty());
+            init(
+                    modelPath,
+                    getOrDefault(builder.temperature, 0.1),
+                    getOrDefault(builder.topP, 1.0),
+                    getOrDefault(builder.seed, 12345),
+                    getOrDefault(builder.maxTokens, 512),
+                    getOrDefault(builder.onGPU, Boolean.TRUE));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
     // @formatter:on
 
@@ -58,7 +69,9 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
 
     public static class Builder {
 
-        protected Path modelPath;
+        private Optional<Path> modelCachePath;
+        private String modelName = Consts.DEFAULT_CHAT_MODEL_NAME;
+        private String quantization = Consts.DEFAULT_CHAT_MODEL_QUANTIZATION;
         protected Double temperature;
         protected Double topP;
         protected Integer seed;
@@ -69,8 +82,18 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
             // This is public so it can be extended
         }
 
-        public Builder modelPath(Path modelPath) {
-            this.modelPath = modelPath;
+        public Builder modelCachePath(Optional<Path> modelCachePath) {
+            this.modelCachePath = modelCachePath;
+            return this;
+        }
+
+        public Builder modelName(String modelName) {
+            this.modelName = modelName;
+            return this;
+        }
+
+        public Builder quantization(String quantization) {
+            this.quantization = quantization;
             return this;
         }
 
