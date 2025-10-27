@@ -25,7 +25,8 @@ public class QuarkusMcpToolProvider extends McpToolProvider {
         super(mcpClients, false,
                 AlwaysTrueMcpClientToolSpecificationBiPredicate.INSTANCE,
                 determineToolWrapper(tracerInstance),
-                exposeResourcesAsTools ? DefaultMcpResourcesAsToolsPresenter.builder().build() : null);
+                exposeResourcesAsTools ? DefaultMcpResourcesAsToolsPresenter.builder().build() : null,
+                null, null);
     }
 
     private static Function<ToolExecutor, ToolExecutor> determineToolWrapper(Instance<Tracer> tracerInstance) {

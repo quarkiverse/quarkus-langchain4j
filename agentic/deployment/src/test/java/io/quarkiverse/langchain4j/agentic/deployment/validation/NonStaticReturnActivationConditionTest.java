@@ -32,10 +32,10 @@ public class NonStaticReturnActivationConditionTest {
 
     public interface ExpertsAgent {
 
-        @ConditionalAgent(outputName = "response", subAgents = {
-                @SubAgent(type = Agents.MedicalExpert.class, outputName = "response"),
-                @SubAgent(type = Agents.TechnicalExpert.class, outputName = "response"),
-                @SubAgent(type = Agents.LegalExpert.class, outputName = "response")
+        @ConditionalAgent(outputKey = "response", subAgents = {
+                @SubAgent(type = Agents.MedicalExpert.class, outputKey = "response"),
+                @SubAgent(type = Agents.TechnicalExpert.class, outputKey = "response"),
+                @SubAgent(type = Agents.LegalExpert.class, outputKey = "response")
         })
         String askExpert(@V("request") String request);
 

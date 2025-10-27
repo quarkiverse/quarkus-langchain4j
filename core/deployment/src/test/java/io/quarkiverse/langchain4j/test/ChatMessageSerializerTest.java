@@ -87,7 +87,8 @@ class ChatMessageSerializerTest {
         List<ChatMessage> messages = singletonList(userMessage("hello"));
 
         String json = messagesToJson(messages);
-        assertThat(json).isEqualTo("[{\"contents\":[{\"text\":\"hello\",\"type\":\"TEXT\"}],\"type\":\"USER\"}]");
+        assertThat(json)
+                .isEqualTo("[{\"contents\":[{\"text\":\"hello\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"}]");
 
         List<ChatMessage> deserializedMessages = messagesFromJson(json);
         assertThat(deserializedMessages).isEqualTo(messages);
@@ -109,8 +110,9 @@ class ChatMessageSerializerTest {
         String json = ChatMessageSerializer.messagesToJson(messages);
         assertThat(json).isEqualTo("[" +
                 "{\"text\":\"Hello from system\",\"type\":\"SYSTEM\"}," +
-                "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
-                "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"type\":\"USER\"}," +
+                "{\"contents\":[{\"text\":\"Hello from user\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"}," +
+                "{\"name\":\"Klaus\",\"contents\":[{\"text\":\"Hello from Klaus\",\"type\":\"TEXT\"}],\"attributes\":{},\"type\":\"USER\"},"
+                +
                 "{\"toolExecutionRequests\":[{\"name\":\"calculator\",\"arguments\":\"{}\"}],\"text\":\"Hello from AI\",\"attributes\":{},\"type\":\"AI\"},"
                 +
                 "{\"text\":\"4\",\"id\":\"12345\",\"toolName\":\"calculator\",\"type\":\"TOOL_EXECUTION_RESULT\"}" +

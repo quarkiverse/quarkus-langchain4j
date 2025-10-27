@@ -36,10 +36,10 @@ public class NonErrorResultReturnTypeErrorHandlerTest {
 
     public interface StoryCreatorWithErrorRecovery {
 
-        @SequenceAgent(outputName = "story", subAgents = {
-                @SubAgent(type = Agents.CreativeWriter.class, outputName = "story"),
-                @SubAgent(type = Agents.AudienceEditor.class, outputName = "story"),
-                @SubAgent(type = Agents.StyleEditor.class, outputName = "story")
+        @SequenceAgent(outputKey = "story", subAgents = {
+                @SubAgent(type = Agents.CreativeWriter.class, outputKey = "story"),
+                @SubAgent(type = Agents.AudienceEditor.class, outputKey = "story"),
+                @SubAgent(type = Agents.StyleEditor.class, outputKey = "story")
         })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
 
