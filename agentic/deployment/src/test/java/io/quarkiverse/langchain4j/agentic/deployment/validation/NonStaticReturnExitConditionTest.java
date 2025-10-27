@@ -34,9 +34,9 @@ public class NonStaticReturnExitConditionTest {
 
     public interface StyleReviewLoopAgentWithCounter {
 
-        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputName = "story", maxIterations = 5, subAgents = {
-                @SubAgent(type = Agents.StyleScorer.class, outputName = "score"),
-                @SubAgent(type = Agents.StyleEditor.class, outputName = "story")
+        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputKey = "story", maxIterations = 5, subAgents = {
+                @SubAgent(type = Agents.StyleScorer.class, outputKey = "score"),
+                @SubAgent(type = Agents.StyleEditor.class, outputKey = "story")
         })
         String write(@V("story") String story);
 

@@ -38,9 +38,9 @@ public class NonExecutorReturnTypeParallelExecutorTest {
 
     public interface EveningPlannerAgent {
 
-        @ParallelAgent(outputName = "plans", subAgents = {
-                @SubAgent(type = Agents.FoodExpert.class, outputName = "meals"),
-                @SubAgent(type = Agents.MovieExpert.class, outputName = "movies")
+        @ParallelAgent(outputKey = "plans", subAgents = {
+                @SubAgent(type = Agents.FoodExpert.class, outputKey = "meals"),
+                @SubAgent(type = Agents.MovieExpert.class, outputKey = "movies")
         })
         List<Agents.EveningPlan> plan(@V("mood") String mood);
 

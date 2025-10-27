@@ -59,8 +59,8 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
 
     public interface Sequence {
 
-        @SequenceAgent(outputName = "toolsList", subAgents = {
-                @SubAgent(type = AgentWithMcpTools.class, outputName = "toolsList")
+        @SequenceAgent(outputKey = "toolsList", subAgents = {
+                @SubAgent(type = AgentWithMcpTools.class, outputKey = "toolsList")
         })
         String toolsList(@V("userMessage") String userMessage);
     }

@@ -45,10 +45,10 @@ public class WorkflowTest extends OpenAiBaseTest {
 
     public interface StoryCreator {
 
-        @SequenceAgent(outputName = "story", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputName = "story"),
-                @SubAgent(type = AudienceEditor.class, outputName = "story"),
-                @SubAgent(type = StyleEditor.class, outputName = "story")
+        @SequenceAgent(outputKey = "story", subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
+                @SubAgent(type = AudienceEditor.class, outputKey = "story"),
+                @SubAgent(type = StyleEditor.class, outputKey = "story")
         })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
     }
@@ -96,9 +96,9 @@ public class WorkflowTest extends OpenAiBaseTest {
 
     public interface StyleReviewLoopAgent {
 
-        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputName = "story", maxIterations = 5, subAgents = {
-                @SubAgent(type = StyleScorer.class, outputName = "score"),
-                @SubAgent(type = StyleEditor.class, outputName = "story")
+        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputKey = "story", maxIterations = 5, subAgents = {
+                @SubAgent(type = StyleScorer.class, outputKey = "score"),
+                @SubAgent(type = StyleEditor.class, outputKey = "story")
         })
         String write(@V("story") String story);
 
@@ -110,9 +110,9 @@ public class WorkflowTest extends OpenAiBaseTest {
 
     public interface StoryCreatorWithReview {
 
-        @SequenceAgent(outputName = "story", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputName = "story"),
-                @SubAgent(type = StyleReviewLoopAgent.class, outputName = "story")
+        @SequenceAgent(outputKey = "story", subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
+                @SubAgent(type = StyleReviewLoopAgent.class, outputKey = "story")
         })
         ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
     }
@@ -136,10 +136,10 @@ public class WorkflowTest extends OpenAiBaseTest {
 
     public interface ExpertsAgent {
 
-        @ConditionalAgent(outputName = "response", subAgents = {
-                @SubAgent(type = MedicalExpert.class, outputName = "response"),
-                @SubAgent(type = TechnicalExpert.class, outputName = "response"),
-                @SubAgent(type = LegalExpert.class, outputName = "response")
+        @ConditionalAgent(outputKey = "response", subAgents = {
+                @SubAgent(type = MedicalExpert.class, outputKey = "response"),
+                @SubAgent(type = TechnicalExpert.class, outputKey = "response"),
+                @SubAgent(type = LegalExpert.class, outputKey = "response")
         })
         String askExpert(@V("request") String request);
 
@@ -161,9 +161,9 @@ public class WorkflowTest extends OpenAiBaseTest {
 
     public interface ExpertRouterAgent {
 
-        @SequenceAgent(outputName = "response", subAgents = {
-                @SubAgent(type = CategoryRouter.class, outputName = "category"),
-                @SubAgent(type = ExpertsAgent.class, outputName = "response")
+        @SequenceAgent(outputKey = "response", subAgents = {
+                @SubAgent(type = CategoryRouter.class, outputKey = "category"),
+                @SubAgent(type = ExpertsAgent.class, outputKey = "response")
         })
         ResultWithAgenticScope<String> ask(@V("request") String request);
     }

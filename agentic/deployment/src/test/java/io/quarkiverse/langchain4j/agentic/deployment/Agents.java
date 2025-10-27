@@ -317,7 +317,7 @@ public class Agents {
         @Inject
         Logger logger;
 
-        @Agent(value = "Produces a Goodbye", outputName = "goodbye")
+        @Agent(value = "Produces a Goodbye", outputKey = "goodbye")
         public String goodBye() {
             logger.info("Good Bye");
 
@@ -328,19 +328,19 @@ public class Agents {
 
     public interface StoryCreator {
 
-        @SequenceAgent(outputName = "story", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputName = "story"),
-                @SubAgent(type = AudienceEditor.class, outputName = "story"),
-                @SubAgent(type = StyleEditor.class, outputName = "story")
+        @SequenceAgent(outputKey = "story", subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
+                @SubAgent(type = AudienceEditor.class, outputKey = "story"),
+                @SubAgent(type = StyleEditor.class, outputKey = "story")
         })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
     }
 
     public interface StyleReviewLoopAgent {
 
-        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputName = "story", maxIterations = 5, subAgents = {
-                @SubAgent(type = StyleScorer.class, outputName = "score"),
-                @SubAgent(type = StyleEditor.class, outputName = "story")
+        @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputKey = "story", maxIterations = 5, subAgents = {
+                @SubAgent(type = StyleScorer.class, outputKey = "score"),
+                @SubAgent(type = StyleEditor.class, outputKey = "story")
         })
         String write(@V("story") String story);
 
@@ -352,9 +352,9 @@ public class Agents {
 
     public interface SupervisorStoryCreator {
 
-        @SupervisorAgent(outputName = "story", responseStrategy = SupervisorResponseStrategy.LAST, subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputName = "story"),
-                @SubAgent(type = StyleReviewLoopAgent.class, outputName = "story")
+        @SupervisorAgent(outputKey = "story", responseStrategy = SupervisorResponseStrategy.LAST, subAgents = {
+                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
+                @SubAgent(type = StyleReviewLoopAgent.class, outputKey = "story")
         })
         ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
 

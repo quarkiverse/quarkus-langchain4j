@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.exception.ToolExecutionException;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
@@ -103,8 +102,7 @@ public abstract class McpToolsTestBase {
                 .arguments("{\"input\": 1}")
                 .build();
         assertThatThrownBy(() -> executor.execute(toolExecutionRequest, null))
-                .isInstanceOf(ToolArgumentsException.class)
-                .hasMessageContaining("THIS-TOOL-DOES-NOT-EXIST");
+                .isInstanceOf(ToolExecutionException.class);
     }
 
     @Test
