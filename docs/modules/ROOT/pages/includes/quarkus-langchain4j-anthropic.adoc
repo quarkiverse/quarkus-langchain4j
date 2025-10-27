@@ -370,6 +370,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-system-messages]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-system-messages[`quarkus.langchain4j.anthropic.chat-model.cache-system-messages`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.cache-system-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache system messages to reduce costs for repeated prompts. Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku). Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_SYSTEM_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_SYSTEM_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-tools]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-cache-tools[`quarkus.langchain4j.anthropic.chat-model.cache-tools`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.cache-tools+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache tool definitions to reduce costs. Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku). Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_CACHE_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-type[`quarkus.langchain4j.anthropic.chat-model.thinking.type`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.type+++[]
@@ -453,6 +495,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`true`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-interleaved]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-thinking-interleaved[`quarkus.langchain4j.anthropic.chat-model.thinking.interleaved`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.thinking.interleaved+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable interleaved thinking for Claude 4 models, allowing reasoning between tool calls. Requires Claude 4 model (e.g., claude-opus-4-20250514) and thinking.type: enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_INTERLEAVED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_THINKING_INTERLEAVED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
 
 h|[[quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic]] [.section-name.section-level0]##link:#quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic[Named model config]##
 h|Type
@@ -800,6 +863,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`false`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-system-messages]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-system-messages[`quarkus.langchain4j.anthropic."model-name".chat-model.cache-system-messages`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-system-messages+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache system messages to reduce costs for repeated prompts. Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku). Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_SYSTEM_MESSAGES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_SYSTEM_MESSAGES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-tools]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-cache-tools[`quarkus.langchain4j.anthropic."model-name".chat-model.cache-tools`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.cache-tools+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache tool definitions to reduce costs. Requires minimum 1024 tokens (Claude Opus/Sonnet) or 2048-4096 tokens (Haiku). Supported models: Claude Opus 4.1, Sonnet 4.5, Haiku 4.5, and later models.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_TOOLS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_CACHE_TOOLS+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-type[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.type`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.type+++[]
@@ -883,6 +988,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`true`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-interleaved]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-thinking-interleaved[`quarkus.langchain4j.anthropic."model-name".chat-model.thinking.interleaved`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.thinking.interleaved+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable interleaved thinking for Claude 4 models, allowing reasoning between tool calls. Requires Claude 4 model (e.g., claude-opus-4-20250514) and thinking.type: enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_INTERLEAVED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_INTERLEAVED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
 
 
 |===

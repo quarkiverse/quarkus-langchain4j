@@ -96,4 +96,29 @@ public interface ChatModelConfig {
      * @return
      */
     Optional<List<String>> stop();
+
+    /**
+     * Constrains effort on reasoning for reasoning models.
+     * Currently supported values are {@code minimal}, {@code low}, {@code medium}, and {@code high}.
+     * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+     * <p>
+     * Note: The {@code gpt-5-pro} model defaults to (and only supports) high reasoning effort.
+     */
+    Optional<String> reasoningEffort();
+
+    /**
+     * Specifies the processing type used for serving the request.
+     * <p>
+     * If set to {@code auto}, then the request will be processed with the service tier configured in the Project settings.
+     * If set to {@code default}, then the request will be processed with the standard pricing and performance for the selected
+     * model.
+     * If set to {@code flex} or {@code priority}, then the request will be processed with the corresponding service tier.
+     * When not set, the default behavior is {@code auto}.
+     * <p>
+     * When the service tier parameter is set, the response body will include the {@code service_tier} value based on the
+     * processing mode actually used to serve the request.
+     * This response value may be different from the value set in the parameter.
+     */
+    @ConfigDocDefault("default")
+    Optional<String> serviceTier();
 }
