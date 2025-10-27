@@ -28,6 +28,7 @@ import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiChatRequestParameters;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModerationModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
@@ -77,6 +78,11 @@ public class OpenAiRecorder {
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
 
+            OpenAiChatRequestParameters.Builder defaultChatRequestParametersBuilder = OpenAiChatRequestParameters.builder();
+            if (chatModelConfig.reasoningEffort().isPresent()) {
+                defaultChatRequestParametersBuilder.reasoningEffort(chatModelConfig.reasoningEffort().get());
+            }
+
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .configName(configName)
@@ -92,7 +98,9 @@ public class OpenAiRecorder {
                     .presencePenalty(chatModelConfig.presencePenalty())
                     .frequencyPenalty(chatModelConfig.frequencyPenalty())
                     .responseFormat(chatModelConfig.responseFormat().orElse(null))
+                    .defaultRequestParameters(defaultChatRequestParametersBuilder.build())
                     .strictJsonSchema(chatModelConfig.strictJsonSchema().orElse(null))
+                    .serviceTier(chatModelConfig.serviceTier().orElse(null))
                     .stop(chatModelConfig.stop().orElse(null));
 
             openAiConfig.organizationId().ifPresent(builder::organizationId);

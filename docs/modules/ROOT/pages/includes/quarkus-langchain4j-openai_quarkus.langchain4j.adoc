@@ -574,6 +574,54 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-reasoning-effort[`quarkus.langchain4j.openai.chat-model.reasoning-effort`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains effort on reasoning for reasoning models. Currently supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+
+Note: The `gpt-5-pro` model defaults to (and only supports) high reasoning effort.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-service-tier]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-chat-model-service-tier[`quarkus.langchain4j.openai.chat-model.service-tier`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai.chat-model.service-tier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the processing type used for serving the request.
+
+If set to `auto`, then the request will be processed with the service tier configured in the Project settings. If set to `default`, then the request will be processed with the standard pricing and performance for the selected model. If set to `flex` or `priority`, then the request will be processed with the corresponding service tier. When not set, the default behavior is `auto`.
+
+When the service tier parameter is set, the response body will include the `service_tier` value based on the processing mode actually used to serve the request. This response value may be different from the value set in the parameter.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_SERVICE_TIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_CHAT_MODEL_SERVICE_TIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`default`
+
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-embedding-model-model-name[`quarkus.langchain4j.openai.embedding-model.model-name`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.openai.embedding-model.model-name+++[]
@@ -1456,6 +1504,54 @@ endif::add-copy-button-to-env-var[]
 --
 |list of string
 |
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-reasoning-effort]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-reasoning-effort[`quarkus.langchain4j.openai."model-name".chat-model.reasoning-effort`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.reasoning-effort+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Constrains effort on reasoning for reasoning models. Currently supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+
+Note: The `gpt-5-pro` model defaults to (and only supports) high reasoning effort.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_REASONING_EFFORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-service-tier]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-chat-model-service-tier[`quarkus.langchain4j.openai."model-name".chat-model.service-tier`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.openai."model-name".chat-model.service-tier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Specifies the processing type used for serving the request.
+
+If set to `auto`, then the request will be processed with the service tier configured in the Project settings. If set to `default`, then the request will be processed with the standard pricing and performance for the selected model. If set to `flex` or `priority`, then the request will be processed with the corresponding service tier. When not set, the default behavior is `auto`.
+
+When the service tier parameter is set, the response body will include the `service_tier` value based on the processing mode actually used to serve the request. This response value may be different from the value set in the parameter.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_SERVICE_TIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__CHAT_MODEL_SERVICE_TIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`default`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-model-name]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-embedding-model-model-name[`quarkus.langchain4j.openai."model-name".embedding-model.model-name`]##
 ifdef::add-copy-button-to-config-props[]
