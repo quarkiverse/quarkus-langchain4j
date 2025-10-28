@@ -60,7 +60,11 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         this.httpClient = builder.httpClient;
         this.logRequests = builder.logRequests;
         this.logResponses = builder.logResponses;
-        this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
+        if (builder.mcpClientAuthProvider != null) {
+            this.mcpClientAuthProvider = builder.mcpClientAuthProvider;
+        } else {
+            this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
+        }
     }
 
     @Override
@@ -246,6 +250,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         private boolean logRequests = false;
         private boolean logResponses = false;
         private HttpClient httpClient;
+        private McpClientAuthProvider mcpClientAuthProvider;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -278,6 +283,11 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
         public Builder httpClient(HttpClient httpClient) {
             this.httpClient = httpClient;
+            return this;
+        }
+
+        public Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
+            this.mcpClientAuthProvider = mcpClientAuthProvider;
             return this;
         }
 

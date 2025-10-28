@@ -63,7 +63,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
             clientBuilder.tlsConfiguration(tlsConfiguration);
         }
 
-        this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
+        if (builder.mcpClientAuthProvider != null) {
+            this.mcpClientAuthProvider = builder.mcpClientAuthProvider;
+        } else {
+            this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
+        }
         if (mcpClientAuthProvider != null) {
             clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
@@ -198,6 +202,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         private boolean logRequests = false;
         private boolean logResponses = false;
         private TlsConfiguration tlsConfiguration;
+        private McpClientAuthProvider mcpClientAuthProvider;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -230,6 +235,11 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
         public QuarkusHttpMcpTransport.Builder tlsConfiguration(TlsConfiguration tlsConfiguration) {
             this.tlsConfiguration = tlsConfiguration;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
+            this.mcpClientAuthProvider = mcpClientAuthProvider;
             return this;
         }
 
