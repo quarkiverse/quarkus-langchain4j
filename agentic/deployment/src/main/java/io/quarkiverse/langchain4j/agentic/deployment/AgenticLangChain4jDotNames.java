@@ -46,6 +46,8 @@ public final class AgenticLangChain4jDotNames {
 
     public static final List<DotName> ALL_AGENT_ANNOTATIONS = List.of(AGENT, SUB_AGENT, SUPERVISOR_AGENT, SEQUENCE_AGENT,
             PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT);
+    public static final List<DotName> AGENT_ANNOTATIONS_WITH_SUB_AGENTS = List.of(SUPERVISOR_AGENT, SEQUENCE_AGENT,
+            PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT);
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
     public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);

@@ -12,6 +12,7 @@ import io.quarkiverse.langchain4j.openai.testing.internal.OpenAiBaseTest;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.test.QuarkusUnitTest;
 
+@SuppressWarnings("CdiInjectionPointsInspection")
 public class AgentBeanSmokeTest extends OpenAiBaseTest {
 
     @RegisterExtension
@@ -31,6 +32,15 @@ public class AgentBeanSmokeTest extends OpenAiBaseTest {
 
     @Inject
     Agents.SupervisorStoryCreator supervisorStoryCreator;
+
+    @Inject
+    Agents.EveningPlannerAgent eveningPlannerAgent;
+
+    @Inject
+    Agents.MedicalExpertWithMemory medicalExpertWithMemory;
+
+    @Inject
+    Agents.StoryCreator storyCreator;
 
     @Test
     public void test() {

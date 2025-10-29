@@ -1,6 +1,9 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.MethodInfo;
@@ -39,5 +42,9 @@ public final class DetectedAiAgentBuildItem extends MultiBuildItem {
 
     public List<MethodInfo> getMcpToolBoxMethods() {
         return mcpToolBoxMethods;
+    }
+
+    public static Set<ClassInfo> allIfaces(Collection<DetectedAiAgentBuildItem> items) {
+        return items.stream().map(DetectedAiAgentBuildItem::getIface).collect(Collectors.toSet());
     }
 }
