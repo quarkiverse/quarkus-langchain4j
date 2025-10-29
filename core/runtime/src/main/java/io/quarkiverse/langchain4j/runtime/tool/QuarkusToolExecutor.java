@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.exception.ToolExecutionException;
 import dev.langchain4j.internal.Json;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.service.tool.ToolExecutionResult;
@@ -29,7 +30,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
     private final Context context;
 
     public record Context(Object tool, String toolInvokerName, String methodName, String argumentMapperClassName,
-            ToolMethodCreateInfo.ExecutionModel executionModel, ReturnBehavior returnBehavior) {
+            ToolMethodCreateInfo.ExecutionModel executionModel, ReturnBehavior returnBehavior,
+            boolean propagateToolExecutionExceptions) {
     }
 
     public interface Wrapper {
@@ -107,7 +109,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
             String result;
             if (invocationResult instanceof Uni<?>) { // TODO CS
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
-                    throw new IllegalStateException(
+                    throw new ToolExecutionException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");
                 }
                 result = handleResult(invokerInstance, ((Uni<?>) invocationResult).await().indefinitely());
@@ -116,12 +118,11 @@ public class QuarkusToolExecutor implements ToolExecutor {
             }
             log.debugv("Tool execution result: {0}", result);
             return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
+        } catch (ToolExecutionException e) {
+            throw e;
         } catch (Exception e) {
-            if (e instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) e;
-            }
-            if (e instanceof IllegalStateException) {
-                throw (IllegalStateException) e;
+            if (context.propagateToolExecutionExceptions) {
+                throw new ToolExecutionException(e);
             }
             log.error("Error while executing tool '" + context.tool.getClass() + "'", e);
             return ToolExecutionResult.builder().isError(true).resultText(e.getMessage()).build();

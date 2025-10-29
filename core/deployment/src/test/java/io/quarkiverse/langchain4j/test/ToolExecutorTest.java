@@ -292,7 +292,7 @@ class ToolExecutorTest {
                 toolExecutor = new QuarkusToolExecutor(
                         new QuarkusToolExecutor.Context(testTool, invokerClassName, methodCreateInfo.methodName(),
                                 methodCreateInfo.argumentMapperClassName(), methodCreateInfo.executionModel(),
-                                methodCreateInfo.returnBehavior()));
+                                methodCreateInfo.returnBehavior(), false));
                 break;
             }
         }
