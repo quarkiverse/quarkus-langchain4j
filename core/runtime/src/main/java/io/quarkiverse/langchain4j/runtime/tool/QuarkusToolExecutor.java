@@ -109,7 +109,7 @@ public class QuarkusToolExecutor implements ToolExecutor {
             String result;
             if (invocationResult instanceof Uni<?>) { // TODO CS
                 if (io.vertx.core.Context.isOnEventLoopThread()) {
-                    throw new IllegalStateException(
+                    throw new ToolExecutionException(
                             "Cannot execute tools returning Uni on event loop thread due to a tool executor limitation");
                 }
                 result = handleResult(invokerInstance, ((Uni<?>) invocationResult).await().indefinitely());
@@ -118,6 +118,8 @@ public class QuarkusToolExecutor implements ToolExecutor {
             }
             log.debugv("Tool execution result: {0}", result);
             return ToolExecutionResult.builder().result(invocationResult).resultText(result).build();
+        } catch (ToolExecutionException e) {
+            throw e;
         } catch (Exception e) {
             if (context.propagateToolExecutionExceptions) {
                 throw new ToolExecutionException(e);
