@@ -9,6 +9,7 @@ import jakarta.enterprise.inject.Instance;
 
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.ModelName;
@@ -116,6 +117,40 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         }
         throw new IllegalStateException("No configured ChatModel named '" + modelName
                 + "' was found. The application has made available the following named ChatModel instances: "
+                + String.join(", ", availableNames));
+    }
+
+    public StreamingChatModel effectiveStreamingChatModel(AiServiceMethodCreateInfo createInfo, Object[] methodArgs) {
+        if (createInfo.getOverrideChatModelParamPosition().isPresent()) {
+            // we have verified at build time that this is of type String
+            return effectiveStreamingChatModel((String) methodArgs[createInfo.getOverrideChatModelParamPosition().get()]);
+        }
+        return streamingChatModel;
+    }
+
+    private StreamingChatModel effectiveStreamingChatModel(String modelName) {
+        if (modelName == null) {
+            // happens when @ModelName parameter exists but the caller passed null
+            return streamingChatModel;
+        }
+        InstanceHandle<StreamingChatModel> instance = Arc.container().instance(StreamingChatModel.class,
+                ModelName.Literal.of(modelName));
+        if (instance.isAvailable()) {
+            return instance.get();
+        }
+        Set<String> availableNames = new HashSet<>();
+        for (Instance.Handle<StreamingChatModel> handle : Arc.container().select(StreamingChatModel.class, Any.Literal.INSTANCE)
+                .handles()) {
+            Set<Annotation> qualifiers = handle.getBean().getQualifiers();
+            for (Annotation qualifier : qualifiers) {
+                if (qualifier.annotationType().equals(ModelName.class)) {
+                    availableNames.add(((ModelName) qualifier).value());
+                    break;
+                }
+            }
+        }
+        throw new IllegalStateException("No configured StreamingChatModel named '" + modelName
+                + "' was found. The application has made available the following named StreamingChatModel instances: "
                 + String.join(", ", availableNames));
     }
 }

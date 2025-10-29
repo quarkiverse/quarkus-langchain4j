@@ -21,6 +21,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
@@ -35,7 +36,6 @@ import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
-import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.tool.BeforeToolExecution;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutionResult;
@@ -51,7 +51,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final Logger log = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class);
 
-    private final AiServiceContext context;
+    private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
     private final Object memoryId;
 
@@ -72,9 +72,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final Context executionContext;
     private final boolean mustSwitchToWorkerThread;
     private final boolean switchToWorkerForEmission;
+    private final AiServiceMethodCreateInfo methodCreateInfo;
+    private final Object[] methodArgs;
     private final ExecutorService executor;
 
-    QuarkusAiServiceStreamingResponseHandler(AiServiceContext context,
+    QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context,
             InvocationContext invocationContext,
             Object memoryId,
             Consumer<String> partialResponseHandler,
@@ -91,7 +93,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread,
             boolean switchToWorkerForEmission,
-            Context cxtx) {
+            Context cxtx,
+            AiServiceMethodCreateInfo methodCreateInfo,
+            Object[] methodArgs) {
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
@@ -114,6 +118,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.mustSwitchToWorkerThread = mustSwitchToWorkerThread;
         this.executionContext = cxtx;
         this.switchToWorkerForEmission = switchToWorkerForEmission;
+        this.methodCreateInfo = methodCreateInfo;
+        this.methodArgs = methodArgs;
         if (executionContext == null) {
             // We do not have a context, but we still need to make sure we are not blocking the event loop and ordered
             // is respected.
@@ -123,7 +129,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    public QuarkusAiServiceStreamingResponseHandler(AiServiceContext context, InvocationContext invocationContext,
+    public QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context, InvocationContext invocationContext,
             Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
@@ -134,7 +140,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
-            ExecutorService executor) {
+            ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
         this.context = context;
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = memoryId;
@@ -154,6 +160,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.switchToWorkerForEmission = switchToWorkerForEmission;
         this.executionContext = executionContext;
         this.executor = executor;
+        this.methodCreateInfo = methodCreateInfo;
+        this.methodArgs = methodArgs;
     }
 
     private <T> void fireInvocationComplete(T result) {
@@ -282,8 +290,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                     DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
                     parametersBuilder.toolSpecifications(toolSpecifications);
 
-                    if (nonNull(context.streamingChatModel.defaultRequestParameters())) {
-                        var toolChoice = context.streamingChatModel.defaultRequestParameters().toolChoice();
+                    StreamingChatModel effectiveStreamingChatModel = context.effectiveStreamingChatModel(methodCreateInfo,
+                            methodArgs);
+                    if (nonNull(effectiveStreamingChatModel.defaultRequestParameters())) {
+                        var toolChoice = effectiveStreamingChatModel.defaultRequestParameters().toolChoice();
                         if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
                             // This code is needed to avoid a infinite-loop when using the AiService
                             // in combination with the tool-choice option set to REQUIRED.
@@ -314,8 +324,9 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             TokenUsage.sum(tokenUsage, completeResponse.metadata().tokenUsage()),
                             toolSpecifications,
                             toolExecutors,
-                            mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor);
-                    context.streamingChatModel.chat(chatRequest, handler);
+                            mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
+                            methodArgs);
+                    effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
             });
         } else {

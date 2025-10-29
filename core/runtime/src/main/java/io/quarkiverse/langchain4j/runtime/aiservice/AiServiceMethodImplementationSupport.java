@@ -282,7 +282,7 @@ public class AiServiceMethodImplementationSupport {
                                 var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
                                         finalToolExecutors, ar.contents(), context, invocationContext, memoryId,
                                         methodCreateInfo.isSwitchToWorkerThreadForToolExecution(),
-                                        isRunningOnWorkerThread);
+                                        isRunningOnWorkerThread, methodCreateInfo, methodArgs);
 
                                 return stream
                                         .filter(event -> !isStringMulti
@@ -383,7 +383,8 @@ public class AiServiceMethodImplementationSupport {
             var hasUpstreamGuardrails = methodCreateInfo.getOutputGuardrails().hasGuardrails();
             Multi<?> stream = new TokenStreamMulti(messagesToSend, toolSpecifications, toolExecutors,
                     (augmentationResult != null ? augmentationResult.contents() : null), context, invocationContext, memoryId,
-                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread);
+                    methodCreateInfo.isSwitchToWorkerThreadForToolExecution(), isRunningOnWorkerThread,
+                    methodCreateInfo, methodArgs);
 
             if (hasUpstreamGuardrails) {
                 stream = stream.filter(o -> o instanceof ChatEvent)
