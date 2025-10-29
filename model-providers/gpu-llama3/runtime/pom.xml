@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>quarkus-langchain4j-gpu-llama3-parent</artifactId>
+        <version>999-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+    <name>Quarkus LangChain4j - GPULlama3 - Runtime</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.beehive-lab</groupId>
+            <artifactId>gpu-llama3</artifactId>
+            <version>${gpu-llama3.version}</version>
+        </dependency>
+
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-extension-maven-plugin</artifactId>
+                <version>${quarkus.version}</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>extension-descriptor</goal>
+                        </goals>
+                        <configuration>
+                            <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
+                        </configuration>
+                    </execution>
+                </executions>
+              <configuration>
+                <parentFirstArtifacts>
+                  <parentFirstArtifact>org.graalvm:graal-sdk</parentFirstArtifact>
+                  <parentFirstArtifact>io.github.beehive-lab:gpu-llama3</parentFirstArtifact>
+                </parentFirstArtifacts>
+                <runnerParentFirstArtifacts>
+                  <runnerParentFirstArtifact>org.graalvm:graal-sdk</runnerParentFirstArtifact>
+                  <runnerParentFirstArtifact>io.github.beehive-lab:gpu-llama3</runnerParentFirstArtifact>
+                </runnerParentFirstArtifacts>
+              </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                  <!--
+                      In order for vector support to work on JDK 21+, we need to build the module with JDK 23,
+                      because in that version Vector is no longer preview, so we build target and runtime versions
+                      don't need to match (remember that preview features only work on the same runtime version as the target
+                   -->
+                  <source>21</source>
+                  <target>21</target>
+                  <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
+                    <compilerArgs>
+                      <arg>--add-modules=jdk.incubator.vector</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.quarkus</groupId>
+                            <artifactId>quarkus-extension-processor</artifactId>
+                            <version>${quarkus.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

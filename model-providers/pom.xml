@@ -38,6 +38,7 @@
             </activation>
             <modules>
                 <module>jlama</module>
+                <module>gpu-llama3</module>
             </modules>
         </profile>
         <profile>
