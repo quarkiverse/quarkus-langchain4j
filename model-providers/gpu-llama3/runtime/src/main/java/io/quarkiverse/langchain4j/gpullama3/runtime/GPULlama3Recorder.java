@@ -6,7 +6,10 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
+import dev.langchain4j.model.chat.DisabledStreamingChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.gpullama3.GPULlama3ChatModel;
+import io.quarkiverse.langchain4j.gpullama3.GPULlama3StreamingChatModel;
 import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3FixedRuntimeConfig;
 import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3RuntimeConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -65,6 +68,49 @@ public class GPULlama3Recorder {
                 @Override
                 public ChatModel get() {
                     return new DisabledChatModel();
+                }
+            };
+        }
+    }
+
+    public Supplier<StreamingChatModel> streamingChatModel(String configName) {
+        var gpuLlama3Config = correspondingConfig(configName);
+        var gpuLlama3FixedRuntimeConfig = correspondingFixedConfig(configName);
+
+        if (gpuLlama3Config.enableIntegration()) {
+            LOG.info("Creating GPULlama3StreamingChatModel for config: " + configName);
+            var chatModelConfig = gpuLlama3Config.chatModel();
+
+            var builder = GPULlama3StreamingChatModel.builder()
+                    .modelName(gpuLlama3FixedRuntimeConfig.chatModel().modelName())
+                    .quantization(gpuLlama3FixedRuntimeConfig.chatModel().quantization())
+                    .onGPU(Boolean.TRUE)
+                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
+
+            if (chatModelConfig.temperature().isPresent()) {
+                builder.temperature(chatModelConfig.temperature().getAsDouble());
+            }
+            if (chatModelConfig.topP().isPresent()) {
+                builder.topP(chatModelConfig.topP().getAsDouble());
+            }
+            if (chatModelConfig.maxTokens().isPresent()) {
+                builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
+            }
+            if (chatModelConfig.seed().isPresent()) {
+                builder.seed(chatModelConfig.seed().getAsInt());
+            }
+
+            return new Supplier<>() {
+                @Override
+                public StreamingChatModel get() {
+                    return builder.build();
+                }
+            };
+        } else {
+            return new Supplier<>() {
+                @Override
+                public StreamingChatModel get() {
+                    return new DisabledStreamingChatModel();
                 }
             };
         }

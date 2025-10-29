@@ -47,5 +47,5 @@ when quarkus is running, open a new terminal and run:
 
 ```bash
 curl http://localhost:8080/chat/blocking
+curl http://localhost:8080/chat/streaming
 ```
-
