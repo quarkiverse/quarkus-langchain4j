@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.gpullama3.deployment;
 
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.CHAT_MODEL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMING_CHAT_MODEL;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -15,8 +16,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.logging.Logger;
 
+import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
 import io.quarkiverse.langchain4j.deployment.items.SelectedChatModelProviderBuildItem;
 import io.quarkiverse.langchain4j.gpullama3.GPULlama3ModelRegistry;
@@ -72,9 +75,24 @@ public class GPULlama3Processor {
                         .defaultBean()
                         .scope(ApplicationScoped.class)
                         .supplier(recorder.chatModel(configName));
-
+                addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
+
+                var streamingBuilder = SyntheticBeanBuildItem
+                        .configure(STREAMING_CHAT_MODEL)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .scope(ApplicationScoped.class)
+                        .supplier(recorder.streamingChatModel(configName));
+                addQualifierIfNecessary(streamingBuilder, configName);
+                beanProducer.produce(streamingBuilder.done());
             }
+        }
+    }
+
+    private void addQualifierIfNecessary(SyntheticBeanBuildItem.ExtendedBeanConfigurator builder, String configName) {
+        if (!NamedConfigUtil.isDefault(configName)) {
+            builder.addQualifier(AnnotationInstance.builder(ModelName.class).add("value", configName).build());
         }
     }
 
