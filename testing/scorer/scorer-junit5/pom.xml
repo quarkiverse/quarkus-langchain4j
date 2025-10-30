@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-testing-scorer-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.4.0.CR1</version>
     </parent>
 
     <artifactId>quarkus-langchain4j-testing-scorer-junit5</artifactId>
@@ -32,7 +32,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-testing-scorer-core</artifactId>
-            <version>999-SNAPSHOT</version>
+            <version>1.4.0.CR1</version>
         </dependency>
 
         <dependency>
