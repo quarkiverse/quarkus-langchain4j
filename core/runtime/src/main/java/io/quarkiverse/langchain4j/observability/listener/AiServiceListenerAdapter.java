@@ -4,6 +4,7 @@ import dev.langchain4j.observability.api.event.AiServiceEvent;
 import dev.langchain4j.observability.api.listener.AiServiceListener;
 import io.quarkiverse.langchain4j.observability.AiServiceSelectorLiteral;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
 
 /**
  * An adapter class for implementing the {@link AiServiceListener} interface to CDI event firing.
@@ -19,7 +20,11 @@ public record AiServiceListenerAdapter<T extends AiServiceEvent>(Class<T> eventC
 
     @Override
     public void onEvent(T event) {
-        Arc.container()
+        ArcContainer container = Arc.container();
+        if (container == null) { // can happen during shutdown
+            return;
+        }
+        container
                 .beanManager()
                 .getEvent()
                 .select(
