@@ -14,10 +14,13 @@ public final class OutputKeyBuildItem extends SimpleBuildItem {
 
     private final Map<String, DotName> keyToTypeMap;
     private final Set<String> userProvidedKeys;
+    private final Set<String> supervisedKeys;
 
-    private OutputKeyBuildItem(Map<String, DotName> keyToTypeMap, Set<String> userProvidedKeys) {
+    private OutputKeyBuildItem(Map<String, DotName> keyToTypeMap, Set<String> userProvidedKeys,
+            Set<String> supervisedKeys) {
         this.keyToTypeMap = keyToTypeMap;
         this.userProvidedKeys = userProvidedKeys;
+        this.supervisedKeys = supervisedKeys;
     }
 
     public Map<String, DotName> getKeyToTypeMap() {
@@ -28,6 +31,10 @@ public final class OutputKeyBuildItem extends SimpleBuildItem {
         return userProvidedKeys;
     }
 
+    public Set<String> getSupervisedKeys() {
+        return supervisedKeys;
+    }
+
     public static Builder of() {
         return new Builder();
     }
@@ -35,6 +42,7 @@ public final class OutputKeyBuildItem extends SimpleBuildItem {
     public static class Builder {
         private final Map<String, DotName> keyToTypeMap = new HashMap<>();
         private final Set<String> userProvidedKeys = new HashSet<>();
+        private final Set<String> supervisedKeys = new HashSet<>();
 
         private Builder() {
         }
@@ -59,8 +67,14 @@ public final class OutputKeyBuildItem extends SimpleBuildItem {
             return this;
         }
 
+        public Builder addSupervisedKeys(String name) {
+            Objects.requireNonNull(name, "name must not be null");
+            supervisedKeys.add(name);
+            return this;
+        }
+
         public OutputKeyBuildItem build() {
-            return new OutputKeyBuildItem(Map.copyOf(keyToTypeMap), Set.copyOf(userProvidedKeys));
+            return new OutputKeyBuildItem(Map.copyOf(keyToTypeMap), Set.copyOf(userProvidedKeys), Set.copyOf(supervisedKeys));
         }
     }
 }

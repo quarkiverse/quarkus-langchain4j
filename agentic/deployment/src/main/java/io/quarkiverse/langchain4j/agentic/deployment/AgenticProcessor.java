@@ -506,6 +506,7 @@ public class AgenticProcessor {
 
     @BuildStep
     public OutputKeyBuildItem outputKeyItems(DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            CombinedIndexBuildItem indexBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscoveryFinished) {
         Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
 
@@ -555,9 +556,39 @@ public class AgenticProcessor {
                         }
                     }
                 }
-
             }
         }
+
+        // we need to go through the supervisor agents and mark the method parameters of all agents that are part
+        // of the supervisor agent system
+        IndexView index = indexBuildItem.getIndex();
+        index.getAnnotations(AgenticLangChain4jDotNames.SUPERVISOR_AGENT).forEach(instance -> {
+            AnnotationValue subAgentsValue = instance.value("subAgents");
+            if (subAgentsValue == null) {
+                return;
+            }
+            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
+                return;
+            }
+            MethodInfo supervisorAgentMethod = instance.target().asMethod();
+            supervisorAgentMethod.parameters().forEach(pi -> {
+                String parameterName = determineParameterName(pi);
+                builder.addSupervisedKeys(parameterName);
+            });
+            for (AnnotationInstance subAgentInstance : subAgentsValue.asNestedArray()) {
+                AnnotationValue typeValue = subAgentInstance.value("type");
+                if (typeValue == null) {
+                    continue;
+                }
+                ifaceToAgentMethodsMap.getOrDefault(typeValue.asClass().name(), Collections.emptyList()).forEach(mi -> {
+                    List<MethodParameterInfo> parameters = mi.parameters();
+                    parameters.forEach(pi -> {
+                        String parameterName = determineParameterName(pi);
+                        builder.addSupervisedKeys(parameterName);
+                    });
+                });
+            }
+        });
 
         // we need to know if any of the parameters are passed by the user, so we need to analyze the known usages
         beanDiscoveryFinished.getInjectionPoints().forEach(ip -> {
@@ -622,7 +653,9 @@ public class AgenticProcessor {
                     }
                     DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);
                     if (expectedParameterTypeName == null) {
-                        if (!outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)) {
+                        boolean doesNotNeedResolution = outputKeyBuildItem.getUserProvidedKeys().contains(parameterName)
+                                || outputKeyBuildItem.getSupervisedKeys().contains(parameterName);
+                        if (!doesNotNeedResolution) {
                             throw new IllegalConfigurationException(
                                     "No agent provides an output key named '%s'. This means that parameter no.%d of method '%s' of class '%s' cannot be resolved"
                                             .formatted(
