@@ -27,11 +27,14 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     private final Object memoryId;
     private final boolean switchToWorkerThreadForToolExecution;
     private final boolean isCallerRunningOnWorkerThread;
+    private final AiServiceMethodCreateInfo methodCreateInfo;
+    private final Object[] methodArgs;
 
     TokenStreamMulti(List<ChatMessage> messagesToSend, List<ToolSpecification> toolSpecifications,
             Map<String, ToolExecutor> toolExecutors,
             List<Content> contents, QuarkusAiServiceContext context, InvocationContext invocationContext, Object memoryId,
-            boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread) {
+            boolean switchToWorkerThreadForToolExecution, boolean isCallerRunningOnWorkerThread,
+            AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
         // We need to pass and store the parameters to the constructor because we need to re-create a stream on every subscription.
         this.messagesToSend = messagesToSend;
         this.toolSpecifications = toolSpecifications;
@@ -42,6 +45,8 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         this.memoryId = memoryId;
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution;
         this.isCallerRunningOnWorkerThread = isCallerRunningOnWorkerThread;
+        this.methodCreateInfo = methodCreateInfo;
+        this.methodArgs = methodArgs;
     }
 
     @Override
@@ -61,7 +66,7 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
 
         var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
                 toolsExecutors, contents, context, invocationContext, memoryId, ctxt, switchToWorkerThreadForToolExecution,
-                isCallerRunningOnWorkerThread);
+                isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs);
         TokenStream tokenStream = stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
                 .onPartialThinking(thinking -> processor.onNext(new ChatEvent.PartialThinkingEvent(thinking.text())))
