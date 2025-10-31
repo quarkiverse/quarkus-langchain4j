@@ -21,7 +21,7 @@
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.version>3.22.3</quarkus.platform.version>
     <kotest.version>5.9.1</kotest.version>
-    <kotlinx-datetime.version>0.6.2</kotlinx-datetime.version>
+    <kotlinx-datetime.version>0.7.1-0.6.x-compat</kotlinx-datetime.version>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
   </properties>
 
