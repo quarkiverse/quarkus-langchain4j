@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-bedrock-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.4.0.CR2</version>
     </parent>
     <artifactId>quarkus-langchain4j-bedrock-deployment</artifactId>
     <name>Quarkus LangChain4j - Bedrock - Deployment</name>
