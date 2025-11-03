@@ -73,6 +73,13 @@ public interface ChatModelConfig {
     Double topP();
 
     /**
+     * If specified, our system will make the best effort to sample deterministically, such that repeated requests with the same
+     * seed and parameters should return the same result. Determinism isn't guaranteed.
+     * Support for reproducible output was first added in API version 2023-12-01-preview
+     */
+    Optional<Integer> seed();
+
+    /**
      * The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens can't exceed
      * the model's context length.
      * Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
