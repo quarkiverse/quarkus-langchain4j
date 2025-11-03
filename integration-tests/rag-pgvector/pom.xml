@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-    <version>1.4.0.CR2</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-test-rag-pgvector</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - RAG With PgVector</name>
@@ -98,7 +98,7 @@
         <dependency>
           <groupId>io.quarkiverse.langchain4j</groupId>
           <artifactId>quarkus-langchain4j-openai-deployment</artifactId>
-          <version>1.4.0.CR2</version>
+          <version>999-SNAPSHOT</version>
           <type>pom</type>
           <scope>test</scope>
           <exclusions>
