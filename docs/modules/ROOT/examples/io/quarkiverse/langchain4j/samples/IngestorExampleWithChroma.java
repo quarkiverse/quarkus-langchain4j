@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
-import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
+import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 
 @ApplicationScoped
 public class IngestorExampleWithChroma {
