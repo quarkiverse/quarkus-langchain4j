@@ -1,4 +1,4 @@
-:project-version: 1.4.0.CR1
+:project-version: 1.4.0.CR2
 :langchain4j-version: 1.8.0
 :langchain4j-embeddings-version: 1.8.0-beta15
 :examples-dir: ./../examples/
