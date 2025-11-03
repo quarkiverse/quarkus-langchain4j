@@ -3,7 +3,7 @@ package io.quarkiverse.langchain4j.chroma.runtime;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-import io.quarkiverse.langchain4j.chroma.ChromaEmbeddingStore;
+import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -19,11 +19,14 @@ public class ChromaRecorder {
         return new Supplier<>() {
             @Override
             public ChromaEmbeddingStore get() {
-                return new ChromaEmbeddingStore(runtimeConfig.getValue().url(),
-                        runtimeConfig.getValue().collectionName(),
-                        runtimeConfig.getValue().timeout().orElse(Duration.ofSeconds(5)),
-                        runtimeConfig.getValue().logRequests().orElse(false),
-                        runtimeConfig.getValue().logResponses().orElse(false));
+                ChromaEmbeddingStore.Builder builder = ChromaEmbeddingStore.builder();
+                builder.apiVersion(runtimeConfig.getValue().apiVersion());
+                builder.collectionName(runtimeConfig.getValue().collectionName());
+                builder.logRequests(runtimeConfig.getValue().logRequests().orElse(false));
+                builder.logResponses(runtimeConfig.getValue().logResponses().orElse(false));
+                builder.timeout(runtimeConfig.getValue().timeout().orElse(Duration.ofSeconds(5)));
+                builder.baseUrl(runtimeConfig.getValue().url());
+                return builder.build();
             }
         };
     }

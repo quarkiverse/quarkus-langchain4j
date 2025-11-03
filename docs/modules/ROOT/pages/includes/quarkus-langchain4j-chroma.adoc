@@ -38,7 +38,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The container image name to use, for container based DevServices providers. If you want to use Redis Stack modules (bloom, graph, search...), use: `redis/redis-stack:latest`.
+The container image name to use, for container based DevServices providers.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -49,7 +49,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_IMAGE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`ghcr.io/chroma-core/chroma:0.4.15`
+|`ghcr.io/chroma-core/chroma:1.3.0`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port[`quarkus.langchain4j.chroma.devservices.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -82,7 +82,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-Indicates if the Redis server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Redis starts a new container.
+Indicates if the Chroma server managed by Quarkus Dev Services is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, Dev Services for Chroma starts a new container.
 
 The discovery uses the `quarkus-dev-service-chroma` label. The value is configured using the `service-name` property.
 
@@ -107,7 +107,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The value of the `quarkus-dev-service-chroma` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Redis looks for a container with the `quarkus-dev-service-chroma` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-chroma` label set to the specified value.
+The value of the `quarkus-dev-service-chroma` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, Dev Services for Chroma looks for a container with the `quarkus-dev-service-chroma` label set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it starts a new container with the `quarkus-dev-service-chroma` label set to the specified value.
 
 This property is used when you need multiple shared Chroma servers.
 
@@ -247,6 +247,27 @@ endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`false`
+
+a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-api-version]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-api-version[`quarkus.langchain4j.chroma.api-version`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.chroma.api-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The Chroma API version to use. V1 is deprecated (Chroma 0.x) and its support will be removed in the future. Please use Chroma 1.x which uses the V2 API.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_CHROMA_API_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_API_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`v1`, `v2`
+|`v2`
 
 |===
 

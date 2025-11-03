@@ -34,10 +34,8 @@ public interface ChromaBuildConfig {
 
         /**
          * The container image name to use, for container based DevServices providers.
-         * If you want to use Redis Stack modules (bloom, graph, search...), use:
-         * {@code redis/redis-stack:latest}.
          */
-        @WithDefault("ghcr.io/chroma-core/chroma:0.4.15")
+        @WithDefault("ghcr.io/chroma-core/chroma:1.3.0")
         String imageName();
 
         /**
@@ -48,10 +46,10 @@ public interface ChromaBuildConfig {
         OptionalInt port();
 
         /**
-         * Indicates if the Redis server managed by Quarkus Dev Services is shared.
+         * Indicates if the Chroma server managed by Quarkus Dev Services is shared.
          * When shared, Quarkus looks for running containers using label-based service discovery.
          * If a matching container is found, it is used, and so a second one is not started.
-         * Otherwise, Dev Services for Redis starts a new container.
+         * Otherwise, Dev Services for Chroma starts a new container.
          * <p>
          * The discovery uses the {@code quarkus-dev-service-chroma} label.
          * The value is configured using the {@code service-name} property.
@@ -64,7 +62,7 @@ public interface ChromaBuildConfig {
         /**
          * The value of the {@code quarkus-dev-service-chroma} label attached to the started container.
          * This property is used when {@code shared} is set to {@code true}.
-         * In this case, before starting a container, Dev Services for Redis looks for a container with the
+         * In this case, before starting a container, Dev Services for Chroma looks for a container with the
          * {@code quarkus-dev-service-chroma} label
          * set to the configured value. If found, it will use this container instead of starting a new one. Otherwise, it
          * starts a new container with the {@code quarkus-dev-service-chroma} label set to the specified value.
