@@ -260,6 +260,11 @@ class AzureOpenAiRecorderEndpointTests {
                 }
 
                 @Override
+                public Optional<Integer> seed() {
+                    return Optional.empty();
+                }
+
+                @Override
                 public Optional<Integer> maxTokens() {
                     return Optional.empty();
                 }

@@ -65,6 +65,7 @@ public class AzureOpenAiChatModel implements ChatModel {
 
     private final OpenAiClient client;
     private final Double temperature;
+    private final Integer seed;
     private final Double topP;
     private final Integer maxTokens;
     private final Double presencePenalty;
@@ -80,6 +81,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             String adToken,
             TokenCountEstimator tokenizer,
             Double temperature,
+            Integer seed,
             Double topP,
             Integer maxTokens,
             Double presencePenalty,
@@ -112,6 +114,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .build();
 
         this.temperature = getOrDefault(temperature, 0.7);
+        this.seed = seed;
         this.topP = topP;
         this.maxTokens = maxTokens;
         this.presencePenalty = presencePenalty;
@@ -135,6 +138,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .messages(toOpenAiMessages(messages))
                 .temperature(temperature)
+                .seed(seed)
                 .topP(topP)
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
@@ -247,6 +251,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         private String adToken;
         private TokenCountEstimator tokenizer;
         private Double temperature;
+        private Integer seed;
         private Double topP;
         private Integer maxTokens;
         private Double presencePenalty;
@@ -314,6 +319,11 @@ public class AzureOpenAiChatModel implements ChatModel {
             return this;
         }
 
+        public Builder seed(Integer seed) {
+            this.seed = seed;
+            return this;
+        }
+
         public Builder topP(Double topP) {
             this.topP = topP;
             return this;
@@ -376,6 +386,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                     adToken,
                     tokenizer,
                     temperature,
+                    seed,
                     topP,
                     maxTokens,
                     presencePenalty,
