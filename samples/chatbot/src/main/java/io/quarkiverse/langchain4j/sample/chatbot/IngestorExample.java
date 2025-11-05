@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.sample.chatbot;
 import static dev.langchain4j.data.document.splitter.DocumentSplitters.recursive;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,6 +18,7 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class IngestorExample {
@@ -35,10 +37,9 @@ public class IngestorExample {
     @Inject
     EmbeddingModel embeddingModel;
 
-    public void ingest(@Observes StartupEvent event) {
-        Log.infof("Ingesting documents...");
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(new File("src/main/resources/catalog").toPath(),
-                new TextDocumentParser());
+    public void ingest(@Observes StartupEvent event, @ConfigProperty(name = "offerings.folder", defaultValue = "src/main/resources/catalog") Path source) {
+        Log.infof("Ingesting documents from " + source.toAbsolutePath());
+        List<Document> documents = FileSystemDocumentLoader.loadDocuments(source, new TextDocumentParser());
         var ingestor = EmbeddingStoreIngestor.builder()
                 .embeddingStore(store)
                 .embeddingModel(embeddingModel)
