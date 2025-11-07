@@ -173,6 +173,8 @@ In order to enable events for the prompt and response content you need to activa
 ----
 quarkus.langchain4j.tracing.include-prompt=true
 quarkus.langchain4j.tracing.include-completion=true
+quarkus.langchain4j.tracing.include-tool-arguments=true
+quarkus.langchain4j.tracing.include-tool-result=true
 ----
 
 ==== Step 2: Configure Langfuse
