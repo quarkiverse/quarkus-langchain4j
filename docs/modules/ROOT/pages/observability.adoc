@@ -111,7 +111,7 @@ In the trace above we can see the parent span which corresponds to the handling 
 interesting thing is the `langchain4j.aiservices.MyAiService.writeAPoem` span which corresponds to the invocation of the AI service.
 The child spans of this span correspond (from to right) to calling the OpenAI API, invoking the `sendEmail` tool and finally invoking calling the OpenAI API again.
 
-==== Custom span data
+=== Custom span data
 if you have the need for custom span data, you can simply add a bean implemtenting `ChatModelSpanContributor`.
 [source,java]
 ----
