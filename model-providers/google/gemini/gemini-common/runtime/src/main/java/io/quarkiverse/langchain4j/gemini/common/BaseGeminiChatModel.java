@@ -19,10 +19,11 @@ public class BaseGeminiChatModel {
     protected final List<ChatModelListener> listeners;
     protected final Long thinkingBudget;
     protected final boolean includeThoughts;
+    protected final boolean useGoogleSearch;
 
     public BaseGeminiChatModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK, Double topP,
             ResponseFormat responseFormat, List<ChatModelListener> listeners, Long thinkingBudget,
-            boolean includeThoughts) {
+            boolean includeThoughts, boolean useGoogleSearch) {
         this.modelId = modelId;
         this.temperature = temperature;
         this.maxOutputTokens = maxOutputTokens;
@@ -32,5 +33,6 @@ public class BaseGeminiChatModel {
         this.listeners = listeners;
         this.thinkingBudget = thinkingBudget;
         this.includeThoughts = includeThoughts;
+        this.useGoogleSearch = useGoogleSearch;
     }
 }

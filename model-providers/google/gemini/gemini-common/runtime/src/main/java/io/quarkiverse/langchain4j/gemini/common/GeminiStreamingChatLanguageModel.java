@@ -35,8 +35,8 @@ import io.smallrye.mutiny.Multi;
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
     public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
-            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
-        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, null, false);
+            Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners, boolean useGoogleSearch) {
+        super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners, null, false, useGoogleSearch);
     }
 
     @Override
@@ -67,7 +67,7 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
                 .topP(getOrDefault(requestParameters.topP(), this.topP))
                 .build();
         GenerateContentRequest request = ContentMapper.map(chatRequest.messages(), chatRequest.toolSpecifications(),
-                generationConfig);
+                generationConfig, this.modelId, this.useGoogleSearch);
 
         ChatRequest modelListenerRequest = createModelListenerRequest(request, chatRequest.messages(),
                 chatRequest.toolSpecifications());

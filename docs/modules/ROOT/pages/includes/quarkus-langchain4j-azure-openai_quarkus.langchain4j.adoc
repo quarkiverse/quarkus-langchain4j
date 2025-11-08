@@ -603,6 +603,27 @@ endif::add-copy-button-to-env-var[]
 |double
 |`1.0`
 
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-seed[`quarkus.langchain4j.azure-openai.chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If specified, our system will make the best effort to sample deterministically, such that repeated requests with the same seed and parameters should return the same result. Determinism isn't guaranteed. Support for reproducible output was first added in API version 2023-12-01-preview
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-chat-model-max-tokens[`quarkus.langchain4j.azure-openai.chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.chat-model.max-tokens+++[]
@@ -1829,6 +1850,27 @@ endif::add-copy-button-to-env-var[]
 --
 |double
 |`1.0`
+
+a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-seed[`quarkus.langchain4j.azure-openai."model-name".chat-model.seed`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".chat-model.seed+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If specified, our system will make the best effort to sample deterministically, such that repeated requests with the same seed and parameters should return the same result. Determinism isn't guaranteed. Support for reproducible output was first added in API version 2023-12-01-preview
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_SEED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__CHAT_MODEL_SEED+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-chat-model-max-tokens[`quarkus.langchain4j.azure-openai."model-name".chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
