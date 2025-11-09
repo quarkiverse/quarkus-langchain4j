@@ -244,15 +244,18 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         AiMessage aiMessage = completeResponse.aiMessage();
 
         if (aiMessage.hasToolExecutionRequests()) {
+            // Fire IntermediateResponseEvent immediately before tool execution
+            // This ensures the event reaches clients as soon as streaming completes,
+            // without waiting for executor scheduling latency
+            if (intermediateResponseHandler != null) {
+                intermediateResponseHandler.accept(completeResponse);
+            }
             // Tools execution may block the caller thread. When the caller thread is the event loop thread, and
             // when tools have been detected to be potentially blocking, we need to switch to a worker thread.
             executeTools(new Runnable() {
                 @Override
                 public void run() {
                     addToMemory(aiMessage);
-                    if (intermediateResponseHandler != null) {
-                        intermediateResponseHandler.accept(completeResponse);
-                    }
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
                         // Call before tool execution handler
                         if (beforeToolExecutionHandler != null) {
