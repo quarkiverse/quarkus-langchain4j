@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -58,6 +59,7 @@ public class McpRegistryClientTest {
     }
 
     @Test
+    @Disabled("Need to update to a langchain4j version that includes https://github.com/langchain4j/langchain4j/pull/4016")
     public void testListServersUpdatedSince() {
         // NOTE: the DateTimes are evaluated in UTC
         LocalDateTime updatedSince = LocalDateTime.now().minusDays(30);
