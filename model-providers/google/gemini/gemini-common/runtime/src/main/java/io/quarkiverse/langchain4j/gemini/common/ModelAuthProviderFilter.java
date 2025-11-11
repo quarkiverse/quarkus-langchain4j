@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.gemini.common;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -64,10 +65,15 @@ public class ModelAuthProviderFilter implements ResteasyReactiveClientRequestFil
 
     private static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
 
+        private static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform";
+        private static final String SCOPE_GENERATIVE_LANGUAGE = "https://www.googleapis.com/auth/generative-language.retriever";
+
         @Override
         public String getAuthorization(Input input) {
             try {
-                var credentials = GoogleCredentials.getApplicationDefault();
+                var credentials = GoogleCredentials
+                        .getApplicationDefault()
+                        .createScoped(List.of(SCOPE_GENERATIVE_LANGUAGE, SCOPE_CLOUD_PLATFORM));
                 credentials.refreshIfExpired();
                 return "Bearer " + credentials.getAccessToken().getTokenValue();
             } catch (IOException e) {
