@@ -29,8 +29,7 @@ The above steps:
 
 - Set the `TORNADOVM_SDK` environment variable to the TornadoVM SDK path.
 - Create a `tornado-argfile` under `~/TornadoVM` containing the JVM arguments required to enable TornadoVM.
-- The `tornado-argfile` is automatically used in Quarkus *dev mode*.
-- For *production mode*, you must manually pass the argfile to the JVM (see step 3).
+- ⚠️ The `tornado-argfile` should be used for *building* and *running* the Quarkus application (see section Building & Running the Quarkus Application).
 
 == Using GPULlama3.java
 
@@ -129,6 +128,66 @@ quarkus.langchain4j.gpu-llama3.chat-model.max-tokens=1024
 ----
 
 Model files are automatically downloaded from https://huggingface.co/beehive-lab[Beehive Lab HuggingFace] if not available locally.
+
+== Building & Running the Quarkus Application
+
+=== Dev Mode
+
+To run your Quarkus application in **dev mode** with TornadoVM:
+
+1. Ensure your `pom.xml` contains the `quarkus-langchain4j-gpu-llama3` dependency (shown earlier).
+
+2. Add the TornadoVM argfile as a Maven property:
+
+[source,xml]
+----
+<properties>
+    <tornado.argfile>/path/to/tornado-argfile</tornado.argfile>
+</properties>
+----
+
+3. Pass the argfile to the JVM in the plugin configuration for dev mode:
+
+[source,xml]
+----
+<plugin>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-maven-plugin</artifactId>
+    <configuration>
+        <jvmArgs>@${tornado.argfile}</jvmArgs>
+    </configuration>
+</plugin>
+----
+
+4. Launch dev mode explicitly:
+
+[source,shell]
+----
+mvn quarkus:dev
+----
+
+---
+
+=== Production Mode
+
+To build and run your application in **production mode**:
+
+1. Build the Quarkus application:
+
+[source,shell]
+----
+mvn clean package
+----
+
+2. Run the generated jar with the TornadoVM argfile:
+
+[source,shell]
+----
+java @/path/to/tornado-argfile -jar target/quarkus-app/quarkus-run.jar
+----
+
+⚠ **Important:** Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly set.
+
 
 == Supported Models and Quantizations
 
