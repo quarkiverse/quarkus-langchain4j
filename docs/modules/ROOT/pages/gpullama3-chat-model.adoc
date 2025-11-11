@@ -41,7 +41,7 @@ To integrate the GPULlama3 chat model into your Quarkus application, add the fol
 <dependency>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
-    <version>1.4.0.CR2</version>
+    <version>{project-version}</version>
 </dependency>
 ----
 
