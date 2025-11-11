@@ -27,7 +27,7 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
     private VertexAiGeminiChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners, null, false);
+                builder.listeners, null, false, builder.useGoogleSearch);
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
@@ -94,6 +94,7 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
         private Proxy proxy;
+        private boolean useGoogleSearch = false;
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
@@ -167,6 +168,11 @@ public class VertexAiGeminiChatLanguageModel extends GeminiChatLanguageModel {
 
         public Builder proxy(Proxy proxy) {
             this.proxy = proxy;
+            return this;
+        }
+
+        public Builder useGoogleSearch(boolean useGoogleSearch) {
+            this.useGoogleSearch = useGoogleSearch;
             return this;
         }
 

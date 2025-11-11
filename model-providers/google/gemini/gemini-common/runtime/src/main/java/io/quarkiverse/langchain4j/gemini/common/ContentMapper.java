@@ -37,8 +37,12 @@ public final class ContentMapper {
     private ContentMapper() {
     }
 
-    public static GenerateContentRequest map(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications,
-            GenerationConfig generationConfig) {
+    public static GenerateContentRequest map(
+            List<ChatMessage> messages,
+            List<ToolSpecification> toolSpecifications,
+            GenerationConfig generationConfig,
+            String modelId,
+            boolean useGoogleSearch) {
         List<String> systemPrompts = new ArrayList<>();
         List<Content> contents = new ArrayList<>(messages.size());
 
@@ -145,22 +149,39 @@ public final class ContentMapper {
 
         return new GenerateContentRequest(contents,
                 !systemPrompts.isEmpty() ? GenerateContentRequest.SystemInstruction.ofContent(systemPrompts) : null,
-                toTools(toolSpecifications),
+                toTools(modelId, toolSpecifications, useGoogleSearch),
                 generationConfig);
     }
 
-    static List<GenerateContentRequest.Tool> toTools(Collection<ToolSpecification> toolSpecifications) {
-        if (toolSpecifications == null) {
-            return null;
+    private static List<GenerateContentRequest.Tool> toTools(
+            String modelId,
+            Collection<ToolSpecification> toolSpecifications,
+            boolean useGoogleSearch) {
+        List<GenerateContentRequest.Tool> tools = new ArrayList<>();
+        if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
+            List<FunctionDeclaration> functionDeclarations = new ArrayList<>(toolSpecifications.size());
+            for (ToolSpecification toolSpecification : toolSpecifications) {
+                functionDeclarations.add(toFunctionDeclaration(toolSpecification));
+            }
+            tools.add(GenerateContentRequest.Tool.ofFunctionDeclarations(functionDeclarations));
         }
-        if (toolSpecifications.isEmpty()) {
-            return Collections.emptyList();
+        if (useGoogleSearch) {
+            /*
+             * Adding this check to support google search for legacy gemini models
+             * reference:
+             * https://github.com/langchain4j/langchain4j/blob/144eaa8fb6eb1d4f77e9dc6fa154b319c4579e82/langchain4j-vertex-ai-
+             * gemini/src/main/java/dev/langchain4j/model/vertexai/gemini/ResponseGrounding.java#L15
+             */
+            if (modelId.startsWith("gemini-1")) {
+                tools.add(GenerateContentRequest.Tool.ofGoogleSearchRetrieval());
+            } else {
+                tools.add(GenerateContentRequest.Tool.ofGoogleSearch());
+            }
         }
-        List<FunctionDeclaration> functionDeclarations = new ArrayList<>(toolSpecifications.size());
-        for (ToolSpecification toolSpecification : toolSpecifications) {
-            functionDeclarations.add(toFunctionDeclaration(toolSpecification));
+        if (tools.isEmpty()) {
+            return toolSpecifications == null ? null : Collections.emptyList();
         }
-        return List.of(new GenerateContentRequest.Tool(functionDeclarations));
+        return tools;
     }
 
     private static FunctionDeclaration toFunctionDeclaration(ToolSpecification toolSpecification) {

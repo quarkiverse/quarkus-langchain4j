@@ -27,7 +27,7 @@ public class AiGeminiStreamingChatLanguageModel extends GeminiStreamingChatLangu
 
     private AiGeminiStreamingChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners);
+                builder.listeners, builder.useGoogleSearch);
 
         this.apiMetadata = AiGeminiRestApi.ApiMetadata
                 .builder()
@@ -83,6 +83,7 @@ public class AiGeminiStreamingChatLanguageModel extends GeminiStreamingChatLangu
         private Boolean logRequests = false;
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
+        private boolean useGoogleSearch = false;
 
         public Builder configName(String configName) {
             this.configName = configName;
@@ -146,6 +147,11 @@ public class AiGeminiStreamingChatLanguageModel extends GeminiStreamingChatLangu
 
         public Builder listeners(List<ChatModelListener> listeners) {
             this.listeners = listeners;
+            return this;
+        }
+
+        public Builder useGoogleSearch(boolean useGoogleSearch) {
+            this.useGoogleSearch = useGoogleSearch;
             return this;
         }
 

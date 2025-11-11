@@ -29,7 +29,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
     private VertexAiGeminiStreamingChatLanguageModel(Builder builder) {
         super(builder.modelId, builder.temperature, builder.maxOutputTokens, builder.topK, builder.topP, builder.responseFormat,
-                builder.listeners);
+                builder.listeners, builder.useGoogleSearch);
 
         this.apiMetadata = VertxAiGeminiRestApi.ApiMetadata
                 .builder()
@@ -95,6 +95,7 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
         private Boolean logResponses = false;
         private List<ChatModelListener> listeners = Collections.emptyList();
         private Proxy proxy;
+        private boolean useGoogleSearch = false;
 
         public Builder baseUrl(Optional<String> baseUrl) {
             this.baseUrl = baseUrl;
@@ -168,6 +169,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
 
         public Builder proxy(Proxy proxy) {
             this.proxy = proxy;
+            return this;
+        }
+
+        public Builder useGoogleSearch(boolean useGoogleSearch) {
+            this.useGoogleSearch = useGoogleSearch;
             return this;
         }
 
