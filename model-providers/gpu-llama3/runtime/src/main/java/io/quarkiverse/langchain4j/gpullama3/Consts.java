@@ -6,12 +6,11 @@ public final class Consts {
     }
 
     /**
-     * working links:
-     * https://huggingface.co/beehive-lab/Llama-3.2-1B-Instruct-GGUF/blob/main/Llama-3.2-1B-Instruct-FP16.gguf
-     * https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-f16.gguf
+     * Beehive-Lab HuggingFace Collections:
+     * https://huggingface.co/beehive-lab/collections
      */
 
-    public static final String DEFAULT_CHAT_MODEL_NAME = "beehive-lab/Llama-3.2-1B-Instruct-GGUF";
-    public static final String DEFAULT_CHAT_MODEL_QUANTIZATION = "FP16";
+    public static final String DEFAULT_CHAT_MODEL_NAME = "unsloth/Llama-3.2-1B-Instruct-GGUF";
+    public static final String DEFAULT_CHAT_MODEL_QUANTIZATION = "F16";
 
 }
