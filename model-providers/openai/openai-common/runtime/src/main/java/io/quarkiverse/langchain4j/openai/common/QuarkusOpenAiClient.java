@@ -19,7 +19,10 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
 import dev.langchain4j.model.chat.response.StreamingHandle;
@@ -115,6 +118,15 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             @Override
                             public void filter(ClientRequestContext requestContext) {
                                 requestContext.getHeaders().putSingle("User-Agent", builder.userAgent);
+                            }
+                        });
+                    }
+                    if (builder.customHeaders != null) {
+                        restApiBuilder.clientHeadersFactory(new ClientHeadersFactory() {
+                            @Override
+                            public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
+                                    MultivaluedMap<String, String> clientOutgoingHeaders) {
+                                return new MultivaluedHashMap(builder.customHeaders);
                             }
                         });
                     }
