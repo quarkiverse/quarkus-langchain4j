@@ -48,6 +48,7 @@
 *** xref:anthropic-chat-model.adoc[Anthropic (Claude)]
 *** xref:azure-openai-chat-model.adoc[Azure OpenAI]
 *** xref:gemini-chat-model.adoc[Google Gemini]
+*** xref:gpullama3-chat-model.adoc[GPULlama3]
 *** xref:huggingface-chat-model.adoc[HuggingFace]
 *** xref:watsonx-chat-model.adoc[IBM watsonx.ai]
 *** xref:openai-chat-model.adoc[OpenAI]

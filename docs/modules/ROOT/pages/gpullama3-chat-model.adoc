@@ -1,0 +1,174 @@
+= GPULlama3.java Chat Models
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+https://github.com/beehive-lab/GPULlama3.java[GPULlama3.java] provides a *Java-native implementation of Llama3* that runs entirely in Java and executes automatically on GPUs via https://github.com/beehive-lab/TornadoVM[TornadoVM].
+
+This extension allows Quarkus applications to use locally hosted Llama3 and other compatible models (e.g., *Mistral*, *Qwen3*, *Phi3*) for chat-based inference, leveraging GPU acceleration without requiring native CUDA code.
+
+[#_prerequisites]
+== Prerequisites
+
+=== Java Version and TornadoVM
+
+GPULlama3.java requires *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API] and TornadoVM integration.
+
+Install TornadoVM locally as follows:
+
+[source,shell]
+----
+cd ~
+git clone git@github.com:beehive-lab/TornadoVM.git
+cd ~/TornadoVM
+./bin/tornadovm-installer --jdk jdk21 --backend opencl
+source setvars.sh
+----
+
+The above steps:
+
+- Set the `TORNADOVM_SDK` environment variable to the TornadoVM SDK path.
+- Create a `tornado-argfile` under `~/TornadoVM` containing the JVM arguments required to enable TornadoVM.
+- The `tornado-argfile` is automatically used in Quarkus *dev mode*.
+- For *production mode*, you must manually pass the argfile to the JVM (see step 3).
+
+== Using GPULlama3.java
+
+To integrate the GPULlama3 chat model into your Quarkus application, add the following dependency:
+
+[source,xml,subs=attributes+]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
+    <version>1.4.0.CR2</version>
+</dependency>
+----
+
+Important: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
+
+Sample implementation for ChatModel:
+[source,java]
+----
+@Path("chat")
+public class ChatLanguageModelResource {
+    private final ChatModel chatModel;
+    public ChatLanguageModelResource(ChatModel chatModel) {
+        this.chatModel = chatModel;
+    }
+
+    @GET
+    @Path("blocking")
+    public String blocking() {
+        return chatModel.chat("When was the nobel prize for economics first awarded?");
+    }
+}
+----
+
+Send requests to blocking endpoint:
+```
+curl http://localhost:8080/chat/blocking
+```
+
+Sample implementation for StreamingChatModel:
+[source,java]
+----
+@Path("chat")
+public class ChatLanguageModelResource {
+    private final StreamingChatModel streamingChatModel;
+    public ChatLanguageModelResource(StreamingChatModel streamingChatModel) {
+        this.streamingChatModel = streamingChatModel;
+    }
+
+    @GET
+    @Path("streaming")
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> streaming() {
+        return Multi.createFrom().emitter(emitter -> {
+            streamingChatModel.chat("When was the nobel prize for economics first awarded?",
+                    new StreamingChatResponseHandler() {
+                        @Override
+                        public void onPartialResponse(String token) {
+                            emitter.emit(token);
+                        }
+
+                        @Override
+                        public void onError(Throwable error) {
+                            emitter.fail(error);
+                        }
+
+                        @Override
+                        public void onCompleteResponse(ChatResponse completeResponse) {
+                            emitter.complete();
+                        }
+                    });
+        });
+    }
+}
+----
+
+Send requests to streaming endpoint:
+```
+curl http://localhost:8080/chat/streaming
+```
+
+== Configure GPULlama3
+
+The GPULlama3 extension can be configured via standard Quarkus properties:
+
+[source,properties]
+----
+# Enable GPULlama3 integration
+quarkus.langchain4j.gpu-llama3.enable-integration=true
+
+# Select the default model
+quarkus.langchain4j.gpu-llama3.chat-model.model-name=unsloth/Llama-3.2-1B-Instruct-GGUF
+quarkus.langchain4j.gpu-llama3.chat-model.quantization=F16
+quarkus.langchain4j.gpu-llama3.chat-model.temperature=0.7
+quarkus.langchain4j.gpu-llama3.chat-model.max-tokens=1024
+----
+
+Model files are automatically downloaded from https://huggingface.co/beehive-lab[Beehive Lab HuggingFace] if not available locally.
+
+== Supported Models and Quantizations
+
+The following models have been tested with GPULlama3.java and can be found in link:++https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
+
+⚠️ **Important:**
+Quantization format names are model-dependent. Some models require `F16`, others `fp16` (lowercase), as defined in their GGUF files.
+Use **exactly** the spelling listed below, or the model may fail to load.
+
+[cols="2a,1,3a", options="header"]
+|===
+| Model | Quantizations | Model Identifier (Hugging Face)
+
+| **Llama 3.2 1B** | `F16`, `Q8_0` | `unsloth/Llama-3.2-1B-Instruct-GGUF`
+| **Llama 3.2 3B** | `F16`, `Q8_0` | `unsloth/Llama-3.2-3B-Instruct-GGUF`
+| **Llama 3.1 8B** | `fp16`, `Q8_0` | `brittlewis12/Meta-Llama-3.1-8B-Instruct-GGUF`
+| **Mistral 7B** | `fp16`, `Q8_0` | `MaziyarPanahi/Mistral-7B-Instruct-v0.3-GGUF`
+| **Qwen2.5 0.5B** | `F16`, `Q8_0` | `bartowski/Qwen2.5-0.5B-Instruct-GGUF`
+| **Qwen2.5 1.5B** | `fp16`, `Q8_0` | `Qwen/Qwen2.5-1.5B-Instruct-GGUF`
+| **DeepSeek-R1 Distill Qwen 1.5B** | `F16`, `Q8_0` | `hdnh2006/DeepSeek-R1-Distill-Qwen-1.5B-GGUF`
+| **DeepSeek-R1 Distill Qwen 7B** | `F16`, `Q8_0` | `XelotX/DeepSeek-R1-Distill-Qwen-7B-GGUF`
+| **Qwen3 0.6B** | `F16`, `Q8_0` | `ggml-org/Qwen3-0.6B-GGUF`
+| **Qwen3 1.7B** | `F16`, `Q8_0` | `ggml-org/Qwen3-1.7B-GGUF`
+| **Qwen3 4B** | `F16`, `Q8_0` | `ggml-org/Qwen3-4B-GGUF`
+| **Qwen3 8B** | `F16`, `Q8_0` | `ggml-org/Qwen3-8B-GGUF`
+| **Phi 3 Mini 4k** | `fp16`| `microsoft/Phi-3-mini-4k-instruct-gguf`
+| **Phi 3 Mini 4k**| `Q8_0` |`bartowski/Phi-3-mini-4k-instruct-GGUF`
+| **Phi 3 Mini 128k** | `Q8_0` | `QuantFactory/Phi-3-mini-4k-instruct-GGUF`
+| **Phi 3.1 Mini 128k** | `Q8_0` | `bartowski/Phi-3.1-mini-128k-instruct-GGUF`
+|===
+
+Each entry corresponds to a GGUF model tested to run on TornadoVM via GPULlama3.java.
+
+== Configuration Reference
+
+include::includes/quarkus-langchain4j-gpu-llama3.adoc[leveloffset=+1,opts=optional]
+
+
+== Limitations
+
+* TornadoVM currently does **not** support GraalVM Native Image builds.
+* Ensure that the TornadoVM environment (`TORNADOVM_SDK` and `tornado-argfile`) is properly set before running Quarkus.
+* Only Java 21 or newer versions are supported.
