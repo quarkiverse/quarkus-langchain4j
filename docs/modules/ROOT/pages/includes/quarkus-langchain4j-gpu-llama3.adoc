@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_MODEL_NAME++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`beehive-lab/Llama-3.2-1B-Instruct-GGUF`
+|`unsloth/Llama-3.2-1B-Instruct-GGUF`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-quantization[`quarkus.langchain4j.gpu-llama3.chat-model.quantization`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_QUANTIZATION
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`FP16`
+|`F16`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-models-path]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-models-path[`quarkus.langchain4j.gpu-llama3.models-path`]##
 ifdef::add-copy-button-to-config-props[]
@@ -282,7 +282,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`beehive-lab/Llama-3.2-1B-Instruct-GGUF`
+|`unsloth/Llama-3.2-1B-Instruct-GGUF`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-quantization[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.quantization`]##
 ifdef::add-copy-button-to-config-props[]
@@ -303,7 +303,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`FP16`
+|`F16`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-temperature[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
