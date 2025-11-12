@@ -270,7 +270,7 @@
         </property>
       </activation>
       <properties>
-        <quarkus-langchain4j.version>1.4.0.CR2</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>1.4.0</quarkus-langchain4j.version>
       </properties>
       <dependencyManagement>
         <dependencies>
