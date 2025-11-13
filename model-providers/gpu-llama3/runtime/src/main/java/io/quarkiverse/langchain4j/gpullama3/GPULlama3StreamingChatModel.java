@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.logging.Logger;
 
@@ -50,20 +48,68 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
 
     private static final Logger LOG = Logger.getLogger(GPULlama3StreamingChatModel.class);
 
-    // Fields to track initialization state
-    private final CompletableFuture<Void> initializationFuture = new CompletableFuture<>();
-    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final Builder builderConfig;
+    private volatile boolean initialized = false;
 
-    private GPULlama3StreamingChatModel(Builder builder) {
-        // Schedule the initialization to happen on a background thread
-        runOutEventLoop(() -> {
-            LOG.debug("Starting GPULlama3 model initialization on worker thread");
-            coreInit(builder);
-        });
+    private GPULlama3StreamingChatModel(Builder builder, boolean lazy) {
+        if (lazy) {
+            this.builderConfig = builder;
+            // Don't initialize yet!
+        } else {
+            this.builderConfig = null;
+            // Original background initialization
+            runOutEventLoop(() -> {
+                LOG.debug("Starting GPULlama3 StreamingChatModel initialization on worker thread");
+                doInitialization(builder);
+                initialized = true;
+            });
+        }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    private GPULlama3StreamingChatModel(Builder builder) {
+        this(builder, false); // Default to original background initialization
+    }
+
+    // Add factory method for lazy initialization
+    public static GPULlama3StreamingChatModel createLazy(Builder builder) {
+        return new GPULlama3StreamingChatModel(builder, true);
+    }
+
+    private void ensureInitialized() {
+        if (!initialized && builderConfig != null) {
+            if (!initialized) {
+                LOG.debug("Lazy initialization of GPULlama3StreamingChatModel");
+                doInitialization(builderConfig);
+                initialized = true;
+            }
+        }
+    }
+
+    private void doInitialization(Builder builder) {
+        GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
+        try {
+            Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
+                    Optional.empty(), Optional.empty());
+            Double temp = getOrDefault(builder.temperature, 0.1);
+            Double topP = getOrDefault(builder.topP, 1.0);
+            Integer seed = getOrDefault(builder.seed, 12345);
+            Integer maxTokens = getOrDefault(builder.maxTokens, 512);
+            Boolean onGPU = getOrDefault(builder.onGPU, Boolean.TRUE);
+
+            LOG.info("GPULlama3StreamingChatModel Instantiation {modelPath=" + modelPath +
+                    ", temperature=" + temp +
+                    ", topP=" + topP +
+                    ", seed=" + seed +
+                    ", maxTokens=" + maxTokens +
+                    ", onGPU=" + onGPU + "}...");
+
+            init(modelPath, temp, topP, seed, maxTokens, onGPU);
+            LOG.info("GPULlama3StreamingChatModel Instantiation Complete!");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -75,57 +121,16 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
         ChatRequestValidationUtils.validate(parameters.responseFormat());
 
         // Run the GPU operations on a worker thread using runOutEventLoop
-        runOutEventLoop(new Runnable() {
-            @Override
-            public void run() {
-                // Wait for initialization to complete if it hasn't yet
-                if (!initialized.get()) {
-                    LOG.debug("Waiting for model initialization to complete");
-                    try {
-                        initializationFuture.get();
-                    } catch (Exception e) {
-                        LOG.error("Failed to initialize model", e);
-                        handler.onError(e);
-                        return;
-                    }
-                }
+        runOutEventLoop(() -> {
+            try {
+                ensureInitialized(); // Build happens HERE on first call!
                 LOG.debug("Executing GPU Llama inference on worker thread");
                 coreDoChat(chatRequest, handler);
-                LOG.debug("GPULlama3 model initialization completed");
+            } catch (Exception e) {
+                LOG.error("Failed during lazy initialization or inference", e);
+                handler.onError(e);
             }
         });
-    }
-
-    /**
-     * The actual initialization logic.
-     * It is called by a worker thread in a non-blocking manner.
-     */
-    private void coreInit(Builder builder) {
-        GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
-        try {
-            Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
-                    Optional.empty(), Optional.empty());
-            init(
-                    modelPath,
-                    getOrDefault(builder.temperature, 0.1),
-                    getOrDefault(builder.topP, 1.0),
-                    getOrDefault(builder.seed, 12345),
-                    getOrDefault(builder.maxTokens, 512),
-                    getOrDefault(builder.onGPU, Boolean.TRUE));
-
-            // Mark initialization as complete
-            initialized.set(true);
-            initializationFuture.complete(null);
-        } catch (IOException e) {
-            initializationFuture.completeExceptionally(new UncheckedIOException(e));
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            initializationFuture.completeExceptionally(e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            initializationFuture.completeExceptionally(e);
-            throw e;
-        }
     }
 
     /**
@@ -152,9 +157,13 @@ public class GPULlama3StreamingChatModel extends GPULlama3BaseModel implements S
 
             handler.onCompleteResponse(chatResponse);
         } catch (Exception e) {
-            LOG.error("Error in GPULlama3 asyncDoChat", e);
+            LOG.error("Error in GPULlama3 coreDoChat", e);
             handler.onError(e);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
