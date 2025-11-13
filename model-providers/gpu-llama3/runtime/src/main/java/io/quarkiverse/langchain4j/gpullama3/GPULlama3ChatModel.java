@@ -7,6 +7,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
+import org.jboss.logging.Logger;
+
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ChatRequestValidationUtils;
 import dev.langchain4j.model.chat.ChatModel;
@@ -16,19 +18,83 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 
 public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel {
 
-    // @formatter:off
+    private static final Logger LOG = Logger.getLogger(GPULlama3ChatModel.class);
+
+    private final Builder builderConfig;
+    private volatile boolean initialized = false;
+
+    /**
+     * Default constructor.
+     *
+     * @param builder
+     */
     private GPULlama3ChatModel(Builder builder) {
+        this(builder, false);
+    }
+
+    /**
+     * Constructor with lazy initialization.
+     *
+     * @param builder the builder used to configure the model.
+     * @param lazy if true, the model is not initialized until the first call to doChat.
+     */
+    private GPULlama3ChatModel(Builder builder, boolean lazy) {
+        if (lazy) {
+            // lazy initialization
+            this.builderConfig = builder;
+        } else {
+            this.builderConfig = null;
+            // original immediate initialization
+            doInitialization(builder);
+        }
+    }
+
+    /**
+     * The factory method for creating a lazy initialized model.
+     *
+     * @param builder the builder used to configure the model.
+     * @return the model.
+     */
+    public static GPULlama3ChatModel createLazy(Builder builder) {
+        return new GPULlama3ChatModel(builder, true);
+    }
+
+    /**
+     * Ensure that the model is initialized.
+     */
+    private void ensureInitialized() {
+        if (!initialized && builderConfig != null) {
+            if (!initialized) {
+                doInitialization(builderConfig);
+                initialized = true;
+            }
+        }
+    }
+
+    // @formatter:off
+    /**
+     * Performs the actual initialization.
+     */
+    private void doInitialization(Builder builder) {
         GPULlama3ModelRegistry gpuLlama3ModelRegistry = GPULlama3ModelRegistry.getOrCreate(builder.modelCachePath);
         try {
             Path modelPath = gpuLlama3ModelRegistry.downloadModel(builder.modelName, builder.quantization,
                     Optional.empty(), Optional.empty());
-            init(
-                    modelPath,
-                    getOrDefault(builder.temperature, 0.1),
-                    getOrDefault(builder.topP, 1.0),
-                    getOrDefault(builder.seed, 12345),
-                    getOrDefault(builder.maxTokens, 512),
-                    getOrDefault(builder.onGPU, Boolean.TRUE));
+            Double temp = getOrDefault(builder.temperature, 0.1);
+            Double topP = getOrDefault(builder.topP, 1.0);
+            Integer seed = getOrDefault(builder.seed, 12345);
+            Integer maxTokens = getOrDefault(builder.maxTokens, 512);
+            Boolean onGPU = getOrDefault(builder.onGPU, Boolean.TRUE);
+
+            LOG.info("GPULlama3ChatModel Instantiation {modelPath=" + modelPath +
+                    ", temperature=" + temp +
+                    ", topP=" + topP +
+                    ", seed=" + seed +
+                    ", maxTokens=" + maxTokens +
+                    ", onGPU=" + onGPU + "}...");
+
+            init(modelPath, temp, topP, seed, maxTokens, onGPU);
+            LOG.info("GPULlama3ChatModel Instantiation Complete!");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (InterruptedException e) {
@@ -43,6 +109,8 @@ public class GPULlama3ChatModel extends GPULlama3BaseModel implements ChatModel 
 
     @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
+        ensureInitialized(); // If in lazy path, init model
+
         ChatRequestValidationUtils.validateMessages(chatRequest.messages());
         ChatRequestParameters parameters = chatRequest.parameters();
         ChatRequestValidationUtils.validateParameters(parameters);

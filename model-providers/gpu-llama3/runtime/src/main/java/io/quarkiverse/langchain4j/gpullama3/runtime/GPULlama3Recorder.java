@@ -35,7 +35,7 @@ public class GPULlama3Recorder {
         var gpuLlama3FixedRuntimeConfig = correspondingFixedConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
-            LOG.info("Creating GPULlama3ChatModel for config: " + configName);
+            LOG.info("Registering GPULlama3ChatModel CDI Bean for config: " + configName);
             var chatModelConfig = gpuLlama3Config.chatModel();
 
             var builder = GPULlama3ChatModel.builder()
@@ -57,12 +57,8 @@ public class GPULlama3Recorder {
                 builder.seed(chatModelConfig.seed().getAsInt());
             }
 
-            return new Supplier<>() {
-                @Override
-                public ChatModel get() {
-                    return builder.build();
-                }
-            };
+            // use the lazy path -> init the model on first call to doChat()
+            return () -> GPULlama3ChatModel.createLazy(builder);
         } else {
             return new Supplier<>() {
                 @Override
@@ -78,41 +74,34 @@ public class GPULlama3Recorder {
         var gpuLlama3FixedRuntimeConfig = correspondingFixedConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
-            LOG.info("Creating GPULlama3StreamingChatModel for config: " + configName);
+            LOG.info("Registering GPULlama3StreamingChatModel CDI Bean for config: " + configName);
             var chatModelConfig = gpuLlama3Config.chatModel();
 
-            var builder = GPULlama3StreamingChatModel.builder()
-                    .modelName(gpuLlama3FixedRuntimeConfig.chatModel().modelName())
-                    .quantization(gpuLlama3FixedRuntimeConfig.chatModel().quantization())
-                    .onGPU(Boolean.TRUE)
-                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
+            return () -> {
+                var builder = GPULlama3StreamingChatModel.builder()
+                        .modelName(gpuLlama3FixedRuntimeConfig.chatModel().modelName())
+                        .quantization(gpuLlama3FixedRuntimeConfig.chatModel().quantization())
+                        .onGPU(Boolean.TRUE)
+                        .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
 
-            if (chatModelConfig.temperature().isPresent()) {
-                builder.temperature(chatModelConfig.temperature().getAsDouble());
-            }
-            if (chatModelConfig.topP().isPresent()) {
-                builder.topP(chatModelConfig.topP().getAsDouble());
-            }
-            if (chatModelConfig.maxTokens().isPresent()) {
-                builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
-            }
-            if (chatModelConfig.seed().isPresent()) {
-                builder.seed(chatModelConfig.seed().getAsInt());
-            }
-
-            return new Supplier<>() {
-                @Override
-                public StreamingChatModel get() {
-                    return builder.build();
+                if (chatModelConfig.temperature().isPresent()) {
+                    builder.temperature(chatModelConfig.temperature().getAsDouble());
                 }
+                if (chatModelConfig.topP().isPresent()) {
+                    builder.topP(chatModelConfig.topP().getAsDouble());
+                }
+                if (chatModelConfig.maxTokens().isPresent()) {
+                    builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
+                }
+                if (chatModelConfig.seed().isPresent()) {
+                    builder.seed(chatModelConfig.seed().getAsInt());
+                }
+
+                // use the lazy path -> init the model on first call to doChat()
+                return GPULlama3StreamingChatModel.createLazy(builder);
             };
         } else {
-            return new Supplier<>() {
-                @Override
-                public StreamingChatModel get() {
-                    return new DisabledStreamingChatModel();
-                }
-            };
+            return () -> new DisabledStreamingChatModel();
         }
     }
 
