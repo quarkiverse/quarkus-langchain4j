@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
@@ -29,6 +30,7 @@ import io.quarkus.runtime.annotations.RecordableConstructor;
 public final class AiServiceMethodCreateInfo {
     private final String interfaceName;
     private final String methodName;
+    private final List<ParameterInfo> parameterInfo;
     private final Optional<TemplateInfo> systemMessageInfo;
     private final UserMessageInfo userMessageInfo;
     private final Optional<Integer> memoryIdParamPosition;
@@ -65,7 +67,9 @@ public final class AiServiceMethodCreateInfo {
     private final boolean switchToWorkerThreadForToolExecution;
 
     @RecordableConstructor
-    public AiServiceMethodCreateInfo(String interfaceName, String methodName,
+    public AiServiceMethodCreateInfo(String interfaceName,
+            String methodName,
+            List<ParameterInfo> parameterInfo,
             Optional<TemplateInfo> systemMessageInfo,
             UserMessageInfo userMessageInfo,
             Optional<Integer> memoryIdParamPosition,
@@ -85,6 +89,7 @@ public final class AiServiceMethodCreateInfo {
             OutputGuardrailsLiteral outputGuardrails) {
         this.interfaceName = interfaceName;
         this.methodName = methodName;
+        this.parameterInfo = parameterInfo;
         this.systemMessageInfo = systemMessageInfo;
         this.userMessageInfo = userMessageInfo;
         this.memoryIdParamPosition = memoryIdParamPosition;
@@ -124,6 +129,10 @@ public final class AiServiceMethodCreateInfo {
 
     public String getMethodName() {
         return methodName;
+    }
+
+    public List<ParameterInfo> getParameterInfo() {
+        return parameterInfo;
     }
 
     public Optional<TemplateInfo> getSystemMessageInfo() {
@@ -254,27 +263,15 @@ public final class AiServiceMethodCreateInfo {
 
     public record UserMessageInfo(Optional<TemplateInfo> template,
             Optional<Integer> paramPosition,
-            Optional<Integer> userNameParamPosition,
-            Optional<Integer> imageParamPosition,
-            Optional<Integer> audioParamPosition,
-            Optional<Integer> pdfParamPosition,
-            Optional<Integer> videoParamPosition) {
+            Optional<Integer> userNameParamPosition) {
 
-        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition,
-                Optional<Integer> imageParamPosition, Optional<Integer> audioParamPosition,
-                Optional<Integer> pdfParamPosition,
-                Optional<Integer> videoParamPosition) {
+        public static UserMessageInfo fromMethodParam(int paramPosition, Optional<Integer> userNameParamPosition) {
             return new UserMessageInfo(Optional.empty(), Optional.of(paramPosition),
-                    userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
+                    userNameParamPosition);
         }
 
-        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition,
-                Optional<Integer> imageUrlParamPosition,
-                Optional<Integer> audioParamPosition,
-                Optional<Integer> pdfParamPosition,
-                Optional<Integer> videoParamPosition) {
-            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition,
-                    imageUrlParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
+        public static UserMessageInfo fromTemplate(TemplateInfo templateInfo, Optional<Integer> userNameParamPosition) {
+            return new UserMessageInfo(Optional.of(templateInfo), Optional.empty(), userNameParamPosition);
         }
     }
 
@@ -404,5 +401,9 @@ public final class AiServiceMethodCreateInfo {
             return new ResponseSchemaInfo(enabled, systemMessage, userMessage, outputFormatInstructions,
                     structuredOutputSchema);
         }
+    }
+
+    public record ParameterInfo(String name, String typeDescriptor, Set<String> annotationTypes) {
+
     }
 }

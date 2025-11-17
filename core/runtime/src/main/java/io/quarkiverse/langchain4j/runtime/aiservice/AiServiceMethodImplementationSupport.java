@@ -43,6 +43,7 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.AudioContent;
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.PdfFileContent;
 import dev.langchain4j.data.message.SystemMessage;
@@ -93,12 +94,17 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
+import io.quarkiverse.langchain4j.AudioUrl;
+import io.quarkiverse.langchain4j.ImageUrl;
+import io.quarkiverse.langchain4j.PdfUrl;
+import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
 import io.quarkiverse.langchain4j.runtime.aiservice.GuardrailsSupport.OutputGuardrailStreamingMapper;
 import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
+import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.smallrye.mutiny.Multi;
@@ -892,94 +898,10 @@ public class AiServiceMethodImplementationSupport {
         AiServiceMethodCreateInfo.UserMessageInfo userMessageInfo = createInfo.getUserMessageInfo();
 
         String userName = null;
-        ImageContent imageContent = null;
-        AudioContent audioContent = null;
-        PdfFileContent pdfFileContent = null;
-        VideoContent videoContent = null;
         if (userMessageInfo.userNameParamPosition().isPresent()) {
             userName = methodArgs[userMessageInfo.userNameParamPosition().get()]
                     .toString(); // LangChain4j does this, but might want to make anything other than a String a
                                                                                                      // build time error
-        }
-        if (userMessageInfo.imageParamPosition().isPresent()) {
-            Object imageParamValue = methodArgs[userMessageInfo.imageParamPosition().get()];
-            if (imageParamValue instanceof String s) {
-                imageContent = ImageContent.from(s);
-            } else if (imageParamValue instanceof URI u) {
-                imageContent = ImageContent.from(u);
-            } else if (imageParamValue instanceof URL u) {
-                try {
-                    imageContent = ImageContent.from(u.toURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (imageParamValue instanceof Image i) {
-                imageContent = ImageContent.from(i);
-            } else {
-                throw new IllegalStateException("Unsupported parameter type '" + imageParamValue.getClass()
-                        + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
-                        + createInfo.getMethodName());
-            }
-        }
-        if (userMessageInfo.audioParamPosition().isPresent()) {
-            Object audioParamValue = methodArgs[userMessageInfo.audioParamPosition().get()];
-            if (audioParamValue instanceof String s) {
-                audioContent = AudioContent.from(s);
-            } else if (audioParamValue instanceof URI u) {
-                audioContent = AudioContent.from(u);
-            } else if (audioParamValue instanceof URL u) {
-                try {
-                    audioContent = AudioContent.from(u.toURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (audioParamValue instanceof Audio a) {
-                audioContent = AudioContent.from(a);
-            } else {
-                throw new IllegalStateException("Unsupported parameter type '" + audioParamValue.getClass()
-                        + "' annotated with @AudioUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
-                        + createInfo.getMethodName());
-            }
-        }
-        if (userMessageInfo.pdfParamPosition().isPresent()) {
-            Object pdfParamValue = methodArgs[userMessageInfo.pdfParamPosition().get()];
-            if (pdfParamValue instanceof String s) {
-                pdfFileContent = PdfFileContent.from(s);
-            } else if (pdfParamValue instanceof URI u) {
-                pdfFileContent = PdfFileContent.from(u);
-            } else if (pdfParamValue instanceof URL u) {
-                try {
-                    pdfFileContent = PdfFileContent.from(u.toURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (pdfParamValue instanceof PdfFile i) {
-                pdfFileContent = PdfFileContent.from(i);
-            } else {
-                throw new IllegalStateException("Unsupported parameter type '" + pdfParamValue.getClass()
-                        + "' annotated with @PdfUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
-                        + createInfo.getMethodName());
-            }
-        }
-        if (userMessageInfo.videoParamPosition().isPresent()) {
-            Object videoParamValue = methodArgs[userMessageInfo.videoParamPosition().get()];
-            if (videoParamValue instanceof String s) {
-                videoContent = VideoContent.from(s);
-            } else if (videoParamValue instanceof URI u) {
-                videoContent = VideoContent.from(u);
-            } else if (videoParamValue instanceof URL u) {
-                try {
-                    videoContent = VideoContent.from(u.toURI());
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            } else if (videoParamValue instanceof Video v) {
-                videoContent = VideoContent.from(v);
-            } else {
-                throw new IllegalStateException("Unsupported parameter type '" + videoParamValue.getClass()
-                        + "' annotated with @AudioUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
-                        + createInfo.getMethodName());
-            }
         }
 
         if (userMessageInfo.template().isPresent()) {
@@ -1014,7 +936,10 @@ public class AiServiceMethodImplementationSupport {
             }
 
             Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
-            return createUserMessage(userName, imageContent, audioContent, pdfFileContent, videoContent, prompt.text());
+            List<Content> finalContents = new ArrayList<>();
+            finalContents.add(TextContent.from(prompt.text()));
+            handleSpecialContentTypes(createInfo, methodArgs, finalContents);
+            return toUserMessage(userName, finalContents);
 
         } else if (userMessageInfo.paramPosition().isPresent()) {
             Integer paramIndex = userMessageInfo.paramPosition().get();
@@ -1027,13 +952,141 @@ public class AiServiceMethodImplementationSupport {
             }
 
             String text = toString(argValue);
-            return createUserMessage(userName, imageContent,
-                    audioContent, pdfFileContent, videoContent,
-                    text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
-                            : createInfo.getResponseSchemaInfo().outputFormatInstructions()));
+
+            List<Content> finalContents = new ArrayList<>();
+            finalContents
+                    .add(TextContent.from(text.concat(supportsJsonSchema || !createInfo.getResponseSchemaInfo().enabled() ? ""
+                            : createInfo.getResponseSchemaInfo().outputFormatInstructions())));
+            handleSpecialContentTypes(createInfo, methodArgs, finalContents);
+            return toUserMessage(userName, finalContents);
         } else {
             // create a user message that instructs the model to ignore it's content
             return EmptyUserMessage.INSTANCE;
+        }
+    }
+
+    private static UserMessage toUserMessage(String userName, List<Content> finalContents) {
+        if (userName == null) {
+            return UserMessage.userMessage(finalContents);
+        } else {
+            return UserMessage.userMessage(userName, finalContents);
+        }
+    }
+
+    private static void handleSpecialContentTypes(AiServiceMethodCreateInfo createInfo, Object[] methodArgs,
+            List<Content> finalContents) {
+        for (int i = 0; i < methodArgs.length; i++) {
+            Object methodArg = methodArgs[i];
+            AiServiceMethodCreateInfo.ParameterInfo parameterInfo = createInfo.getParameterInfo().get(i);
+            if (methodArg instanceof Content content) {
+                handleContent(content, parameterInfo, finalContents);
+            } else if (methodArg instanceof List<?> list) {
+                Type javaType = TypeSignatureParser.parse(parameterInfo.typeDescriptor());
+                if (javaType instanceof ParameterizedType pt) {
+                    Type actualTypeArgument = pt.getActualTypeArguments()[0];
+                    if (Content.class.isAssignableFrom(loadClass(actualTypeArgument))) {
+                        for (Object o : list) {
+                            handleContent((Content) o, parameterInfo, finalContents);
+                        }
+                    }
+                }
+            } else if (methodArg instanceof Video video) {
+                finalContents.add(VideoContent.from(video));
+            } else if (methodArg instanceof Audio audio) {
+                finalContents.add(AudioContent.from(audio));
+            } else if (methodArg instanceof PdfFile pdf) {
+                finalContents.add(PdfFileContent.from(pdf));
+            } else if (methodArg instanceof Image image) {
+                finalContents.add(ImageContent.from(image));
+            } else if (parameterInfo.annotationTypes().contains(VideoUrl.class.getName())) {
+                VideoContent videoContent;
+                if (methodArg instanceof String s) {
+                    videoContent = VideoContent.from(s);
+                } else if (methodArg instanceof URI u) {
+                    videoContent = VideoContent.from(u);
+                } else if (methodArg instanceof URL u) {
+                    try {
+                        videoContent = VideoContent.from(u.toURI());
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new IllegalStateException("Unsupported parameter type '" + methodArg.getClass()
+                            + "' annotated with @VideoUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                            + createInfo.getMethodName());
+                }
+                finalContents.add(videoContent);
+            } else if (parameterInfo.annotationTypes().contains(AudioUrl.class.getName())) {
+                AudioContent audioContent;
+                if (methodArg instanceof String s) {
+                    audioContent = AudioContent.from(s);
+                } else if (methodArg instanceof URI u) {
+                    audioContent = AudioContent.from(u);
+                } else if (methodArg instanceof URL u) {
+                    try {
+                        audioContent = AudioContent.from(u.toURI());
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new IllegalStateException("Unsupported parameter type '" + methodArg.getClass()
+                            + "' annotated with @AudioUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                            + createInfo.getMethodName());
+                }
+                finalContents.add(audioContent);
+            } else if (parameterInfo.annotationTypes().contains(PdfUrl.class.getName())) {
+                PdfFileContent pdfFileContent;
+                if (methodArg instanceof String s) {
+                    pdfFileContent = PdfFileContent.from(s);
+                } else if (methodArg instanceof URI u) {
+                    pdfFileContent = PdfFileContent.from(u);
+                } else if (methodArg instanceof URL u) {
+                    try {
+                        pdfFileContent = PdfFileContent.from(u.toURI());
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new IllegalStateException("Unsupported parameter type '" + methodArg.getClass()
+                            + "' annotated with @PdfUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                            + createInfo.getMethodName());
+                }
+                finalContents.add(pdfFileContent);
+            } else if (parameterInfo.annotationTypes().contains(ImageUrl.class.getName())) {
+                ImageContent imageContent;
+                if (methodArg instanceof String s) {
+                    imageContent = ImageContent.from(s);
+                } else if (methodArg instanceof URI u) {
+                    imageContent = ImageContent.from(u);
+                } else if (methodArg instanceof URL u) {
+                    try {
+                        imageContent = ImageContent.from(u.toURI());
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new IllegalStateException("Unsupported parameter type '" + methodArg.getClass()
+                            + "' annotated with @ImageUrl. Offending AiService is '" + createInfo.getInterfaceName() + "#"
+                            + createInfo.getMethodName());
+                }
+                finalContents.add(imageContent);
+            }
+        }
+    }
+
+    private static Class<?> loadClass(Type actualTypeArgument) {
+        try {
+            return Class.forName(actualTypeArgument.getTypeName(), false, Thread.currentThread()
+                    .getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void handleContent(Content content, AiServiceMethodCreateInfo.ParameterInfo parameterInfo,
+            List<Content> finalContents) {
+        if (parameterInfo.annotationTypes().contains(dev.langchain4j.service.UserMessage.class.getName())) {
+            finalContents.add(content);
         }
     }
 
@@ -1054,30 +1107,6 @@ public class AiServiceMethodImplementationSupport {
         }
 
         return variables;
-    }
-
-    private static UserMessage createUserMessage(String name, ImageContent imageContent, AudioContent audioContent,
-            PdfFileContent pdfFileContent, VideoContent videoContent,
-            String text) {
-        List<dev.langchain4j.data.message.Content> contents = new ArrayList<>();
-        contents.add(TextContent.from(text));
-        if (imageContent != null) {
-            contents.add(imageContent);
-        }
-        if (audioContent != null) {
-            contents.add(audioContent);
-        }
-        if (pdfFileContent != null) {
-            contents.add(pdfFileContent);
-        }
-        if (videoContent != null) {
-            contents.add(videoContent);
-        }
-        if (name == null) {
-            return UserMessage.userMessage(contents);
-        } else {
-            return UserMessage.userMessage(name, contents);
-        }
     }
 
     private static Object transformTemplateParamValue(Object value) {

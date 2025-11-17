@@ -1703,10 +1703,19 @@ public class AiServicesProcessor {
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
                 methodToolClassInfo.keySet());
 
-        var methodReturnTypeSignature = returnTypeSignature(method.returnType(),
-                new TypeArgMapper(method.declaringClass(), index));
+        TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
+        var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
 
-        return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), systemMessageInfo,
+        List<AiServiceMethodCreateInfo.ParameterInfo> parameterInfoList = new ArrayList<>();
+        for (MethodParameterInfo p : method.parameters()) {
+            parameterInfoList.add(new AiServiceMethodCreateInfo.ParameterInfo(p.name(),
+                    typeSignature(p.type(), typeArgMapper),
+                    p.declaredAnnotations().stream().map(an -> an.name().toString()).collect(
+                            Collectors.toSet())));
+        }
+
+        return new AiServiceMethodCreateInfo(method.declaringClass().name().toString(), method.name(), parameterInfoList,
+                systemMessageInfo,
                 userMessageInfo, memoryIdParamPosition, requiresModeration, methodReturnTypeSignature,
                 overrideChatModelParamPosition, metricsTimedInfo, metricsCountedInfo, spanInfo, responseSchemaInfo,
                 methodToolClassInfo, methodMcpClientNames, switchToWorkerThreadForToolExecution,
@@ -1817,7 +1826,7 @@ public class AiServicesProcessor {
         }
     }
 
-    private String returnTypeSignature(Type returnType, TypeArgMapper typeArgMapper) {
+    private String typeSignature(Type returnType, TypeArgMapper typeArgMapper) {
         return AsmUtil.getSignature(returnType, typeArgMapper);
     }
 
@@ -1979,7 +1988,7 @@ public class AiServicesProcessor {
             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
                     AiServiceMethodCreateInfo.TemplateInfo.fromText(userMessageTemplate,
                             TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                    userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
+                    userNameParamPosition);
         } else {
             Optional<AnnotationInstance> userMessageOnMethodParam = method.annotations(LangChain4jDotNames.USER_MESSAGE)
                     .stream()
@@ -1992,13 +2001,11 @@ public class AiServicesProcessor {
                                     Short.valueOf(userMessageOnMethodParam.get().target().asMethodParameter().position())
                                             .intValue(),
                                     TemplateParameterInfo.toNameToArgsPositionMap(templateParams)),
-                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition,
-                            videoParamPosition);
+                            userNameParamPosition);
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(
                             userMessageOnMethodParam.get().target().asMethodParameter().position(),
-                            userNameParamPosition, imageParamPosition, audioParamPosition, pdfParamPosition,
-                            videoParamPosition);
+                            userNameParamPosition);
                 }
             } else {
                 Set<String> templateParamNames = Collections.EMPTY_SET;
@@ -2031,9 +2038,7 @@ public class AiServicesProcessor {
                     if (undefinedParams > 1) {
                         if (fallbackToDummyUserMesage.test(method)) {
                             return AiServiceMethodCreateInfo.UserMessageInfo.fromTemplate(
-                                    AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(), Optional.empty(), Optional.empty());
+                                    AiServiceMethodCreateInfo.TemplateInfo.fromText("", Map.of()), Optional.empty());
                         }
 
                         throw illegalConfigurationForMethod(
@@ -2044,12 +2049,10 @@ public class AiServicesProcessor {
                 }
                 if (userMessageParamPosition == -1) {
                     // There is no user message
-                    return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty(),
-                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+                    return new AiServiceMethodCreateInfo.UserMessageInfo(Optional.empty(), Optional.empty(), Optional.empty());
                 } else {
                     return AiServiceMethodCreateInfo.UserMessageInfo.fromMethodParam(userMessageParamPosition,
-                            userNameParamPosition,
-                            imageParamPosition, audioParamPosition, pdfParamPosition, videoParamPosition);
+                            userNameParamPosition);
 
                 }
             }
