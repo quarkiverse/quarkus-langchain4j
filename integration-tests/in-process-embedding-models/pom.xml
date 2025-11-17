@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>1.4.1</version>
   </parent>
   <artifactId>quarkus-langchain4j-integration-tests-in-process-embedding-models</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - In Process Embedding Models</name>
