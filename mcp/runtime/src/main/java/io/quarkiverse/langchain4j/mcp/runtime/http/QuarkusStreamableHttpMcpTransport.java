@@ -31,11 +31,12 @@ import dev.langchain4j.mcp.client.transport.McpTransport;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
-import io.vertx.core.parsetools.RecordParser;
 
 public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
@@ -147,16 +148,34 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         log.debug("Assigned MCP session ID: " + mcpSessionId);
                                         this.mcpSessionId.set(mcpSessionId);
                                     }
+                                    // Handler that splits SSE events whether they are separated by \r\n\r\n or \n\n
+                                    Handler<Buffer> sseEventparser = new Handler<Buffer>() {
+                                        private StringBuffer sb = new StringBuffer();
 
-                                    RecordParser sseEventparser = RecordParser.newDelimited("\n\n", bodyBuffer -> {
-                                        String responseString = bodyBuffer.toString();
-                                        SseEvent<String> sseEvent = parseSseEvent(responseString);
-                                        sseSubscriber.accept(sseEvent);
-                                    });
-
+                                        @Override
+                                        public void handle(Buffer event) {
+                                            sb.append(event.toString());
+                                            String str = sb.toString();
+                                            if (str.contains("\r\n\r\n")) {
+                                                String[] parts = str.split("\r\n\r\n", 2);
+                                                String eventStr = parts[0];
+                                                sb = new StringBuffer();
+                                                sb.append(parts[1]);
+                                                SseEvent<String> sseEvent = parseSseEvent(eventStr);
+                                                sseSubscriber.accept(sseEvent);
+                                            } else if (str.contains("\n\n")) {
+                                                String[] parts = str.split("\n\n", 2);
+                                                String eventStr = parts[0];
+                                                sb = new StringBuffer();
+                                                sb.append(parts[1]);
+                                                SseEvent<String> sseEvent = parseSseEvent(eventStr);
+                                                sseSubscriber.accept(sseEvent);
+                                            }
+                                        }
+                                    };
                                     String contentType = response.result().getHeader("Content-Type");
                                     if (id != null && contentType != null && contentType.contains("text/event-stream")) {
-                                        // the server has started a SSE channel
+                                        // the server has started an SSE channel
                                         response.result().handler(sseEventparser);
                                     } else {
                                         // the server has sent a single regular response
@@ -198,7 +217,8 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     // FIXME: this may be brittle, is there a more standard way to parse SSE events?
     private SseEvent<String> parseSseEvent(String responseString) {
-        Map<String, String> entries = Arrays.stream(responseString.split("\\n"))
+        // use \\R to match any line ending because some servers use \r\n and some use \n
+        Map<String, String> entries = Arrays.stream(responseString.split("\\R"))
                 .collect(Collectors.toMap(s -> s.substring(0, s.indexOf(":")),
                         s -> s.substring(s.indexOf(":") + 2)));
         return new SseEvent<String>() {
