@@ -32,6 +32,10 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
 
     @Override
     public void accept(SseEvent<String> s) {
+        // some servers send empty messages as pings
+        if (s.data().isEmpty() || s.data().isBlank()) {
+            return;
+        }
         if (logEvents) {
             log.debug("< " + s.data());
         }
