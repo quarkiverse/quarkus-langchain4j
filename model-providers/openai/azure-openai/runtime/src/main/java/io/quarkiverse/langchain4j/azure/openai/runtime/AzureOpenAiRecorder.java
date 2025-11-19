@@ -97,7 +97,7 @@ public class AzureOpenAiRecorder {
             }
 
             if (chatModelConfig.seed().isPresent()) {
-                builder.maxTokens(chatModelConfig.seed().get());
+                builder.seed(chatModelConfig.seed().get());
             }
 
             return new Function<>() {
