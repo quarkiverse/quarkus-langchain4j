@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.net.ssl.SSLContext;
+
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
@@ -18,6 +20,7 @@ import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
+import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import dev.langchain4j.service.tool.ToolProvider;
@@ -106,6 +109,24 @@ public class McpRecorder {
                                 .logResponses(runtimeConfig.logResponses().orElse(false))
                                 .httpClient(vertx.get().createHttpClient(httpClientOptions))
                                 .mcpClientName(key)
+                                .timeout(runtimeConfig.toolExecutionTimeout())
+                                .build();
+                    }
+                    case WEBSOCKET -> {
+                        SSLContext sslContext = null;
+                        if (tlsConfiguration.isPresent()) {
+                            try {
+                                sslContext = tlsConfiguration.get().createSSLContext();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        yield WebSocketMcpTransport.builder()
+                                .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
+                                        "MCP client configuration named " + key + " is missing the 'url' property")))
+                                .logRequests(runtimeConfig.logRequests().orElse(false))
+                                .logResponses(runtimeConfig.logResponses().orElse(false))
+                                .sslContext(sslContext)
                                 .timeout(runtimeConfig.toolExecutionTimeout())
                                 .build();
                     }
