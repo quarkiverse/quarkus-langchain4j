@@ -17,7 +17,6 @@
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-agentic</artifactId>
-      <version>${langchain4j-agentic.version}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
