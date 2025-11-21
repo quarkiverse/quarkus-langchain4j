@@ -38,10 +38,7 @@
     <quarkus.version>3.20.2.2</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.8.0</langchain4j.version>
-    <langchain4j-beta.version>1.8.0-beta15</langchain4j-beta.version>
-    <langchain4j-agentic.version>1.8.0-beta15</langchain4j-agentic.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
-    <langchain4j-embeddings.version>1.8.0-beta15</langchain4j-embeddings.version>
     <quarkus-antora.version>2.2.0</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->
     <assertj.version>3.27.3</assertj.version>
@@ -69,11 +66,6 @@
         <version>${langchain4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>dev.langchain4j</groupId>
-        <artifactId>langchain4j-agentic</artifactId>
-        <version>${langchain4j-agentic.version}</version>
       </dependency>
       <dependency>
         <groupId>io.quarkus</groupId>
@@ -148,7 +140,7 @@
                     <dependency>
                       <groupId>dev.langchain4j</groupId>
                       <artifactId>langchain4j-milvus</artifactId>
-                      <version>${langchain4j-beta.version}</version>
+                      <version>${langchain4j.version}</version>
                       <exclusions>
                         <exclusion>
                           <groupId>com.google.android</groupId>
@@ -386,4 +378,24 @@
         </modules>
     </profile>
   </profiles>
+
+  <!-- 
+	  This is to allow building against langchain4j snapshots because they depend on snapshots
+	  of langchain4j-embeddings and those are deployed in the Central Portal.
+	  TODO: this can be removed after langchain4j-embeddings are moved into the main langchain4j repo 
+  -->
+  <repositories>
+    <repository>
+        <releases>
+            <enabled>false</enabled>
+        </releases>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+        <id>central-portal-snapshots</id>
+        <name>Central Portal Snapshots</name>
+        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+    </repository>
+  </repositories>
+
 </project>
