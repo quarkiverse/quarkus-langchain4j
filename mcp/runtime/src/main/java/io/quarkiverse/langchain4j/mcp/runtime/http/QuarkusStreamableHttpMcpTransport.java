@@ -50,6 +50,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
     private final HttpClient httpClient;
+    private McpInitializeRequest initializeRequest;
     private volatile SseSubscriber sseSubscriber;
 
     private volatile Runnable onFailure;
@@ -76,6 +77,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
+        this.initializeRequest = request;
         return execute(request, request.getId())
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .onItem()
@@ -106,6 +108,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     }
 
     private Uni<JsonNode> execute(McpClientMessage request, Long id) {
+        return execute(request, id, false);
+    }
+
+    private Uni<JsonNode> execute(McpClientMessage request, Long id, boolean isRetry) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
         Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
         if (id != null) {
@@ -125,7 +131,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                 .addHeader("Accept", "application/json,text/event-stream")
                 .addHeader("Content-Type", "application/json")
                 .setMethod(HttpMethod.POST);
-        if (mcpSessionId.get() != null) {
+        if (mcpSessionId.get() != null && !(request instanceof McpInitializeRequest)) {
             options.addHeader("Mcp-Session-Id", mcpSessionId.get());
         }
         if (mcpClientAuthProvider != null) {
@@ -202,6 +208,28 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                             }
                                         });
                                     }
+                                } else if (!(request instanceof McpInitializeRequest) && response.result().statusCode() == 404
+                                        && !isRetry) {
+                                    log.debug("Received 404 for operation, retrying after re-initialize");
+                                    McpInitializeRequest initReq = QuarkusStreamableHttpMcpTransport.this.initializeRequest;
+                                    if (initReq == null) {
+                                        future.completeExceptionally(
+                                                new IllegalStateException("Cannot retry 404: initializeRequest is null"));
+                                        return;
+                                    }
+                                    initialize(initReq).thenAccept(node -> {
+                                        execute(request, id, true)
+                                                .subscribeAsCompletionStage()
+                                                .thenAccept(future::complete)
+                                                .exceptionally(t -> {
+                                                    future.completeExceptionally(t);
+                                                    return null;
+                                                });
+                                    })
+                                            .exceptionally(t -> {
+                                                future.completeExceptionally(t);
+                                                return null;
+                                            });
                                 } else {
                                     future.completeExceptionally(
                                             new RuntimeException("Unexpected status code: " + response.result().statusCode()));
