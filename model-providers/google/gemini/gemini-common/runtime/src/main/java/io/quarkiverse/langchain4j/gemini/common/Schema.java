@@ -129,4 +129,21 @@ public class Schema {
             return new Schema(this);
         }
     }
+
+    public boolean isEffectiveEmptyObject() {
+        if (type == Type.OBJECT) {
+            if (properties.isEmpty()) {
+                return true;
+            } else {
+                Schema contentSchema = properties.get("content");
+                if (contentSchema == null) {
+                    return true;
+                }
+                if (contentSchema.type == Type.OBJECT) {
+                    return (contentSchema.properties == null) || contentSchema.properties.isEmpty();
+                }
+            }
+        }
+        return false;
+    }
 }
