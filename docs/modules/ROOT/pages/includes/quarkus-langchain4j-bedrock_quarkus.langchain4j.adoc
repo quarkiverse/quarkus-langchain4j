@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-enabled[`quarkus.langchain4j.bedrock.embedding-model.enabled`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_ENABLED+++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-enable-integration]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-enable-integration[`quarkus.langchain4j.bedrock.enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-requests[`quarkus.langchain4j.bedrock.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-responses[`quarkus.langchain4j.bedrock.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -110,7 +110,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-log-body[`quarkus.langchain4j.bedrock.log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_LOG_BODY+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-region[`quarkus.langchain4j.bedrock.aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_AWS_REGION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-endpoint-override[`quarkus.langchain4j.bedrock.aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_AWS_CREDENTIALS_PROVIDER++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-max-retries[`quarkus.langchain4j.bedrock.aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_AWS_MAX_RETRIES+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-aws-api-call-timeout[`quarkus.langchain4j.bedrock.aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -236,7 +236,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_AWS_API_CALL_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-connect-timeout[`quarkus.langchain4j.bedrock.client.connect-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -257,7 +257,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_CONNECT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-timeout[`quarkus.langchain4j.bedrock.client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -278,7 +278,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-proxy-address[`quarkus.langchain4j.bedrock.client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -383,7 +383,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_DISABLE_CONTEXTUAL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-connection-ttl[`quarkus.langchain4j.bedrock.client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -446,7 +446,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CLIENT_KEEP_ALIVE_ENABLED+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-client-hostname-verifier[`quarkus.langchain4j.bedrock.client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]
@@ -658,7 +658,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_LOG_REQUESTS+++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-log-responses[`quarkus.langchain4j.bedrock.chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -679,7 +679,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_LOG_RESPONSES++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-log-body[`quarkus.langchain4j.bedrock.chat-model.log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -700,7 +700,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_LOG_BODY+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-region[`quarkus.langchain4j.bedrock.chat-model.aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -721,7 +721,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_AWS_REGION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-endpoint-override[`quarkus.langchain4j.bedrock.chat-model.aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -763,7 +763,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_AWS_CREDENTIALS
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-max-retries[`quarkus.langchain4j.bedrock.chat-model.aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -784,7 +784,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_AWS_MAX_RETRIES
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-aws-api-call-timeout[`quarkus.langchain4j.bedrock.chat-model.aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -805,7 +805,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_AWS_API_CALL_TI
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-model-id[`quarkus.langchain4j.bedrock.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -826,7 +826,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2`
+|`+++chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-temperature[`quarkus.langchain4j.bedrock.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -849,7 +849,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_TEMPERATURE+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.7`
+|`+++0.7+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-max-tokens[`quarkus.langchain4j.bedrock.chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -872,7 +872,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_MAX_TOKENS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1024`
+|`+++1024+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-top-p[`quarkus.langchain4j.bedrock.chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -895,7 +895,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`+++1.0+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-top-k[`quarkus.langchain4j.bedrock.chat-model.top-k`]##
 ifdef::add-copy-button-to-config-props[]
@@ -958,7 +958,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_CONNECT_
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-timeout[`quarkus.langchain4j.bedrock.chat-model.client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -979,7 +979,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_TIMEOUT+
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-proxy-address[`quarkus.langchain4j.bedrock.chat-model.client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1084,7 +1084,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_DISABLE_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-connection-ttl[`quarkus.langchain4j.bedrock.chat-model.client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1147,7 +1147,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_CLIENT_KEEP_ALI
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-client-hostname-verifier[`quarkus.langchain4j.bedrock.chat-model.client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1359,7 +1359,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_LOG_REQUES
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-responses[`quarkus.langchain4j.bedrock.embedding-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1380,7 +1380,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_LOG_RESPON
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-body[`quarkus.langchain4j.bedrock.embedding-model.log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1401,7 +1401,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_LOG_BODY++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-region[`quarkus.langchain4j.bedrock.embedding-model.aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1422,7 +1422,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_AWS_REGION
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-endpoint-override[`quarkus.langchain4j.bedrock.embedding-model.aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1464,7 +1464,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_AWS_CREDEN
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-max-retries[`quarkus.langchain4j.bedrock.embedding-model.aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1485,7 +1485,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_AWS_MAX_RE
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-aws-api-call-timeout[`quarkus.langchain4j.bedrock.embedding-model.aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1506,7 +1506,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_AWS_API_CA
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-model-id[`quarkus.langchain4j.bedrock.embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1527,7 +1527,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_MODEL_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`cohere.embed-english-v3`
+|`+++cohere.embed-english-v3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-titan-dimensions]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-titan-dimensions[`quarkus.langchain4j.bedrock.embedding-model.titan.dimensions`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1632,7 +1632,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_CON
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-timeout[`quarkus.langchain4j.bedrock.embedding-model.client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1653,7 +1653,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_TIM
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-proxy-address[`quarkus.langchain4j.bedrock.embedding-model.client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1758,7 +1758,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_DIS
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-connection-ttl[`quarkus.langchain4j.bedrock.embedding-model.client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1821,7 +1821,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_EMBEDDING_MODEL_CLIENT_KEE
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-client-hostname-verifier[`quarkus.langchain4j.bedrock.embedding-model.client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2037,7 +2037,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__ENABLE_INTEGR
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-requests[`quarkus.langchain4j.bedrock."model-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2058,7 +2058,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__LOG_REQUESTS+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-responses[`quarkus.langchain4j.bedrock."model-name".log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2079,7 +2079,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__LOG_RESPONSES
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-log-body[`quarkus.langchain4j.bedrock."model-name".log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2100,7 +2100,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__LOG_BODY+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-region[`quarkus.langchain4j.bedrock."model-name".aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2121,7 +2121,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__AWS_REGION+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-endpoint-override[`quarkus.langchain4j.bedrock."model-name".aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2163,7 +2163,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__AWS_CREDENTIA
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-max-retries[`quarkus.langchain4j.bedrock."model-name".aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2184,7 +2184,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__AWS_MAX_RETRI
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-aws-api-call-timeout[`quarkus.langchain4j.bedrock."model-name".aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2205,7 +2205,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__AWS_API_CALL_
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-connect-timeout[`quarkus.langchain4j.bedrock."model-name".client.connect-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2226,7 +2226,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_CONNEC
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-timeout[`quarkus.langchain4j.bedrock."model-name".client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2247,7 +2247,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_TIMEOU
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-proxy-address[`quarkus.langchain4j.bedrock."model-name".client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2352,7 +2352,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_DISABL
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-connection-ttl[`quarkus.langchain4j.bedrock."model-name".client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2415,7 +2415,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CLIENT_KEEP_A
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-client-hostname-verifier[`quarkus.langchain4j.bedrock."model-name".client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2627,7 +2627,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_LO
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-log-responses[`quarkus.langchain4j.bedrock."model-name".chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2648,7 +2648,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_LO
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-log-body[`quarkus.langchain4j.bedrock."model-name".chat-model.log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2669,7 +2669,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_LO
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-region[`quarkus.langchain4j.bedrock."model-name".chat-model.aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2690,7 +2690,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_AW
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-endpoint-override[`quarkus.langchain4j.bedrock."model-name".chat-model.aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2732,7 +2732,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_AW
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-max-retries[`quarkus.langchain4j.bedrock."model-name".chat-model.aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2753,7 +2753,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_AW
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-aws-api-call-timeout[`quarkus.langchain4j.bedrock."model-name".chat-model.aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2774,7 +2774,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_AW
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-model-id[`quarkus.langchain4j.bedrock."model-name".chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2795,7 +2795,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_MO
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2`
+|`+++chat: us.amazon.nova-lite-v1:0, stream: anthropic.claude-v2+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-temperature[`quarkus.langchain4j.bedrock."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2818,7 +2818,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_TE
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.7`
+|`+++0.7+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-max-tokens[`quarkus.langchain4j.bedrock."model-name".chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2841,7 +2841,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_MA
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1024`
+|`+++1024+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-top-p[`quarkus.langchain4j.bedrock."model-name".chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2864,7 +2864,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_TO
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`1.0`
+|`+++1.0+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-top-k[`quarkus.langchain4j.bedrock."model-name".chat-model.top-k`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2927,7 +2927,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-timeout[`quarkus.langchain4j.bedrock."model-name".chat-model.client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -2948,7 +2948,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-proxy-address[`quarkus.langchain4j.bedrock."model-name".chat-model.client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3053,7 +3053,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-connection-ttl[`quarkus.langchain4j.bedrock."model-name".chat-model.client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3116,7 +3116,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-client-hostname-verifier[`quarkus.langchain4j.bedrock."model-name".chat-model.client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3328,7 +3328,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-responses[`quarkus.langchain4j.bedrock."model-name".embedding-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3349,7 +3349,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-body]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-body[`quarkus.langchain4j.bedrock."model-name".embedding-model.log-body`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3370,7 +3370,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-region]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-region[`quarkus.langchain4j.bedrock."model-name".embedding-model.aws.region`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3391,7 +3391,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws region provider chain`
+|`+++default aws region provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-endpoint-override]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-endpoint-override[`quarkus.langchain4j.bedrock."model-name".embedding-model.aws.endpoint-override`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3433,7 +3433,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default aws credentials provider chain`
+|`+++default aws credentials provider chain+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-max-retries]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-max-retries[`quarkus.langchain4j.bedrock."model-name".embedding-model.aws.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3454,7 +3454,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-api-call-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-aws-api-call-timeout[`quarkus.langchain4j.bedrock."model-name".embedding-model.aws.api-call-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3475,7 +3475,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`13s`
+|`+++13s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-model-id[`quarkus.langchain4j.bedrock."model-name".embedding-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3496,7 +3496,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`cohere.embed-english-v3`
+|`+++cohere.embed-english-v3+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-titan-dimensions]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-titan-dimensions[`quarkus.langchain4j.bedrock."model-name".embedding-model.titan.dimensions`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3601,7 +3601,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`3s`
+|`+++3s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-timeout]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-timeout[`quarkus.langchain4j.bedrock."model-name".embedding-model.client.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3622,7 +3622,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-bedrock_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-address]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-proxy-address[`quarkus.langchain4j.bedrock."model-name".embedding-model.client.proxy-address`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3727,7 +3727,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-connection-ttl]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-connection-ttl[`quarkus.langchain4j.bedrock."model-name".embedding-model.client.connection-ttl`]##
 ifdef::add-copy-button-to-config-props[]
@@ -3790,7 +3790,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__EMBEDDING_MOD
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-hostname-verifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-client-hostname-verifier[`quarkus.langchain4j.bedrock."model-name".embedding-model.client.hostname-verifier`]##
 ifdef::add-copy-button-to-config-props[]

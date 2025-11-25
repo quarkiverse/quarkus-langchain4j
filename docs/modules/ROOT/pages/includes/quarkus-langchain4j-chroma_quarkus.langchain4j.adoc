@@ -28,7 +28,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-image-name[`quarkus.langchain4j.chroma.devservices.image-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_IMAGE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`ghcr.io/chroma-core/chroma:1.3.0`
+|`+++ghcr.io/chroma-core/chroma:1.3.0+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-port[`quarkus.langchain4j.chroma.devservices.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -97,7 +97,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SHARED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-service-name[`quarkus.langchain4j.chroma.devservices.service-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -120,7 +120,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_DEVSERVICES_SERVICE_NAME+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`chroma`
+|`+++chroma+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-devservices-container-env-container-env[`quarkus.langchain4j.chroma.devservices.container-env."container-env"`]##
 ifdef::add-copy-button-to-config-props[]
@@ -183,7 +183,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_COLLECTION_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`default`
+|`+++default+++`
 
 a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-timeout]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-timeout[`quarkus.langchain4j.chroma.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -225,7 +225,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-responses]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-responses[`quarkus.langchain4j.chroma.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -246,7 +246,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-api-version]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-api-version[`quarkus.langchain4j.chroma.api-version`]##
 ifdef::add-copy-button-to-config-props[]
@@ -267,7 +267,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_API_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`v1`, `v2`
-|`v2`
+|`+++v2+++`
 
 |===
 

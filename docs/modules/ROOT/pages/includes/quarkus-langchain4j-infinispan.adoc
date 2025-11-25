@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_CACHE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`embeddings-cache`
+|`+++embeddings-cache+++`
 
 a| [[quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance]] [.property-path]##link:#quarkus-langchain4j-infinispan_quarkus-langchain4j-infinispan-distance[`quarkus.langchain4j.infinispan.distance`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_INFINISPAN_DISTANCE+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 |===
 

@@ -32,7 +32,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`message-window`, `token-window`
-|`message-window`
+|`+++message-window+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-enabled[`quarkus.langchain4j.devservices.enabled`]##
 ifdef::add-copy-button-to-config-props[]
@@ -55,7 +55,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-port]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-port[`quarkus.langchain4j.devservices.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -76,7 +76,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PORT+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`11434`
+|`+++11434+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-devservices-preload[`quarkus.langchain4j.devservices.preload`]##
 ifdef::add-copy-button-to-config-props[]
@@ -97,7 +97,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_DEVSERVICES_PRELOAD+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-core_quarkus-langchain4j-response-schema]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-response-schema[`quarkus.langchain4j.response-schema`]##
 ifdef::add-copy-button-to-config-props[]
@@ -118,7 +118,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_RESPONSE_SCHEMA+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-memory-window-max-messages[`quarkus.langchain4j.chat-memory.memory-window.max-messages`]##
 ifdef::add-copy-button-to-config-props[]
@@ -139,7 +139,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_MEMORY_WINDOW_MAX_MESS
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`10`
+|`+++10+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-chat-memory-token-window-max-tokens[`quarkus.langchain4j.chat-memory.token-window.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -160,7 +160,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_CHAT_MEMORY_TOKEN_WINDOW_MAX_TOKEN
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1000`
+|`+++1000+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests[`quarkus.langchain4j.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -181,7 +181,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-responses]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-responses[`quarkus.langchain4j.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -202,7 +202,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-timeout]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-timeout[`quarkus.langchain4j.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -223,7 +223,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-core_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-temperature[`quarkus.langchain4j.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -265,7 +265,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GUARDRAILS_MAX_RETRIES+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3`
+|`+++3+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-prompt[`quarkus.langchain4j.tracing.include-prompt`]##
 ifdef::add-copy-button-to-config-props[]
@@ -286,7 +286,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_PROMPT+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-completion[`quarkus.langchain4j.tracing.include-completion`]##
 ifdef::add-copy-button-to-config-props[]
@@ -307,7 +307,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_COMPLETION+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-arguments[`quarkus.langchain4j.tracing.include-tool-arguments`]##
 ifdef::add-copy-button-to-config-props[]
@@ -328,7 +328,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_ARGUMENTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-tracing-include-tool-result[`quarkus.langchain4j.tracing.include-tool-result`]##
 ifdef::add-copy-button-to-config-props[]
@@ -349,7 +349,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TRACING_INCLUDE_TOOL_RESULT+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 h|[[quarkus-langchain4j-core_section_quarkus-langchain4j]] [.section-name.section-level0]##link:#quarkus-langchain4j-core_section_quarkus-langchain4j[Default model config]##
 h|Type

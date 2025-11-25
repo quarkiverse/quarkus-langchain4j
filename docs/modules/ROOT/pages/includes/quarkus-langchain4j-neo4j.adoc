@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_LABEL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`Document`
+|`+++Document+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-embedding-property]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-embedding-property[`quarkus.langchain4j.neo4j.embedding-property`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_EMBEDDING_PROPERTY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`embedding`
+|`+++embedding+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-id-property]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-id-property[`quarkus.langchain4j.neo4j.id-property`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_ID_PROPERTY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`id`
+|`+++id+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-metadata-prefix]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-metadata-prefix[`quarkus.langchain4j.neo4j.metadata-prefix`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_TEXT_PROPERTY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`text`
+|`+++text+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-index-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-index-name[`quarkus.langchain4j.neo4j.index-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_INDEX_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`vector`
+|`+++vector+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-database-name[`quarkus.langchain4j.neo4j.database-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_DATABASE_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`neo4j`
+|`+++neo4j+++`
 
 a| [[quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-retrieval-query]] [.property-path]##link:#quarkus-langchain4j-neo4j_quarkus-langchain4j-neo4j-retrieval-query[`quarkus.langchain4j.neo4j.retrieval-query`]##
 ifdef::add-copy-button-to-config-props[]
@@ -200,7 +200,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_NEO4J_RETRIEVAL_QUERY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`RETURN properties(node) AS metadata, node.${quarkus.langchain4j.neo4j.id-property} AS ${quarkus.langchain4j.neo4j.id-property}, node.${quarkus.langchain4j.neo4j.text-property} AS ${quarkus.langchain4j.neo4j.text-property}, node.${quarkus.langchain4j.neo4j.embedding-property} AS ${quarkus.langchain4j.neo4j.embedding-property}, score`
+|`+++RETURN properties(node) AS metadata, node.${quarkus.langchain4j.neo4j.id-property} AS ${quarkus.langchain4j.neo4j.id-property}, node.${quarkus.langchain4j.neo4j.text-property} AS ${quarkus.langchain4j.neo4j.text-property}, node.${quarkus.langchain4j.neo4j.embedding-property} AS ${quarkus.langchain4j.neo4j.embedding-property}, score+++`
 
 |===
 

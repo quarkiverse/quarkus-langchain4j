@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-project-id[`quarkus.langchain4j.vertexai.project-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROJECT_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-location[`quarkus.langchain4j.vertexai.location`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOCATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-publisher[`quarkus.langchain4j.vertexai.publisher`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PUBLISHER+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`google`
+|`+++google+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-base-url[`quarkus.langchain4j.vertexai.base-url`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-type[`quarkus.langchain4j.vertexai.proxy-type`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`HTTP`
+|`+++HTTP+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-proxy-host[`quarkus.langchain4j.vertexai.proxy-host`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_PROXY_PORT+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3128`
+|`+++3128+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-requests[`quarkus.langchain4j.vertexai.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-log-responses[`quarkus.langchain4j.vertexai.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -236,7 +236,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-model-id[`quarkus.langchain4j.vertexai.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -257,7 +257,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`chat-bison`
+|`+++chat-bison+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-temperature[`quarkus.langchain4j.vertexai.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -280,7 +280,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TEMPERATURE+++
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`${quarkus.langchain4j.temperature:0.0}`
+|`+++${quarkus.langchain4j.temperature:0.0}+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai.chat-model.max-output-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -301,7 +301,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_MAX_OUTPUT_TOK
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1024`
+|`+++1024+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-p[`quarkus.langchain4j.vertexai.chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -324,7 +324,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.95`
+|`+++0.95+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-top-k[`quarkus.langchain4j.vertexai.chat-model.top-k`]##
 ifdef::add-copy-button-to-config-props[]
@@ -349,7 +349,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_TOP_K+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`40`
+|`+++40+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-requests[`quarkus.langchain4j.vertexai.chat-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -370,7 +370,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_REQUESTS++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-chat-model-log-responses[`quarkus.langchain4j.vertexai.chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -391,7 +391,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI_CHAT_MODEL_LOG_RESPONSES+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 h|[[quarkus-langchain4j-vertex-ai_section_quarkus-langchain4j-vertexai]] [.section-name.section-level0]##link:#quarkus-langchain4j-vertex-ai_section_quarkus-langchain4j-vertexai[Named model config]##
 h|Type
@@ -416,7 +416,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROJECT_ID++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-location]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-location[`quarkus.langchain4j.vertexai."model-name".location`]##
 ifdef::add-copy-button-to-config-props[]
@@ -437,7 +437,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOCATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-publisher]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-publisher[`quarkus.langchain4j.vertexai."model-name".publisher`]##
 ifdef::add-copy-button-to-config-props[]
@@ -458,7 +458,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PUBLISHER+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`google`
+|`+++google+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-base-url[`quarkus.langchain4j.vertexai."model-name".base-url`]##
 ifdef::add-copy-button-to-config-props[]
@@ -500,7 +500,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__ENABLE_INTEG
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-type]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-type[`quarkus.langchain4j.vertexai."model-name".proxy-type`]##
 ifdef::add-copy-button-to-config-props[]
@@ -521,7 +521,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_TYPE++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`HTTP`
+|`+++HTTP+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-host]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-proxy-host[`quarkus.langchain4j.vertexai."model-name".proxy-host`]##
 ifdef::add-copy-button-to-config-props[]
@@ -563,7 +563,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__PROXY_PORT++
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`3128`
+|`+++3128+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-requests[`quarkus.langchain4j.vertexai."model-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -584,7 +584,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_REQUESTS
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-log-responses[`quarkus.langchain4j.vertexai."model-name".log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -605,7 +605,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__LOG_RESPONSE
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-model-id[`quarkus.langchain4j.vertexai."model-name".chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -626,7 +626,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_M
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`chat-bison`
+|`+++chat-bison+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-temperature[`quarkus.langchain4j.vertexai."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -649,7 +649,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_T
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`${quarkus.langchain4j.temperature:0.0}`
+|`+++${quarkus.langchain4j.temperature:0.0}+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.vertexai."model-name".chat-model.max-output-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -670,7 +670,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_M
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1024`
+|`+++1024+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-p[`quarkus.langchain4j.vertexai."model-name".chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -693,7 +693,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_T
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.95`
+|`+++0.95+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-k]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-top-k[`quarkus.langchain4j.vertexai."model-name".chat-model.top-k`]##
 ifdef::add-copy-button-to-config-props[]
@@ -718,7 +718,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_T
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`40`
+|`+++40+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-requests[`quarkus.langchain4j.vertexai."model-name".chat-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -739,7 +739,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_L
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-vertex-ai_quarkus-langchain4j-vertexai-model-name-chat-model-log-responses[`quarkus.langchain4j.vertexai."model-name".chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -760,7 +760,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_VERTEXAI__MODEL_NAME__CHAT_MODEL_L
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 
 |===

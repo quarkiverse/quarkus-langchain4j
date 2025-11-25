@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-base-url[`quarkus.langchain4j.cohere.base-url`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://api.cohere.com/`
+|`+++https://api.cohere.com/+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-api-key[`quarkus.langchain4j.cohere.api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-timeout[`quarkus.langchain4j.cohere.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`30s`
+|`+++30s+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name[`quarkus.langchain4j.cohere.scoring-model.model-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -110,7 +110,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MODEL_NAME+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`rerank-multilingual-v2.0`
+|`+++rerank-multilingual-v2.0+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-timeout[`quarkus.langchain4j.cohere.scoring-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`30S`
+|`+++30S+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests[`quarkus.langchain4j.cohere.scoring-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_LOG_REQUESTS+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-responses[`quarkus.langchain4j.cohere.scoring-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_LOG_RESPONSES
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-max-retries[`quarkus.langchain4j.cohere.scoring-model.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_MAX_RETRIES++
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1`
+|`+++1+++`
 
 h|[[quarkus-langchain4j-cohere_section_quarkus-langchain4j-cohere]] [.section-name.section-level0]##link:#quarkus-langchain4j-cohere_section_quarkus-langchain4j-cohere[Named model config]##
 h|Type
@@ -219,7 +219,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://api.cohere.com/`
+|`+++https://api.cohere.com/+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-api-key[`quarkus.langchain4j.cohere."model-name".api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -240,7 +240,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__API_KEY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`dummy`
+|`+++dummy+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-timeout[`quarkus.langchain4j.cohere."model-name".timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -261,7 +261,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`30s`
+|`+++30s+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name[`quarkus.langchain4j.cohere."model-name".scoring-model.model-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -282,7 +282,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`rerank-multilingual-v2.0`
+|`+++rerank-multilingual-v2.0+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-timeout[`quarkus.langchain4j.cohere."model-name".scoring-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -303,7 +303,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-cohere_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`30S`
+|`+++30S+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests[`quarkus.langchain4j.cohere."model-name".scoring-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -324,7 +324,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-responses[`quarkus.langchain4j.cohere."model-name".scoring-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -345,7 +345,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-max-retries[`quarkus.langchain4j.cohere."model-name".scoring-model.max-retries`]##
 ifdef::add-copy-button-to-config-props[]
@@ -366,7 +366,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1`
+|`+++1+++`
 
 
 |===

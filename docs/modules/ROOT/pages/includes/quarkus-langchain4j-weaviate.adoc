@@ -28,7 +28,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEVSERVICES_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-image-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-image-name[`quarkus.langchain4j.weaviate.devservices.image-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -49,7 +49,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEVSERVICES_IMAGE_NAME+++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`cr.weaviate.io/semitechnologies/weaviate:1.25.5`
+|`+++cr.weaviate.io/semitechnologies/weaviate:1.25.5+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-port[`quarkus.langchain4j.weaviate.devservices.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -97,7 +97,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEVSERVICES_SHARED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-service-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-service-name[`quarkus.langchain4j.weaviate.devservices.service-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -120,7 +120,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_DEVSERVICES_SERVICE_NAME+
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`weaviate`
+|`+++weaviate+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-container-env-container-env]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-devservices-container-env-container-env[`quarkus.langchain4j.weaviate.devservices.container-env."container-env"`]##
 ifdef::add-copy-button-to-config-props[]
@@ -183,7 +183,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_SCHEME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`http`
+|`+++http+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-host]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-host[`quarkus.langchain4j.weaviate.host`]##
 ifdef::add-copy-button-to-config-props[]
@@ -204,7 +204,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_HOST+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`localhost`
+|`+++localhost+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-port[`quarkus.langchain4j.weaviate.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -225,7 +225,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_PORT+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`8080`
+|`+++8080+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-port]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-port[`quarkus.langchain4j.weaviate.grpc.port`]##
 ifdef::add-copy-button-to-config-props[]
@@ -246,7 +246,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_GRPC_PORT+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`50051`
+|`+++50051+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-secure]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-secure[`quarkus.langchain4j.weaviate.grpc.secure`]##
 ifdef::add-copy-button-to-config-props[]
@@ -267,7 +267,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_GRPC_SECURE+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-use-for-inserts]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-grpc-use-for-inserts[`quarkus.langchain4j.weaviate.grpc.use-for-inserts`]##
 ifdef::add-copy-button-to-config-props[]
@@ -288,7 +288,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_GRPC_USE_FOR_INSERTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-object-class]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-object-class[`quarkus.langchain4j.weaviate.object-class`]##
 ifdef::add-copy-button-to-config-props[]
@@ -309,7 +309,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_OBJECT_CLASS+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`Default`
+|`+++Default+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-text-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-text-field-name[`quarkus.langchain4j.weaviate.text-field-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -330,7 +330,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_TEXT_FIELD_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`text`
+|`+++text+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-avoid-dups]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-avoid-dups[`quarkus.langchain4j.weaviate.avoid-dups`]##
 ifdef::add-copy-button-to-config-props[]
@@ -351,7 +351,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_AVOID_DUPS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-consistency-level]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-consistency-level[`quarkus.langchain4j.weaviate.consistency-level`]##
 ifdef::add-copy-button-to-config-props[]
@@ -372,7 +372,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_CONSISTENCY_LEVEL+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`one`, `quorum`, `all`
-|`quorum`
+|`+++quorum+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-metadata-keys]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-metadata-keys[`quarkus.langchain4j.weaviate.metadata.keys`]##
 ifdef::add-copy-button-to-config-props[]
@@ -393,7 +393,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_METADATA_KEYS+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|`tags`
+|`+++tags+++`
 
 a| [[quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-metadata-field-name]] [.property-path]##link:#quarkus-langchain4j-weaviate_quarkus-langchain4j-weaviate-metadata-field-name[`quarkus.langchain4j.weaviate.metadata.field-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -414,7 +414,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_WEAVIATE_METADATA_FIELD_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`_metadata`
+|`+++_metadata+++`
 
 |===
 
