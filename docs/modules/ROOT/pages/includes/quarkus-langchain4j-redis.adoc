@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_INDEX_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`embedding-index`
+|`+++embedding-index+++`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-textual-metadata-fields[`quarkus.langchain4j.redis.textual-metadata-fields`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_DISTANCE_METRIC+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`l2`, `ip`, `cosine`
-|`cosine`
+|`+++cosine+++`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-field-name[`quarkus.langchain4j.redis.vector-field-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_VECTOR_FIELD_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`vector`
+|`+++vector+++`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-scalar-field-name[`quarkus.langchain4j.redis.scalar-field-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_SCALAR_FIELD_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`scalar`
+|`+++scalar+++`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-prefix[`quarkus.langchain4j.redis.prefix`]##
 ifdef::add-copy-button-to-config-props[]
@@ -196,7 +196,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_PREFIX+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`embedding:`
+|`+++embedding:+++`
 
 a| [[quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm]] [.property-path]##link:#quarkus-langchain4j-redis_quarkus-langchain4j-redis-vector-algorithm[`quarkus.langchain4j.redis.vector-algorithm`]##
 ifdef::add-copy-button-to-config-props[]
@@ -217,7 +217,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_REDIS_VECTOR_ALGORITHM+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`flat`, `hnsw`
-|`hnsw`
+|`+++hnsw+++`
 
 |===
 

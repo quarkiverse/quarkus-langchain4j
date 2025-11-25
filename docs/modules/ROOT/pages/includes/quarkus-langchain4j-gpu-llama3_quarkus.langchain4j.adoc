@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_INCLUDE_MODELS_IN_ARTIF
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enabled]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-enabled[`quarkus.langchain4j.gpu-llama3.chat-model.enabled`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-model-name[`quarkus.langchain4j.gpu-llama3.chat-model.model-name`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_MODEL_NAME++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`unsloth/Llama-3.2-1B-Instruct-GGUF`
+|`+++unsloth/Llama-3.2-1B-Instruct-GGUF+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-quantization[`quarkus.langchain4j.gpu-llama3.chat-model.quantization`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_QUANTIZATION
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`F16`
+|`+++F16+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-models-path]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-models-path[`quarkus.langchain4j.gpu-llama3.models-path`]##
 ifdef::add-copy-button-to-config-props[]
@@ -110,7 +110,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_MODELS_PATH+++`
 endif::add-copy-button-to-env-var[]
 --
 |path
-|`${user.home}/.langchain4j/models`
+|`+++${user.home}/.langchain4j/models+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-temperature[`quarkus.langchain4j.gpu-llama3.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_TEMPERATURE+
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.3`
+|`+++0.3+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-top-p[`quarkus.langchain4j.gpu-llama3.chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_TOP_P+++`
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.85`
+|`+++0.85+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-seed[`quarkus.langchain4j.gpu-llama3.chat-model.seed`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_SEED+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1234`
+|`+++1234+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-chat-model-max-tokens[`quarkus.langchain4j.gpu-llama3.chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_CHAT_MODEL_MAX_TOKENS++
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`512`
+|`+++512+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-enable-integration]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-enable-integration[`quarkus.langchain4j.gpu-llama3.enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-log-requests]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-log-requests[`quarkus.langchain4j.gpu-llama3.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -236,7 +236,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-log-responses]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-log-responses[`quarkus.langchain4j.gpu-llama3.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -257,7 +257,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 h|[[quarkus-langchain4j-gpu-llama3_section_quarkus-langchain4j-gpu-llama3]] [.section-name.section-level0]##link:#quarkus-langchain4j-gpu-llama3_section_quarkus-langchain4j-gpu-llama3[Named model config]##
 h|Type
@@ -282,7 +282,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`unsloth/Llama-3.2-1B-Instruct-GGUF`
+|`+++unsloth/Llama-3.2-1B-Instruct-GGUF+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-quantization]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-quantization[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.quantization`]##
 ifdef::add-copy-button-to-config-props[]
@@ -303,7 +303,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`F16`
+|`+++F16+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-temperature[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -324,7 +324,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.3`
+|`+++0.3+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-top-p[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -345,7 +345,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`0.85`
+|`+++0.85+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-seed]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-seed[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.seed`]##
 ifdef::add-copy-button-to-config-props[]
@@ -366,7 +366,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`1234`
+|`+++1234+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-max-tokens]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-chat-model-max-tokens[`quarkus.langchain4j.gpu-llama3."model-name".chat-model.max-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -387,7 +387,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__CHAT_MODEL
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`512`
+|`+++512+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-enable-integration[`quarkus.langchain4j.gpu-llama3."model-name".enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
@@ -408,7 +408,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__ENABLE_INT
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-log-requests[`quarkus.langchain4j.gpu-llama3."model-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -429,7 +429,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__LOG_REQUES
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-gpu-llama3_quarkus-langchain4j-gpu-llama3-model-name-log-responses[`quarkus.langchain4j.gpu-llama3."model-name".log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -450,7 +450,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_GPU_LLAMA3__MODEL_NAME__LOG_RESPON
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 
 |===

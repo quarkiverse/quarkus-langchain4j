@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_POD_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`s1.x1`
+|`+++s1.x1+++`
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-index-readiness-timeout[`quarkus.langchain4j.pinecone.index-readiness-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TEXT_FIELD_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`text`
+|`+++text+++`
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-timeout[`quarkus.langchain4j.pinecone.timeout`]##
 ifdef::add-copy-button-to-config-props[]

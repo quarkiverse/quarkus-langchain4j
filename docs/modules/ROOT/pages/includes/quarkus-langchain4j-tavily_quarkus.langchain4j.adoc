@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_BASE_URL+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`https://api.tavily.com`
+|`+++https://api.tavily.com+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-api-key]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-api-key[`quarkus.langchain4j.tavily.api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -68,7 +68,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_MAX_RESULTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`5`
+|`+++5+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-timeout]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-timeout[`quarkus.langchain4j.tavily.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-tavily_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`60S`
+|`+++60S+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests[`quarkus.langchain4j.tavily.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -110,7 +110,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-responses]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-responses[`quarkus.langchain4j.tavily.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-search-depth]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-search-depth[`quarkus.langchain4j.tavily.search-depth`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_SEARCH_DEPTH+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`basic`, `advanced`
-|`basic`
+|`+++basic+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-answer]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-answer[`quarkus.langchain4j.tavily.include-answer`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_ANSWER+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-raw-content]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-raw-content[`quarkus.langchain4j.tavily.include-raw-content`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_RAW_CONTENT+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-domains]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-include-domains[`quarkus.langchain4j.tavily.include-domains`]##
 ifdef::add-copy-button-to-config-props[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_INCLUDE_DOMAINS+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|`empty list`
+|`+++empty list+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-exclude-domains[`quarkus.langchain4j.tavily.exclude-domains`]##
 ifdef::add-copy-button-to-config-props[]
@@ -236,7 +236,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_EXCLUDE_DOMAINS+++`
 endif::add-copy-button-to-env-var[]
 --
 |list of string
-|`empty list`
+|`+++empty list+++`
 
 |===
 

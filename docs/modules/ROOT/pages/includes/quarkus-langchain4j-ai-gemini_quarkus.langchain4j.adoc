@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-enabled]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-enabled[`quarkus.langchain4j.ai.gemini.embedding-model.enabled`]##
 ifdef::add-copy-button-to-config-props[]
@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_ENABLED+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-api-key]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-api-key[`quarkus.langchain4j.ai.gemini.api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -89,7 +89,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_PUBLISHER+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`google`
+|`+++google+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-base-url]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-base-url[`quarkus.langchain4j.ai.gemini.base-url`]##
 ifdef::add-copy-button-to-config-props[]
@@ -131,7 +131,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_ENABLE_INTEGRATION+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-log-requests]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-log-requests[`quarkus.langchain4j.ai.gemini.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -152,7 +152,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_LOG_REQUESTS+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-log-responses[`quarkus.langchain4j.ai.gemini.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -173,7 +173,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_LOG_RESPONSES+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-timeout[`quarkus.langchain4j.ai.gemini.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -194,7 +194,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`${QUARKUS.LANGCHAIN4J.TIMEOUT}`
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-model-id[`quarkus.langchain4j.ai.gemini.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -215,7 +215,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_MODEL_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-2.5-flash`
+|`+++gemini-2.5-flash+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-temperature[`quarkus.langchain4j.ai.gemini.chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -238,7 +238,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_TEMPERATURE++
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`${quarkus.langchain4j.temperature}`
+|`+++${quarkus.langchain4j.temperature}+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-max-output-tokens[`quarkus.langchain4j.ai.gemini.chat-model.max-output-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -259,7 +259,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_MAX_OUTPUT_TO
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`8192`
+|`+++8192+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-top-p[`quarkus.langchain4j.ai.gemini.chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -336,7 +336,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_LOG_REQUESTS+
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-log-responses[`quarkus.langchain4j.ai.gemini.chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -357,7 +357,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_LOG_RESPONSES
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-timeout[`quarkus.langchain4j.ai.gemini.chat-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -378,7 +378,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-include-thoughts]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-include-thoughts[`quarkus.langchain4j.ai.gemini.chat-model.thinking.include-thoughts`]##
 ifdef::add-copy-button-to-config-props[]
@@ -399,7 +399,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_INCL
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-chat-model-thinking-thinking-budget[`quarkus.langchain4j.ai.gemini.chat-model.thinking.thinking-budget`]##
 ifdef::add-copy-button-to-config-props[]
@@ -443,7 +443,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_MODEL_ID
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`text-embedding-004`
+|`+++text-embedding-004+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-output-dimension[`quarkus.langchain4j.ai.gemini.embedding-model.output-dimension`]##
 ifdef::add-copy-button-to-config-props[]
@@ -506,7 +506,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_LOG_REQU
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-log-responses[`quarkus.langchain4j.ai.gemini.embedding-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -527,7 +527,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_LOG_RESP
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-timeout[`quarkus.langchain4j.ai.gemini.embedding-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -548,7 +548,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_EMBEDDING_MODEL_TIMEOUT+
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 h|[[quarkus-langchain4j-ai-gemini_section_quarkus-langchain4j-ai-gemini]] [.section-name.section-level0]##link:#quarkus-langchain4j-ai-gemini_section_quarkus-langchain4j-ai-gemini[Named model config]##
 h|Type
@@ -594,7 +594,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__PUBLISHER++
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`google`
+|`+++google+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-base-url]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-base-url[`quarkus.langchain4j.ai.gemini."model-name".base-url`]##
 ifdef::add-copy-button-to-config-props[]
@@ -636,7 +636,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__ENABLE_INTE
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-log-requests[`quarkus.langchain4j.ai.gemini."model-name".log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -657,7 +657,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__LOG_REQUEST
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-log-responses[`quarkus.langchain4j.ai.gemini."model-name".log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -678,7 +678,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__LOG_RESPONS
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-timeout[`quarkus.langchain4j.ai.gemini."model-name".timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -699,7 +699,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`${QUARKUS.LANGCHAIN4J.TIMEOUT}`
+|`+++${QUARKUS.LANGCHAIN4J.TIMEOUT}+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-model-id[`quarkus.langchain4j.ai.gemini."model-name".chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -720,7 +720,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`gemini-2.5-flash`
+|`+++gemini-2.5-flash+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-temperature[`quarkus.langchain4j.ai.gemini."model-name".chat-model.temperature`]##
 ifdef::add-copy-button-to-config-props[]
@@ -743,7 +743,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |double
-|`${quarkus.langchain4j.temperature}`
+|`+++${quarkus.langchain4j.temperature}+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-max-output-tokens]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-max-output-tokens[`quarkus.langchain4j.ai.gemini."model-name".chat-model.max-output-tokens`]##
 ifdef::add-copy-button-to-config-props[]
@@ -764,7 +764,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |int
-|`8192`
+|`+++8192+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-top-p]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-top-p[`quarkus.langchain4j.ai.gemini."model-name".chat-model.top-p`]##
 ifdef::add-copy-button-to-config-props[]
@@ -841,7 +841,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-log-responses[`quarkus.langchain4j.ai.gemini."model-name".chat-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -862,7 +862,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-timeout[`quarkus.langchain4j.ai.gemini."model-name".chat-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -883,7 +883,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-include-thoughts]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-include-thoughts[`quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.include-thoughts`]##
 ifdef::add-copy-button-to-config-props[]
@@ -904,7 +904,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-budget]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-chat-model-thinking-thinking-budget[`quarkus.langchain4j.ai.gemini."model-name".chat-model.thinking.thinking-budget`]##
 ifdef::add-copy-button-to-config-props[]
@@ -948,7 +948,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`text-embedding-004`
+|`+++text-embedding-004+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-output-dimension[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.output-dimension`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1011,7 +1011,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-log-responses]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-log-responses[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.log-responses`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1032,7 +1032,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`false`
+|`+++false+++`
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-timeout]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-timeout[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1053,7 +1053,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__EMBEDDING_M
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-ai-gemini_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
-|`10s`
+|`+++10s+++`
 
 
 |===

@@ -26,7 +26,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OIDC_MODEL_AUTH_PROVIDER_ENABLED++
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|`true`
+|`+++true+++`
 
 |===
 

@@ -26,7 +26,6 @@ import io.quarkus.mongodb.MongoClientName;
 import io.quarkus.mongodb.deployment.MongoClientBuildTimeConfig;
 import io.quarkus.mongodb.deployment.MongoClientNameBuildItem;
 import io.quarkus.mongodb.deployment.MongoUnremovableClientsBuildItem;
-import io.quarkus.mongodb.runtime.MongoClientBeanUtil;
 
 class MongoDBMemoryStoreProcessor {
 
@@ -48,7 +47,7 @@ class MongoDBMemoryStoreProcessor {
 
         if (shouldCreateDefaultBean(mongoClientBuildTimeConfig, registrationPhase, mongoUnremovableClientsBuildItem)
                 && config.clientName().isEmpty()) {
-            mongoClientName.produce(new MongoClientNameBuildItem(MongoClientBeanUtil.DEFAULT_MONGOCLIENT_NAME));
+            mongoClientName.produce(new MongoClientNameBuildItem("<default>"));
         }
 
         config.clientName().ifPresent(clientName -> mongoClientName.produce(new MongoClientNameBuildItem(clientName)));
