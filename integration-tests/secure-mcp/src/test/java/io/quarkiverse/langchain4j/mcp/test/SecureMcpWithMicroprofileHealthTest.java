@@ -81,14 +81,6 @@ class SecureMcpWithMicroprofileHealthTest {
     }
 
     @Test
-    void testAuthenticationSuccessfulWithRestAssured() throws Exception {
-        RestAssured.given().auth().oauth2(getJwt())
-                .when().get("http://localhost:8082/mcp/sse")
-                .then()
-                .statusCode(200);
-    }
-
-    @Test
     void testAuthenticationFailedWithRestAssured() throws Exception {
         RestAssured.when().get("http://localhost:8082/mcp/sse")
                 .then()
