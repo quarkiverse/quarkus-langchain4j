@@ -132,20 +132,13 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
         // Azure OpenAI supports JSON schema for models like gpt-4o-2024-08-06+
         this.supportedCapabilities = new HashSet<>();
-        if (this.responseFormat != null && ResponseFormatType.JSON.equals(this.responseFormat.type())) {
+        if (this.responseFormat != null && ResponseFormatType.JSON_SCHEMA.equals(this.responseFormat.type())) {
             this.supportedCapabilities.add(RESPONSE_FORMAT_JSON_SCHEMA);
         }
     }
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-        ResponseFormat requestResponseFormat = this.responseFormat;
-
-        // Handle ChatRequest-level ResponseFormat if provided
-        if (chatRequest.responseFormat() != null) {
-            requestResponseFormat = chatRequest.responseFormat();
-        }
-
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
@@ -157,7 +150,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
-                .responseFormat(requestResponseFormat);
+                .responseFormat(this.responseFormat);
 
         Integer inputTokenCount = tokenizer == null ? null : tokenizer.estimateTokenCountInMessages(messages);
 
