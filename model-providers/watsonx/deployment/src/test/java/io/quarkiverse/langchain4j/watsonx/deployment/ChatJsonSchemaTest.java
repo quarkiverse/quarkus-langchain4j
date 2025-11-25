@@ -27,25 +27,22 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.data.message.ChatMessage;
+import com.ibm.watsonx.ai.chat.model.ChatMessage;
+import com.ibm.watsonx.ai.chat.model.ChatParameters.JsonSchemaObject;
+import com.ibm.watsonx.ai.chat.model.SystemMessage;
+import com.ibm.watsonx.ai.chat.model.TextChatRequest;
+import com.ibm.watsonx.ai.chat.model.UserMessage;
+
 import dev.langchain4j.internal.JsonSchemaElementUtils;
 import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageSystem;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatMessage.TextChatMessageUser;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters.TextChatResponseFormat;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatParameters.TextChatResponseFormat.JsonSchemaObject;
-import io.quarkiverse.langchain4j.watsonx.bean.TextChatRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class ChatJsonSchemaTest extends WireMockAbstract {
@@ -74,21 +71,6 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
                             .build())
             .build();
 
-    static TextChatParameters parameters = TextChatParameters.builder()
-            .frequencyPenalty(0.0)
-            .logprobs(false)
-            .maxTokens(1024)
-            .n(1)
-            .presencePenalty(0.0)
-            .temperature(1.0)
-            .topP(1.0)
-            .stop(List.of())
-            .timeLimit(DEFAULT_TIME_LIMIT)
-            .responseFormat(new TextChatResponseFormat("json_schema",
-                    new JsonSchemaObject("test", JsonSchemaElementUtils.toMap(jsonSchema.rootElement()),
-                            true)))
-            .build();
-
     @Inject
     ChatModel chatModel;
 
@@ -108,25 +90,38 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
     void test_chat_json_schema_input() throws Exception {
         var config = langchain4jWatsonConfig.defaultConfig();
         String modelId = config.chatModel().modelName();
-        String spaceId = config.spaceId().orElse(null);
         String projectId = config.projectId().orElse(null);
 
-        var messages = List.<TextChatMessage> of(
-                TextChatMessageSystem.of("SystemMessage"),
-                TextChatMessageUser.of("UserMessage"));
+        var messages = List.<ChatMessage> of(
+                SystemMessage.of("SystemMessage"),
+                UserMessage.text("UserMessage"));
 
-        TextChatRequest body = new TextChatRequest(modelId, spaceId, projectId, messages, null, parameters);
+        var body = TextChatRequest.builder()
+                .modelId(modelId)
+                .projectId(projectId)
+                .messages(messages)
+                .timeLimit(DEFAULT_TIME_LIMIT.toMillis())
+                .frequencyPenalty(0.0)
+                .maxCompletionTokens(1024)
+                .presencePenalty(0.0)
+                .temperature(1.0)
+                .logprobs(false)
+                .topP(1.0)
+                .stop(List.of())
+                .responseFormat(com.ibm.watsonx.ai.chat.model.ChatParameters.ResponseFormat.JSON_SCHEMA.value())
+                .jsonSchema(new JsonSchemaObject("test", JsonSchemaElementUtils.toMap(jsonSchema.rootElement()), true))
+                .build();
 
         mockWatsonxBuilder(URL_WATSONX_CHAT_API, 200)
                 .body(mapper.writeValueAsString(body))
                 .response(RESPONSE_WATSONX_CHAT_API)
                 .build();
 
-        var chatMessages = List.<ChatMessage> of(
+        var chatMessages = List.<dev.langchain4j.data.message.ChatMessage> of(
                 dev.langchain4j.data.message.SystemMessage.from("SystemMessage"),
                 dev.langchain4j.data.message.UserMessage.from("UserMessage"));
 
-        var chatRequest = ChatRequest.builder()
+        var chatRequest = dev.langchain4j.model.chat.request.ChatRequest.builder()
                 .messages(chatMessages)
                 .responseFormat(ResponseFormat.builder().type(ResponseFormatType.JSON).jsonSchema(jsonSchema).build())
                 .build();
@@ -150,6 +145,6 @@ public class ChatJsonSchemaTest extends WireMockAbstract {
 
         assertThat(streamingResponse.get().aiMessage().text())
                 .isNotNull()
-                .isEqualTo(" Hello");
+                .isEqualTo("Hello");
     }
 }

@@ -1,0 +1,62 @@
+{
+    "entity": {
+        "document_reference": {
+            "connection": {
+                "id": "connection-id"
+            },
+            "location": {
+                "bucket": "my-bucket",
+                "file_name": "test.pdf"
+            },
+            "type": "connection_asset"
+        },
+        "parameters": {
+            "classification_mode": "exact",
+            "languages": [
+                "en"
+            ],
+            "semantic_config": {
+                "schemas": [
+                    {
+                        "document_description": "A vendor-issued invoice listing purchased items, prices, and payment information.",
+                        "document_type": "Invoice",
+                        "fields": {
+                            "invoice_date": {
+                                "description": "The date when the invoice was issued.",
+                                "example": "2024-07-10"
+                            },
+                            "invoice_number": {
+                                "description": "The unique number identifying the invoice.",
+                                "example": "INV-2024-001"
+                            },
+                            "total_amount": {
+                                "description": "The total amount to be paid.",
+                                "example": "1250.50"
+                            }
+                        }
+                    },
+                    {
+                        "document_description": "A legal document outlining terms and conditions between two parties.",
+                        "document_type": "Contract",
+                        "fields": {}
+                    }
+                ],
+                "schemas_merge_strategy": "replace"
+            }
+        },
+        "results": {
+            "completed_at": "2025-10-23T07:32:42.981Z",
+            "document_classified": true,
+            "document_type": "Invoice",
+            "number_pages_processed": 10,
+            "running_at": "2025-10-23T07:32:24.272Z",
+            "status": "completed"
+        }
+    },
+    "metadata": {
+        "created_at": "2025-10-23T07:32:11.013Z",
+        "id": "id",
+        "modified_at": "2025-10-23T07:32:43.003Z",
+        "project_id": "project-id"
+    }
+}

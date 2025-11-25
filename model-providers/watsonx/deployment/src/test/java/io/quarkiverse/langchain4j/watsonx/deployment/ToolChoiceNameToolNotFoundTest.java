@@ -39,7 +39,7 @@ public class ToolChoiceNameToolNotFoundTest extends WireMockAbstract {
     @Override
     void handlerBeforeEach() {
         mockIAMBuilder(200)
-                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType())
+                .grantType(langchain4jWatsonConfig.defaultConfig().iam().grantType().orElse(null))
                 .response(BEARER_TOKEN, new Date())
                 .build();
     }

@@ -14,7 +14,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.langchain4j.watsonx.services.WebCrawlerService;
+import com.ibm.watsonx.ai.tool.builtin.WebCrawlerTool;
+
 import io.quarkus.test.QuarkusUnitTest;
 
 public class BuiltinServiceBaseUrlExceptionTest {
@@ -26,7 +27,7 @@ public class BuiltinServiceBaseUrlExceptionTest {
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.api-key", API_KEY)
             .overrideRuntimeConfigKey("quarkus.langchain4j.watsonx.project-id", PROJECT_ID)
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, WebCrawlerService.class))
+                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(WireMockUtil.class, WebCrawlerTool.class))
             .assertException(t -> {
                 assertThat(t).isInstanceOf(RuntimeException.class)
                         .hasMessage(
@@ -34,7 +35,7 @@ public class BuiltinServiceBaseUrlExceptionTest {
             });
 
     @Inject
-    WebCrawlerService tool;
+    WebCrawlerTool tool;
 
     @Test
     void test() {

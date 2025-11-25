@@ -4,9 +4,12 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PROJECT_ID;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.RESPONSE_WATSONX_EMBEDDING_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_CHAT_STREAMING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_EMBEDDING_API;
+import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SCORING_API;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_WATSONX_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.streamingChatResponseHandler;
 import static org.awaitility.Awaitility.await;
@@ -34,6 +37,8 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.scoring.ScoringModel;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiChatCacheTokenTest extends WireMockAbstract {
@@ -67,6 +72,12 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
     @Inject
     StreamingChatModel streamingChatModel;
 
+    @Inject
+    EmbeddingModel embeddingModel;
+
+    @Inject
+    ScoringModel scoringModel;
+
     @Override
     void handlerBeforeEach() throws Exception {
         Thread.sleep(cacheTimeout);
@@ -91,15 +102,28 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
 
         Stream.of(
                 Map.entry(URL_WATSONX_CHAT_API, RESPONSE_WATSONX_CHAT_API),
-                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API))
+                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API),
+                Map.entry(URL_WATSONX_EMBEDDING_API, RESPONSE_WATSONX_EMBEDDING_API),
+                Map.entry(URL_WATSONX_SCORING_API, """
+                        {
+                            "model_id": "cross-encoder/ms-marco-minilm-l-12-v2",
+                            "created_at": "2024-10-18T06:57:42.032Z",
+                            "results": [
+                                {
+                                    "index": 0,
+                                    "score": -2.5847978591918945
+                                }
+                            ],
+                            "input_token_count": 318
+                        }"""))
                 .forEach(entry -> {
 
-                    WatsonxBuilder builder = mockWatsonxBuilder(entry.getKey(), 200);
-
-                    builder.token("3secondstoken")
-                            .responseMediaType(entry.getKey().equals(URL_WATSONX_CHAT_STREAMING_API)
-                                    ? MediaType.SERVER_SENT_EVENTS
-                                    : MediaType.APPLICATION_JSON)
+                    mockWatsonxBuilder(entry.getKey(), 200)
+                            .token("3secondstoken")
+                            .responseMediaType(
+                                    entry.getKey().equals(URL_WATSONX_CHAT_STREAMING_API)
+                                            ? MediaType.SERVER_SENT_EVENTS
+                                            : MediaType.APPLICATION_JSON)
                             .response(entry.getValue())
                             .build();
 
@@ -108,8 +132,9 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
                             assertDoesNotThrow(() -> chatModel.chat("message"));
                             assertDoesNotThrow(() -> chatModel.chat("message")); // cache
                         }
-                        case URL_WATSONX_CHAT_STREAMING_API ->
-                            assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
+                        case URL_WATSONX_CHAT_STREAMING_API -> assertDoesNotThrow(() -> chatModel.chat("message")); // cache.
+                        case URL_WATSONX_EMBEDDING_API -> assertDoesNotThrow(() -> embeddingModel.embed("message")); // cache.
+                        case URL_WATSONX_SCORING_API -> assertDoesNotThrow(() -> scoringModel.score("message", "message")); // cache.
                     }
                 });
     }
@@ -131,7 +156,20 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
 
         Stream.of(
                 Map.entry(URL_WATSONX_CHAT_API, RESPONSE_WATSONX_CHAT_API),
-                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API))
+                Map.entry(URL_WATSONX_CHAT_STREAMING_API, RESPONSE_WATSONX_CHAT_STREAMING_API),
+                Map.entry(URL_WATSONX_EMBEDDING_API, RESPONSE_WATSONX_EMBEDDING_API),
+                Map.entry(URL_WATSONX_SCORING_API, """
+                        {
+                            "model_id": "cross-encoder/ms-marco-minilm-l-12-v2",
+                            "created_at": "2024-10-18T06:57:42.032Z",
+                            "results": [
+                                {
+                                    "index": 0,
+                                    "score": -2.5847978591918945
+                                }
+                            ],
+                            "input_token_count": 318
+                        }"""))
                 .forEach(entry -> {
                     mockWatsonxBuilder(entry.getKey(), 401)
                             .token("expired_token")
@@ -159,6 +197,8 @@ public class AiChatCacheTokenTest extends WireMockAbstract {
                                     .until(() -> streamingResponse.get() != null);
                             assertNotNull(streamingResponse.get());
                         }
+                        case URL_WATSONX_EMBEDDING_API -> assertDoesNotThrow(() -> embeddingModel.embed("message"));
+                        case URL_WATSONX_SCORING_API -> assertDoesNotThrow(() -> scoringModel.score("message", "message"));
                     }
                     try {
                         Thread.sleep(cacheTimeout);

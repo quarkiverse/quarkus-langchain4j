@@ -22,18 +22,6 @@ public interface ScoringModelConfig {
     String modelName();
 
     /**
-     * Specifies the maximum number of input tokens accepted. This helps to avoid requests failing due to input exceeding the
-     * configured token limits.
-     * <p>
-     * If the input exceeds the specified token limit, the text will be truncated from the end (right side), ensuring that the
-     * start of the input remains
-     * intact. If the provided value exceeds the model's maximum sequence length (refer to the documentation for the model's
-     * maximum sequence length), the
-     * request will fail if the total number of tokens exceeds the maximum limit.
-     */
-    Optional<Integer> truncateInputTokens();
-
-    /**
      * Whether embedding model requests should be logged.
      */
     @ConfigDocDefault("false")
@@ -44,4 +32,10 @@ public interface ScoringModelConfig {
      */
     @ConfigDocDefault("false")
     Optional<Boolean> logResponses();
+
+    /**
+     * Whether the watsonx.ai client should log requests as cURL commands.
+     */
+    @ConfigDocDefault("false")
+    Optional<Boolean> logRequestsCurl();
 }
