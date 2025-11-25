@@ -55,12 +55,13 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler aHandler) {
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
+        Schema schema = effectiveResponseFormat != null
+                ? SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema())
+                : null;
         GenerationConfig generationConfig = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
-                .responseMimeType(computeMimeType(effectiveResponseFormat))
-                .responseSchema(effectiveResponseFormat != null
-                        ? SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema())
-                        : null)
+                .responseMimeType(schema != null ? computeMimeType(effectiveResponseFormat) : null)
+                .responseSchema(schema)
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))
