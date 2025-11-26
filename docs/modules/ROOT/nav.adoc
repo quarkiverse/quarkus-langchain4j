@@ -107,5 +107,6 @@
 
 [.list-top-item]
 .Development
+* xref:./includes/quarkus-all-config.adoc[All Configuration Options]
 * https://github.com/quarkiverse/quarkus-langchain4j[Source Code^,role=github]
 * https://github.com/quarkiverse/quarkus-langchain4j/issues[Issues^,role=github]

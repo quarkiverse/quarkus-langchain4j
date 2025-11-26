@@ -408,6 +408,19 @@
                 <configuration>
                     <targetDirectory>${project.basedir}/modules/ROOT/pages/includes/</targetDirectory>
                 </configuration>
+                <executions>
+                  <execution>
+                    <id>generate-config-doc</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                      <goal>generate-config-doc</goal>
+                    </goals>
+                    <configuration>
+                      <generateAllConfig>true</generateAllConfig>
+                      <enableEnumTooltips>true</enableEnumTooltips>
+                    </configuration>
+                  </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
