@@ -23,6 +23,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import jakarta.validation.ValidationException;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -56,13 +58,21 @@ import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import dev.langchain4j.model.output.structured.Description;
 import io.quarkiverse.langchain4j.deployment.items.ToolMethodBuildItem;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
 import io.quarkiverse.langchain4j.runtime.ToolsRecorder;
 import io.quarkiverse.langchain4j.runtime.prompt.Mappable;
 import io.quarkiverse.langchain4j.runtime.tool.ToolInvoker;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpanWrapper;
 import io.quarkiverse.langchain4j.runtime.tool.ToolSpecificationObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolGuardrailAnnotationLiteral;
+import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolGuardrailService;
+import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolInputGuardrailsLiteral;
+import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolOutputGuardrailsLiteral;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
+import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
@@ -109,10 +119,96 @@ public class ToolProcessor {
             DotNames.OFFSET_DATE_TIME, DotNames.OFFSET_TIME, DotNames.YEAR, DotNames.YEAR_MONTH);
 
     @BuildStep
-    public void telemetry(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+    public void additionalBeans(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeanProducer) {
+        // Register OpenTelemetry span wrapper if available
         var addOpenTelemetrySpan = capabilities.isPresent(Capability.OPENTELEMETRY_TRACER);
         if (addOpenTelemetrySpan) {
             additionalBeanProducer.produce(AdditionalBeanBuildItem.builder().addBeanClass(ToolSpanWrapper.class).build());
+        }
+
+        // Register tool guardrail service
+        additionalBeanProducer.produce(AdditionalBeanBuildItem.builder()
+                .addBeanClass(ToolGuardrailService.class)
+                .setUnremovable()
+                .build());
+    }
+
+    /**
+     * Registers core tool guardrail classes for reflection.
+     * <p>
+     * This includes interfaces, annotations, records, and exception classes that are part
+     * of the tool guardrails framework and may be needed at runtime or in native images.
+     * </p>
+     */
+    @BuildStep
+    public void registerToolGuardrailClassesForReflection(
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+
+        // Register annotation classes
+        reflectiveClassProducer.produce(ReflectiveClassBuildItem
+                .builder(LangChain4jDotNames.TOOL_INPUT_GUARDRAILS.toString(),
+                        LangChain4jDotNames.TOOL_OUTPUT_GUARDRAILS.toString())
+                .build());
+    }
+
+    /**
+     * Marks tool guardrail beans as unremovable.
+     * <p>
+     * Tool guardrails are discovered via {@code @ToolInputGuardrails} and {@code @ToolOutputGuardrails}
+     * annotations.
+     * </p>
+     */
+    @BuildStep
+    public void markGuardrailsAsUnremovable(
+            List<ToolMethodBuildItem> toolMethods,
+            BuildProducer<UnremovableBeanBuildItem> unremovableProducer,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer) {
+
+        Set<String> guardrailClasses = new HashSet<>();
+        boolean hasGuardrails = false;
+
+        for (ToolMethodBuildItem toolMethod : toolMethods) {
+            ToolMethodCreateInfo createInfo = toolMethod.getToolMethodCreateInfo();
+
+            // Gather input guardrail classes
+            if (createInfo.inputGuardrails() != null) {
+                ToolInputGuardrailsLiteral inputGuardrails = createInfo.inputGuardrails();
+                guardrailClasses.addAll(inputGuardrails.getClassNames());
+                hasGuardrails = true;
+            }
+
+            // Gather output guardrail classes
+            if (createInfo.outputGuardrails() != null) {
+                ToolOutputGuardrailsLiteral outputGuardrails = createInfo.outputGuardrails();
+                guardrailClasses.addAll(outputGuardrails.getClassNames());
+                hasGuardrails = true;
+            }
+        }
+
+        if (!guardrailClasses.isEmpty()) {
+            unremovableProducer.produce(UnremovableBeanBuildItem.beanClassNames(guardrailClasses.toArray(String[]::new)));
+            log.debugf("Marked %d tool guardrail beans as unremovable: %s", guardrailClasses.size(), guardrailClasses);
+
+            // Register guardrail beans for reflection (needed for native image)
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem
+                    .builder(guardrailClasses.toArray(String[]::new))
+                    .methods()
+                    .build());
+        }
+
+        // Register annotation literal classes for reflection if any guardrails are used
+        // TODO Clement - Wondering if we need this.
+        if (hasGuardrails) {
+            reflectiveClassProducer.produce(ReflectiveClassBuildItem
+                    .builder(
+                            ToolInputGuardrailsLiteral.class.getName(),
+                            ToolOutputGuardrailsLiteral.class.getName(),
+                            ToolGuardrailAnnotationLiteral.class.getName())
+                    .fields()
+                    .methods()
+                    .constructors()
+                    .build());
+            log.debug("Registered tool guardrail annotation literal classes for reflection");
         }
     }
 
@@ -166,7 +262,6 @@ public class ToolProcessor {
                 ClassInfo classInfo = methodInfo.declaringClass();
                 boolean causeValidationError = false;
                 if (classInfo.isInterface()) {
-
                     if (preventToolValidationError.test(classInfo)) {
                         // we allow tools on method of these interfaces because we know they will be beans
                     } else {
@@ -298,12 +393,18 @@ public class ToolProcessor {
                     generatedArgumentMapperClasses.add(argumentMapperClassName);
 
                     ToolSpecification toolSpecification = builder.build();
+                    ToolInputGuardrailsLiteral inputGuardrails = gatherInputGuardrails(toolMethod);
+                    ToolOutputGuardrailsLiteral outputGuardrails = gatherOutputGuardrails(toolMethod);
+
                     ToolMethodCreateInfo methodCreateInfo = new ToolMethodCreateInfo(
                             toolMethod.name(), invokerClassName,
                             toolSpecification, argumentMapperClassName, determineExecutionModel(toolMethod),
-                            returnBehaviorEnum);
+                            returnBehaviorEnum,
+                            inputGuardrails,
+                            outputGuardrails);
 
                     validateExecutionModel(methodCreateInfo, toolMethod, validation);
+                    validateGuardrails(toolMethod, inputGuardrails, outputGuardrails, index, validation);
 
                     toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
 
@@ -328,6 +429,42 @@ public class ToolProcessor {
         }
 
         toolsMetadataProducer.produce(new ToolsMetadataBeforeRemovalBuildItem(metadata));
+    }
+
+    @BuildStep
+    public void validateThatGuardrailsAreCDIBeans(BeanRegistrationPhaseBuildItem registrationPhaseBuildItem,
+            List<ToolMethodBuildItem> toolsBuildItem,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrorBuildItem) {
+        for (ToolMethodBuildItem item : toolsBuildItem) {
+            String methodName = item.getToolsMethodInfo().declaringClass().name() + "." + item.getToolsMethodInfo().name();
+            var ig = item.getToolMethodCreateInfo().getInputGuardrails();
+            var og = item.getToolMethodCreateInfo().getOutputGuardrails();
+            if (ig != null && ig.hasGuardrails()) {
+                for (String className : ig.getClassNames()) {
+                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
+                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
+                        String msg = String.format("Input guardrail class '%s' for tool method '%s' is not a CDI bean. "
+                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                className, methodName);
+                        validationErrorBuildItem
+                                .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
+                    }
+                }
+            }
+            if (og != null && og.hasGuardrails()) {
+                for (String className : og.getClassNames()) {
+                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
+                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
+                        String msg = String.format("Output guardrail class '%s' for tool method '%s' is not a CDI bean. "
+                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                className, methodName);
+                        validationErrorBuildItem
+                                .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
+                    }
+                }
+            }
+        }
+
     }
 
     public static String resolveToolName(MethodInfo toolMethod) {
@@ -383,6 +520,126 @@ public class ToolProcessor {
             }
         }
 
+    }
+
+    /**
+     * Validates tool guardrail configurations at build time.
+     * <p>
+     * Performs the following validations:
+     * </p>
+     * <ul>
+     * <li>Guardrail classes must exist in the index</li>
+     * <li>Input guardrail classes must implement
+     * {@link ToolInputGuardrail}</li>
+     * <li>Output guardrail classes must implement
+     * {@link ToolOutputGuardrail}</li>
+     * <li>Guardrail classes should be CDI beans (warning if not)</li>
+     * </ul>
+     *
+     * @param toolMethod the tool method being validated
+     * @param inputGuardrails the input guardrails configuration
+     * @param outputGuardrails the output guardrails configuration
+     * @param index the Jandex index
+     * @param validation the validation error producer
+     */
+    private void validateGuardrails(
+            MethodInfo toolMethod,
+            ToolInputGuardrailsLiteral inputGuardrails,
+            ToolOutputGuardrailsLiteral outputGuardrails,
+            IndexView index,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation) {
+
+        String methodName = toolMethod.declaringClass().name() + "." + toolMethod.name();
+
+        // Validate input guardrails
+        if (inputGuardrails != null) {
+            for (String guardrailClassName : inputGuardrails.getClassNames()) {
+                DotName guardrailName = DotName.createSimple(guardrailClassName);
+                ClassInfo guardrailClass = index.getClassByName(guardrailName);
+
+                // Check if class exists
+                if (guardrailClass == null) {
+                    validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new IllegalStateException(
+                                    "Input guardrail class '" + guardrailClassName + "' not found in index for tool method '"
+                                            + methodName + "'. Ensure the class is on the classpath.")));
+                    continue;
+                }
+
+                // Check if it implements ToolInputGuardrail
+                if (!implementsInterface(guardrailClass, LangChain4jDotNames.TOOL_INPUT_GUARDRAIL, index)) {
+                    validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new IllegalStateException(
+                                    "Input guardrail class '" + guardrailClassName + "' must implement "
+                                            + LangChain4jDotNames.TOOL_INPUT_GUARDRAIL + " for tool method '" + methodName
+                                            + "'")));
+                }
+
+                // The validation to make sure the guardrail is a CDI beans is done afterwards.
+            }
+        }
+
+        // Validate output guardrails
+        if (outputGuardrails != null) {
+            for (String guardrailClassName : outputGuardrails.getClassNames()) {
+                DotName guardrailName = DotName.createSimple(guardrailClassName);
+                ClassInfo guardrailClass = index.getClassByName(guardrailName);
+
+                // Check if class exists
+                if (guardrailClass == null) {
+                    validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new IllegalStateException(
+                                    "Output guardrail class '" + guardrailClassName
+                                            + "' not found in index for tool method '"
+                                            + methodName + "'. Ensure the class is on the classpath.")));
+                    continue;
+                }
+
+                // Check if it implements ToolOutputGuardrail
+                if (!implementsInterface(guardrailClass, LangChain4jDotNames.TOOL_OUTPUT_GUARDRAIL, index)) {
+                    validation.produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(
+                            new IllegalStateException(
+                                    "Output guardrail class '" + guardrailClassName + "' must implement "
+                                            + LangChain4jDotNames.TOOL_OUTPUT_GUARDRAIL + " for tool method '" + methodName
+                                            + "'")));
+                }
+
+                // The validation to make sure the guardrail is a CDI beans is done afterwards.
+            }
+        }
+    }
+
+    /**
+     * Checks if a class implements a specific interface, including through inheritance.
+     *
+     * @param classInfo the class to check
+     * @param interfaceName the interface to look for
+     * @param index the Jandex index
+     * @return true if the class implements the interface
+     */
+    private boolean implementsInterface(ClassInfo classInfo, DotName interfaceName, IndexView index) {
+        // Check direct interfaces
+        if (classInfo.interfaceNames().contains(interfaceName)) {
+            return true;
+        }
+
+        // Check parent class
+        if (classInfo.superName() != null && !DotNames.OBJECT.equals(classInfo.superName())) {
+            ClassInfo superClass = index.getClassByName(classInfo.superName());
+            if (superClass != null && implementsInterface(superClass, interfaceName, index)) {
+                return true;
+            }
+        }
+
+        // Check implemented interfaces recursively
+        for (DotName implementedInterface : classInfo.interfaceNames()) {
+            ClassInfo interfaceClass = index.getClassByName(implementedInterface);
+            if (interfaceClass != null && implementsInterface(interfaceClass, interfaceName, index)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -743,5 +1000,63 @@ public class ToolProcessor {
             return ToolMethodCreateInfo.ExecutionModel.VIRTUAL_THREAD;
         }
         return ToolMethodCreateInfo.ExecutionModel.BLOCKING;
+    }
+
+    /**
+     * Gathers input guardrails from a tool method.
+     * <p>
+     * Looks for {@code @ToolInputGuardrails} annotation on the method and extracts
+     * the guardrail class names to create a literal representation.
+     * </p>
+     *
+     * @param methodInfo the tool method to inspect
+     * @return input guardrails literal, or null if no guardrails are configured
+     */
+    private static ToolInputGuardrailsLiteral gatherInputGuardrails(MethodInfo methodInfo) {
+        AnnotationInstance annotation = methodInfo.annotation(LangChain4jDotNames.TOOL_INPUT_GUARDRAILS);
+        if (annotation == null) {
+            return null;
+        }
+
+        List<String> guardrailClassNames = gatherGuardrailClassNames(annotation);
+        return guardrailClassNames.isEmpty() ? null : new ToolInputGuardrailsLiteral(guardrailClassNames);
+    }
+
+    /**
+     * Gathers output guardrails from a tool method.
+     * <p>
+     * Looks for {@code @ToolOutputGuardrails} annotation on the method and extracts
+     * the guardrail class names to create a literal representation.
+     * </p>
+     *
+     * @param methodInfo the tool method to inspect
+     * @return output guardrails literal, or null if no guardrails are configured
+     */
+    private static ToolOutputGuardrailsLiteral gatherOutputGuardrails(MethodInfo methodInfo) {
+        AnnotationInstance annotation = methodInfo.annotation(LangChain4jDotNames.TOOL_OUTPUT_GUARDRAILS);
+        if (annotation == null) {
+            return null;
+        }
+
+        List<String> guardrailClassNames = gatherGuardrailClassNames(annotation);
+        return guardrailClassNames.isEmpty() ? null : new ToolOutputGuardrailsLiteral(guardrailClassNames);
+    }
+
+    /**
+     * Extracts guardrail class names from a guardrails annotation.
+     *
+     * @param annotation the annotation instance (either ToolInputGuardrails or ToolOutputGuardrails)
+     * @return list of fully qualified guardrail class names
+     */
+    private static List<String> gatherGuardrailClassNames(AnnotationInstance annotation) {
+        AnnotationValue value = annotation.value();
+        if (value == null) {
+            return List.of();
+        }
+
+        return Arrays.stream(value.asClassArray())
+                .map(type -> type.name().toString())
+                .distinct()
+                .toList();
     }
 }

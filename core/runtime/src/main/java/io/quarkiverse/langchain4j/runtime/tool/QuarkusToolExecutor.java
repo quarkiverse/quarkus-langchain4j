@@ -31,13 +31,22 @@ public class QuarkusToolExecutor implements ToolExecutor {
 
     public record Context(Object tool, String toolInvokerName, String methodName, String argumentMapperClassName,
             ToolMethodCreateInfo.ExecutionModel executionModel, ReturnBehavior returnBehavior,
-            boolean propagateToolExecutionExceptions) {
+            boolean propagateToolExecutionExceptions, ToolMethodCreateInfo methodCreateInfo) {
+    }
+
+    /**
+     * Gets the tool method metadata including guardrail configuration.
+     *
+     * @return the method create info, or null if not available
+     */
+    public ToolMethodCreateInfo getMethodCreateInfo() {
+        return context.methodCreateInfo;
     }
 
     public interface Wrapper {
 
         ToolExecutionResult wrap(ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext,
-                BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun);
+                BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun, QuarkusToolExecutor executor);
     }
 
     public QuarkusToolExecutor(Context context) {

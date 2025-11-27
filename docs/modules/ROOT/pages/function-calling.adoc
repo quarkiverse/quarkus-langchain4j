@@ -410,6 +410,76 @@ public interface WeatherForecastService {
 }
 ----
 
+== Tool Guardrails
+
+Tool guardrails provide validation and control mechanisms for tool invocations, operating at both **input** (before tool execution) and **output** (after tool execution) stages.
+
+=== Basic Example
+
+[source,java]
+----
+@ApplicationScoped
+public class EmailTools {
+
+    @Tool("Send an email to a recipient")
+    @ToolInputGuardrails({ EmailFormatValidator.class })    // Input validation
+    @ToolOutputGuardrails({ SensitiveDataFilter.class })    // Output filtering
+    public String sendEmail(String to, String subject, String body) {
+        return "Email sent to " + to;
+    }
+}
+----
+
+[source,java]
+----
+@ApplicationScoped
+public class EmailFormatValidator implements ToolInputGuardrail {
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        // Parse and validate email format
+        JsonNode args = parseArguments(request.arguments());
+        String email = args.get("to").asText();
+
+        if (!isValidEmail(email)) {
+            return ToolInputGuardrailResult.failure("Invalid email format: " + email);
+        }
+
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+=== Common Use Cases
+
+Tool guardrails are useful for:
+
+* **Security**: Authorization checks before tool execution
+* **Validation**: Email format, parameter ranges, business rules
+* **Privacy**: Filter sensitive data (SSN, credit cards) from outputs
+* **Cost Control**: Rate limiting, output size limiting
+* **Compliance**: Audit logging, data classification
+
+=== Input vs. Output Guardrails
+
+**Input Guardrails** (`@ToolInputGuardrails`):
+
+* Execute **before** the tool
+* Can validate parameters, check authorization, enforce rate limits
+* If validation fails, the tool is **not executed**
+* Error message is returned to the LLM
+
+**Output Guardrails** (`@ToolOutputGuardrails`):
+
+* Execute **after** the tool
+* Can filter sensitive data, transform results, validate output format
+* Can modify the result before returning to the LLM
+
+[NOTE]
+====
+See xref:tool-guardrails.adoc[Tool Guardrails] for complete documentation.
+====
+
 == Summary
 
 Function calling enables the model to take actions and retrieve external information by invoking application-defined tools. Quarkus LangChain4j simplifies this process through annotations and automatic orchestration and execution.
@@ -424,11 +494,14 @@ Function calling enables the model to take actions and retrieve external informa
 |`@Blocking`, `@NonBlocking`, `@RunOnVirtualThread` | Control how tool execution is scheduled
 |`@UserMessage`, `@SystemMessage` | Provide instructions to guide tool use, depending on the model, the prompt should provide hints.
 |`toolProviderSupplier` | Allows dynamic tool provisioning via ToolProvider
+|`@ToolInputGuardrails` | Validates tool parameters before execution
+|`@ToolOutputGuardrails` | Validates or transforms tool results after execution
 |===
 
 == Going Further
 
 [.lead]
+* xref:tool-guardrails.adoc[Tool Guardrails] – Validate and control tool invocations
 * xref:ai-services.adoc[AI Service Configuration]
 * xref:messages-and-memory.adoc[Memory and Context Management]
 * xref:observability.adoc[Observability of Tool Invocations]
