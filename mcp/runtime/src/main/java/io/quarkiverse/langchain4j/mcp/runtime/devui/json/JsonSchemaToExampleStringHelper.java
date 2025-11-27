@@ -34,6 +34,8 @@ public class JsonSchemaToExampleStringHelper {
             return builder.toString();
         } else if (element instanceof JsonAnyOfSchema schema) {
             return generateExampleStringFromSchema(schema.anyOf().get(0));
+        } else if (element instanceof JsonEnumSchema schema) {
+            return "\"" + schema.enumValues().get(0) + "\"";
         }
         throw new UnsupportedOperationException("Unsupported schema type: " + element.getClass());
     }

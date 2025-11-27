@@ -26,6 +26,16 @@ export class QwcMcpClients extends LitElement {
             margin-left: 15px;
             margin-right: 15px;
         }
+
+        vaadin-text-area[readonly]::part(input-field) {
+            background-color: #ffffff;
+            opacity: 1;
+        }
+
+        vaadin-text-area[readonly]::part(value) {
+            color: #000000;
+            opacity: 1;
+        }
     `;
 
     static properties = {
@@ -78,10 +88,10 @@ export class QwcMcpClients extends LitElement {
                                 .then(jsonRpcResponse => {
                                     let outputElement = this.shadowRoot.getElementById(textAreaId);
                                     outputElement.style = "width: 100%; display: block;";
-                                    outputElement.value = JSON.stringify(jsonRpcResponse.result);
+                                    outputElement.value = jsonRpcResponse.result;
                                 });}
                 }>Execute</vaadin-button>
-                <vaadin-text-area label="Output" id=${textAreaId} disabled style="width: 100%; display: none;"></vaadin-text-area>
+                <vaadin-text-area label="Output" id=${textAreaId} readonly style="width: 100%; display: none;"></vaadin-text-area>
             </vaadin-vertical-layout>
         `
     }
