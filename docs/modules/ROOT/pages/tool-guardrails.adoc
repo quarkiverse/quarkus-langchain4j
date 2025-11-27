@@ -1,0 +1,800 @@
+= Tool Guardrails - Protecting Your Function Calls
+
+include::./includes/attributes.adoc[]
+
+Tool guardrails provide validation and control mechanisms for tool (function) invocations in AI applications.
+Unlike LLM guardrails which validate prompts and responses from the LLM, tool guardrails operate on the **input parameters** and **output results** of tools that the LLM can invoke using xref:function-calling.adoc[function calling].
+
+[NOTE]
+====
+Tool guardrails are important for:
+
+* **Security**: Prevent unauthorized access to sensitive operations
+* **Data Validation**: Ensure parameters meet format and business rule requirements
+* **Privacy Protection**: Filter sensitive data from tool outputs
+* **Cost Control**: Limit expensive operations through rate limiting
+* **Reliability**: Prevent malformed requests from causing errors
+====
+
+== Overview
+
+Tool guardrails operate at two stages:
+
+1. **Input Guardrails** (`@ToolInputGuardrails`) - Execute **before** the tool, validating parameters and context
+2. **Output Guardrails** (`@ToolOutputGuardrails`) - Execute **after** the tool, validating or transforming results
+
+Both types can:
+
+* Allow execution to proceed (`success()`)
+* Block execution with an error message (`failure()`)
+* Transform requests/responses (`successWith()`)
+
+== Quick Start
+
+To create your first guardrail in 3 steps:
+
+1. **Create a CDI bean** implementing `ToolInputGuardrail` or `ToolOutputGuardrail`
+2. **Implement the `validate()` method** with your validation logic
+3. **Apply the annotation** to your tool method
+
+[source,java]
+----
+// Step 1 & 2: Create guardrail bean
+@ApplicationScoped  // <1>
+public class PositiveNumberGuardrail implements ToolInputGuardrail {  // <2>
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {  // <3>
+        JsonObject args = request.argumentsAsJson();
+        int number = args.getInteger("amount");
+
+        if (number < 0) {
+            return ToolInputGuardrailResult.failure(  // <4>
+                "Amount must be positive, got: " + number);
+        }
+
+        return ToolInputGuardrailResult.success();  // <5>
+    }
+}
+
+// Step 3: Apply to tool
+@ApplicationScoped
+public class BankingTools {
+
+    @Tool("Transfer money between accounts")
+    @ToolInputGuardrails({ PositiveNumberGuardrail.class })  // <6>
+    public String transfer(int amount, String from, String to) {
+        // This only executes if amount is positive
+        return "Transferred $" + amount + " from " + from + " to " + to;
+    }
+}
+----
+<1> Make it a CDI bean with a scope annotation
+<2> Implement the appropriate guardrail interface
+<3> Override the validate method
+<4> Return failure if validation fails
+<5> Return success if validation passes
+<6> Apply the guardrail annotation to your tool
+
+== Basic Usage
+
+=== Input Guardrails
+
+Input guardrails validate tool parameters before execution:
+
+[source,java]
+----
+@ApplicationScoped
+public class EmailTools {
+
+    @Tool("Send an email to a recipient")
+    @ToolInputGuardrails({ EmailFormatValidator.class })
+    public String sendEmail(String to,
+                           String subject,
+                           String body) {
+        // This only executes if EmailFormatValidator passes
+        return "Email sent to " + to;
+    }
+}
+----
+
+The guardrail implementation:
+
+[source,java]
+----
+@ApplicationScoped
+public class EmailFormatValidator implements ToolInputGuardrail {
+
+    private static final Pattern EMAIL_PATTERN =
+        Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        // Parse arguments as JsonObject for easy access
+        JsonObject args = request.argumentsAsJson();
+        String email = args.getString("to");
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            return ToolInputGuardrailResult.failure(
+                "Invalid email format: " + email);
+        }
+
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+[IMPORTANT]
+====
+When an input guardrail fails:
+
+* The tool is **not executed**
+* The error message is returned to the LLM as the tool result
+* The LLM can retry with corrected parameters
+====
+
+=== Output Guardrails
+
+Output guardrails validate and transform tool results:
+
+[source,java]
+----
+@Tool("Get customer information")
+@ToolOutputGuardrails({ SensitiveDataFilter.class })
+public String getCustomerInfo(String customerId) {
+    // Returns customer data including SSN, credit cards, etc.
+    return customerDatabase.findById(customerId).toString();
+}
+----
+
+The guardrail implementation:
+
+[source,java]
+----
+@ApplicationScoped
+public class SensitiveDataFilter implements ToolOutputGuardrail {
+
+    private static final Pattern SSN_PATTERN =
+        Pattern.compile("\\b\\d{3}-\\d{2}-\\d{4}\\b");
+
+    @Override
+    public ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request) {
+        String result = request.resultText();
+
+        // Filter sensitive data
+        String filtered = SSN_PATTERN.matcher(result)
+            .replaceAll("[REDACTED-SSN]");
+
+        if (!filtered.equals(result)) {
+            // Return modified result
+            return ToolOutputGuardrailResult.successWith(
+                ToolExecutionResult.builder()
+                    .toolName(request.toolName())
+                    .resultText(filtered)
+                    .build()
+            );
+        }
+
+        return ToolOutputGuardrailResult.success();
+    }
+}
+----
+
+[IMPORTANT]
+====
+When an output guardrail modifies the result:
+
+* The **modified** result is returned to the LLM
+* The original tool result is **never** seen by the LLM
+* Multiple output guardrails can chain transformations
+====
+
+== Guardrail Interfaces
+
+=== ToolInputGuardrail Interface
+
+[source,java]
+----
+public interface ToolInputGuardrail {
+    /**
+     * Validates tool input parameters before execution.
+     */
+    ToolInputGuardrailResult validate(ToolInputGuardrailRequest request);
+}
+----
+
+**Request Context:**
+
+[source,java]
+----
+// Access available context
+String toolName = request.toolName();
+String arguments = request.arguments();  // JSON string
+JsonObject args = request.argumentsAsJson();  // Parsed JSON for easy access
+Object memoryId = request.memoryId();
+ToolMetadata metadata = request.toolMetadata();
+ToolInvocationContext context = request.invocationContext();
+----
+
+**Result Options:**
+
+[source,java]
+----
+// Validation passed
+return ToolInputGuardrailResult.success();
+
+// Validation passed with modified request
+return ToolInputGuardrailResult.successWith(modifiedRequest);
+
+// Validation failed
+return ToolInputGuardrailResult.failure("Error message for LLM");
+
+// Critical failure with exception
+return ToolInputGuardrailResult.failure("Error", exception);
+----
+
+=== ToolOutputGuardrail Interface
+
+[source,java]
+----
+public interface ToolOutputGuardrail {
+    /**
+     * Validates tool output after execution.
+     */
+    ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request);
+}
+----
+
+**Request Context:**
+
+[source,java]
+----
+// Access tool result and context
+String resultText = request.resultText();
+JsonObject result = request.resultAsJson();  // Parsed result for JSON tools
+boolean isError = request.isError();
+String toolName = request.toolName();
+JsonObject args = request.argumentsAsJson();  // Original input arguments
+ToolExecutionRequest originalRequest = request.executionRequest();
+ToolExecutionResult executionResult = request.executionResult();
+----
+
+**Result Options:**
+
+[source,java]
+----
+// Output valid
+return ToolOutputGuardrailResult.success();
+
+// Output valid with transformation
+return ToolOutputGuardrailResult.successWith(modifiedResult);
+
+// Output invalid
+return ToolOutputGuardrailResult.failure("Error message");
+
+----
+
+== Multiple Guardrails
+
+Multiple guardrails can be applied to a single tool and execute them in **order**:
+
+[source,java]
+----
+@Tool("Send bulk emails")
+@ToolInputGuardrails({
+    EmailFormatValidator.class,      // Executes first
+    UserAuthorizationGuardrail.class, // Executes second
+    RateLimitGuardrail.class          // Executes third
+})
+@ToolOutputGuardrails({
+    OutputSizeLimiter.class,          // Executes first
+    SensitiveDataFilter.class         // Executes second
+})
+public String sendBulkEmail(String recipients, String subject, String body) {
+    // Implementation
+}
+----
+
+[TIP]
+====
+**Execution Order Best Practices:**
+
+* Place **fast, cheap** checks first (format validation)
+* Place **slow, expensive** checks last (database lookups)
+* For output guardrails, order by transformation dependencies
+====
+
+[IMPORTANT]
+====
+**Fail-Fast Behavior:**
+
+Input guardrails execute in order and **stop at the first failure**. If `EmailFormatValidator` fails, the subsequent guardrails are not executed and the tool does not run.
+====
+
+== Working with Parameters
+
+=== Accessing JSON Parameters
+
+Tool arguments are provided as JSON strings. Use `argumentsAsJson()` for easy parameter access:
+
+[source,java]
+----
+import io.vertx.core.json.JsonObject;  // <1>
+import io.vertx.core.json.JsonArray;
+
+@Override
+public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+    JsonObject args = request.argumentsAsJson();  // <2>
+
+    // Type-safe parameter access
+    int age = args.getInteger("age");
+    String name = args.getString("name");
+    boolean active = args.getBoolean("active", false);  // with default
+
+    // Check for parameter existence
+    if (args.containsKey("email")) {
+        String email = args.getString("email");
+    }
+
+    // Nested objects
+    JsonObject address = args.getJsonObject("address");
+    String city = address.getString("city");
+
+    // Arrays
+    JsonArray tags = args.getJsonArray("tags");
+
+    return ToolInputGuardrailResult.success();
+}
+----
+<1> Import Vert.x JSON classes (included with Quarkus)
+<2> Parse arguments to JsonObject for easy access
+
+[NOTE]
+====
+`JsonObject` is from Vert.x (`io.vertx.core.json.JsonObject`), which is included in Quarkus.
+It provides null-safe methods like `getString(key, default)` and convenient type conversions.
+====
+
+=== POJO Mapping
+
+For complex parameters, map JSON directly to Java objects:
+
+[source,java]
+----
+// Define parameter structure as a record
+record EmailParams(
+    String to,
+    String subject,
+    String body,
+    List<String> attachments
+) {}
+
+@Override
+public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+    // Map arguments to POJO
+    EmailParams params = request.argumentsAsJson().mapTo(EmailParams.class);
+
+    // Access strongly-typed parameters
+    if (params.to() == null || params.to().isEmpty()) {
+        return ToolInputGuardrailResult.failure("Email recipient is required");
+    }
+
+    if (params.attachments().size() > 5) {
+        return ToolInputGuardrailResult.failure("Maximum 5 attachments allowed");
+    }
+
+    return ToolInputGuardrailResult.success();
+}
+----
+
+=== Parsing Tool Output
+
+Output guardrails can also parse JSON results:
+
+[source,java]
+----
+record CustomerData(
+    String id,
+    String name,
+    String ssn,
+    String creditCard
+) {}
+
+@Override
+public ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request) {
+    // Parse JSON output
+    CustomerData customer = request.resultAsJson().mapTo(CustomerData.class);
+
+    // Filter sensitive fields
+    CustomerData filtered = new CustomerData(
+        customer.id(),
+        customer.name(),
+        "[REDACTED]",
+        "[REDACTED]"
+    );
+
+    // Return filtered result as JSON
+    JsonObject filteredJson = JsonObject.mapFrom(filtered);
+    return ToolOutputGuardrailResult.successWith(
+        ToolExecutionResult.builder()
+            .toolName(request.toolName())
+            .resultText(filteredJson.encode())
+            .build()
+    );
+}
+----
+
+== Common Use Cases
+
+=== Security and Authorization
+
+[source,java]
+----
+@RequestScoped
+public class UserAuthorizationGuardrail implements ToolInputGuardrail {
+
+    @Inject
+    SecurityIdentity securityIdentity;
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        if (securityIdentity.isAnonymous()) {
+            return ToolInputGuardrailResult.failure(
+                "Authentication required to execute " + request.toolName());
+        }
+
+        if (!securityIdentity.hasRole("ADMIN")) {
+            return ToolInputGuardrailResult.failure(
+                "Insufficient permissions to execute " + request.toolName());
+        }
+
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+[NOTE]
+====
+Guardrails are CDI beans and can inject dependencies like `SecurityIdentity`, making them ideal for authorization checks.
+====
+
+=== Rate Limiting
+
+[source,java]
+----
+@ApplicationScoped
+public class RateLimitGuardrail implements ToolInputGuardrail {
+
+    @Inject
+    RateLimiterService rateLimiter;
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        String userId = getUserId(request);
+
+        if (!rateLimiter.tryAcquire(userId, request.toolName())) {
+            return ToolInputGuardrailResult.failure(
+                "Rate limit exceeded. Please try again later.");
+        }
+
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+=== Data Privacy and Filtering
+
+[source,java]
+----
+@ApplicationScoped
+public class PiiFilter implements ToolOutputGuardrail {
+
+    private static final List<Pattern> PII_PATTERNS = List.of(
+        Pattern.compile("\\b\\d{3}-\\d{2}-\\d{4}\\b"),  // SSN
+        Pattern.compile("\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b")  // Credit card
+    );
+
+    @Override
+    public ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request) {
+        String result = request.resultText();
+        String filtered = result;
+
+        for (Pattern pattern : PII_PATTERNS) {
+            filtered = pattern.matcher(filtered).replaceAll("[REDACTED]");
+        }
+
+        if (!filtered.equals(result)) {
+            return ToolOutputGuardrailResult.successWith(
+                ToolExecutionResult.builder()
+                    .toolName(request.toolName())
+                    .resultText(filtered)
+                    .build()
+            );
+        }
+
+        return ToolOutputGuardrailResult.success();
+    }
+}
+----
+
+=== Cost Control (Output Size Limiting)
+
+[source,java]
+----
+@ApplicationScoped
+public class OutputSizeLimiter implements ToolOutputGuardrail {
+
+    private static final int MAX_CHARACTERS = 4000;
+
+    @Override
+    public ToolOutputGuardrailResult validate(ToolOutputGuardrailRequest request) {
+        String result = request.resultText();
+
+        if (result.length() > MAX_CHARACTERS) {
+            String truncated = result.substring(0, MAX_CHARACTERS) +
+                "\n\n[Output truncated. Please refine your query.]";
+
+            return ToolOutputGuardrailResult.successWith(
+                ToolExecutionResult.builder()
+                    .toolName(request.toolName())
+                    .resultText(truncated)
+                    .build()
+            );
+        }
+
+        return ToolOutputGuardrailResult.success();
+    }
+}
+----
+
+== CDI Integration
+
+Guardrails are CDI beans and support all standard features:
+
+[source,java]
+----
+@RequestScoped  // Can use different scopes
+public class StatefulGuardrail implements ToolInputGuardrail {
+
+    @Inject
+    SecurityIdentity identity;  // Dependency injection
+
+    @Inject
+    AuditLogger auditLogger;    // Custom beans
+
+    @ConfigProperty(name = "app.max-retries", defaultValue = "3")
+    int maxRetries;  // Configuration injection
+
+    private int callCount = 0;  // Instance state
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        callCount++;
+        auditLogger.log(identity.getPrincipal().getName(),
+                       "Tool invocation #" + callCount);
+
+        // Validation logic
+        return ToolInputGuardrailResult.success();
+    }
+}
+----
+
+== Advanced Topics
+
+=== Important Limitation: Tool Guardrails and Event Loop Compatibility
+
+Tool guardrails (both `@ToolInputGuardrails` and `@ToolOutputGuardrails`) have synchronous, blocking APIs by design, as
+  they perform operations like JSON parsing, validation, and potentially database lookups or external API calls.
+
+Consequently, tools annotated with guardrails cannot execute on the Vert.x event loop and must be marked as blocking.
+If you attempt to use a tool with guardrails from the event loop (for example, in a reactive endpoint or streaming AI  service), the framework will throw a ToolExecutionException with the message "Cannot execute guardrails on the event  loop thread."
+
+To use guardrails with your tools, ensure the tool methods are properly detected or annotated as  blocking (e.g., using @Blocking annotation or by returning blocking types instead of `Uni/Multi`).
+
+Tools without guardrails can continue to use reactive execution models without any restrictions.
+This architectural decision ensures  application responsiveness by preventing blocking operations on the event loop.
+
+=== Request Modification
+
+Input guardrails can modify tool requests before execution:
+
+[source,java]
+----
+@ApplicationScoped
+public class ParameterNormalizer implements ToolInputGuardrail {
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        // Parse arguments as JsonObject
+        JsonObject args = request.argumentsAsJson();
+
+        // Normalize email to lowercase
+        String email = args.getString("email").toLowerCase();
+        args.put("email", email);
+
+        // Build modified request with normalized parameters
+        ToolExecutionRequest modified = ToolExecutionRequest.builder()
+            .id(request.executionRequest().id())
+            .name(request.executionRequest().name())
+            .arguments(args.encode())  // Convert back to JSON string
+            .build();
+
+        return ToolInputGuardrailResult.successWith(modified);
+    }
+}
+----
+
+=== Context and Metadata
+
+Guardrails have access to contextual information:
+
+[source,java]
+----
+@Override
+public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+    // Tool information
+    ToolMetadata metadata = request.toolMetadata();
+    String toolName = metadata.toolName();
+    String description = metadata.description();
+
+    // Invocation context
+    ToolInvocationContext context = request.invocationContext();
+    Object memoryId = context.memoryId();
+    Map<String, Object> params = context.parameters();
+
+    // Use context for validation...
+    return ToolInputGuardrailResult.success();
+}
+----
+
+=== Error Handling
+
+Guardrails should handle parsing and validation errors gracefully:
+
+[source,java]
+----
+@Override
+public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+    try {
+        JsonObject args = request.argumentsAsJson();
+        int value = args.getInteger("amount");
+
+        if (value < 0) {
+            return ToolInputGuardrailResult.failure(
+                "Amount must be positive, got: " + value);
+        }
+
+        return ToolInputGuardrailResult.success();
+
+    } catch (DecodeException e) {
+        // JSON parsing failed
+        return ToolInputGuardrailResult.failure(
+            "Invalid JSON arguments: " + e.getMessage());
+
+    } catch (ClassCastException e) {
+        // Type mismatch (e.g., string instead of integer)
+        return ToolInputGuardrailResult.failure(
+            "Invalid parameter type: " + e.getMessage());
+
+    } catch (Exception e) {
+        // Unexpected error - use fatal failure to stop execution
+        return ToolInputGuardrailResult.failure(
+            "Validation error: " + e.getMessage(), e);
+    }
+}
+----
+
+[IMPORTANT]
+====
+**Fatal vs Non-Fatal Failures:**
+
+* `failure(message)` - Non-fatal: error returned to LLM as tool result
+* `failure(message, cause)` - Fatal: throws exception, stops execution completely
+
+Use fatal failures only for critical errors that indicate bugs or system failures, not for validation errors that the LLM can potentially correct.
+====
+
+=== Best Practices
+
+Follow these guidelines when implementing guardrails:
+
+[source,java]
+----
+@ApplicationScoped
+public class WellDesignedGuardrail implements ToolInputGuardrail {
+
+    @Override
+    public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+        try {
+            // 1. Use argumentsAsJson() for easy parameter access
+            JsonObject args = request.argumentsAsJson();
+
+            // 2. Provide clear, actionable error messages for the LLM
+            int age = args.getInteger("age", -1);
+            if (age < 0) {
+                return ToolInputGuardrailResult.failure(
+                    "Parameter 'age' must be a non-negative integer. Got: " + age
+                );
+            }
+
+            // 3. Check required parameters exist
+            if (!args.containsKey("email")) {
+                return ToolInputGuardrailResult.failure(
+                    "Missing required parameter: 'email'"
+                );
+            }
+
+            // 4. Validate formats with helpful messages
+            String email = args.getString("email");
+            if (!isValidEmail(email)) {
+                return ToolInputGuardrailResult.failure(
+                    "Invalid email format: '" + email + "'. " +
+                    "Expected format: user@example.com"
+                );
+            }
+
+            return ToolInputGuardrailResult.success();
+
+        } catch (DecodeException e) {
+            // 5. Handle JSON parsing errors gracefully
+            return ToolInputGuardrailResult.failure(
+                "Arguments must be valid JSON. " + e.getMessage()
+            );
+        }
+    }
+}
+----
+
+== Testing
+
+Test guardrails as regular CDI beans:
+
+[source,java]
+----
+@QuarkusTest
+public class EmailValidatorTest {
+
+    @Inject
+    EmailFormatValidator validator;
+
+    @Test
+    public void testValidEmail() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+            .id("1")
+            .name("sendEmail")
+            .arguments("{\"to\":\"user@example.com\"}")
+            .build();
+
+        ToolInputGuardrailRequest guardrailRequest =
+            new ToolInputGuardrailRequest(request, null, null);
+
+        ToolInputGuardrailResult result = validator.validate(guardrailRequest);
+
+        assertThat(result.isSuccess()).isTrue();
+    }
+
+    @Test
+    public void testInvalidEmail() {
+        ToolExecutionRequest request = ToolExecutionRequest.builder()
+            .id("1")
+            .name("sendEmail")
+            .arguments("{\"to\":\"invalid-email\"}")
+            .build();
+
+        ToolInputGuardrailRequest guardrailRequest =
+            new ToolInputGuardrailRequest(request, null, null);
+
+        ToolInputGuardrailResult result = validator.validate(guardrailRequest);
+
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.errorMessage()).contains("Invalid email");
+    }
+}
+----
+
+== Going Further
+
+[.lead]
+* xref:function-calling.adoc[Function Calling] – Learn how to declare and use tools in AI services
+* xref:guardrails.adoc[LLM Guardrails] – Understand guardrails for prompts and responses
+* xref:ai-services.adoc[AI Services Reference] – Complete AI service configuration guide

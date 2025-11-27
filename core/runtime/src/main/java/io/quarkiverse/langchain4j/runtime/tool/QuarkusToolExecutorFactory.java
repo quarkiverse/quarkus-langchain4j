@@ -29,6 +29,7 @@ public class QuarkusToolExecutorFactory {
 
         return new QuarkusToolExecutor(context) {
             final QuarkusToolExecutor originalTool = new QuarkusToolExecutor(context);
+            final QuarkusToolExecutor executor = this;
 
             @Override
             public ToolExecutionResult executeWithContext(ToolExecutionRequest toolExecutionRequest,
@@ -41,7 +42,8 @@ public class QuarkusToolExecutorFactory {
                     var currentFun = funRef.get();
                     BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> newFunction = (
                             toolExecutionRequest1,
-                            invocationContext1) -> wrapper.wrap(toolExecutionRequest1, invocationContext1, currentFun);
+                            invocationContext1) -> wrapper.wrap(toolExecutionRequest1, invocationContext1, currentFun,
+                                    executor);
                     funRef.set(newFunction);
                 }
 

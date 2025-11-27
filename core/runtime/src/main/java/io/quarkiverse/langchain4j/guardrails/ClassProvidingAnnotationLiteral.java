@@ -41,15 +41,15 @@ public abstract sealed class ClassProvidingAnnotationLiteral<A extends Annotatio
         return getClasses();
     }
 
-    private boolean neesCacheInitialization() {
+    private boolean needsCacheInitialization() {
         return (this.guardrailClasses == null) || this.guardrailClasses.size() != this.classNames.size();
     }
 
     private void checkClassCache() {
         // Using double-checked locking pattern for cache initialization
-        if (neesCacheInitialization()) {
+        if (needsCacheInitialization()) {
             synchronized (this) {
-                if (neesCacheInitialization()) {
+                if (needsCacheInitialization()) {
                     var classLoader = Thread.currentThread().getContextClassLoader();
                     this.guardrailClasses = this.classNames.stream()
                             .map(className -> {

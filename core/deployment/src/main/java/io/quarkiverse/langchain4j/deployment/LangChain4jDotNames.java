@@ -40,6 +40,10 @@ import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.SeedMemory;
 import io.quarkiverse.langchain4j.VideoUrl;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatEvent;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContextQualifier;
 
@@ -54,6 +58,10 @@ public class LangChain4jDotNames {
     public static final DotName TOKEN_STREAM = DotName.createSimple(TokenStream.class);
     public static final DotName OUTPUT_GUARDRAILS = DotName.createSimple(OutputGuardrails.class);
     public static final DotName INPUT_GUARDRAILS = DotName.createSimple(InputGuardrails.class);
+    public static final DotName TOOL_OUTPUT_GUARDRAILS = DotName.createSimple(ToolOutputGuardrails.class);
+    public static final DotName TOOL_INPUT_GUARDRAILS = DotName.createSimple(ToolInputGuardrails.class);
+    public static final DotName TOOL_OUTPUT_GUARDRAIL = DotName.createSimple(ToolOutputGuardrail.class);
+    public static final DotName TOOL_INPUT_GUARDRAIL = DotName.createSimple(ToolInputGuardrail.class);
     static final DotName AI_SERVICES = DotName.createSimple(AiServices.class);
     static final DotName CREATED_AWARE = DotName.createSimple(CreatedAware.class);
     public static final DotName SYSTEM_MESSAGE = DotName.createSimple(SystemMessage.class);

@@ -32,7 +32,7 @@ public class ToolSpanWrapper implements QuarkusToolExecutor.Wrapper {
 
     @Override
     public ToolExecutionResult wrap(ToolExecutionRequest toolExecutionRequest, InvocationContext invocationContext,
-            BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun) {
+            BiFunction<ToolExecutionRequest, InvocationContext, ToolExecutionResult> fun, QuarkusToolExecutor executor) {
 
         // from https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md#execute-tool-span
         Span span = tracer.spanBuilder("langchain4j.tools." + toolExecutionRequest.name())
