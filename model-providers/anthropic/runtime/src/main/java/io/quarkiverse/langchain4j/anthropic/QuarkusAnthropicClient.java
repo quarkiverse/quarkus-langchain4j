@@ -168,6 +168,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final List<String> thinkingSignatures = synchronizedList(new ArrayList<>());
         private final List<String> redactedThinkings = synchronizedList(new ArrayList<>());
         private final AnthropicCreateMessageOptions options;
+        private volatile boolean completionHandled = false;
 
         private AnthropicStreamingSubscriber(StreamingChatResponseHandler handler, AnthropicCreateMessageOptions options) {
             this.handler = handler;
@@ -341,6 +342,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleMessageStop() {
+            completionHandled = true;
             ChatResponse response = build();
             handler.onCompleteResponse(response);
         }
@@ -390,11 +392,17 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         @Override
         public void onFailure(Throwable failure) {
+            completionHandled = true;
             handler.onError(failure);
         }
 
         @Override
         public void onCompletion() {
+            if (!completionHandled) {
+                handler.onError(new RuntimeException(
+                        "Stream terminated unexpectedly without message_stop event. " +
+                                "This may indicate a rate limit (429), server overload (529), or connection issue."));
+            }
         }
 
         @Override
