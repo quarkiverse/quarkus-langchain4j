@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -33,11 +32,7 @@ public class InvalidOutputKeyTest {
 
     public interface StoryCreator {
 
-        @SequenceAgent(outputKey = "story-final", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputKey = "story-initial"),
-                @SubAgent(type = AudienceEditor.class, outputKey = "story-edited"),
-                @SubAgent(type = StyleEditor.class, outputKey = "story-final")
-        })
+        @SequenceAgent(outputKey = "story-final", subAgents = { CreativeWriter.class, AudienceEditor.class, StyleEditor.class })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
     }
 
@@ -49,7 +44,7 @@ public class InvalidOutputKeyTest {
                 Return only the story and nothing else.
                 The topic is {{topic}}.
                 """)
-        @Agent("Generate a story based on the given topic")
+        @Agent(description = "Generate a story based on the given topic", outputKey = "story-initial")
         String generateStory(@V("topic") String topic);
     }
 
@@ -61,7 +56,7 @@ public class InvalidOutputKeyTest {
                 Return only the story and nothing else.
                 The story is "{{story}}".
                 """)
-        @Agent("Edit a story to better fit a given audience")
+        @Agent(description = "Edit a story to better fit a given audience", outputKey = "story-edited")
         String editStory(@V("story") String story, @V("audience") String audience);
     }
 
@@ -73,7 +68,7 @@ public class InvalidOutputKeyTest {
                 Return only the story and nothing else.
                 The story is "{{story}}".
                 """)
-        @Agent("Edit a story to better fit a given style")
+        @Agent(description = "Edit a story to better fit a given style", outputKey = "story-final")
         String editStory(@V("story") String story, @V("style") String style);
     }
 

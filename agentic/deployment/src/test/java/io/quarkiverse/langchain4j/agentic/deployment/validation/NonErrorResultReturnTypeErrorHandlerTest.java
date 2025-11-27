@@ -13,7 +13,6 @@ import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.agent.MissingArgumentException;
 import dev.langchain4j.agentic.declarative.ErrorHandler;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
@@ -36,11 +35,8 @@ public class NonErrorResultReturnTypeErrorHandlerTest {
 
     public interface StoryCreatorWithErrorRecovery {
 
-        @SequenceAgent(outputKey = "story", subAgents = {
-                @SubAgent(type = Agents.CreativeWriter.class, outputKey = "story"),
-                @SubAgent(type = Agents.AudienceEditor.class, outputKey = "story"),
-                @SubAgent(type = Agents.StyleEditor.class, outputKey = "story")
-        })
+        @SequenceAgent(outputKey = "story", subAgents = { Agents.CreativeWriter.class, Agents.AudienceEditor.class,
+                Agents.StyleEditor.class })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
 
         @ErrorHandler

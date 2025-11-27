@@ -16,10 +16,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agentic.declarative.Output;
 import dev.langchain4j.agentic.declarative.ParallelAgent;
 import dev.langchain4j.agentic.declarative.ParallelExecutor;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
-import io.quarkiverse.langchain4j.agentic.deployment.Agents;
+import io.quarkiverse.langchain4j.agentic.deployment.ParallelAgents;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class NonEmptyParametersParallelExecutorTest {
@@ -27,7 +26,7 @@ public class NonEmptyParametersParallelExecutorTest {
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
-                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(Agents.class, EveningPlannerAgent.class))
+                    () -> ShrinkWrap.create(JavaArchive.class).addClasses(ParallelAgents.class, EveningPlannerAgent.class))
             .assertException(
                     throwable -> Assertions.assertThat(throwable).isInstanceOf(IllegalConfigurationException.class)
                             .hasMessageContaining("any method parameters"));
@@ -39,11 +38,8 @@ public class NonEmptyParametersParallelExecutorTest {
 
     public interface EveningPlannerAgent {
 
-        @ParallelAgent(outputKey = "plans", subAgents = {
-                @SubAgent(type = Agents.FoodExpert.class, outputKey = "meals"),
-                @SubAgent(type = Agents.MovieExpert.class, outputKey = "movies")
-        })
-        List<Agents.EveningPlan> plan(@V("mood") String mood);
+        @ParallelAgent(outputKey = "plans", subAgents = { ParallelAgents.FoodExpert.class, ParallelAgents.MovieExpert.class })
+        List<ParallelAgents.EveningPlan> plan(@V("mood") String mood);
 
         @ParallelExecutor
         static Executor executor(Object whatever) {
@@ -51,13 +47,13 @@ public class NonEmptyParametersParallelExecutorTest {
         }
 
         @Output
-        static List<Agents.EveningPlan> createPlans(@V("movies") List<String> movies, @V("meals") List<String> meals) {
-            List<Agents.EveningPlan> moviesAndMeals = new ArrayList<>();
+        static List<ParallelAgents.EveningPlan> createPlans(@V("movies") List<String> movies, @V("meals") List<String> meals) {
+            List<ParallelAgents.EveningPlan> moviesAndMeals = new ArrayList<>();
             for (int i = 0; i < movies.size(); i++) {
                 if (i >= meals.size()) {
                     break;
                 }
-                moviesAndMeals.add(new Agents.EveningPlan(movies.get(i), meals.get(i)));
+                moviesAndMeals.add(new ParallelAgents.EveningPlan(movies.get(i), meals.get(i)));
             }
             return moviesAndMeals;
         }
