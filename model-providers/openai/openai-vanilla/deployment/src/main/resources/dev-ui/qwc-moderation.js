@@ -47,8 +47,8 @@ export class QwcModerationModels extends LitElement {
         `;
 
     supportedModels = [
-        { label: "text-moderation-latest",  value: "text-moderation-latest"},
-        { label: "text-moderation-stable",  value: "text-moderation-stable"}]
+        { label: "omni-moderation-latest",  value: "omni-moderation-latest"}
+    ]
 
     static properties = {
         _moderationResponse: {state: true},
