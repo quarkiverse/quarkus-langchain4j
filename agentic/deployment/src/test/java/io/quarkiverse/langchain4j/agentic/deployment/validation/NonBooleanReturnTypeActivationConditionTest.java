@@ -1,6 +1,5 @@
 package io.quarkiverse.langchain4j.agentic.deployment.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.assertj.core.api.Assertions;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.declarative.ActivationCondition;
 import dev.langchain4j.agentic.declarative.ConditionalAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
@@ -34,11 +32,8 @@ public class NonBooleanReturnTypeActivationConditionTest {
 
     public interface ExpertsAgent {
 
-        @ConditionalAgent(outputKey = "response", subAgents = {
-                @SubAgent(type = Agents.MedicalExpert.class, outputKey = "response"),
-                @SubAgent(type = Agents.TechnicalExpert.class, outputKey = "response"),
-                @SubAgent(type = Agents.LegalExpert.class, outputKey = "response")
-        })
+        @ConditionalAgent(outputKey = "response", subAgents = { Agents.MedicalExpert.class, Agents.TechnicalExpert.class,
+                Agents.LegalExpert.class })
         String askExpert(@V("request") String request);
 
         @ActivationCondition(Agents.MedicalExpert.class)

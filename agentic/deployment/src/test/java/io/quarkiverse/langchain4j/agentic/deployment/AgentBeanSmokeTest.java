@@ -19,7 +19,7 @@ public class AgentBeanSmokeTest extends OpenAiBaseTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(
                     () -> ShrinkWrap.create(JavaArchive.class)
-                            .addClasses(Agents.class))
+                            .addClasses(Agents.class, ParallelAgents.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "whatever")
             .overrideRuntimeConfigKey("quarkus.langchain4j.openai.base-url",
                     WiremockAware.wiremockUrlForConfig("/v1"));
@@ -34,7 +34,7 @@ public class AgentBeanSmokeTest extends OpenAiBaseTest {
     Agents.SupervisorStoryCreator supervisorStoryCreator;
 
     @Inject
-    Agents.EveningPlannerAgent eveningPlannerAgent;
+    ParallelAgents.EveningPlannerAgent eveningPlannerAgent;
 
     @Inject
     Agents.MedicalExpertWithMemory medicalExpertWithMemory;

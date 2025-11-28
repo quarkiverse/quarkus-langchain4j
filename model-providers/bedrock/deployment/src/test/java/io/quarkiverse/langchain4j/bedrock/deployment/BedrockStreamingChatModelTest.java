@@ -25,9 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
+import dev.langchain4j.model.bedrock.BedrockTokenUsage;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.output.FinishReason;
-import dev.langchain4j.model.output.TokenUsage;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
@@ -102,7 +102,10 @@ class BedrockStreamingChatModelTest extends BedrockTestBase {
         assertThat(response.aiMessage().text()).isEqualTo("Hello, how are you today?");
         assertThat(response.metadata().finishReason()).isEqualTo(FinishReason.STOP);
         assertThat(response.metadata().modelName()).isEqualTo("amazon.titan-text-express-v1");
-        assertThat(response.metadata().tokenUsage()).isEqualTo(new TokenUsage(10, 17));
+        assertThat(response.metadata().tokenUsage()).isEqualTo(BedrockTokenUsage.builder()
+                .inputTokenCount(10)
+                .outputTokenCount(17)
+                .build());
         assertThat(listener.onRequestCount()).isEqualTo(1);
         assertThat(listener.onResponseCount()).isEqualTo(1);
         assertThat(listener.onErrorCount()).isEqualTo(0);

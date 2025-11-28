@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
 import dev.langchain4j.service.SystemMessage;
@@ -65,11 +64,8 @@ public class SupervisorAgentShouldWorkTest {
 
     public interface SupervisorBanker {
 
-        @SupervisorAgent(responseStrategy = SupervisorResponseStrategy.SUMMARY, subAgents = {
-                @SubAgent(type = WithdrawAgent.class),
-                @SubAgent(type = CreditAgent.class),
-                @SubAgent(type = ExchangeAgent.class)
-        })
+        @SupervisorAgent(responseStrategy = SupervisorResponseStrategy.SUMMARY, subAgents = { WithdrawAgent.class,
+                CreditAgent.class, ExchangeAgent.class })
         String invoke(@V("request") String request);
     }
 }

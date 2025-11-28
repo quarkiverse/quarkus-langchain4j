@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
 import dev.langchain4j.service.V;
@@ -59,15 +58,13 @@ public class AgentMcpClientTest extends OpenAiBaseTest {
 
     public interface Sequence {
 
-        @SequenceAgent(outputKey = "toolsList", subAgents = {
-                @SubAgent(type = AgentWithMcpTools.class, outputKey = "toolsList")
-        })
+        @SequenceAgent(outputKey = "toolsList", subAgents = { AgentWithMcpTools.class })
         String toolsList(@V("userMessage") String userMessage);
     }
 
     public interface AgentWithMcpTools {
 
-        @Agent
+        @Agent(outputKey = "toolsList")
         @McpToolBox
         String toolsList(@V("userMessage") String userMessage);
     }

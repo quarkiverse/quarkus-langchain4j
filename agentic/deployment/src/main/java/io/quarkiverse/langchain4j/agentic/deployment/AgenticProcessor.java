@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -535,24 +536,25 @@ public class AgenticProcessor {
                     if (subAgentsValue == null) {
                         continue;
                     }
-                    for (AnnotationInstance subAgentInstance : subAgentsValue.asNestedArray()) {
-                        AnnotationValue outputKeyValue = subAgentInstance.value("outputKey");
-                        AnnotationValue typeValue = subAgentInstance.value("type");
-                        if ((outputKeyValue != null) && (typeValue != null)) {
-                            String outputKeyString = outputKeyValue.asString();
-                            DotName subAgentType = typeValue.asClass().name();
+                    for (Type subAgentType : subAgentsValue.asClassArray()) {
+                        // in order to determine the type associated with the outputKey, we need to look up
+                        // the interface and check the return key and type of (the single agent-related) method
 
-                            // in order to determine the type associated with the outputKey, we need to look up
-                            // the interface and check the return type of (the single agent-related) method
-
-                            List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType);
-                            if (subAgentMethods.size() != 1) {
-                                log.warn("Unable to determine type of outputKey '%s' for subagent with type '%s'"
-                                        .formatted(outputKeyString, subAgentType));
-                            } else {
-                                builder.addKeyType(outputKeyString,
-                                        determineAgentMethodReturnType(subAgentMethods.get(0).returnType()));
-                            }
+                        List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType.name());
+                        if (subAgentMethods.size() != 1) {
+                            log.warn("Unable to determine type of outputKey for subagent with type '%s'"
+                                    .formatted(subAgentType));
+                        } else {
+                            MethodInfo subAgentMethod = subAgentMethods.get(0);
+                            AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS.stream()
+                                    .map(ann -> subAgentMethod.annotation(ann))
+                                    .filter(Objects::nonNull)
+                                    .map(ann -> ann.value("outputKey"))
+                                    .filter(Objects::nonNull)
+                                    .map(key -> key.asString())
+                                    .findFirst()
+                                    .ifPresent(outputKeyString -> builder.addKeyType(outputKeyString,
+                                            determineAgentMethodReturnType(subAgentMethod.returnType())));
                         }
                     }
                 }
@@ -575,12 +577,8 @@ public class AgenticProcessor {
                 String parameterName = determineParameterName(pi);
                 builder.addSupervisedKeys(parameterName);
             });
-            for (AnnotationInstance subAgentInstance : subAgentsValue.asNestedArray()) {
-                AnnotationValue typeValue = subAgentInstance.value("type");
-                if (typeValue == null) {
-                    continue;
-                }
-                ifaceToAgentMethodsMap.getOrDefault(typeValue.asClass().name(), Collections.emptyList()).forEach(mi -> {
+            for (Type subAgentType : subAgentsValue.asClassArray()) {
+                ifaceToAgentMethodsMap.getOrDefault(subAgentType.name(), Collections.emptyList()).forEach(mi -> {
                     List<MethodParameterInfo> parameters = mi.parameters();
                     parameters.forEach(pi -> {
                         String parameterName = determineParameterName(pi);
@@ -649,6 +647,9 @@ public class AgenticProcessor {
                     }
                     Type parameterType = parameter.type();
                     if (AgenticLangChain4jDotNames.AGENTIC_SCOPE.equals(parameterType.name())) {
+                        continue;
+                    }
+                    if (parameter.annotation(AgenticLangChain4jDotNames.MEMORY_ID) != null) {
                         continue;
                     }
                     DotName expectedParameterTypeName = outputKeyBuildItem.getKeyToTypeMap().get(parameterName);

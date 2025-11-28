@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.LoopCounter;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
@@ -35,9 +34,7 @@ public class NonBooleanReturnTypeExitConditionTest {
     public interface StyleReviewLoopAgentWithCounter {
 
         @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputKey = "story", maxIterations = 5, subAgents = {
-                @SubAgent(type = Agents.StyleScorer.class, outputKey = "score"),
-                @SubAgent(type = Agents.StyleEditor.class, outputKey = "story")
-        })
+                Agents.StyleScorer.class, Agents.StyleEditor.class })
         String write(@V("story") String story);
 
         @ExitCondition(testExitAtLoopEnd = true)

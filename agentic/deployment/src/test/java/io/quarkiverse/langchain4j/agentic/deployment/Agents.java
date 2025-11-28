@@ -1,7 +1,5 @@
 package io.quarkiverse.langchain4j.agentic.deployment;
 
-import java.util.List;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -13,7 +11,6 @@ import dev.langchain4j.agentic.declarative.ChatModelSupplier;
 import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
-import dev.langchain4j.agentic.declarative.SubAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.declarative.SupervisorRequest;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
@@ -63,7 +60,7 @@ public class Agents {
                 Reply with only one of those words and nothing else.
                 The user request is: '{{request}}'.
                 """)
-        @Agent("Categorize a user request")
+        @Agent(description = "Categorize a user request", outputKey = "category")
         RequestCategory classify(@V("request") String request);
 
         @ChatModelSupplier
@@ -100,7 +97,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A medical expert")
-        @Agent("A medical expert")
+        @Agent(description = "A medical expert", outputKey = "response")
         String medical(@V("request") String request);
 
         @ChatModelSupplier
@@ -118,7 +115,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A medical expert")
-        @Agent("A medical expert")
+        @Agent(description = "A medical expert", outputKey = "response")
         String medical(@MemoryId String memoryId, @V("request") String request);
     }
 
@@ -130,7 +127,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A legal expert")
-        @Agent("A legal expert")
+        @Agent(description = "A legal expert", outputKey = "response")
         String legal(@V("request") String request);
     }
 
@@ -142,7 +139,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A legal expert")
-        @Agent("A legal expert")
+        @Agent(description = "A legal expert", outputKey = "response")
         String legal(@MemoryId String memoryId, @V("request") String request);
     }
 
@@ -154,7 +151,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A technical expert")
-        @Agent("A technical expert")
+        @Agent(description = "A technical expert", outputKey = "response")
         String technical(@V("request") String request);
     }
 
@@ -166,7 +163,7 @@ public class Agents {
                 The user request is {{request}}.
                 """)
         @Tool("A technical expert")
-        @Agent("A technical expert")
+        @Agent(description = "A technical expert", outputKey = "response")
         String technical(@MemoryId String memoryId, @V("request") String request);
     }
 
@@ -178,7 +175,7 @@ public class Agents {
                 Return only the story and nothing else.
                 The topic is {{topic}}.
                 """)
-        @Agent("Generate a story based on the given topic")
+        @Agent(description = "Generate a story based on the given topic", outputKey = "story")
         String generateStory(@V("topic") String topic);
 
         @ChatModelSupplier
@@ -200,7 +197,7 @@ public class Agents {
                 Return only the story and nothing else.
                 The story is "{{story}}".
                 """)
-        @Agent("Edit a story to better fit a given audience")
+        @Agent(description = "Edit a story to better fit a given audience", outputKey = "story")
         String editStory(@V("story") String story, @V("audience") String audience);
 
         @ChatModelSupplier
@@ -224,7 +221,7 @@ public class Agents {
                 Return only the story and nothing else.
                 The story is "{{story}}".
                 """)
-        @Agent("Edit a story to better fit a given style")
+        @Agent(description = "Edit a story to better fit a given style", outputKey = "story")
         String editStory(@V("story") String story, @V("style") String style);
 
         @ChatModelSupplier
@@ -256,7 +253,7 @@ public class Agents {
 
                 The story is: "{{story}}"
                 """)
-        @Agent("Score a story based on how well it aligns with a given style")
+        @Agent(description = "Score a story based on how well it aligns with a given style", outputKey = "score")
         double scoreStyle(@V("story") String story, @V("style") String style);
 
         @ChatModelSupplier
@@ -277,40 +274,6 @@ public class Agents {
         ResultWithAgenticScope<String> writeStoryWithStyle(@V("topic") String topic, @V("style") String style);
     }
 
-    public interface FoodExpert {
-
-        @UserMessage("""
-                You are a great evening planner.
-                Propose a list of 3 meals matching the given mood.
-                The mood is {{mood}}.
-                For each meal, just give the name of the meal.
-                Provide a list with the 3 items and nothing else.
-                """)
-        @Agent
-        List<String> findMeal(@V("mood") String mood);
-    }
-
-    public interface MovieExpert {
-
-        @UserMessage("""
-                You are a great evening planner.
-                Propose a list of 3 movies matching the given mood.
-                The mood is {{mood}}.
-                Provide a list with the 3 items and nothing else.
-                """)
-        @Agent
-        List<String> findMovie(@V("mood") String mood);
-    }
-
-    public record EveningPlan(String movie, String meal) {
-    }
-
-    public interface EveningPlannerAgent {
-
-        @Agent
-        List<EveningPlan> plan(@V("mood") String mood);
-    }
-
     @ApplicationScoped
     public static class NoneAiAgent {
 
@@ -328,20 +291,14 @@ public class Agents {
 
     public interface StoryCreator {
 
-        @SequenceAgent(outputKey = "story", subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
-                @SubAgent(type = AudienceEditor.class, outputKey = "story"),
-                @SubAgent(type = StyleEditor.class, outputKey = "story")
-        })
+        @SequenceAgent(outputKey = "story", subAgents = { CreativeWriter.class, AudienceEditor.class, StyleEditor.class })
         String write(@V("topic") String topic, @V("style") String style, @V("audience") String audience);
     }
 
     public interface StyleReviewLoopAgent {
 
         @LoopAgent(description = "Review the given story to ensure it aligns with the specified style", outputKey = "story", maxIterations = 5, subAgents = {
-                @SubAgent(type = StyleScorer.class, outputKey = "score"),
-                @SubAgent(type = StyleEditor.class, outputKey = "story")
-        })
+                StyleScorer.class, StyleEditor.class })
         String write(@V("story") String story);
 
         @ExitCondition
@@ -353,9 +310,7 @@ public class Agents {
     public interface SupervisorStoryCreator {
 
         @SupervisorAgent(outputKey = "story", responseStrategy = SupervisorResponseStrategy.LAST, subAgents = {
-                @SubAgent(type = CreativeWriter.class, outputKey = "story"),
-                @SubAgent(type = StyleReviewLoopAgent.class, outputKey = "story")
-        })
+                CreativeWriter.class, StyleReviewLoopAgent.class })
         ResultWithAgenticScope<String> write(@V("topic") String topic, @V("style") String style);
 
         @SupervisorRequest
