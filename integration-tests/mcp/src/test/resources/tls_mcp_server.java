@@ -1,6 +1,7 @@
 ///usr/bin/env jbang "$0" "$@" ; exit $?
 //DEPS io.quarkus:quarkus-bom:${quarkus.version:3.25.0}@pom
-//DEPS io.quarkiverse.mcp:quarkus-mcp-server-sse:1.4.0
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-sse:1.7.2
+//DEPS io.quarkiverse.mcp:quarkus-mcp-server-websocket:1.7.2
 //Q:CONFIG quarkus.mcp.server.client-logging.default-level=DEBUG
 
 import java.util.ArrayList;
