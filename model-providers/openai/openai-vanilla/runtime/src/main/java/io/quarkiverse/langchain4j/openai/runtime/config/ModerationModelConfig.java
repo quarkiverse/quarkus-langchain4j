@@ -12,7 +12,7 @@ public interface ModerationModelConfig {
     /**
      * Model name to use
      */
-    @WithDefault("text-moderation-latest")
+    @WithDefault("omni-moderation-latest")
     String modelName();
 
     /**
