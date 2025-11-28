@@ -35,6 +35,10 @@ import io.quarkus.runtime.metrics.MetricsFactory;
 public class GuardrailObservabilityProcessor {
     private static final Logger LOG = Logger.getLogger(GuardrailObservabilityProcessor.class);
 
+    /**
+     * @deprecated These metrics are now collected via the GuardrailMetricsObserver bean.
+     */
+    @Deprecated
     @BuildStep
     void transformWithMetrics(Optional<MetricsCapabilityBuildItem> metricsCapability,
             CombinedIndexBuildItem indexBuildItem,
@@ -48,11 +52,11 @@ public class GuardrailObservabilityProcessor {
                                     AnnotationInstance.builder(MICROMETER_COUNTED)
                                             .add("value", "guardrail.invoked")
                                             .add("description",
-                                                    "Measures the number of times this guardrail was invoked")
+                                                    "Measures the number of times this guardrail was invoked (deprecated)")
                                             .build(),
                                     AnnotationInstance.builder(MICROMETER_TIMED)
                                             .add("value", "guardrail.timed")
-                                            .add("description", "Measures the runtime of this guardrail")
+                                            .add("description", "Measures the runtime of this guardrail (deprecated)")
                                             .add("percentiles", new double[] { 0.75, 0.95, 0.99 })
                                             .add("histogram", true)
                                             .build()),
