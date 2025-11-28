@@ -725,7 +725,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_MODERATION_MODEL_MODEL_NAME
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-moderation-latest+++`
+|`+++omni-moderation-latest+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-moderation-model-log-requests[`quarkus.langchain4j.openai.moderation-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1656,7 +1656,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__MODERATION_MOD
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++text-moderation-latest+++`
+|`+++omni-moderation-latest+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-moderation-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-moderation-model-log-requests[`quarkus.langchain4j.openai."model-name".moderation-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]

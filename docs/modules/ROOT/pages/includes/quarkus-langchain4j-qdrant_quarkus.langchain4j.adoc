@@ -47,7 +47,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_QDRANT_DEVSERVICES_QDRANT_IMAGE_NA
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++docker.io/qdrant/qdrant:v1.8.3-unprivileged+++`
+|`+++docker.io/qdrant/qdrant:v1.16-unprivileged+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port]] [.property-path]##link:#quarkus-langchain4j-qdrant_quarkus-langchain4j-qdrant-devservices-port[`quarkus.langchain4j.qdrant.devservices.port`]##
 ifdef::add-copy-button-to-config-props[]
