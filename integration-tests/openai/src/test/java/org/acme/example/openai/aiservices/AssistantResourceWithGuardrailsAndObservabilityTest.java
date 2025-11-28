@@ -9,15 +9,8 @@ import java.time.Duration;
 import jakarta.inject.Inject;
 
 import org.acme.example.openai.TestUtils;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractIGImplementingValidateWithParams;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractIGImplementingValidateWithUserMessage;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractOGImplementingValidateWithAiMessage;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.AbstractOGImplementingValidateWithParams;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.IGDirectlyImplementInputGuardrailWithParams;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.IGDirectlyImplementInputGuardrailWithUserMessage;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.OGDirectlyImplementOutputGuardrailWithAiMessage;
-import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.OGDirectlyImplementOutputGuardrailWithParams;
-import org.junit.jupiter.api.BeforeAll;
+import org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.micrometer.core.instrument.Counter;
@@ -32,14 +25,120 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
     @Inject
     MeterRegistry registry;
 
-    @BeforeAll
-    static void addSimpleRegistry() {
+    @BeforeEach
+    void addSimpleRegistry() {
         Metrics.globalRegistry.add(new SimpleMeterRegistry());
         Metrics.globalRegistry.clear();
     }
 
     @Test
     void guardrailMetricsAvailable() {
+        get("assistant-with-guardrails-observability").then()
+                .statusCode(200)
+                .body(TestUtils.containsStringOrMock("test"));
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> assertThat(
+                        registry
+                                .find("guardrail.invoked")
+                                .tag("operation", "chat")
+                                .tag("aiservice",
+                                        "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$Assistant")
+                                .counters())
+                        .hasSize(8)
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(Counter::count).isEqualTo(1.0))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("outcome"))
+                                .isEqualTo("success"))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("guardrail.type"))
+                                .isIn("input", "output"))
+                        .map(c -> c.getId().getTag("guardrail"))
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithUserMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithUserMessage"));
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> assertThat(
+                        registry
+                                .find("guardrail.timed")
+                                .tag("operation", "chat")
+                                .tag("aiservice",
+                                        "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$Assistant")
+                                .timers())
+                        .hasSize(8)
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(Timer::count).isEqualTo(1L))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("outcome"))
+                                .isEqualTo("success"))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("guardrail.type"))
+                                .isIn("input", "output"))
+                        .map(c -> c.getId().getTag("guardrail"))
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithUserMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithUserMessage"));
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> assertThat(
+                        registry
+                                .find("guardrail.timed")
+                                .tag("operation", "chat")
+                                .tag("aiservice",
+                                        "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$Assistant")
+                                .timers())
+                        .hasSize(8)
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(Timer::count).isEqualTo(1L))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("outcome"))
+                                .isEqualTo("success"))
+                        .allSatisfy(c -> assertThat(c).isNotNull().extracting(x -> x.getId().getTag("guardrail.type"))
+                                .isIn("input", "output"))
+                        .map(c -> c.getId().getTag("guardrail"))
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithUserMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithAiMessage")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGExtendingValidateWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$OGDirectlyImplementOutputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGDirectlyImplementInputGuardrailWithParams")
+                        .containsOnlyOnce(
+                                "org.acme.example.openai.aiservices.AssistantResourceWithGuardrailsAndObservability$IGExtendingValidateWithUserMessage"));
+
+    }
+
+    @Test
+    void deprecatedGuardrailMetricsAvailable() {
         get("assistant-with-guardrails-observability").then()
                 .statusCode(200)
                 .body(TestUtils.containsStringOrMock("test"));
@@ -58,7 +157,7 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
                                         Counter::count,
                                         ct -> ct.getId().getDescription())
                                 .containsExactly(
-                                        1.0, "Measures the number of times this guardrail was invoked"))
+                                        1.0, "Measures the number of times this guardrail was invoked (deprecated)"))
                         .map(c -> c.getId().getTag("class"))
                         .containsOnlyOnce(AbstractIGImplementingValidateWithUserMessage.class.getName())
                         .containsOnlyOnce(IGDirectlyImplementInputGuardrailWithParams.class.getName())
@@ -82,7 +181,7 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
                                 .extracting(
                                         Timer::count,
                                         ti -> ti.getId().getDescription())
-                                .containsExactly(1L, "Measures the runtime of this guardrail"))
+                                .containsExactly(1L, "Measures the runtime of this guardrail (deprecated)"))
                         .map(c -> c.getId().getTag("class"))
                         .containsOnlyOnce(AbstractIGImplementingValidateWithUserMessage.class.getName())
                         .containsOnlyOnce(IGDirectlyImplementInputGuardrailWithParams.class.getName())
@@ -106,7 +205,7 @@ class AssistantResourceWithGuardrailsAndObservabilityTest {
                                 .extracting(
                                         Timer::count,
                                         ti -> ti.getId().getDescription())
-                                .containsExactly(1L, "Measures the runtime of this guardrail"))
+                                .containsExactly(1L, "Measures the runtime of this guardrail (deprecated)"))
                         .map(c -> c.getId().getTag("class"))
                         .containsOnlyOnce(AbstractIGImplementingValidateWithUserMessage.class.getName())
                         .containsOnlyOnce(IGDirectlyImplementInputGuardrailWithParams.class.getName())
