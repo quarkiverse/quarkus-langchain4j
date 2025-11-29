@@ -41,8 +41,8 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
         }
         String name = s.name();
         if (name == null) {
-            log.warn("Received event with null name");
-            return;
+            log.debug("Received event with null name, default it to 'message'");
+            name = "message";
         }
         String data = s.data();
         if (name.equals("message")) {
