@@ -8,7 +8,6 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.rag.content.Content;
-import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.tool.ToolExecutor;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Multi;
@@ -52,22 +51,32 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
     @Override
     public void subscribe(MultiSubscriber<? super ChatEvent> subscriber) {
         UnicastProcessor<ChatEvent> processor = UnicastProcessor.create();
-        processor.subscribe(subscriber);
 
-        createTokenStream(processor);
-    }
-
-    private void createTokenStream(UnicastProcessor<ChatEvent> processor) {
-        Context ctxt = null;
+        // Create context once, used for both stream creation and execution
+        Context vertxContext = null;
         if (switchToWorkerThreadForToolExecution || isCallerRunningOnWorkerThread) {
-            // we create or retrieve the current context, to use `executeBlocking` when required.
-            ctxt = VertxContext.getOrCreateDuplicatedContext();
+            vertxContext = VertxContext.getOrCreateDuplicatedContext();
         }
 
-        var stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
-                toolsExecutors, contents, context, invocationContext, memoryId, ctxt, switchToWorkerThreadForToolExecution,
-                isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs);
-        TokenStream tokenStream = stream
+        // Create the token stream first so we can capture the reference
+        QuarkusAiServiceTokenStream stream = createTokenStream(processor, vertxContext);
+
+        // Wire cancellation: when the Multi subscription is cancelled, cancel the underlying HTTP stream
+        Multi<ChatEvent> cancellableMulti = processor.onCancellation().invoke(() -> {
+            stream.getStreamingHandle().cancel();
+        });
+
+        cancellableMulti.subscribe(subscriber);
+
+        // Start the stream (fires the HTTP request)
+        startTokenStream(stream, vertxContext);
+    }
+
+    private QuarkusAiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor, Context vertxContext) {
+        QuarkusAiServiceTokenStream stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
+                toolsExecutors, contents, context, invocationContext, memoryId, vertxContext,
+                switchToWorkerThreadForToolExecution, isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs);
+        stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
                 .onPartialThinking(thinking -> processor.onNext(new ChatEvent.PartialThinkingEvent(thinking.text())))
                 .onCompleteResponse(message -> {
@@ -80,17 +89,21 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
                         beforeExecution -> processor.onNext(new ChatEvent.BeforeToolExecutionEvent(beforeExecution.request())))
                 .onToolExecuted(execution -> processor.onNext(new ChatEvent.ToolExecutedEvent(execution)))
                 .onError(processor::onError);
+        return stream;
+    }
+
+    private void startTokenStream(QuarkusAiServiceTokenStream stream, Context vertxContext) {
         // This is equivalent to "run subscription on worker thread"
         if (switchToWorkerThreadForToolExecution && Context.isOnEventLoopThread()) {
-            ctxt.executeBlocking(new Callable<Void>() {
+            vertxContext.executeBlocking(new Callable<Void>() {
                 @Override
                 public Void call() {
-                    tokenStream.start();
+                    stream.start();
                     return null;
                 }
             });
         } else {
-            tokenStream.start();
+            stream.start();
         }
     }
 }
