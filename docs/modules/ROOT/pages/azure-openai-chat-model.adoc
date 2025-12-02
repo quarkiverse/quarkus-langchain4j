@@ -97,4 +97,6 @@ import jakarta.inject.Inject;
 @Inject @ModelName("some-name") ChatModel chatModel;
 ----
 
+== Advanced usage
 
+Please refer to https://docs.quarkiverse.io/quarkus-langchain4j/dev/openai-chat-model.html#_advanced_usage[Open AI].
