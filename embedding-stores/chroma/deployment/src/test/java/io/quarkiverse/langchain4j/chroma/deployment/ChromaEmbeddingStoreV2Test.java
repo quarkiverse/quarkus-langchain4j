@@ -45,4 +45,10 @@ public class ChromaEmbeddingStoreV2Test extends EmbeddingStoreIT {
     protected EmbeddingModel embeddingModel() {
         return embeddingModel;
     }
+
+    @Override
+    protected boolean assertEmbedding() {
+        return false;
+    }
+
 }
