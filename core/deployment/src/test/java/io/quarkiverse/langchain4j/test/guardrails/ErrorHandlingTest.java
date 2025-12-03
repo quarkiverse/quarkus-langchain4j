@@ -98,7 +98,7 @@ public class ErrorHandlingTest {
     @ActivateRequestContext
     void testInputGuardrail_throwsNullPointerException() {
         assertThatThrownBy(() -> aiService.chat("test", "nullPointerTool - anything"))
-                .isInstanceOf(NullPointerException.class)
+                .isInstanceOf(ToolGuardrailException.class)
                 .hasMessageContaining("null");
 
         assertThat(NullPointerExceptionGuardrail.executionCount).isEqualTo(1);

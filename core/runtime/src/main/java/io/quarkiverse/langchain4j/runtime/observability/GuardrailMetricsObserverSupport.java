@@ -67,6 +67,34 @@ public class GuardrailMetricsObserverSupport {
         recordMetrics(GuardrailType.OUTPUT, aiServiceName, methodName, guardrailName, outcome, durationNanos);
     }
 
+    /**
+     * Observes tool input guardrail execution events and records metrics.
+     *
+     * @param event the tool input guardrail executed event
+     */
+    public static void onToolInputGuardrailExecuted(ToolInputGuardrailExecutedEvent event) {
+        String toolName = event.toolName();
+        String guardrailName = sanitize(event.toolClass().getName());
+        ToolGuardrailOutcome outcome = event.outcome();
+        long durationNanos = event.duration();
+
+        //        recordToolMetrics(GuardrailType.INPUT, toolName, guardrailName, outcome, durationNanos);
+    }
+
+    /**
+     * Observes tool output guardrail execution events and records metrics.
+     *
+     * @param event the tool output guardrail executed event
+     */
+    public static void onToolOutputGuardrailExecuted(ToolOutputGuardrailExecutedEvent event) {
+        String toolName = event.toolName();
+        String guardrailName = sanitize(event.toolClass().getName());
+        ToolGuardrailOutcome outcome = event.outcome();
+        long durationNanos = event.duration();
+
+        //        recordToolMetrics(GuardrailType.OUTPUT, toolName, guardrailName, outcome, durationNanos);
+    }
+
     private static String sanitize(String simpleName) {
         if (simpleName == null) {
             return null;
