@@ -563,14 +563,14 @@ public class MoreRealWorldToolGuardrailsTest {
 
             // Check if user is authenticated
             if (user == null) {
-                return ToolInputGuardrailResult.failure(
+                return ToolInputGuardrailResult.fatal(
                         "Authentication required. Please log in to use this tool.",
                         new SecurityException("Unauthenticated access attempt"));
             }
 
             // Check if user has required role
             if (!ADMIN_USERS.contains(user)) {
-                return ToolInputGuardrailResult.failure(
+                return ToolInputGuardrailResult.fatal(
                         "Insufficient permissions. Administrator role required.",
                         new SecurityException("Unauthorized access attempt by user: " + user));
             }

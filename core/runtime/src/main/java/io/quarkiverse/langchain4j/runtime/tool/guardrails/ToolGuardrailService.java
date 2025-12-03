@@ -9,7 +9,17 @@ import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.service.tool.ToolExecutionResult;
-import io.quarkiverse.langchain4j.guardrails.*;
+import io.quarkiverse.langchain4j.guardrails.ToolGuardrailException;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.ToolInvocationContext;
+import io.quarkiverse.langchain4j.guardrails.ToolMetadata;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailRequest;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 
 /**
@@ -165,7 +175,12 @@ public class ToolGuardrailService {
                     toolMetadata,
                     context);
 
-            ToolOutputGuardrailResult guardrailResult = guardrail.validate(guardrailRequest);
+            ToolOutputGuardrailResult guardrailResult;
+            try {
+                guardrailResult = guardrail.validate(guardrailRequest);
+            } catch (Exception e) {
+                guardrailResult = ToolOutputGuardrailResult.fatal(e);
+            }
 
             if (!guardrailResult.isSuccess()) {
                 return handleOutputGuardrailFailure(guardrailResult, guardrailClass, request.name());
@@ -236,11 +251,11 @@ public class ToolGuardrailService {
                 ? result.errorMessage()
                 : "Input validation failed";
 
-        if (result.cause() != null) {
+        if (result.isFatalFailure()) {
             // Fatal failure - throw exception
             log.errorv("Input guardrail {0} failed fatally for tool {1}: {2}",
                     guardrailClass.getSimpleName(), toolName, errorMessage);
-            throw new ToolGuardrailException(errorMessage, result.cause());
+            throw new ToolGuardrailException(errorMessage, result.cause(), true);
         }
 
         // Non-fatal failure - this will be caught by the wrapper and converted to a ToolExecutionResult
@@ -266,11 +281,11 @@ public class ToolGuardrailService {
                 ? result.errorMessage()
                 : "Output validation failed";
 
-        if (result.cause() != null) {
+        if (result.isFatalFailure()) {
             // Fatal failure - throw exception
             log.errorv("Output guardrail {0} failed fatally for tool {1}: {2}",
                     guardrailClass.getSimpleName(), toolName, errorMessage);
-            throw new ToolGuardrailException(errorMessage, result.cause());
+            throw new ToolGuardrailException(errorMessage, result.cause(), true);
         }
 
         // Non-fatal failure - return error as tool result

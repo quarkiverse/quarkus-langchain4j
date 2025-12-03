@@ -324,7 +324,7 @@ public class ToolInputGuardrailsExecutionTest {
         @Override
         public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
             executionCount++;
-            return ToolInputGuardrailResult.failure(
+            return ToolInputGuardrailResult.fatal(
                     "Fatal validation error",
                     new SecurityException("Unauthorized access"));
         }

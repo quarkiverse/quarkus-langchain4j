@@ -114,7 +114,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
                 }
             } catch (ToolGuardrailException e) {
                 // Check if this is a fatal failure (has a cause)
-                if (e.getCause() != null) {
+                if (e.isFatal()) {
                     // Fatal failure - re-throw to stop execution
                     log.errorv("Input guardrail failed fatally for tool {0}: {1}",
                             toolExecutionRequest.name(), e.getMessage());
@@ -161,7 +161,7 @@ public class ToolGuardrailsWrapper implements QuarkusToolExecutor.Wrapper {
                 }
             } catch (ToolGuardrailException e) {
                 // Check if this is a fatal failure (has a cause)
-                if (e.getCause() != null) {
+                if (e.isFatal()) {
                     // Fatal failure - re-throw to stop execution
                     log.errorv("Output guardrail failed fatally for tool {0}: {1}",
                             toolExecutionRequest.name(), e.getMessage());

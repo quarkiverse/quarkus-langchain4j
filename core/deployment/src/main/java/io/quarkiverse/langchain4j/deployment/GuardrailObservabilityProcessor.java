@@ -1,6 +1,10 @@
 package io.quarkiverse.langchain4j.deployment;
 
-import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.*;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_COUNTED;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.MICROMETER_TIMED;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.TransformType;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.WITH_SPAN;
+import static io.quarkiverse.langchain4j.deployment.GuardrailObservabilityProcessorSupport.shouldTransformMethod;
 
 import java.util.Optional;
 import java.util.function.Consumer;
