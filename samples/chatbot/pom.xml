@@ -33,6 +33,10 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
         </dependency>
@@ -134,6 +138,9 @@
                     <name>platform-deps</name>
                 </property>
             </activation>
+            <properties>
+                <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+            </properties>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
