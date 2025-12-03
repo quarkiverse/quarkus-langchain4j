@@ -15,7 +15,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <quarkus.platform.version>3.22.2</quarkus.platform.version>
+        <quarkus.platform.version>3.27.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <kotlin.version>2.1.21</kotlin.version>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>io.quarkiverse.mailpit</groupId>
             <artifactId>quarkus-mailpit</artifactId>
-            <version>1.2.2</version>
+            <version>1.8.0</version>
         </dependency>
 
         <!-- Minimal dependencies to constrain the build -->

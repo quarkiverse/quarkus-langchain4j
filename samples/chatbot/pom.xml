@@ -16,7 +16,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <quarkus.platform.version>3.26.4</quarkus.platform.version>
+        <quarkus.platform.version>3.27.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <skipTests>true</skipTests>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
@@ -101,7 +101,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus-langchain4j.version>1.4.2</quarkus-langchain4j.version>
+                <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
