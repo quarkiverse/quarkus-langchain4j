@@ -191,9 +191,6 @@ public class AiServicesProcessor {
     public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
             .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
 
-    private static final DotName CHAT_MEMORY_ACCESS = DotName.createSimple(
-            ChatMemoryAccess.class);
-
     private static final String METRICS_DEFAULT_NAME = "langchain4j.aiservices";
 
     private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -1347,24 +1344,9 @@ public class AiServicesProcessor {
             ClassOutput generatedClassOutput = new GeneratedClassGizmoAdaptor(generatedClassProducer, true);
             ClassOutput generatedBeanOutput = new GeneratedBeanGizmoAdaptor(generatedBeanProducer);
             for (ClassInfo iface : ifacesForCreate) {
-                List<MethodInfo> allMethods = new ArrayList<>(iface.methods());
-                JandexUtil.getAllSuperinterfaces(iface, index).stream().filter(ci -> !ci.name().equals(
-                        CHAT_MEMORY_ACCESS)).forEach(ci -> allMethods.addAll(ci.methods()));
+                List<MethodInfo> methodsToImplement = AiServicesUtil.determineAiServiceMethods(iface, index);
 
-                List<MethodInfo> methodsToImplement = new ArrayList<>();
                 Map<String, AiServiceMethodCreateInfo> perMethodMetadata = new HashMap<>();
-                for (MethodInfo method : allMethods) {
-                    short modifiers = method.flags();
-                    if (Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers) || JandexUtil.isDefault(
-                            modifiers)) {
-                        continue;
-                    }
-
-                    if (methodsToImplement.stream().anyMatch(m -> MethodUtil.methodSignaturesMatch(m, method))) {
-                        continue;
-                    }
-                    methodsToImplement.add(method);
-                }
 
                 String ifaceName = iface.name().toString();
                 String implClassName = ifaceName + "$$QuarkusImpl";
