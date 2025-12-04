@@ -32,6 +32,7 @@ import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
+import io.quarkiverse.langchain4j.guardrails.ToolGuardrailException;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
@@ -96,9 +97,9 @@ public class ErrorHandlingTest {
     @Test
     @ActivateRequestContext
     void testInputGuardrail_throwsNullPointerException() {
-        // NPE propagates directly
         assertThatThrownBy(() -> aiService.chat("test", "nullPointerTool - anything"))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(ToolGuardrailException.class)
+                .hasMessageContaining("null");
 
         assertThat(NullPointerExceptionGuardrail.executionCount).isEqualTo(1);
         assertThat(tools.nullPointerToolExecuted).isFalse();

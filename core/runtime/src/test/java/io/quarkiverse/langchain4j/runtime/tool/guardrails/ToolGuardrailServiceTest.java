@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.tool.guardrails;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 

@@ -226,11 +226,14 @@ return ToolInputGuardrailResult.success();
 // Validation passed with modified request
 return ToolInputGuardrailResult.successWith(modifiedRequest);
 
-// Validation failed
+// Validation failed - error returned to LLM
 return ToolInputGuardrailResult.failure("Error message for LLM");
 
-// Critical failure with exception
-return ToolInputGuardrailResult.failure("Error", exception);
+// Fatal failure - stops execution immediately
+return ToolInputGuardrailResult.fatal("Critical error", exception);
+
+// Fatal failure - uses exception message
+return ToolInputGuardrailResult.fatal(exception);
 ----
 
 === ToolOutputGuardrail Interface
@@ -269,9 +272,14 @@ return ToolOutputGuardrailResult.success();
 // Output valid with transformation
 return ToolOutputGuardrailResult.successWith(modifiedResult);
 
-// Output invalid
+// Output invalid - error returned to LLM
 return ToolOutputGuardrailResult.failure("Error message");
 
+// Fatal failure - stops execution immediately
+return ToolOutputGuardrailResult.fatal("Critical error", exception);
+
+// Fatal failure - uses exception message
+return ToolOutputGuardrailResult.fatal(exception);
 ----
 
 == Multiple Guardrails
@@ -678,7 +686,7 @@ public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
 
     } catch (Exception e) {
         // Unexpected error - use fatal failure to stop execution
-        return ToolInputGuardrailResult.failure(
+        return ToolInputGuardrailResult.fatal(
             "Validation error: " + e.getMessage(), e);
     }
 }
@@ -688,10 +696,11 @@ public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
 ====
 **Fatal vs Non-Fatal Failures:**
 
-* `failure(message)` - Non-fatal: error returned to LLM as tool result
-* `failure(message, cause)` - Fatal: throws exception, stops execution completely
+* `failure(message)` - Non-fatal: error returned to LLM as tool result, LLM can retry
+* `fatal(message, cause)` - Fatal: throws exception, stops execution completely
+* `fatal(cause)` - Fatal: throws exception with cause message, stops execution
 
-Use fatal failures only for critical errors that indicate bugs or system failures, not for validation errors that the LLM can potentially correct.
+Use fatal failures only for critical errors that indicate bugs or system failures (e.g., authorization failures, system errors), not for validation errors that the LLM can potentially correct.
 ====
 
 === Best Practices
@@ -791,6 +800,77 @@ public class EmailValidatorTest {
     }
 }
 ----
+
+== Observability and Metrics
+
+Tool guardrail execution can be monitored using Micrometer metrics when the `quarkus-micrometer` extension is present.
+
+=== Metrics
+
+Two metrics are automatically recorded for each guardrail execution:
+
+**Counter Metric: `tool-guardrail.invoked`**
+
+Counts the number of times a tool guardrail is invoked, with tags:
+
+* `aiservice` - Fully qualified AI service interface name
+* `operation` - AI service method name
+* `tool.name` - Name of the tool being validated
+* `guardrail` - Guardrail class name
+* `guardrail.type` - `input` or `output`
+* `outcome` - `success`, `failure`, or `fatal`
+
+**Timer Metric: `tool-guardrail.timed`**
+
+Records execution time of guardrails with the same tags as the counter, plus percentiles (75th, 95th, 99th).
+
+=== Events
+
+For custom observability, you can observe CDI events fired during guardrail execution:
+
+[source,java]
+----
+@ApplicationScoped
+public class GuardrailMonitor {
+
+    public void onInputGuardrailExecuted(
+            @Observes ToolInputGuardrailExecutedEvent event) {
+
+        String toolName = event.toolName();
+        Class<?> guardrailClass = event.toolClass();
+        ToolGuardrailOutcome outcome = event.outcome(); // SUCCESS, FAILURE, FATAL
+        long durationNanos = event.duration();
+
+        // Custom monitoring logic
+        if (outcome == ToolGuardrailOutcome.FATAL) {
+            logger.error("Fatal guardrail failure for tool: {}", toolName);
+        }
+    }
+
+    public void onOutputGuardrailExecuted(
+            @Observes ToolOutputGuardrailExecutedEvent event) {
+        // Similar monitoring for output guardrails
+    }
+}
+----
+
+These events provide access to:
+
+* `toolName()` - The tool being validated
+* `toolClass()` - The guardrail class
+* `outcome()` - SUCCESS, FAILURE, or FATAL
+* `duration()` - Execution time in nanoseconds
+* `toolInvocationContext()` - Full invocation context including memory ID and parameters
+
+[TIP]
+====
+Use these metrics to:
+
+* Monitor guardrail success rates and identify problematic tools
+* Track performance and identify slow guardrails
+* Set up alerts for fatal failures indicating system issues
+* Analyze which guardrails are most frequently triggered
+====
 
 == Going Further
 

@@ -1,15 +1,30 @@
 package io.quarkiverse.langchain4j.runtime.tool.guardrails;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.inject.Inject;
 
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.service.tool.ToolExecutionResult;
-import io.quarkiverse.langchain4j.guardrails.*;
+import io.quarkiverse.langchain4j.guardrails.ToolGuardrailException;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
+import io.quarkiverse.langchain4j.guardrails.ToolInvocationContext;
+import io.quarkiverse.langchain4j.guardrails.ToolMetadata;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailRequest;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
+import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
+import io.quarkiverse.langchain4j.runtime.observability.ToolGuardrailOutcome;
+import io.quarkiverse.langchain4j.runtime.observability.ToolInputGuardrailExecutedEvent;
+import io.quarkiverse.langchain4j.runtime.observability.ToolOutputGuardrailExecutedEvent;
 import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 
 /**
@@ -40,6 +55,12 @@ import io.quarkiverse.langchain4j.runtime.tool.ToolMethodCreateInfo;
 public class ToolGuardrailService {
 
     private static final Logger log = Logger.getLogger(ToolGuardrailService.class);
+
+    @Inject
+    Event<ToolInputGuardrailExecutedEvent> inputGuardrailExecutedEvent;
+
+    @Inject
+    Event<ToolOutputGuardrailExecutedEvent> outputGuardrailExecutedEvent;
 
     /**
      * Checks if the tool method has input guardrails configured.
@@ -103,19 +124,29 @@ public class ToolGuardrailService {
                     toolMetadata,
                     context);
 
-            ToolInputGuardrailResult result = guardrail.validate(guardrailRequest);
+            ToolInputGuardrailResult guardrailResult;
+            long startTime = System.nanoTime();
+            try {
+                guardrailResult = guardrail.validate(guardrailRequest);
+            } catch (Exception e) {
+                guardrailResult = ToolInputGuardrailResult.fatal(e);
+            }
 
-            if (!result.isSuccess()) {
-                return handleInputGuardrailFailure(result, guardrailClass, request.name());
+            long durationNanos = System.nanoTime() - startTime;
+            createInputGuardrailExecutedEventAndFire(guardrailClass, toolMetadata.toolName(), guardrailResult, context,
+                    durationNanos);
+
+            if (!guardrailResult.isSuccess()) {
+                return handleInputGuardrailFailure(guardrailResult, guardrailClass, request.name());
             }
 
             // Apply request modification if present
-            if (result.modifiedRequest() != null) {
+            if (guardrailResult.modifiedRequest() != null) {
                 if (log.isDebugEnabled()) {
                     log.debugv("Input guardrail {0} modified the request for tool {1}",
                             guardrailClass.getSimpleName(), request.name());
                 }
-                currentRequest = result.modifiedRequest();
+                currentRequest = guardrailResult.modifiedRequest();
             }
         }
 
@@ -165,7 +196,16 @@ public class ToolGuardrailService {
                     toolMetadata,
                     context);
 
-            ToolOutputGuardrailResult guardrailResult = guardrail.validate(guardrailRequest);
+            ToolOutputGuardrailResult guardrailResult;
+            long startTime = System.nanoTime();
+            try {
+                guardrailResult = guardrail.validate(guardrailRequest);
+            } catch (Exception e) {
+                guardrailResult = ToolOutputGuardrailResult.fatal(e);
+            }
+
+            long durationNanos = System.nanoTime() - startTime;
+            createOutputGuardrailExecutedEventAndFire(guardrailClass, request.name(), guardrailResult, context, durationNanos);
 
             if (!guardrailResult.isSuccess()) {
                 return handleOutputGuardrailFailure(guardrailResult, guardrailClass, request.name());
@@ -182,6 +222,54 @@ public class ToolGuardrailService {
         }
 
         return currentResult;
+    }
+
+    private void createOutputGuardrailExecutedEventAndFire(
+            Class<? extends ToolOutputGuardrail> guardrailClass,
+            String toolName,
+            ToolOutputGuardrailResult result,
+            ToolInvocationContext context,
+            long duration) {
+        outputGuardrailExecutedEvent.fire(new ToolOutputGuardrailExecutedEvent(
+                context,
+                guardrailClass,
+                toolName,
+                getOutcomeFromResult(result),
+                duration));
+    }
+
+    private void createInputGuardrailExecutedEventAndFire(
+            Class<? extends ToolInputGuardrail> guardrailClass,
+            String toolName,
+            ToolInputGuardrailResult result,
+            ToolInvocationContext context,
+            long duration) {
+        inputGuardrailExecutedEvent.fire(new ToolInputGuardrailExecutedEvent(
+                context,
+                guardrailClass,
+                toolName,
+                getOutcomeFromResult(result),
+                duration));
+    }
+
+    private ToolGuardrailOutcome getOutcomeFromResult(ToolOutputGuardrailResult result) {
+        if (result.isSuccess()) {
+            return ToolGuardrailOutcome.SUCCESS;
+        } else if (result.isFatalFailure()) {
+            return ToolGuardrailOutcome.FATAL;
+        } else {
+            return ToolGuardrailOutcome.FAILURE;
+        }
+    }
+
+    private ToolGuardrailOutcome getOutcomeFromResult(ToolInputGuardrailResult result) {
+        if (result.isSuccess()) {
+            return ToolGuardrailOutcome.SUCCESS;
+        } else if (result.isFatalFailure()) {
+            return ToolGuardrailOutcome.FATAL;
+        } else {
+            return ToolGuardrailOutcome.FAILURE;
+        }
     }
 
     /**
@@ -236,11 +324,11 @@ public class ToolGuardrailService {
                 ? result.errorMessage()
                 : "Input validation failed";
 
-        if (result.cause() != null) {
+        if (result.isFatalFailure()) {
             // Fatal failure - throw exception
             log.errorv("Input guardrail {0} failed fatally for tool {1}: {2}",
                     guardrailClass.getSimpleName(), toolName, errorMessage);
-            throw new ToolGuardrailException(errorMessage, result.cause());
+            throw new ToolGuardrailException(errorMessage, result.cause(), true);
         }
 
         // Non-fatal failure - this will be caught by the wrapper and converted to a ToolExecutionResult
@@ -266,11 +354,11 @@ public class ToolGuardrailService {
                 ? result.errorMessage()
                 : "Output validation failed";
 
-        if (result.cause() != null) {
+        if (result.isFatalFailure()) {
             // Fatal failure - throw exception
             log.errorv("Output guardrail {0} failed fatally for tool {1}: {2}",
                     guardrailClass.getSimpleName(), toolName, errorMessage);
-            throw new ToolGuardrailException(errorMessage, result.cause());
+            throw new ToolGuardrailException(errorMessage, result.cause(), true);
         }
 
         // Non-fatal failure - return error as tool result

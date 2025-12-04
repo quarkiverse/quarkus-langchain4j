@@ -445,7 +445,7 @@ public class ToolGuardrailWithObjectTest {
 
                 return ToolInputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolInputGuardrailResult.failure("Failed to validate customer ID: " + e.getMessage(), e);
+                return ToolInputGuardrailResult.fatal("Failed to validate customer ID: " + e.getMessage(), e);
             }
         }
 
@@ -481,7 +481,7 @@ public class ToolGuardrailWithObjectTest {
 
                 return ToolOutputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolOutputGuardrailResult.failure("Failed to filter sensitive fields: " + e.getMessage(), e);
+                return ToolOutputGuardrailResult.fatal("Failed to filter sensitive fields: " + e.getMessage(), e);
             }
         }
 
@@ -529,7 +529,7 @@ public class ToolGuardrailWithObjectTest {
                 limitedSize = originalSize;
                 return ToolOutputGuardrailResult.success();
             } catch (Exception e) {
-                return ToolOutputGuardrailResult.failure("Failed to limit customer list: " + e.getMessage(), e);
+                return ToolOutputGuardrailResult.fatal("Failed to limit customer list: " + e.getMessage(), e);
             }
         }
 
