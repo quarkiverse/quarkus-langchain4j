@@ -1,0 +1,8 @@
+---
+- name: "Edge Case 1"
+  parameters:
+    - "edge"
+  expected-output: "edge"
+  tags:
+    - edge
+    - special

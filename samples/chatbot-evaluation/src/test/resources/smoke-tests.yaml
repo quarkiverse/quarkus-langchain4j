@@ -1,0 +1,17 @@
+- name: Quick Business Hours Check
+  parameters:
+    - "When are you open?"
+  expected-output: "Monday-Friday, 9 AM - 5 PM EST"
+  tags: ["smoke-test"]
+
+- name: Shipping Cost Question
+  parameters:
+    - "Is shipping free?"
+  expected-output: "Free shipping on orders over $50"
+  tags: ["smoke-test"]
+
+- name: Contact Email
+  parameters:
+    - "What is your email?"
+  expected-output: "support@quarkusshop.com"
+  tags: ["smoke-test"]

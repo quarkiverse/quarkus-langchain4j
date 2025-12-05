@@ -4,17 +4,20 @@
 
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-parent</artifactId>
+        <artifactId>quarkus-langchain4j-testing</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
 
+    <artifactId>quarkus-langchain4j-testing-evaluation-parent</artifactId>
+    <name>Quarkus LangChain4j - Testing - Evaluation Parent</name>
 
-    <artifactId>quarkus-langchain4j-testing</artifactId>
-    <name>Quarkus LangChain4j - Testing</name>
     <packaging>pom</packaging>
 
     <modules>
-        <module>evaluation</module>
+        <module>evaluation-core</module>
+        <module>evaluation-strategies/semantic-similarity</module>
+        <module>evaluation-strategies/ai-judge</module>
+        <module>evaluation-junit5</module>
     </modules>
 
 

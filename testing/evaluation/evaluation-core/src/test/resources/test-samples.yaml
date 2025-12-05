@@ -1,0 +1,13 @@
+- name: "Sample1"
+  parameters:
+    - "What is YAML?"
+  expected-output: "YAML is a data serialization format"
+  tags:
+    - "yaml-test"
+- name: "Sample2"
+  parameters:
+    - "How to parse YAML?"
+  expected-output: "Use a YAML parser library"
+  tags:
+    - "yaml-test"
+    - "parsing"
