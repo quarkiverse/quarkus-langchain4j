@@ -17,6 +17,7 @@ import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.Content;
@@ -68,6 +69,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private int beforeToolExecutionInvoked;
     private int onIntermediateResponseInvoked;
     private int toolExecuteInvoked;
+
+    private volatile QuarkusAiServiceStreamingResponseHandler handler;
 
     public QuarkusAiServiceTokenStream(List<ChatMessage> messages,
             List<ToolSpecification> toolSpecifications,
@@ -163,7 +166,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 .toolSpecifications(toolSpecifications)
                 .build();
 
-        QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
+        this.handler = new QuarkusAiServiceStreamingResponseHandler(
                 context,
                 invocationContext,
                 memoryId,
@@ -195,6 +198,18 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 errorHandler.accept(e);
             }
         }
+    }
+
+    /**
+     * Returns the StreamingHandle that can be used to cancel the underlying stream.
+     * <p>
+     * Returns {@code null} if streaming has not started yet, or a {@link NoopStreamingHandle}
+     * if the handler has not received any partial responses.
+     *
+     * @apiNote This uses langchain4j's experimental StreamingHandle API (since 1.8.0)
+     */
+    public StreamingHandle getStreamingHandle() {
+        return handler != null ? handler.getStreamingHandle() : null;
     }
 
     private void validateConfiguration() {

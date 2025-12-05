@@ -28,8 +28,14 @@ import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
+import dev.langchain4j.model.chat.response.PartialResponse;
+import dev.langchain4j.model.chat.response.PartialResponseContext;
 import dev.langchain4j.model.chat.response.PartialThinking;
+import dev.langchain4j.model.chat.response.PartialThinkingContext;
+import dev.langchain4j.model.chat.response.PartialToolCall;
+import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
+import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
@@ -75,6 +81,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final AiServiceMethodCreateInfo methodCreateInfo;
     private final Object[] methodArgs;
     private final ExecutorService executor;
+    private volatile StreamingHandle streamingHandle = NoopStreamingHandle.INSTANCE;
 
     QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context,
             InvocationContext invocationContext,
@@ -214,6 +221,43 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                 }
             });
         }
+    }
+
+    @Override
+    public void onPartialResponse(PartialResponse partialResponse, PartialResponseContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        onPartialResponse(partialResponse.text());
+    }
+
+    @Override
+    public void onPartialThinking(PartialThinking partialThinking, PartialThinkingContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        onPartialThinking(partialThinking);
+    }
+
+    @Override
+    public void onPartialToolCall(PartialToolCall partialToolCall, PartialToolCallContext context) {
+        captureStreamingHandle(context.streamingHandle());
+        // Delegate to the default implementation which does nothing special
+        StreamingChatResponseHandler.super.onPartialToolCall(partialToolCall, context);
+    }
+
+    private void captureStreamingHandle(StreamingHandle handle) {
+        if (this.streamingHandle == NoopStreamingHandle.INSTANCE) {
+            this.streamingHandle = handle;
+        }
+    }
+
+    /**
+     * Returns the StreamingHandle that can be used to cancel the underlying stream.
+     * <p>
+     * Returns {@link NoopStreamingHandle} until the first partial response is received
+     * from a provider that supports cancellation.
+     *
+     * @apiNote This uses langchain4j's experimental StreamingHandle API (since 1.8.0)
+     */
+    public StreamingHandle getStreamingHandle() {
+        return streamingHandle;
     }
 
     private void executeTools(Runnable runnable) {
