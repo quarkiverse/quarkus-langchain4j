@@ -1,4 +1,4 @@
-package io.quarkiverse.langchain4j.openai.common;
+package io.quarkiverse.langchain4j.azure.openai;
 
 import java.net.URI;
 import java.util.concurrent.Executor;
