@@ -5,6 +5,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,9 +132,13 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         });
                     }
 
+                    Map<String, String> configMap = new HashMap<>();
+                    configMap.put("azureApiKey", azureApiKey != null ? azureApiKey : "");
+                    configMap.put("openaiApiKey", openaiApiKey != null ? openaiApiKey : "");
+                    configMap.put("azureAdToken", azureAdToken != null ? azureAdToken : "");
                     // resolves rest api filter
                     RestApiFilterResolverLoader.load().resolve(ModelAuthProvider.resolve(builder.configName), restApiBuilder,
-                            Map.of("azureApiKey", azureApiKey, "openaiApiKey", openaiApiKey, "azureAdToken", azureAdToken));
+                            configMap);
 
                     Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
                             .select(TlsConfigurationRegistry.class);

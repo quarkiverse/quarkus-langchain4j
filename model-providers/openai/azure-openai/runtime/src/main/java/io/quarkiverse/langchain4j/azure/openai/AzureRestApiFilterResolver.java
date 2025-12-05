@@ -15,8 +15,10 @@ public class AzureRestApiFilterResolver implements RestApiFilterResolver {
         if (provider.isPresent()) {
             restApiBuilder.register(new OpenAiRestApi.OpenAIRestAPIFilter(provider.get()));
         } else {
-            if (!configProperties.getOrDefault("azureApiKey", "").isEmpty()
-                    || !configProperties.getOrDefault("azureAdToken", "").isEmpty()) {
+            String azureApiKey = configProperties.getOrDefault("azureApiKey", "");
+            String azureAdToken = configProperties.getOrDefault("azureAdToken", "");
+
+            if (!azureApiKey.isEmpty() || !azureAdToken.isEmpty()) {
                 return;
             }
             restApiBuilder.register(new AzureModelAuthProviderFilter());
