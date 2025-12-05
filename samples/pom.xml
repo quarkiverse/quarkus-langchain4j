@@ -29,6 +29,7 @@
         <module>secure-poem-multiple-models</module>
         <module>secure-sql-chatbot</module>
         <module>sql-chatbot</module>
+        <module>guardrails</module>
         <module>weather-agent</module>
         <module>react-chatbot</module>
     </modules>

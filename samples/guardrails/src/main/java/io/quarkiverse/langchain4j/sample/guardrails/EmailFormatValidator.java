@@ -56,7 +56,7 @@ public class EmailFormatValidator implements ToolInputGuardrail {
             return ToolInputGuardrailResult.success();
 
         } catch (Exception e) {
-            return ToolInputGuardrailResult.failure(
+            return ToolInputGuardrailResult.fatal(
                     "Failed to validate email format: " + e.getMessage(), e);
         }
     }
