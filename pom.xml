@@ -37,7 +37,7 @@
   <properties>
     <quarkus.version>3.27.1</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
-    <langchain4j.version>1.9.1</langchain4j.version>
+    <langchain4j.version>1.10.0-SNAPSHOT</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
     <quarkus-antora.version>3.25.0</quarkus-antora.version>
     <quarkus-poi.version>2.0.4</quarkus-poi.version> <!-- we need to use this version because langchain4j uses POI 5.2.3 instead of 5.2.5 and the substitution needed is different in the two versions -->

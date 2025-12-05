@@ -15,6 +15,7 @@ import javax.net.ssl.SSLContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpRoot;
@@ -23,6 +24,9 @@ import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
 import dev.langchain4j.mcp.registryclient.DefaultMcpRegistryClient;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
+import dev.langchain4j.mcp.resourcesastools.DefaultMcpResourcesAsToolsPresenter;
+import dev.langchain4j.mcp.resourcesastools.McpResourcesAsToolsPresenter;
+import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProvider;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.jaxrsclient.JaxRsHttpClientBuilder;
@@ -159,10 +163,27 @@ public class McpRecorder {
                     clients.add(context.getInjectedReference(McpClient.class, qualifier));
                 }
                 boolean exposeResourcesAsTools = mcpRuntimeConfiguration.getValue().exposeResourcesAsTools().orElse(false);
-                return new QuarkusMcpToolProvider(clients, context.getInjectedReference(TRACER_TYPE_LITERAL),
-                        exposeResourcesAsTools);
+                McpResourcesAsToolsPresenter presenter = exposeResourcesAsTools
+                        ? DefaultMcpResourcesAsToolsPresenter.builder().build()
+                        : null;
+                Function<ToolExecutor, ToolExecutor> toolWrapper = determineToolWrapper(
+                        context.getInjectedReference(TRACER_TYPE_LITERAL));
+                return McpToolProvider.builder()
+                        .mcpClients(clients)
+                        .resourcesAsToolsPresenter(presenter)
+                        .toolWrapper(toolWrapper)
+                        .failIfOneServerFails(false)
+                        .build();
             }
         };
+    }
+
+    private Function<ToolExecutor, ToolExecutor> determineToolWrapper(Instance<Tracer> tracerInstance) {
+        if (tracerInstance.isResolvable()) {
+            return new SpanToolWrapper(tracerInstance);
+        } else {
+            return Function.identity();
+        }
     }
 
     private Optional<TlsConfiguration> resolveTlsConfiguration(Optional<String> tlsConfigurationName) {

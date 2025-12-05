@@ -10,6 +10,7 @@ import static io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil.hasResponseS
 import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -107,6 +108,7 @@ import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
@@ -125,6 +127,9 @@ public class AiServiceMethodImplementationSupport {
                                                                                                        // might need to
                                                                                                        // be improved
 
+    // io.quarkiverse.langchain4j.mcp.runtime.McpToolProviderRequestFactory.create(Object, UserMessage, List<String>)
+    private static Method mcpToolProviderRequestFactoryMethod;
+
     static {
         var defaultMemoryIdProviders = ServiceHelper.loadFactories(
                 DefaultMemoryIdProvider.class);
@@ -138,6 +143,20 @@ public class AiServiceMethodImplementationSupport {
                     return Integer.compare(o1.priority(), o2.priority());
                 }
             });
+        }
+        try {
+            Class<?> mcpToolProviderRequestClass = Class
+                    .forName("io.quarkiverse.langchain4j.mcp.runtime.McpToolProviderRequestFactory");
+            try {
+                mcpToolProviderRequestFactoryMethod = mcpToolProviderRequestClass.getDeclaredMethod("create", Object.class,
+                        UserMessage.class, List.class);
+            } catch (NoSuchMethodException nsme) {
+                Log.warn(
+                        "Can't locate the factory method of McpToolProviderRequest, will use the regular ToolProviderRequest and filtering won't work",
+                        nsme);
+            }
+        } catch (ClassNotFoundException cnfe) {
+            // ignore
         }
     }
 
@@ -226,8 +245,20 @@ public class AiServiceMethodImplementationSupport {
         if (context.toolService.toolProvider() != null) {
             toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
             toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
-            ToolProviderRequest request = new QuarkusToolProviderRequest(memoryId, userMessage,
-                    methodCreateInfo.getMcpClientNames());
+            // This is somewhat ugly because we have MCP-specific stuff in the core module, so we need to use
+            // reflection to avoid a direct dependency.
+            ToolProviderRequest request;
+            if (methodCreateInfo.getMcpClientNames() != null && !methodCreateInfo.getMcpClientNames().isEmpty()
+                    && mcpToolProviderRequestFactoryMethod != null) {
+                try {
+                    request = (ToolProviderRequest) mcpToolProviderRequestFactoryMethod.invoke(null, memoryId, userMessage,
+                            methodCreateInfo.getMcpClientNames());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                request = new ToolProviderRequest(memoryId, userMessage);
+            }
             ToolProviderResult result = context.toolService.toolProvider().provideTools(request);
             for (ToolSpecification specification : result.tools().keySet()) {
                 toolSpecifications.add(specification);

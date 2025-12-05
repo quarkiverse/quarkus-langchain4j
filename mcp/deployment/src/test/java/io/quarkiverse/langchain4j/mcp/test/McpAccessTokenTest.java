@@ -16,8 +16,6 @@ import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
-import io.quarkiverse.langchain4j.mcp.runtime.QuarkusMcpToolProvider;
-import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
@@ -40,11 +38,6 @@ public class McpAccessTokenTest {
 
     @Inject
     ToolProvider toolProvider;
-
-    @Test
-    public void toolProviderShouldBeMcpBased() {
-        assertThat(ClientProxy.unwrap(toolProvider)).isInstanceOf(QuarkusMcpToolProvider.class);
-    }
 
     @Test
     public void providingTools() {

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolProviderRequestFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -224,6 +225,7 @@ public class McpProcessor {
                         .produce(ReflectiveClassBuildItem.builder(clazz.name().toString()).fields(true).methods(true).build());
             }
         }
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(McpToolProviderRequestFactory.class).build());
     }
 
     @BuildStep
