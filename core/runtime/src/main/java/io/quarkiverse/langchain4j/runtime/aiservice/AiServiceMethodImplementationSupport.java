@@ -67,7 +67,7 @@ import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.input.Prompt;
-import dev.langchain4j.model.input.PromptTemplate;
+//import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.input.structured.StructuredPrompt;
 import dev.langchain4j.model.input.structured.StructuredPromptProcessor;
 import dev.langchain4j.model.moderation.Moderation;
@@ -97,6 +97,7 @@ import dev.langchain4j.spi.ServiceHelper;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.PdfUrl;
+import io.quarkiverse.langchain4j.PromptTemplate;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
@@ -117,7 +118,7 @@ import io.vertx.core.Context;
  */
 public class AiServiceMethodImplementationSupport {
 
-    private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
+	private static final Logger log = Logger.getLogger(AiServiceMethodImplementationSupport.class);
     private static final int DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS = 10;
     private static final List<DefaultMemoryIdProvider> DEFAULT_MEMORY_ID_PROVIDERS;
 
@@ -887,10 +888,15 @@ public class AiServiceMethodImplementationSupport {
         templateParams.put("chat_memory", previousChatMessages);
         Optional<String> maybeText = systemMessageInfo.text();
         if (maybeText.isPresent()) {
-            return Optional.of(PromptTemplate.from(maybeText.get()).apply(templateParams).toSystemMessage());
+            String templateName = getTemplateName(createInfo.getInterfaceName(), createInfo.getMethodName(), false);
+            return Optional.of(PromptTemplate.from(maybeText.get(), templateName).apply(templateParams).toSystemMessage());
         } else {
             return Optional.empty();
         }
+    }
+
+    private static String getTemplateName(String interfaceName, String methodName, boolean userMessage) {
+        return "java://annotation:" + interfaceName + "#" + methodName + (userMessage ? "@UserMessage" : "@SystemMessage");
     }
 
     private static UserMessage prepareUserMessage(AiServiceContext context, AiServiceMethodCreateInfo createInfo,
