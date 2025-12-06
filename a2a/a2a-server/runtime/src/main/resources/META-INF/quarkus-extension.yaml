@@ -1,0 +1,12 @@
+name: LangChain4j A2A server
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Allows exposing Quarkus LangChain4j AI Services as A2A servers
+metadata:
+  keywords:
+    - ai
+    - langchain4j
+  guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+  categories:
+    - "ai"
+  status: "experimental"
+ 
