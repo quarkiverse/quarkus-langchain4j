@@ -33,18 +33,18 @@ public class SseSubscriber implements Consumer<SseEvent<String>> {
     @Override
     public void accept(SseEvent<String> s) {
         // some servers send empty messages as pings
-        if (s.data().isEmpty() || s.data().isBlank()) {
+        String data = s.data();
+        if (data == null || data.isEmpty() || data.isBlank()) {
             return;
         }
         if (logEvents) {
-            log.debug("< " + s.data());
+            log.debug("< " + data);
         }
         String name = s.name();
         if (name == null) {
             log.debug("Received event with null name, default it to 'message'");
             name = "message";
         }
-        String data = s.data();
         if (name.equals("message")) {
             try {
                 JsonNode jsonNode = OBJECT_MAPPER.readTree(data);
