@@ -77,6 +77,7 @@ import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.ToolBox;
@@ -244,6 +245,8 @@ public class AiServicesProcessor {
                 RequestScopeStateDefaultMemoryIdProvider.class.getName()));
         serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
                 PromptTemplateFactoryContentFilterProvider.class.getName()));
+        serviceProviderProducer.produce(ServiceProviderBuildItem.allProvidersFromClassPath(
+                ClassMetadataProviderFactory.class.getName()));
 
         // needed because various LLMs use these, so let's be proactive
         // there isn't one great place to put this, so this is probably as good as any
