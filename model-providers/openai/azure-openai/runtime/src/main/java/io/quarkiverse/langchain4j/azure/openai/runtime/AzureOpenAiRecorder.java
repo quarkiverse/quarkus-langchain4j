@@ -103,8 +103,6 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
-                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
-                            configName);
 
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
@@ -158,8 +156,6 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
-                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
-                            configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -203,8 +199,6 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
-                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
-                            configName);
                     return builder.build();
                 }
             };
@@ -266,8 +260,6 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
-                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
-                            configName);
                     return builder.build();
                 }
             };
@@ -327,12 +319,6 @@ public class AzureOpenAiRecorder {
             azureAiConfig = runtimeConfig.namedConfig().get(configName);
         }
         return azureAiConfig;
-    }
-
-    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
-        if ((apiKey != null) == (adToken != null) && !authProviderAvailable) {
-            throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
-        }
     }
 
     private ConfigValidationException.Problem[] createKeyMisconfigurationProblem(String configName) {
