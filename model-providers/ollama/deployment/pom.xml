@@ -34,6 +34,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>ollama</artifactId>
+            <version>1.21.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>junit</groupId>
