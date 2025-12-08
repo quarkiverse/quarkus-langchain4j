@@ -64,7 +64,12 @@ If you switch to a different embedding model, ensure the `dimension` value is up
 Use-index controls whether the engine should create and use an index over the embeddings table. 
 To create an index, you need the index-list-size parameter, which is a fine-tuning parameter.
 This basically creates an IVFFlat index with clusters to extend the effectivness of nearest neighbor search.
-If you set the use-index=true you will have to also se the index-list-size=10.
+If you set the `use-index=true` you will have to also se the `index-list-size`.
+
+[NOTE]
+====
+This is something you rarely would need in development. 
+====
 
 [source,properties]
 ----
@@ -72,7 +77,7 @@ quarkus.langchain4j.pgvector.use-index=true
 quarkus.langchain4j.pgvector.index-list-size=10
 ----
 
-Higher index size values speed up queries by reducing the search space during query time.
+Higher number of lists values speed up queries by reducing the search space during query time.
 However, it also decreases the region size, which can lead to more recall errors by excluding some points.
 Additionally, more distance comparisons are required to find the closest cluster during step one of the query process.
 
@@ -81,7 +86,6 @@ Here are some recommendations for setting the lists parameter:
 * For datasets with less than one million rows, use lists = rows / 1000.
 * For datasets with more than one million rows, use lists = sqrt(rows).
 * It is generally advisable to have at least 10 clusters.
-
 
 == Usage Example
 
