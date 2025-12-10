@@ -148,7 +148,7 @@ public class ToolExecutionModelWithStreamingTest {
         });
 
         Awaitility.await().until(() -> result.get() != null);
-        assertThat(result.get()).contains(uuid, caller.get());
+        assertThat(result.get()).contains(uuid);
     }
 
     @Test

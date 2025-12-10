@@ -25,14 +25,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Flow;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
@@ -107,6 +106,9 @@ import io.quarkiverse.langchain4j.runtime.tool.QuarkusToolExecutor;
 import io.quarkiverse.langchain4j.runtime.types.TypeSignatureParser;
 import io.quarkiverse.langchain4j.runtime.types.TypeUtil;
 import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
+import io.quarkus.runtime.BlockingOperationControl;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Context;
@@ -184,6 +186,19 @@ public class AiServiceMethodImplementationSupport {
 
     private static Object doImplement(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
             QuarkusAiServiceContext context) {
+        if (TypeUtil.isMulti(methodCreateInfo.getReturnType()) && !BlockingOperationControl.isBlockingAllowed()) {
+            // this a special case where we can't block, so we need to delegate the to a worker pool
+            // as so many of the things done in LangChain4j are blocking
+            return Multi.createFrom().deferred(
+                    () -> ((Multi<?>) doImplement0(methodCreateInfo, invocationContext, context)))
+                    .runSubscriptionOn(createExecutor());
+        } else {
+            return doImplement0(methodCreateInfo, invocationContext, context);
+        }
+    }
+
+    private static Object doImplement0(AiServiceMethodCreateInfo methodCreateInfo, InvocationContext invocationContext,
+            QuarkusAiServiceContext context) {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object[] methodArgs = invocationContext.methodArguments().toArray(Object[]::new);
         Object memoryId = invocationContext.chatMemoryId();
@@ -249,74 +264,8 @@ public class AiServiceMethodImplementationSupport {
                     .build();
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
 
-            if (!isMulti) {
-                augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
-                userMessage = (UserMessage) augmentationResult.chatMessage();
-            } else {
-                // TODO duplicated context propagation.
-                // this a special case where we can't block, so we need to delegate the
-                // retrieval augmentation to a worker pool
-                CompletableFuture<AugmentationResult> augmentationResultCF = CompletableFuture
-                        .supplyAsync(new Supplier<>() {
-                            @Override
-                            public AugmentationResult get() {
-                                return context.retrievalAugmentor.augment(augmentationRequest);
-                            }
-                        }, Infrastructure.getDefaultWorkerPool());
-
-                return Multi.createFrom().completionStage(augmentationResultCF).flatMap(
-                        new Function<>() {
-                            @Override
-                            public Flow.Publisher<?> apply(AugmentationResult ar) {
-                                ChatMessage augmentedUserMessage = ar.chatMessage();
-
-                                ChatMemory memory = context.chatMemoryService.getChatMemory(memoryId);
-                                var guardrailRequestParams = GuardrailRequestParams.builder()
-                                        .chatMemory(memory)
-                                        .augmentationResult(ar)
-                                        .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
-                                        .variables(templateVariables)
-                                        .invocationContext(invocationContext)
-                                        .aiServiceListenerRegistrar(context.eventListenerRegistrar)
-                                        .build();
-
-                                UserMessage guardrailsMessage = GuardrailsSupport.executeInputGuardrails(
-                                        context.guardrailService(),
-                                        (UserMessage) augmentedUserMessage,
-                                        methodCreateInfo, guardrailRequestParams);
-                                List<ChatMessage> messagesToSend = messagesToSend(guardrailsMessage, needsMemorySeed);
-                                var stream = new TokenStreamMulti(messagesToSend, effectiveToolSpecifications,
-                                        finalToolExecutors, ar.contents(), context, invocationContext, memoryId,
-                                        methodCreateInfo.isSwitchToWorkerThreadForToolExecution(),
-                                        isRunningOnWorkerThread, methodCreateInfo, methodArgs);
-
-                                return stream
-                                        .filter(event -> !isStringMulti
-                                                || event instanceof ChatEvent.PartialResponseEvent)
-                                        .map(event -> {
-                                            if (isStringMulti && event instanceof ChatEvent.PartialResponseEvent) {
-                                                return ((ChatEvent.PartialResponseEvent) event).getChunk();
-                                            }
-                                            return event;
-                                        })
-                                        .plug(m -> ResponseAugmenterSupport.apply(m, methodCreateInfo,
-                                                new ResponseAugmenterParams((UserMessage) augmentedUserMessage, memory,
-                                                        ar,
-                                                        methodCreateInfo.getUserMessageTemplate(), templateVariables)));
-                            }
-
-                            private List<ChatMessage> messagesToSend(UserMessage augmentedUserMessage,
-                                    boolean needsMemorySeed) {
-                                return context.hasChatMemory()
-                                        ? createMessagesToSendForExistingMemory(systemMessage, augmentedUserMessage,
-                                                context.chatMemoryService.getChatMemory(memoryId), needsMemorySeed,
-                                                context,
-                                                methodCreateInfo)
-                                        : createMessagesToSendForNoMemory(systemMessage, augmentedUserMessage,
-                                                needsMemorySeed, context, methodCreateInfo);
-                            }
-                        });
-            }
+            augmentationResult = context.retrievalAugmentor.augment(augmentationRequest);
+            userMessage = (UserMessage) augmentationResult.chatMessage();
         }
 
         var guardrailService = context.guardrailService();
@@ -1171,6 +1120,11 @@ public class AiServiceMethodImplementationSupport {
                 .getOptionalValue("quarkus.langchain4j.ai-service.max-tool-executions", Integer.class)
                 .orElse(
                         DEFAULT_MAX_SEQUENTIAL_TOOL_EXECUTIONS);
+    }
+
+    private static Executor createExecutor() {
+        InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
+        return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
     }
 
     public static class Input {
