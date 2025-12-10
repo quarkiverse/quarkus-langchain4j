@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.guardrails;
 
+import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
+
 /**
  * Exception thrown when tool guardrail validation fails critically.
  * <p>
@@ -23,7 +25,7 @@ package io.quarkiverse.langchain4j.guardrails;
  * @see ToolInputGuardrailResult
  * @see ToolOutputGuardrailResult
  */
-public class ToolGuardrailException extends RuntimeException {
+public class ToolGuardrailException extends RuntimeException implements PreventsErrorHandlerExecution {
 
     private final boolean fatal;
 

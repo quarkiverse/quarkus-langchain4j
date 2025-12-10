@@ -41,6 +41,7 @@ import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailRequest;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolOutputGuardrails;
+import io.quarkiverse.langchain4j.runtime.BlockingToolNotAllowedException;
 import io.quarkiverse.langchain4j.runtime.aiservice.NoopChatMemory;
 import io.quarkiverse.langchain4j.test.Lists;
 import io.quarkus.arc.Arc;
@@ -130,7 +131,7 @@ public class GuardrailEventLoopBlockingTest {
         Throwable exception = exceptionRef.get();
         assertThat(exception)
                 .isNotNull()
-                .isInstanceOf(ToolExecutionException.class);
+                .isInstanceOf(BlockingToolNotAllowedException.class);
 
         // Our ToolGuardrailsWrapper should catch the event loop and throw a clear error
         assertThat(exception.getMessage())
@@ -169,7 +170,7 @@ public class GuardrailEventLoopBlockingTest {
         Throwable exception = exceptionRef.get();
         assertThat(exception)
                 .isNotNull()
-                .isInstanceOf(ToolExecutionException.class);
+                .isInstanceOf(BlockingToolNotAllowedException.class);
 
         assertThat(exception.getMessage())
                 .contains("Cannot execute guardrails")

@@ -33,6 +33,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final Optional<String> beanName;
     private final DeclarativeAiServiceInputGuardrails inputGuardrails;
     private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
+    private final DotName toolArgumentsErrorHandlerDotName;
+    private final DotName toolExecutionErrorHandlerDotName;
     private final Integer maxSequentialToolInvocations;
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
@@ -57,6 +59,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
+            DotName toolArgumentsErrorHandlerDotName,
+            DotName toolExecutionErrorHandlerDotName,
             Integer maxSequentialToolInvocations,
             boolean allowContinuousForcedToolCalling,
             boolean makeDefaultBean) {
@@ -79,6 +83,8 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.toolHallucinationStrategyClassDotName = toolHallucinationStrategyClassDotName;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
+        this.toolArgumentsErrorHandlerDotName = toolArgumentsErrorHandlerDotName;
+        this.toolExecutionErrorHandlerDotName = toolExecutionErrorHandlerDotName;
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
@@ -158,6 +164,14 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public DeclarativeAiServiceOutputGuardrails getOutputGuardrails() {
         return outputGuardrails;
+    }
+
+    public DotName getToolArgumentsErrorHandlerDotName() {
+        return toolArgumentsErrorHandlerDotName;
+    }
+
+    public DotName getToolExecutionErrorHandlerDotName() {
+        return toolExecutionErrorHandlerDotName;
     }
 
     public boolean isMakeDefaultBean() {

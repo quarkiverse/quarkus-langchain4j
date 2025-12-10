@@ -6,6 +6,8 @@ import dev.langchain4j.data.image.Image;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.pdf.PdfFile;
+import dev.langchain4j.exception.ToolArgumentsException;
+import dev.langchain4j.exception.ToolExecutionException;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
@@ -29,11 +31,15 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.service.guardrail.InputGuardrails;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
+import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
 import io.quarkiverse.langchain4j.AudioUrl;
 import io.quarkiverse.langchain4j.CreatedAware;
+import io.quarkiverse.langchain4j.HandleToolArgumentError;
+import io.quarkiverse.langchain4j.HandleToolExecutionError;
 import io.quarkiverse.langchain4j.ImageUrl;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.PdfUrl;
@@ -124,6 +130,9 @@ public class LangChain4jDotNames {
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
 
+    static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
+    static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);
+
     static final DotName WEB_SEARCH_TOOL = DotName.createSimple(WebSearchTool.class);
     static final DotName WEB_SEARCH_ENGINE = DotName.createSimple(WebSearchEngine.class);
     static final DotName IMAGE = DotName.createSimple(Image.class);
@@ -136,4 +145,8 @@ public class LangChain4jDotNames {
     public static final DotName MCP_TOOLBOX = DotName.createSimple("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
     public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);
     public static final DotName CHAT_MEMORY = DotName.createSimple(ChatMemory.class);
+    public static final DotName TOOL_ERROR_HANDLER_RESULT = DotName.createSimple(ToolErrorHandlerResult.class);
+    public static final DotName TOOL_ARGUMENTS_EXCEPTION = DotName.createSimple(ToolArgumentsException.class);
+    public static final DotName TOOL_EXECUTION_EXCEPTION = DotName.createSimple(ToolExecutionException.class);
+    public static final DotName TOOL_ERROR_CONTEXT = DotName.createSimple(ToolErrorContext.class);
 }
