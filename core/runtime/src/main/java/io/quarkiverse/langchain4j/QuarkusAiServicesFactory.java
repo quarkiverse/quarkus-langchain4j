@@ -68,6 +68,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
             return this;
         }
 
+        public AiServices<T> allowContinuousForcedToolCalling(boolean allowContinuousForcedToolCalling) {
+            quarkusAiServiceContext().allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
+            return this;
+        }
+
         @SuppressWarnings("unchecked")
         @Override
         public T build() {

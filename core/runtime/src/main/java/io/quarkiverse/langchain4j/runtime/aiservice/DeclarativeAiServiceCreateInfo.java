@@ -27,5 +27,6 @@ public record DeclarativeAiServiceCreateInfo(
         String toolHallucinationStrategyClassName,
         InputGuardrailsLiteral inputGuardrails,
         OutputGuardrailsLiteral outputGuardrails,
-        Integer maxSequentialToolInvocations) {
+        Integer maxSequentialToolInvocations,
+        boolean allowContinuousForcedToolCalling) {
 }

@@ -34,6 +34,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DeclarativeAiServiceInputGuardrails inputGuardrails;
     private final DeclarativeAiServiceOutputGuardrails outputGuardrails;
     private final Integer maxSequentialToolInvocations;
+    private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
 
     public DeclarativeAiServiceBuildItem(
@@ -56,7 +57,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolHallucinationStrategyClassDotName,
             DeclarativeAiServiceInputGuardrails inputGuardrails,
             DeclarativeAiServiceOutputGuardrails outputGuardrails,
-            Integer maxSequentialToolInvocations, boolean makeDefaultBean) {
+            Integer maxSequentialToolInvocations,
+            boolean allowContinuousForcedToolCalling,
+            boolean makeDefaultBean) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -77,6 +80,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
+        this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
     }
 
@@ -183,5 +187,9 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public Integer getMaxSequentialToolInvocations() {
         return maxSequentialToolInvocations;
+    }
+
+    public boolean isAllowContinuousForcedToolCalling() {
+        return allowContinuousForcedToolCalling;
     }
 }

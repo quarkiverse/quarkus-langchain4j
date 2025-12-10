@@ -503,7 +503,8 @@ public class AiServiceMethodImplementationSupport {
 
             if (nonNull(context.chatModel.defaultRequestParameters())) {
                 var toolChoice = context.chatModel.defaultRequestParameters().toolChoice();
-                if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)) {
+                if (nonNull(toolChoice) && toolChoice.equals(ToolChoice.REQUIRED)
+                        && !context.allowContinuousForcedToolCalling) {
                     // This code is needed to avoid a infinite-loop when using the AiService
                     // in combination with the tool-choice option set to REQUIRED.
                     // If the tool-choice option is not set to AUTO after calling the tool,
