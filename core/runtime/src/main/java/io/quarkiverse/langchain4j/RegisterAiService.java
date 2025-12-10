@@ -16,6 +16,7 @@ import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ToolChoice;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.moderation.ModerationModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
@@ -146,6 +147,19 @@ public @interface RegisterAiService {
      * Configures a toolProviderSupplier. It is possible to use together toolProviderSupplier and "normal" tools.
      */
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
+
+    /**
+     * By default, after first tool call execution, in subsequent prompts the {@code toolChoice} of
+     * {@link dev.langchain4j.model.chat.request.ChatRequestParameters}
+     * is set to {@link ToolChoice#AUTO}.
+     * By enabling this option {@link ToolChoice#AUTO} will not be set and instead whatever value was used in the initial prompt
+     * will
+     * continue to be used.
+     * <p>
+     * BEWARE: This is dangerous as it can result in an infinite-loop when using the AiService in combination with the
+     * {@code toolChoice} option set to {@link ToolChoice#REQUIRED}.
+     */
+    boolean allowContinuousForcedToolCalling() default false;
 
     /**
      * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by

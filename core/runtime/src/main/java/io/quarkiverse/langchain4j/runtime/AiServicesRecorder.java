@@ -312,6 +312,12 @@ public class AiServicesRecorder {
                         quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
                     }
 
+                    if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
+                        quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
+                    }
+
+                    quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
+
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);

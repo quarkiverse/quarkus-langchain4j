@@ -470,6 +470,11 @@ public class AiServicesProcessor {
             Integer maxSequentialToolInvocations = instance.value("maxSequentialToolInvocations") != null
                     ? instance.value("maxSequentialToolInvocations").asInt()
                     : 0;
+
+            boolean allowContinuousForcedToolCalling = instance.value("allowContinuousForcedToolCalling") != null
+                    ? instance.value("allowContinuousForcedToolCalling").asBoolean()
+                    : false;
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -492,6 +497,7 @@ public class AiServicesProcessor {
                             classInputGuardrails(declarativeAiServiceClassInfo, index),
                             classOutputGuardrails(declarativeAiServiceClassInfo, index),
                             maxSequentialToolInvocations,
+                            allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                             impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name())));
 
@@ -752,6 +758,7 @@ public class AiServicesProcessor {
             ClassInfo declarativeAiServiceClassInfo = bi.getServiceClassInfo();
             String serviceClassName = declarativeAiServiceClassInfo.name().toString();
             Integer maxSequentialToolInvocations = bi.getMaxSequentialToolInvocations();
+            boolean allowContinuousForcedToolCalling = bi.isAllowContinuousForcedToolCalling();
 
             String chatLanguageModelSupplierClassName = (bi.getChatLanguageModelSupplierClassDotName() != null
                     ? bi.getChatLanguageModelSupplierClassDotName().toString()
@@ -879,7 +886,8 @@ public class AiServicesProcessor {
                                     toolHallucinationStrategyClassName,
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
-                                    maxSequentialToolInvocations)))
+                                    maxSequentialToolInvocations,
+                                    allowContinuousForcedToolCalling)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
