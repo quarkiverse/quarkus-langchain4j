@@ -31,7 +31,7 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
  * using the class as a CDI bean.
  * Under the hood LangChain4j's {@link AiServices#builder(Class)} is called
- * while also providing the builder with the proper {@link ChatLanguageModel} bean (mandatory), {@code tools} bean (optional),
+ * while also providing the builder with the proper {@link ChatModel} bean (mandatory), {@code tools} bean (optional),
  * {@link ChatMemoryProvider} and {@link ContentRetriever} beans (which by default are configured if such beans exist).
  * <p>
  * NOTE: The resulting CDI bean is {@link jakarta.enterprise.context.RequestScoped} by default. If you need to change the scope,
@@ -48,7 +48,7 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 public @interface RegisterAiService {
 
     /**
-     * Configures the way to obtain the {@link StreamingChatLanguageModel} to use.
+     * Configures the way to obtain the {@link StreamingChatModel} to use.
      * If not configured, the default CDI bean implementing the model is looked up.
      * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
      * {@code quarkus-langchain4j-azure-openai} or
@@ -57,7 +57,7 @@ public @interface RegisterAiService {
     Class<? extends Supplier<StreamingChatModel>> streamingChatLanguageModelSupplier() default BeanStreamingChatLanguageModelSupplier.class;
 
     /**
-     * Configures the way to obtain the {@link ChatLanguageModel} to use.
+     * Configures the way to obtain the {@link ChatModel} to use.
      * If not configured, the default CDI bean implementing the model is looked up.
      * Such a bean provided automatically by extensions such as {@code quarkus-langchain4j-openai},
      * {@code quarkus-langchain4j-azure-openai} or
@@ -67,7 +67,7 @@ public @interface RegisterAiService {
 
     /**
      * When {@code chatLanguageModelSupplier} is set to {@code BeanChatLanguageModelSupplier.class} (which is the default)
-     * this allows the selection of the {@link ChatLanguageModel} CDI bean to use.
+     * this allows the selection of the {@link ChatModel} CDI bean to use.
      * <p>
      * If not set, the default model (i.e. the one configured without setting the model name) is used.
      * An example of the default model configuration is the following:
@@ -148,7 +148,7 @@ public @interface RegisterAiService {
     Class<? extends Supplier<ToolProvider>> toolProviderSupplier() default BeanIfExistsToolProviderSupplier.class;
 
     /**
-     * Marker that is used to tell Quarkus to use the {@link ChatLanguageModel} that has been configured as a CDI bean by
+     * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by
      * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
@@ -161,7 +161,7 @@ public @interface RegisterAiService {
     }
 
     /**
-     * Marker that is used to tell Quarkus to use the {@link StreamingChatLanguageModel} that has been configured as a CDI bean
+     * Marker that is used to tell Quarkus to use the {@link StreamingChatModel} that has been configured as a CDI bean
      * by * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
      */
