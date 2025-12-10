@@ -29,6 +29,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.UserName;
 import dev.langchain4j.service.guardrail.InputGuardrails;
 import dev.langchain4j.service.guardrail.OutputGuardrails;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.web.search.WebSearchEngine;
 import dev.langchain4j.web.search.WebSearchTool;
@@ -136,4 +137,6 @@ public class LangChain4jDotNames {
     public static final DotName MCP_TOOLBOX = DotName.createSimple("io.quarkiverse.langchain4j.mcp.runtime.McpToolBox");
     public static final DotName CHAT_EVENT = DotName.createSimple(ChatEvent.class);
     public static final DotName CHAT_MEMORY = DotName.createSimple(ChatMemory.class);
+    public static final DotName CHAT_MEMORY_ACCESS = DotName.createSimple(
+            ChatMemoryAccess.class);
 }

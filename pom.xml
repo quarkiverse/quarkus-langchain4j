@@ -16,6 +16,7 @@
     <module>core</module>
     <module>embedding-stores</module>
     <module>mcp</module>
+    <module>a2a/a2a-server</module>
     <module>memory-stores</module>
     <module>model-auth-providers</module>
     <module>model-providers</module>
