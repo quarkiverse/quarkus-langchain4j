@@ -1,0 +1,14 @@
+[
+  {
+    "name": "JsonSample1",
+    "parameters": ["What is JSON?"],
+    "expected-output": "JSON is a data format",
+    "tags": ["json-test"]
+  },
+  {
+    "name": "JsonSample2",
+    "parameters": ["How to parse JSON?"],
+    "expected-output": "Use a parser library",
+    "tags": ["json-test", "parsing"]
+  }
+]

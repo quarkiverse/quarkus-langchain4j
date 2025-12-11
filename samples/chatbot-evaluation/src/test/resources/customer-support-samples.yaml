@@ -1,0 +1,35 @@
+- name: Business Hours Query
+  parameters:
+    - "What are your business hours?"
+  expected-output: "Our business hours are Monday through Friday, 9 AM to 5 PM EST."
+  tags: ["business-info", "critical"]
+
+- name: Shipping Policy Question
+  parameters:
+    - "Do you offer free shipping?"
+  expected-output: "Yes, we offer free shipping on all orders over $50."
+  tags: ["shipping", "critical"]
+
+- name: Return Policy Inquiry
+  parameters:
+    - "What is your return policy?"
+  expected-output: "We have a 30-day return policy for all items."
+  tags: ["returns", "critical"]
+
+- name: Contact Information Request
+  parameters:
+    - "How can I contact customer support?"
+  expected-output: "You can reach us at support@quarkusshop.com or call 1-800-QUARKUS."
+  tags: ["contact", "critical"]
+
+- name: Greeting Response
+  parameters:
+    - "Hello, I need help!"
+  expected-output: "Hello! I'm here to help you. What can I assist you with today?"
+  tags: ["greeting", "optional"]
+
+- name: Multiple Questions Combined
+  parameters:
+    - "What are your hours and do you have free shipping?"
+  expected-output: "Our business hours are Monday-Friday 9 AM to 5 PM EST. We offer free shipping on orders over $50."
+  tags: ["business-info", "shipping"]
