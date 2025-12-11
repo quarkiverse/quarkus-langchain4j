@@ -81,6 +81,9 @@ public class DotNames {
 
     public static final DotName EXECUTOR = DotName.createSimple(Executor.class);
 
+    public static final DotName THROWABLE = DotName.createSimple(Throwable.class);
+    public static final DotName EXCEPTION = DotName.createSimple(Exception.class);
+
     public static final DotName CHAT_MODEL_LISTENER = DotName.createSimple(ChatModelListener.class);
     public static final DotName MODEL_AUTH_PROVIDER = DotName.createSimple(ModelAuthProvider.class);
     public static final DotName TOOL = DotName.createSimple(Tool.class);

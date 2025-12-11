@@ -45,6 +45,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.DeploymentException;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.interceptor.InterceptorBinding;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -77,6 +78,10 @@ import dev.langchain4j.service.Moderate;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import dev.langchain4j.service.output.JsonSchemas;
 import dev.langchain4j.service.output.ServiceOutputParser;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
+import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.spi.classloading.ClassInstanceFactory;
 import dev.langchain4j.spi.classloading.ClassMetadataProviderFactory;
 import io.quarkiverse.langchain4j.ModelName;
@@ -341,6 +346,7 @@ public class AiServicesProcessor {
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ToolProviderMetaBuildItem> toolProviderProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
         IndexView index = indexBuildItem.getIndex();
 
@@ -496,6 +502,8 @@ public class AiServicesProcessor {
                             toolHallucinationStrategy(instance),
                             classInputGuardrails(declarativeAiServiceClassInfo, index),
                             classOutputGuardrails(declarativeAiServiceClassInfo, index),
+                            toolArgumentsErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
+                            toolExecutionErrorHandlerDotName(declarativeAiServiceClassInfo, generatedBeanProducer),
                             maxSequentialToolInvocations,
                             allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
@@ -647,6 +655,97 @@ public class AiServicesProcessor {
                 declarativeAiServiceBuildItem.getOutputGuardrails().maxRetries());
     }
 
+    private DotName toolArgumentsErrorHandlerDotName(ClassInfo aiServiceClassInfo,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean) {
+        return toolErrorHandlerDotName(aiServiceClassInfo, LangChain4jDotNames.HANDLE_TOOL_ARGUMENT_ERROR, generatedBean,
+                ToolArgumentsErrorHandler.class);
+    }
+
+    private DotName toolExecutionErrorHandlerDotName(ClassInfo aiServiceClassInfo,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean) {
+        return toolErrorHandlerDotName(aiServiceClassInfo, LangChain4jDotNames.HANDLE_TOOL_EXECUTION_ERROR, generatedBean,
+                ToolExecutionErrorHandler.class);
+    }
+
+    private DotName toolErrorHandlerDotName(ClassInfo aiServiceClassInfo, DotName annotationName,
+            BuildProducer<GeneratedBeanBuildItem> generatedBean,
+            Class<?> interfaceType) {
+        List<AnnotationInstance> instances = aiServiceClassInfo.annotations(annotationName);
+        if (instances.isEmpty()) {
+            return null;
+        }
+        if (instances.size() > 1) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only once in an AI Service. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        AnnotationTarget target = instances.get(0).target();
+        if (target.kind() != AnnotationTarget.Kind.METHOD) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only methods. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        MethodInfo targetMethod = target.asMethod();
+        if (!Modifier.isStatic(targetMethod.flags())) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only on static methods. Offending class is '%s'".formatted(annotationName,
+                            aiServiceClassInfo.name()));
+        }
+        DotName returnType = targetMethod.returnType().name();
+        if ((!returnType.equals(DotNames.STRING)) && !returnType.equals(LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT)) {
+            throw new IllegalConfigurationException(
+                    "`@%s` can be used only on static methods that return '%s' or '%s'. Offending class is '%s'"
+                            .formatted(annotationName,
+                                    DotNames.STRING, LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT, aiServiceClassInfo.name()));
+        }
+
+        ClassOutput output = new GeneratedBeanGizmoAdaptor(generatedBean);
+        String generatedClassName = aiServiceClassInfo.name().toString() + "$" + annotationName.withoutPackagePrefix();
+        ClassCreator.Builder classCreatorBuilder = ClassCreator.builder()
+                .classOutput(output)
+                .interfaces(interfaceType)
+                .className(generatedClassName);
+        try (ClassCreator classCreator = classCreatorBuilder.build()) {
+            classCreator.addAnnotation(Singleton.class);
+
+            MethodCreator handleMethod = classCreator.getMethodCreator(MethodDescriptor.ofMethod(generatedClassName, "handle",
+                    ToolErrorHandlerResult.class, Throwable.class, ToolErrorContext.class));
+
+            List<ResultHandle> paramHandles = new ArrayList<>();
+            for (MethodParameterInfo parameter : targetMethod.parameters()) {
+                DotName paramTypeDotName = parameter.type().name();
+                if (paramTypeDotName.equals(DotNames.THROWABLE) || paramTypeDotName.equals(DotNames.EXCEPTION)) {
+                    paramHandles.add(handleMethod.getMethodParam(0));
+                } else if (paramTypeDotName.equals(LangChain4jDotNames.TOOL_ERROR_CONTEXT)) {
+                    paramHandles.add(handleMethod.getMethodParam(1));
+                } else {
+                    throw new IllegalConfigurationException(
+                            "`@%s` can be used only on static methods that use the parameters of type '%s' or '%s'. Offending class is '%s'"
+                                    .formatted(annotationName,
+                                            DotNames.THROWABLE, LangChain4jDotNames.TOOL_ERROR_CONTEXT,
+                                            aiServiceClassInfo.name()));
+                }
+            }
+
+            ResultHandle result = handleMethod.invokeStaticInterfaceMethod(targetMethod,
+                    paramHandles.toArray(new ResultHandle[0]));
+            if (returnType.equals(LangChain4jDotNames.TOOL_ERROR_HANDLER_RESULT)) {
+                handleMethod.returnValue(result);
+            } else if (returnType.equals(DotNames.STRING)) {
+                ResultHandle toolErrorHandlerResultResult = handleMethod.invokeStaticMethod(
+                        MethodDescriptor.ofMethod(ToolErrorHandlerResult.class, "text", ToolErrorHandlerResult.class,
+                                String.class),
+                        result);
+                handleMethod.returnValue(toolErrorHandlerResultResult);
+            } else {
+                throw new IllegalStateException("Unhandled result type: " + returnType);
+            }
+
+        }
+
+        return DotName.createSimple(generatedClassName);
+    }
+
     private static List<ClassInfo> tools(AnnotationInstance instance, IndexView index) {
         AnnotationValue toolsInstance = instance.value("tools");
         if (toolsInstance != null) {
@@ -792,6 +891,14 @@ public class AiServicesProcessor {
                 allToolHallucinationStrategies.add(bi.getToolHallucinationStrategyClassDotName());
             }
 
+            String toolArgumentsErrorHandlerDotName = (bi.getToolArgumentsErrorHandlerDotName() != null
+                    ? bi.getToolArgumentsErrorHandlerDotName().toString()
+                    : null);
+
+            String toolExecutionErrorHandlerDotName = (bi.getToolExecutionErrorHandlerDotName() != null
+                    ? bi.getToolExecutionErrorHandlerDotName().toString()
+                    : null);
+
             String chatMemoryProviderSupplierClassName = bi.getChatMemoryProviderSupplierClassDotName() != null
                     ? bi.getChatMemoryProviderSupplierClassDotName().toString()
                     : null;
@@ -884,6 +991,8 @@ public class AiServicesProcessor {
                                     injectModerationModelBean,
                                     injectImageModel,
                                     toolHallucinationStrategyClassName,
+                                    toolArgumentsErrorHandlerDotName,
+                                    toolExecutionErrorHandlerDotName,
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
                                     maxSequentialToolInvocations,
@@ -930,6 +1039,12 @@ public class AiServicesProcessor {
 
             if (bi.getToolHallucinationStrategyClassDotName() != null) {
                 configurator.addInjectionPoint(ClassType.create(bi.getToolHallucinationStrategyClassDotName()));
+            }
+            if (bi.getToolArgumentsErrorHandlerDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getToolArgumentsErrorHandlerDotName()));
+            }
+            if (bi.getToolExecutionErrorHandlerDotName() != null) {
+                configurator.addInjectionPoint(ClassType.create(bi.getToolExecutionErrorHandlerDotName()));
             }
 
             if (LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER.toString().equals(chatMemoryProviderSupplierClassName)) {
