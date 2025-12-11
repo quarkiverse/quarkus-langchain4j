@@ -12,23 +12,42 @@ This extension allows Quarkus applications to use locally hosted Llama3 and othe
 
 === Java Version and TornadoVM
 
-GPULlama3.java requires *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API] and TornadoVM integration.
+GPULlama3.java requires TornadoVM and *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API].
 
-Install TornadoVM locally as follows:
+Download and Install TornadoVM locally as follows:
+
+*Linux (x86_64)*
 
 [source,shell]
 ----
-cd ~
-git clone git@github.com:beehive-lab/TornadoVM.git
-cd ~/TornadoVM
-./bin/tornadovm-installer --jdk jdk21 --backend opencl
-source setvars.sh
+wget https://github.com/beehive-lab/TornadoVM/releases/download/v2.1.0/tornadovm-2.1.0-opencl-linux-amd64.zip
+unzip tornadovm-2.1.0-opencl-linux-amd64.zip
+# Replace <path-to-sdk> manually with the absolute path of the extracted folder
+export TORNADO_SDK="<path-to-sdk>/tornadovm-2.1.0-opencl"
+export PATH=$TORNADO_SDK/bin:$PATH
+
+tornado --devices
+tornado --version
+----
+
+*macOS (Apple Silicon)*
+
+[source,shell]
+----
+wget https://github.com/beehive-lab/TornadoVM/releases/download/v2.1.0/tornadovm-2.1.0-opencl-mac-aarch64.zip
+unzip tornadovm-2.1.0-opencl-mac-aarch64.zip
+# Replace <path-to-sdk> manually with the absolute path of the extracted folder
+export TORNADO_SDK="<path-to-sdk>/tornadovm-2.1.0-opencl"
+export PATH=$TORNADO_SDK/bin:$PATH
+
+tornado --devices
+tornado --version
 ----
 
 The above steps:
 
 - Set the `TORNADOVM_SDK` environment variable to the TornadoVM SDK path.
-- Create a `tornado-argfile` under `~/TornadoVM` containing the JVM arguments required to enable TornadoVM.
+- `TORNADO_SDK` contains the `tornado-argfile` with all the JVM arguments required to enable TornadoVM.
 - ⚠️ The `tornado-argfile` should be used for *building* and *running* the Quarkus application (see section Building & Running the Quarkus Application).
 
 == Using GPULlama3.java
