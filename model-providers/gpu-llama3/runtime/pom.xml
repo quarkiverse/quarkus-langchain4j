@@ -86,7 +86,8 @@
                   <target>21</target>
                   <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
                     <compilerArgs>
-                      <arg>--add-modules=jdk.incubator.vector</arg>
+                        <arg>--enable-preview</arg>
+                        <arg>--add-modules=jdk.incubator.vector</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
