@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,8 +159,14 @@ public class InfinispanEmbeddingStore implements EmbeddingStore<TextSegment> {
         }).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
-    public void deleteAll() {
-        remoteCache.clearAsync();
+    @Override
+    public void removeAll(Collection<String> ids) {
+        ids.forEach(id -> remoteCache.remove(id));
+    }
+
+    @Override
+    public void removeAll() {
+        remoteCache.clear();
     }
 
     public static class Builder {

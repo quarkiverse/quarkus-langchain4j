@@ -42,7 +42,7 @@ public class InfinispanEmbeddingStoreTest extends EmbeddingStoreIT {
 
     @Override
     protected void clearStore() {
-        embeddingStore.deleteAll();
+        embeddingStore.removeAll();
     }
 
     @Override
