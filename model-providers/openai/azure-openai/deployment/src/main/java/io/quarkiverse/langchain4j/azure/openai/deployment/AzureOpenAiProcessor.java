@@ -15,6 +15,7 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -41,6 +42,25 @@ public class AzureOpenAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    public void registerDefaultModelAuthProvider(AzureOpenAiRecorder recorder,
+            BuildProducer<SyntheticBeanBuildItem> producer,
+            LangChain4jAzureOpenAiBuildConfig buildConfig) {
+
+        if (buildConfig.azureDefaultCredentialsEnabled().isPresent() &&
+                buildConfig.azureDefaultCredentialsEnabled().get()) {
+            producer.produce(
+                    SyntheticBeanBuildItem
+                            .configure(ModelAuthProvider.class)
+                            .scope(ApplicationScoped.class)
+                            .setRuntimeInit()
+                            .defaultBean()
+                            .createWith(recorder.modelAuthProvider())
+                            .done());
+        }
     }
 
     @BuildStep
@@ -131,8 +151,6 @@ public class AzureOpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
-                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
-                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
                         .createWith(imageModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
