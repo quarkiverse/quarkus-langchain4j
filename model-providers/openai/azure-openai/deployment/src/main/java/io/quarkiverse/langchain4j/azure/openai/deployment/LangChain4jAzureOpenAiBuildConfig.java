@@ -2,6 +2,9 @@ package io.quarkiverse.langchain4j.azure.openai.deployment;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
+import java.util.Optional;
+
+import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
@@ -28,4 +31,11 @@ public interface LangChain4jAzureOpenAiBuildConfig {
      * Image model related settings
      */
     ImageModelBuildConfig imageModel();
+
+    /**
+     * If true, enables the use of Azure Default Credentials for authentication.
+     * If not set, the default behavior is disabled.
+     */
+    @ConfigDocDefault("true")
+    Optional<Boolean> azureDefaultCredentialsEnabled();
 }
