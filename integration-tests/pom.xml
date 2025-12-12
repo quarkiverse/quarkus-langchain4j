@@ -37,7 +37,10 @@
     <module>secure-mcp</module>
   </modules>
 
+
   <profiles>
+    <!-- Temporarily disable this as it causing issues with the release -->
+    <!--
     <profile>
       <id>jdk21-plus</id>
       <activation>
@@ -47,6 +50,7 @@
         <module>jlama</module>
       </modules>
     </profile>
+    -->
     <profile>
       <id>jdk22-plus</id>
       <activation>
