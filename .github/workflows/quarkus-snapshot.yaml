@@ -54,6 +54,9 @@ jobs:
           repository: ${{ env.ECOSYSTEM_CI_REPO }}
           path: ecosystem-ci
 
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+
       - name: Setup and Run Tests
         run: ./ecosystem-ci/setup-and-test
         env:
