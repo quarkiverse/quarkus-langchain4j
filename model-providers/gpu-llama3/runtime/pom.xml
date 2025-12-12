@@ -74,31 +74,111 @@
                 </runnerParentFirstArtifacts>
               </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                  <!--
-                      In order for vector support to work on JDK 21+, we need to build the module with JDK 23,
-                      because in that version Vector is no longer preview, so we build target and runtime versions
-                      don't need to match (remember that preview features only work on the same runtime version as the target
-                   -->
-                  <source>21</source>
-                  <target>21</target>
-                  <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
-                    <compilerArgs>
-                        <arg>--enable-preview</arg>
-                        <arg>--add-modules=jdk.incubator.vector</arg>
-                    </compilerArgs>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>io.quarkus</groupId>
-                            <artifactId>quarkus-extension-processor</artifactId>
-                            <version>${quarkus.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Java 21: Enable preview features to match gpu-llama3 compilation -->
+        <profile>
+            <id>jdk21-with-preview</id>
+            <activation>
+                <jdk>21</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                Target Java 21 with preview features to match gpu-llama3 dependency
+                             -->
+                            <source>21</source>
+                            <target>21</target>
+                            <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
+                            <compilerArgs>
+                                <arg>--enable-preview</arg>
+                                <arg>--add-modules=jdk.incubator.vector</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>io.quarkus</groupId>
+                                    <artifactId>quarkus-extension-processor</artifactId>
+                                    <version>${quarkus.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Java 22-23: Compile to Java 21 target for compatibility -->
+        <profile>
+            <id>jdk22-23-with-preview</id>
+            <activation>
+                <jdk>[22,23]</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                Compile with JDK 22-23 but target Java 21 for compatibility
+                             -->
+                            <source>21</source>
+                            <target>21</target>
+                            <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
+                            <compilerArgs>
+                                <arg>--enable-preview</arg>
+                                <arg>--add-modules=jdk.incubator.vector</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>io.quarkus</groupId>
+                                    <artifactId>quarkus-extension-processor</artifactId>
+                                    <version>${quarkus.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Java 24+: Use current JDK's preview features -->
+        <profile>
+            <id>jdk24-plus</id>
+            <activation>
+                <jdk>[24,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                Use JDK 24+ where preview features are supported for current version
+                             -->
+                            <source>24</source>
+                            <target>24</target>
+                            <release combine.self="override" />  <!-- make sure -release is not passed to javac-->
+                            <compilerArgs>
+                                <arg>--enable-preview</arg>
+                                <arg>--add-modules=jdk.incubator.vector</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>io.quarkus</groupId>
+                                    <artifactId>quarkus-extension-processor</artifactId>
+                                    <version>${quarkus.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
