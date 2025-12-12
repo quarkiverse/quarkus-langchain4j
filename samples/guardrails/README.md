@@ -1,14 +1,14 @@
 # Tool Guardrails Demo
 
-This demo showcases the implementation of **guardrails for tool/function calling** in Quarkus LangChain4j. 
+This demo showcases the implementation of **guardrails** in Quarkus LangChain4j, including tool/function calling. 
 Guardrails provide a mechanism to validate and control tool invocations at both input and output stages.
 
-## What are Tool Guardrails?
+## What are Guardrails?
 
-Tool guardrails are validation and transformation mechanisms that:
+Guardrails are validation and transformation mechanisms that:
 
-- **Input Guardrails**: Validate parameters and context before tool execution
-- **Output Guardrails**: Validate, filter, or transform tool results before returning to the LLM
+- **Input Guardrails**: Validate parameters and context before execution
+- **Output Guardrails**: Validate, filter, or transform results before returning to the LLM
 
 This enables:
 - Security controls (authorization, authentication)
@@ -19,7 +19,7 @@ This enables:
 
 ## Demo Overview
 
-This demo includes 6 different guardrails demonstrating various use cases:
+This demo includes 7 different guardrails demonstrating various use cases:
 
 ### Input Guardrails
 
@@ -53,13 +53,17 @@ This demo includes 6 different guardrails demonstrating various use cases:
 6. **Combined Guardrails** - Multiple guardrails on one tool
    - Demonstrates guardrail chaining
    - Ordered execution
+    
+7. **Profanity Guardrail** - Validation of AI output.
+   - The simplest use case to show the basics
+   - Checks chat AI output, fails if it contains prohibited word
 
 ## Running the Demo
 
 ### Start the application in dev mode:
 
 ```bash
-mvn quarkus:dev
+mvn quarkus:dev -Dquarkus.langchain4j.openai.api-key=$API_KEY
 ```
 
 The application will start on http://localhost:8080
@@ -98,4 +102,15 @@ done
 ```bash
 # Large result set will be truncated
 curl "http://localhost:8080/email?request=Search%20for%20all%20customers"
+```
+
+
+#### 4. Chat with the assistant (with output moderation)
+
+```bash
+$ curl -X POST localhost:8080/chatbot/moderated -w "\n" -d 'Hello, my name is Meatbag'
+[The AI answered with expletive]
+# The similar but non-prohibited name will not be flagged 
+$ curl -X POST localhost:8080/chatbot/moderated -w "\n" -d 'Hello, my name is Fleabag'
+Hello Fleabag! How can I assist you today?
 ```
