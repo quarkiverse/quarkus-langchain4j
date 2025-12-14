@@ -53,8 +53,14 @@
                             <artifactId>quarkus-extension-processor</artifactId>
                         </path>
                     </annotationProcessorPaths>
+                    <release combine.self="override"/>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    
 </project>
