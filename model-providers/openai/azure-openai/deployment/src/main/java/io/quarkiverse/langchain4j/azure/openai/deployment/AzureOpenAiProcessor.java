@@ -47,7 +47,7 @@ public class AzureOpenAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     public void registerDefaultModelAuthProvider(AzureOpenAiRecorder recorder,
-                                                 BuildProducer<SyntheticBeanBuildItem> producer) {
+            BuildProducer<SyntheticBeanBuildItem> producer) {
         producer.produce(
                 SyntheticBeanBuildItem
                         .configure(ModelAuthProvider.class)
