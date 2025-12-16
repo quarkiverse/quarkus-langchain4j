@@ -47,20 +47,15 @@ public class AzureOpenAiProcessor {
     @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     public void registerDefaultModelAuthProvider(AzureOpenAiRecorder recorder,
-            BuildProducer<SyntheticBeanBuildItem> producer,
-            LangChain4jAzureOpenAiBuildConfig buildConfig) {
-
-        if (buildConfig.azureDefaultCredentialsEnabled().isPresent() &&
-                buildConfig.azureDefaultCredentialsEnabled().get()) {
-            producer.produce(
-                    SyntheticBeanBuildItem
-                            .configure(ModelAuthProvider.class)
-                            .scope(ApplicationScoped.class)
-                            .setRuntimeInit()
-                            .defaultBean()
-                            .createWith(recorder.modelAuthProvider())
-                            .done());
-        }
+                                                 BuildProducer<SyntheticBeanBuildItem> producer) {
+        producer.produce(
+                SyntheticBeanBuildItem
+                        .configure(ModelAuthProvider.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .createWith(recorder.modelAuthProvider())
+                        .done());
     }
 
     @BuildStep

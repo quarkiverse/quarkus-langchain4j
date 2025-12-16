@@ -131,10 +131,12 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         });
                     }
 
-                    ModelAuthProvider
-                            .resolve(builder.configName)
-                            .ifPresent(modelAuthProvider -> restApiBuilder
-                                    .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
+                    if (azureApiKey == null && azureAdToken == null && openaiApiKey == null) {
+                        ModelAuthProvider
+                                .resolve(builder.configName)
+                                .ifPresent(modelAuthProvider -> restApiBuilder
+                                        .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
+                    }
 
                     Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
                             .select(TlsConfigurationRegistry.class);
