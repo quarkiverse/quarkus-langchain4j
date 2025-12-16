@@ -2,9 +2,6 @@ package io.quarkiverse.langchain4j.azure.openai.deployment;
 
 import static io.quarkus.runtime.annotations.ConfigPhase.BUILD_TIME;
 
-import java.util.Optional;
-
-import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
