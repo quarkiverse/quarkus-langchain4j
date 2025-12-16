@@ -79,6 +79,16 @@ public class MyMcpAuthProvider implements McpClientAuthProvider {
 
 TIP: The `Input` object gives you access to the HTTP request context (URI, method, headers).
 
+If you have multiple MCP clients, you may need to control which client uses which `McpClientAuthProvider`.
+For that, you can apply the `@McpClientName` qualifier on beans that implement `McpClientAuthProvider`, and
+that provider will only be used for the specified MCP client (or clients, if you repeat the annotation multiple times).
+
+When resolving which client will use which auth provider, these rules are followed:
+- If there is a provider with the matching `@McpClientName`, it will be used. If there are multiple, it's not defined which one will be used.
+- Otherwise, if there is a provider without `@McpClientName`, it will be used.
+- If neither of the above is true, no authorization will be applied.
+
+
 === Propagating OIDC Access Tokens
 
 If your application uses OpenID Connect (OIDC) and the user has authenticated, you can **automatically propagate** the user's access token to the MCP server by adding:
