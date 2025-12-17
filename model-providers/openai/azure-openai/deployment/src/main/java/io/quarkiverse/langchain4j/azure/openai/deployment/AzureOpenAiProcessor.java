@@ -62,8 +62,7 @@ public class AzureOpenAiProcessor {
     @BuildStep
     RuntimeInitializedClassBuildItem runtimeInitAzureKeyring() {
         return new RuntimeInitializedClassBuildItem(
-                "com.microsoft.aad.msal4jextensions.persistence.linux.ISecurityLibrary"
-        );
+                "com.microsoft.aad.msal4jextensions.persistence.linux.ISecurityLibrary");
     }
 
     @BuildStep
