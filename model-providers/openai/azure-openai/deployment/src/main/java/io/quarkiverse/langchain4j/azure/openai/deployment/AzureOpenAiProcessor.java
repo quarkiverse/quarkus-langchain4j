@@ -7,7 +7,6 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 
 import java.util.List;
 
-import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -34,6 +33,7 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 
 public class AzureOpenAiProcessor {
 
