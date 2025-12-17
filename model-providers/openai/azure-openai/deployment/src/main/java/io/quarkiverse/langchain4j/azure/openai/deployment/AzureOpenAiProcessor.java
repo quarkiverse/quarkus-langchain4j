@@ -7,6 +7,7 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.STREAMIN
 
 import java.util.List;
 
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -56,6 +57,13 @@ public class AzureOpenAiProcessor {
                         .defaultBean()
                         .createWith(recorder.modelAuthProvider())
                         .done());
+    }
+
+    @BuildStep
+    RuntimeInitializedClassBuildItem runtimeInitAzureKeyring() {
+        return new RuntimeInitializedClassBuildItem(
+                "com.microsoft.aad.msal4jextensions.persistence.linux.ISecurityLibrary"
+        );
     }
 
     @BuildStep
