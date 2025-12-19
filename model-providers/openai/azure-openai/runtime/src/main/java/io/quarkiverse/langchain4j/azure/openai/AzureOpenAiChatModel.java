@@ -38,7 +38,6 @@ import dev.langchain4j.model.openai.internal.chat.ChatCompletionRequest;
 import dev.langchain4j.model.openai.internal.chat.ChatCompletionResponse;
 import dev.langchain4j.model.openai.internal.chat.ResponseFormat;
 import dev.langchain4j.model.openai.internal.chat.ResponseFormatType;
-import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.openai.common.QuarkusOpenAiClient;
 
 /**
@@ -75,7 +74,6 @@ public class AzureOpenAiChatModel implements ChatModel {
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
-    private final ModelAuthProvider defaultModelAuthProvider;
 
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
@@ -94,8 +92,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             String responseFormat,
             Boolean logRequests,
             Boolean logResponses,
-            String configName, List<ChatModelListener> listeners,
-            ModelAuthProvider defaultModelAuthProvider) {
+            String configName, List<ChatModelListener> listeners) {
         this.listeners = listeners;
 
         timeout = getOrDefault(timeout, ofSeconds(60));
@@ -114,7 +111,6 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
                 .configName(configName)
-                .defaultModelAuthProvider(defaultModelAuthProvider)
                 .build();
 
         this.temperature = getOrDefault(temperature, 0.7);
@@ -132,7 +128,6 @@ public class AzureOpenAiChatModel implements ChatModel {
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
-        this.defaultModelAuthProvider = defaultModelAuthProvider;
     }
 
     @Override
@@ -269,7 +264,6 @@ public class AzureOpenAiChatModel implements ChatModel {
         private Boolean logResponses;
         private String configName;
         private List<ChatModelListener> listeners = Collections.emptyList();
-        private ModelAuthProvider defaultModelAuthProvider;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -385,11 +379,6 @@ public class AzureOpenAiChatModel implements ChatModel {
             return this;
         }
 
-        public Builder defaultModelAuthProvider(ModelAuthProvider defaultModelAuthProvider) {
-            this.defaultModelAuthProvider = defaultModelAuthProvider;
-            return this;
-        }
-
         public AzureOpenAiChatModel build() {
             return new AzureOpenAiChatModel(endpoint,
                     apiVersion,
@@ -409,8 +398,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                     logRequests,
                     logResponses,
                     configName,
-                    listeners,
-                    defaultModelAuthProvider);
+                    listeners);
         }
     }
 }

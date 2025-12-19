@@ -131,15 +131,12 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                         });
                     }
 
-                    if (builder.defaultModelAuthProvider != null && ModelAuthProvider.resolve(builder.configName).isEmpty()) {
-                        restApiBuilder
-                                .register(new OpenAiRestApi.OpenAIRestAPIFilter(builder.defaultModelAuthProvider));
+                    if (azureApiKey == null && azureAdToken == null && openaiApiKey == null) {
+                        ModelAuthProvider
+                                .resolve(builder.configName)
+                                .ifPresent(modelAuthProvider -> restApiBuilder
+                                        .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
                     }
-
-                    ModelAuthProvider
-                            .resolve(builder.configName)
-                            .ifPresent(modelAuthProvider -> restApiBuilder
-                                    .register(new OpenAiRestApi.OpenAIRestAPIFilter(modelAuthProvider)));
 
                     Instance<TlsConfigurationRegistry> tlsConfigurationRegistry = CDI.current()
                             .select(TlsConfigurationRegistry.class);
@@ -407,7 +404,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
         private Duration callTimeout = Duration.ofSeconds(60);
         private Duration writeTimeout = Duration.ofSeconds(60);
         private String apiVersion;
-        private ModelAuthProvider defaultModelAuthProvider;
 
         public Proxy proxy;
         public boolean logStreamingResponses;
@@ -488,11 +484,6 @@ public class QuarkusOpenAiClient extends OpenAiClient {
 
         public Builder proxy(Proxy.Type type, String ip, int port) {
             this.proxy = new Proxy(type, new InetSocketAddress(ip, port));
-            return this;
-        }
-
-        public Builder defaultModelAuthProvider(ModelAuthProvider defaultModelAuthProvider) {
-            this.defaultModelAuthProvider = defaultModelAuthProvider;
             return this;
         }
 

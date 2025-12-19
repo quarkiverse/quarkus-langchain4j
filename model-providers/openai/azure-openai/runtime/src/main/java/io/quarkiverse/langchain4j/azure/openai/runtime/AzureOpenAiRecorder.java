@@ -108,10 +108,8 @@ public class AzureOpenAiRecorder {
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
-                    if (areApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
-                            configName)) {
-                        builder.defaultModelAuthProvider(new AzureOpenAiRecorder.ApplicationDefaultAuthProvider());
-                    }
+                    throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
+                            configName);
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -290,6 +288,16 @@ public class AzureOpenAiRecorder {
         }
     }
 
+    public Function<SyntheticCreationalContext<ModelAuthProvider>, ModelAuthProvider> modelAuthProvider() {
+        return new Function<>() {
+            @Override
+            public ModelAuthProvider apply(
+                    SyntheticCreationalContext<ModelAuthProvider> modelAuthProviderSyntheticCreationalContext) {
+                return new AzureOpenAiRecorder.ApplicationDefaultAuthProvider();
+            }
+        };
+    }
+
     static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName, EndpointType type) {
         var endpoint = azureAiConfig.endPointFor(type);
 
@@ -354,10 +362,6 @@ public class AzureOpenAiRecorder {
         if ((apiKey != null) == (adToken != null) && !authProviderAvailable) {
             throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
         }
-    }
-
-    private boolean areApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
-        return (apiKey != null) == (adToken != null) && !authProviderAvailable;
     }
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
