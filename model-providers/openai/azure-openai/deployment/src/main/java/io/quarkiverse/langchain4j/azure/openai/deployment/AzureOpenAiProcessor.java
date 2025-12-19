@@ -146,6 +146,8 @@ public class AzureOpenAiProcessor {
                         .setRuntimeInit()
                         .defaultBean()
                         .scope(ApplicationScoped.class)
+                        .addInjectionPoint(ParameterizedType.create(DotNames.CDI_INSTANCE,
+                                new Type[] { ClassType.create(DotNames.MODEL_AUTH_PROVIDER) }, null))
                         .createWith(imageModel);
                 addQualifierIfNecessary(builder, configName);
                 beanProducer.produce(builder.done());
