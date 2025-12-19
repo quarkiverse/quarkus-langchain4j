@@ -12,9 +12,8 @@
     <properties>
         <skipITs>true</skipITs>
         <maven.compiler.release>21</maven.compiler.release>
-        <quarkus.version>3.18.0</quarkus.version>
         <!-- TornadoVM argfile path -->
-        <tornado.argfile>${env.TORNADO_SDK}/tornado-argfile</tornado.argfile>
+        <tornado.argfile>${env.TORNADOVM_HOME}/tornado-argfile</tornado.argfile>
     </properties>
     <dependencies>
         <dependency>
