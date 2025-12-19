@@ -1,28 +1,26 @@
 ### How to run the integrated tests:
 
-#### 1) Install TornadoVM:
+#### 1) Install TornadoVM with SDKMAN!:
 
 ```bash
-cd ~
-git clone git@github.com:beehive-lab/TornadoVM.git
-cd ~/TornadoVM
-./bin/tornadovm-installer --jdk jdk21 --backend opencl
-source setvars.sh
+sdk install tornadovm 2.2.0-opencl
+
+# verify installation
+tonrado --devices
 ```
 
-Note that the above steps:
-- Set `TORNADOVM_SDK` environment variable to the path of the TornadoVM SDK.
-- Create the `tornado-argfile` under `~/TornadoVM` which contains all the required JVM arguments to enable TornadoVM.
+Note that SDKMAN! automatically:
+- Sets `TORNADOVM_HOME` environment variable to the path of the TornadoVM SDK.
+- Creates the `tornado-argfile` under `~/TornadoVM` which contains all the required JVM arguments to enable TornadoVM.
 - The argfile is automatically used in Quarkus dev mode; however, in production mode, you need to manually pass the argfile to the JVM (see step 3).
 
-#### 2) Build Quarkus-langchain4j:
+#### 2) Build Quarkus-LangChain4j with GPULlama3 and integrated tests:
 
 ```bash
 cd ~
-git clone git@github.com:mikepapadim/quarkus-langchain4j.git
+git clone git@github.com:quarkiverse/quarkus-langchain4j.git
 cd ~/quarkus-langchain4j
-git checkout gpu-llama3-integration
-mvn clean install -DskipTests
+mvn clean install -pl integration-tests/gpu-llama3 -am -DskipTests -Dtornado
 ```
 
 #### 3) Run the integrated tests:
@@ -39,8 +37,10 @@ mvn quarkus:dev
 
 - For *production* mode, run:
 ```bash
-java @~/TornadoVM/tornado-argfile -jar target/quarkus-app/quarkus-run.jar
+java  @$TORNADOVM_HOME/tornado-argfile \
+      -jar target/quarkus-app/quarkus-run.jar
 ```
+(Note: use `-Dtornado.device.memory=<X>GB` to set the device memory if needed)
 ##### 3.2 Send requests to the Quarkus app:
 
 when quarkus is running, open a new terminal and run:
