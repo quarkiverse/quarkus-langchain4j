@@ -468,6 +468,7 @@ public class AiServiceMethodImplementationSupport {
                 committableChatMemory.add(toolResult);
             }
             if (immediateToolReturn) {
+                committableChatMemory.commit();
                 if (!TypeUtil.isResult(returnType)) {
                     throw IllegalConfigurationException
                             .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
