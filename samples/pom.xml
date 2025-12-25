@@ -19,6 +19,7 @@
         <module>email-a-poem</module>
         <module>email-a-poem-kotlin</module>
         <module>fraud-detection</module>
+        <module>mcp-fileserver</module>
         <module>mcp-tools</module>
         <module>mcp-sse-client-server</module>
         <module>movie-similarity-search</module>
