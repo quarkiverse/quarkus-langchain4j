@@ -130,7 +130,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus-langchain4j.version>1.2.2</quarkus-langchain4j.version>
+                <quarkus-langchain4j.version>1.2.3</quarkus-langchain4j.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
