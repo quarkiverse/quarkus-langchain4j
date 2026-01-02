@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-oidc-client-mcp-auth-provider-parent</artifactId>
-        <version>1.2.3</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-oidc-client-mcp-auth-provider</artifactId>
     <name>Quarkus LangChain4j - OpenId Connect (OIDC) Client McpClientAuthProvider - Runtime</name>
