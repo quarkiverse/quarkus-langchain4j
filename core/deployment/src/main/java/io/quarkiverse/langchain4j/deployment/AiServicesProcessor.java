@@ -1213,7 +1213,8 @@ public class AiServicesProcessor {
             MethodInfo method,
             List<String> associatedTools,
             List<ToolMethodBuildItem> tools,
-            DotName toolProviderClassDotName) {
+            DotName toolProviderClassDotName,
+            List<String> mcpClientNames) {
         boolean reactive = method.returnType().name().equals(DotNames.UNI)
                 || method.returnType().name().equals(DotNames.COMPLETION_STAGE)
                 || method.returnType().name().equals(DotNames.MULTI);
@@ -1223,6 +1224,13 @@ public class AiServicesProcessor {
         if (!reactive) {
             // We are already on a thread we can block.
             return false;
+        }
+
+        if (mcpClientNames != null) {
+            // MCP clients are blocking for now, so we need to switch to a worker thread
+            // note: null means no MCP clients, empty list means that there is a McpToolBox annotation that takes all
+            // MCP clients
+            return true;
         }
 
         // If a ToolProvider is configured for a reactive method, assume it may provide blocking tools at runtime
@@ -1830,7 +1838,7 @@ public class AiServicesProcessor {
 
         //  Detect if tools execution may block the caller thread.
         boolean switchToWorkerThreadForToolExecution = detectIfToolExecutionRequiresAWorkerThread(method, tools,
-                methodToolClassInfo.keySet());
+                methodToolClassInfo.keySet(), methodMcpClientNames);
 
         TypeArgMapper typeArgMapper = new TypeArgMapper(method.declaringClass(), index);
         var methodReturnTypeSignature = typeSignature(method.returnType(), typeArgMapper);
@@ -1908,7 +1916,7 @@ public class AiServicesProcessor {
     }
 
     private boolean detectIfToolExecutionRequiresAWorkerThread(MethodInfo method, List<ToolMethodBuildItem> tools,
-            Collection<String> methodToolClassNames) {
+            Collection<String> methodToolClassNames, List<String> mcpClientNames) {
         List<String> allTools = new ArrayList<>(methodToolClassNames);
         DotName toolProviderClassDotName = null;
         // We need to combine it with the tools that are registered globally - unfortunately, we don't have access to the AI service here, so, re-parsing.
@@ -1924,7 +1932,8 @@ public class AiServicesProcessor {
                 toolProviderClassDotName = toolProviderValue.asClass().name();
             }
         }
-        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName);
+        return detectAiServiceMethodThanNeedToBeDispatchedOnWorkerThread(method, allTools, tools, toolProviderClassDotName,
+                mcpClientNames);
     }
 
     private void validateReturnType(MethodInfo method) {
