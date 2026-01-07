@@ -107,7 +107,9 @@ public class JaxRsHttpClient implements HttpClient {
         for (var headers : request.headers().entrySet()) {
             List<String> values = headers.getValue();
             if ((values != null) && (!values.isEmpty())) {
-                invocationBuilder.header(headers.getKey(), values);
+                for (String value : values) {
+                    invocationBuilder.header(headers.getKey(), value);
+                }
             }
         }
 
