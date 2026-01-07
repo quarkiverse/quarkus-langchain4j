@@ -1,9 +1,7 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
-import static dev.langchain4j.data.message.AiMessage.aiMessage;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
-import static io.quarkiverse.langchain4j.gemini.common.BaseGeminiChatModel.log;
 
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +24,6 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
-import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.ChatResponseMetadata;
 import dev.langchain4j.model.output.FinishReason;
@@ -58,12 +55,11 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
     public ChatResponse chat(ChatRequest chatRequest) {
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
-        Schema schema = effectiveResponseFormat != null
-                ? SchemaMapper.fromJsonSchemaToSchema(effectiveResponseFormat.jsonSchema())
-                : null;
+        Schema schema = detectSchema(effectiveResponseFormat);
+
         GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
-                .responseMimeType(schema != null ? computeMimeType(effectiveResponseFormat) : null)
+                .responseMimeType(computeMimeType(effectiveResponseFormat, schema))
                 .responseSchema(schema)
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
@@ -178,21 +174,6 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
                         .tokenUsage(response.tokenUsage()).build())
                 .build();
-    }
-
-    private String computeMimeType(ResponseFormat responseFormat) {
-        if (responseFormat == null || ResponseFormatType.TEXT.equals(responseFormat.type())) {
-            return "text/plain";
-        }
-
-        if (ResponseFormatType.JSON.equals(responseFormat.type()) &&
-                responseFormat.jsonSchema() != null &&
-                responseFormat.jsonSchema().rootElement() != null &&
-                responseFormat.jsonSchema().rootElement() instanceof JsonEnumSchema) {
-            return "text/x.enum";
-        }
-
-        return "application/json";
     }
 
     @Override
