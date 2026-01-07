@@ -65,6 +65,10 @@
                     <groupId>com.github.spullara.mustache.java</groupId>
                     <artifactId>compiler</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>dev.langchain4j</groupId>
+                    <artifactId>langchain4j-http-client-jdk</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
