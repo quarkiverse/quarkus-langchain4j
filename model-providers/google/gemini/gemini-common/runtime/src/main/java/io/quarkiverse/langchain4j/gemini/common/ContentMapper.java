@@ -114,7 +114,7 @@ public final class ContentMapper {
                                         Map.class);
                                 FunctionCall functionCall = new FunctionCall(name, arguments);
                                 Content.Part part = Content.Part
-                                        .ofFunctionCall(functionCall);
+                                        .ofFunctionCall(functionCall, toolExecutionRequest.id());
                                 functionCalls.put(name, new Content(role, List.of(part)));
                             }
                         } else {
