@@ -45,6 +45,11 @@ public class NonCDIBeanGuardrailTest {
 
     // NOTE: This class is intentionally NOT annotated with @ApplicationScoped or any CDI annotation
     public static class NotACDIBeanGuardrail implements ToolInputGuardrail {
+
+        // introduce a no-args constructor
+        public NotACDIBeanGuardrail(String dummy) {
+        }
+
         @Override
         public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
             return ToolInputGuardrailResult.success();

@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.runtime.tool.guardrails;
 
+import java.lang.reflect.InvocationTargetException;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -284,6 +286,12 @@ public class ToolGuardrailService {
         try {
             return CDI.current().select(guardrailClass).get();
         } catch (UnsatisfiedResolutionException e) {
+            try {
+                return guardrailClass.getConstructor().newInstance();
+            } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
+                    | InvocationTargetException ignored) {
+
+            }
             throw new IllegalStateException(
                     String.format("Failed to lookup guardrail bean '%s'. " +
                             "Common causes:\n" +

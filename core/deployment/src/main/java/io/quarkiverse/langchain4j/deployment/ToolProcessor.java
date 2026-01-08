@@ -74,6 +74,8 @@ import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
+import io.quarkus.arc.processor.BeanRegistrar;
+import io.quarkus.arc.processor.BuildExtension;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
@@ -439,10 +441,15 @@ public class ToolProcessor {
             String methodName = item.getToolsMethodInfo().declaringClass().name() + "." + item.getToolsMethodInfo().name();
             var ig = item.getToolMethodCreateInfo().getInputGuardrails();
             var og = item.getToolMethodCreateInfo().getOutputGuardrails();
+            BeanRegistrar.RegistrationContext registrationContext = registrationPhaseBuildItem.getContext();
             if (ig != null && ig.hasGuardrails()) {
                 for (String className : ig.getClassNames()) {
-                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
-                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
+                    DotName classDotName = DotName.createSimple(className);
+                    if (registrationContext.beans().classBeans()
+                            .withBeanType(classDotName).isEmpty()) {
+                        if (hasNoArgsCtor(registrationContext, classDotName)) {
+                            continue;
+                        }
                         String msg = String.format("Input guardrail class '%s' for tool method '%s' is not a CDI bean. "
                                 + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
                                 className, methodName);
@@ -453,8 +460,12 @@ public class ToolProcessor {
             }
             if (og != null && og.hasGuardrails()) {
                 for (String className : og.getClassNames()) {
-                    if (registrationPhaseBuildItem.getContext().beans().classBeans()
-                            .withBeanType(DotName.createSimple(className)).isEmpty()) {
+                    DotName classDotName = DotName.createSimple(className);
+                    if (registrationContext.beans().classBeans()
+                            .withBeanType(classDotName).isEmpty()) {
+                        if (hasNoArgsCtor(registrationContext, classDotName)) {
+                            continue;
+                        }
                         String msg = String.format("Output guardrail class '%s' for tool method '%s' is not a CDI bean. "
                                 + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
                                 className, methodName);
@@ -465,6 +476,16 @@ public class ToolProcessor {
             }
         }
 
+    }
+
+    private static boolean hasNoArgsCtor(BeanRegistrar.RegistrationContext registrationContext,
+            DotName classDotName) {
+        boolean hasNoArgsCtor = false;
+        ClassInfo igClassInfo = registrationContext.get(BuildExtension.Key.INDEX).getClassByName(classDotName);
+        if (igClassInfo != null) {
+            hasNoArgsCtor = igClassInfo.hasNoArgsConstructor();
+        }
+        return hasNoArgsCtor;
     }
 
     public static String resolveToolName(MethodInfo toolMethod) {
