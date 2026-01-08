@@ -256,7 +256,6 @@ public class ToolOutputGuardrailsExecutionTest {
 
     // Guardrails
 
-    @ApplicationScoped
     public static class ValidationGuardrail implements ToolOutputGuardrail {
         static int executionCount = 0;
         static ToolOutputGuardrailRequest lastRequest = null;

@@ -43,9 +43,6 @@ class ToolInputGuardrailsTest {
                             SecondGuardrail.class));
 
     @Inject
-    ValidationGuardrail validationGuardrail;
-
-    @Inject
     TransformGuardrail transformGuardrail;
 
     @Inject
@@ -107,7 +104,7 @@ class ToolInputGuardrailsTest {
                 .build();
 
         ToolInputGuardrailRequest guardrailRequest = new ToolInputGuardrailRequest(request, null, null);
-        ToolInputGuardrailResult result = validationGuardrail.validate(guardrailRequest);
+        ToolInputGuardrailResult result = new ValidationGuardrail().validate(guardrailRequest);
 
         assertThat(result.isSuccess()).isTrue();
         assertThat(result.modifiedRequest()).isNull();
@@ -248,7 +245,6 @@ class ToolInputGuardrailsTest {
 
     // Guardrails
 
-    @ApplicationScoped
     public static class ValidationGuardrail implements ToolInputGuardrail {
         static int executionCount = 0;
         static ToolInputGuardrailRequest lastRequest = null;

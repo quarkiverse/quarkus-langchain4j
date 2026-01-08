@@ -45,7 +45,7 @@ package io.quarkiverse.langchain4j.guardrails;
  * </pre>
  *
  * <p>
- * Implementations must be CDI beans to enable dependency injection.
+ * Implementations must either be CDI beans to enable dependency injection, or have a no-args constructor.
  * Common scopes include {@code @ApplicationScoped} for stateless guardrails
  * and {@code @RequestScoped} for guardrails that need per-request state.
  * </p>
