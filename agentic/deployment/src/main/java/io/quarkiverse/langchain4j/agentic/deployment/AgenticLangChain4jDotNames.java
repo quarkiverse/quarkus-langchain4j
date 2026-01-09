@@ -5,13 +5,10 @@ import java.util.List;
 import org.jboss.jandex.DotName;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.agentic.agent.AgentRequest;
-import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.agent.ErrorContext;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.declarative.ActivationCondition;
-import dev.langchain4j.agentic.declarative.AfterAgentInvocation;
-import dev.langchain4j.agentic.declarative.BeforeAgentInvocation;
+import dev.langchain4j.agentic.declarative.AgentListenerSupplier;
 import dev.langchain4j.agentic.declarative.ChatMemoryProviderSupplier;
 import dev.langchain4j.agentic.declarative.ChatMemorySupplier;
 import dev.langchain4j.agentic.declarative.ChatModelSupplier;
@@ -31,6 +28,7 @@ import dev.langchain4j.agentic.declarative.SequenceAgent;
 import dev.langchain4j.agentic.declarative.SupervisorAgent;
 import dev.langchain4j.agentic.declarative.ToolProviderSupplier;
 import dev.langchain4j.agentic.declarative.ToolsSupplier;
+import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.service.MemoryId;
@@ -55,10 +53,8 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName RESULT_WITH_AGENTIC_SCOPE = DotName.createSimple(ResultWithAgenticScope.class);
 
     public static final DotName ACTIVATION_CONDITION = DotName.createSimple(ActivationCondition.class.getName());
-    public static final DotName BEFORE_AGENT_INVOCATION = DotName.createSimple(BeforeAgentInvocation.class.getName());
-    public static final DotName AFTER_AGENT_INVOCATION = DotName.createSimple(AfterAgentInvocation.class.getName());
-    public static final DotName AGENT_REQUEST = DotName.createSimple(AgentRequest.class.getName());
-    public static final DotName AGENT_RESPONSE = DotName.createSimple(AgentResponse.class.getName());
+    public static final DotName AGENT_LISTENER = DotName.createSimple(AgentListener.class.getName());
+    public static final DotName AGENT_LISTENER_SUPPLIER = DotName.createSimple(AgentListenerSupplier.class.getName());
     public static final DotName CHAT_MEMORY_PROVIDER_SUPPLIER = DotName
             .createSimple(ChatMemoryProviderSupplier.class.getName());
     public static final DotName CHAT_MEMORY_SUPPLIER = DotName

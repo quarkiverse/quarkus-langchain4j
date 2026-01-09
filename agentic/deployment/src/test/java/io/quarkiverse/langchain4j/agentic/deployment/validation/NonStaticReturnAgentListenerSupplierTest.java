@@ -8,12 +8,14 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import dev.langchain4j.agentic.declarative.AfterAgentInvocation;
+import dev.langchain4j.agentic.declarative.AgentListenerSupplier;
+import dev.langchain4j.agentic.observability.AgentListener;
+import dev.langchain4j.agentic.observability.AgentRequest;
 import dev.langchain4j.service.IllegalConfigurationException;
 import io.quarkiverse.langchain4j.agentic.deployment.Agents;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class NonAgentResponseParameterTypeAfterAgentInvocationTest {
+public class NonStaticReturnAgentListenerSupplierTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
@@ -21,7 +23,7 @@ public class NonAgentResponseParameterTypeAfterAgentInvocationTest {
                     () -> ShrinkWrap.create(JavaArchive.class).addClasses(Agents.class, StyleReviewLoopAgentWithListener.class))
             .assertException(
                     throwable -> Assertions.assertThat(throwable).isInstanceOf(IllegalConfigurationException.class)
-                            .hasMessageContaining("AgentResponse"));
+                            .hasMessageContaining("static"));
 
     @Test
     public void test() {
@@ -30,9 +32,14 @@ public class NonAgentResponseParameterTypeAfterAgentInvocationTest {
 
     public interface StyleReviewLoopAgentWithListener extends Agents.StyleReviewLoopAgent {
 
-        @AfterAgentInvocation
-        static void afterAgentInvocation(Void response) {
+        @AgentListenerSupplier
+        default AgentListener listener() {
+            return new AgentListener() {
+                @Override
+                public void beforeAgentInvocation(AgentRequest request) {
 
+                }
+            };
         }
     }
 }

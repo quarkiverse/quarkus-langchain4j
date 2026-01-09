@@ -401,6 +401,7 @@ public class AiServiceMethodImplementationSupport {
         context.eventListenerRegistrar.fireEvent(
                 AiServiceResponseReceivedEvent.builder()
                         .invocationContext(invocationContext)
+                        .request(chatRequest)
                         .response(response)
                         .build());
 
@@ -520,13 +521,15 @@ public class AiServiceMethodImplementationSupport {
                 }
             }
 
-            response = effectiveChatModel.chat(chatRequestBuilder.parameters(parametersBuilder.build()).build());
+            ChatRequest request = chatRequestBuilder.parameters(parametersBuilder.build()).build();
+            response = effectiveChatModel.chat(request);
             log.debug("AI response obtained");
 
             // New firing
             context.eventListenerRegistrar.fireEvent(
                     AiServiceResponseReceivedEvent.builder()
                             .invocationContext(invocationContext)
+                            .request(request)
                             .response(response)
                             .build());
 

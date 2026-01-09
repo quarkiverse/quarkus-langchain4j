@@ -99,8 +99,7 @@ public class AgenticProcessor {
     private void validate(DetectedAiAgentBuildItem item) {
         ClassInfo iface = item.getIface();
         validateActivationCondition(iface);
-        validateBeforeAgentInvocation(iface);
-        validateAfterAgentInvocation(iface);
+        validateAgentListenerSupplier(iface);
         validateChatMemoryProviderSupplier(iface);
         validateChatMemorySupplier(iface);
         validateChatModelSupplier(iface);
@@ -131,8 +130,8 @@ public class AgenticProcessor {
         }
     }
 
-    private void validateBeforeAgentInvocation(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.BEFORE_AGENT_INVOCATION;
+    private void validateAgentListenerSupplier(ClassInfo iface) {
+        DotName annotationToValidate = AgenticLangChain4jDotNames.AGENT_LISTENER_SUPPLIER;
         List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
         for (AnnotationInstance instance : instances) {
             if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
@@ -141,25 +140,8 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENT_REQUEST),
-                    annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID),
-                    annotationToValidate);
-        }
-    }
-
-    private void validateAfterAgentInvocation(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.AFTER_AGENT_INVOCATION;
-        List<AnnotationInstance> instances = iface.annotations(annotationToValidate);
-        for (AnnotationInstance instance : instances) {
-            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
-                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
-                continue;
-            }
-            MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
-            validateRequiredParameterTypes(method, List.of(AgenticLangChain4jDotNames.AGENT_RESPONSE), annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
+            validateNoMethodParameters(method, annotationToValidate);
+            validateAllowedReturnTypes(method, Set.of(AgenticLangChain4jDotNames.AGENT_LISTENER), annotationToValidate);
         }
     }
 

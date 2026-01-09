@@ -57,6 +57,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     private final Logger log = Logger.getLogger(QuarkusAiServiceStreamingResponseHandler.class);
 
+    private final ChatRequest chatRequest;
     private final QuarkusAiServiceContext context;
     private final InvocationContext invocationContext;
     private final Object memoryId;
@@ -83,7 +84,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final ExecutorService executor;
     private volatile StreamingHandle streamingHandle = NoopStreamingHandle.INSTANCE;
 
-    QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context,
+    QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
             InvocationContext invocationContext,
             Object memoryId,
             Consumer<String> partialResponseHandler,
@@ -103,6 +104,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Context cxtx,
             AiServiceMethodCreateInfo methodCreateInfo,
             Object[] methodArgs) {
+        this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = ensureNotNull(memoryId, "memoryId");
@@ -136,8 +138,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         }
     }
 
-    public QuarkusAiServiceStreamingResponseHandler(QuarkusAiServiceContext context, InvocationContext invocationContext,
-            Object memoryId,
+    public QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
+            InvocationContext invocationContext, Object memoryId,
             Consumer<String> partialResponseHandler,
             Consumer<PartialThinking> partialThinkingHandler,
             Consumer<BeforeToolExecution> beforeToolExecutionHandler,
@@ -148,6 +150,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
             ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
+        this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = context;
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
         this.memoryId = memoryId;
@@ -189,6 +192,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private void fireResponseReceivedEvent(ChatResponse chatResponse) {
         context.eventListenerRegistrar.fireEvent(AiServiceResponseReceivedEvent.builder()
                 .invocationContext(invocationContext)
+                .request(chatRequest)
                 .response(chatResponse)
                 .build());
     }
@@ -356,6 +360,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             .parameters(parametersBuilder.build())
                             .build();
                     QuarkusAiServiceStreamingResponseHandler handler = new QuarkusAiServiceStreamingResponseHandler(
+                            chatRequest,
                             context,
                             invocationContext,
                             memoryId,
