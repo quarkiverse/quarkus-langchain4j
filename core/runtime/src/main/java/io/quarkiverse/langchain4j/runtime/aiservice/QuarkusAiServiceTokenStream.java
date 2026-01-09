@@ -167,6 +167,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 .build();
 
         this.handler = new QuarkusAiServiceStreamingResponseHandler(
+                chatRequest,
                 context,
                 invocationContext,
                 memoryId,
