@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -55,6 +56,7 @@ import dev.langchain4j.data.video.Video;
 import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.guardrail.ChatExecutor;
 import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.internal.Utils;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.ChatMemory;
@@ -242,6 +244,7 @@ public class AiServiceMethodImplementationSupport {
                 : context.toolService.toolSpecifications();
         Map<String, ToolExecutor> toolExecutors = hasMethodSpecificTools ? methodCreateInfo.getToolExecutors()
                 : context.toolService.toolExecutors();
+        Set<String> immediateReturnToolNames = Set.of();
 
         if (context.toolService.toolProvider() != null) {
             toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
@@ -249,13 +252,12 @@ public class AiServiceMethodImplementationSupport {
             ToolProviderRequest request = new QuarkusToolProviderRequest(memoryId, userMessage,
                     methodCreateInfo.getMcpClientNames());
             ToolProviderResult result = context.toolService.toolProvider().provideTools(request);
+            immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
             for (ToolSpecification specification : result.tools().keySet()) {
                 toolSpecifications.add(specification);
                 toolExecutors.put(specification.name(), result.tools().get(specification));
             }
         }
-        List<ToolSpecification> effectiveToolSpecifications = toolSpecifications;
-        Map<String, ToolExecutor> finalToolExecutors = toolExecutors;
 
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
@@ -458,9 +460,9 @@ public class AiServiceMethodImplementationSupport {
                         .build();
                 toolExecutions.add(toolExecution);
                 toolResults.add(toolExecutionResultMessage);
-                if (toolExecutor != null && toolExecutor instanceof QuarkusToolExecutor) {
-                    immediateToolReturn = ((QuarkusToolExecutor) toolExecutor).returnBehavior() == ReturnBehavior.IMMEDIATE;
-                } else {
+
+                // If any tool does not return immediately, results must be processed by LLM
+                if (!isImmediateReturnTool(toolExecutionRequest.name(), toolExecutor, immediateReturnToolNames)) {
                     immediateToolReturn = false;
                 }
 
@@ -1176,6 +1178,19 @@ public class AiServiceMethodImplementationSupport {
     private static Executor createExecutor() {
         InstanceHandle<ManagedExecutor> executor = Arc.container().instance(ManagedExecutor.class);
         return executor.isAvailable() ? executor.get() : Infrastructure.getDefaultExecutor();
+    }
+
+    private static boolean isImmediateReturnTool(String toolName, ToolExecutor toolExecutor,
+            Set<String> immediateReturnToolNames) {
+        // Check if the executor itself declares immediate return behavior
+        if (toolExecutor instanceof QuarkusToolExecutor quarkusExecutor) {
+            if (quarkusExecutor.returnBehavior() == ReturnBehavior.IMMEDIATE) {
+                return true;
+            }
+        }
+
+        // Otherwise, check if the tool name is in the immediate return set
+        return immediateReturnToolNames.contains(toolName);
     }
 
     public static class Input {
