@@ -334,6 +334,48 @@ public interface MyAiService {
 
 More details on function calling and tool integration can be found in the xref:function-calling.adoc[Function Calling guide].
 
+=== Tool Error Handling
+
+Handle tool execution errors with custom error handlers defined as static methods in your AI Service interface.
+
+==== @HandleToolArgumentError
+
+Handles invalid arguments provided by the LLM to tool calls.
+
+[source,java]
+----
+@RegisterAiService
+public interface MyAiService {
+
+    @HandleToolArgumentError
+    static String handleArgumentError(Throwable error) {
+        return "Invalid tool arguments: " + error.getMessage();
+    }
+}
+----
+
+==== @HandleToolExecutionError
+
+Handles runtime exceptions during tool execution.
+
+[source,java]
+----
+@RegisterAiService
+public interface MyAiService {
+
+    @HandleToolExecutionError
+    static ToolErrorHandlerResult handleExecutionError(Throwable error, ToolErrorContext context) {
+        return ToolErrorHandlerResult.text("Tool '" + context.toolName() + "' failed: " + error.getMessage());
+    }
+}
+----
+
+**Method requirements:**
+
+- Must be `static`
+- Parameters (optional): `Throwable` and/or `ToolErrorContext`
+- Return type: `String` or `ToolErrorHandlerResult`
+
 == Document Retrieval (RAG)
 
 Integrate document retrieval using `RetrievalAugmentor`:
