@@ -209,7 +209,15 @@ public class AiServiceMethodImplementationSupport {
         boolean isRunningOnWorkerThread = !Context.isOnEventLoopThread();
         Object[] methodArgs = invocationContext.methodArguments().toArray(Object[]::new);
         Object memoryId = invocationContext.chatMemoryId();
-        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId);
+
+        var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId) : null;
+        // we want to defer saving the new messages because the service could fail and be retried
+        // this also avoids fetching data from the remote stores every time we ask for the messages
+        var committableChatMemory = chatMemory != null ? new DefaultCommittableChatMemory(chatMemory)
+                : new NoopChatMemory();
+
+        Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId,
+                committableChatMemory);
 
         boolean supportsJsonSchema = supportsJsonSchema(context, methodCreateInfo, methodArgs);
 
@@ -261,12 +269,9 @@ public class AiServiceMethodImplementationSupport {
 
         AugmentationResult augmentationResult = null;
         if (context.retrievalAugmentor != null) {
-            List<ChatMessage> chatMemory = context.hasChatMemory()
-                    ? context.chatMemoryService.getChatMemory(memoryId).messages()
-                    : null;
             Metadata metadata = Metadata.builder()
                     .chatMessage(userMessage)
-                    .chatMemory(chatMemory)
+                    .chatMemory(committableChatMemory.messages())
                     .invocationContext(invocationContext)
                     .build();
             AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, metadata);
@@ -276,7 +281,6 @@ public class AiServiceMethodImplementationSupport {
         }
 
         var guardrailService = context.guardrailService();
-        var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getChatMemory(memoryId) : null;
 
         var guardrailParams = GuardrailRequestParams.builder()
                 .chatMemory(chatMemory)
@@ -290,18 +294,12 @@ public class AiServiceMethodImplementationSupport {
         userMessage = GuardrailsSupport.executeInputGuardrails(guardrailService, userMessage, methodCreateInfo,
                 guardrailParams);
 
-        CommittableChatMemory committableChatMemory;
         List<ChatMessage> messagesToSend;
-
         if (context.hasChatMemory()) {
-            // we want to defer saving the new messages because the service could fail and
-            // be retried
-            committableChatMemory = new DefaultCommittableChatMemory(chatMemory);
             messagesToSend = createMessagesToSendForExistingMemory(systemMessage, userMessage, committableChatMemory,
                     needsMemorySeed,
                     context, methodCreateInfo);
         } else {
-            committableChatMemory = new NoopChatMemory();
             messagesToSend = createMessagesToSendForNoMemory(systemMessage, userMessage, needsMemorySeed, context,
                     methodCreateInfo);
         }
@@ -867,10 +865,9 @@ public class AiServiceMethodImplementationSupport {
     private static Optional<SystemMessage> prepareSystemMessage(AiServiceMethodCreateInfo createInfo,
             Object[] methodArgs,
             QuarkusAiServiceContext context,
-            Object memoryId) {
-        List<ChatMessage> previousChatMessages = context.hasChatMemory()
-                ? context.chatMemoryService.getOrCreateChatMemory(memoryId).messages()
-                : Collections.emptyList();
+            Object memoryId,
+            CommittableChatMemory committableChatMemory) {
+        List<ChatMessage> previousChatMessages = committableChatMemory.messages();
 
         if (createInfo.getSystemMessageInfo().isEmpty()) {
             return context.systemMessageProvider.apply(memoryId).map(SystemMessage::new);
