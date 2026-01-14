@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,8 +18,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiEmbeddingModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
@@ -42,8 +43,8 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
     void testBatch() {
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:batchEmbedContents?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/models/%s:batchEmbedContents", EMBED_MODEL_ID)))
+                        .withHeader("x-goog-api-key", equalTo(API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -83,12 +84,12 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
     @Test
     void test() {
-        assertThat(ClientProxy.unwrap(embeddingModel)).isInstanceOf(AiGeminiEmbeddingModel.class);
+        assertThat(ClientProxy.unwrap(embeddingModel)).isInstanceOf(GoogleAiEmbeddingModel.class);
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:embedContent?key=%s",
-                                EMBED_MODEL_ID, API_KEY)))
+                        String.format("/models/%s:embedContent", EMBED_MODEL_ID)))
+                        .withHeader("x-goog-api-key", equalTo(API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""

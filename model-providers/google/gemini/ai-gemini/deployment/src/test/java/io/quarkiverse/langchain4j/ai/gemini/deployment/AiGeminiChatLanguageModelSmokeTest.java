@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.ai.gemini.deployment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import dev.langchain4j.model.chat.ChatModel;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiChatLanguageModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.QuarkusUnitTest;
@@ -37,12 +38,12 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
 
     @Test
     void test() {
-        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(AiGeminiChatLanguageModel.class);
+        assertThat(ClientProxy.unwrap(chatLanguageModel)).isInstanceOf(GoogleAiGeminiChatModel.class);
 
         wiremock().register(
                 post(urlEqualTo(
-                        String.format("/v1beta/models/%s:generateContent?key=%s",
-                                CHAT_MODEL_ID, API_KEY)))
+                        String.format("/models/%s:generateContent", CHAT_MODEL_ID)))
+                        .withHeader("x-goog-api-key", equalTo(API_KEY))
                         .willReturn(aResponse()
                                 .withHeader("Content-Type", "application/json")
                                 .withBody("""
@@ -102,7 +103,7 @@ public class AiGeminiChatLanguageModelSmokeTest extends WiremockAware {
         assertThat(response).isEqualTo("Nice to meet you");
 
         LoggedRequest loggedRequest = singleLoggedRequest();
-        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("Quarkus REST Client");
+        assertThat(loggedRequest.getHeader("User-Agent")).isEqualTo("LangChain4j");
         String requestBody = new String(loggedRequest.getBody());
         assertThat(requestBody).contains("hello");
     }
