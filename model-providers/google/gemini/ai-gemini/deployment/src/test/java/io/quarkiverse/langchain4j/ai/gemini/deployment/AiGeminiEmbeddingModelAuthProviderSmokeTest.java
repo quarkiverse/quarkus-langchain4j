@@ -19,8 +19,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.ai.runtime.gemini.AiGeminiEmbeddingModel;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.testing.internal.WiremockAware;
 import io.quarkus.arc.ClientProxy;
@@ -85,7 +85,7 @@ public class AiGeminiEmbeddingModelAuthProviderSmokeTest extends WiremockAware {
 
     @Test
     void test() {
-        assertThat(ClientProxy.unwrap(embeddingModel)).isInstanceOf(AiGeminiEmbeddingModel.class);
+        assertThat(ClientProxy.unwrap(embeddingModel)).isInstanceOf(GoogleAiEmbeddingModel.class);
 
         wiremock().register(
                 post(urlEqualTo(
