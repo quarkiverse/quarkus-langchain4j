@@ -4,6 +4,7 @@ import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.Utils.isNullOrBlank;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
+import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toOpenAiMessages;
 import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
@@ -12,9 +13,11 @@ import static java.time.Duration.ofSeconds;
 import java.net.Proxy;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -25,6 +28,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -78,6 +82,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
+    private final Set<Capability> supportedCapabilities;
 
     public AzureOpenAiStreamingChatModel(String endpoint,
             String apiVersion,
@@ -124,11 +129,16 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
+
+        // Azure OpenAI supports JSON schema for models like gpt-4o-2024-08-06+
+        this.supportedCapabilities = new HashSet<>();
+        if (this.responseFormat != null && ResponseFormatType.JSON_SCHEMA.equals(this.responseFormat.type())) {
+            this.supportedCapabilities.add(RESPONSE_FORMAT_JSON_SCHEMA);
+        }
     }
 
     @Override
     public void doChat(ChatRequest chatRequest, StreamingChatResponseHandler handler) {
-
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
 
@@ -140,7 +150,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
-                .responseFormat(responseFormat);
+                .responseFormat(this.responseFormat);
 
         Integer inputTokenCount = tokenizer == null ? null : tokenizer.estimateTokenCountInMessages(messages);
 
@@ -270,6 +280,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
                         .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
+    }
+
+    @Override
+    public Set<Capability> supportedCapabilities() {
+        return supportedCapabilities;
     }
 
     public static Builder builder() {
