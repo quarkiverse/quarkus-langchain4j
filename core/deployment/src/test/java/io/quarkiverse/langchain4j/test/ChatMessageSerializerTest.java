@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.ImageContent;
@@ -120,5 +121,20 @@ class ChatMessageSerializerTest {
 
         List<ChatMessage> deserializedMessages = messagesFromJson(json);
         assertThat(deserializedMessages).isEqualTo(messages);
+    }
+
+    @Test
+    void should_serialize_and_deserialize_ai_message_with_thinking() {
+        AiMessage message = AiMessage.builder()
+                .text("Hello from AI")
+                .thinking("Let me think about this...")
+                .build();
+
+        String json = messageToJson(message);
+        ChatMessage deserializedMessage = messageFromJson(json);
+
+        assertThat(deserializedMessage).isEqualTo(message);
+        assertThat(deserializedMessage).isInstanceOf(AiMessage.class);
+        assertThat(((AiMessage) deserializedMessage).thinking()).isEqualTo("Let me think about this...");
     }
 }
