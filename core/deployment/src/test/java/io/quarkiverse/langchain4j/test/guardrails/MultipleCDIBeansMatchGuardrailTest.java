@@ -1,7 +1,7 @@
 package io.quarkiverse.langchain4j.test.guardrails;
 
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -10,24 +10,25 @@ import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrail;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailRequest;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrailResult;
 import io.quarkiverse.langchain4j.guardrails.ToolInputGuardrails;
+import io.quarkus.arc.Unremovable;
 import io.quarkus.test.QuarkusUnitTest;
 
 /**
- * Test that should FAIL at build time because the guardrail is NOT a CDI bean.
+ * Test that should FAIL at build time because there are multiple CDI beans that match a guardrail class.
  */
-public class NonCDIBeanGuardrailTest {
+public class MultipleCDIBeansMatchGuardrailTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(MyTools.class, NotACDIBeanGuardrail.class))
+            .withApplicationRoot(root -> root.addClasses(MyTools.class, Alpha.class, Bravo.class))
             .assertException(t -> {
                 // Expect build-time validation error for non-CDI bean guardrail
                 if (t.getMessage() != null
-                        && t.getMessage().contains("is neither a CDI bean, nor declares a public no-args constructor")) {
-                    System.out.println("✓ Correctly caught non-CDI bean guardrail: " + t.getMessage());
+                        && t.getMessage().contains("There must be exactly one bean that matches the input guardrail")) {
+                    System.out.println("✓ Correctly caught multiple CDI beans matching a guardrail: " + t.getMessage());
                 } else {
-                    throw new AssertionError("Expected 'is not a CDI bean' error but got: " + t.getMessage());
+                    throw new AssertionError(
+                            "Expected ' multiple CDI beans matching a guardrail' error but got: " + t.getMessage());
                 }
             });
 
@@ -37,19 +38,26 @@ public class NonCDIBeanGuardrailTest {
     }
 
     public static class MyTools {
+
         @Tool("Test tool")
-        @ToolInputGuardrails({ NotACDIBeanGuardrail.class })
+        @ToolInputGuardrails(Alpha.class)
         public String testTool(String input) {
             return "result";
         }
     }
 
-    // NOTE: This class is intentionally NOT annotated with @ApplicationScoped or any CDI annotation
-    public static class NotACDIBeanGuardrail implements ToolInputGuardrail {
+    @ApplicationScoped
+    public static class Alpha implements ToolInputGuardrail {
 
-        // introduce a no-args constructor
-        public NotACDIBeanGuardrail(String dummy) {
+        @Override
+        public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
+            return ToolInputGuardrailResult.success();
         }
+    }
+
+    @Unremovable // Alpha is marked as unremovable because it's used on a tool
+    @ApplicationScoped
+    public static class Bravo extends Alpha {
 
         @Override
         public ToolInputGuardrailResult validate(ToolInputGuardrailRequest request) {
