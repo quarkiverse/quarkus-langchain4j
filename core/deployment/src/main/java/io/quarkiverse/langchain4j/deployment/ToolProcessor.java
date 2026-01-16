@@ -71,11 +71,12 @@ import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolGuardrailService;
 import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolInputGuardrailsLiteral;
 import io.quarkiverse.langchain4j.runtime.tool.guardrails.ToolOutputGuardrailsLiteral;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
-import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
+import io.quarkus.arc.deployment.BeanArchiveIndexBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.arc.deployment.ValidationPhaseBuildItem;
-import io.quarkus.arc.processor.BeanRegistrar;
-import io.quarkus.arc.processor.BuildExtension;
+import io.quarkus.arc.deployment.ValidationPhaseBuildItem.ValidationErrorBuildItem;
+import io.quarkus.arc.processor.BeanDeploymentValidator.ValidationContext;
+import io.quarkus.arc.processor.BeanInfo;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.GeneratedClassGizmoAdaptor;
@@ -235,7 +236,7 @@ public class ToolProcessor {
             BuildProducer<BytecodeTransformerBuildItem> transformerProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
-            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validation,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrors,
             BuildProducer<ToolsMetadataBeforeRemovalBuildItem> toolsMetadataProducer) {
 
         IndexView index = indexBuildItem.getIndex();
@@ -273,7 +274,7 @@ public class ToolProcessor {
                     causeValidationError = true;
                 }
                 if (causeValidationError) {
-                    validation.produce(
+                    validationErrors.produce(
                             new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
                                     "@Tool is only supported on non-abstract classes, all other usages are ignored. Offending method is '"
                                             + methodInfo.declaringClass().name().toString() + "#" + methodInfo.name() + "'")));
@@ -296,7 +297,7 @@ public class ToolProcessor {
                     // Validation
                     // - Must not have another tool with the same name
                     if (discoveredToolNames.contains(toolName)) {
-                        validation.produce(
+                        validationErrors.produce(
                                 new ValidationPhaseBuildItem.ValidationErrorBuildItem(new IllegalStateException(
                                         "Duplicate tool name '" + toolName + "' found in class '"
                                                 + className + "'. Tools name must be unique within a class.")));
@@ -405,8 +406,8 @@ public class ToolProcessor {
                             inputGuardrails,
                             outputGuardrails);
 
-                    validateExecutionModel(methodCreateInfo, toolMethod, validation);
-                    validateGuardrails(toolMethod, inputGuardrails, outputGuardrails, index, validation);
+                    validateExecutionModel(methodCreateInfo, toolMethod, validationErrors);
+                    validateGuardrails(toolMethod, inputGuardrails, outputGuardrails, index, validationErrors);
 
                     toolMethodBuildItemProducer.produce(new ToolMethodBuildItem(toolMethod, methodCreateInfo));
 
@@ -434,42 +435,55 @@ public class ToolProcessor {
     }
 
     @BuildStep
-    public void validateThatGuardrailsAreCDIBeans(BeanRegistrationPhaseBuildItem registrationPhaseBuildItem,
-            List<ToolMethodBuildItem> toolsBuildItem,
-            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrorBuildItem) {
+    public void validateGuardrailsBeans(List<ToolMethodBuildItem> toolsBuildItem,
+            BeanArchiveIndexBuildItem beanArchiveIndex,
+            ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationPhaseBuildItem.ValidationErrorBuildItem> validationErrors) {
+        IndexView index = beanArchiveIndex.getIndex();
         for (ToolMethodBuildItem item : toolsBuildItem) {
             String methodName = item.getToolsMethodInfo().declaringClass().name() + "." + item.getToolsMethodInfo().name();
             var ig = item.getToolMethodCreateInfo().getInputGuardrails();
             var og = item.getToolMethodCreateInfo().getOutputGuardrails();
-            BeanRegistrar.RegistrationContext registrationContext = registrationPhaseBuildItem.getContext();
+            ValidationContext validationContext = validationPhase.getContext();
             if (ig != null && ig.hasGuardrails()) {
-                for (String className : ig.getClassNames()) {
-                    DotName classDotName = DotName.createSimple(className);
-                    if (registrationContext.beans().classBeans()
-                            .withBeanType(classDotName).isEmpty()) {
-                        if (hasNoArgsCtor(registrationContext, classDotName)) {
-                            continue;
-                        }
-                        String msg = String.format("Input guardrail class '%s' for tool method '%s' is not a CDI bean. "
-                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
-                                className, methodName);
-                        validationErrorBuildItem
+                for (String inputGuardrailClassName : ig.getClassNames()) {
+                    DotName classDotName = DotName.createSimple(inputGuardrailClassName);
+                    List<BeanInfo> beans = validationContext.beans().withBeanType(classDotName).collect();
+                    if (beans.size() > 1) {
+                        String message = String.format(
+                                "There must be exactly one bean that matches the input guardrail '%s' declared on '%s':\n\t- %s",
+                                inputGuardrailClassName,
+                                methodName,
+                                beans.stream().map(Object::toString).collect(Collectors.joining("\n\t- ")));
+                        validationErrors.produce(new ValidationErrorBuildItem(new IllegalStateException(message)));
+                    } else if (beans.isEmpty() && !hasNoArgsCtor(index, classDotName)) {
+                        String msg = String.format(
+                                "Input guardrail class '%s' for tool method '%s' is neither a CDI bean, nor declares a public no-args constructor. "
+                                        + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                inputGuardrailClassName, methodName);
+                        validationErrors
                                 .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
                     }
                 }
             }
             if (og != null && og.hasGuardrails()) {
-                for (String className : og.getClassNames()) {
-                    DotName classDotName = DotName.createSimple(className);
-                    if (registrationContext.beans().classBeans()
-                            .withBeanType(classDotName).isEmpty()) {
-                        if (hasNoArgsCtor(registrationContext, classDotName)) {
-                            continue;
-                        }
-                        String msg = String.format("Output guardrail class '%s' for tool method '%s' is not a CDI bean. "
-                                + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
-                                className, methodName);
-                        validationErrorBuildItem
+                for (String outputGuardrailClassName : og.getClassNames()) {
+                    DotName classDotName = DotName.createSimple(outputGuardrailClassName);
+                    List<BeanInfo> beans = validationPhase.getContext().beans().withBeanType(classDotName).collect();
+                    if (beans.size() > 1) {
+                        String message = String.format(
+                                "There must be exactly one bean that matches the output guardrail '%s' declared on '%s':\n\t- %s",
+                                outputGuardrailClassName,
+                                methodName,
+                                beans.stream().map(Object::toString).collect(Collectors.joining("\n\t- ")));
+
+                        validationErrors.produce(new ValidationErrorBuildItem(new IllegalStateException(message)));
+                    } else if (beans.isEmpty() && !hasNoArgsCtor(index, classDotName)) {
+                        String msg = String.format(
+                                "Output guardrail class '%s' for tool method '%s' is neither a CDI bean, nor declares a public no-args constructor. "
+                                        + "Add a bean-defining annotation like @ApplicationScoped to enable dependency injection.",
+                                outputGuardrailClassName, methodName);
+                        validationErrors
                                 .produce(new ValidationPhaseBuildItem.ValidationErrorBuildItem(new ValidationException(msg)));
                     }
                 }
@@ -478,10 +492,10 @@ public class ToolProcessor {
 
     }
 
-    private static boolean hasNoArgsCtor(BeanRegistrar.RegistrationContext registrationContext,
+    private static boolean hasNoArgsCtor(IndexView index,
             DotName classDotName) {
         boolean hasNoArgsCtor = false;
-        ClassInfo igClassInfo = registrationContext.get(BuildExtension.Key.INDEX).getClassByName(classDotName);
+        ClassInfo igClassInfo = index.getClassByName(classDotName);
         if (igClassInfo != null) {
             hasNoArgsCtor = igClassInfo.hasNoArgsConstructor();
         }
@@ -672,6 +686,7 @@ public class ToolProcessor {
     public ToolsMetadataBuildItem filterOutRemovedTools(
             ToolsMetadataBeforeRemovalBuildItem beforeRemoval,
             ValidationPhaseBuildItem validationPhase,
+            BuildProducer<ValidationErrorBuildItem> validationErrors, // make sure the build step is executed at the right time
             RecorderContext recorderContext,
             ToolsRecorder recorder) {
         if (beforeRemoval != null) {
