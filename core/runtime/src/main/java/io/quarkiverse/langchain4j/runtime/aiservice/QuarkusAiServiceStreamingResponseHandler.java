@@ -19,6 +19,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.exception.ToolArgumentsException;
 import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -43,9 +44,14 @@ import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.service.tool.BeforeToolExecution;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
+import dev.langchain4j.service.tool.ToolErrorContext;
+import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
+import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.vertx.core.Context;
 
 /**
@@ -265,10 +271,21 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     }
 
     private void executeTools(Runnable runnable) {
+        Runnable safeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception e) {
+                    onError(e);
+                }
+            }
+        };
+
         if (mustSwitchToWorkerThread && Context.isOnEventLoopThread()) {
-            executeOnWorkerThread(runnable, false);
+            executeOnWorkerThread(safeRunnable, false);
         } else {
-            runnable.run();
+            safeRunnable.run();
         }
     }
 
@@ -292,6 +309,73 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         } else {
             executor.submit(runnable);
         }
+    }
+
+    /**
+     * Executes a tool and handles any exceptions using the configured error handlers.
+     * <p>
+     * If a {@link ToolArgumentsException} occurs and {@code toolArgumentsErrorHandler} is configured,
+     * the handler is invoked and an error result is returned to the LLM instead of propagating the exception.
+     * <p>
+     * For other exceptions, if {@code toolExecutionErrorHandler} is configured (and the exception does not
+     * implement {@link PreventsErrorHandlerExecution}), the handler is invoked and an error result is returned.
+     * <p>
+     * This allows the LLM to recover from tool failures by receiving error feedback and potentially retrying.
+     *
+     * @param toolExecutionRequest the tool execution request from the LLM
+     * @param toolExecutor the executor for the tool
+     * @param invocationContext the current invocation context
+     * @param toolArgumentsErrorHandler optional handler for argument parsing errors
+     * @param toolExecutionErrorHandler optional handler for execution errors
+     * @return the tool execution result, which may indicate an error if handled by an error handler
+     */
+    private ToolExecutionResult executeTool(ToolExecutionRequest toolExecutionRequest, ToolExecutor toolExecutor,
+            InvocationContext invocationContext,
+            ToolArgumentsErrorHandler toolArgumentsErrorHandler,
+            ToolExecutionErrorHandler toolExecutionErrorHandler) {
+        ToolExecutionResult toolExecutionResult;
+        try {
+            toolExecutionResult = toolExecutor.executeWithContext(toolExecutionRequest, invocationContext);
+        } catch (ToolArgumentsException e) {
+            if (toolArgumentsErrorHandler != null) {
+                log.debugv(e, "Error occurred while executing tool arguments. Executing  ",
+                        toolArgumentsErrorHandler.getClass().getName() + "' to handle it");
+                ToolErrorContext errorContext = ToolErrorContext.builder()
+                        .toolExecutionRequest(toolExecutionRequest)
+                        .invocationContext(invocationContext)
+                        .build();
+                ToolErrorHandlerResult toolErrorHandlerResult = toolArgumentsErrorHandler.handle(e, errorContext);
+                return ToolExecutionResult.builder()
+                        .isError(true)
+                        .resultText(toolErrorHandlerResult.text())
+                        .build();
+            } else {
+                throw e;
+            }
+        } catch (Exception e) {
+            if (e instanceof PreventsErrorHandlerExecution) {
+                // preserve semantics for existing code
+                throw e;
+            }
+            if (toolExecutionErrorHandler != null) {
+                log.debugv(e, "Error occurred while executing tool. Executing '",
+                        toolExecutionErrorHandler.getClass().getName() + "' to handle it");
+                ToolErrorContext errorContext = ToolErrorContext.builder()
+                        .toolExecutionRequest(toolExecutionRequest)
+                        .invocationContext(invocationContext)
+                        .build();
+                ToolErrorHandlerResult toolErrorHandlerResult = toolExecutionErrorHandler.handle(e, errorContext);
+                return ToolExecutionResult.builder()
+                        .isError(true)
+                        .resultText(toolErrorHandlerResult.text())
+                        .build();
+            } else {
+                throw e;
+            }
+        }
+        log.debugv("Result of {0} is '{1}'", toolExecutionRequest, toolExecutionResult);
+
+        return toolExecutionResult;
     }
 
     @Override
@@ -323,14 +407,25 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
                         String toolName = toolExecutionRequest.name();
                         ToolExecutor toolExecutor = toolExecutors.get(toolName);
-                        String toolExecutionResult = toolExecutor.execute(toolExecutionRequest, memoryId);
-                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult);
+                        // Execute the tool with argumentsErrorHandler and executionErrorHandler.
+                        // If execution fails, these handlers convert exceptions into error results
+                        // that are sent back to the LLM, allowing it to recover from tool failures.
+                        ToolExecutionResult toolExecutionResult = executeTool(
+                                toolExecutionRequest,
+                                toolExecutor,
+                                invocationContext,
+                                context.toolService.argumentsErrorHandler(),
+                                context.toolService.executionErrorHandler());
+
+                        fireToolExecutedEvent(toolExecutionRequest, toolExecutionResult.resultText());
+
                         ToolExecutionResultMessage toolExecutionResultMessage = ToolExecutionResultMessage.from(
                                 toolExecutionRequest,
-                                toolExecutionResult);
+                                toolExecutionResult.resultText());
+
                         ToolExecution toolExecution = ToolExecution.builder()
                                 .request(toolExecutionRequest)
-                                .result(ToolExecutionResult.builder().resultText(toolExecutionResult).build())
+                                .result(toolExecutionResult)
                                 .build();
                         if (toolExecuteHandler != null) {
                             toolExecuteHandler.accept(toolExecution);
