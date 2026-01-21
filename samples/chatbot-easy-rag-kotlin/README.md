@@ -45,6 +45,14 @@ The chatbot is a financial assistant that:
 3. Analyzes sentiment in user messages
 4. Content moderation: Detects malicious content in user messages and sends a warning by email, if detected
 
+Alternatively, if you prefer working from the command line instead of a GUI,
+and you have the `wscat` tool installed, you can connect directly to the bot using
+a WebSocket client:
+
+```shell
+wscat -c ws://localhost:8080/chatbot
+```
+
 ### Setting up the document catalog
 
 The app is configured to look for your financial product documents in a `catalog` directory relative to the current working directory.

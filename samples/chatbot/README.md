@@ -25,6 +25,14 @@ The chatbot is a conversational agent that uses information from the files
 in `src/main/resources/catalog` to answer your questions about banking
 products. More information about how it works is shown on the webpage.
 
+Alternatively, if you prefer working from the command line instead of a GUI,
+and you have the `wscat` tool installed, you can connect directly to the bot using
+a WebSocket client:
+
+```shell
+wscat -c ws://localhost:8080/chatbot
+```
+
 ## Using other model providers
 
 ### Compatible OpenAI serving infrastructure
