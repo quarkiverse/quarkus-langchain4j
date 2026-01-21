@@ -15,6 +15,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.model.bedrock.BedrockChatModel;
+import dev.langchain4j.model.bedrock.BedrockChatRequestParameters;
 import dev.langchain4j.model.bedrock.BedrockCohereEmbeddingModel;
 import dev.langchain4j.model.bedrock.BedrockStreamingChatModel;
 import dev.langchain4j.model.bedrock.BedrockTitanEmbeddingModel;
@@ -23,7 +24,6 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
-import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.quarkiverse.langchain4j.bedrock.runtime.config.AwsClientConfig;
@@ -63,7 +63,7 @@ public class BedrockRecorder {
         if (config.enableIntegration()) {
             var modelConfig = config.chatModel();
 
-            var paramBuilder = ChatRequestParameters.builder()
+            var paramBuilder = BedrockChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());
 
             if (modelConfig.temperature().isPresent()) {
@@ -83,6 +83,14 @@ public class BedrockRecorder {
                 if (!stopSequences.isEmpty()) {
                     paramBuilder.stopSequences(stopSequences.toArray(new String[0]));
                 }
+            }
+
+            if (modelConfig.promptCaching().isPresent()) {
+                paramBuilder.promptCaching(modelConfig.promptCaching().get());
+            }
+
+            if (modelConfig.reasoning().isPresent()) {
+                paramBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
             }
 
             var clientBuilder = BedrockRuntimeClient.builder();
@@ -147,7 +155,7 @@ public class BedrockRecorder {
 
             var modelId = modelConfig.modelId().orElse("anthropic.claude-v2");
 
-            var paramsBuilder = ChatRequestParameters.builder()
+            var paramsBuilder = BedrockChatRequestParameters.builder()
                     .maxOutputTokens(modelConfig.maxTokens());
 
             if (modelConfig.temperature().isPresent()) {
@@ -164,6 +172,14 @@ public class BedrockRecorder {
 
             if (modelConfig.stopSequences().isPresent()) {
                 paramsBuilder.stopSequences(modelConfig.stopSequences().get().toArray(new String[0]));
+            }
+
+            if (modelConfig.promptCaching().isPresent()) {
+                paramsBuilder.promptCaching(modelConfig.promptCaching().get());
+            }
+
+            if (modelConfig.reasoning().isPresent()) {
+                paramsBuilder.enableReasoning(modelConfig.reasoning().getAsInt());
             }
 
             var builder = BedrockStreamingChatModel.builder()
