@@ -23,11 +23,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.langchain4j.mcp.client.protocol.McpClientMessage;
-import dev.langchain4j.mcp.client.protocol.McpInitializationNotification;
-import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
+import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.protocol.McpClientMessage;
+import dev.langchain4j.mcp.protocol.McpInitializationNotification;
+import dev.langchain4j.mcp.protocol.McpInitializeRequest;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -78,11 +79,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     @Override
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
         this.initializeRequest = request;
-        return execute(request, request.getId())
+        McpCallContext ctx = new McpCallContext(null, request);
+        return execute(ctx)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .onItem()
                 .transformToUni(
-                        response -> execute(new McpInitializationNotification(), null).onItem().transform(ignored -> response))
+                        response -> execute(new McpInitializationNotification()).onItem().transform(ignored -> response))
                 .subscribeAsCompletionStage();
     }
 
@@ -98,22 +100,44 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
-        return execute(operation, operation.getId()).subscribeAsCompletionStage();
+        McpCallContext context = new McpCallContext(null, operation);
+        return execute(context).subscribeAsCompletionStage();
+    }
+
+    @Override
+    public CompletableFuture<JsonNode> executeOperationWithResponse(McpCallContext context) {
+        return execute(context).subscribeAsCompletionStage();
     }
 
     @Override
     public void executeOperationWithoutResponse(McpClientMessage operation) {
-        execute(operation, null).subscribe().with(ignored -> {
+        execute(operation).subscribe().with(ignored -> {
         });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request, Long id) {
-        return execute(request, id, false);
+    @Override
+    public void executeOperationWithoutResponse(McpCallContext context) {
+        execute(context).subscribe().with(ignored -> {
+        });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request, Long id, boolean isRetry) {
+    private Uni<JsonNode> execute(McpClientMessage request) {
+        return execute(new McpCallContext(null, request), false);
+    }
+
+    private Uni<JsonNode> execute(McpClientMessage request, boolean retry) {
+        return execute(new McpCallContext(null, request), retry);
+    }
+
+    private Uni<JsonNode> execute(McpCallContext context) {
+        return execute(context, false);
+    }
+
+    private Uni<JsonNode> execute(McpCallContext context, boolean isRetry) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
         Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
+        Long id = context.message().getId();
+        McpClientMessage request = context.message();
         if (id != null) {
             operationHandler.startOperation(id, future);
         }
@@ -218,7 +242,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         return;
                                     }
                                     initialize(initReq).thenAccept(node -> {
-                                        execute(request, id, true)
+                                        execute(request, true)
                                                 .subscribeAsCompletionStage()
                                                 .thenAccept(future::complete)
                                                 .exceptionally(t -> {

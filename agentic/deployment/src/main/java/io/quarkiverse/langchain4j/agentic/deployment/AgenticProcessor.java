@@ -37,7 +37,6 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
-import dev.langchain4j.agentic.observability.AgentListenerProvider;
 import dev.langchain4j.agentic.planner.AgentInstance;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -471,7 +470,7 @@ public class AgenticProcessor {
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(agentClassNames).methods(true).fields(false).build());
         proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(agentClassNames));
         proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(InternalAgent.class.getName(),
-                AgentListenerProvider.class.getName(), AgenticScopeOwner.class.getName(), AgenticScopeAccess.class.getName(),
+                AgenticScopeOwner.class.getName(), AgenticScopeAccess.class.getName(),
                 AgentInstance.class.getName(), ChatMemoryAccess.class.getName(), ChatMessagesAccess.class.getName()));
     }
 

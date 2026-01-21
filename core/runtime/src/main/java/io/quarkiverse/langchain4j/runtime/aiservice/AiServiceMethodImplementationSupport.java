@@ -391,6 +391,7 @@ public class AiServiceMethodImplementationSupport {
                         memoryId);
         ChatExecutor chatExecutor = ChatExecutor.builder(context.effectiveChatModel(methodCreateInfo, methodArgs))
                 .chatRequest(chatRequest)
+                .invocationContext(invocationContext)
                 .build();
 
         ChatResponse response = chatExecutor.execute();

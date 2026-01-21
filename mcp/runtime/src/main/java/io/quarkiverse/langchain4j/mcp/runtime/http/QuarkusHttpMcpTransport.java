@@ -15,11 +15,12 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import dev.langchain4j.mcp.client.protocol.McpClientMessage;
-import dev.langchain4j.mcp.client.protocol.McpInitializationNotification;
-import dev.langchain4j.mcp.client.protocol.McpInitializeRequest;
+import dev.langchain4j.mcp.client.McpCallContext;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.protocol.McpClientMessage;
+import dev.langchain4j.mcp.protocol.McpInitializationNotification;
+import dev.langchain4j.mcp.protocol.McpInitializeRequest;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -122,17 +123,39 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
     @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
-        return execute(operation, operation.getId()).subscribeAsCompletionStage();
+        McpCallContext context = new McpCallContext(null, operation);
+        return execute(context, operation.getId()).subscribeAsCompletionStage();
+    }
+
+    @Override
+    public CompletableFuture<JsonNode> executeOperationWithResponse(McpCallContext context) {
+        return execute(context, context.message().getId()).subscribeAsCompletionStage();
     }
 
     @Override
     public void executeOperationWithoutResponse(McpClientMessage operation) {
-        execute(operation, null).subscribe().with(ignored -> {
+        McpCallContext context = new McpCallContext(null, operation);
+        execute(context, null).subscribe().with(ignored -> {
         });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request, Long id) {
+    @Override
+    public void executeOperationWithoutResponse(McpCallContext context) {
+        execute(context, null).subscribe().with(ignored -> {
+        });
+    }
+
+    private Uni<JsonNode> execute(McpClientMessage message, Long id) {
+        McpCallContext context = new McpCallContext(null, message);
+        return execute(context, id);
+    }
+
+    private Uni<JsonNode> execute(McpCallContext context, Long id) {
+        // NOTE: the id parameter is necessary because it will be null for responses to server-initiated operations
+        // even though the ID inside the message itself will be set to an actual number, and in these cases
+        // we don't want to register the operation in the operation handler
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
+        McpClientMessage request = context.message();
         Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
         if (id != null) {
             operationHandler.startOperation(id, future);

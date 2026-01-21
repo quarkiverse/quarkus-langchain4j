@@ -6,7 +6,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import dev.langchain4j.mcp.client.protocol.McpClientMessage;
+import dev.langchain4j.mcp.protocol.McpClientMessage;
 import io.smallrye.mutiny.Uni;
 
 public interface McpPostEndpoint {
