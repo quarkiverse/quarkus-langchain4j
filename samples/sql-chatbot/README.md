@@ -32,3 +32,10 @@ LLM is used to generate SQL queries necessary for answering your question.
 Check the application's log, the SQL queries and the retrieved data will be
 printed there.
 
+Alternatively, if you prefer working from the command line instead of a GUI,
+and you have the `wscat` tool installed, you can connect directly to the bot using
+a WebSocket client:
+
+```shell
+wscat -c ws://localhost:8080/chatbot
+```

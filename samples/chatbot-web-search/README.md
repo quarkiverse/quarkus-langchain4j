@@ -25,4 +25,12 @@ in the bottom right corner to open the chat window.
 
 Read the description on the web page to learn about the implementation details.
 
+Alternatively, if you prefer working from the command line instead of a GUI,
+and you have the `wscat` tool installed, you can connect directly to the bot using
+a WebSocket client:
+
+```shell
+wscat -c ws://localhost:8080/chatbot
+```
+
 

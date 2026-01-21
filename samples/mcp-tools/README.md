@@ -25,3 +25,11 @@ way that Quarkus can connect to its standard input and output.
 Run the sample using `mvn quarkus:dev` and then access
 `http://localhost:8080` to start chatting. Some more information
 and a few suggested prompts to try out will be shown on that page.
+
+Alternatively, if you prefer working from the command line instead of a GUI,
+and you have the `wscat` tool installed, you can connect directly to the bot using
+a WebSocket client:
+
+```shell
+wscat -c ws://localhost:8080/chatbot
+```
