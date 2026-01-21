@@ -33,7 +33,8 @@ public class ToolWithToolMemoryIdTest extends OpenAiBaseTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Tool.class, App.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class).addClasses(Tool.class, App.class))
+            .overrideRuntimeConfigKey("quarkus.langchain4j.openai.api-key", "defaultKey");
 
     @Singleton
     public static class Tool {

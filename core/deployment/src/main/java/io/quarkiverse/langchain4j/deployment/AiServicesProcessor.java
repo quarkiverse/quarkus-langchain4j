@@ -541,6 +541,9 @@ public class AiServicesProcessor {
                     case FIELD -> {
                         ci = instance.target().asField().declaringClass();
                     }
+                    case METHOD_PARAMETER -> {
+                        ci = instance.target().asMethodParameter().method().declaringClass();
+                    }
                     default -> {
                         ci = null;
                     }
@@ -1757,6 +1760,11 @@ public class AiServicesProcessor {
                     }
                 } else if (kind == AnnotationTarget.Kind.CLASS) {
                     ClassInfo declaringClass = target.asClass();
+                    if (declaringClass.isInterface()) {
+                        detectedForCreate.add(declaringClass.name().toString());
+                    }
+                } else if (kind == AnnotationTarget.Kind.METHOD_PARAMETER) {
+                    ClassInfo declaringClass = target.asMethodParameter().method().declaringClass();
                     if (declaringClass.isInterface()) {
                         detectedForCreate.add(declaringClass.name().toString());
                     }
