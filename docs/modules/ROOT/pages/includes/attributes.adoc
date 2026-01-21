@@ -1,4 +1,4 @@
-:project-version: 1.5.0
-:langchain4j-version: 1.9.1
+:project-version: 1.6.0.CR1
+:langchain4j-version: 1.10.0
 :langchain4j-embeddings-version: ${langchain4j-embeddings.version}
 :examples-dir: ./../examples/
