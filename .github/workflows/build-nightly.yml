@@ -25,9 +25,6 @@ jobs:
         run: git config --global core.autocrlf false
         if: startsWith(matrix.os, 'windows')
 
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
-
       - uses: actions/checkout@v3
 
       - name: Reclaim Disk Space
