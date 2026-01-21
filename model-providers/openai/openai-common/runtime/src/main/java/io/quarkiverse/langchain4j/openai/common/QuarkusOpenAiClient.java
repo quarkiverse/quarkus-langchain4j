@@ -121,12 +121,12 @@ public class QuarkusOpenAiClient extends OpenAiClient {
                             }
                         });
                     }
-                    if (builder.customHeaders != null) {
+                    if (builder.customHeadersSupplier != null) {
                         restApiBuilder.clientHeadersFactory(new ClientHeadersFactory() {
                             @Override
                             public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
                                     MultivaluedMap<String, String> clientOutgoingHeaders) {
-                                return new MultivaluedHashMap(builder.customHeaders);
+                                return new MultivaluedHashMap(builder.customHeadersSupplier.get());
                             }
                         });
                     }

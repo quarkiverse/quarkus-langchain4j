@@ -27,9 +27,11 @@ import dev.langchain4j.model.mistralai.internal.api.MistralAiChatCompletionRespo
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiEmbeddingResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiFimCompletionRequest;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiMessageContent;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModelResponse;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationRequest;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiModerationResponse;
+import dev.langchain4j.model.mistralai.internal.api.MistralAiTextContent;
 import dev.langchain4j.model.mistralai.internal.api.MistralAiUsage;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
@@ -81,8 +83,15 @@ public class QuarkusMistralAiClient extends MistralAiClient {
             @Override
             public void accept(MistralAiChatCompletionResponse response) {
                 MistralAiChatCompletionChoice choice = response.getChoices().get(0);
-                String chunk = choice.getDelta().getContent();
-                contentBuilder.get().append(chunk);
+                String chunk = null;
+                // TODO: this may be a MistralAiThinkingContent, add proper handling for it?
+                for (MistralAiMessageContent content : choice.getDelta().getContent()) {
+                    if (content instanceof MistralAiTextContent) {
+                        chunk = ((MistralAiTextContent) content).getText();
+                        contentBuilder.get().append(chunk);
+                        break;
+                    }
+                }
 
                 if (chunk != null) {
                     handler.onPartialResponse(chunk);
