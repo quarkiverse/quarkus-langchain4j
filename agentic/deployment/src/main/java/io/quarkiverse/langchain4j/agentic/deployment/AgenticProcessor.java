@@ -34,7 +34,14 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 import org.jboss.logging.Logger;
 
+import dev.langchain4j.agentic.agent.ChatMessagesAccess;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.internal.InternalAgent;
+import dev.langchain4j.agentic.observability.AgentListenerProvider;
+import dev.langchain4j.agentic.planner.AgentInstance;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.service.IllegalConfigurationException;
+import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.agentic.runtime.AgenticRecorder;
 import io.quarkiverse.langchain4j.agentic.runtime.AiAgentCreateInfo;
@@ -463,6 +470,9 @@ public class AgenticProcessor {
                 .toArray(String[]::new);
         reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(agentClassNames).methods(true).fields(false).build());
         proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(agentClassNames));
+        proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(InternalAgent.class.getName(),
+                AgentListenerProvider.class.getName(), AgenticScopeOwner.class.getName(), AgenticScopeAccess.class.getName(),
+                AgentInstance.class.getName(), ChatMemoryAccess.class.getName(), ChatMessagesAccess.class.getName()));
     }
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
