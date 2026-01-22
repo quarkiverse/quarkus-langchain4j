@@ -4,22 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 public class TestUtils {
     private static final String MOCK_ANSWER = "MockGPT";
 
-    @ConfigProperty(name = "openai.key")
-    static String key;
+    static boolean mocked = false;
 
     static {
-        key = ConfigProvider.getConfig().getValue("openai.key", String.class);
+        ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.openai.base-url", String.class)
+                .ifPresent(s -> mocked = s.contains("mock"));
     }
 
     private static boolean useMock() {
-        return key.equalsIgnoreCase("ADD_A_TOKEN");
+        return mocked;
+    }
+
+    // required for @EnabledIf annotations
+    public static boolean usesLLM() {
+        return !mocked;
     }
 
     public static Matcher<String> containsStringOrMock(String... expected) {
