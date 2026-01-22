@@ -18,7 +18,7 @@ import jakarta.ws.rs.sse.SseEventSource;
 import org.acme.example.openai.TestUtils;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIf;
 
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.common.http.TestHTTPResource;
@@ -42,7 +42,7 @@ public class ChatLanguageModelResourceTest {
     }
 
     @Test
-    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "The Mock API does not handle streaming properly")
+    @EnabledIf(value = "org.acme.example.openai.TestUtils#usesLLM", disabledReason = "The Mock API does not handle streaming properly")
     public void sse() throws Exception {
         Client client = ClientBuilder.newBuilder().build();
         WebTarget target = client.target(url.toString() + "/streaming");
@@ -84,7 +84,7 @@ public class ChatLanguageModelResourceTest {
     }
 
     @Test
-    @EnabledIfSystemProperty(named = "quarkus.test.profile", matches = "cloud-llm", disabledReason = "The Mock API does not handle streaming properly")
+    @EnabledIf(value = "org.acme.example.openai.TestUtils#usesLLM", disabledReason = "The Mock API does not handle streaming properly")
     public void memory() {
         given()
                 .baseUri(url.toString())
