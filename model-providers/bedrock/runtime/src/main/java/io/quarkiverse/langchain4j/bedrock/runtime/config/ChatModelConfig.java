@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
+import dev.langchain4j.model.bedrock.BedrockCachePointPlacement;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
@@ -84,5 +85,22 @@ public interface ChatModelConfig extends AwsClientConfig {
      * Http client related configurations for chat models
      */
     HttpClientConfig client();
+
+    /**
+     * Enables prompt caching to reduce latency and costs for requests with repeated content.
+     * You can specify where to place the cache point in the prompt, possible values are {@code AFTER_SYSTEM},
+     * {@code AFTER_USER_MESSAGE} or {@code AFTER_TOOLS}.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html">AWS Bedrock Prompt Caching</a>
+     */
+    Optional<BedrockCachePointPlacement> promptCaching();
+
+    /**
+     * Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html">AWS Bedrock inference
+     *      reasoning</a>.
+     */
+    OptionalInt reasoning();
 
 }
