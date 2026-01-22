@@ -43,19 +43,23 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
+        # jbang is required for some tests, eg McpToolsStreamableHttpTransportTest
+      - name: Setup JBang
+        uses: jbangdev/setup-jbang@main
+
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
           path: current-repo
+
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
 
       - name: Checkout Ecosystem
         uses: actions/checkout@v3
         with:
           repository: ${{ env.ECOSYSTEM_CI_REPO }}
           path: ecosystem-ci
-
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
 
       - name: Setup and Run Tests
         run: ./ecosystem-ci/setup-and-test

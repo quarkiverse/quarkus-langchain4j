@@ -26,7 +26,7 @@ public class AssistantResourceWithGuardrailsAndObservability {
 
     @GET
     public String assistant() {
-        return assistant.chat("test");
+        return assistant.chat("Hello, answer with word 'test'");
     }
 
     @RegisterAiService
