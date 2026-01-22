@@ -35,7 +35,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <quarkus.version>3.27.1</quarkus.version>
+    <quarkus.version>3.27.2</quarkus.version>
     <quarkus.extension-processor.version>${quarkus.version}</quarkus.extension-processor.version>
     <langchain4j.version>1.10.0</langchain4j.version>
     <langchain4j-community.version>1.6.0-beta12</langchain4j-community.version>
