@@ -26,7 +26,7 @@ When using Dev Mode:
 - The extension will automatically pull the configured model.
 - JVM flags are set up automatically to enable the C2 compiler, which is required for proper inference performance.
 - Disk space is required for downloaded models. The model directory can be customized via:
-
++
 [source,properties]
 ----
 quarkus.langchain4j.jlama.models-path=/path/to/model/storage

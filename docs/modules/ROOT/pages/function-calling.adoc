@@ -349,7 +349,8 @@ The previous AI service is the one that will reason about the user question and 
 
 The tool _implementations_ are very simple:
 
-1) The city extractor agent just extracts the city from the user question. It's implemented as an AI service.
+1. The city extractor agent just extracts the city from the user question. It's implemented as an AI service.
++
 [source, java]
 ----
 @ApplicationScoped
@@ -366,13 +367,13 @@ public interface CityExtractorAgent {
     String extractCity(String question); // <3>
 }
 ----
-
++
 <1> This service does not require memory.
 <2> The tool description, the LLM can use it to decide when to call this tool.
 <3> The method signature, the LLM use it to know how to call this tool.
-
-2) The geocoding tool is a REST client that provide the _GeoResult_ for a given city:
-
++
+2. The geocoding tool is a REST client that provide the _GeoResult_ for a given city:
++
 [source, java]
 ----
 @RegisterRestClient(configKey = "geocoding")
@@ -386,9 +387,9 @@ public interface GeoCodingService {
     GeoResults findCity(@RestQuery String name);
 }
 ----
-
-3) The weather forecast tools is also implemented as a REST client:
-
++
+3. The weather forecast tools is also implemented as a REST client:
++
 [source, java]
 ----
 @RegisterRestClient(configKey = "openmeteo")

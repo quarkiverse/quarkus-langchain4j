@@ -48,7 +48,7 @@ Add the following dependencies in your `pom.xml`:
 </dependency>
 ----
 
-IF you are using Ollama, configure your model in `application.properties`:
+If you are using Ollama, configure your model in `application.properties`:
 
 [source,properties]
 ----

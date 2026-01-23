@@ -31,7 +31,7 @@ To inject the embedding model:
 EmbeddingModel embeddingModel;
 ----
 
-=== Configuration
+== Configuration
 
 Set the API key in your `application.properties`:
 

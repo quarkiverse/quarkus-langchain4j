@@ -202,6 +202,7 @@ See the <<Memory Management>> reference for detailed customization.
 AI Services map LLM responses to method return types:
 
 - Direct JSON mapping:
+
 [source,java]
 ----
 @UserMessage("Evaluate review: {review}. Respond in JSON.")
@@ -212,7 +213,8 @@ Quarkus automatically deserializes responses into `ReviewResponse`.
 Depending on the model, it forces the response format to match the expected type.
 It inserts the expected schema into the prompt automatically.
 
-- Dynamic schema with `{response_schema}` placeholder:
+- Dynamic schema with `\{response_schema}` placeholder:
+
 [source,java]
 ----
 @UserMessage("""
@@ -223,6 +225,7 @@ Classify text: {text}. Schema: {response_schema}
 In this case, the schema is not automatically inserted.
 
 You can disable automatic schema insertion via configuration:
+
 [source,properties]
 ----
 quarkus.langchain4j.response-schema=false
@@ -304,6 +307,7 @@ quarkus.langchain4j.openai.m3.embedding-model.model-name=text-emb...
 Integrate function calling (methods) callable by the LLM:
 
 - Define tools with `@Tool`:
++
 [source,java]
 ----
 @ApplicationScoped
@@ -313,15 +317,16 @@ public class CustomerService {
     public String getName(long id) { /*...*/ }
 }
 ----
-
++
 - Configure tools:
++
 [source,java]
 ----
 @RegisterAiService(tools = CustomerService.class)
 ----
-
-or, (recommended) use a toolbox:
-
++
+- or, (recommended) use a toolbox:
++
 [source,java]
 ----
 @RegisterAiService
@@ -466,12 +471,14 @@ Limitations for image generation:
 To summarize:
 
 - Image description:
++
 [source,java]
 ----
 String describe(@ImageUrl String imageUrl);
 ----
-
++
 - Image generation:
++
 [source,java]
 ----
 Image generate(String prompt);

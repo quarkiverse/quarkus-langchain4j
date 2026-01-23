@@ -9,6 +9,7 @@ IMPORTANT: This extension supports IBM watsonx as a service on IBM Cloud only.
 
 == Prerequisites
 
+// tag::watsonx-prerequisites[]
 To use watsonx.ai models, configure the following required values in your `application.properties` file:
 
 === Base URL
@@ -51,7 +52,8 @@ Create an API key by visiting https://cloud.ibm.com/iam/apikeys and clicking Cre
 quarkus.langchain4j.watsonx.api-key=your-api-key
 ----
 
-TIP: You can also use the QUARKUS_LANGCHAIN4J_WATSONX_API_KEY environment variable.
+TIP: You can also use the `QUARKUS_LANGCHAIN4J_WATSONX_API_KEY` environment variable.
+// end::watsonx-prerequisites[]
 
 == Dependency
 
@@ -89,7 +91,7 @@ Each mode has its own configuration namespace:
 
 === Chat Mode Example
 
-[source,properties,subs=attributes+]
+[source,properties]
 ----
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}
@@ -109,7 +111,7 @@ public interface AiService {
 
 === Generation Mode Example
 
-[source,properties,subs=attributes+]
+[source,properties]
 ----
 quarkus.langchain4j.watsonx.base-url=${BASE_URL}
 quarkus.langchain4j.watsonx.api-key=${API_KEY}

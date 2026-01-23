@@ -18,7 +18,7 @@ To use Azure OpenAI models in your Quarkus application, configure your Azure cre
 
 1.	Obtain your Azure OpenAI endpoint, resource name, deployment name, and either an api-key or an Azure AD access token from the https://portal.azure.com/[Azure Portal].
 2.	Configure your application.properties with the necessary details:
-
++
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.azure-openai.resource-name=

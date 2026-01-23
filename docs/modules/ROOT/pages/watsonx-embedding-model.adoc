@@ -7,15 +7,7 @@ IBM watsonx.ai also provides access to embedding models that can be used for vec
 
 == Prerequisites
 
-Same as for the chat model. Ensure:
-
-- base-url
-- project-id
-- api-key
-
-are configured.
-
-See xref:watsonx-chat-model.adoc[IBM watsonx.ai Chat Models] for details on setting up the service and obtaining an API key.
+include::./watsonx-chat-model.adoc[tags=watsonx-prerequisites]
 
 == Dependency
 

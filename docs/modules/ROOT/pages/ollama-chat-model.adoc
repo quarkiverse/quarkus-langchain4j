@@ -27,7 +27,7 @@ The Dev Service bundled with this extension simplifies local setup:
 - It will *automatically pull* any model configured in your application.
 - If Ollama is not already running, it will *start an Ollama container* using your installed container runtime (Podman or Docker).
 - If, running in a container, the container will be exposed via configuration properties:
-
++
 [source,properties,subs=attributes+]
 ----
 langchain4j-ollama-dev-service.ollama.host=host

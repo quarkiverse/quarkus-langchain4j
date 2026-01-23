@@ -254,11 +254,16 @@ public class Startup {
 
 == Auditing
 
-IMPORTANT: The Quarkus-specific auditing features have been deprecated and removed. They have been replaced by https://docs.langchain4j.dev/tutorials/observability#ai-service-observability. You can observe the https://docs.langchain4j.dev/tutorials/observability#types-of-events[LangChain4j observability events] as CDI events.
+:langchain4j-observability-url: https://docs.langchain4j.dev/tutorials/observability
+:ai-service-observability-link: {langchain4j-observability-url}#ai-service-observability[LangChain4j AI Service Observability^]
+:event-types-observability-link: {langchain4j-observability-url}#types-of-events[LangChain4j observability events^]
+:cdi-observer-pattern-link: https://docs.oracle.com/javaee/6/tutorial/doc/gkhic.html[CDI observer pattern^]
 
-The extension allows users to audit the process of implementing an AiService by observing normal CDI events. See the https://docs.langchain4j.dev/tutorials/observability#ai-service-observability[LangChain4j AI Service Observability] tutorial for more information about the types of events that can be observed.
+IMPORTANT: The Quarkus-specific auditing features have been deprecated and removed. They have been replaced by {ai-service-observability-link}. You can observe the {event-types-observability-link} as CDI events.
 
-The main difference is that in Quarkus, you do not need to create an implementation of an `AiServiceListener`. Instead, just create a bean class (or multiple bean classes) and observe them using the https://docs.oracle.com/javaee/6/tutorial/doc/gkhic.html[CDI observer pattern].
+The extension allows users to audit the process of implementing an AiService by observing normal CDI events. See the {ai-service-observability-link} tutorial for more information about the types of events that can be observed.
+
+The main difference is that in Quarkus, you do not need to create an implementation of an `AiServiceListener`. Instead, just create a bean class (or multiple bean classes) and observe them using the {cdi-observer-pattern-link}.
 
 All the events for a single invocation can be correlated by `event.invocationContext().invocationId()`.
 

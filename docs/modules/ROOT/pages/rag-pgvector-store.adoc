@@ -112,7 +112,7 @@ The PGVector extension maps each ingested document to a row in a PostgreSQL tabl
 * Optional metadata
 * The vector embedding (stored as a `vector` type column)
 
-During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding <=> :query_vector LIMIT N`.
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector LIMIT N`.
 
 The extension manages schema creation and indexing automatically unless overridden.
 

@@ -27,7 +27,7 @@ When using Dev Mode, the extension:
 - Automatically pulls and configures the selected model.
 - Ensures the *C2 JIT compiler* is enabled for optimal runtime performance.
 - Allows you to configure the model directory via:
-
++
 [source,properties]
 ----
 quarkus.langchain4j.llama3.models-path=/your/custom/location
