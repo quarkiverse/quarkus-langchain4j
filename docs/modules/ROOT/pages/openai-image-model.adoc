@@ -6,7 +6,7 @@ include::./includes/customization.adoc[]
 OpenAI provides various image models capable of generating or editing images based on textual prompts.
 These models are ideal for use cases involving content creation, design assistance, or visual storytelling.
 
-For an overview of how image models fit into AI-infused applications, see the xref:models.adoc#_image_models_[Image Models] section in the Models reference guide.
+For an overview of how image models fit into AI-infused applications, see the xref:models.adoc#_image_models[Image Models] section in the Models reference guide.
 
 == Prerequisites
 
@@ -75,7 +75,7 @@ Image image = imageModel.generate("A majestic dragon flying over a medieval cast
 == Additional Resources
 
 [.lead]
-* Learn more about xref:models.adoc#_image_models_[Image Models]
+* Learn more about xref:models.adoc#_image_models[Image Models]
 * Explore xref:ai-services.adoc[AI Services] for orchestrating multiple models
 
 

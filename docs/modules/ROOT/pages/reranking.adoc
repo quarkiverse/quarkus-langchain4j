@@ -12,6 +12,8 @@ When using RAG, a scoring model can be used to rerank the top-k documents retrie
   mutually incomparable, so using the raw https://learn.microsoft.com/en-us/azure/search/hybrid-search-ranking[Reciprocal Rank Fusion] for merging the lists of documents retrieved by these retrievers is suboptimal.
 
 Quarkus-langchain4j currently supports scoring through `Cohere`. Configure a scoring model:
+
+[source,properties]
 ----
 quarkus.langchain4j.cohere.api-key=YOUR_COHERE_API_KEY
 quarkus.langchain4j.cohere.scoring-model.model-name=MODEL_ID

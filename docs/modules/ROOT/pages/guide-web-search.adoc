@@ -111,6 +111,6 @@ include::includes/quarkus-langchain4j-tavily.adoc[leveloffset=+1,opts=optional]
 == Going Further
 
 [.lead]
-xref:function-calling.adoc[Function Calling with Tools] +
-xref:rag.adoc[Retrieval-Augmented Generation (RAG)] +
-xref:ai-services.adoc[AI Service Reference]
+* xref:function-calling.adoc[Function Calling with Tools] +
+* xref:rag.adoc[Retrieval-Augmented Generation (RAG)] +
+* xref:ai-services.adoc[AI Service Reference]

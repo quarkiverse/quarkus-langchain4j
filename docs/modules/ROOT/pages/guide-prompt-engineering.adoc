@@ -541,10 +541,10 @@ ANSWER: <final_answer>
 """)
 public interface MathSolver {
 
-@UserMessage("""
-If Alice has 4 apples and Bob gives her 3 more, how many apples does Alice have?
-""")
-String solve();
+    @UserMessage("""
+    If Alice has 4 apples and Bob gives her 3 more, how many apples does Alice have?
+    """)
+    String solve();
 
 }
 ----
@@ -569,10 +569,10 @@ You will receive a task. First decompose it into smaller steps. Then solve each 
 """)
 public interface TaskDecomposer {
 
-@UserMessage("""
-Analyze this article and produce a summary and a list of 5 follow-up actions.
-""")
-String execute(String article);
+    @UserMessage("""
+    Analyze this article and produce a summary and a list of 5 follow-up actions.
+    """)
+    String execute(String article);
 
 }
 ----
@@ -591,18 +591,20 @@ Use when integrating tools, agents, or APIs where decisions depend on intermedia
 
 [source,java]
 ----
-import io.quarkiverse.langchain4j.ToolBox;@RegisterAiService
+import io.quarkiverse.langchain4j.ToolBox;
+
+@RegisterAiService
 @ApplicationScoped
 @SystemMessage("""
 You are a reasoning agent. For each problem, reason about the solution, and when necessary, use available tools.
 """)
 public interface AgentService {
 
-@UserMessage("""
+    @UserMessage("""
     What’s the weather like in Tokyo tomorrow?
-""")
-@ToolBox(WeatherForecastTool.class)
-String answer();
+    """)
+    @ToolBox(WeatherForecastTool.class)
+    String answer();
 
 }
 ----
@@ -634,7 +636,7 @@ public interface ReflectiveAI {
     STEP 1: Provide a first version.
     STEP 2: Reflect on and improve the answer.
     """)
-String summarize(String article);
+    String summarize(String article);
 
 }
 ----

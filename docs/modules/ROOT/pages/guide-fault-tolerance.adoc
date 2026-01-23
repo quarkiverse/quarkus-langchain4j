@@ -9,7 +9,7 @@ This is particularly useful when working with external model providers that may 
 To enable fault tolerance for AI services, follow these steps:
 
 * Add the `quarkus-smallrye-fault-tolerance` extension to your project:
-
++
 [source,xml]
 ----
 <dependency>
@@ -17,9 +17,9 @@ To enable fault tolerance for AI services, follow these steps:
     <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
 </dependency>
 ----
-
++
 * Use fault tolerance annotations such as `@Fallback`, `@Timeout`, or `@Retry` on your AI service methods:
-
++
 [source,java]
 ----
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/AiServiceWithFaultTolerance.java[]

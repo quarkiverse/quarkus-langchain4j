@@ -73,7 +73,7 @@ To integrate the GPULlama3 chat model into your Quarkus application, add the fol
 </dependency>
 ----
 
-Important: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
+IMPORTANT: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
 
 Sample implementation for ChatModel:
 [source,java]
@@ -167,16 +167,16 @@ To run your Quarkus application in **dev mode** with TornadoVM:
 1. Ensure your `pom.xml` contains the `quarkus-langchain4j-gpu-llama3` dependency (shown earlier).
 
 2. Add the TornadoVM argfile as a Maven property:
-
++
 [source,xml]
 ----
 <properties>
     <tornado.argfile>/path/to/tornado-argfile</tornado.argfile>
 </properties>
 ----
-
++
 3. Pass the argfile to the JVM in the plugin configuration for dev mode:
-
++
 [source,xml]
 ----
 <plugin>
@@ -187,9 +187,9 @@ To run your Quarkus application in **dev mode** with TornadoVM:
     </configuration>
 </plugin>
 ----
-
++
 4. Launch dev mode explicitly:
-
++
 [source,shell]
 ----
 mvn quarkus:dev
@@ -202,29 +202,31 @@ mvn quarkus:dev
 To build and run your application in **production mode**:
 
 1. Build the Quarkus application:
-
++
 [source,shell]
 ----
 mvn clean package
 ----
-
++
 2. Run the generated jar with the TornadoVM argfile:
-
++
 [source,shell]
 ----
 java @$TORNADOVM_HOME/tornado-argfile -jar target/quarkus-app/quarkus-run.jar
 ----
 
-⚠ **Important:** Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly set.
+IMPORTANT: Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly set.
 
 
 == Supported Models and Quantizations
 
 The following models have been tested with GPULlama3.java and can be found in link:++https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
 
-⚠️ **Important:**
+[IMPORTANT]
+====
 Quantization format names are model-dependent. Some models require `F16`, others `fp16` (lowercase), as defined in their GGUF files.
 Use **exactly** the spelling listed below, or the model may fail to load.
+====
 
 [cols="2a,1,3a", options="header"]
 |===

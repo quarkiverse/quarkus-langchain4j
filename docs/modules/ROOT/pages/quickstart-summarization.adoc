@@ -69,7 +69,7 @@ This interface defines a system message to guide the model's behavior and a meth
 
 Let's look at the `summarize` method.
 The `@UserMessage` annotation specifies how the input should be formatted when sent to the model.
-The `{input}` placeholder will be replaced with the actual content passed to the method.
+The `\{input}` placeholder will be replaced with the actual content passed to the method.
 
 [#main-app]
 == Writing the Main Application

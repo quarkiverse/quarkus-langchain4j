@@ -5,7 +5,7 @@ include::./includes/customization.adoc[]
 
 Azure OpenAI provides image generation models that can create or modify images based on natural language prompts. These models enable use cases such as visual storytelling, creative content generation, and image editing workflows.
 
-For an overview of how image models fit into AI workflows, refer to the xref:models.adoc#_image_models_[Image Models] section of the Models documentation.
+For an overview of how image models fit into AI workflows, refer to the xref:models.adoc#_image_models[Image Models] section of the Models documentation.
 
 == Prerequisites
 
@@ -62,7 +62,7 @@ import jakarta.inject.Inject;
 == Related Topics
 
 [.lead]
-* xref:models.adoc#_image_models_[Image Models Overview]
+* xref:models.adoc#_image_models[Image Models Overview]
 * xref:ai-services.adoc[AI Services Reference]
 
 

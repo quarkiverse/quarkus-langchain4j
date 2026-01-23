@@ -93,7 +93,7 @@ In Quarkus LangChain4j, streaming responses are exposed as `Multi<String>` seque
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=streaming-ai-service,indent=0]
 ----
 
-[#_embedding_models]== Embedding Models
+== Embedding Models
 
 Embedding models convert #unstructured input (text or images) into numerical vectors known as _embeddings_#.
 An embedding is a high-dimensional representation that captures semantic similarity: items with similar meaning are close together in vector space.
@@ -140,7 +140,7 @@ The output is generally an image URL, byte stream, or base64-encoded representat
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/ModelExamples.java[tag=image-service,indent=0]
 ----
 
-[#_reasoning_models]== Reasoning Models
+== Reasoning Models
 
 Reasoning models go beyond plain generation by supporting structured planning, problem-solving, and tool invocation. They are commonly used when the model needs to make decisions, call external tools, or follow multi-step workflows.
 They are the base for building complex AI agents that can reason about tasks, invoke APIs, and produce structured outputs, paving the way for #agentic architectures#.

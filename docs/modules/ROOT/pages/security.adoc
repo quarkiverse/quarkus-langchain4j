@@ -47,7 +47,7 @@ A malicious user might craft a prompt that manipulates the LLM to ignore its ori
 
 * *Sanitize User Input*: Before adding user input to a prompt, sanitize it to neutralize any characters or instructions that could alter the prompt's meaning.
 * *Use Delimiters and Context*: Clearly separate instructions from user-provided data in your prompts. For example:
-
++
 [source,java]
 ----
 // User input is clearly demarcated.

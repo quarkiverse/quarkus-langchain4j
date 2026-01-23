@@ -20,14 +20,12 @@ If you’re using a provider other than OpenAI, ensure that the authentication a
 // tag::openai-prerequisites[]
 === OpenAI Account and API Key
 
-=== OpenAI Account and API Key
-
 To use OpenAI models in your Quarkus application:
 
 1.	https://auth.openai.com/create-account[Create an OpenAI account].
 2.	https://platform.openai.com/api-keys[Generate an API key] from the API Keys page.
 3.	Add the following to your `application.properties`:
-
++
 [source,properties,subs=attributes+]
 ----
 quarkus.langchain4j.openai.api-key=sk-...
@@ -43,12 +41,14 @@ You can use the environment variable `QUARKUS_LANGCHAIN4J_OPENAI_API_KEY` instea
 .Using configuration placeholders
 ====
 You can also reference an environment variable directly in your properties file:
-[source,properties,subs=attributes+]
+
+[source,properties]
 ----
 quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 ----
 ====
 // end::openai-prerequisites[]
+
 === OpenAI Quarkus Extension
 
 To enable OpenAI chat model support, add the following dependency to your `pom.xml`:
@@ -256,6 +256,6 @@ This approach is ideal for multi-tenant setups or dynamic token rotation.
 * xref:ai-services.adoc[AI Services]
 * xref:./models.adoc#_embedding_models[Embedding Models]
 * xref:./models.adoc#_moderation_models[Moderation Models]
-* xref:./models.adoc#_image_models_[Image Models]
+* xref:./models.adoc#_image_models[Image Models]
 
 
