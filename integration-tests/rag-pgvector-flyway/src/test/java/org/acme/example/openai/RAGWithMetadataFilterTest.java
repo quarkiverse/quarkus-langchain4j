@@ -8,8 +8,8 @@ import jakarta.inject.Inject;
 import org.acme.example.AiWithUserFilterService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
@@ -23,7 +23,7 @@ import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-@Disabled("flaky test")
+@EnabledIfSystemProperty(named = "enable.flaky-tests", matches = "true")
 public class RAGWithMetadataFilterTest {
 
     @Inject
