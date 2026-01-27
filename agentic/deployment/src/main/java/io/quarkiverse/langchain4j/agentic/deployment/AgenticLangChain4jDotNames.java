@@ -35,7 +35,10 @@ import dev.langchain4j.service.MemoryId;
 
 public final class AgenticLangChain4jDotNames {
 
+    private static final String AGENTIC_PACKAGE = "dev.langchain4j.agentic.declarative";
+
     public static final DotName AGENT = DotName.createSimple(Agent.class.getName());
+    public static final DotName A2A_AGENT = DotName.createSimple(AGENTIC_PACKAGE + ".A2AClientAgent");
     public static final DotName SUPERVISOR_AGENT = DotName.createSimple(SupervisorAgent.class.getName());
     public static final DotName SEQUENCE_AGENT = DotName.createSimple(SequenceAgent.class.getName());
     public static final DotName PARALLEL_AGENT = DotName.createSimple(ParallelAgent.class.getName());
@@ -44,7 +47,7 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName PLANNER_AGENT = DotName.createSimple(PlannerAgent.class.getName());
 
     public static final List<DotName> ALL_AGENT_ANNOTATIONS = List.of(AGENT, SUPERVISOR_AGENT, SEQUENCE_AGENT,
-            PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
+            PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT);
     public static final List<DotName> AGENT_ANNOTATIONS_WITH_SUB_AGENTS = List.of(SUPERVISOR_AGENT, SEQUENCE_AGENT,
             PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
 
