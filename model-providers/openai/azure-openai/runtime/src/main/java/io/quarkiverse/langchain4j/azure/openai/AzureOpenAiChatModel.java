@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.azure.openai;
 import static dev.langchain4j.internal.RetryUtils.withRetry;
 import static dev.langchain4j.internal.Utils.getOrDefault;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
+import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.aiMessageFrom;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.finishReasonFrom;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
@@ -13,9 +14,11 @@ import static java.time.Duration.ofSeconds;
 import java.net.Proxy;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
@@ -24,6 +27,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.TokenCountEstimator;
+import dev.langchain4j.model.chat.Capability;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -74,6 +78,7 @@ public class AzureOpenAiChatModel implements ChatModel {
     private final TokenCountEstimator tokenizer;
     private final ResponseFormat responseFormat;
     private final List<ChatModelListener> listeners;
+    private final Set<Capability> supportedCapabilities;
 
     public AzureOpenAiChatModel(String endpoint,
             String apiVersion,
@@ -128,9 +133,14 @@ public class AzureOpenAiChatModel implements ChatModel {
                 : ResponseFormat.builder()
                         .type(ResponseFormatType.valueOf(responseFormat.toUpperCase(Locale.ROOT)))
                         .build();
+
+        // Azure OpenAI supports JSON schema for models like gpt-4o-2024-08-06+
+        this.supportedCapabilities = new HashSet<>();
+        if (this.responseFormat != null && ResponseFormatType.JSON_SCHEMA.equals(this.responseFormat.type())) {
+            this.supportedCapabilities.add(RESPONSE_FORMAT_JSON_SCHEMA);
+        }
     }
 
-    @Override
     public ChatResponse doChat(ChatRequest chatRequest) {
         List<ChatMessage> messages = chatRequest.messages();
         List<ToolSpecification> toolSpecifications = chatRequest.toolSpecifications();
@@ -143,7 +153,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .maxTokens(maxTokens)
                 .presencePenalty(presencePenalty)
                 .frequencyPenalty(frequencyPenalty)
-                .responseFormat(responseFormat);
+                .responseFormat(this.responseFormat);
 
         if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
             requestBuilder.functions(toFunctions(toolSpecifications));
@@ -237,6 +247,11 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
                         .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
+    }
+
+    @Override
+    public Set<Capability> supportedCapabilities() {
+        return supportedCapabilities;
     }
 
     public static Builder builder() {
