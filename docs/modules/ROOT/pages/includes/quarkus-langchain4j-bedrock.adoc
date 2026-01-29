@@ -1340,6 +1340,48 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching[`quarkus.langchain4j.bedrock.chat-model.prompt-caching`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.prompt-caching+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables prompt caching to reduce latency and costs for requests with repeated content. You can specify where to place the cache point in the prompt, possible values are `AFTER_SYSTEM`, `AFTER_USER_MESSAGE` or `AFTER_TOOLS`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`after-system`, `after-user-message`, `after-tools`
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning[`quarkus.langchain4j.bedrock.chat-model.reasoning`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-embedding-model-log-requests[`quarkus.langchain4j.bedrock.embedding-model.log-requests`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock.embedding-model.log-requests+++[]
@@ -3307,6 +3349,48 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching[`quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables prompt caching to reduce latency and costs for requests with repeated content. You can specify where to place the cache point in the prompt, possible values are `AFTER_SYSTEM`, `AFTER_USER_MESSAGE` or `AFTER_TOOLS`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`after-system`, `after-user-message`, `after-tools`
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning[`quarkus.langchain4j.bedrock."model-name".chat-model.reasoning`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.reasoning+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enables reasoning capabilities of the model. It requires to set the maximum number of tokens to allocate for reasoning.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_REASONING+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-embedding-model-log-requests[`quarkus.langchain4j.bedrock."model-name".embedding-model.log-requests`]##
