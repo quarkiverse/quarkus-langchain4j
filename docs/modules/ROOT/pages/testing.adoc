@@ -55,6 +55,35 @@ To use the `EvaluationExtension`, include the following Maven dependency in your
 </dependency>
 ----
 
+== Prerequisites
+
+IMPORTANT: For the evaluation framework to work correctly with AI Services, you MUST configure the Maven compiler to preserve parameter names.
+
+Add this to your pom.xml:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.13.0</version>
+    <configuration>
+        <parameters>true</parameters>  <!--1-->
+    </configuration>
+</plugin>
+----
+<1> REQUIRED for `@RegisterAiService` when using with the evaluation framework
+
+Without this configuration, you may encounter errors like:
+
+[source]
+----
+java.lang.IllegalStateException: Duplicate key null
+(attempted merging values 0 and 1)
+----
+
+This occurs because the Java compiler strips parameter names by default, and the LangChain4j framework needs them to map method parameters to template variables in `@SystemMessage` and `@UserMessage` annotations.
+
 == Using the extension
 
 To use the extension, annotate your test class with `@ExtendWith(EvaluationExtension.class)` or `@Evaluate`:
@@ -310,6 +339,45 @@ Alternatively, samples can be loaded from a YAML file using the `@SampleLocation
   tags: ["tag1"]
 ----
 
+=== YAML Sample Format Reference
+
+The YAML format MUST follow this exact structure:
+
+[source,yaml]
+----
+- name: unique_sample_identifier        # Required: unique name
+  parameters:                            # Required: MUST be plural "parameters"
+    - "first parameter value"
+    - "second parameter value"           # Optional: multiple parameters
+  expected-output: |                     # Required: hyphenated, can be multiline
+    The expected output content here
+    Can span multiple lines
+  tags: ["tag1", "tag2"]                 # Optional: for filtering
+----
+
+For samples with multiple expected outputs (e.g., testing retrievers), use `expected-outputs` (plural):
+
+[source,yaml]
+----
+- name: retriever_test_sample
+  parameters:
+    - "search query"
+  expected-outputs:                      # Note: plural form
+    - "expected segment 1"
+    - "expected segment 2"
+    - "expected segment 3"
+  tags: ["retriever"]
+----
+
+IMPORTANT: Common format requirements:
+
+* Use `parameters` (plural), not `parameter` or `input`
+* Use `expected-output` (hyphenated) for single String output, or `expected-outputs` (plural) for List<String> output
+* You MUST use either `expected-output` or `expected-outputs`, not both
+* Parameters must be a list, even for single values
+* The file can optionally start with `---` as YAML document separator
+* Multiline expected output uses the `|` (pipe) character for literal block style
+
 NOTE: You can implement your own loader to support custom sample formats (see the <<_custom_sample_loaders,Custom Sample Loaders section>>).
 
 === Evaluation Strategy
@@ -338,10 +406,11 @@ public interface EvaluationStrategy<T> {
 
 Strategies return an `EvaluationResult` which can be created using:
 
-- `EvaluationResult.passed()` / `EvaluationResult.failed()`: Simple pass/fail
-- `EvaluationResult.fromBoolean(boolean)`: Convert boolean to result
-- `EvaluationResult.withScore(double)`: Include a numerical score (0.0-1.0)
-- Fluent API for complex results with explanations and metadata:
+- `EvaluationResult.passed(double score)`: Create a passing result with a score (0.0-1.0)
+- `EvaluationResult.failed(double score, String explanation)`: Create a failing result with score and explanation
+- `EvaluationResult.failed(String explanation)`: Create a failing result with explanation (score defaults to 0.0)
+- `EvaluationResult.fromBoolean(boolean)`: Convert boolean to result (passed=1.0, failed=0.0)
+- Fluent API for adding explanations and metadata:
 
 [source,java]
 ----
@@ -800,7 +869,7 @@ It uses a configurable evaluation prompt and `ChatModel`.
 </dependency>
 ----
 
-**Example:**
+**Basic Example:**
 
 [source,java]
 ----
@@ -814,6 +883,127 @@ EvaluationStrategy<String> strategy = new AiJudgeStrategy(myChatLanguageModel, "
 
                 """);
 ----
+
+==== Advanced Usage: Structured JSON Output
+
+For reliable parsing and detailed evaluation results, request JSON output in your judge prompt:
+
+[source,java]
+----
+@ApplicationScoped
+@RegisterAiService
+public interface LlmJudgeService {
+
+    @SystemMessage("""
+        You are an expert evaluator for an AI application.
+
+        Your role is to judge whether an actual response correctly
+        addresses what was expected based on the user's question.
+
+        Evaluation Criteria:
+        - Does the response address the user's question?
+        - Is the information accurate and relevant?
+        - Does it cover key concepts from the expected output?
+        - Is it helpful and informative?
+
+        Scoring Guidelines:
+        - 100: Perfect response - fully addresses the question
+        - 80-99: Good response - addresses well, minor gaps
+        - 60-79: Adequate response - addresses but missing info
+        - 40-59: Partial response - only partially addresses
+        - 20-39: Poor response - barely relevant or mostly incorrect
+        - 0-19: Incorrect response - completely wrong or off-topic
+
+        Respond with ONLY a JSON object in this exact format:
+        {
+          "score": <number 0-100>,
+          "passed": <true or false>,
+          "explanation": "<brief explanation of the score>"
+        }
+        """)
+    @UserMessage("""
+        Question: {{question}}
+        Expected Behavior: {{expectedOutput}}
+        Actual Response: {{actualResponse}}
+
+        Evaluate the actual response and provide your judgment as JSON.
+        """)
+    String judgeResponse(String question, String expectedOutput, String actualResponse);
+}
+----
+
+==== Robust JSON Parsing
+
+LLMs may wrap JSON in markdown code blocks. Handle this robustly:
+
+[source,java]
+----
+private JudgmentResult parseJudgment(String response) throws Exception {
+    String cleaned = response.trim();
+
+    // Remove markdown code blocks
+    if (cleaned.startsWith("```json")) {
+        cleaned = cleaned.substring(7);
+    }
+    if (cleaned.startsWith("```")) {
+        cleaned = cleaned.substring(3);
+    }
+    if (cleaned.endsWith("```")) {
+        cleaned = cleaned.substring(0, cleaned.length() - 3);
+    }
+
+    // Parse JSON
+    JsonNode root = objectMapper.readTree(cleaned.trim());
+
+    int score = root.get("score").asInt();
+    boolean passed = root.get("passed").asBoolean();
+    String explanation = root.get("explanation").asText();
+
+    return new JudgmentResult(score, passed, explanation);
+}
+
+private record JudgmentResult(int score, boolean passed, String explanation) {}
+----
+
+==== Fallback Strategy
+
+Always provide a fallback when LLM judge fails:
+
+[source,java]
+----
+public class LlmJudgeEvaluationStrategy implements EvaluationStrategy<String> {
+
+    private final LlmJudgeService judgeService;
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        try {
+            return evaluateWithLlmJudge(sample, output);
+        } catch (Exception e) {
+            LOG.warn("LLM judge failed for sample: " + sample.name(), e);
+            return fallbackEvaluation(sample, output);
+        }
+    }
+
+    private EvaluationResult fallbackEvaluation(
+            EvaluationSample<String> sample, String output) {
+        // Simple keyword-based fallback
+        boolean contains = output.toLowerCase()
+            .contains(sample.expectedOutput().toLowerCase());
+
+        return EvaluationResult.fromBoolean(contains)
+            .withExplanation("Fallback evaluation (LLM judge unavailable)");
+    }
+}
+----
+
+==== Cost Considerations
+
+LLM as judge adds API costs:
+
+* Per evaluation: ~$0.001-0.003 (gpt-4o-mini)
+* For 20 samples: ~$0.03-0.06 additional cost
+* Consider caching judge results for identical inputs
 
 == Creating a Custom Evaluation Strategy
 
@@ -871,11 +1061,15 @@ public class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<St
                 }
             }
             double score = (double) found / expected.size();
-            return EvaluationResult.builder()
-                .passed(found == expected.size())
-                .score(score)
-                .explanation(String.format("Found %d of %d expected segments", found, expected.size()))
-                .build();
+            boolean passed = found == expected.size();
+
+            if (passed) {
+                return EvaluationResult.passed(score)
+                    .withExplanation(String.format("Found %d of %d expected segments", found, expected.size()));
+            } else {
+                return EvaluationResult.failed(score,
+                    String.format("Found %d of %d expected segments", found, expected.size()));
+            }
         }
 
     }
@@ -908,6 +1102,19 @@ void evaluateWithSamples(@SampleLocation("test-samples.yaml") Samples<String> sa
     // Use samples in your test
 }
 ----
+
+=== @SampleLocation Path Resolution
+
+The `@SampleLocation` annotation expects **filesystem paths relative to the project root**, NOT classpath resource paths.
+
+[source,java]
+----
+@SampleLocation("src/test/resources/samples.yaml")      // Relative to project root
+@SampleLocation("test-data/samples.yaml")                // Also relative to project root
+@SampleLocation("/absolute/path/to/samples.yaml")       // Absolute path (not recommended)
+----
+
+NOTE: Always use the full path from the project root for clarity and reliability.
 
 [#_custom_sample_loaders]
 == Custom Sample Loaders
@@ -1036,6 +1243,493 @@ IMPORTANT: Your formatter may also push the result to an external system (databa
 private EvaluationReport<String> report;
 ----
 
+== Testing Guardrails
+
+Guardrails are critical for production AI applications. Test them thoroughly for accuracy.
+
+=== Unit Testing InputGuardrails
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+public class GuardrailEvaluationTest {
+
+    @Inject
+    OffTopicDetectionGuardrail guardrail;
+
+    @Test
+    public void testGuardrailAccuracy(
+        @ScorerConfiguration(concurrency = 2) Scorer scorer,
+        @SampleLocation("src/test/resources/guardrail-samples.yaml") Samples<String> samples) {
+
+        EvaluationReport<String> report = scorer.evaluate(
+            samples,
+            params -> evaluateGuardrail(params.get(0)),
+            new GuardrailEvaluationStrategy()
+        );
+
+        // Expect perfect accuracy for guardrails
+        assertThat(report).hasScore(100.0);
+    }
+
+    private String evaluateGuardrail(String input) {
+        try {
+            UserMessage message = UserMessage.from(input);
+            guardrail.validate(message);
+            return "ACCEPT";
+        } catch (InputGuardrailException e) {
+            return "REJECT:" + e.getMessage();
+        }
+    }
+}
+----
+
+=== Guardrail Evaluation Strategy
+
+[source,java]
+----
+public class GuardrailEvaluationStrategy implements EvaluationStrategy<String> {
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        String expectedBehavior = sample.expectedOutput();
+
+        // Check if output matches expected behavior
+        if (expectedBehavior.startsWith("ACCEPT")) {
+            if (output.equals("ACCEPT")) {
+                return EvaluationResult.passed(1.0)
+                    .withExplanation("Correctly accepted on-topic question");
+            } else {
+                return EvaluationResult.failed("False negative: incorrectly rejected on-topic question");
+            }
+        } else if (expectedBehavior.startsWith("REJECT")) {
+            if (output.startsWith("REJECT")) {
+                return EvaluationResult.passed(1.0)
+                    .withExplanation("Correctly rejected off-topic question");
+            } else {
+                return EvaluationResult.failed("False positive: incorrectly accepted off-topic question");
+            }
+        }
+
+        return EvaluationResult.failed("Unknown expected behavior: " + expectedBehavior);
+    }
+}
+----
+
+=== Sample Format for Guardrails
+
+[source,yaml]
+----
+- name: on_topic_ai_services
+  parameters:
+    - "How do I use @RegisterAiService?"
+  expected-output: "ACCEPT"
+  tags: ["on-topic", "ai-services"]
+
+- name: on_topic_rag
+  parameters:
+    - "How does RAG work in Quarkus LangChain4j?"
+  expected-output: "ACCEPT"
+  tags: ["on-topic", "rag"]
+
+- name: off_topic_weather
+  parameters:
+    - "What's the weather today?"
+  expected-output: "REJECT"
+  tags: ["off-topic", "weather"]
+
+- name: off_topic_cooking
+  parameters:
+    - "How do I bake a cake?"
+  expected-output: "REJECT"
+  tags: ["off-topic", "cooking"]
+----
+
+=== Metrics to Track
+
+For production guardrails, track these metrics:
+
+* **Accuracy**: Overall percentage of correct classifications
+* **False Positive Rate**: Incorrectly accepted off-topic questions
+* **False Negative Rate**: Incorrectly rejected on-topic questions
+* **Precision**: Of accepted questions, how many were truly on-topic
+* **Recall**: Of all on-topic questions, how many were accepted
+
+Target: 100% accuracy for guardrails, 0% false negatives (security critical)
+
+== Testing REST APIs
+
+You can combine RestAssured with the evaluation framework to test HTTP endpoints:
+
+[source,java]
+----
+@QuarkusTest
+@Evaluate
+public class RestApiEvaluationTest {
+
+    @Inject
+    LlmJudgeService judgeService;
+
+    @Test
+    public void testRestApi(
+        @ScorerConfiguration(concurrency = 2) Scorer scorer,
+        @SampleLocation("src/test/resources/api-samples.yaml") Samples<String> samples) {
+
+        EvaluationReport<String> report = scorer.evaluate(
+            samples,
+            params -> callApi(params.get(0)),
+            new LlmJudgeEvaluationStrategy(judgeService)
+        );
+
+        assertThat(report).hasScoreGreaterThan(80.0);
+    }
+
+    private String callApi(String input) {
+        try {
+            Response response = RestAssured
+                .given()
+                    .contentType(ContentType.JSON)
+                    .body(Map.of("message", input, "memoryId", UUID.randomUUID().toString()))
+                .when()
+                    .post("/api/chat")
+                .then()
+                    .extract().response();
+
+            int statusCode = response.getStatusCode();
+            String body = response.body().asString();
+
+            // Format for evaluation: encode both status and response
+            return String.format("STATUS:%d|RESPONSE:%s", statusCode, body);
+
+        } catch (Exception e) {
+            return String.format("STATUS:500|ERROR:%s", e.getMessage());
+        }
+    }
+}
+----
+
+Your evaluation strategy can then parse this format:
+
+[source,java]
+----
+public class RestApiEvaluationStrategy implements EvaluationStrategy<String> {
+
+    @Override
+    public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+        // Parse: "STATUS:200|RESPONSE:..."
+        String[] parts = output.split("\\|", 2);
+        int statusCode = Integer.parseInt(parts[0].replace("STATUS:", ""));
+        String response = parts[1].substring(parts[1].indexOf(":") + 1);
+
+        // Validate based on expected behavior
+        if (statusCode >= 200 && statusCode < 300) {
+            return evaluateSuccessResponse(sample, response);
+        } else {
+            return evaluateErrorResponse(sample, statusCode, response);
+        }
+    }
+}
+----
+
+Sample format for API tests:
+
+[source,yaml]
+----
+- name: successful_query
+  parameters:
+    - "How do I use Quarkus LangChain4j?"
+  expected-output: |
+    Should explain basic setup with dependency and @RegisterAiService.
+  tags: ["success", "on-topic"]
+
+- name: off_topic_rejection
+  parameters:
+    - "What's the weather today?"
+  expected-output: |
+    Should be rejected with appropriate message.
+  tags: ["rejection", "off-topic"]
+
+- name: empty_input_validation
+  parameters:
+    - ""
+  expected-output: |
+    Should return HTTP 400 with validation error.
+  tags: ["validation", "edge-case"]
+----
+
+== Multi-Layered Testing Strategy
+
+[source,java]
+----
+// Level 1: Component Test
+@Test
+void testRetrieverComponent(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> retriever.retrieve(params.get(0)),
+        new KeywordRelevanceStrategy()  // Fast, simple
+    );
+    assertThat(report).hasScoreGreaterThan(70.0);
+}
+
+// Level 2: Integration Test
+@Test
+void testAiServiceWithRetriever(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> aiService.chat(params.get(0)),
+        new SemanticSimilarityStrategy(0.80)  // More sophisticated
+    );
+    assertThat(report).hasScoreGreaterThan(80.0);
+}
+
+// Level 3: End-to-End Test
+@Test
+void testCompleteChatFlow(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> chatService.processMessage(params.get(0)),
+        new SemanticSimilarityStrategy(0.85)
+    );
+    assertThat(report).hasScoreGreaterThan(85.0);
+}
+
+// Level 4: REST API Test
+@Test
+void testRestApiEndpoint(Scorer scorer, Samples<String> samples) {
+    EvaluationReport<String> report = scorer.evaluate(
+        samples,
+        params -> callHttpApi(params.get(0)),
+        new LlmJudgeEvaluationStrategy(judge)  // Most thorough
+    );
+    assertThat(report).hasScoreGreaterThan(80.0);
+}
+----
+
+== Testing Edge Cases
+
+Real-world AI applications must handle edge cases gracefully. Include these in your evaluation tests.
+
+=== Common Edge Cases to Test
+
+[source,yaml]
+----
+# Empty input
+- name: empty_message
+  parameters:
+    - ""
+  expected-output: |
+    Should return validation error or prompt user for input.
+  tags: ["edge-case", "validation"]
+
+# Very long input
+- name: very_long_question
+  parameters:
+    - "Can you explain Quarkus LangChain4j in detail including all features like AI services, RAG, evaluation, guardrails, tools, embeddings, chat memory, and how they all work together with examples and best practices for each feature?"
+  expected-output: |
+    Should handle long input gracefully without truncation errors.
+  tags: ["edge-case", "long-input"]
+
+# Special characters
+- name: special_characters
+  parameters:
+    - "How do I use @RegisterAiService & <configure> embeddings? (with examples!)"
+  expected-output: |
+    Should handle special characters correctly in parsing and response.
+  tags: ["edge-case", "special-chars"]
+
+# Multilingual input
+- name: multilingual_question
+  parameters:
+    - "Comment utiliser Quarkus LangChain4j?" # French: How to use
+  expected-output: |
+    Should recognize as on-topic and attempt to answer.
+  tags: ["edge-case", "multilingual"]
+
+# Ambiguous follow-up
+- name: follow_up_without_context
+  parameters:
+    - "Can you explain that in more detail?"
+  expected-output: |
+    Should ask for clarification or context.
+  tags: ["edge-case", "ambiguous"]
+
+# SQL injection attempt
+- name: sql_injection_attempt
+  parameters:
+    - "'; DROP TABLE users; --"
+  expected-output: |
+    Should handle safely without execution or error.
+  tags: ["edge-case", "security"]
+
+# Extremely off-topic
+- name: completely_unrelated
+  parameters:
+    - "What is the meaning of life?"
+  expected-output: "REJECT"
+  tags: ["edge-case", "off-topic"]
+
+# Mixed language
+- name: code_in_question
+  parameters:
+    - "Why does `@Inject ChatModel model;` not work?"
+  expected-output: |
+    Should parse code blocks and provide relevant answer.
+  tags: ["edge-case", "code-snippet"]
+----
+
+== Cost Considerations
+
+Evaluation tests make API calls which incur costs. Estimate costs before running large test suites.
+
+=== Per-Sample Cost Estimation
+
+[source]
+----
+Typical costs per sample (using OpenAI):
+
+RAG Retrieval:
+- Embeddings (text-embedding-3-small): ~$0.001
+- 5 retrievals: ~$0.005
+
+AI Response Generation:
+- Chat completion (gpt-4o-mini): ~$0.01-0.05
+- Depends on context size and response length
+
+LLM as Judge:
+- Evaluation (gpt-4o-mini): ~$0.001-0.003
+- Input: question + expected + actual (~300-600 tokens)
+- Output: JSON judgment (~100-150 tokens)
+
+Guardrail Classification:
+- Topic detection (gpt-4o-mini): ~$0.0001-0.001
+- Very short prompts and responses
+
+Example: 20-sample test suite
+- On-topic: ~$0.015 × 14 = $0.21
+- Off-topic: ~$0.001 × 5 = $0.005
+- Edge cases: ~$0.01 × 1 = $0.01
+- Total: ~$0.22 per test run
+----
+
+=== Cost Optimization Strategies
+
+1. **Use Smaller Models for Evaluation**
++
+[source,java]
+----
+// Use gpt-4o-mini for judges (10x cheaper than gpt-4)
+@RegisterAiService(chatModelName = "gpt-4o-mini")
+public interface LlmJudgeService { ... }
+----
+
+
+2. **Reuse Vector Stores**
+
+
+3. **Filter by Tags**
++
+[source,java]
+----
+// Run only critical tests during development
+Samples<String> criticalOnly = samples.filterByTags("critical");
+----
+
+== Troubleshooting
+
+=== "Duplicate key null" Error
+
+*Full Error:*
+[source]
+----
+java.lang.IllegalStateException: Duplicate key null
+(attempted merging values 0 and 1)
+at io.quarkiverse.langchain4j.deployment.AiServicesProcessor...
+----
+
+*Cause:* Maven compiler not preserving parameter names for `@RegisterAiService` methods
+
+*Solution:* Add to pom.xml:
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+----
+
+Then run: `mvn clean compile test-compile`
+
+=== "File not found" for Sample Loading
+
+*Error:* `File not found: evaluation-samples/samples.yaml`
+
+*Cause:* `@SampleLocation` expects filesystem paths, not classpath paths
+
+*Solution:* Use full path from project root:
+[source,java]
+----
+@SampleLocation("src/test/resources/evaluation-samples/samples.yaml")
+----
+
+=== YAML Parsing Errors
+
+*Error:* `Cannot parse YAML sample file`
+
+*Common causes:*
+
+1. Using `expected` instead of `expected-output`
+2. Using `parameter` instead of `parameters` (must be plural)
+3. Not using list format for parameters
+
+*Solution:* Follow exact YAML format:
+[source,yaml]
+----
+- name: sample1
+  parameters:          # Plural, must be list
+    - "value"
+  expected-output: |   # Hyphenated
+    Expected result
+----
+
+=== Low Evaluation Scores
+
+*Symptom:* Tests consistently scoring lower than expected
+
+*Possible causes:*
+
+1. **Limited RAG Content**
+* Only 3 documentation pages ingested
+* Questions about topics not in those pages will fail
+* Solution: Ingest more relevant documentation
+
+2. **Threshold Too High**
+* AI responses are non-deterministic
+* 100% semantic similarity is unrealistic
+* Solution: Use 70-85% thresholds for semantic similarity
+
+3. **Wrong Evaluation Strategy**
+* Keyword matching too strict for AI responses
+* Solution: Use SemanticSimilarity or AI Judge instead
+
+4. **Poor Sample Quality**
+* Expected outputs too specific or too generic
+* Solution: Review and improve sample quality
+
+*Example adjustments:*
+[source,java]
+----
+// Too strict - may fail
+assertThat(report).hasScoreGreaterThan(95.0);
+
+// Reasonable for AI systems
+assertThat(report).hasScoreGreaterThan(75.0);
+----
+
 == Example of tests using Quarkus
 
 Let's imagine an _AI Service_ used by a Chatbot to generate responses.
@@ -1150,7 +1844,7 @@ public class AssistantTest {
     public static class TextSegmentEvaluationStrategy implements EvaluationStrategy<List<String>> {
 
         @Override
-        public boolean evaluate(EvaluationSample<List<String>> sample, List<String> response) {
+        public EvaluationResult evaluate(EvaluationSample<List<String>> sample, List<String> response) {
             List<String> expected = sample.expectedOutput();
             int found = 0;
             for (String seg : expected) {
@@ -1167,7 +1861,16 @@ public class AssistantTest {
                     System.out.println("Segment not found: " + seg);
                 }
             }
-            return found == expected.size();
+            double score = (double) found / expected.size();
+            boolean passed = found == expected.size();
+
+            if (passed) {
+                return EvaluationResult.passed(score)
+                    .withExplanation(String.format("Found %d of %d expected segments", found, expected.size()));
+            } else {
+                return EvaluationResult.failed(score,
+                    String.format("Found %d of %d expected segments", found, expected.size()));
+            }
         }
 
     }
