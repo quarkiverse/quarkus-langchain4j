@@ -50,6 +50,9 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
+import io.quarkus.deployment.metrics.MetricsCapabilityBuildItem;
+import io.quarkus.runtime.metrics.MetricsFactory;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 import io.quarkus.vertx.core.deployment.CoreVertxBuildItem;
 
@@ -127,8 +130,17 @@ public class McpProcessor {
             BuildProducer<HealthBuildItem> healthBuildItems,
             ShutdownContextBuildItem shutdown,
             Capabilities capabilities,
+            Optional<MetricsCapabilityBuildItem> metricsCapability,
             CoreVertxBuildItem vertxBuildItem,
+            BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
             McpRecorder recorder) {
+        boolean micrometerPresent = metricsCapability.isPresent()
+                && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
+        if (!micrometerPresent) {
+            // to avoid breaking native compilation if Micrometer isn't present
+            runtimeInitializedClasses.produce(
+                    new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
+        }
         Map<String, McpTransportType> clients = new HashMap<>();
         if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
             mcpBuildTimeConfiguration.clients().forEach((name, config) -> clients.put(name, config.transportType()));
@@ -155,7 +167,8 @@ public class McpProcessor {
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
                         .supplier(
-                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx()))
+                                recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
+                                        micrometerPresent && mcpBuildTimeConfiguration.clients().get(client).metricsEnabled()))
                         .done());
             });
             // generate a tool provider if configured to do so
@@ -215,8 +228,8 @@ public class McpProcessor {
     @BuildStep
     public void reflectionRegistrations(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
             CombinedIndexBuildItem indexBuildItem) {
-        // register everything in the dev.langchain4j.mcp.client.protocol package
-        String PROTOCOL_PACKAGE_PATTERN = "dev\\.langchain4j\\.mcp\\.client\\.protocol\\..+";
+        // register everything in the dev.langchain4j.mcp.protocol package
+        String PROTOCOL_PACKAGE_PATTERN = "dev\\.langchain4j\\.mcp\\.protocol\\..+";
         IndexView index = indexBuildItem.getIndex();
         for (ClassInfo clazz : index.getKnownClasses()) {
             if (clazz.name().toString().matches(PROTOCOL_PACKAGE_PATTERN)) {
