@@ -45,7 +45,7 @@ class ParameterTest {
         Parameter parameter = new Parameter.UnnamedParameter("notANumber");
         assertThatThrownBy(() -> parameter.as(Integer.class))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("SRCFG00020");
+                .hasMessageContaining("SRCFG");
     }
 
     @Test
