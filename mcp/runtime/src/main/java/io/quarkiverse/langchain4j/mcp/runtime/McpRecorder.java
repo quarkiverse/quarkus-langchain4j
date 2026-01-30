@@ -17,6 +17,7 @@ import jakarta.enterprise.util.TypeLiteral;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpClientListener;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
@@ -64,7 +65,8 @@ public class McpRecorder {
     public Supplier<McpClient> mcpClientSupplier(String key,
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
-            Supplier<Vertx> vertx) {
+            Supplier<Vertx> vertx,
+            boolean addMetrics) {
         return new Supplier<McpClient>() {
             @Override
             public McpClient get() {
@@ -131,7 +133,11 @@ public class McpRecorder {
                                 .build();
                     }
                 };
-                DefaultMcpClient client = new DefaultMcpClient.Builder()
+                DefaultMcpClient.Builder builder = new DefaultMcpClient.Builder();
+                if (addMetrics) {
+                    addMetrics(builder, key);
+                }
+                DefaultMcpClient client = builder
                         .key(key)
                         .transport(transport)
                         .toolExecutionTimeout(runtimeConfig.toolExecutionTimeout())
@@ -146,6 +152,18 @@ public class McpRecorder {
                 return client;
             }
         };
+    }
+
+    private void addMetrics(DefaultMcpClient.Builder builder, String key) {
+        try {
+            // avoid direct dependency on the MetricsMcpListener class, it would break native
+            // compilation if the optional Micrometer dependency isn't present
+            builder.listener((McpClientListener) Thread.currentThread()
+                    .getContextClassLoader().loadClass("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener")
+                    .getConstructor(String.class).newInstance(key));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Function<SyntheticCreationalContext<ToolProvider>, ToolProvider> toolProviderFunction(
