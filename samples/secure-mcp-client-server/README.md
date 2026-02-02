@@ -1,6 +1,6 @@
-# Secure MCP client-server example using the SSE transport protocol with GitHub OAuth2 and AI Gemini.
+# Secure MCP client-server example using the Streamable HTTP transport protocol with GitHub OAuth2 and AI Gemini.
 
-This sample showcases how to login with GitHub and use the GitHub authorization code flow access token to access secure Quarkus MCP server using the [SSE transport protocol](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse) protocol.
+This sample showcases how to login with GitHub and use the GitHub authorization code flow access token to access secure Quarkus MCP server using the [Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http) protocol.
 
 Quarkus MCP server gives the LLM a tool that can return a name of the logged-in user. AI Gemini uses this tool to create a poem about Java for the logged-in user.
 
