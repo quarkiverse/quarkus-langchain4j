@@ -1,7 +1,7 @@
-# MCP-based client-server example using the SSE transport protocol
+# MCP-based client-server example using the Streamable HTTP transport protocol
 
 This sample showcases how to use a Quarkus MCP server to
-provide tools to an LLM. In this case, we use the [SSE transport protocol](https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse) giving the LLM a set of tools to interact with for
+provide tools to an LLM. In this case, we use the [Streamable HTTP transport protocol](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http) giving the LLM a set of tools to interact with for
 weather forecast services. 
 
 # Running the sample
