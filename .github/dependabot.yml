@@ -19,4 +19,4 @@ updates:
     schedule:
       interval: daily
     allow:
-      - dependency-name: io.quarkiverse:*
+      - dependency-name: io.quarkiverse.*:*
