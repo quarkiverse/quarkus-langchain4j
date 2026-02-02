@@ -3,56 +3,435 @@
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-Quarkus LangChain4j supports the Model Context Protocol (MCP) for interacting with MCP-compliant servers that provide and execute tools dynamically.
+The Model Context Protocol (MCP) is an open standard that enables seamless integration between AI applications and external data sources, tools, and services.
+MCP allows LLMs to dynamically discover and execute tools provided by external servers, making it possible to extend AI capabilities without hardcoding integrations.
 
-- General information: https://modelcontextprotocol.io/[modelcontextprotocol.io]
-- LangChain4j-specific docs: https://docs.langchain4j.dev/tutorials/mcp[MCP in LangChain4j]
-- Sample project: https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-tools[`mcp-tools` sample]
+Quarkus LangChain4j provides comprehensive MCP client support, enabling your AI services to interact with any MCP-compliant server. This integration allows you to:
+
+- Dynamically discover tools from MCP servers at runtime
+- Execute operations on external systems through standardized protocols (_function calling_)
+- Access resources like files, databases, or APIs through MCP servers
+- Integrate with the MCP ecosystem, including servers from the https://registry.modelcontextprotocol.io/[official MCP Registry]
+
+[IMPORTANT]
+====
+This MCP client implements the specification https://modelcontextprotocol.io/specification/2025-11-25[MCP Specification v2025-11-25].
+Make sure your MCP servers are compatible with this version of the specification for optimal interoperability.
+====
+
+[TIP]
+====
+**When to use MCP:**
+
+- You need tools that interact with external systems (filesystems, APIs, databases)
+- You want to leverage existing MCP servers from the community
+- You need runtime discovery of available tools
+- You want to avoid implementing custom tool integrations for each external system
+====
+
+== Additional Resources
+
+- General MCP information: https://modelcontextprotocol.io/[modelcontextprotocol.io]
+- LangChain4j MCP documentation: https://docs.langchain4j.dev/tutorials/mcp[MCP in LangChain4j]
+- Sample project (STDIO): https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-tools[`mcp-tools` sample]
+- Sample project (Streamable HTTP): https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/mcp-client-server[`mcp-client-server` sample]
+- MCP Registry: https://registry.modelcontextprotocol.io/[registry.modelcontextprotocol.io]
 
 [NOTE]
 ====
-Quarkus also provides a dedicated extension for building MCP servers. See:
+Quarkus also provides a dedicated extension for **building MCP servers**. If you want to create your own MCP server, see:
 
+- https://docs.quarkiverse.io/quarkus-mcp-server/dev/index.html[MCP Server Documentation]
 - https://github.com/quarkiverse/quarkus-mcp-server[quarkus-mcp-server GitHub repo]
-- https://docs.quarkiverse.io/quarkus-mcp-server/dev/index.html[Documentation]
 ====
 
-== Declarative Tool Provider Generation
+== Quick Start
 
-Quarkus allows you to configure an MCP-backed `ToolProvider` declaratively via configuration properties.
-This provider is automatically used by AI services **unless explicitly overridden**.
+Here's a minimal example to get started with MCP in Quarkus:
 
-Example configuration:
+**1. Add the required dependencies:**
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-openai</artifactId> <!-- or your preferred LLM provider -->
+</dependency>
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-mcp</artifactId>
+</dependency>
+----
+
+**2. Configure your LLM and MCP server:**
+
+[source,properties]
+----
+# Configure your LLM (this example uses OpenAI)
+quarkus.langchain4j.openai.api-key=sk-...
+
+# Configure the filesystem MCP server (requires npm installed)
+# 'filesystem' is the client name we'll reference later
+quarkus.langchain4j.mcp.filesystem.transport-type=stdio
+quarkus.langchain4j.mcp.filesystem.command=npm,exec,@modelcontextprotocol/server-filesystem,/path/to/allowed/directory
+----
+
+**3. Create an AI service that uses MCP tools:**
+
+[source,java]
+----
+import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
+import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
+
+@RegisterAiService
+public interface FileAssistant {
+
+    @SystemMessage("""
+        You are a helpful assistant that can interact with the filesystem.
+        Help users read, write, and manage files in the allowed directory.
+        """)
+    @McpToolBox("filesystem")  // Enable tools from the "filesystem" MCP server
+    String chat(@UserMessage String message);
+}
+----
+
+**4. Use your AI service:**
+
+[source,java]
+----
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+
+@Path("/assistant")
+public class AssistantResource {
+
+    @Inject
+    FileAssistant assistant;
+
+    @GET
+    public String chat(@QueryParam("message") String message) {
+        return assistant.chat(message);
+    }
+}
+----
+
+That's it! Your AI service can now use filesystem operations provided by the MCP server. When a user asks "What files are in the directory?" or "Create a file called notes.txt with the content 'Hello World'", the LLM will automatically use the appropriate MCP tools to fulfill the request.
+
+[TIP]
+====
+To learn more about AI Services and their features (system messages, memory, streaming, etc.), see the xref:ai-services.adoc[AI Services documentation].
+====
+
+== Dev UI - Testing MCP Clients
+
+When running your application in development mode (`mvn quarkus:dev`), Quarkus provides a Dev UI interface for exploring and testing your MCP clients.
+
+Access the Dev UI by navigating to `http://localhost:8080/q/dev-ui` and clicking on the **MCP clients** card:
+
+image::mcp-dev-ui-card.png[MCP Dev UI Card,400,align="center"]
+
+The MCP Dev UI provides a comprehensive interface for interacting with your MCP clients:
+
+image::mcp-dev-ui-tools.png[MCP Dev UI Tools Interface,800,align="center"]
+
+**Features:**
+
+- View all configured MCP clients by name
+- Browse all tools available from each MCP client, including:
+  * Tool names
+  * Tool descriptions
+  * Parameter schemas with example values
+- Execute MCP tools directly from the UI
+  * Pre-populated example inputs based on the tool's JSON schema
+  * Editable argument fields (modify the JSON to test different inputs)
+  * Execute button to run the tool
+  * Output display showing the tool execution results
+
+[TIP]
+====
+The Dev UI is particularly useful for:
+
+- Exploring what tools an MCP server provides without reading documentation
+- Testing tool execution with different parameters before integrating into your AI service
+- Debugging tool argument formats and understanding expected inputs
+- Validating that your MCP server is correctly configured and responsive
+
+This interactive approach speeds up development by letting you experiment with MCP tools before writing any code.
+====
+
+== Transport Types
+
+MCP supports multiple transport mechanisms for communication between clients and servers. Quarkus LangChain4j supports all standard MCP transports:
+
+=== STDIO Transport
+
+The STDIO transport spawns an MCP server as a subprocess and communicates through standard input/output streams.
+This is the **most common transport** for local MCP servers, especially those distributed as npm packages.
 
 [source,properties]
 ----
 quarkus.langchain4j.mcp.github.transport-type=stdio
 quarkus.langchain4j.mcp.github.command=npm,exec,@modelcontextprotocol/server-github
 quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>
+quarkus.langchain4j.mcp.github.environment.GITHUB_API_URL=https://api.github.com
 ----
 
-This will:
+[TIP]
+====
+The `command` property expects a comma-separated list of command parts (command and its arguments).
+In the previous example, it runs `npm exec @modelcontextprotocol/server-github`.
+You can also use absolute paths for commands if needed.
 
-- Start the MCP server using `npm exec @modelcontextprotocol/server-github` as a subprocess
-- Provide environment variables to the subprocess
-- Register a `ToolProvider` under the name `github`
-- Use this provider for all AI services unless a specific provider is configured
+You can pass environment variables to the subprocess using the `environment` map.
+====
 
-To **enable the use of MCP tools** in a method of an AI service, annotate it with `@McpToolBox`:
+=== HTTP Transports
+
+HTTP-based transports connect to remote MCP servers via HTTP.
+Quarkus supports both streamable HTTP and the SSE (legacy) HTTP transports:
+
+**Streamable HTTP (Recommended):**
+[source,properties]
+----
+quarkus.langchain4j.mcp.remote-server.transport-type=streamable-http
+quarkus.langchain4j.mcp.remote-server.url=https://mcp-server.example.com/mcp
+----
+
+**HTTP/SSE (Legacy):**
+[source,properties]
+----
+quarkus.langchain4j.mcp.remote-server.transport-type=http
+quarkus.langchain4j.mcp.remote-server.url=https://mcp-server.example.com/mcp/sse
+----
+
+=== WebSocket Transport
+
+This transport is not part of the official MCP specification but is supported by some MCP servers (like those built with `quarkus-mcp-server`).
+The WebSocket transport enables bidirectional communication with MCP servers over WebSocket connections:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.ws-server.transport-type=websocket
+quarkus.langchain4j.mcp.ws-server.url=ws://localhost:8080/mcp
+----
+
+== Declarative Tool Provider Generation
+
+Quarkus automatically generates an MCP-backed `ToolProvider` from your configuration.
+This provider aggregates tools from all configured MCP servers and makes them available to your AI services.
+
+=== Basic Configuration
+
+Configure one or more MCP servers using named configuration:
+
+[source,properties]
+----
+# Configure a GitHub MCP server
+quarkus.langchain4j.mcp.github.transport-type=stdio
+quarkus.langchain4j.mcp.github.command=npm,exec,@modelcontextprotocol/server-github
+quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>
+
+# Configure a filesystem MCP server
+quarkus.langchain4j.mcp.filesystem.transport-type=stdio
+quarkus.langchain4j.mcp.filesystem.command=npm,exec,@modelcontextprotocol/server-filesystem,/home/user/documents
+----
+
+Each configuration block creates an MCP client with the specified name (`github`, `filesystem`, etc.).
+
+=== Using MCP Tools in AI Services
+
+By default, AI services do **not** automatically use MCP tools.
+You must explicitly enable them using the `@McpToolBox` annotation.
+Once enabled, the AI service can discover and execute tools from the specified MCP servers.
+
+**Use specific MCP servers:**
+[source,java]
+----
+import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
+
+@RegisterAiService
+public interface Assistant {
+
+    @McpToolBox("github")  // Only use tools from the "github" server
+    String helpWithGitHub(@UserMessage String message);
+
+    @McpToolBox({"github", "filesystem"})  // Use tools from multiple servers
+    String workWithGitHubAndFiles(@UserMessage String message);
+}
+----
+
+**Use all available MCP servers:**
+[source,java]
+----
+@McpToolBox  // No arguments = use all configured MCP servers
+String useAllMcpTools(@UserMessage String userMessage);
+----
+
+[WARNING]
+====
+The `@McpToolBox` annotation only works when automatic tool provider generation is enabled (which is the default).
+If you provide a custom `ToolProvider` to your AI service, you'll need to manually configure which MCP clients it uses.
+====
+
+== Claude Desktop Configuration File
+
+If you're already using Claude Desktop and have MCP servers configured in its configuration file, you can reuse that configuration in your Quarkus application.
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.config-file=/path/to/claude_desktop_config.json
+----
+
+This feature only supports **STDIO transport** MCP servers. The configuration file is read at **build time**, so the set of MCP servers is determined when you build your application. However, runtime configuration properties (like environment variables) can still be overridden:
+
+[source,properties]
+----
+# Use Claude Desktop config file
+quarkus.langchain4j.mcp.config-file=${user.home}/.config/claude/config.json
+
+# Override environment variable at runtime
+quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_TOKEN}
+----
+
+== MCP Registry Client
+
+The https://registry.modelcontextprotocol.io/[MCP Registry] is a centralized repository of community-contributed MCP servers. Quarkus provides a client to discover and query servers from the registry.
+
+IMPORTANT: This feature is experimental and may change in future releases.
+
+=== Configuration
+
+Configure an MCP registry client:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.registry-client.official.base-url=https://registry.modelcontextprotocol.io
+----
+
+=== Using the Registry Client
+
+Inject the registry client into your code:
 
 [source,java]
 ----
-@McpToolBox("github")
-String useGithub(@UserMessage String userMessage);
+import dev.langchain4j.mcp.registryclient.McpRegistryClient;
+import dev.langchain4j.mcp.registryclient.model.McpServerListRequest;
+import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class McpServerDiscovery {
+
+    @Inject
+    @McpRegistryClientName("official")
+    McpRegistryClient registryClient;
+
+    public void discoverServers() {
+        // Search for servers
+        var result = registryClient.listServers(
+            McpServerListRequest.builder()
+                .search("filesystem")
+                .limit(10L)
+                .build()
+        );
+
+        // Get specific server version
+        var server = registryClient.getSpecificServerVersion(
+            "io.github.bytedance/mcp-server-filesystem",
+            "latest"
+        );
+
+        System.out.println("Found server: " + server.getServer().getDescription());
+    }
+}
 ----
 
-If no name is provided, all available MCP servers will be used:
+The registry client supports:
+
+- Find servers by keywords (search)
+- Get specific versions or all versions of a server
+- Verify registry availability
+- View server descriptions, repositories, packages, and transport information
+
+== Exposing MCP Resources as Tools
+
+Some MCP servers provide **resources** (files, database records, API responses, etc.) that can be accessed programmatically.
+Quarkus can automatically expose these resources as callable tools, making them directly available to your AI services.
+
+[source,properties]
+----
+# Enable resources-as-tools feature
+quarkus.langchain4j.mcp.expose-resources-as-tools=true
+
+quarkus.langchain4j.mcp.myserver.transport-type=http
+quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp/sse
+----
+
+When enabled, two synthetic tools are automatically created:
+
+- `list_resources`: Lists all available resources from the MCP server
+- `get_resource`: Retrieves the content of a specific resource by URI
+
+Your AI service can then use these tools to discover and access resources:
 
 [source,java]
 ----
-@McpToolBox
-String useAllMcpServers(@UserMessage String userMessage);
+@RegisterAiService
+public interface DataAssistant {
+
+    @McpToolBox("myserver")
+    String analyzeData(@UserMessage String question);
+}
 ----
+
+The AI can now ask questions like "List available resources" or "Show me the content of resource X", and the MCP client will handle the resource retrieval automatically.
+
+== Programmatic Access to MCP Clients
+
+While the declarative approach with `@McpToolBox` is recommended, you can also inject MCP clients directly for programmatic control:
+
+[source,java]
+----
+import dev.langchain4j.mcp.client.McpClient;
+import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class McpService {
+
+    @Inject
+    @McpClientName("github")
+    McpClient githubClient;
+
+    public void executeTool() {
+        // List available tools
+        var tools = githubClient.listTools();
+
+        // Execute a tool
+        var request = /* build tool execution request using ToolExecutionRequest.builder()...  */;
+        var result = githubClient.executeTool(request);
+
+        // List resources
+        var resources = githubClient.listResources();
+
+        // Read a specific resource
+        var content = githubClient.readResource("resource://path/to/resource");
+    }
+}
+----
+
+This approach is useful when you need:
+
+- Fine-grained control over tool execution
+- Custom tool filtering or mapping logic
+- Integration with non-AI parts of your application
+- Programmatic resource access
 
 == Authorization
 
@@ -62,6 +441,9 @@ To support this, implement the `McpClientAuthProvider` interface to inject crede
 
 [source,java]
 ----
+import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
+import jakarta.enterprise.context.ApplicationScoped;
+
 @ApplicationScoped
 public class MyMcpAuthProvider implements McpClientAuthProvider {
 
@@ -103,31 +485,389 @@ If your application uses OpenID Connect (OIDC) and the user has authenticated, y
 
 This allows the MCP client to act on behalf of the authenticated user (e.g., when calling GitHub APIs).
 
-== Logging
+== Logging and Monitoring
 
-MCP clients configured declaratively in Quarkus support log message observation.
+=== Request/Response Logging
 
-Quarkus replaces the default MCP log handler with one that:
+Enable detailed logging of MCP client interactions:
 
-- Logs messages via the application logger
-- Fires CDI events for each log message
+[source,properties]
+----
+# Log all MCP requests and responses
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
 
-To react to these events:
+# Or configure per-client
+quarkus.langchain4j.mcp.github.log-requests=true
+quarkus.langchain4j.mcp.github.log-responses=true
+
+# Enable debug logging for MCP-related classes
+quarkus.log.category."dev.langchain4j.mcp".level=DEBUG
+quarkus.log.category."io.quarkiverse.langchain4j.mcp".level=DEBUG
+----
+
+=== Observing MCP Log Messages
+
+MCP servers can send log messages to clients. Quarkus automatically:
+
+- Logs these messages via your application logger
+- Fires CDI events for each log message, enabling custom handling
+
+React to log messages from specific MCP servers:
 
 [source,java]
 ----
-public void onMcpLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
-    // React to log message
+import dev.langchain4j.mcp.client.logging.McpLogMessage;
+import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
+@ApplicationScoped
+public class McpLogObserver {
+
+    public void onGitHubLog(@Observes @McpClientName("github") McpLogMessage logMessage) {
+        System.out.println("GitHub MCP: [" + logMessage.level() + "] " + logMessage.data());
+        // Custom handling: store in database, trigger alerts, etc.
+    }
+
+    public void onAnyMcpLog(@Observes McpLogMessage logMessage) {
+        // Observe logs from all MCP clients (no @McpClientName qualifier)
+        System.out.println("MCP Log: [" + logMessage.level() + "] " + logMessage.data());
+        // Custom handling: store in database, trigger alerts, etc.
+    }
 }
 ----
 
-The `McpLogMessage` class (`dev.langchain4j.mcp.client.logging.McpLogMessage`) includes:
+The `McpLogMessage` includes:
 
-- The log message (`JsonNode`)
-- Log level
-- Logger name
+- `data()`: The log message as a `JsonNode`
+- `level()`: Log level as `McpLogLevel` enum (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY)
+- `logger()`: Logger name from the MCP server
 
-You can omit `@McpClientName` if you want to listen to log messages from all clients.
+=== Health Checks
+
+Quarkus automatically registers a readiness health check for all configured MCP clients when the `quarkus-smallrye-health` extension is present:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-smallrye-health</artifactId>
+</dependency>
+----
+
+The health check verifies that all MCP servers are responsive by sending an MCP protocol **ping** message and waiting for a **pong** response.
+This works for all transport types (STDIO, HTTP, WebSocket).
+
+For HTTP-based MCP servers, you can optionally use a MicroProfile Health endpoint instead (see below).
+
+Access the health status at `/q/health/ready`:
+
+[source,json]
+----
+{
+  "status": "UP",
+  "checks": [
+    {
+      "name": "MCP clients health check",
+      "status": "UP",
+      "data": {
+        "github": "OK",
+        "filesystem": "OK"
+      }
+    }
+  ]
+}
+----
+
+If any MCP client is unhealthy, the overall status becomes `DOWN` and the data shows the error:
+
+[source,json]
+----
+{
+  "status": "DOWN",
+  "checks": [
+    {
+      "name": "MCP clients health check",
+      "status": "DOWN",
+      "data": {
+        "github": "OK",
+        "filesystem": "Connection refused"
+      }
+    }
+  ]
+}
+----
+
+==== MicroProfile Health Integration
+
+For **HTTP-based MCP servers only**, you can optionally use the server's MicroProfile Health endpoint instead of the default MCP ping/pong health check.
+This is useful when the MCP server is built with `quarkus-mcp-server` or other frameworks that expose a separate health endpoint.
+
+[source,properties]
+----
+# Only works for HTTP/Streamable HTTP transports
+quarkus.langchain4j.mcp.myserver.transport-type=streamable-http
+quarkus.langchain4j.mcp.myserver.url=https://mcp-server.example.com/mcp
+
+# Enable MicroProfile health check for this MCP client
+quarkus.langchain4j.mcp.myserver.microprofile-health-check=true
+
+# Customize the health endpoint path (defaults to /q/health)
+quarkus.langchain4j.mcp.myserver.microprofile-health-check-path=/q/health
+----
+
+When enabled, the health check:
+
+1. Attempts to call the MicroProfile health endpoint at the configured path
+2. Falls back to the standard MCP ping/pong health check if the endpoint returns 404
+3. Uses the overall server health status from the endpoint
+
+[IMPORTANT]
+====
+This option is **only available for HTTP-based transports**. STDIO and WebSocket transports always use the standard MCP ping/pong mechanism.
+
+The MicroProfile health endpoint URL is constructed by extracting the base URL (scheme, host, port) from the MCP server URL and appending the configured health path.
+For example, if your MCP URL is `https://example.com/mcp/sse`, the health check will call `https://example.com/q/health`.
+====
+
+==== Disabling Health Checks
+
+To disable MCP health checks entirely:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.health.enabled=false
+----
+
+==== Configuring Health Check Timeouts
+
+The `ping-timeout` configuration controls how long to wait for a pong response from the MCP server during health checks. This applies to all transport types:
+
+[source,properties]
+----
+# Configure ping timeout for health checks (default: 10s)
+quarkus.langchain4j.mcp.github.ping-timeout=5s
+
+# Different timeouts for different clients
+quarkus.langchain4j.mcp.filesystem.ping-timeout=3s
+quarkus.langchain4j.mcp.remote-server.ping-timeout=15s
+----
+
+If the MCP server doesn't respond with a pong within the configured timeout, the health check will fail and the overall health status will be `DOWN`.
+
+== Advanced Configuration
+
+=== Timeouts
+
+Configure various timeout settings for MCP operations:
+
+[source,properties]
+----
+# Global timeout (applies to all operations unless overridden)
+quarkus.langchain4j.timeout=60s
+
+# Tool execution timeout (per MCP client)
+quarkus.langchain4j.mcp.github.tool-execution-timeout=30s
+
+# Resource operation timeout (listing and reading resources)
+quarkus.langchain4j.mcp.github.resources-timeout=60s
+
+# Ping timeout for health checks
+quarkus.langchain4j.mcp.github.ping-timeout=10s
+
+# For MCP Registry clients
+quarkus.langchain4j.mcp.registry-client.official.read-timeout=10s
+quarkus.langchain4j.mcp.registry-client.official.connect-timeout=10s
+----
+
+=== Tool List Caching
+
+By default, MCP clients cache the tool list and update it when the server notifies of changes:
+
+[source,properties]
+----
+# Disable caching (always fetch fresh tool list from server)
+# Useful for servers that don't support change notifications
+quarkus.langchain4j.mcp.github.cache-tool-list=false
+----
+
+=== MCP Roots
+
+MCP roots define the filesystem boundaries where an MCP server can operate.
+Similar to workspace folders in IDEs like VSCode, roots specify which directories and files the server has access to.
+This provides security and access control by restricting server operations to designated locations.
+
+Some MCP servers require a list of workspace roots to function properly.
+You can configure initial roots in your application properties:
+
+[source,properties]
+----
+# Provide initial roots (can be updated programmatically at runtime)
+quarkus.langchain4j.mcp.myserver.roots=workspace1=/path/to/workspace1,workspace2=/path/to/workspace2
+----
+
+[TIP]
+====
+Roots are particularly useful for:
+
+- Filesystem-based MCP servers that need to know which directories they can access
+- Multi-project environments where different servers operate on different codebases
+- Security boundaries to prevent servers from accessing unauthorized locations
+
+The root list can be updated programmatically at runtime using the `McpClient` API if the server needs to adapt to changing workspace configurations.
+====
+
+=== TLS Configuration
+
+For HTTP-based MCP clients, you can specify custom TLS configuration:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.secure-server.tls-configuration-name=my-tls-config
+
+# Configure TLS in Quarkus TLS registry
+quarkus.tls.my-tls-config.trust-store.pem.certs=server-ca.pem
+quarkus.tls.my-tls-config.key-store.pem.0.cert=client-cert.pem
+quarkus.tls.my-tls-config.key-store.pem.0.key=client-key.pem
+----
+
+This is also supported for MCP Registry clients:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.registry-client.official.tls-configuration-name=my-tls-config
+----
+
+== Troubleshooting
+
+=== MCP Server Not Starting
+
+**Problem**: STDIO MCP server fails to start with "command not found" or similar errors.
+
+**Solutions**:
+
+1. Verify the command path is correct and the executable is available:
++
+[source,bash]
+----
+which npm
+npm exec @modelcontextprotocol/server-filesystem --version
+----
+
+2. Use absolute paths for commands:
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.filesystem.command=/usr/local/bin/npm,exec,@modelcontextprotocol/server-filesystem,/path/to/dir
+----
+
+3. Check environment variables are correctly passed:
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.github.environment.PATH=/usr/local/bin:/usr/bin
+----
+
+=== Tools Not Available
+
+**Problem**: `@McpToolBox` doesn't provide any tools to the AI service.
+
+**Solutions**:
+
+1. Verify the MCP client name in `@McpToolBox` matches your configuration property. For example, if you have:
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.github.command=...
+----
++
+Then use:
++
+[source,java]
+----
+@McpToolBox("github")  // Must match the name in the configuration
+String chat(@UserMessage String message);
+----
+
+2. Check if automatic tool provider generation is enabled (it should be by default):
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.generate-tool-provider=true
+----
+
+3. Enable debug logging to see tool discovery:
++
+[source,properties]
+----
+quarkus.log.category."io.quarkiverse.langchain4j.mcp".level=DEBUG
+quarkus.langchain4j.log-requests=true
+quarkus.langchain4j.log-responses=true
+----
+
+4. Verify the MCP server is healthy by checking `/q/health` or `/q/health/ready` endpoints (Quarkus SmallRye Health extension required and enabled)
+
+=== Connection Timeouts
+
+**Problem**: Operations timeout when calling MCP server tools.
+
+**Solutions**:
+
+1. Increase relevant timeout settings:
++
+[source,properties]
+----
+quarkus.langchain4j.timeout=120s
+quarkus.langchain4j.mcp.myserver.tool-execution-timeout=120s
+----
+
+2. For HTTP servers, check network connectivity and server responsiveness
+
+3. Monitor MCP server logs for performance issues
+
+=== Authorization Failures
+
+**Problem**: HTTP MCP server returns 401/403 errors.
+
+**Solutions**:
+
+1. Implement `McpClientAuthProvider` as described in the Authorization section
+
+2. Verify credentials are correctly configured:
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.github.environment.GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_TOKEN}
+----
+
+3. For OIDC propagation, ensure the user is authenticated and the OIDC extension is configured
+
+4. Enable request logging to inspect authorization headers:
++
+[source,properties]
+----
+quarkus.langchain4j.mcp.myserver.log-requests=true
+----
+
+=== Tool Execution Errors
+
+**Problem**: AI receives errors when executing MCP tools.
+
+**Solutions**:
+
+1. Check MCP server logs for error details (observe `McpLogMessage` events)
+
+2. Verify tool arguments match the expected schema:
++
+[source,properties]
+----
+quarkus.log.category."dev.langchain4j.mcp".level=DEBUG
+----
+
+3. Test the tool directly using programmatic MCP client access to isolate the issue
+
+4. For resource-related tools, verify resources are accessible by the MCP server
 
 == Configuration Reference
 
