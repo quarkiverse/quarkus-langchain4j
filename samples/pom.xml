@@ -11,6 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>dynamic-mcp-clients</module>
         <module>chatbot-easy-rag-kotlin</module>
         <module>chatbot-easy-rag</module>
         <module>chatbot-web-search</module>
