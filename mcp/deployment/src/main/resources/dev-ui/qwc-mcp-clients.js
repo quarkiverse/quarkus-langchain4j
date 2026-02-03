@@ -89,6 +89,11 @@ export class QwcMcpClients extends LitElement {
                                     let outputElement = this.shadowRoot.getElementById(textAreaId);
                                     outputElement.style = "width: 100%; display: block;";
                                     outputElement.value = jsonRpcResponse.result;
+                                })
+                                .catch(error => {
+                                    let outputElement = this.shadowRoot.getElementById(textAreaId);
+                                    outputElement.style = "width: 100%; display: block;";
+                                    outputElement.value = `Error: ${JSON.stringify(error.error)}`;
                                 });}
                 }>Execute</vaadin-button>
                 <vaadin-text-area label="Output" id=${textAreaId} readonly style="width: 100%; display: none;"></vaadin-text-area>
