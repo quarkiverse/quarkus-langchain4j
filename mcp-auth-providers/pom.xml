@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
-        <version>1.6.0</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-mcp-auth-providers-parent</artifactId>
     <name>Quarkus LangChain4j - MCP Auth Providers - Parent</name>
