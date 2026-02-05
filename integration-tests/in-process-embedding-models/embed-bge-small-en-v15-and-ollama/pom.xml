@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-in-process-embedding-models</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.6.0</version>
     </parent>
 
     <artifactId>quarkus-langchain4j-integration-test-embed-bge-small-en-v15-and-ollama</artifactId>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-ollama-deployment</artifactId>
-            <version>999-SNAPSHOT</version>
+            <version>1.6.0</version>
             <type>pom</type>
             <scope>test</scope>
             <exclusions>

@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parsers-base-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.6.0</version>
     </parent>
     <artifactId>quarkus-langchain4j-parsers-base</artifactId>
     <name>Quarkus LangChain4j - Parsers Base - Runtime</name>
