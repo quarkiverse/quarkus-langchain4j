@@ -1,0 +1,25 @@
+{#if connections.isEmpty()}
+<p style="color: #999;">No connections yet. Add one to get started!</p>
+{#else}
+<ul class="connection-list">
+    {#for conn in connections}
+    <li class="connection-item">
+        <div class="connection-info">
+            <div class="connection-name">{conn.name}</div>
+            <div class="connection-details">
+                Type: {conn.transportType}
+                {#if conn.command} | Command: {conn.command}{/if}
+                {#if conn.url} | URL: {conn.url}{/if}
+            </div>
+        </div>
+        <button class="delete-btn"
+                hx-delete="/api/mcp-connections/{conn.name}"
+                hx-target="#connections-list"
+                hx-swap="innerHTML"
+                hx-confirm="Are you sure you want to delete connection '{conn.name}'?">
+            Delete
+        </button>
+    </li>
+    {/for}
+</ul>
+{/if}
