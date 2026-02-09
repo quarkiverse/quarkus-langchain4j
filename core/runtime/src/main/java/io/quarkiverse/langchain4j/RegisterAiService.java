@@ -27,6 +27,7 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 
 /**
  * Used to create LangChain4j's {@link AiServices} in a declarative manner that the application can then use simply by
@@ -160,6 +161,20 @@ public @interface RegisterAiService {
      * {@code toolChoice} option set to {@link ToolChoice#REQUIRED}.
      */
     boolean allowContinuousForcedToolCalling() default false;
+
+    /**
+     * Configures a {@link SystemMessageProvider} to dynamically supply a system message based on the memory ID.
+     * This is useful when the system message needs to be determined at runtime, for example based on user context
+     * or other dynamic factors.
+     * <p>
+     * If not configured (left at the default), no dynamic system message provider is used. In that case,
+     * the system message can still be provided via the {@link dev.langchain4j.service.SystemMessage} annotation
+     * on the AiService method.
+     *
+     * @see <a href="https://docs.langchain4j.dev/tutorials/ai-services#system-message-provider">LangChain4j System Message
+     *      Provider</a>
+     */
+    Class<? extends SystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
 
     /**
      * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by
@@ -303,6 +318,30 @@ public @interface RegisterAiService {
 
         @Override
         public ToolExecutionResultMessage apply(ToolExecutionRequest toolExecutionRequest) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used when the user does not want any {@link SystemMessageProvider} configured for the AiService.
+     * This is the default.
+     */
+    final class NoSystemMessageProviderSupplier implements SystemMessageProvider {
+
+        @Override
+        public java.util.Optional<String> getSystemMessage(Object memoryId) {
+            throw new UnsupportedOperationException("should never be called");
+        }
+    }
+
+    /**
+     * Marker that is used to tell Quarkus to use the {@link SystemMessageProvider} that the user has configured as a CDI bean.
+     * If no such bean exists, then no system message provider will be used.
+     */
+    final class BeanIfExistsSystemMessageProviderSupplier implements SystemMessageProvider {
+
+        @Override
+        public java.util.Optional<String> getSystemMessage(Object memoryId) {
             throw new UnsupportedOperationException("should never be called");
         }
     }
