@@ -548,7 +548,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__TOOL_EXECUTION_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-resources-timeout[`quarkus.langchain4j.mcp."client-name".resources-timeout`]##
@@ -569,7 +569,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__RESOURCES_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++60s+++`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-ping-timeout[`quarkus.langchain4j.mcp."client-name".ping-timeout`]##
@@ -590,7 +590,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__PING_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10S+++`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-roots[`quarkus.langchain4j.mcp."client-name".roots`]##
@@ -763,7 +763,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__READ_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-registry-client-registry-client-name-connect-timeout[`quarkus.langchain4j.mcp.registry-client."registry-client-name".connect-timeout`]##
@@ -784,7 +784,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_REGISTRY_CLIENT__REGISTRY_CLIENT_NAME__CONNECT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 
@@ -1137,7 +1137,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_INDEX_READINESS_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |
 
 a| [[quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace]] [.property-path]##link:#quarkus-langchain4j-pinecone_quarkus-langchain4j-pinecone-namespace[`quarkus.langchain4j.pinecone.namespace`]##
@@ -1200,7 +1200,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_PINECONE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |
 
 
@@ -1289,7 +1289,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_TAVILY_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++60S+++`
 
 a| [[quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests]] [.property-path]##link:#quarkus-langchain4j-tavily_quarkus-langchain4j-tavily-log-requests[`quarkus.langchain4j.tavily.log-requests`]##
@@ -1546,7 +1546,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests[`quarkus.langchain4j.anthropic.log-requests`]##
@@ -2039,7 +2039,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests[`quarkus.langchain4j.anthropic."model-name".log-requests`]##
@@ -2649,7 +2649,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_CHROMA_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |
 
 a| [[quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-requests]] [.property-path]##link:#quarkus-langchain4j-chroma_quarkus-langchain4j-chroma-log-requests[`quarkus.langchain4j.chroma.log-requests`]##
@@ -2801,7 +2801,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++30s+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-model-name[`quarkus.langchain4j.cohere.scoring-model.model-name`]##
@@ -2843,7 +2843,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE_SCORING_MODEL_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++30S+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-scoring-model-log-requests[`quarkus.langchain4j.cohere.scoring-model.log-requests`]##
@@ -2973,7 +2973,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++30s+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-model-name[`quarkus.langchain4j.cohere."model-name".scoring-model.model-name`]##
@@ -3015,7 +3015,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_COHERE__MODEL_NAME__SCORING_MODEL_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++30S+++`
 
 a| [[quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests]] [.property-path]##link:#quarkus-langchain4j-cohere_quarkus-langchain4j-cohere-model-name-scoring-model-log-requests[`quarkus.langchain4j.cohere."model-name".scoring-model.log-requests`]##
@@ -3302,7 +3302,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-temperature]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-temperature[`quarkus.langchain4j.temperature`]##
@@ -3753,7 +3753,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-chat-model-inference-endpoint-url[`quarkus.langchain4j.huggingface.chat-model.inference-endpoint-url`]##
@@ -4143,7 +4143,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_HUGGINGFACE__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url]] [.property-path]##link:#quarkus-langchain4j-hugging-face_quarkus-langchain4j-huggingface-model-name-chat-model-inference-endpoint-url[`quarkus.langchain4j.huggingface."model-name".chat-model.inference-endpoint-url`]##
@@ -4813,7 +4813,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MILVUS_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |
 
 a| [[quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-db-name]] [.property-path]##link:#quarkus-langchain4j-milvus_quarkus-langchain4j-milvus-db-name[`quarkus.langchain4j.milvus.db-name`]##
@@ -5196,7 +5196,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-chat-model-model-name[`quarkus.langchain4j.mistralai.chat-model.model-name`]##
@@ -5626,7 +5626,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_MISTRALAI__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name]] [.property-path]##link:#quarkus-langchain4j-mistral-ai_quarkus-langchain4j-mistralai-model-name-chat-model-model-name[`quarkus.langchain4j.mistralai."model-name".chat-model.model-name`]##
@@ -6184,7 +6184,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests[`quarkus.langchain4j.ollama.log-requests`]##
@@ -6697,7 +6697,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests[`quarkus.langchain4j.ollama."model-name".log-requests`]##
@@ -7296,7 +7296,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-max-retries]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-max-retries[`quarkus.langchain4j.openai.max-retries`]##
@@ -8227,7 +8227,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OPENAI__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-max-retries]] [.property-path]##link:#quarkus-langchain4j-openai_quarkus-langchain4j-openai-model-name-max-retries[`quarkus.langchain4j.openai."model-name".max-retries`]##
@@ -9709,7 +9709,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-version[`quarkus.langchain4j.watsonx.version`]##
@@ -9881,7 +9881,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_IAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-iam-grant-type[`quarkus.langchain4j.watsonx.iam.grant-type`]##
@@ -11061,7 +11061,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_BUILT_IN_SERVICE_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-requests]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-built-in-service-log-requests[`quarkus.langchain4j.watsonx.built-in-service.log-requests`]##
@@ -11225,7 +11225,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-version[`quarkus.langchain4j.watsonx."model-name".version`]##
@@ -11397,7 +11397,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__IAM_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
-|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-all-config[icon:question-circle[title=More information about the Duration format]]
 |`+++10s+++`
 
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-iam-grant-type[`quarkus.langchain4j.watsonx."model-name".iam.grant-type`]##

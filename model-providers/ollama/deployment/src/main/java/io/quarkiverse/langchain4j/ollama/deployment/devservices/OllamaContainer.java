@@ -33,6 +33,7 @@ public class OllamaContainer extends org.testcontainers.ollama.OllamaContainer {
     private static final String DEFAULT_OLLAMA_DIRECTORY = "/root/.ollama";
 
     private final boolean useSharedNetwork;
+    private final OllamaDevServicesBuildConfig config;
 
     /**
      * The dynamic host name determined from TestContainers.
@@ -41,10 +42,14 @@ public class OllamaContainer extends org.testcontainers.ollama.OllamaContainer {
 
     OllamaContainer(OllamaDevServicesBuildConfig config, boolean useSharedNetwork) {
         super(DockerImageName.parse(config.imageName()).asCompatibleSubstituteFor("ollama/ollama"));
+        this.config = config;
         this.useSharedNetwork = useSharedNetwork;
 
         super.withLabel(OllamaDevServicesProcessor.DEV_SERVICE_LABEL, OllamaDevServicesProcessor.PROVIDER)
                 .withStartupTimeout(Duration.ofMinutes(1));
+
+        this.config.port()
+                .ifPresent(p -> addFixedExposedPort(p, DEFAULT_OLLAMA_PORT));
 
         // if the OLLAMA_MODELS env var is set, use it - see https://github.com/ollama/ollama/blob/main/docs%2Ffaq.md#how-do-i-configure-ollama-server
         var localOllamaDir = (System.getenv("OLLAMA_MODELS") != null ? Paths.get(System.getenv("OLLAMA_MODELS"))
@@ -102,7 +107,8 @@ public class OllamaContainer extends org.testcontainers.ollama.OllamaContainer {
     }
 
     public int getPort() {
-        return getMappedPort(DEFAULT_OLLAMA_PORT);
+        return this.config.port()
+                .orElseGet(() -> getMappedPort(DEFAULT_OLLAMA_PORT));
     }
 
     @Override
