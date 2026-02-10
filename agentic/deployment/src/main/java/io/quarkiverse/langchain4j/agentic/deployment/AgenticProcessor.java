@@ -37,8 +37,6 @@ import org.jboss.logging.Logger;
 import dev.langchain4j.agentic.agent.ChatMessagesAccess;
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.internal.InternalAgent;
-import dev.langchain4j.agentic.planner.AgentInstance;
-import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.service.IllegalConfigurationException;
 import dev.langchain4j.service.memory.ChatMemoryAccess;
 import io.quarkiverse.langchain4j.ModelName;
@@ -63,7 +61,6 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.deployment.builditem.ServiceStartBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 
 public class AgenticProcessor {
 
@@ -463,15 +460,15 @@ public class AgenticProcessor {
 
     @BuildStep
     void nativeSupport(List<DetectedAiAgentBuildItem> detectedAiAgentBuildItems,
-            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
             BuildProducer<NativeImageProxyDefinitionBuildItem> proxyProducer) {
-        String[] agentClassNames = detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
-                .toArray(String[]::new);
-        reflectiveClassProducer.produce(ReflectiveClassBuildItem.builder(agentClassNames).methods(true).fields(false).build());
-        proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(agentClassNames));
-        proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(InternalAgent.class.getName(),
-                AgenticScopeOwner.class.getName(), AgenticScopeAccess.class.getName(),
-                AgentInstance.class.getName(), ChatMemoryAccess.class.getName(), ChatMessagesAccess.class.getName()));
+
+        detectedAiAgentBuildItems.stream().map(bi -> bi.getIface().name().toString())
+                .forEach(c -> {
+                    // we need to declare the list of interfaces in the exact order that `dev.langchain4j.agentic.agent.AgentBuilder#build` declares them in the `Proxy#newProxyInstance` call
+                    proxyProducer.produce(new NativeImageProxyDefinitionBuildItem(List.of(c, InternalAgent.class.getName(),
+                            AgenticScopeOwner.class.getName(), ChatMemoryAccess.class.getName(),
+                            ChatMessagesAccess.class.getName())));
+                });
     }
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
