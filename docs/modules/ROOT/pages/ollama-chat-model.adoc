@@ -35,6 +35,8 @@ langchain4j-ollama-dev-service.ollama.port=port
 langchain4j-ollama-dev-service.ollama.endpoint=http://${langchain4j-ollama-dev-service.ollama.host}:${langchain4j-ollama-dev-service.ollama.port}
 ----
 
+If you'd like to customize the port the container is exposed on, use the `quarkus.langchain4j.ollama.devservices.port` property. Its value will be reflected in the above settings.
+
 [WARNING]
 ====
 Ollama models are large (e.g., Llama3 ~4.7 GB). Ensure sufficient disk space.
