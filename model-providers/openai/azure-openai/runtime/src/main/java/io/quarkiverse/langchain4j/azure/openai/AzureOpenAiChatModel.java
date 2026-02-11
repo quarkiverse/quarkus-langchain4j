@@ -7,6 +7,7 @@ import static dev.langchain4j.model.openai.internal.OpenAiUtils.aiMessageFrom;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.finishReasonFrom;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toOpenAiMessages;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toTools;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.tokenUsageFrom;
 import static java.time.Duration.ofSeconds;
 
@@ -63,7 +64,13 @@ public class AzureOpenAiChatModel implements ChatModel {
 
     private static final Logger log = Logger.getLogger(AzureOpenAiChatModel.class);
 
+    /**
+     * Minimum Azure API version that supports the 'tools' parameter instead of the deprecated 'functions' parameter.
+     */
+    private static final String TOOLS_MIN_API_VERSION = "2023-12-01";
+
     private final OpenAiClient client;
+    private final String apiVersion;
     private final Double temperature;
     private final Integer seed;
     private final Double topP;
@@ -94,6 +101,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             Boolean logResponses,
             String configName, List<ChatModelListener> listeners) {
         this.listeners = listeners;
+        this.apiVersion = apiVersion;
 
         timeout = getOrDefault(timeout, ofSeconds(60));
 
@@ -146,7 +154,11 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .responseFormat(responseFormat);
 
         if (toolSpecifications != null && !toolSpecifications.isEmpty()) {
-            requestBuilder.functions(toFunctions(toolSpecifications));
+            if (supportsTools()) {
+                requestBuilder.tools(toTools(toolSpecifications, false));
+            } else {
+                requestBuilder.functions(toFunctions(toolSpecifications));
+            }
         }
 
         ChatCompletionRequest request = requestBuilder.build();
@@ -237,6 +249,20 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .metadata(ChatResponseMetadata.builder().id(responseId).modelName(responseModel)
                         .tokenUsage(response.tokenUsage()).finishReason(response.finishReason()).build())
                 .build();
+    }
+
+    /**
+     * Returns {@code true} if the configured Azure API version supports the {@code tools} parameter.
+     * The {@code tools} parameter was introduced in Azure API version {@code 2023-12-01-preview}.
+     * Older API versions only support the deprecated {@code functions} parameter.
+     */
+    private boolean supportsTools() {
+        if (apiVersion == null) {
+            return false;
+        }
+        // Strip any suffix like "-preview" for comparison, e.g. "2023-12-01-preview" -> "2023-12-01"
+        String normalized = apiVersion.length() > 10 ? apiVersion.substring(0, 10) : apiVersion;
+        return normalized.compareTo(TOOLS_MIN_API_VERSION) >= 0;
     }
 
     public static Builder builder() {
