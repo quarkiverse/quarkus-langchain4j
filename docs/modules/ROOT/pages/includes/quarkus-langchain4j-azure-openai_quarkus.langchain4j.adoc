@@ -212,7 +212,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The API version to use for this operation. This follows the YYYY-MM-DD format
+The API version to use for this operation. This follows the YYYY-MM-DD format. API versions `2023-12-01-preview` and later support the `tools` parameter for function calling. Older versions use the deprecated `functions` parameter.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -223,7 +223,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI_API_VERSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++2023-05-15+++`
+|`+++2024-10-21+++`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-api-key[`quarkus.langchain4j.azure-openai.api-key`]##
 ifdef::add-copy-button-to-config-props[]
@@ -1460,7 +1460,7 @@ endif::add-copy-button-to-config-props[]
 
 [.description]
 --
-The API version to use for this operation. This follows the YYYY-MM-DD format
+The API version to use for this operation. This follows the YYYY-MM-DD format. API versions `2023-12-01-preview` and later support the `tools` parameter for function calling. Older versions use the deprecated `functions` parameter.
 
 
 ifdef::add-copy-button-to-env-var[]
@@ -1471,7 +1471,7 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_AZURE_OPENAI__MODEL_NAME__API_VERS
 endif::add-copy-button-to-env-var[]
 --
 |string
-|`+++2023-05-15+++`
+|`+++2024-10-21+++`
 
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-api-key]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-api-key[`quarkus.langchain4j.azure-openai."model-name".api-key`]##
 ifdef::add-copy-button-to-config-props[]

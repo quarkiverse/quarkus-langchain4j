@@ -89,9 +89,11 @@ public interface LangChain4jAzureOpenAiConfig {
         Optional<String> adToken();
 
         /**
-         * The API version to use for this operation. This follows the YYYY-MM-DD format
+         * The API version to use for this operation. This follows the YYYY-MM-DD format.
+         * API versions {@code 2023-12-01-preview} and later support the {@code tools} parameter
+         * for function calling. Older versions use the deprecated {@code functions} parameter.
          */
-        @WithDefault("2023-05-15")
+        @WithDefault("2024-10-21")
         String apiVersion();
 
         /**
