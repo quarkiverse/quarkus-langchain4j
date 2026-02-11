@@ -17,6 +17,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 
 public class QuarkusAiServicesFactory implements AiServicesFactory {
 
@@ -55,6 +56,11 @@ public class QuarkusAiServicesFactory implements AiServicesFactory {
 
         public AiServices<T> chatMemorySeeder(ChatMemorySeeder chatMemorySeeder) {
             quarkusAiServiceContext().chatMemorySeeder = chatMemorySeeder;
+            return this;
+        }
+
+        public AiServices<T> systemMessageProvider(SystemMessageProvider systemMessageProvider) {
+            context.systemMessageProvider = memoryId -> systemMessageProvider.getSystemMessage(memoryId);
             return this;
         }
 

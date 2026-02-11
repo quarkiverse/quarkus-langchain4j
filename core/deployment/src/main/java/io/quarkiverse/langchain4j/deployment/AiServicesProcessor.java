@@ -481,6 +481,16 @@ public class AiServicesProcessor {
                     ? instance.value("allowContinuousForcedToolCalling").asBoolean()
                     : false;
 
+            DotName systemMessageProviderClassDotName = null;
+            AnnotationValue systemMessageProviderSupplierValue = instance.value("systemMessageProviderSupplier");
+            if (systemMessageProviderSupplierValue != null) {
+                DotName supplierDotName = systemMessageProviderSupplierValue.asClass().name();
+                if (!LangChain4jDotNames.NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER.equals(supplierDotName)) {
+                    systemMessageProviderClassDotName = supplierDotName;
+                    validateSupplierAndRegisterForReflection(systemMessageProviderClassDotName, index, reflectiveClassProducer);
+                }
+            }
+
             declarativeAiServiceProducer.produce(
                     new DeclarativeAiServiceBuildItem(
                             declarativeAiServiceClassInfo,
@@ -493,6 +503,7 @@ public class AiServicesProcessor {
                             moderationModelSupplierClassName,
                             imageModelSupplierClassName(reflectiveClassProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
+                            systemMessageProviderClassDotName,
                             cdiScope(customScopes, declarativeAiServiceClassInfo),
                             chatModelName,
                             moderationModelName,
@@ -922,6 +933,10 @@ public class AiServicesProcessor {
                     ? bi.getChatMemorySeederClassDotName().toString()
                     : null);
 
+            String systemMessageProviderClassName = (bi.getSystemMessageProviderClassDotName() != null
+                    ? bi.getSystemMessageProviderClassDotName().toString()
+                    : null);
+
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
             // currently in one class either streaming or blocking model are supported, but not both
@@ -987,6 +1002,7 @@ public class AiServicesProcessor {
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
                                     chatMemorySeederClassName,
+                                    systemMessageProviderClassName,
                                     chatModelName,
                                     moderationModelName,
                                     bi.getImageModelName(),

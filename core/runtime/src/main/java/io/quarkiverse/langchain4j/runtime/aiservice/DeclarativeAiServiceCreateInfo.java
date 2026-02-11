@@ -18,6 +18,7 @@ public record DeclarativeAiServiceCreateInfo(
         String moderationModelSupplierClassName,
         String imageModelSupplierClassName,
         String chatMemorySeederClassName,
+        String systemMessageProviderClassName,
         String chatModelName,
         String moderationModelName,
         String imageModelName,
