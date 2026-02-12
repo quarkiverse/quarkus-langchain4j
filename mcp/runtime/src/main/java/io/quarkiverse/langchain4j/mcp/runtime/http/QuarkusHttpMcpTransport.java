@@ -25,6 +25,7 @@ import dev.langchain4j.mcp.protocol.McpClientMessage;
 import dev.langchain4j.mcp.protocol.McpInitializationNotification;
 import dev.langchain4j.mcp.protocol.McpInitializeRequest;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.tls.TlsConfiguration;
@@ -177,7 +178,12 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                 .onItem().invoke(response -> {
                     int statusCode = response.getStatus();
                     if (!isExpectedStatusCode(statusCode)) {
-                        future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                        if (statusCode == 401) {
+                            String wwwAuth = response.getHeaderString("WWW-Authenticate");
+                            future.completeExceptionally(new McpAuthenticationException(statusCode, wwwAuth));
+                        } else {
+                            future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                        }
                     }
                     // For messages with null ID, we don't wait for a response in the SSE channel,
                     // so if the server accepted the request, we consider the operation done

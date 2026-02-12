@@ -1,0 +1,229 @@
+<div class="panel auth-required-panel">
+    <div class="auth-header">
+        <h2><span class="auth-icon">🔐</span> Authentication Required</h2>
+    </div>
+    
+    <div class="server-details">
+        <p><strong>Connection Name:</strong> {name}</p>
+        <p><strong>Transport:</strong> Streamable HTTP</p>
+        <p><strong>URL:</strong> {url}</p>
+    </div>
+    
+    <div style="height: 20px;"></div>
+    
+    <div class="oauth-form">
+        <div class="form-group">
+            <label for="clientId">OAuth2 Client ID:</label>
+            <input type="text" id="clientId" placeholder="Enter your OAuth2 client ID (leave empty for default)" 
+                   oninput="toggleClientSecret()" />
+        </div>
+        
+        <div class="form-group">
+            <label for="clientSecret">OAuth2 Client Secret:</label>
+            <input type="password" id="clientSecret" placeholder="Enter your OAuth2 client secret" 
+                   disabled style="opacity: 0.6;" />
+        </div>
+        
+        <div class="form-group">
+            <label for="scopes">Scopes (space-separated):</label>
+            <input type="text" id="scopes" placeholder="e.g., read write admin" />
+        </div>
+    </div>
+    
+    <div class="auth-actions">
+        <button type="button" onclick="authenticateWithClientId()" 
+                class="auth-button">
+            🚀 Authenticate & Add Connection
+        </button>
+        <button type="button" onclick="goBackToForm()" 
+                class="cancel-button">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<style>
+.auth-required-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.auth-header {
+    margin-bottom: 20px;
+}
+
+.auth-icon {
+    font-size: 1.2em;
+    margin-right: 8px;
+}
+
+.auth-header h2 {
+    color: white;
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+.server-details {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 35px;
+    backdrop-filter: blur(10px);
+}
+
+.server-details p {
+    margin: 8px 0;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9em;
+}
+
+.server-details strong {
+    color: white;
+    font-weight: 600;
+}
+
+.auth-details {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.auth-details p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.auth-details strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.auth-message {
+    margin-bottom: 20px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.oauth-form {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+}
+
+.auth-required-panel .oauth-form label {
+    color: white;
+    font-weight: 600;
+}
+
+.auth-required-panel .form-group input {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #333;
+}
+
+.auth-required-panel .form-group input:focus {
+    border-color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.auth-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.auth-button {
+    background: white;
+    color: #667eea;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    color: #5a67d8;
+}
+
+.cancel-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+</style>
+
+<script>
+function toggleClientSecret() {
+    const clientId = document.getElementById('clientId').value.trim();
+    const clientSecretInput = document.getElementById('clientSecret');
+    
+    if (clientId) {
+        clientSecretInput.disabled = false;
+        clientSecretInput.style.opacity = '1';
+    } else {
+        clientSecretInput.disabled = true;
+        clientSecretInput.style.opacity = '0.6';
+        clientSecretInput.value = '';
+    }
+}
+
+function authenticateWithClientId() {
+    const clientId = document.getElementById('clientId').value.trim();
+    const clientSecret = document.getElementById('clientSecret').value.trim();
+    const scopes = document.getElementById('scopes').value.trim();
+    
+    const params = new URLSearchParams({
+        name: '{name}',
+        transportType: '{transportType}',
+        command: '{command}',
+        url: '{url}'
+    });
+    
+    if (clientId) {
+        params.set('client_id', clientId);
+    }
+    
+    if (clientSecret) {
+        params.set('client_secret', clientSecret);
+    }
+    
+    if (scopes) {
+        params.set('scopes', scopes);
+    }
+    
+    {#if resourceMetadata}
+    params.set('resource_metadata', '{resourceMetadata}');
+    {/if}
+    
+    window.location.href = '/mcp-authorization?' + params.toString();
+}
+
+function goBackToForm() {
+    // Reload the page to go back to the original form
+    window.location.reload();
+}
+</script>
