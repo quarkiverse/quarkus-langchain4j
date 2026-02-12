@@ -1,0 +1,180 @@
+<div class="auth-required" id="form-feedback">
+    <div class="auth-header">
+        <div class="auth-icon">🔐</div>
+        <h3>Authentication Required</h3>
+    </div>
+    
+    <div class="oauth-form">
+        <label for="clientId">OAuth2 Client ID:</label>
+        <input type="text" id="clientId" placeholder="Enter your OAuth2 client ID (leave empty for default)" />
+        
+        <label for="scopes">Scopes (space-separated):</label>
+        <input type="text" id="scopes" placeholder="e.g., read write admin" />
+    </div>
+    
+    <div class="auth-actions">
+        <button type="button" onclick="authenticateWithClientId()" 
+                class="auth-button">
+            🚀 Authenticate & Add Connection
+        </button>
+        <button type="button" onclick="document.getElementById('form-feedback').innerHTML = '';" 
+                class="cancel-button">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<style>
+.auth-required {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    border: none;
+}
+
+.auth-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+}
+
+.auth-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px;
+    border-radius: 8px;
+    line-height: 1;
+}
+
+.auth-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.auth-details {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.auth-details p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.auth-details strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.auth-message {
+    margin-bottom: 20px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.oauth-form {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+}
+
+.oauth-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.oauth-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.oauth-form input:focus {
+    outline: none;
+    border-color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.auth-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.auth-button {
+    background: white;
+    color: #667eea;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    color: #5a67d8;
+}
+
+.cancel-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+</style>
+
+<script>
+function authenticateWithClientId() {
+    const clientId = document.getElementById('clientId').value.trim();
+    const scopes = document.getElementById('scopes').value.trim();
+    
+    const params = new URLSearchParams({
+        name: '{name}',
+        transportType: '{transportType}',
+        command: '{command}',
+        url: '{url}'
+    });
+    
+    if (clientId) {
+        params.set('client_id', clientId);
+    }
+    
+    if (scopes) {
+        params.set('scopes', scopes);
+    }
+    
+    window.location.href = '/mcp-authorization?' + params.toString();
+}
+</script>
