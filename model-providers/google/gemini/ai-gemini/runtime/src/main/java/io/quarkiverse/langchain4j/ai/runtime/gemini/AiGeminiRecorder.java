@@ -16,6 +16,10 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.embedding.DisabledEmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.googleai.GeminiThinkingConfig;
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.ai.runtime.gemini.config.LangChain4jAiGeminiConfig;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
@@ -47,21 +51,12 @@ public class AiGeminiRecorder {
 
             String apiKey = aiConfig.apiKey().orElse(null);
 
-            var builder = AiGeminiEmbeddingModel.builder()
-                    .configName(configName)
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(embeddingModelConfig.modelId())
+            var builder = GoogleAiEmbeddingModel.builder()
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .apiKey(apiKey)
+                    .modelName(embeddingModelConfig.modelId())
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), aiConfig.logResponses()));
-
-            if (embeddingModelConfig.outputDimension().isPresent()) {
-                builder.dimension(embeddingModelConfig.outputDimension().get());
-            }
-
-            if (embeddingModelConfig.taskType().isPresent()) {
-                builder.taskType(embeddingModelConfig.taskType().get());
-            }
 
             return new Function<>() {
                 @Override
@@ -90,10 +85,10 @@ public class AiGeminiRecorder {
             Optional<String> baseUrl = aiConfig.baseUrl();
 
             String apiKey = aiConfig.apiKey().orElse(null);
-            var builder = AiGeminiChatLanguageModel.builder()
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(chatModelConfig.modelId())
+            var builder = GoogleAiGeminiChatModel.builder()
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), aiConfig.logResponses()));
@@ -110,13 +105,11 @@ public class AiGeminiRecorder {
             if (chatModelConfig.timeout().isPresent()) {
                 builder.timeout(chatModelConfig.timeout().get());
             }
-            ChatModelConfig.ThinkingConfig thinkingConfig = chatModelConfig.thinking();
-            if (thinkingConfig.includeThoughts()) {
-                builder.includeThoughts(thinkingConfig.includeThoughts());
-            }
-            if (thinkingConfig.thinkingBudget().isPresent()) {
-                builder.thinkingBudget(thinkingConfig.thinkingBudget().getAsLong());
-            }
+
+            configureThinking(chatModelConfig, builder);
+            // TODO: what do we do with these?
+            builder.returnThinking(true);
+            builder.sendThinking(true);
 
             // TODO: add the rest of the properties
 
@@ -142,6 +135,20 @@ public class AiGeminiRecorder {
 
     }
 
+    private String determineBaseUrl(Optional<String> baseUrl) {
+        return baseUrl.orElse("https://generativelanguage.googleapis.com");
+    }
+
+    private void configureThinking(ChatModelConfig chatModelConfig,
+            GoogleAiGeminiChatModel.GoogleAiGeminiChatModelBaseBuilder builder) {
+        GeminiThinkingConfig.Builder geminiThinkingConfigBuilder = GeminiThinkingConfig.builder()
+                .includeThoughts(chatModelConfig.thinking().includeThoughts());
+        if (chatModelConfig.thinking().thinkingBudget().isPresent()) {
+            geminiThinkingConfigBuilder.thinkingBudget(chatModelConfig.thinking().thinkingBudget().getAsInt());
+        }
+        builder.thinkingConfig(geminiThinkingConfigBuilder.build());
+    }
+
     public Function<SyntheticCreationalContext<StreamingChatModel>, StreamingChatModel> streamingChatModel(String configName) {
         var aiConfig = correspondingAiConfig(configName);
 
@@ -150,10 +157,10 @@ public class AiGeminiRecorder {
             Optional<String> baseUrl = aiConfig.baseUrl();
 
             String apiKey = aiConfig.apiKey().orElse(null);
-            var builder = AiGeminiStreamingChatLanguageModel.builder()
-                    .baseUrl(baseUrl)
-                    .key(apiKey)
-                    .modelId(chatModelConfig.modelId())
+            var builder = GoogleAiGeminiStreamingChatModel.builder()
+                    .baseUrl(determineBaseUrl(baseUrl))
+                    .apiKey(apiKey)
+                    .modelName(chatModelConfig.modelId())
                     .maxOutputTokens(chatModelConfig.maxOutputTokens())
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), aiConfig.logResponses()));
@@ -171,7 +178,10 @@ public class AiGeminiRecorder {
                 builder.timeout(chatModelConfig.timeout().get());
             }
 
-            // TODO: add the rest of the properties
+            configureThinking(chatModelConfig, builder);
+            // TODO: what do we do with these?
+            builder.returnThinking(true);
+            builder.sendThinking(true);
 
             return new Function<>() {
                 @Override
