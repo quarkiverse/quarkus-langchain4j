@@ -18,6 +18,11 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
 
+import com.azure.core.credential.AccessToken;
+import com.azure.core.credential.TokenRequestContext;
+import com.azure.identity.DefaultAzureCredential;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
@@ -105,7 +110,6 @@ public class AzureOpenAiRecorder {
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
-
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -160,6 +164,7 @@ public class AzureOpenAiRecorder {
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
+
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     return builder.build();
@@ -205,6 +210,7 @@ public class AzureOpenAiRecorder {
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
+
                     return builder.build();
                 }
             };
@@ -268,6 +274,7 @@ public class AzureOpenAiRecorder {
                 public ImageModel apply(SyntheticCreationalContext<ImageModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, adToken, isAuthProviderAvailable(context, configName),
                             configName);
+
                     return builder.build();
                 }
             };
@@ -279,6 +286,16 @@ public class AzureOpenAiRecorder {
                 }
             };
         }
+    }
+
+    public Function<SyntheticCreationalContext<ModelAuthProvider>, ModelAuthProvider> modelAuthProvider() {
+        return new Function<>() {
+            @Override
+            public ModelAuthProvider apply(
+                    SyntheticCreationalContext<ModelAuthProvider> modelAuthProviderSyntheticCreationalContext) {
+                return new AzureOpenAiRecorder.ApplicationDefaultAuthProvider();
+            }
+        };
     }
 
     static String getEndpoint(LangChain4jAzureOpenAiConfig.AzureAiConfig azureAiConfig, String configName, EndpointType type) {
@@ -329,12 +346,6 @@ public class AzureOpenAiRecorder {
         return azureAiConfig;
     }
 
-    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
-        if ((apiKey != null) == (adToken != null) && !authProviderAvailable) {
-            throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
-        }
-    }
-
     private ConfigValidationException.Problem[] createKeyMisconfigurationProblem(String configName) {
         return new ConfigValidationException.Problem[] {
                 new ConfigValidationException.Problem(
@@ -345,6 +356,12 @@ public class AzureOpenAiRecorder {
                                 "api-key",
                                 NamedConfigUtil.isDefault(configName) ? "." : ("." + configName + "."), "ad-token"))
         };
+    }
+
+    private void throwIfApiKeysNotConfigured(String apiKey, String adToken, boolean authProviderAvailable, String configName) {
+        if ((apiKey != null) == (adToken != null) && !authProviderAvailable) {
+            throw new ConfigValidationException(createKeyMisconfigurationProblem(configName));
+        }
     }
 
     private static ConfigValidationException.Problem createConfigProblem(String key, String configName) {
@@ -367,4 +384,24 @@ public class AzureOpenAiRecorder {
         });
     }
 
+    public static class ApplicationDefaultAuthProvider implements ModelAuthProvider {
+        private static final String SCOPE = "https://cognitiveservices.azure.com/.default";
+        private static final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder().build();
+        private static final TokenRequestContext context = new TokenRequestContext().addScopes(SCOPE);
+        private static volatile AccessToken currentToken;
+
+        @Override
+        public String getAuthorization(Input input) {
+            AccessToken token = currentToken;
+            if (token == null || token.isExpired()) {
+                synchronized (ApplicationDefaultAuthProvider.class) {
+                    token = currentToken;
+                    if (token == null || token.isExpired()) {
+                        currentToken = credential.getTokenSync(context);
+                    }
+                }
+            }
+            return "Bearer " + currentToken.getToken();
+        }
+    }
 }
