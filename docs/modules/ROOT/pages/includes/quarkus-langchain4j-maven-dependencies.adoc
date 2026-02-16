@@ -1,0 +1,44 @@
+[source,xml,subs=attributes+]
+----
+<dependency>
+  <groupId>io.quarkiverse.langchain4j</groupId>
+  <artifactId>{provider-artifact}</artifactId>
+  <version>{project-version}</version>
+</dependency>
+----
+
+Even better, if you use the Quarkus platformn BOM (default for projects generated), add the Quarkus Langchain4J BOM and all dependency versions will align:
+
+[source,xml,subs=attributes+]
+----
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-langchain4j-bom</artifactId> <!--1-->
+                <version>${quarkus.platform.version}</version> <!--2-->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+      <dependency>
+        <groupId>io.quarkiverse.langchain4j</groupId>
+        <artifactId>{provider-artifact}</artifactId>
+        <!--3-->
+      </dependency>
+    </dependencies>
+----
+
+<1> In your `dependencyManagement` section, add the `quarkus-langchain4j-bom`
+<2> Inherit the version from your platform version
+<3> Voilà, no need for version alignment anymore

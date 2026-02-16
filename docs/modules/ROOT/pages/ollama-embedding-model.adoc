@@ -16,14 +16,7 @@ To use embedding models, you must have a working Ollama setup. Refer to xref:./o
 
 To enable embedding support, include the following extension:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-ollama</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-ollama]
 
 == Default Model
 

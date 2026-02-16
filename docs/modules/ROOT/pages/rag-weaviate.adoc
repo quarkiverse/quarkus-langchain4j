@@ -15,14 +15,7 @@ With Quarkus LangChain4j, you can ingest documents and perform vector-based retr
 
 To enable Weaviate support in your Quarkus application, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-weaviate</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-weaviate]
 
 == Dev Services Support
 

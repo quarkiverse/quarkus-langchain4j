@@ -16,14 +16,7 @@ include::./azure-openai-chat-model.adoc[tags=azure-openai-prerequisites]
 To use Azure OpenAI image models in your Quarkus application, add the following extension:
 
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-azure-openai]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Azure OpenAI image model.
 
