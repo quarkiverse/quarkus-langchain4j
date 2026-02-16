@@ -14,14 +14,7 @@ The `quarkus-langchain4j-qdrant` extension allows you to connect to a Qdrant ins
 
 To enable Qdrant integration, add the following dependency to your Quarkus project:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-qdrant</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-qdrant]
 
 == Dev Services Support
 

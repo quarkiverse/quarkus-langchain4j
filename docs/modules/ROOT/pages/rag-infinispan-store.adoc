@@ -24,14 +24,7 @@ It automatically registers the required schema on startup.
 
 To enable Infinispan support in your Quarkus project, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-infinispan</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-infinispan]
 
 This extension builds upon the https://quarkus.io/guides/infinispan-client[Quarkus Infinispan client].
 Ensure that the default Infinispan client is correctly configured* For more details, see:

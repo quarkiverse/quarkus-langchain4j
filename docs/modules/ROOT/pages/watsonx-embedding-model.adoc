@@ -11,14 +11,7 @@ include::./watsonx-chat-model.adoc[tags=watsonx-prerequisites]
 
 == Dependency
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-watsonx</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-watsonx]
 
 == Default Configuration
 

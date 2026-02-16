@@ -51,14 +51,7 @@ Model pulls can take several minutes depending on the model size and connection 
 
 To enable Ollama support in your Quarkus project, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-ollama</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-ollama]
 
 If no other LLM extension is present, xref:ai-services.adoc[AI Services] will default to using the configured Ollama chat model.
 
