@@ -252,6 +252,40 @@ public class Startup {
 * Check the logs of the application for potential clues
 * Check https://langfuse.com/self-hosting/troubleshooting#missing-events-after-post-apipublicingestion[Troubleshooting] page
 
+=== Comet Opik
+
+You can also send Quarkus LangChain4j traces to https://www.comet.com/docs/opik/[Comet Opik] via OpenTelemetry.
+
+==== Step 1: Enable OpenTelemetry in Quarkus LangChain4j
+
+Use the same setup as in the Langfuse section:
+
+* Add the `quarkus-opentelemetry` dependency
+* Set `quarkus.otel.exporter.otlp.traces.protocol=http/protobuf`
+* Optionally enable prompt and completion tracing via `quarkus.langchain4j.tracing.*`
+
+==== Step 2: Configure Opik OTLP endpoint and headers
+
+Set your OpenTelemetry exporter endpoint and headers to the Opik values from your project settings.
+
+[source,bash]
+----
+QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT=<opik_otlp_endpoint>
+QUARKUS_OTEL_EXPORTER_OTLP_HEADERS=<opik_otlp_headers>
+----
+
+Or configure in `application.properties`:
+
+[source,properties]
+----
+quarkus.otel.exporter.otlp.endpoint=<opik_otlp_endpoint>
+quarkus.otel.exporter.otlp.headers=<opik_otlp_headers>
+----
+
+==== Step 3: Run a test AI operation
+
+Run the same AI service example shown above and verify traces in your Opik project.
+
 == Auditing
 
 :langchain4j-observability-url: https://docs.langchain4j.dev/tutorials/observability
