@@ -192,6 +192,11 @@ class AzureOpenAiRecorderEndpointTests {
         }
 
         @Override
+        public Optional<Boolean> logRequestsCurl() {
+            return Optional.empty();
+        }
+
+        @Override
         public Boolean enableIntegration() {
             return null;
         }

@@ -18,6 +18,7 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
+import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
@@ -107,11 +108,14 @@ public class AnthropicRecorder {
                 builder.beta("interleaved-thinking-2025-05-14");
             }
 
+            var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
+
             return new Function<>() {
                 @Override
                 public ChatModel apply(SyntheticCreationalContext<ChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     return builder.build();
                 }
             };
@@ -190,11 +194,14 @@ public class AnthropicRecorder {
                 builder.beta("interleaved-thinking-2025-05-14");
             }
 
+            var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
+
             return new Function<>() {
                 @Override
                 public StreamingChatModel apply(SyntheticCreationalContext<StreamingChatModel> context) {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
+                    QuarkusAnthropicClient.setLogCurlHint(logCurl);
                     return builder.build();
                 }
             };

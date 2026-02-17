@@ -50,6 +50,7 @@ import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
 import io.vertx.core.Handler;
@@ -75,9 +76,10 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
-            if (builder.logRequests || builder.logResponses) {
+            if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE).clientLogger(
-                        new QuarkusAnthropicClient.AnthropicClientLogger(builder.logRequests, builder.logResponses));
+                        new QuarkusAnthropicClient.AnthropicClientLogger(builder.logRequests, builder.logResponses,
+                                builder.logCurl));
             }
 
             this.restApi = restApiBuilder.build(AnthropicRestApi.class);
@@ -448,14 +450,30 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
     }
 
+    private static final ThreadLocal<Boolean> LOG_CURL_HINT = new ThreadLocal<>();
+
+    public static void setLogCurlHint(boolean logCurl) {
+        LOG_CURL_HINT.set(logCurl);
+    }
+
+    static boolean getAndClearLogCurlHint() {
+        Boolean value = LOG_CURL_HINT.get();
+        LOG_CURL_HINT.remove();
+        return value != null && value;
+    }
+
     public static class QuarkusAnthropicClientBuilderFactory implements AnthropicClientBuilderFactory {
         @Override
         public AnthropicClient.Builder get() {
-            return new Builder();
+            Builder builder = new Builder();
+            builder.logCurl = getAndClearLogCurlHint();
+            return builder;
         }
     }
 
     public static class Builder extends AnthropicClient.Builder<QuarkusAnthropicClient, Builder> {
+        public boolean logCurl;
+
         @Override
         public QuarkusAnthropicClient build() {
             return new QuarkusAnthropicClient(this);
@@ -470,10 +488,16 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         private final boolean logRequests;
         private final boolean logResponses;
+        private final boolean logCurl;
 
         public AnthropicClientLogger(boolean logRequests, boolean logResponses) {
+            this(logRequests, logResponses, false);
+        }
+
+        public AnthropicClientLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
+            this.logCurl = logCurl;
         }
 
         @Override
@@ -490,6 +514,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
                 } catch (Exception e) {
                     log.warn("Failed to log request", e);
                 }
+            }
+            if (logCurl) {
+                CurlRequestLogger.logCurl(log, request, body);
             }
         }
 

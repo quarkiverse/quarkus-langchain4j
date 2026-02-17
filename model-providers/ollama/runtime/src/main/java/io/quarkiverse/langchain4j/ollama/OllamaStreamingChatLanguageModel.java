@@ -50,7 +50,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
     private OllamaStreamingChatLanguageModel(OllamaStreamingChatLanguageModel.Builder builder) {
         client = new OllamaClient(builder.baseUrl, builder.timeout, builder.logRequests, builder.logResponses,
-                builder.configName, builder.tlsConfigurationName);
+                builder.logCurl, builder.configName, builder.tlsConfigurationName);
         model = builder.model;
         format = builder.format;
         options = builder.options;
@@ -257,6 +257,7 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
         private boolean logRequests = false;
         private boolean logResponses = false;
+        private boolean logCurl = false;
         private String configName;
         private List<ChatModelListener> listeners = Collections.emptyList();
 
@@ -297,6 +298,11 @@ public class OllamaStreamingChatLanguageModel implements StreamingChatModel {
 
         public Builder logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
             return this;
         }
 

@@ -46,7 +46,7 @@ public class AzureOpenAiImageModel implements ImageModel {
     public AzureOpenAiImageModel(String endpoint, String apiKey, String adToken, String apiVersion, String modelName,
             String size,
             String quality, String style, Optional<String> user, String responseFormat, Duration timeout,
-            Integer maxRetries, Boolean logRequests, Boolean logResponses,
+            Integer maxRetries, Boolean logRequests, Boolean logResponses, Boolean logCurl,
             Optional<Path> persistDirectory, String configName) {
         this.modelName = modelName;
         this.size = size;
@@ -66,6 +66,7 @@ public class AzureOpenAiImageModel implements ImageModel {
                 .writeTimeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl != null && logCurl)
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -156,6 +157,7 @@ public class AzureOpenAiImageModel implements ImageModel {
         private Integer maxRetries;
         private Boolean logRequests;
         private Boolean logResponses;
+        private Boolean logCurl;
         private Optional<Path> persistDirectory;
         private String configName;
 
@@ -196,6 +198,11 @@ public class AzureOpenAiImageModel implements ImageModel {
 
         public Builder logResponses(Boolean logResponses) {
             this.logResponses = logResponses;
+            return this;
+        }
+
+        public Builder logCurl(Boolean logCurl) {
+            this.logCurl = logCurl;
             return this;
         }
 
@@ -241,7 +248,7 @@ public class AzureOpenAiImageModel implements ImageModel {
 
         public AzureOpenAiImageModel build() {
             return new AzureOpenAiImageModel(endpoint, apiKey, adToken, apiVersion, modelName, size, quality, style, user,
-                    responseFormat, timeout, maxRetries, logRequests, logResponses,
+                    responseFormat, timeout, maxRetries, logRequests, logResponses, logCurl,
                     persistDirectory, configName);
         }
     }

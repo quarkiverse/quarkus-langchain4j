@@ -99,6 +99,7 @@ public class AzureOpenAiChatModel implements ChatModel {
             String responseFormat,
             Boolean logRequests,
             Boolean logResponses,
+            Boolean logCurl,
             String configName, List<ChatModelListener> listeners) {
         this.listeners = listeners;
         this.apiVersion = apiVersion;
@@ -115,6 +116,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                 .proxy(proxy)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl != null && logCurl)
                 .userAgent(Consts.DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -288,6 +290,7 @@ public class AzureOpenAiChatModel implements ChatModel {
         private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
+        private Boolean logCurl;
         private String configName;
         private List<ChatModelListener> listeners = Collections.emptyList();
 
@@ -400,6 +403,11 @@ public class AzureOpenAiChatModel implements ChatModel {
             return this;
         }
 
+        public Builder logCurl(Boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         public Builder listeners(List<ChatModelListener> listeners) {
             this.listeners = listeners;
             return this;
@@ -423,6 +431,7 @@ public class AzureOpenAiChatModel implements ChatModel {
                     responseFormat,
                     logRequests,
                     logResponses,
+                    logCurl,
                     configName,
                     listeners);
         }

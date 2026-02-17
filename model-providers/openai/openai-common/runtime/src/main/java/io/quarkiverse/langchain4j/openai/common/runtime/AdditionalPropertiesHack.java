@@ -61,4 +61,23 @@ public final class AdditionalPropertiesHack {
         }
         return map.remove("tlsConfigurationName");
     }
+
+    public static void setLogCurl(boolean logCurl) {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return;
+        }
+        map.put("logCurl", Boolean.toString(logCurl));
+    }
+
+    public static boolean getAndClearLogCurl() {
+        Map<String, String> map = PROPS.get();
+        if (map == null) {
+            // this should never happen
+            return false;
+        }
+        String value = map.remove("logCurl");
+        return Boolean.parseBoolean(value);
+    }
 }

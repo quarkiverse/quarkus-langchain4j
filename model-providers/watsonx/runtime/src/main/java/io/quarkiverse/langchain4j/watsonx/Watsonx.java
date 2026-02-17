@@ -28,11 +28,12 @@ public abstract class Watsonx {
                 .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
 
-        if (builder.logRequests || builder.logResponses) {
+        if (builder.logRequests || builder.logResponses || builder.logCurl) {
             restClientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             restClientBuilder.clientLogger(new WatsonxClientLogger(
                     builder.logRequests,
-                    builder.logResponses));
+                    builder.logResponses,
+                    builder.logCurl));
         }
 
         this.client = restClientBuilder.build(WatsonxRestApi.class);
@@ -75,6 +76,7 @@ public abstract class Watsonx {
         protected URL url;
         protected boolean logResponses;
         protected boolean logRequests;
+        protected boolean logCurl;
         protected TokenGenerator tokenGenerator;
         protected String responseFormatText;
         private List<ChatModelListener> listeners = Collections.emptyList();
@@ -131,6 +133,11 @@ public abstract class Watsonx {
 
         public T logResponses(boolean logResponses) {
             this.logResponses = logResponses;
+            return (T) this;
+        }
+
+        public T logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
             return (T) this;
         }
     }

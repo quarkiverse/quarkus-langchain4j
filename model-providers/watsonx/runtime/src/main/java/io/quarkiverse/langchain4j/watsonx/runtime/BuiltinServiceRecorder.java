@@ -171,6 +171,12 @@ public class BuiltinServiceRecorder {
     private UtilityAgentToolsRestApi createRestClient(
             String baseUrl, String apiKey, IAMConfig iamConfig,
             Duration timeout, boolean logRequests, boolean logResponses) {
+        return createRestClient(baseUrl, apiKey, iamConfig, timeout, logRequests, logResponses, false);
+    }
+
+    private UtilityAgentToolsRestApi createRestClient(
+            String baseUrl, String apiKey, IAMConfig iamConfig,
+            Duration timeout, boolean logRequests, boolean logResponses, boolean logCurl) {
         var builder = QuarkusRestClientBuilder.newBuilder()
                 .baseUri(URI.create(baseUrl))
                 .clientHeadersFactory(
@@ -182,9 +188,9 @@ public class BuiltinServiceRecorder {
                 .readTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .connectTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);
 
-        if (logRequests || logResponses) {
+        if (logRequests || logResponses || logCurl) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE)
-                    .clientLogger(new WatsonxClientLogger(logRequests, logResponses));
+                    .clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
         }
 
         return builder.build(UtilityAgentToolsRestApi.class);

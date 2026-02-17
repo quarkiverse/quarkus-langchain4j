@@ -279,6 +279,7 @@ public class WatsonxRecorder {
                 watsonConfig.logRequests());
         var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), rerankModelConfig.logResponses(),
                 watsonConfig.logResponses());
+        var logCurl = firstOrDefault(false, watsonConfig.logRequestsCurl());
         var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
         var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
@@ -287,6 +288,7 @@ public class WatsonxRecorder {
                 .timeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl)
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
@@ -329,6 +331,7 @@ public class WatsonxRecorder {
         URL cosUrl;
         boolean logRequests = watsonConfig.logRequests().orElse(false);
         boolean logResponses = watsonConfig.logResponses().orElse(false);
+        boolean logCurl = watsonConfig.logRequestsCurl().orElse(false);
 
         try {
             cosUrl = URI.create(textExtractionConfig.baseUrl()).toURL();
@@ -352,9 +355,9 @@ public class WatsonxRecorder {
                         .connectTimeout(watsonxDuration.toSeconds(), TimeUnit.SECONDS)
                         .readTimeout(watsonxDuration.toSeconds(), TimeUnit.SECONDS);
 
-                if (logRequests || logResponses) {
+                if (logRequests || logResponses || logCurl) {
                     watsonxClient.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                    watsonxClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses));
+                    watsonxClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
                 }
 
                 var cosClient = QuarkusRestClientBuilder.newBuilder()
@@ -363,9 +366,9 @@ public class WatsonxRecorder {
                         .connectTimeout(0, TimeUnit.SECONDS)
                         .readTimeout(0, TimeUnit.SECONDS);
 
-                if (logRequests || logResponses) {
+                if (logRequests || logResponses || logCurl) {
                     cosClient.loggingScope(LoggingScope.REQUEST_RESPONSE);
-                    cosClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses));
+                    cosClient.clientLogger(new WatsonxClientLogger(logRequests, logResponses, logCurl));
                 }
 
                 return new TextExtraction(
@@ -420,6 +423,7 @@ public class WatsonxRecorder {
                 watsonConfig.logRequests());
         var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), chatModelConfig.logResponses(),
                 watsonConfig.logResponses());
+        var logCurl = firstOrDefault(false, watsonConfig.logRequestsCurl());
         var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
         var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
@@ -428,6 +432,7 @@ public class WatsonxRecorder {
                 .timeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl)
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
@@ -484,6 +489,7 @@ public class WatsonxRecorder {
                 watsonConfig.logRequests());
         var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), chatModelConfig.logResponses(),
                 watsonConfig.logResponses());
+        var logCurl = firstOrDefault(false, watsonConfig.logRequestsCurl());
         var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
         var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
@@ -492,6 +498,7 @@ public class WatsonxRecorder {
                 .timeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl)
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
@@ -539,6 +546,7 @@ public class WatsonxRecorder {
                 watsonConfig.logRequests());
         var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), generationModelConfig.logResponses(),
                 watsonConfig.logResponses());
+        var logCurl = firstOrDefault(false, watsonConfig.logRequestsCurl());
         var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
         var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
@@ -547,6 +555,7 @@ public class WatsonxRecorder {
                 .timeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl)
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
@@ -595,6 +604,7 @@ public class WatsonxRecorder {
                 watsonConfig.logRequests());
         var logResponses = firstOrDefault(defaultConfig.logResponses().orElse(false), generationModelConfig.logResponses(),
                 watsonConfig.logResponses());
+        var logCurl = firstOrDefault(false, watsonConfig.logRequestsCurl());
         var spaceId = firstOrDefault(defaultConfig.spaceId().orElse(null), watsonConfig.spaceId());
         var projectId = firstOrDefault(defaultConfig.projectId().orElse(null), watsonConfig.projectId());
 
@@ -603,6 +613,7 @@ public class WatsonxRecorder {
                 .timeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .logCurl(logCurl)
                 .version(watsonConfig.version())
                 .spaceId(spaceId)
                 .projectId(projectId)
