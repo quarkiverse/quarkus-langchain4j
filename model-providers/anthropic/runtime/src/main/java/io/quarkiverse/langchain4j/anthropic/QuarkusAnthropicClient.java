@@ -64,12 +64,14 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     private final String apiKey;
     private final String anthropicVersion;
     private final String configuredBeta;
+    private final Boolean disableBetaHeader;
     private final AnthropicRestApi restApi;
 
     public QuarkusAnthropicClient(Builder builder) {
         this.apiKey = builder.apiKey;
         this.anthropicVersion = builder.version;
         this.configuredBeta = builder.beta;
+        this.disableBetaHeader = builder.disableBetaHeader;
 
         try {
             var restApiBuilder = QuarkusRestClientBuilder.newBuilder().baseUri(new URI(builder.baseUrl))
@@ -121,6 +123,9 @@ public class QuarkusAnthropicClient extends AnthropicClient {
     }
 
     private String buildBetaHeaderForRequest(AnthropicCreateMessageRequest request) {
+        if (Boolean.TRUE.equals(disableBetaHeader)) {
+            return null;
+        }
         boolean toolsPresent = hasTools(request);
 
         // If beta configured, use it (may need to combine with tools beta)
@@ -462,17 +467,31 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         return value != null && value;
     }
 
+    private static final ThreadLocal<Boolean> DISABLE_BETA_HEADER_HINT = new ThreadLocal<>();
+
+    public static void setDisableBetaHint(boolean disableBetaHint) {
+        DISABLE_BETA_HEADER_HINT.set(disableBetaHint);
+    }
+
+    static boolean getAndClearDisableBetaHint() {
+        Boolean value = DISABLE_BETA_HEADER_HINT.get();
+        DISABLE_BETA_HEADER_HINT.remove();
+        return value != null && value;
+    }
+
     public static class QuarkusAnthropicClientBuilderFactory implements AnthropicClientBuilderFactory {
         @Override
         public AnthropicClient.Builder get() {
             Builder builder = new Builder();
             builder.logCurl = getAndClearLogCurlHint();
+            builder.disableBetaHeader = getAndClearDisableBetaHint();
             return builder;
         }
     }
 
     public static class Builder extends AnthropicClient.Builder<QuarkusAnthropicClient, Builder> {
         public boolean logCurl;
+        public boolean disableBetaHeader;
 
         @Override
         public QuarkusAnthropicClient build() {
