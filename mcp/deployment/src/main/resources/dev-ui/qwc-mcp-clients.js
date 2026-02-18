@@ -15,6 +15,7 @@ import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import 'qui-themed-code-block';
 import '@qomponent/qui-badge';
 import { JsonRpc } from 'jsonrpc';
+import { msg, updateWhenLocaleChanges } from 'localization';
 
 /**
  * This component shows the MCP clients and their tools.
@@ -58,6 +59,7 @@ export class QwcMcpClients extends LitElement {
 
     constructor() {
         super();
+        updateWhenLocaleChanges(this);
         this._selectedTool = null;
         this._showInputDialog = false;
         this._showResultDialog = false;
@@ -83,7 +85,7 @@ export class QwcMcpClients extends LitElement {
         } else {
             return html`
             <div style="color: var(--lumo-secondary-text-color);width: 95%;">
-                <div>Fetching MCP clients...</div>
+                <div>${msg('Fetching MCP clients...', { id: 'mcp-client-fetching-clients' })}</div>
                 <vaadin-progress-bar indeterminate></vaadin-progress-bar>
             </div>
             `;
@@ -102,24 +104,24 @@ export class QwcMcpClients extends LitElement {
                             }
                         }}">
                         <vaadin-grid-sort-column
-                            header="Name"
+                            header="${msg('Name', { id: 'mcp-client-col-name' })}"
                             path="name"
                             auto-width
                             ${columnBodyRenderer(this._renderName, [])}
                         ></vaadin-grid-sort-column>
                         <vaadin-grid-sort-column
-                            header="MCP Client"
+                            header="${msg('MCP Client', { id: 'mcp-client-col-mcp-client' })}"
                             path="clientName"
                             auto-width
                             ${columnBodyRenderer(this._renderClientName, [])}
                         ></vaadin-grid-sort-column>
                         <vaadin-grid-sort-column
-                            header="Description"
+                            header="${msg('Description', { id: 'mcp-client-col-description' })}"
                             path="description"
                             auto-width>
                         </vaadin-grid-sort-column>
                         <vaadin-grid-column
-                            header="Args"
+                            header="${msg('Args', { id: 'mcp-client-col-args' })}"
                             frozen-to-end
                             auto-width
                             flex-grow="0"
@@ -132,7 +134,7 @@ export class QwcMcpClients extends LitElement {
     _renderFilterTextbar() {
         return html`<vaadin-text-field
                 class="filterText"
-                placeholder="Filter"
+                placeholder="${msg('Filter', { id: 'mcp-client-filter' })}"
                 @value-changed="${(e) => {
                     this._searchTerm = (e.detail.value || '').trim().toLowerCase();
                     this._applyFilter();
@@ -144,7 +146,7 @@ export class QwcMcpClients extends LitElement {
 
     _renderResultDialog() {
         return html`<vaadin-dialog
-            header-title="Tool execution result"
+            header-title="${msg('Tool execution result', { id: 'mcp-client-tool-execution-result' })}"
             resizable
             draggable
             .opened="${this._showResultDialog}"
@@ -173,7 +175,7 @@ export class QwcMcpClients extends LitElement {
         const args = tool.args || [];
 
         return html`<vaadin-dialog
-            header-title="Execute tool: ${tool.name}"
+            header-title="${msg('Execute tool', { id: 'mcp-client-execute-tool' })}: ${tool.name}"
             resizable
             draggable
             .opened="${this._showInputDialog}"
@@ -193,10 +195,10 @@ export class QwcMcpClients extends LitElement {
                 <vaadin-vertical-layout theme="spacing" style="width:500px; max-width:80vw;">
                     ${args.length > 0
                         ? args.map((arg) => this._renderArgInput(tool.name, arg))
-                        : html`<p style="color: var(--lumo-secondary-text-color);">This tool has no arguments.</p>`
+                        : html`<p style="color: var(--lumo-secondary-text-color);">${msg('This tool has no arguments.', { id: 'mcp-client-no-arguments' })}</p>`
                     }
                     <vaadin-button theme="primary" @click="${() => this._executeTool()}">
-                        Execute
+                        ${msg('Execute', { id: 'mcp-client-execute' })}
                     </vaadin-button>
                 </vaadin-vertical-layout>
             `, [])}
