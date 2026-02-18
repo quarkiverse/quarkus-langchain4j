@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-ai-gemini-parent</artifactId>
-        <version>1.7.2</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-ai-gemini-deployment</artifactId>
     <name>Quarkus LangChain4j - AI Gemini - Deployment</name>
