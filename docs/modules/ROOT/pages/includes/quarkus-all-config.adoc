@@ -3935,6 +3935,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+=======
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-enable-integration]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-enable-integration[`quarkus.langchain4j.azure-openai.enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai.enable-integration+++[]
@@ -5204,6 +5205,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+=======
 a| [[quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-enable-integration]] [.property-path]##link:#quarkus-langchain4j-azure-openai_quarkus-langchain4j-azure-openai-model-name-enable-integration[`quarkus.langchain4j.azure-openai."model-name".enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.azure-openai."model-name".enable-integration+++[]
@@ -13686,6 +13688,7 @@ endif::add-copy-button-to-env-var[]
 
 
 
+=======
 h|[.extension-name]##Quarkus Langchain4j - Memory Store - MongoDB##
 h|Type
 h|Default
