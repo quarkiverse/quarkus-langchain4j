@@ -1,13 +1,11 @@
 package io.quarkiverse.langchain4j.mcp.runtime.devui.json;
 
-import java.util.List;
-
-public class McpToolInfo {
+public class McpToolArgInfo {
 
     private String name;
+    private String type;
     private String description;
-    private String exampleInput;
-    private List<McpToolArgInfo> args;
+    private boolean required;
 
     public String getName() {
         return name;
@@ -17,12 +15,12 @@ public class McpToolInfo {
         this.name = name;
     }
 
-    public String getExampleInput() {
-        return exampleInput;
+    public String getType() {
+        return type;
     }
 
-    public void setExampleInput(String exampleInput) {
-        this.exampleInput = exampleInput;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getDescription() {
@@ -33,11 +31,11 @@ public class McpToolInfo {
         this.description = description;
     }
 
-    public List<McpToolArgInfo> getArgs() {
-        return args;
+    public boolean isRequired() {
+        return required;
     }
 
-    public void setArgs(List<McpToolArgInfo> args) {
-        this.args = args;
+    public void setRequired(boolean required) {
+        this.required = required;
     }
 }
