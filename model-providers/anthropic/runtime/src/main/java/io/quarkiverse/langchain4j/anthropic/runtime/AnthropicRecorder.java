@@ -109,6 +109,7 @@ public class AnthropicRecorder {
             }
 
             var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
+            var disableBeta = firstOrDefault(false, anthropicConfig.disableBetaHeader());
 
             return new Function<>() {
                 @Override
@@ -116,6 +117,7 @@ public class AnthropicRecorder {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
+                    QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
                     return builder.build();
                 }
             };
@@ -195,6 +197,7 @@ public class AnthropicRecorder {
             }
 
             var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
+            var disableBeta = firstOrDefault(false, anthropicConfig.disableBetaHeader());
 
             return new Function<>() {
                 @Override
@@ -202,6 +205,7 @@ public class AnthropicRecorder {
                     builder.listeners(context.getInjectedReference(CHAT_MODEL_LISTENER_TYPE_LITERAL).stream()
                             .collect(Collectors.toList()));
                     QuarkusAnthropicClient.setLogCurlHint(logCurl);
+                    QuarkusAnthropicClient.setDisableBetaHint(disableBeta);
                     return builder.build();
                 }
             };

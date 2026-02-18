@@ -55,6 +55,12 @@ public interface LangChain4jAnthropicConfig {
         String version();
 
         /**
+         * If set to {@code true}, the {@code "anthopic-beta"} header will never be sent
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> disableBetaHeader();
+
+        /**
          * Timeout for Anthropic calls
          */
         @ConfigDocDefault("10s")
