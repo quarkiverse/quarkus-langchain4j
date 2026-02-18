@@ -11,9 +11,17 @@ import jakarta.enterprise.inject.Any;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.model.chat.request.json.JsonArraySchema;
+import dev.langchain4j.model.chat.request.json.JsonBooleanSchema;
+import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
+import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
+import dev.langchain4j.model.chat.request.json.JsonStringSchema;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.devui.json.JsonSchemaToExampleStringHelper;
 import io.quarkiverse.langchain4j.mcp.runtime.devui.json.McpClientInfo;
+import io.quarkiverse.langchain4j.mcp.runtime.devui.json.McpToolArgInfo;
 import io.quarkiverse.langchain4j.mcp.runtime.devui.json.McpToolInfo;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InjectableBean;
@@ -70,6 +78,57 @@ public class McpClientsJsonRpcService {
         info.setName(toolSpec.name());
         info.setDescription(toolSpec.description());
         info.setExampleInput(JsonSchemaToExampleStringHelper.generateExampleStringFromSchema(toolSpec.parameters()));
+        info.setArgs(buildArgInfos(toolSpec.parameters()));
         return info;
+    }
+
+    private List<McpToolArgInfo> buildArgInfos(JsonSchemaElement element) {
+        List<McpToolArgInfo> args = new ArrayList<>();
+        if (element instanceof JsonObjectSchema schema) {
+            List<String> requiredFields = schema.required() != null ? schema.required() : List.of();
+            for (Map.Entry<String, JsonSchemaElement> entry : schema.properties().entrySet()) {
+                McpToolArgInfo arg = new McpToolArgInfo();
+                arg.setName(entry.getKey());
+                arg.setType(getSchemaType(entry.getValue()));
+                arg.setDescription(getSchemaDescription(entry.getValue()));
+                arg.setRequired(requiredFields.contains(entry.getKey()));
+                args.add(arg);
+            }
+        }
+        return args;
+    }
+
+    private String getSchemaType(JsonSchemaElement element) {
+        if (element instanceof JsonBooleanSchema) {
+            return "boolean";
+        } else if (element instanceof JsonNumberSchema) {
+            return "number";
+        } else if (element instanceof JsonStringSchema) {
+            return "string";
+        } else if (element instanceof JsonIntegerSchema) {
+            return "integer";
+        } else if (element instanceof JsonArraySchema) {
+            return "array";
+        } else if (element instanceof JsonObjectSchema) {
+            return "object";
+        }
+        return "string";
+    }
+
+    private String getSchemaDescription(JsonSchemaElement element) {
+        if (element instanceof JsonBooleanSchema schema) {
+            return schema.description();
+        } else if (element instanceof JsonNumberSchema schema) {
+            return schema.description();
+        } else if (element instanceof JsonStringSchema schema) {
+            return schema.description();
+        } else if (element instanceof JsonIntegerSchema schema) {
+            return schema.description();
+        } else if (element instanceof JsonArraySchema schema) {
+            return schema.description();
+        } else if (element instanceof JsonObjectSchema schema) {
+            return schema.description();
+        }
+        return null;
     }
 }
