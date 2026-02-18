@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.7.2</version>
     </parent>
     <artifactId>quarkus-langchain4j-memory-stores-parent</artifactId>
     <name>Quarkus LangChain4j - Memory Stores - Parent</name>
