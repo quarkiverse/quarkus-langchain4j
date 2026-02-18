@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.ClientLogger;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory.ObjectMapperHolder;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -25,15 +26,22 @@ public class WatsonxClientLogger implements ClientLogger {
 
     private final boolean logRequests;
     private final boolean logResponses;
+    private final boolean logCurl;
 
     public WatsonxClientLogger(boolean logRequests, boolean logResponses) {
+        this(logRequests, logResponses, false);
+    }
+
+    public WatsonxClientLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
         this.logRequests = logRequests;
         this.logResponses = logResponses;
+        this.logCurl = logCurl;
     }
 
     public WatsonxClientLogger(Optional<Boolean> logRequests, Optional<Boolean> logResponses) {
         this.logRequests = logRequests.orElse(false);
         this.logResponses = logResponses.orElse(false);
+        this.logCurl = false;
     }
 
     @Override
@@ -43,18 +51,20 @@ public class WatsonxClientLogger implements ClientLogger {
 
     @Override
     public void logRequest(HttpClientRequest request, Buffer body, boolean omitBody) {
-        if (!logRequests || !log.isInfoEnabled()) {
-            return;
+        if (logRequests && log.isInfoEnabled()) {
+            try {
+                log.infof(
+                        "Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
+                        request.getMethod(),
+                        request.absoluteURI(),
+                        inOneLine(request.headers()),
+                        bodyToString(body));
+            } catch (Exception e) {
+                log.warn("Failed to log request", e);
+            }
         }
-        try {
-            log.infof(
-                    "Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
-                    request.getMethod(),
-                    request.absoluteURI(),
-                    inOneLine(request.headers()),
-                    bodyToString(body));
-        } catch (Exception e) {
-            log.warn("Failed to log request", e);
+        if (logCurl) {
+            CurlRequestLogger.logCurl(log, request, body);
         }
     }
 

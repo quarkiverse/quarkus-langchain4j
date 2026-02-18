@@ -37,6 +37,7 @@ import dev.langchain4j.model.mistralai.internal.client.MistralAiClient;
 import dev.langchain4j.model.mistralai.internal.client.MistralAiClientBuilderFactory;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -57,10 +58,10 @@ public class QuarkusMistralAiClient extends MistralAiClient {
                     .baseUri(new URI(builder.baseUrl))
                     .connectTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS)
                     .readTimeout(builder.timeout.toSeconds(), TimeUnit.SECONDS);
-            if (builder.logRequests || builder.logResponses) {
+            if (builder.logRequests || builder.logResponses || builder.logCurl) {
                 restApiBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
                 restApiBuilder.clientLogger(new QuarkusMistralAiClient.MistralAiClientLogger(builder.logRequests,
-                        builder.logResponses));
+                        builder.logResponses, builder.logCurl));
             }
             restApi = restApiBuilder.build(MistralAiRestApi.class);
         } catch (URISyntaxException e) {
@@ -153,15 +154,30 @@ public class QuarkusMistralAiClient extends MistralAiClient {
         throw new UnsupportedOperationException();
     }
 
+    private static final ThreadLocal<Boolean> LOG_CURL_HINT = new ThreadLocal<>();
+
+    public static void setLogCurlHint(boolean logCurl) {
+        LOG_CURL_HINT.set(logCurl);
+    }
+
+    static boolean getAndClearLogCurlHint() {
+        Boolean value = LOG_CURL_HINT.get();
+        LOG_CURL_HINT.remove();
+        return value != null && value;
+    }
+
     public static class QuarkusMistralAiClientBuilderFactory implements MistralAiClientBuilderFactory {
 
         @Override
         public Builder get() {
-            return new Builder();
+            Builder builder = new Builder();
+            builder.logCurl = getAndClearLogCurlHint();
+            return builder;
         }
     }
 
     public static class Builder extends MistralAiClient.Builder<QuarkusMistralAiClient, Builder> {
+        public boolean logCurl;
 
         @Override
         public QuarkusMistralAiClient build() {
@@ -179,10 +195,16 @@ public class QuarkusMistralAiClient extends MistralAiClient {
 
         private final boolean logRequests;
         private final boolean logResponses;
+        private final boolean logCurl;
 
         public MistralAiClientLogger(boolean logRequests, boolean logResponses) {
+            this(logRequests, logResponses, false);
+        }
+
+        public MistralAiClientLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
+            this.logCurl = logCurl;
         }
 
         @Override
@@ -192,17 +214,19 @@ public class QuarkusMistralAiClient extends MistralAiClient {
 
         @Override
         public void logRequest(HttpClientRequest request, Buffer body, boolean omitBody) {
-            if (!logRequests || !log.isInfoEnabled()) {
-                return;
+            if (logRequests && log.isInfoEnabled()) {
+                try {
+                    log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
+                            request.getMethod(),
+                            request.absoluteURI(),
+                            inOneLine(request.headers()),
+                            bodyToString(body));
+                } catch (Exception e) {
+                    log.warn("Failed to log request", e);
+                }
             }
-            try {
-                log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
-                        request.getMethod(),
-                        request.absoluteURI(),
-                        inOneLine(request.headers()),
-                        bodyToString(body));
-            } catch (Exception e) {
-                log.warn("Failed to log request", e);
+            if (logCurl) {
+                CurlRequestLogger.logCurl(log, request, body);
             }
         }
 

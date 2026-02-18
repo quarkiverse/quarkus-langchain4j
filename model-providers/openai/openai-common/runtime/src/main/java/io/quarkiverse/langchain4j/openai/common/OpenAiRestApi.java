@@ -61,6 +61,7 @@ import dev.langchain4j.model.openai.internal.moderation.ModerationRequest;
 import dev.langchain4j.model.openai.internal.moderation.ModerationResponse;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
 import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 import io.quarkus.rest.client.reactive.ClientExceptionMapper;
@@ -353,10 +354,16 @@ public interface OpenAiRestApi {
 
         private final boolean logRequests;
         private final boolean logResponses;
+        private final boolean logCurl;
 
         public OpenAiClientLogger(boolean logRequests, boolean logResponses) {
+            this(logRequests, logResponses, false);
+        }
+
+        public OpenAiClientLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
+            this.logCurl = logCurl;
         }
 
         @Override
@@ -366,17 +373,19 @@ public interface OpenAiRestApi {
 
         @Override
         public void logRequest(HttpClientRequest request, Buffer body, boolean omitBody) {
-            if (!logRequests || !log.isInfoEnabled()) {
-                return;
+            if (logRequests && log.isInfoEnabled()) {
+                try {
+                    log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
+                            request.getMethod(),
+                            request.absoluteURI(),
+                            inOneLine(request.headers()),
+                            bodyToString(body));
+                } catch (Exception e) {
+                    log.warn("Failed to log request", e);
+                }
             }
-            try {
-                log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
-                        request.getMethod(),
-                        request.absoluteURI(),
-                        inOneLine(request.headers()),
-                        bodyToString(body));
-            } catch (Exception e) {
-                log.warn("Failed to log request", e);
+            if (logCurl) {
+                CurlRequestLogger.logCurl(log, request, body);
             }
         }
 

@@ -77,6 +77,7 @@ public class OpenAiRecorder {
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiChatModelBuilderFactory.Builder) OpenAiChatModel.builder();
+            builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
 
             OpenAiChatRequestParameters.Builder defaultChatRequestParametersBuilder = OpenAiChatRequestParameters.builder();
             if (chatModelConfig.reasoningEffort().isPresent()) {
@@ -147,6 +148,7 @@ public class OpenAiRecorder {
             }
             ChatModelConfig chatModelConfig = openAiConfig.chatModel();
             var builder = (QuarkusOpenAiStreamingChatModelBuilderFactory.Builder) OpenAiStreamingChatModel.builder();
+            builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .configName(configName)
@@ -255,6 +257,7 @@ public class OpenAiRecorder {
             }
             ModerationModelConfig moderationModelConfig = openAiConfig.moderationModel();
             var builder = (QuarkusOpenAiModerationModelBuilderFactory.Builder) OpenAiModerationModel.builder();
+            builder.logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()));
             builder
                     .tlsConfigurationName(openAiConfig.tlsConfigurationName().orElse(null))
                     .configName(configName)
@@ -308,6 +311,7 @@ public class OpenAiRecorder {
                     .maxRetries(openAiConfig.maxRetries())
                     .logRequests(firstOrDefault(false, imageModelConfig.logRequests(), openAiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, imageModelConfig.logResponses(), openAiConfig.logResponses()))
+                    .logCurl(firstOrDefault(false, openAiConfig.logRequestsCurl()))
                     .modelName(imageModelConfig.modelName())
                     .size(imageModelConfig.size())
                     .quality(imageModelConfig.quality())

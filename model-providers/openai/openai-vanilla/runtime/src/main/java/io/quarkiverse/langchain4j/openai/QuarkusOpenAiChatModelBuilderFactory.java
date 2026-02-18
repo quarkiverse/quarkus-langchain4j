@@ -16,6 +16,7 @@ public class QuarkusOpenAiChatModelBuilderFactory implements OpenAiChatModelBuil
 
         private String configName;
         private String tlsConfigurationName;
+        private boolean logCurl;
 
         private Proxy proxy;
 
@@ -34,10 +35,16 @@ public class QuarkusOpenAiChatModelBuilderFactory implements OpenAiChatModelBuil
             return this;
         }
 
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         @Override
         public OpenAiChatModel build() {
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
+            AdditionalPropertiesHack.setLogCurl(logCurl);
             return super.build();
         }
     }

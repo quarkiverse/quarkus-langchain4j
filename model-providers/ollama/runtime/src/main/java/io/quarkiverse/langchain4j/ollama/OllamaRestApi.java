@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.jackson.ClientObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.Handler;
@@ -165,10 +166,16 @@ public interface OllamaRestApi {
 
         private final boolean logRequests;
         private final boolean logResponses;
+        private final boolean logCurl;
 
         public OllamaLogger(boolean logRequests, boolean logResponses) {
+            this(logRequests, logResponses, false);
+        }
+
+        public OllamaLogger(boolean logRequests, boolean logResponses, boolean logCurl) {
             this.logRequests = logRequests;
             this.logResponses = logResponses;
+            this.logCurl = logCurl;
         }
 
         @Override
@@ -178,17 +185,19 @@ public interface OllamaRestApi {
 
         @Override
         public void logRequest(HttpClientRequest request, Buffer body, boolean omitBody) {
-            if (!logRequests || !log.isInfoEnabled()) {
-                return;
+            if (logRequests && log.isInfoEnabled()) {
+                try {
+                    log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
+                            request.getMethod(),
+                            request.absoluteURI(),
+                            inOneLine(request.headers()),
+                            bodyToString(body));
+                } catch (Exception e) {
+                    log.warn("Failed to log request", e);
+                }
             }
-            try {
-                log.infof("Request:\n- method: %s\n- url: %s\n- headers: %s\n- body: %s",
-                        request.getMethod(),
-                        request.absoluteURI(),
-                        inOneLine(request.headers()),
-                        bodyToString(body));
-            } catch (Exception e) {
-                log.warn("Failed to log request", e);
+            if (logCurl) {
+                CurlRequestLogger.logCurl(log, request, body);
             }
         }
 

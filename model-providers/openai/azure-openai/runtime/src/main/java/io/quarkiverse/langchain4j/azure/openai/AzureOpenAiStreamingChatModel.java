@@ -101,6 +101,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             String responseFormat,
             Boolean logRequests,
             Boolean logResponses,
+            Boolean logCurl,
             String configName,
             List<ChatModelListener> listeners) {
         this.listeners = listeners;
@@ -117,6 +118,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .proxy(proxy)
                 .logRequests(logRequests)
                 .logStreamingResponses(logResponses)
+                .logCurl(logCurl != null && logCurl)
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -319,6 +321,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
+        private Boolean logCurl;
         private String configName;
         private List<ChatModelListener> listeners = Collections.emptyList();
 
@@ -416,6 +419,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return this;
         }
 
+        public Builder logCurl(Boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         public Builder configName(String configName) {
             this.configName = configName;
             return this;
@@ -442,6 +450,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     responseFormat,
                     logRequests,
                     logResponses,
+                    logCurl,
                     configName,
                     listeners);
         }
