@@ -1,12 +1,7 @@
 package io.quarkiverse.langchain4j.mongodb.deployment;
 
-import io.quarkiverse.langchain4j.mongodb.MongoDBEmbeddingStore;
-import io.quarkiverse.langchain4j.mongodb.runtime.MongoDBEmbeddingStoreRecorder;
-import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
-import io.quarkus.arc.processor.BuildExtension;
-import io.quarkus.arc.processor.InjectionPointInfo;
-import io.quarkus.mongodb.deployment.MongoClientBuildTimeConfig;
-import io.quarkus.mongodb.deployment.MongoUnremovableClientsBuildItem;
+import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 
@@ -20,7 +15,12 @@ import com.mongodb.client.MongoClient;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
+import io.quarkiverse.langchain4j.mongodb.MongoDBEmbeddingStore;
+import io.quarkiverse.langchain4j.mongodb.runtime.MongoDBEmbeddingStoreRecorder;
+import io.quarkus.arc.deployment.BeanRegistrationPhaseBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.processor.BuildExtension;
+import io.quarkus.arc.processor.InjectionPointInfo;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -28,9 +28,9 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
 import io.quarkus.mongodb.MongoClientName;
+import io.quarkus.mongodb.deployment.MongoClientBuildTimeConfig;
 import io.quarkus.mongodb.deployment.MongoClientNameBuildItem;
-
-import java.util.List;
+import io.quarkus.mongodb.deployment.MongoUnremovableClientsBuildItem;
 
 public class MongoDBEmbeddingStoreProcessor {
 
@@ -50,10 +50,10 @@ public class MongoDBEmbeddingStoreProcessor {
 
     @BuildStep
     public void requestMongoClient(MongoDBEmbeddingStoreBuildTimeConfig config,
-                                   MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
-                                   BeanRegistrationPhaseBuildItem registrationPhase,
-                                   List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem,
-                                   BuildProducer<MongoClientNameBuildItem> mongoClientName) {
+            MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
+            BeanRegistrationPhaseBuildItem registrationPhase,
+            List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem,
+            BuildProducer<MongoClientNameBuildItem> mongoClientName) {
 
         if (shouldCreateDefaultBean(mongoClientBuildTimeConfig, registrationPhase, mongoUnremovableClientsBuildItem)
                 && config.clientName().isEmpty()) {
@@ -65,8 +65,8 @@ public class MongoDBEmbeddingStoreProcessor {
     }
 
     private boolean shouldCreateDefaultBean(MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
-                                            BeanRegistrationPhaseBuildItem registrationPhase,
-                                            List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem) {
+            BeanRegistrationPhaseBuildItem registrationPhase,
+            List<MongoUnremovableClientsBuildItem> mongoUnremovableClientsBuildItem) {
 
         // Don't create if there are unremovable clients
         if (!mongoUnremovableClientsBuildItem.isEmpty()) {
