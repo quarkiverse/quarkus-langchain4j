@@ -109,12 +109,12 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                                 include(metadataFieldName),
                                 metaVectorSearchScore(SCORE))),
                 match(gte(SCORE, minScore)));
-        var itteratorResult = collection.aggregate(pipeline).iterator();
+        var iteratorResult = collection.aggregate(pipeline).iterator();
         List<EmbeddingMatch<TextSegment>> result;
-        var availableResults = itteratorResult.available();
+        var availableResults = iteratorResult.available();
         if (availableResults > 0) {
             result = new ArrayList<>(availableResults);
-            itteratorResult.forEachRemaining(document -> {
+            iteratorResult.forEachRemaining(document -> {
                 var score = document.getDouble(SCORE);
                 var id = document.getString(ID);
                 var text = document.getString(textFieldName);
