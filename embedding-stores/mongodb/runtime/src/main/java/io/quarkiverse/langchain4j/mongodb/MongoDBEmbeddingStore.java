@@ -123,6 +123,6 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
             });
         } else
             result = List.of();
-        return new EmbeddingSearchResult(result);
+        return new EmbeddingSearchResult<>(result);
     }
 }
