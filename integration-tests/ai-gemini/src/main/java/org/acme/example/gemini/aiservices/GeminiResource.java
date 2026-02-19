@@ -1,7 +1,5 @@
 package org.acme.example.gemini.aiservices;
 
-import java.util.Iterator;
-
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -16,7 +14,7 @@ import io.vertx.core.json.JsonObject;
 public class GeminiResource {
 
     @POST
-    @Path("v1beta/models/gemini-2.5-flash:generateContent")
+    @Path("models/gemini-2.5-flash:generateContent")
     @Produces("application/json")
     @Consumes("application/json")
     public String generateResponse(String generateRequest, @RestQuery String key) {
@@ -79,15 +77,35 @@ public class GeminiResource {
     }
 
     private String getToolResponse(JsonArray contents) {
-        for (Iterator<Object> it = contents.iterator(); it.hasNext();) {
-            JsonObject role = (JsonObject) it.next();
-            if (role.toString().contains("functionResponse")) {
-                JsonArray parts = role.getJsonArray("parts");
-                JsonObject part = parts.getJsonObject(0);
-                JsonObject functionResponse = part.getJsonObject("functionResponse");
-                return functionResponse.getJsonObject("response").getString("content");
+        for (int i = 0; i < contents.size(); i++) {
+            JsonObject content = contents.getJsonObject(i);
+
+            // Check if this is a user role with parts
+            if ("user".equals(content.getString("role", null))) {
+                JsonArray parts = content.getJsonArray("parts");
+
+                if (parts != null) {
+                    for (int j = 0; j < parts.size(); j++) {
+                        JsonObject part = parts.getJsonObject(j);
+
+                        // Check if this part contains a functionResponse
+                        JsonObject functionResponse = part.getJsonObject("functionResponse", null);
+
+                        if (functionResponse != null) {
+                            // Check if it's the duplicateContent function
+                            if ("duplicateContent".equals(functionResponse.getString("name", null))) {
+                                JsonObject responseObj = functionResponse.getJsonObject("response");
+
+                                if (responseObj != null) {
+                                    return responseObj.getString("response", null);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+
         return null;
     }
 

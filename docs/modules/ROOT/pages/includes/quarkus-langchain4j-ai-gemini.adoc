@@ -421,7 +421,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI_CHAT_MODEL_THINKING_THINKING_BUDGET+++`
 endif::add-copy-button-to-env-var[]
 --
-|long
+|int
 |
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-embedding-model-model-id[`quarkus.langchain4j.ai.gemini.embedding-model.model-id`]##
@@ -926,7 +926,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_AI_GEMINI__MODEL_NAME__CHAT_MODEL_THINKING_THINKING_BUDGET+++`
 endif::add-copy-button-to-env-var[]
 --
-|long
+|int
 |
 
 a| [[quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ai-gemini_quarkus-langchain4j-ai-gemini-model-name-embedding-model-model-id[`quarkus.langchain4j.ai.gemini."model-name".embedding-model.model-id`]##
