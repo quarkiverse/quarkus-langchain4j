@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
         <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>999-SNAPSHOT</version>
+        <version>1.7.3</version>
     </parent>
     <artifactId>quarkus-langchain4j-integration-test-mcp-native</artifactId>
     <name>Quarkus LangChain4j - Integration Tests - MCP - Native tests</name>
@@ -85,7 +85,7 @@
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
                     <artifactId>quarkus-langchain4j-mcp-deployment</artifactId>
-                    <version>999-SNAPSHOT</version>
+                    <version>1.7.3</version>
                     <type>pom</type>
                     <scope>test</scope>
                     <exclusions>
