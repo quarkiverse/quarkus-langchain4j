@@ -6,12 +6,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.options;
 import static com.github.tomakehurst.wiremock.client.WireMock.patch;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.trace;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.API_KEY;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.BEARER_TOKEN;
@@ -23,6 +25,8 @@ import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PORT_WA
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.PORT_WX_SERVER;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.URL_IAM_GENERATE_TOKEN;
 import static io.quarkiverse.langchain4j.watsonx.deployment.WireMockUtil.VERSION;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -41,10 +45,10 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import com.ibm.watsonx.ai.textprocessing.textextraction.TextExtractionRequest;
 
-import io.quarkiverse.langchain4j.watsonx.bean.TextExtractionRequest;
-import io.quarkiverse.langchain4j.watsonx.client.WatsonxRestApi;
 import io.quarkiverse.langchain4j.watsonx.runtime.config.LangChain4jWatsonxConfig;
+import io.quarkiverse.langchain4j.watsonx.runtime.spi.JsonProvider;
 
 public abstract class WireMockAbstract {
 
@@ -59,7 +63,7 @@ public abstract class WireMockAbstract {
 
     @BeforeAll
     static void beforeAll() {
-        mapper = WatsonxRestApi.objectMapper(new ObjectMapper());
+        mapper = JsonProvider.MAPPER;
 
         watsonxServer = new WireMockServer(options().port(PORT_WATSONX_SERVER));
         watsonxServer.start();
@@ -92,7 +96,7 @@ public abstract class WireMockAbstract {
     }
 
     void handlerBeforeEach() throws Exception {
-    };
+    }
 
     /**
      * Builder to mock the IAM server.
@@ -144,17 +148,17 @@ public abstract class WireMockAbstract {
     }
 
     /**
-     * Builder to mock the Cloud Object Storage server.
-     */
-    public CosBuilder mockCosBuilder(RequestMethod method, String bucketName, String fileName, int status) {
-        return new CosBuilder(method, "/%s/%s".formatted(bucketName, fileName), status, "");
-    }
-
-    /**
      * Builder to mock the Watsonx.ai server for the text extraction api.
      */
     public TextExtractionBuilder mockTextExtractionBuilder(RequestMethod method, String url, int status) {
         return new TextExtractionBuilder(method, url, status);
+    }
+
+    /**
+     * Builder to mock the Cloud Object Storage server.
+     */
+    public CosBuilder mockCosBuilder(RequestMethod method, String bucketName, String fileName, int status) {
+        return new CosBuilder(method, "/%s/%s".formatted(bucketName, fileName), status, "");
     }
 
     public static abstract class ServerBuilder {
@@ -167,16 +171,18 @@ public abstract class WireMockAbstract {
 
         protected ServerBuilder(RequestMethod method, String apiURL, int status, String version) {
             this.builder = switch (method.getName()) {
-                case "GET" -> get(urlEqualTo(apiURL.formatted(version)));
-                case "POST" -> post(urlEqualTo(apiURL.formatted(version)));
-                case "PUT" -> put(urlEqualTo(apiURL.formatted(version)));
-                case "DELETE" -> delete(urlEqualTo(apiURL.formatted(version)));
-                case "PATCH" -> patch(urlEqualTo(apiURL.formatted(version)));
-                case "OPTIONS" -> options(urlEqualTo(apiURL.formatted(version)));
-                case "HEAD" -> head(urlEqualTo(apiURL.formatted(version)));
-                case "TRACE" -> trace(urlEqualTo(apiURL.formatted(version)));
+                case "GET" -> get(urlPathMatching(apiURL));
+                case "POST" -> post(urlPathMatching(apiURL));
+                case "PUT" -> put(urlPathMatching(apiURL));
+                case "DELETE" -> delete(urlPathMatching(apiURL));
+                case "PATCH" -> patch(urlPathMatching(apiURL));
+                case "OPTIONS" -> options(urlPathMatching(apiURL));
+                case "HEAD" -> head(urlPathMatching(apiURL));
+                case "TRACE" -> trace(urlPathMatching(apiURL));
                 default -> throw new IllegalArgumentException("Unknown request method: " + method);
             };
+            if (nonNull(version) && !version.isBlank())
+                builder.withQueryParam("version", matching("\\d{4}-\\d{2}-\\d{2}"));
             this.status = status;
         }
 
@@ -255,7 +261,7 @@ public abstract class WireMockAbstract {
         }
 
         public IAMBuilder grantType(String grantType) {
-            this.grantType = grantType;
+            this.grantType = isNull(grantType) ? GRANT_TYPE : grantType;
             return this;
         }
 
@@ -323,7 +329,7 @@ public abstract class WireMockAbstract {
         }
 
         protected WxBuilder(String apiURL, int status) {
-            super(RequestMethod.POST, apiURL, status, VERSION);
+            super(RequestMethod.POST, apiURL, status, null);
         }
 
         @Override
@@ -479,6 +485,5 @@ public abstract class WireMockAbstract {
                                     .withHeader("Content-Type", super.responseMediaType)
                                     .withBody(super.response)));
         }
-
     }
 }

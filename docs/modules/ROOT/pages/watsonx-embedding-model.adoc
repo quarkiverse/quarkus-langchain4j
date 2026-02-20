@@ -1,41 +1,715 @@
-= IBM watsonx.ai Embedding Models
+= IBM watsonx.ai Chat and Generation Models
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-IBM watsonx.ai also provides access to embedding models that can be used for vector-based similarity search, semantic retrieval, and RAG scenarios.
+https://www.ibm.com/products/watsonx-ai/foundation-models[IBM watsonx.ai] enables the development of generative AI applications using foundation models from IBM and Hugging Face.
+
+IMPORTANT: This extension supports IBM watsonx as a service on IBM Cloud only.
 
 == Prerequisites
 
-include::./watsonx-chat-model.adoc[tags=watsonx-prerequisites]
+To use watsonx.ai models, configure the following required values in your `application.properties` file:
+
+=== Base URL
+
+The `base-url` depends on the region of your service instance:
+
+* Dallas: https://us-south.ml.cloud.ibm.com
+* Frankfurt: https://eu-de.ml.cloud.ibm.com
+* London: https://eu-gb.ml.cloud.ibm.com
+* Tokyo: https://jp-tok.ml.cloud.ibm.com
+* Sydney: https://au-syd.ml.cloud.ibm.com
+* Toronto: https://ca-tor.ml.cloud.ibm.com
+* Mumbai - https://ap-south-1.aws.wxai.ibm.com
+
+[source,properties,subs=attributes+]
+----
+quarkus.langchain4j.watsonx.base-url=https://us-south.ml.cloud.ibm.com
+----
+
+=== Project ID
+
+Obtain the *Project Id* via:
+
+- Visit https://dataplatform.cloud.ibm.com/projects/?context=wx
+- Open your project and click the Manage tab.
+- Copy the Project ID from the Details section.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.project-id=23d...
+----
+
+NOTE: You may use the optional _space-id_ as an alternative.
+
+=== API Key
+
+Create an API key by visiting https://cloud.ibm.com/iam/apikeys and clicking *Create +*.
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.api-key=your-api-key
+----
+
+TIP: You can also use the *QUARKUS_LANGCHAIN4J_WATSONX_API_KEY* environment variable.
 
 == Dependency
 
 include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-watsonx]
 
-== Default Configuration
+If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically use this provider.
 
-By default, embedding models are auto-detected if no other LLM extension is installed.
+== Chat Model
 
-You can inject the embedding model like so:
+IBM watsonx.ai provides a variety of foundation models for text generation, chat-based interactions, and instruction-following tasks.  
+These include both **IBM-built models** and **third-party / community models**.  
+Quarkus integrates the LangChain4j `WatsonxChatModel`, exposing it as `ChatModel` / `StreamingChatModel` bean.
+
+See the full model catalog:
+
+- IBM foundation models: link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-ibm.html?context=wx&audience=wdp[Model Catalog – IBM]  
+- Third-party / community foundation models: link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-details.html?context=wx&audience=wdp[Model Catalog – Third-Party]  
+
+=== Configuration
+
+Configure the chat model in your `application.properties`:
+
+[source,properties]
+----
+# Base Watsonx configuration
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Chat model
+quarkus.langchain4j.watsonx.chat-model.model-name=ibm/granite-4-h-small
+
+# Optional generation parameters
+quarkus.langchain4j.watsonx.chat-model.max-output-tokens=0
+quarkus.langchain4j.watsonx.chat-model.temperature=0.2
+----
+
+If a chat model is configured, Quarkus automatically registers a `ChatModel` / `StreamingChatModel` bean.
+
+=== Injection
 
 [source,java]
 ----
 @Inject
-EmbeddingModel model;
+ChatModel chatModel;
+
+@Inject
+StreamingChatModel chatModel;
 ----
 
-To customize the model, set the following property:
+== Enabling Thinking / Reasoning Output
+
+Some foundation models can include internal *reasoning* (also referred to as *thinking*) steps as part of their responses.  
+Depending on the model, this reasoning may be **embedded in the same text as the final response**, or **returned separately** in a dedicated field from `watsonx.ai`.
+
+To correctly enable and capture this behavior in Quarkus, you must configure the chat model with either `thinking.tags` (for `ExtractionTags`) or `thinking.effort` / `thinking` (for `ThinkingEffort` or boolean flag) in your `application.properties`.  
+This ensures that LangChain4j can automatically extract the reasoning and response content from the model output.
+
+=== Models that return reasoning and response together
+
+Use **`ExtractionTags`** when the model outputs reasoning and response in the same text string.  
+The tags define XML-like markers used to separate the reasoning from the final response.
 
 [source,properties]
 ----
-quarkus.langchain4j.watsonx.embedding-model.model-name=mistralai/mistral-embed
+# Example configuration for ibm/granite-3-3-8b-instruct
+quarkus.langchain4j.watsonx.chat-model.model-name=ibm/granite-3-3-8b-instruct
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.think=think
+quarkus.langchain4j.watsonx.chat-model.thinking.tags.response=response
 ----
 
-TIP: The same base-url, project-id, and api-key must be present to successfully authenticate with the watsonx service.
+==== Behavior
 
+- If **both tags** are specified, they are used directly to extract reasoning and response segments.  
+- If **only the reasoning tag** is specified, everything outside that tag is considered the response.
+
+[source,java]
+----
+@Inject
+ChatModel thinkingChatModel;
+
+var chatResponse = thinkingChatModel.chat(UserMessage.from("Why is the sky blue?"));
+System.out.println(chatResponse.aiMessage().thinking());
+System.out.println(chatResponse.aiMessage().text());
+----
+
+=== Models that return reasoning and response separately
+
+For models that already return reasoning and response as separate fields, use the **`thinking.effort`** property to control how much reasoning the model applies during generation, or enable it using the boolean flag.
+
+[source,properties]
+----
+# Example configuration for openai/gpt-oss-120b
+quarkus.langchain4j.watsonx.chat-model.model-name=openai/gpt-oss-120b
+quarkus.langchain4j.watsonx.chat-model.thinking.effort=HIGH
+----
+
+=== Streaming Example
+
+[source,java]
+----
+@Inject
+StreamingChatModel streamingChatModel;
+
+List<ChatMessage> messages = List.of(UserMessage.from("Why is the sky blue?"));
+
+ChatRequest chatRequest = ChatRequest.builder()
+    .messages(messages)
+    .build();
+
+streamingChatModel.chat(chatRequest, new StreamingChatResponseHandler() {
+
+    @Override
+    public void onPartialResponse(String partialResponse) {
+        System.out.println("Partial: " + partialResponse);
+    }
+
+    @Override
+    public void onPartialThinking(PartialThinking partialThinking) {
+        System.out.println("Thinking: " + partialThinking.content());
+    }
+
+    @Override
+    public void onCompleteResponse(ChatResponse completeResponse) {
+        System.out.println("Complete: " + completeResponse);
+    }
+
+    @Override
+    public void onError(Throwable error) {
+        error.printStackTrace();
+    }
+});
+----
+
+[NOTE]
+====
+- Ensure that the selected model supports reasoning output.  
+- Use `thinking.tags` for models that embed reasoning and response in a single text string.  
+- Use `thinking.effort` or `thinking=true` for models that already separate reasoning and response automatically.
+====
+
+== Embedding Model
+
+IBM watsonx.ai provides multiple embedding models for converting text into vector
+representations suitable for semantic search, RAG pipelines, similarity comparison,
+and vector database integrations.
+
+Quarkus integrates the LangChain4j `WatsonxEmbeddingModel`, exposing it as `EmbeddingModel` bean.
+
+A list of supported embedding models can be found here:
+
+link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#text_embeddings[Embedding Models]
+
+=== Configuration
+
+Configure the embedding model by specifying its model name in `application.properties`:
+
+[source,properties]
+----
+# Base Watsonx configuration
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Embedding model configuration
+quarkus.langchain4j.watsonx.embedding-model.model-name=ibm/slate-125m-english-rtrvr
+----
+
+If an embedding model is configured, Quarkus will automatically create and register
+a `EmbeddingModel` bean.
+
+=== Injection
+
+[source,java]
+----
+@Inject
+EmbeddingModel embeddingModel;
+----
+
+=== Usage
+
+Generating an embedding for a single text:
+
+[source,java]
+----
+var response = embeddingModel.embed("Hello Watsonx!");
+
+assertNotNull(response);
+var embedding = response.content();
+
+System.out.println("Embedding size: " + embedding.vector().length());
+----
+
+Generating embeddings for multiple text segments:
+
+[source,java]
+----
+var embeddings = embeddingModel.embedAll(
+    List.of(
+        TextSegment.from("First document"),
+        TextSegment.from("Second document")
+    )
+);
+----
+
+== Scoring Model
+
+IBM watsonx.ai provides scoring (reranking) models that evaluate the relevance between a query and a piece of text.
+Quarkus integrates the LangChain4j `WatsonxScoringModel`, exposing it as `ScoringModel` implementation.
+
+Scoring models are especially useful for RAG pipelines, document ranking, and semantic relevance evaluation.
+
+A list of supported scoring/reranker models is available here:
+
+link:https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#rerank[Rerank Models]
+
+=== Configuration
+
+Configure the model by specifying its name in `application.properties`:
+
+[source,properties]
+----
+# Base Watsonx configuration
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Scoring model configuration
+quarkus.langchain4j.watsonx.scoring-model.model-name=cross-encoder/ms-marco-minilm-l-12-v2
+----
+
+If an score model is configured, Quarkus will automatically create and register
+a `ScoringModel` bean.
+
+=== Injection
+
+[source,java]
+----
+@Inject
+ScoringModel scoringModel;
+----
+
+=== Usage
+
+You can score a single text against a query:
+
+[source,java]
+----
+var response = scoringModel.score("Rerank this!", "Test to rerank 1");
+
+assertNotNull(response);
+assertNotNull(response.content());
+
+double score = response.content();
+System.out.println("Score: " + score);
+----
+
+Or score multiple documents at once:
+
+[source,java]
+----
+var scores = scoringModel.scoreAll(
+    List.of(
+        TextSegment.from("Document A"),
+        TextSegment.from("Document B")
+    ),
+    "User query"
+);
+
+System.out.println(scores); // list of relevance scores
+----
+
+== Moderation Model
+
+IBM watsonx.ai provides moderation capabilities through multiple detectors that can identify unsafe, sensitive, or policy-violating content.
+Quarkus integrates the LangChain4j `WatsonxModerationModel`, exposing each detector type as a dedicated configuration group.
+
+Supported detector types include:
+
+* *PII* – Detects Personally Identifiable Information
+* *HAP* – Detects hate, abuse, or profanity
+* *Granite Guardian* – Detects harmful or risky content
+
+Each detector can be enabled individually.
+
+=== Configuration
+
+Enable detectors in `application.properties` using their dedicated flags:
+
+[source,properties]
+----
+# Base Watsonx configuration
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+
+# Enable specific moderation detectors
+quarkus.langchain4j.watsonx.moderation-model.hap.enabled=true
+quarkus.langchain4j.watsonx.moderation-model.pii.enabled=true
+quarkus.langchain4j.watsonx.moderation-model.granite-guardian.enabled=true
+----
+
+Each detector configuration group may also expose additional settings depending on its capabilities.
+If an score model is configured, Quarkus will automatically create and register
+a `ModerationModel` bean.
+
+=== Injection
+
+[source,java]
+----
+@Inject
+ModerationModel moderationModel;
+----
+
+=== Usage
+
+[source,java]
+----
+var response = moderationModel.moderate("Some text to analyze");
+
+boolean flagged = response.content().flagged();
+Map<String, Object> metadata = response.metadata();
+
+System.out.println("Flagged? " + flagged);
+System.out.println("Metadata: " + metadata);
+----
+
+=== Metadata
+
+A moderation response includes metadata describing the detection:
+
+|===
+| Key | Description
+
+| detection
+| The assigned label for the detected content
+
+| detection_type
+| Detector that triggered the flag
+
+| start
+| Start index of the detected segment
+
+| end
+| End index of the detected segment
+
+| score
+| Confidence score
+|===
+
+Example:
+
+[source,java]
+----
+System.out.println(metadata.get("detection_type"));
+System.out.println(metadata.get("score"));
+----
+
+== Text Extraction
+
+The `TextExtraction` feature enables developers to extract text from high-value business documents stored in IBM Cloud Object Storage. Extracted text can be used for AI processing, key information identification, or further document analysis.
+
+The API supports text extraction from the following file types:
+
+* PDF
+* GIF
+* JPG
+* PNG
+* TIFF
+* BMP
+* DOC
+* DOCX
+* HTML
+* JFIF
+* PPT
+* PPTX
+
+The extracted text can be output in the following formats:
+
+* JSON
+* MARKDOWN
+* HTML
+* PLAIN_TEXT
+* PAGE_IMAGES
+
+=== Configuration
+
+To enable `TextExtraction` in your application, configure the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+quarkus.langchain4j.watsonx.text-extraction.cos-url=<base-url>
+quarkus.langchain4j.watsonx.text-extraction.document-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.text-extraction.document-reference.bucket-name=<bucket-name>
+quarkus.langchain4j.watsonx.text-extraction.results-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.text-extraction.results-reference.bucket-name=<bucket-name>
+----
+
+- **`cos-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded.
+- **`results-reference.connection`**: The connection asset ID containing credentials to access the output storage.
+- **`results-reference.bucket-name`**: The bucket where extracted text documents will be saved as new files.
+
+The `document reference` properties define the source storage for input and uloaded files, while the `results reference` properties specify where the extracted content is stored. Both can refer to the same bucket or different ones.
+
+NOTE: For more information on how to get the connection parameter for the `document-reference` and `results-reference` you can refer to the documentation at this https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-files.html?context=wx&audience=wdp[link].
+
+=== Using Text Extraction
+
+The `TextExtraction` class provides multiple methods for extracting text from documents. You can either extract text from an existing file in IBM Cloud Object Storage or upload a file and extract its content. To use `TextExtraction`, you need to inject an instance into your application. If multiple configurations are defined, you can specify the appropriate one using the `@ModelName` qualifier.
+
+[source,java]
+----
+@Inject
+TextExtractionService textExtraction;
+
+@Inject
+@ModelName("custom")
+TextExtractionService customTextExtraction;
+----
+
+You can start the extraction process in two ways.
+
+First, if the document is already stored in IBM Cloud Object Storage, you can initiate the extraction by using the following method:
+
+[source,java]
+----
+TextExtractionResponse response = textExtraction.startExtraction("path/to/document");
+String id = response.metadata().id();
+----
+
+Alternatively, if you're working with a local file, you can upload it and start the extraction process with:
+
+[source,java]
+----
+File file = new File("path/to/document");
+File response = textExtraction.uploadAndStartExtraction(file);
+String id = response.metadata().id();
+----
+
+After starting the extraction, you can check its status by calling:
+
+[source,java]
+----
+TextExtractionResponse response = textExtraction.fetchExtractionRequest(extractionId);
+String result = response.entity().results().status();
+----
+
+If you need to extract and retrieve the text immediately, you have two options.
+
+You can either extract text from an existing file directly:
+
+[source,java]
+----
+String extractedText = textExtraction.extractAndFetch("path/to/document");
+----
+
+Or upload the file and retrieve the extracted text immediately:
+
+[source,java]
+----
+File file = new File("path/to/document");
+String extractedText = textExtraction.uploadExtractAndFetch(file);
+----
+
+All extraction methods can accept a `Parameters` object to customize the behavior of the text extraction request.
+
+The `Parameters` object allows fine-grained control over the extraction process.
+
+[source,java]
+----
+var parameters = TextExtractionParameters.builder()
+        .removeOutputFile(true)
+        .removeUploadedFile(true)
+        .requestedOutputs(MD)
+        .mode(Mode.HIGH_QUALITY)
+        .autoRotationCorrection(false)
+        .outputDpi(16)
+        .build()
+
+File file = new File("path/to/document.pdf");
+String extractedText = textExtraction.uploadExtractAndFetch(file, parameters));
+----
+
+== Text Classification
+
+The `TextClassification` feature enables you to classify text in your documents to identify whether the data in your file matches the key-value pair format in schema definitions for various document types.
+
+By pre-processing the document, you can quickly verify whether a document is classified into one of the pre-defined schemas or a custom schema without performing key-value pair extraction, which can be a longer, resource-intensive process. You can then decide which schema to use to correctly extract text into fields in a key-value pair format.
+
+The API supports text classification from the following file types:
+
+* BMP
+* DOC
+* DOCX
+* GIF
+* HTML
+* JFIF
+* JPG
+* MARKDOWN
+* PDF
+* PNG
+* PPT
+* PPTX
+* TIFF
+* XLSX
+
+=== Configuration
+
+To enable `TextClassification` in your application, configure the following properties:
+
+[source,properties]
+----
+quarkus.langchain4j.watsonx.base-url=${BASE_URL}
+quarkus.langchain4j.watsonx.api-key=${API_KEY}
+quarkus.langchain4j.watsonx.project-id=${PROJECT_ID}
+quarkus.langchain4j.watsonx.text-classification.cos-url=<base-url>
+quarkus.langchain4j.watsonx.text-classification.document-reference.connection=<connection-id>
+quarkus.langchain4j.watsonx.text-classification.document-reference.bucket-name=<bucket-name>
+----
+
+- **`cos-url`**: The endpoint where the IBM Cloud Object Storage instance is deployed. To find the appropriate value, refer to the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints#regionalendpointtable1[IBM Cloud Object Storage endpoint table].
+- **`document-reference.connection`**: The connection asset ID containing credentials to access the source storage.
+- **`document-reference.bucket-name`**: The bucket where documents to be processed will be uploaded (or are already stored).
+
+NOTE: For more information on how to get the connection parameter for the `document-reference` you can refer to the documentation at this https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-files.html?context=wx&audience=wdp[link].
+
+=== Using Text Classification
+
+The `TextClassificationService` class provides multiple methods for classifying documents. You can either classify text from an existing file in IBM Cloud Object Storage or upload a file and classify its content. To use `TextClassificationService`, you need to inject an instance into your application. If multiple configurations are defined, you can specify the appropriate one using the `@ModelName` qualifier.
+
+[source,java]
+----
+@Inject
+TextClassificationService classificationService;
+
+@Inject
+@ModelName("custom")
+TextClassificationService customClassificationService;
+----
+
+You can start the classification process in two ways.
+
+First, if the document is already stored in IBM Cloud Object Storage, you can initiate the classification by using the following method:
+
+[source,java]
+----
+TextClassificationResponse response = classificationService.startClassification("path/to/document");
+String id = response.metadata().id();
+----
+
+Alternatively, if you're working with a local file, you can upload it and start the classification process with:
+
+[source,java]
+----
+File file = new File("path/to/document");
+TextClassificationResponse response = classificationService.uploadAndStartClassification(file);
+String id = response.metadata().id();
+----
+
+After starting the classification, you can check its status by calling:
+
+[source,java]
+----
+TextClassificationResponse response = classificationService.fetchClassificationRequest(classificationId);
+String result = response.entity().results().status();
+----
+
+If you need to classify and retrieve the results immediately, you have two options.
+
+You can either classify an existing file directly:
+
+[source,java]
+----
+ClassificationResult result = classificationService.classifyAndFetch("path/to/document");
+----
+
+Or upload the file and retrieve the classification result immediately:
+
+[source,java]
+----
+File file = new File("path/to/document");
+ClassificationResult result = classificationService.uploadClassifyAndFetch(file);
+----
+
+All classification methods can accept a `TextClassificationParameters` object to customize the behavior of the request.
+
+The `TextClassificationParameters` object allows fine-grained control over the classification process, including **Classification Modes**, **OCR settings**, and **Semantic Configuration**.
+
+[source,java]
+----
+var parameters = TextClassificationParameters.builder()
+        .classificationMode(ClassificationMode.EXACT)
+        .languages(Language.ENGLISH, Language.FRENCH)
+        .ocrMode(OcrMode.AUTO)
+        .autoRotationCorrection(true)
+        .removeUploadedFile(true)
+        .build();
+
+File file = new File("path/to/document.pdf");
+ClassificationResult result = classificationService.uploadClassifyAndFetch(file, parameters));
+----
+
+==== Semantic Configuration
+
+You can provide a `TextClassificationSemanticConfig` to the parameters. This allows you to define custom schemas, enabling the service to identify specific document types based on the presence of key-value pair fields you define.
+
+The following example shows how to configure the service to classify a document as a specific "Invoice" type:
+
+[source,java]
+----
+// 1. Define the fields expected in the document
+var fields = KvpFields.builder()
+    .add("invoice_date", KvpField.of("The date when the invoice was issued.", "2024-07-10"))
+    .add("invoice_number", KvpField.of("The unique number identifying the invoice.", "INV-2024-001"))
+    .add("total_amount", KvpField.of("The total amount to be paid.", "1250.50"))
+    .build();
+
+// 2. Define the Schema using the fields
+var mySchema = Schema.builder()
+    .documentDescription("A vendor-issued invoice listing purchased items, prices, and payment information.")
+    .documentType("Invoice")
+    .fields(fields)
+    .build();
+
+// 3. Create the Semantic Configuration
+var semanticConfig = TextClassificationSemanticConfig.builder()
+    .schemasMergeStrategy(SchemaMergeStrategy.REPLACE)
+    .schemas(mySchema)
+    .build();
+
+// 4. Pass the configuration to the parameters
+var parameters = TextClassificationParameters.builder()
+    .languages(Language.ENGLISH)
+    .semanticConfig(semanticConfig)
+    .build();
+
+ClassificationResult result = classificationService.uploadClassifyAndFetch(file, parameters);
+----
+
+==== Managing Requests and Files
+
+The service also provides utility methods to manage the lifecycle of your requests and files:
+
+[source,java]
+----
+// Delete a classification request history
+classificationService.deleteRequest(requestId, 
+    TextClassificationDeleteParameters.builder().hardDelete(true).build());
+
+// Delete a file from the bucket
+classificationService.deleteFile("bucket-name", "filename.pdf");
+----
 == Configuration
 
 include::includes/quarkus-langchain4j-watsonx.adoc[leveloffset=+1,opts=optional]
-
-NOTE: IBM watsonx.ai also provides a scoring model interface (used for reranking tasks). This feature is documented separately in the RAG and reranking section.

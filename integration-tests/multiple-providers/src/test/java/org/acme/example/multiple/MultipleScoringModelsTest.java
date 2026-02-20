@@ -9,9 +9,9 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.scoring.ScoringModel;
+import dev.langchain4j.model.watsonx.WatsonxScoringModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.cohere.runtime.QuarkusCohereScoringModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxScoringModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 

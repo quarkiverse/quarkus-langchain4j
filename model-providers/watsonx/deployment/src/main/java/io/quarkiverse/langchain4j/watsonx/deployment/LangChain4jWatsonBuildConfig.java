@@ -23,4 +23,9 @@ public interface LangChain4jWatsonBuildConfig {
      * Scoring model related settings.
      */
     ScoringModelBuildConfig scoringModel();
+
+    /**
+     * Moderation model related settings.
+     */
+    ModerationModelBuildConfig moderationModel();
 }

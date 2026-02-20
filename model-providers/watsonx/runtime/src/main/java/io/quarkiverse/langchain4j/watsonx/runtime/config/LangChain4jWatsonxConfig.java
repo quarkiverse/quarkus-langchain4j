@@ -24,7 +24,7 @@ public interface LangChain4jWatsonxConfig {
      * Default model config.
      */
     @WithParentName
-    WatsonConfig defaultConfig();
+    WatsonxConfig defaultConfig();
 
     /**
      * Named model config.
@@ -33,15 +33,15 @@ public interface LangChain4jWatsonxConfig {
     @ConfigDocMapKey("model-name")
     @WithParentName
     @WithDefaults
-    Map<String, WatsonConfig> namedConfig();
+    Map<String, WatsonxConfig> namedConfig();
 
     /**
-     * Configuration for built-in services.
+     * Configuration for built-in tools.
      */
-    BuiltinServiceConfig builtInService();
+    BuiltinToolConfig builtInTool();
 
     @ConfigGroup
-    interface WatsonConfig {
+    interface WatsonxConfig {
 
         /**
          * Specifies the base URL of the watsonx.ai API.
@@ -59,15 +59,14 @@ public interface LangChain4jWatsonxConfig {
         /**
          * Timeout for watsonx.ai calls.
          */
-        @ConfigDocDefault("10s")
-        @WithDefault("${quarkus.langchain4j.timeout}")
+        @ConfigDocDefault("60s")
+        @WithDefault("${quarkus.langchain4j.timeout:60s}")
         Optional<Duration> timeout();
 
         /**
          * The version date for the API of the form YYYY-MM-DD.
          */
-        @WithDefault("2025-04-23")
-        String version();
+        Optional<String> version();
 
         /**
          * The space that contains the resource.
@@ -94,7 +93,7 @@ public interface LangChain4jWatsonxConfig {
          * Whether the watsonx.ai client should log responses.
          */
         @ConfigDocDefault("false")
-        @WithDefault("${quarkus.langchain4j.log-requests}")
+        @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
 
         /**
@@ -106,8 +105,8 @@ public interface LangChain4jWatsonxConfig {
 
         /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the watsonx.ai
-         * provider. Set to {@code false} to
-         * disable all requests.
+         * provider. Set to {@code false}
+         * to disable all requests.
          */
         @WithDefault("true")
         Boolean enableIntegration();
@@ -125,14 +124,16 @@ public interface LangChain4jWatsonxConfig {
         Optional<TextExtractionConfig> textExtraction();
 
         /**
+         * Cloud Object Storage related settings.
+         * <p>
+         * This configuration is only required when using the {@code TextClassification} class.
+         */
+        Optional<TextClassificationConfig> textClassification();
+
+        /**
          * Chat model related settings.
          */
         ChatModelConfig chatModel();
-
-        /**
-         * Generation model related settings.
-         */
-        GenerationModelConfig generationModel();
 
         /**
          * Embedding model related settings.
@@ -143,5 +144,10 @@ public interface LangChain4jWatsonxConfig {
          * Scoring model related settings.
          */
         ScoringModelConfig scoringModel();
+
+        /**
+         * Moderation model related settings.
+         */
+        ModerationModelConfig moderationModel();
     }
 }
