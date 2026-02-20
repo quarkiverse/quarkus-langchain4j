@@ -29,6 +29,7 @@ import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
 import dev.langchain4j.mcp.protocol.McpInitializationNotification;
 import dev.langchain4j.mcp.protocol.McpInitializeRequest;
+import io.quarkiverse.langchain4j.mcp.auth.McpAuthenticationException;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -255,8 +256,14 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                                 return null;
                                             });
                                 } else {
-                                    future.completeExceptionally(
-                                            new RuntimeException("Unexpected status code: " + response.result().statusCode()));
+                                    int statusCode = response.result().statusCode();
+                                    if (statusCode == 401) {
+                                        String wwwAuth = response.result().getHeader("WWW-Authenticate");
+                                        future.completeExceptionally(new McpAuthenticationException(statusCode, wwwAuth));
+                                    } else {
+                                        future.completeExceptionally(
+                                                new RuntimeException("Unexpected status code: " + statusCode));
+                                    }
                                 }
                             }
                         });
