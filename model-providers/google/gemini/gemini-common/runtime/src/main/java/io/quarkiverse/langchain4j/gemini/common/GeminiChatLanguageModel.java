@@ -56,11 +56,13 @@ public abstract class GeminiChatLanguageModel extends BaseGeminiChatModel implem
         ChatRequestParameters requestParameters = chatRequest.parameters();
         ResponseFormat effectiveResponseFormat = getOrDefault(requestParameters.responseFormat(), responseFormat);
         Schema schema = detectSchema(effectiveResponseFormat);
+        Map<String, Object> rawSchema = detectRawSchema(effectiveResponseFormat);
 
         GenerationConfig.Builder generationConfigBuilder = GenerationConfig.builder()
                 .maxOutputTokens(getOrDefault(requestParameters.maxOutputTokens(), this.maxOutputTokens))
-                .responseMimeType(computeMimeType(effectiveResponseFormat, schema))
+                .responseMimeType(computeMimeType(effectiveResponseFormat, schema, rawSchema))
                 .responseSchema(schema)
+                .responseJsonSchema(rawSchema)
                 .stopSequences(requestParameters.stopSequences())
                 .temperature(getOrDefault(requestParameters.temperature(), this.temperature))
                 .topK(getOrDefault(requestParameters.topK(), this.topK))

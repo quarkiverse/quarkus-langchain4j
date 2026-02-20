@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.gemini.common;
 
 import java.util.List;
+import java.util.Map;
 
 public class GenerationConfig {
 
@@ -10,6 +11,7 @@ public class GenerationConfig {
     private final Double topP;
     private final String responseMimeType;
     private final Schema responseSchema;
+    private final Map<String, Object> responseJsonSchema;
     private final List<String> stopSequences;
     private final ThinkingConfig thinkingConfig;
 
@@ -20,6 +22,7 @@ public class GenerationConfig {
         this.topP = builder.topP;
         this.responseMimeType = builder.responseMimeType;
         this.responseSchema = builder.responseSchema;
+        this.responseJsonSchema = builder.responseJsonSchema;
         this.stopSequences = builder.stopSequences;
         this.thinkingConfig = builder.thinkingConfig;
     }
@@ -48,6 +51,10 @@ public class GenerationConfig {
         return responseSchema;
     }
 
+    public Map<String, Object> getResponseJsonSchema() {
+        return responseJsonSchema;
+    }
+
     public List<String> getStopSequences() {
         return stopSequences;
     }
@@ -68,6 +75,7 @@ public class GenerationConfig {
         private Double topP;
         private String responseMimeType;
         private Schema responseSchema;
+        private Map<String, Object> responseJsonSchema;
         private List<String> stopSequences;
         private ThinkingConfig thinkingConfig;
 
@@ -98,6 +106,11 @@ public class GenerationConfig {
 
         public Builder responseSchema(Schema schema) {
             this.responseSchema = schema;
+            return this;
+        }
+
+        public Builder responseJsonSchema(Map<String, Object> responseJsonSchema) {
+            this.responseJsonSchema = responseJsonSchema;
             return this;
         }
 

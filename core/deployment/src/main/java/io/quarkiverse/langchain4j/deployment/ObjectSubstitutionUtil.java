@@ -6,6 +6,7 @@ import dev.langchain4j.model.chat.request.json.JsonEnumSchema;
 import dev.langchain4j.model.chat.request.json.JsonIntegerSchema;
 import dev.langchain4j.model.chat.request.json.JsonNumberSchema;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonRawSchema;
 import dev.langchain4j.model.chat.request.json.JsonReferenceSchema;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.chat.request.json.JsonStringSchema;
@@ -15,6 +16,7 @@ import io.quarkiverse.langchain4j.runtime.substitution.JsonEnumSchemaObjectSubst
 import io.quarkiverse.langchain4j.runtime.substitution.JsonIntegerSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.substitution.JsonNumberSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.substitution.JsonObjectSchemaObjectSubstitution;
+import io.quarkiverse.langchain4j.runtime.substitution.JsonRawSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.substitution.JsonReferenceSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.substitution.JsonSchemaObjectSubstitution;
 import io.quarkiverse.langchain4j.runtime.substitution.JsonStringSchemaObjectSubstitution;
@@ -40,6 +42,8 @@ final class ObjectSubstitutionUtil {
                 JsonNumberSchemaObjectSubstitution.class);
         recorderContext.registerSubstitution(JsonObjectSchema.class, JsonObjectSchemaObjectSubstitution.Serialized.class,
                 JsonObjectSchemaObjectSubstitution.class);
+        recorderContext.registerSubstitution(JsonRawSchema.class, JsonRawSchemaObjectSubstitution.Serialized.class,
+                JsonRawSchemaObjectSubstitution.class);
         recorderContext.registerSubstitution(JsonReferenceSchema.class,
                 JsonReferenceSchemaObjectSubstitution.Serialized.class,
                 JsonReferenceSchemaObjectSubstitution.class);
