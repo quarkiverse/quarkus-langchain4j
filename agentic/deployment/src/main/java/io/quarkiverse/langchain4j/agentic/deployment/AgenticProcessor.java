@@ -73,15 +73,18 @@ public class AgenticProcessor {
 
     @BuildStep
     void detectAgents(CombinedIndexBuildItem indexBuildItem,
-            BuildProducer<DetectedAiAgentAsMapBuildItem> mapProducer,
+            BuildProducer<DetectedAiAgentAsMapBuildItem> aiMapProducer,
+            BuildProducer<DetectedNonAiAgentAsMapBuildItem> nonAiMapProducer,
             BuildProducer<DetectedAiAgentBuildItem> producer) {
         IndexView index = indexBuildItem.getIndex();
 
         Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap = new HashMap<>();
+        Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap = new HashMap<>();
         for (DotName dotName : AgenticLangChain4jDotNames.ALL_AGENT_ANNOTATIONS) {
-            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap);
+            collectAgentsWithMethodAnnotations(index, dotName, ifaceToAgentMethodsMap, classToNonAiAgentMethodsMap);
         }
-        mapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
+        aiMapProducer.produce(DetectedAiAgentAsMapBuildItem.from(ifaceToAgentMethodsMap));
+        nonAiMapProducer.produce(DetectedNonAiAgentAsMapBuildItem.from(classToNonAiAgentMethodsMap));
 
         ifaceToAgentMethodsMap.forEach((classInfo, methods) -> {
             Optional<MethodInfo> chatModelSupplier = classInfo.methods().stream()
@@ -472,20 +475,22 @@ public class AgenticProcessor {
     }
 
     private static void collectAgentsWithMethodAnnotations(IndexView index, DotName annotation,
-            Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap) {
+            Map<ClassInfo, List<MethodInfo>> ifaceToAgentMethodsMap,
+            Map<ClassInfo, List<MethodInfo>> classToNonAiAgentMethodsMap) {
         Collection<AnnotationInstance> annotations = index.getAnnotations(annotation);
         for (AnnotationInstance ai : annotations) {
             if (ai.target().kind() != AnnotationTarget.Kind.METHOD) {
                 continue;
             }
             MethodInfo methodInfo = ai.target().asMethod();
-            if (!methodInfo.declaringClass().isInterface()) {
-                // we need to skio non-AI agents (https://docs.langchain4j.dev/tutorials/agents/#non-ai-agents)
-                continue;
+            if (methodInfo.declaringClass().isInterface()) {
+                ClassInfo iface = methodInfo.declaringClass();
+                addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
+                index.getAllKnownSubinterfaces(iface.name())
+                        .forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
+            } else {
+                addMethodToMap(methodInfo, methodInfo.declaringClass(), classToNonAiAgentMethodsMap);
             }
-            ClassInfo iface = methodInfo.declaringClass();
-            addMethodToMap(methodInfo, iface, ifaceToAgentMethodsMap);
-            index.getAllKnownSubinterfaces(iface.name()).forEach(i -> addMethodToMap(methodInfo, i, ifaceToAgentMethodsMap));
         }
     }
 
@@ -495,9 +500,12 @@ public class AgenticProcessor {
 
     @BuildStep
     public OutputKeyBuildItem outputKeyItems(DetectedAiAgentAsMapBuildItem detectedAiAgentAsMapBuildItem,
+            DetectedNonAiAgentAsMapBuildItem detectedNonAiAgentAsMapBuildItem,
             CombinedIndexBuildItem indexBuildItem,
             BeanDiscoveryFinishedBuildItem beanDiscoveryFinished) {
         Map<DotName, List<MethodInfo>> ifaceToAgentMethodsMap = detectedAiAgentAsMapBuildItem.getIfaceToAgentMethodsMap();
+        Map<DotName, List<MethodInfo>> classToNonAiAgentMethodsMap = detectedNonAiAgentAsMapBuildItem
+                .getClassToNonAiAgentMethodsMap();
 
         OutputKeyBuildItem.Builder builder = OutputKeyBuildItem.of();
         for (var entry : ifaceToAgentMethodsMap.entrySet()) {
@@ -529,6 +537,9 @@ public class AgenticProcessor {
                         // the interface and check the return key and type of (the single agent-related) method
 
                         List<MethodInfo> subAgentMethods = ifaceToAgentMethodsMap.get(subAgentType.name());
+                        if (subAgentMethods == null) {
+                            subAgentMethods = classToNonAiAgentMethodsMap.get(subAgentType.name());
+                        }
                         if (subAgentMethods.size() != 1) {
                             log.warn("Unable to determine type of outputKey for subagent with type '%s'"
                                     .formatted(subAgentType));
