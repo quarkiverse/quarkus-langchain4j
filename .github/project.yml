@@ -1,4 +1,3 @@
 release:
-  current-version: "1.7.3"
+  current-version: "1.7.4"
   next-version: "999-SNAPSHOT"
-
