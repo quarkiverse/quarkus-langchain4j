@@ -86,7 +86,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus-langchain4j.version>1.7.3</quarkus-langchain4j.version>
+                <quarkus-langchain4j.version>1.7.4</quarkus-langchain4j.version>
             </properties>
             <dependencyManagement>
                 <dependencies>
