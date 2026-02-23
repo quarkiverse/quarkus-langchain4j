@@ -78,6 +78,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.rag.AugmentationRequest;
@@ -329,6 +330,7 @@ public class AiServiceMethodImplementationSupport {
                                     .userMessageTemplate(methodCreateInfo.getUserMessageTemplate())
                                     .variables(templateVariables)
                                     .invocationContext(invocationContext)
+                                    .aiServiceListenerRegistrar(context.eventListenerRegistrar)
                                     .build())
                     .build();
             return new AiServiceTokenStream(aiServiceTokenStreamParams);
@@ -392,6 +394,7 @@ public class AiServiceMethodImplementationSupport {
         ChatExecutor chatExecutor = ChatExecutor.builder(context.effectiveChatModel(methodCreateInfo, methodArgs))
                 .chatRequest(chatRequest)
                 .invocationContext(invocationContext)
+                .eventListenerRegistrar(context.eventListenerRegistrar)
                 .build();
 
         ChatResponse response = chatExecutor.execute();
@@ -740,6 +743,15 @@ public class AiServiceMethodImplementationSupport {
         var imagePrompt = systemMessage
                 .map(sm -> "%s\n%s".formatted(sm.text(), um.singleText()))
                 .orElseGet(um::singleText);
+
+        context.eventListenerRegistrar.fireEvent(
+                AiServiceRequestIssuedEvent.builder()
+                        .invocationContext(invocationContext)
+                        .request(
+                                ChatRequest.builder()
+                                        .messages(UserMessage.from(imagePrompt))
+                                        .build())
+                        .build());
 
         Response<Image> imageResponse = context.imageModel.generate(imagePrompt);
 

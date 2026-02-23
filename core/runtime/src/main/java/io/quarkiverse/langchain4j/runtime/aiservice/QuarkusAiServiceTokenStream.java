@@ -20,6 +20,7 @@ import dev.langchain4j.model.chat.response.PartialThinking;
 import dev.langchain4j.model.chat.response.StreamingHandle;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.service.AiServiceContext;
 import dev.langchain4j.service.IllegalConfigurationException;
@@ -190,6 +191,12 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         if (contentsHandler != null && retrievedContents != null) {
             contentsHandler.accept(retrievedContents);
         }
+
+        context.eventListenerRegistrar.fireEvent(
+                AiServiceRequestIssuedEvent.builder()
+                        .invocationContext(invocationContext)
+                        .request(chatRequest)
+                        .build());
 
         try {
             // Some model do not support function calling with tool specifications

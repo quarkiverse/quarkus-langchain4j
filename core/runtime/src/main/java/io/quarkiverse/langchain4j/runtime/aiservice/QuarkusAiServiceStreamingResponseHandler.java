@@ -41,6 +41,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.service.tool.BeforeToolExecution;
@@ -184,6 +185,13 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         context.eventListenerRegistrar.fireEvent(AiServiceCompletedEvent.builder()
                 .invocationContext(invocationContext)
                 .result(result)
+                .build());
+    }
+
+    private void fireRequestIssuedEvent(ChatRequest chatRequest) {
+        context.eventListenerRegistrar.fireEvent(AiServiceRequestIssuedEvent.builder()
+                .invocationContext(invocationContext)
+                .request(chatRequest)
                 .build());
     }
 
@@ -473,6 +481,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             toolExecutors,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
                             methodArgs);
+
+                    fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
                 }
             });
