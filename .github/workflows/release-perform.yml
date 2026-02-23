@@ -27,3 +27,36 @@ jobs:
     with:
       version: ${{github.event.inputs.tag || github.ref_name}}
       java_version: 23
+  send-notifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post a reminder to the release PR
+        run: |
+          
+            # Find the last commit, which changed the version for current tag
+            hash=$(git log --format=%H -n1 $INPUT_VERSION -- .github/project.yml)
+            if [[ -z $hash ]]; then echo "The release commit was not found!" && exit; fi
+            # Find the pulls for this commit
+            pull_info=$(curl -L \
+              -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/quarkiverse/quarkus-langchain4j/commits/$hash/pulls )
+            if [[ -z $pull_info ]]; then echo "The release PR was not found!" && exit; fi
+
+            # There are unlikely to be more, than one release PRs, so take the first one. 
+            user=$(echo $pull_info | jq -r ".[0].user.login")
+            pull_id=$(echo $pull_info | jq -r ".[0].number")
+
+           # Create a comment. Body hack taken from there: https://stackoverflow.com/a/37632617
+           curl -L -X POST \
+           -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+           https://api.github.com/repos/quarkiverse/quarkus-langchain4j/issues/$pull_id/comments \
+           --data @<(cat <<EOF
+           {"body": "@$user Please do not forget to create a PR for Quarkus platform with the new version of Quarkus-langchain4j.
+
+          🤖 This message was created automatically.
+          "}
+          EOF
+          )
+        with:
+          version: ${{github.event.inputs.tag || github.ref_name}}
