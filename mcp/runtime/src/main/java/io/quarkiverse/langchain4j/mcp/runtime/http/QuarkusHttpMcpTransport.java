@@ -6,8 +6,10 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -16,6 +18,7 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.mcp.client.McpCallContext;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -42,6 +45,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private volatile McpPostEndpoint postEndpoint;
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
+    private final McpHeadersSupplier headersSupplier;
 
     private volatile Runnable onFailure;
     private volatile boolean closed;
@@ -72,6 +76,8 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        this.headersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
+        clientBuilder.register(new McpCustomHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             clientBuilder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -91,6 +97,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             builder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        builder.register(new McpCustomHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -160,19 +167,24 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (id != null) {
             operationHandler.startOperation(id, future);
         }
-        postEndpoint.post(request)
-                .onFailure().invoke(future::completeExceptionally)
-                .onItem().invoke(response -> {
-                    int statusCode = response.getStatus();
-                    if (!isExpectedStatusCode(statusCode)) {
-                        future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
-                    }
-                    // For messages with null ID, we don't wait for a response in the SSE channel,
-                    // so if the server accepted the request, we consider the operation done
-                    if (id == null) {
-                        future.complete(null);
-                    }
-                }).subscribeAsCompletionStage();
+        McpCustomHeadersFilter.setCurrentContext(context);
+        try {
+            postEndpoint.post(request)
+                    .onFailure().invoke(future::completeExceptionally)
+                    .onItem().invoke(response -> {
+                        int statusCode = response.getStatus();
+                        if (!isExpectedStatusCode(statusCode)) {
+                            future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                        }
+                        // For messages with null ID, we don't wait for a response in the SSE channel,
+                        // so if the server accepted the request, we consider the operation done
+                        if (id == null) {
+                            future.complete(null);
+                        }
+                    }).subscribeAsCompletionStage();
+        } finally {
+            McpCustomHeadersFilter.clearCurrentContext();
+        }
         return uni;
     }
 
@@ -226,6 +238,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         private boolean logResponses = false;
         private TlsConfiguration tlsConfiguration;
         private McpClientAuthProvider mcpClientAuthProvider;
+        private McpHeadersSupplier headersSupplier;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -263,6 +276,21 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
         public QuarkusHttpMcpTransport.Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
             this.mcpClientAuthProvider = mcpClientAuthProvider;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Map<String, String> headers) {
+            this.headersSupplier = (i) -> headers;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Supplier<Map<String, String>> headersSupplier) {
+            this.headersSupplier = i -> headersSupplier.get();
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(McpHeadersSupplier headersSupplier) {
+            this.headersSupplier = headersSupplier;
             return this;
         }
 

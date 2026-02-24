@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpCallContext;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -50,6 +52,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final AtomicReference<String> mcpSessionId = new AtomicReference<>();
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
+    private final McpHeadersSupplier customHeadersSupplier;
     private final HttpClient httpClient;
     private McpInitializeRequest initializeRequest;
     private volatile SseSubscriber sseSubscriber;
@@ -68,6 +71,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         } else {
             this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
         }
+        this.customHeadersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
     }
 
     @Override
@@ -164,6 +168,10 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
             if (authValue != null) {
                 options.addHeader("Authorization", authValue);
             }
+        }
+        Map<String, String> customHeaders = customHeadersSupplier.apply(context);
+        if (customHeaders != null) {
+            customHeaders.forEach((name, value) -> options.addHeader(name, value));
         }
         String finalBody = body;
         httpClient.request(options)
@@ -323,6 +331,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         private boolean logResponses = false;
         private HttpClient httpClient;
         private McpClientAuthProvider mcpClientAuthProvider;
+        private McpHeadersSupplier headersSupplier;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -360,6 +369,21 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
 
         public Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
             this.mcpClientAuthProvider = mcpClientAuthProvider;
+            return this;
+        }
+
+        public Builder headers(Map<String, String> headers) {
+            this.headersSupplier = (i) -> headers;
+            return this;
+        }
+
+        public Builder headers(Supplier<Map<String, String>> headersSupplier) {
+            this.headersSupplier = i -> headersSupplier.get();
+            return this;
+        }
+
+        public Builder headers(McpHeadersSupplier headersSupplier) {
+            this.headersSupplier = headersSupplier;
             return this;
         }
 

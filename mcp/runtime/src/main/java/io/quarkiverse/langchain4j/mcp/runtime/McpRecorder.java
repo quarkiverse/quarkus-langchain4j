@@ -90,29 +90,37 @@ public class McpRecorder {
                                 .environment(runtimeConfig.environment())
                                 .build();
                     }
-                    case HTTP -> new QuarkusHttpMcpTransport.Builder()
-                            .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
-                                    "MCP client configuration named " + key + " is missing the 'url' property")))
-                            .logRequests(runtimeConfig.logRequests().orElse(false))
-                            .logResponses(runtimeConfig.logResponses().orElse(false))
-                            .tlsConfiguration(tlsConfiguration.orElse(null))
-                            .mcpClientName(key)
-                            .timeout(runtimeConfig.toolExecutionTimeout())
-                            .build();
+                    case HTTP -> {
+                        QuarkusHttpMcpTransport.Builder httpBuilder = new QuarkusHttpMcpTransport.Builder()
+                                .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
+                                        "MCP client configuration named " + key + " is missing the 'url' property")))
+                                .logRequests(runtimeConfig.logRequests().orElse(false))
+                                .logResponses(runtimeConfig.logResponses().orElse(false))
+                                .tlsConfiguration(tlsConfiguration.orElse(null))
+                                .mcpClientName(key)
+                                .timeout(runtimeConfig.toolExecutionTimeout());
+                        if (!runtimeConfig.header().isEmpty()) {
+                            httpBuilder.headers(runtimeConfig.header());
+                        }
+                        yield httpBuilder.build();
+                    }
                     case STREAMABLE_HTTP -> {
                         HttpClientOptions httpClientOptions = new HttpClientOptions();
                         tlsConfiguration.ifPresent(tls -> {
                             TlsConfigUtils.configure(httpClientOptions, tls);
                         });
-                        yield new QuarkusStreamableHttpMcpTransport.Builder()
+                        QuarkusStreamableHttpMcpTransport.Builder streamableBuilder = new QuarkusStreamableHttpMcpTransport.Builder()
                                 .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
                                         "MCP client configuration named " + key + " is missing the 'url' property")))
                                 .logRequests(runtimeConfig.logRequests().orElse(false))
                                 .logResponses(runtimeConfig.logResponses().orElse(false))
                                 .httpClient(vertx.get().createHttpClient(httpClientOptions))
                                 .mcpClientName(key)
-                                .timeout(runtimeConfig.toolExecutionTimeout())
-                                .build();
+                                .timeout(runtimeConfig.toolExecutionTimeout());
+                        if (!runtimeConfig.header().isEmpty()) {
+                            streamableBuilder.headers(runtimeConfig.header());
+                        }
+                        yield streamableBuilder.build();
                     }
                     case WEBSOCKET -> {
                         SSLContext sslContext = null;
