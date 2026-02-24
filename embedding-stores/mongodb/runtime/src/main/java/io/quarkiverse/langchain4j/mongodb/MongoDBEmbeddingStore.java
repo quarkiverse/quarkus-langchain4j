@@ -15,6 +15,7 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.mongodb.runtime.SimilaritySearch;
 import org.bson.BinaryVector;
 import org.bson.Document;
+import org.bson.Float32BinaryVector;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
@@ -22,28 +23,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.mongodb.client.model.Aggregates.project;
-import static com.mongodb.client.model.Aggregates.vectorSearch;
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.search.SearchPath.fieldPath;
 import static com.mongodb.client.model.search.VectorSearchOptions.approximateVectorSearchOptions;
 
 public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     private static final String ID = "_id";
-    private static final String SCORE = "score";
 
     private final String indexName;
-    private final String vectorFieldName;
     private final String textFieldName;
+    private final String scoreFieldName;
+    private final String vectorFieldName;
     private final String metadataFieldName;
     private final MongoCollection<Document> collection;
 
     public MongoDBEmbeddingStore(MongoClient mongoClient, String database, String collection, String indexName,
-                                 String vectorFieldName, String textFieldName, int dimensions, SimilaritySearch similaritySearch, String metadataFieldName) {
+                                 String vectorFieldName, String textFieldName, int dimensions, SimilaritySearch similaritySearch, String scoreFieldName,String metadataFieldName) {
         this.indexName = indexName;
-        this.vectorFieldName = vectorFieldName;
         this.textFieldName = textFieldName;
+        this.scoreFieldName = scoreFieldName;
+        this.vectorFieldName = vectorFieldName;
         this.metadataFieldName = metadataFieldName;
+
         var collectionExists = collectionExistsViaListCollections(mongoClient, database, collection);
 
         if (!collectionExists) {
@@ -59,9 +62,9 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                 "fields",
                 Collections.singletonList(
                         new Document("type", "vector")
-                                .append("path", vectorFieldName)         // must match vectorFieldName
+                                .append("path", vectorFieldName)
                                 .append("numDimensions", dimensions)
-                                .append("similarity", similaritySearch.value())      // or dotProduct, euclidean
+                                .append("similarity", similaritySearch.value())
                 )
         );
         SearchIndexModel indexModel = new SearchIndexModel(
@@ -129,14 +132,10 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
             ids.add(id);
             TextSegment textSegment = embedded.get(i);
             var vector = embeddings.get(i).vector();
-            List<Double> embeddingList = new ArrayList<>(vector.length);
-            for (float v : vector) {
-                embeddingList.add((double) v);
-            }
+
             documents.add(new Document()
                     .append(ID, id)
-//                    .append(vectorFieldName, BinaryVector.floatVector(vector))
-                    .append(vectorFieldName, embeddingList)
+                    .append(vectorFieldName, BinaryVector.floatVector(vector))
                     .append(textFieldName, textSegment != null ? textSegment.text() : null)
                     .append(metadataFieldName, textSegment != null ? textSegment.metadata().toMap() : null));
         }
@@ -147,6 +146,7 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     @Override
     public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest embeddingSearchRequest) {
         var filter = embeddingSearchRequest.filter();
+        var minScore = embeddingSearchRequest.minScore();
         var maxResults = embeddingSearchRequest.maxResults();
         var embedding = embeddingSearchRequest.queryEmbedding();
 
@@ -172,36 +172,36 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                                 include(textFieldName),
                                 include(vectorFieldName),
                                 include(metadataFieldName),
-                                metaVectorSearchScore(SCORE)
+                                metaVectorSearchScore(scoreFieldName)
                         )
                 )
         );
-//        pipeline.add(match(gte(SCORE, minScore)));
+        pipeline.add(match(gte(scoreFieldName, minScore)));
 
-        var iteratorResult = collection.aggregate(pipeline).cursor();
-        List<EmbeddingMatch<TextSegment>> result = new ArrayList<>();
-        while (iteratorResult.hasNext()) {
-            var document = iteratorResult.tryNext();
-
-            var score = document.getDouble(SCORE);
-            var id = document.getString(ID);
-            var text = document.getString(textFieldName);
-            var vectorData = document.getList(vectorFieldName, Double.class);
-            float[] vector = new float[vectorData.size()];
-            for (int i = 0; i < vectorData.size(); i++) {
-                vector[i] = vectorData.get(i).floatValue();
+        try(var iteratorResult = collection.aggregate(pipeline).cursor()) {
+            List<EmbeddingMatch<TextSegment>> result = new ArrayList<>();
+            while (iteratorResult.hasNext()) {
+                var document = iteratorResult.tryNext();
+                if (document != null) {
+                    var score = document.getDouble(scoreFieldName);
+                    var id = document.getString(ID);
+                    var text = document.getString(textFieldName);
+                    var vectorData = document.get(vectorFieldName, Float32BinaryVector.class);
+                    var vector = vectorData.getData();
+                    result.add(new EmbeddingMatch<>(score, id, Embedding.from(vector), TextSegment.from(text)));
+                }
             }
-            result.add(new EmbeddingMatch<>(score, id, Embedding.from(vector), TextSegment.from(text)));
+            return new EmbeddingSearchResult<>(result);
         }
-        return new EmbeddingSearchResult<>(result);
     }
 
     public static boolean collectionExistsViaListCollections(MongoClient client, String dbName, String collectionName) {
         var db = client.getDatabase(dbName);
 
-        return db.listCollections()
+        try(var cursor = db.listCollections()
                 .filter(new Document("name", collectionName))
-                .iterator()
-                .hasNext();
+                .cursor()) {
+            return cursor.hasNext();
+        }
     }
 }
