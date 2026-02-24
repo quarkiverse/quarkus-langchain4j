@@ -481,6 +481,10 @@ public class AiServicesProcessor {
                     ? instance.value("allowContinuousForcedToolCalling").asBoolean()
                     : false;
 
+            boolean shouldThrowExceptionOnEventError = instance.value("shouldThrowExceptionOnEventError") != null
+                    ? instance.value("shouldThrowExceptionOnEventError").asBoolean()
+                    : false;
+
             DotName systemMessageProviderClassDotName = null;
             AnnotationValue systemMessageProviderSupplierValue = instance.value("systemMessageProviderSupplier");
             if (systemMessageProviderSupplierValue != null) {
@@ -518,7 +522,8 @@ public class AiServicesProcessor {
                             maxSequentialToolInvocations,
                             allowContinuousForcedToolCalling,
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
-                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name())));
+                            impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
+                            shouldThrowExceptionOnEventError));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -1015,7 +1020,8 @@ public class AiServicesProcessor {
                                     classInputGuardrails(bi),
                                     classOutputGuardrails(bi),
                                     maxSequentialToolInvocations,
-                                    allowContinuousForcedToolCalling)))
+                                    allowContinuousForcedToolCalling,
+                                    bi.isShouldThrowExceptionOnEventError())))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)

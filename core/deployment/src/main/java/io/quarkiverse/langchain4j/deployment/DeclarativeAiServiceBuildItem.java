@@ -39,6 +39,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final Integer maxSequentialToolInvocations;
     private final boolean allowContinuousForcedToolCalling;
     private final boolean makeDefaultBean;
+    private final boolean shouldThrowExceptionOnEventError;
 
     public DeclarativeAiServiceBuildItem(
             ClassInfo serviceClassInfo,
@@ -65,7 +66,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
             DotName toolExecutionErrorHandlerDotName,
             Integer maxSequentialToolInvocations,
             boolean allowContinuousForcedToolCalling,
-            boolean makeDefaultBean) {
+            boolean makeDefaultBean, boolean shouldThrowExceptionOnEventError) {
         this.serviceClassInfo = serviceClassInfo;
         this.chatLanguageModelSupplierClassDotName = chatLanguageModelSupplierClassDotName;
         this.streamingChatLanguageModelSupplierClassDotName = streamingChatLanguageModelSupplierClassDotName;
@@ -91,6 +92,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
         this.maxSequentialToolInvocations = maxSequentialToolInvocations;
         this.allowContinuousForcedToolCalling = allowContinuousForcedToolCalling;
         this.makeDefaultBean = makeDefaultBean;
+        this.shouldThrowExceptionOnEventError = shouldThrowExceptionOnEventError;
     }
 
     public ClassInfo getServiceClassInfo() {
@@ -183,6 +185,10 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isMakeDefaultBean() {
         return makeDefaultBean;
+    }
+
+    public boolean isShouldThrowExceptionOnEventError() {
+        return shouldThrowExceptionOnEventError;
     }
 
     public record DeclarativeAiServiceInputGuardrails(List<ClassInfo> inputGuardrailClassInfos) {

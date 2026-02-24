@@ -177,6 +177,21 @@ public @interface RegisterAiService {
     Class<? extends SystemMessageProvider> systemMessageProviderSupplier() default NoSystemMessageProviderSupplier.class;
 
     /**
+     * Indicates whether exceptions thrown during
+     * <a href="https://docs.langchain4j.dev/tutorials/observability#types-of-events">AI service event execution</a>
+     * should be rethrown during an AI service interaction, or should be quietly &quot;eaten&quot; by the event handler.
+     * <p>
+     * If {@code true}, exceptions thrown from AI Service event execution will be rethrown by an AI service interaction. This
+     * also means that exceptions can be caught
+     * and dealt with by application code should an AI service event handler fail for some reason.
+     * <p>
+     * Otherwise, errors will be handled silently.
+     * <p>
+     * Default is {@code false} to preserve backwards compatibility.
+     */
+    boolean shouldThrowExceptionOnEventError() default false;
+
+    /**
      * Marker that is used to tell Quarkus to use the {@link ChatModel} that has been configured as a CDI bean by
      * any of the extensions providing such capability (such as {@code quarkus-langchain4j-openai} and
      * {@code quarkus-langchain4j-hugging-face}).
