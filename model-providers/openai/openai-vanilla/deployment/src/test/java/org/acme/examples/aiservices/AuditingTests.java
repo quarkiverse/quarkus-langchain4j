@@ -45,6 +45,7 @@ import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceEvent;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.observability.api.event.GuardrailExecutedEvent;
@@ -53,6 +54,7 @@ import dev.langchain4j.observability.api.event.OutputGuardrailExecutedEvent;
 import dev.langchain4j.observability.api.event.ToolExecutedEvent;
 import dev.langchain4j.observability.event.DefaultAiServiceCompletedEvent;
 import dev.langchain4j.observability.event.DefaultAiServiceErrorEvent;
+import dev.langchain4j.observability.event.DefaultAiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.event.DefaultAiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.event.DefaultAiServiceStartedEvent;
 import dev.langchain4j.observability.event.DefaultInputGuardrailExecutedEvent;
@@ -197,6 +199,7 @@ class AuditingTests extends OpenAiBaseTest {
 
         assertThat(auditor.failed).isZero();
         assertThat(auditor.aiServiceStartedCounter).hasValue(0);
+        assertThat(auditor.aiServiceRequestIssuedCounter).hasValue(0);
         assertThat(auditor.aiServiceCompletedCounter).hasValue(0);
         assertThat(auditor.aiServiceErrorCounter).hasValue(0);
         assertThat(auditor.aiResponseReceivedCounter).hasValue(0);
@@ -331,7 +334,7 @@ class AuditingTests extends OpenAiBaseTest {
                         new MessageContent("assistant", null),
                         new MessageContent("function", "6.97070153193991E8")));
 
-        assertThat(auditor.invocationContexts).hasSize(5);
+        assertThat(auditor.invocationContexts).hasSize(6);
         assertThat(auditor.invocationContexts.stream().collect(Collectors.toSet()))
                 .singleElement()
                 .extracting(
@@ -350,6 +353,7 @@ class AuditingTests extends OpenAiBaseTest {
         assertThat(auditor.result).isEqualTo(Optional.of(EXPECTED_RESPONSE));
         assertThat(auditor.failed).isZero();
         assertThat(auditor.aiServiceStartedCounter.get()).isGreaterThanOrEqualTo(1);
+        assertThat(auditor.aiServiceRequestIssuedCounter.get()).isGreaterThanOrEqualTo(1);
         assertThat(auditor.aiServiceCompletedCounter.get()).isGreaterThanOrEqualTo(1);
         assertThat(auditor.aiServiceErrorCounter.get()).isZero();
         assertThat(auditor.aiResponseReceivedCounter.get()).isGreaterThanOrEqualTo(1);
@@ -544,6 +548,7 @@ class AuditingTests extends OpenAiBaseTest {
         AtomicInteger aiServiceErrorCounter = new AtomicInteger(0);
         AtomicInteger aiResponseReceivedCounter = new AtomicInteger(0);
         AtomicInteger toolExecutedCounter = new AtomicInteger(0);
+        AtomicInteger aiServiceRequestIssuedCounter = new AtomicInteger(0);
 
         protected void init() {
             this.invocationContexts = new ArrayList<>();
@@ -559,6 +564,7 @@ class AuditingTests extends OpenAiBaseTest {
             this.aiServiceErrorCounter.set(0);
             this.aiResponseReceivedCounter.set(0);
             this.toolExecutedCounter.set(0);
+            this.aiServiceRequestIssuedCounter.set(0);
         }
 
         protected void aiServiceStarted(AiServiceStartedEvent serviceStartedEvent) {
@@ -597,6 +603,18 @@ class AuditingTests extends OpenAiBaseTest {
             if (captureEvent(serviceErrorEvent.invocationContext())) {
                 this.aiServiceErrorCounter.incrementAndGet();
                 this.failed++;
+            }
+        }
+
+        protected void serviceRequestIssued(AiServiceRequestIssuedEvent serviceRequestIssuedEvent) {
+            assertThat(serviceRequestIssuedEvent)
+                    .isNotNull()
+                    .isExactlyInstanceOf(DefaultAiServiceRequestIssuedEvent.class);
+
+            handle(serviceRequestIssuedEvent);
+
+            if (captureEvent(serviceRequestIssuedEvent.invocationContext())) {
+                this.aiServiceRequestIssuedCounter.incrementAndGet();
             }
         }
 
@@ -663,6 +681,11 @@ class AuditingTests extends OpenAiBaseTest {
         }
 
         @Override
+        public void serviceRequestIssued(@Observes AiServiceRequestIssuedEvent serviceRequestIssuedEvent) {
+            super.serviceRequestIssued(serviceRequestIssuedEvent);
+        }
+
+        @Override
         public void serviceResponseReceived(@Observes AiServiceResponseReceivedEvent serviceResponseReceivedEvent) {
             super.serviceResponseReceived(serviceResponseReceivedEvent);
         }
@@ -689,6 +712,12 @@ class AuditingTests extends OpenAiBaseTest {
         @Override
         public void aiServiceError(@Observes @AiServiceSelector(Assistant1.class) AiServiceErrorEvent serviceErrorEvent) {
             super.aiServiceError(serviceErrorEvent);
+        }
+
+        @Override
+        public void serviceRequestIssued(
+                @Observes @AiServiceSelector(Assistant1.class) AiServiceRequestIssuedEvent serviceRequestIssuedEvent) {
+            super.serviceRequestIssued(serviceRequestIssuedEvent);
         }
 
         @Override
@@ -719,6 +748,12 @@ class AuditingTests extends OpenAiBaseTest {
         @Override
         public void aiServiceError(@Observes @AiServiceSelector(Assistant2.class) AiServiceErrorEvent serviceErrorEvent) {
             super.aiServiceError(serviceErrorEvent);
+        }
+
+        @Override
+        public void serviceRequestIssued(
+                @Observes @AiServiceSelector(Assistant2.class) AiServiceRequestIssuedEvent serviceRequestIssuedEvent) {
+            super.serviceRequestIssued(serviceRequestIssuedEvent);
         }
 
         @Override

@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.observability;
 import dev.langchain4j.observability.api.event.AiServiceCompletedEvent;
 import dev.langchain4j.observability.api.event.AiServiceErrorEvent;
 import dev.langchain4j.observability.api.event.AiServiceEvent;
+import dev.langchain4j.observability.api.event.AiServiceRequestIssuedEvent;
 import dev.langchain4j.observability.api.event.AiServiceResponseReceivedEvent;
 import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
 import dev.langchain4j.observability.api.event.InputGuardrailExecutedEvent;
@@ -19,6 +20,7 @@ public enum AiServiceEvents {
     ERROR(AiServiceErrorEvent.class),
     INPUT_GUARDRAIL_EXECUTED(InputGuardrailExecutedEvent.class),
     OUTPUT_GUARDRAIL_EXECUTED(OutputGuardrailExecutedEvent.class),
+    REQUEST_ISSUED(AiServiceRequestIssuedEvent.class),
     RESPONSE_RECEIVED(AiServiceResponseReceivedEvent.class),
     STARTED(AiServiceStartedEvent.class),
     TOOL_EXECUTED(ToolExecutedEvent.class);
