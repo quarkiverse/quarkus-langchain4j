@@ -1,11 +1,28 @@
 package io.quarkiverse.langchain4j.mongodb;
 
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.search.SearchPath.fieldPath;
+import static com.mongodb.client.model.search.VectorSearchOptions.approximateVectorSearchOptions;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.bson.BinaryVector;
+import org.bson.Document;
+import org.bson.Float32BinaryVector;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.SearchIndexType;
 import com.mongodb.client.model.search.FieldSearchPath;
 import com.mongodb.client.model.search.VectorSearchOptions;
+
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
@@ -13,21 +30,6 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.quarkiverse.langchain4j.mongodb.runtime.SimilaritySearch;
-import org.bson.BinaryVector;
-import org.bson.Document;
-import org.bson.Float32BinaryVector;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static com.mongodb.client.model.Aggregates.*;
-import static com.mongodb.client.model.Filters.gte;
-import static com.mongodb.client.model.Projections.*;
-import static com.mongodb.client.model.search.SearchPath.fieldPath;
-import static com.mongodb.client.model.search.VectorSearchOptions.approximateVectorSearchOptions;
 
 public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     private static final String ID = "_id";
@@ -38,14 +40,17 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     private final String vectorFieldName;
     private final String metadataFieldName;
     private final MongoCollection<Document> collection;
+    private final MongoDBFilterMapper filterMapper;
 
     public MongoDBEmbeddingStore(MongoClient mongoClient, String database, String collection, String indexName,
-                                 String vectorFieldName, String textFieldName, int dimensions, SimilaritySearch similaritySearch, String scoreFieldName,String metadataFieldName) {
+            String vectorFieldName, String textFieldName, int dimensions, SimilaritySearch similaritySearch,
+            String scoreFieldName, String metadataFieldName) {
         this.indexName = indexName;
         this.textFieldName = textFieldName;
         this.scoreFieldName = scoreFieldName;
         this.vectorFieldName = vectorFieldName;
         this.metadataFieldName = metadataFieldName;
+        this.filterMapper = new MongoDBFilterMapper(metadataFieldName);
 
         var collectionExists = collectionExistsViaListCollections(mongoClient, database, collection);
 
@@ -53,7 +58,8 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
             mongoClient.getDatabase(database).createCollection(collection);
             this.collection = mongoClient.getDatabase(database).getCollection(collection);
             createSearchIndex(vectorFieldName, dimensions, similaritySearch);
-        }else this.collection = mongoClient.getDatabase(database).getCollection(collection);
+        } else
+            this.collection = mongoClient.getDatabase(database).getCollection(collection);
 
     }
 
@@ -64,14 +70,11 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                         new Document("type", "vector")
                                 .append("path", vectorFieldName)
                                 .append("numDimensions", dimensions)
-                                .append("similarity", similaritySearch.value())
-                )
-        );
+                                .append("similarity", similaritySearch.value())));
         SearchIndexModel indexModel = new SearchIndexModel(
                 this.indexName,
                 definition,
-                SearchIndexType.vectorSearch()
-        );
+                SearchIndexType.vectorSearch());
         this.collection.createSearchIndexes(Collections.singletonList(indexModel));
     }
 
@@ -95,12 +98,8 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     }
 
     public void add(String id, Embedding embedding, TextSegment textSegment) {
-        Document document = new Document()
-                .append(ID, id)
-                .append(vectorFieldName, embedding.vector())
-                .append(textFieldName, textSegment != null ? textSegment.text() : null)
-                .append(metadataFieldName, textSegment != null ? textSegment.metadata() : null);
-        collection.insertOne(document);
+        addAllInternal(Collections.singletonList(id), Collections.singletonList(embedding),
+                textSegment == null ? null : Collections.singletonList(textSegment));
     }
 
     @Override
@@ -110,45 +109,48 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
 
     @Override
     public List<String> addAll(List<Embedding> embeddings) {
-        List<String> ids = new ArrayList<>(embeddings.size());
-        List<Document> documents = new ArrayList<>(embeddings.size());
-        for (Embedding embedding : embeddings) {
-            var id = ObjectId.get().toHexString();
-            ids.add(id);
-            documents.add(new Document()
-                    .append(ID, id)
-                    .append(vectorFieldName, embedding.vector()));
-        }
-        collection.insertMany(documents);
+        List<String> ids = embeddings.stream()
+                .map(ignored -> ObjectId.get().toHexString())
+                .toList();
+        addAllInternal(ids, embeddings, null);
         return ids;
     }
 
     @Override
     public List<String> addAll(List<Embedding> embeddings, List<TextSegment> embedded) {
-        List<String> ids = new ArrayList<>(embeddings.size());
-        List<Document> documents = new ArrayList<>(embeddings.size());
-        for (int i = 0; i < embeddings.size(); i++) {
-            var id = ObjectId.get().toHexString();
-            ids.add(id);
-            TextSegment textSegment = embedded.get(i);
-            var vector = embeddings.get(i).vector();
+        List<String> ids = embeddings.stream()
+                .map(ignored -> ObjectId.get().toHexString())
+                .toList();
+        addAllInternal(ids, embeddings, embedded);
+        return ids;
+    }
+
+    private void addAllInternal(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        if (ids.isEmpty() || ids.size() != embeddings.size() || (embedded != null && embedded.size() != embeddings.size())) {
+            throw new IllegalArgumentException("ids, embeddings and embedded must be non-empty and of the same size");
+        }
+        int size = ids.size();
+        List<Document> documents = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            String id = ids.get(i);
+            Embedding embedding = embeddings.get(i);
+            TextSegment textSegment = embedded == null ? null : embedded.get(i);
 
             documents.add(new Document()
                     .append(ID, id)
-                    .append(vectorFieldName, BinaryVector.floatVector(vector))
+                    .append(vectorFieldName, BinaryVector.floatVector(embedding.vector()))
                     .append(textFieldName, textSegment != null ? textSegment.text() : null)
                     .append(metadataFieldName, textSegment != null ? textSegment.metadata().toMap() : null));
         }
         collection.insertMany(documents);
-        return ids;
     }
 
     @Override
-    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest embeddingSearchRequest) {
-        var filter = embeddingSearchRequest.filter();
-        var minScore = embeddingSearchRequest.minScore();
-        var maxResults = embeddingSearchRequest.maxResults();
-        var embedding = embeddingSearchRequest.queryEmbedding();
+    public EmbeddingSearchResult<TextSegment> search(EmbeddingSearchRequest request) {
+        var filter = request.filter();
+        var minScore = request.minScore();
+        var maxResults = request.maxResults();
+        var embedding = request.queryEmbedding();
 
         var queryVector = BinaryVector.floatVector(embedding.vector());
         FieldSearchPath fieldSearchPath = fieldPath(vectorFieldName);
@@ -156,6 +158,10 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
         VectorSearchOptions options = approximateVectorSearchOptions(Math.max(100, maxResults * 10));
 
         if (filter != null) {
+            Bson mongoFilter = filterMapper.map(filter);
+            if (mongoFilter != null) {
+                options.filter(mongoFilter);
+            }
         }
 
         // Create the vectorSearch pipeline stage
@@ -167,18 +173,15 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                 maxResults,
                 options));
         pipeline.add(project(
-                        fields(
-                                include(ID),
-                                include(textFieldName),
-                                include(vectorFieldName),
-                                include(metadataFieldName),
-                                metaVectorSearchScore(scoreFieldName)
-                        )
-                )
-        );
+                fields(
+                        include(ID),
+                        include(textFieldName),
+                        include(vectorFieldName),
+                        include(metadataFieldName),
+                        metaVectorSearchScore(scoreFieldName))));
         pipeline.add(match(gte(scoreFieldName, minScore)));
 
-        try(var iteratorResult = collection.aggregate(pipeline).cursor()) {
+        try (var iteratorResult = collection.aggregate(pipeline).cursor()) {
             List<EmbeddingMatch<TextSegment>> result = new ArrayList<>();
             while (iteratorResult.hasNext()) {
                 var document = iteratorResult.tryNext();
@@ -198,7 +201,7 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
     public static boolean collectionExistsViaListCollections(MongoClient client, String dbName, String collectionName) {
         var db = client.getDatabase(dbName);
 
-        try(var cursor = db.listCollections()
+        try (var cursor = db.listCollections()
                 .filter(new Document("name", collectionName))
                 .cursor()) {
             return cursor.hasNext();

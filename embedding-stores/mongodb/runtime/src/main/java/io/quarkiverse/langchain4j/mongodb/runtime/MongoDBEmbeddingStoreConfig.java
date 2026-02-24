@@ -1,10 +1,10 @@
 package io.quarkiverse.langchain4j.mongodb.runtime;
 
+import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
+
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
-
-import static io.quarkus.runtime.annotations.ConfigPhase.RUN_TIME;
 
 /**
  * Configuration of the MongoDB embedding store.
@@ -43,7 +43,6 @@ public interface MongoDBEmbeddingStoreConfig {
     @WithDefault("text")
     String textFieldName();
 
-
     /**
      * The number of dimensions of the embedding vector. Default is 768, with a max of 8192.
      */
@@ -56,6 +55,12 @@ public interface MongoDBEmbeddingStoreConfig {
     @WithDefault("cosine")
     SimilaritySearch similaritySearch();
 
+    /**
+     * The name of the field that will store the similarity score returned by the vector search.
+     * This field is used to rank results by relevance (e.g., higher scores indicate better matches).
+     * The score is typically a floating-point value between 0 and 1 (or negative for some algorithms),
+     * depending on the chosen similarity search method.
+     */
     @WithDefault("score")
     String scoreFieldName();
 
