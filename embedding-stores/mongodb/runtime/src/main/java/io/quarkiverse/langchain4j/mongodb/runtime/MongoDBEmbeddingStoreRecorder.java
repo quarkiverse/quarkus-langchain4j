@@ -41,6 +41,8 @@ public class MongoDBEmbeddingStoreRecorder {
                         config.indexName(),
                         config.vectorFieldName(),
                         config.textFieldName(),
+                        config.dimensions(),
+                        config.similaritySearch(),
                         config.metadataFieldName());
             }
         };
