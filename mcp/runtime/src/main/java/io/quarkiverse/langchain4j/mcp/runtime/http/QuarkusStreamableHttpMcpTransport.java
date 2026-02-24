@@ -71,7 +71,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         } else {
             this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
         }
-        this.headersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
+        this.headersSupplier = getOrDefault(builder.headersSupplier, new McpHeadersSupplier() {
+            @Override
+            public Map<String, String> apply(McpCallContext i) {
+                return Map.of();
+            }
+        });
     }
 
     @Override
@@ -373,12 +378,22 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         }
 
         public Builder headers(Map<String, String> headers) {
-            this.headersSupplier = (i) -> headers;
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headers;
+                }
+            };
             return this;
         }
 
         public Builder headers(Supplier<Map<String, String>> headersSupplier) {
-            this.headersSupplier = i -> headersSupplier.get();
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headersSupplier.get();
+                }
+            };
             return this;
         }
 
