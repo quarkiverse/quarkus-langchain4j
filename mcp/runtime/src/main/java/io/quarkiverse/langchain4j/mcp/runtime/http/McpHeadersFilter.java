@@ -11,13 +11,13 @@ import dev.langchain4j.mcp.client.McpHeadersSupplier;
 /**
  * Hacky way to be able to access the McpCallContext to provide context-aware headers for MCP client.
  */
-class McpCustomHeadersFilter implements ResteasyReactiveClientRequestFilter {
+class McpHeadersFilter implements ResteasyReactiveClientRequestFilter {
 
-    private final McpHeadersSupplier customHeadersSupplier;
+    private final McpHeadersSupplier headersSupplier;
     private static final ThreadLocal<McpCallContext> CURRENT_CONTEXT = new ThreadLocal<>();
 
-    McpCustomHeadersFilter(McpHeadersSupplier customHeadersSupplier) {
-        this.customHeadersSupplier = customHeadersSupplier;
+    McpHeadersFilter(McpHeadersSupplier headersSupplier) {
+        this.headersSupplier = headersSupplier;
     }
 
     static void setCurrentContext(McpCallContext context) {
@@ -31,7 +31,7 @@ class McpCustomHeadersFilter implements ResteasyReactiveClientRequestFilter {
     @Override
     public void filter(ResteasyReactiveClientRequestContext requestContext) {
         McpCallContext context = CURRENT_CONTEXT.get();
-        Map<String, String> headers = customHeadersSupplier.apply(context);
+        Map<String, String> headers = headersSupplier.apply(context);
         if (headers != null) {
             headers.forEach((name, value) -> requestContext.getHeaders().putSingle(name, value));
         }

@@ -77,7 +77,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
             clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
         this.headersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
-        clientBuilder.register(new McpCustomHeadersFilter(headersSupplier));
+        clientBuilder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             clientBuilder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -97,7 +97,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             builder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
-        builder.register(new McpCustomHeadersFilter(headersSupplier));
+        builder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -167,7 +167,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (id != null) {
             operationHandler.startOperation(id, future);
         }
-        McpCustomHeadersFilter.setCurrentContext(context);
+        McpHeadersFilter.setCurrentContext(context);
         try {
             postEndpoint.post(request)
                     .onFailure().invoke(future::completeExceptionally)
@@ -183,7 +183,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                         }
                     }).subscribeAsCompletionStage();
         } finally {
-            McpCustomHeadersFilter.clearCurrentContext();
+            McpHeadersFilter.clearCurrentContext();
         }
         return uni;
     }

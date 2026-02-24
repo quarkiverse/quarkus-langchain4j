@@ -52,7 +52,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     private final AtomicReference<String> mcpSessionId = new AtomicReference<>();
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
-    private final McpHeadersSupplier customHeadersSupplier;
+    private final McpHeadersSupplier headersSupplier;
     private final HttpClient httpClient;
     private McpInitializeRequest initializeRequest;
     private volatile SseSubscriber sseSubscriber;
@@ -71,7 +71,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         } else {
             this.mcpClientAuthProvider = McpClientAuthProvider.resolve(builder.mcpClientName).orElse(null);
         }
-        this.customHeadersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
+        this.headersSupplier = getOrDefault(builder.headersSupplier, (i) -> Map.of());
     }
 
     @Override
@@ -169,7 +169,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                 options.addHeader("Authorization", authValue);
             }
         }
-        Map<String, String> customHeaders = customHeadersSupplier.apply(context);
+        Map<String, String> customHeaders = headersSupplier.apply(context);
         if (customHeaders != null) {
             customHeaders.forEach((name, value) -> options.addHeader(name, value));
         }

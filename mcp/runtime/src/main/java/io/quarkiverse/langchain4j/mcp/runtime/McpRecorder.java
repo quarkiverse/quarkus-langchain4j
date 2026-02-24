@@ -18,6 +18,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpClientListener;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
@@ -80,6 +81,7 @@ public class McpRecorder {
                     }
                 }
                 Optional<TlsConfiguration> tlsConfiguration = resolveTlsConfiguration(runtimeConfig.tlsConfigurationName());
+                Optional<McpHeadersSupplier> mcpHeadersSupplier = resolveMcpHeadersSupplier();
                 transport = switch (mcpTransportType) {
                     case STDIO -> {
                         List<String> command = runtimeConfig.command().orElseThrow(() -> new ConfigurationException(
@@ -102,6 +104,7 @@ public class McpRecorder {
                         if (!runtimeConfig.header().isEmpty()) {
                             httpBuilder.headers(runtimeConfig.header());
                         }
+                        mcpHeadersSupplier.ifPresent(httpBuilder::headers);
                         yield httpBuilder.build();
                     }
                     case STREAMABLE_HTTP -> {
@@ -120,6 +123,7 @@ public class McpRecorder {
                         if (!runtimeConfig.header().isEmpty()) {
                             streamableBuilder.headers(runtimeConfig.header());
                         }
+                        mcpHeadersSupplier.ifPresent(streamableBuilder::headers);
                         yield streamableBuilder.build();
                     }
                     case WEBSOCKET -> {
@@ -189,6 +193,14 @@ public class McpRecorder {
                         exposeResourcesAsTools);
             }
         };
+    }
+
+    private Optional<McpHeadersSupplier> resolveMcpHeadersSupplier() {
+        if (Arc.container() != null) {
+            McpHeadersSupplier supplier = Arc.container().select(McpHeadersSupplier.class).orNull();
+            return Optional.ofNullable(supplier);
+        }
+        return Optional.empty();
     }
 
     private Optional<TlsConfiguration> resolveTlsConfiguration(Optional<String> tlsConfigurationName) {
