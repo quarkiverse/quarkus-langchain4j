@@ -433,6 +433,46 @@ This approach is useful when you need:
 - Integration with non-AI parts of your application
 - Programmatic resource access
 
+== Providing HTTP headers
+
+For HTTP-based MCP clients, you can inject custom headers into requests sent to the MCP server.
+There are two ways to do this:
+
+=== Static headers via configuration properties:
+
+[source,properties]
+----
+quarkus.langchain4j.mcp.CLIENT_NAME.header.X-Custom-Header=MyValue
+quarkus.langchain4j.mcp.CLIENT_NAME.header.X-Another-Header=AnotherValue
+----
+
+=== Dynamically provided headers via a `McpHeadersSupplier` bean:
+
+This is useful when headers need to be generated at runtime dynamically and the supplier needs
+to be aware of the context of a particular MCP call.
+
+NOTE: This is currently supported only with the Streamable HTTP transport.
+
+Provide a CDI bean that implements the `dev.langchain4j.mcp.client.McpHeadersSupplier` interface:
+
+[source,java]
+----
+import dev.langchain4j.mcp.client.McpCallContext;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
+import jakarta.enterprise.context.ApplicationScoped;
+import java.util.Map;
+
+@ApplicationScoped
+public class MyHeaderProvider implements McpHeadersSupplier {
+    @Override
+    public Map<String,String> apply(McpCallContext context) {
+        // return a map with headers here
+    }}
+
+----
+
+When such bean exists, all Streamable HTTP-based MCP clients will be wired up to it automatically.
+
 == Authorization
 
 If your MCP server uses the *Streamable HTTP* or *HTTP/SSE* transport, it may require client authorization using bearer tokens or API keys.

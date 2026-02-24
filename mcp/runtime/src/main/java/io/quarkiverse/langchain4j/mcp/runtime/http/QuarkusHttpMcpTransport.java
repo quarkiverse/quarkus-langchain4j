@@ -6,8 +6,10 @@ import static dev.langchain4j.internal.ValidationUtils.ensureNotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
@@ -16,6 +18,7 @@ import org.jboss.resteasy.reactive.server.jackson.JacksonBasicMessageBodyReader;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import dev.langchain4j.mcp.client.McpCallContext;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.transport.McpOperationHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.protocol.McpClientMessage;
@@ -42,6 +45,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
     private volatile McpPostEndpoint postEndpoint;
     private volatile McpOperationHandler operationHandler;
     private final McpClientAuthProvider mcpClientAuthProvider;
+    private final McpHeadersSupplier headersSupplier;
 
     private volatile Runnable onFailure;
     private volatile boolean closed;
@@ -72,6 +76,13 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             clientBuilder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        this.headersSupplier = getOrDefault(builder.headersSupplier, new McpHeadersSupplier() {
+            @Override
+            public Map<String, String> apply(McpCallContext i) {
+                return Map.of();
+            }
+        });
+        clientBuilder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             clientBuilder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             clientBuilder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -91,6 +102,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (mcpClientAuthProvider != null) {
             builder.register(new McpClientAuthFilter(mcpClientAuthProvider));
         }
+        builder.register(new McpHeadersFilter(headersSupplier));
         if (logRequests || logResponses) {
             builder.loggingScope(LoggingScope.REQUEST_RESPONSE);
             builder.clientLogger(new McpHttpClientLogger(logRequests, logResponses));
@@ -226,6 +238,7 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         private boolean logResponses = false;
         private TlsConfiguration tlsConfiguration;
         private McpClientAuthProvider mcpClientAuthProvider;
+        private McpHeadersSupplier headersSupplier;
 
         /**
          * The initial URL where to connect to the server and request a SSE
@@ -263,6 +276,26 @@ public class QuarkusHttpMcpTransport implements McpTransport {
 
         public QuarkusHttpMcpTransport.Builder mcpClientAuthProvider(McpClientAuthProvider mcpClientAuthProvider) {
             this.mcpClientAuthProvider = mcpClientAuthProvider;
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Map<String, String> headers) {
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headers;
+                }
+            };
+            return this;
+        }
+
+        public QuarkusHttpMcpTransport.Builder headers(Supplier<Map<String, String>> headersSupplier) {
+            this.headersSupplier = new McpHeadersSupplier() {
+                @Override
+                public Map<String, String> apply(McpCallContext i) {
+                    return headersSupplier.get();
+                }
+            };
             return this;
         }
 

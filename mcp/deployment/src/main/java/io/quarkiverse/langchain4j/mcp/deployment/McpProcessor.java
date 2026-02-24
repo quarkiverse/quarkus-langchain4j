@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -242,6 +243,7 @@ public class McpProcessor {
     @BuildStep
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
     }
 
 }
