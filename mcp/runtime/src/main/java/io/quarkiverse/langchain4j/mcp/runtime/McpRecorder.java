@@ -104,7 +104,6 @@ public class McpRecorder {
                         if (!runtimeConfig.header().isEmpty()) {
                             httpBuilder.headers(runtimeConfig.header());
                         }
-                        mcpHeadersSupplier.ifPresent(httpBuilder::headers);
                         yield httpBuilder.build();
                     }
                     case STREAMABLE_HTTP -> {

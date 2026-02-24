@@ -172,24 +172,19 @@ public class QuarkusHttpMcpTransport implements McpTransport {
         if (id != null) {
             operationHandler.startOperation(id, future);
         }
-        McpHeadersFilter.setCurrentContext(context);
-        try {
-            postEndpoint.post(request)
-                    .onFailure().invoke(future::completeExceptionally)
-                    .onItem().invoke(response -> {
-                        int statusCode = response.getStatus();
-                        if (!isExpectedStatusCode(statusCode)) {
-                            future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
-                        }
-                        // For messages with null ID, we don't wait for a response in the SSE channel,
-                        // so if the server accepted the request, we consider the operation done
-                        if (id == null) {
-                            future.complete(null);
-                        }
-                    }).subscribeAsCompletionStage();
-        } finally {
-            McpHeadersFilter.clearCurrentContext();
-        }
+        postEndpoint.post(request)
+                .onFailure().invoke(future::completeExceptionally)
+                .onItem().invoke(response -> {
+                    int statusCode = response.getStatus();
+                    if (!isExpectedStatusCode(statusCode)) {
+                        future.completeExceptionally(new RuntimeException("Unexpected status code: " + statusCode));
+                    }
+                    // For messages with null ID, we don't wait for a response in the SSE channel,
+                    // so if the server accepted the request, we consider the operation done
+                    if (id == null) {
+                        future.complete(null);
+                    }
+                }).subscribeAsCompletionStage();
         return uni;
     }
 
@@ -301,11 +296,6 @@ public class QuarkusHttpMcpTransport implements McpTransport {
                     return headersSupplier.get();
                 }
             };
-            return this;
-        }
-
-        public QuarkusHttpMcpTransport.Builder headers(McpHeadersSupplier headersSupplier) {
-            this.headersSupplier = headersSupplier;
             return this;
         }
 

@@ -450,6 +450,9 @@ quarkus.langchain4j.mcp.CLIENT_NAME.header.X-Another-Header=AnotherValue
 
 This is useful when headers need to be generated at runtime dynamically and the supplier needs
 to be aware of the context of a particular MCP call.
+
+NOTE: This is currently supported only with the Streamable HTTP transport.
+
 Provide a CDI bean that implements the `dev.langchain4j.mcp.client.McpHeadersSupplier` interface:
 
 [source,java]
@@ -468,7 +471,7 @@ public class MyHeaderProvider implements McpHeadersSupplier {
 
 ----
 
-When such bean exists, all HTTP-based MCP clients will be wired up to it automatically.
+When such bean exists, all Streamable HTTP-based MCP clients will be wired up to it automatically.
 
 == Authorization
 
