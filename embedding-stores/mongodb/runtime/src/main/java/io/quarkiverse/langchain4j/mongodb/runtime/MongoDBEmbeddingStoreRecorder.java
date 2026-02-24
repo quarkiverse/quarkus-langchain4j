@@ -43,6 +43,7 @@ public class MongoDBEmbeddingStoreRecorder {
                         config.textFieldName(),
                         config.dimensions(),
                         config.similaritySearch(),
+                        config.scoreFieldName(),
                         config.metadataFieldName());
             }
         };
