@@ -43,6 +43,13 @@ public interface MongoDBEmbeddingStoreConfig {
     @WithDefault("text")
     String textFieldName();
 
+    @WithDefault("768")
+    int dimensions();
+
+
+    @WithDefault("cosine")
+    SimilaritySearch similaritySearch();
+
     /**
      * The name of the field to store the metadata.
      */
