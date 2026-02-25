@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -167,7 +168,8 @@ public class McpProcessor {
                         .unremovable()
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
-                        .supplier(
+                        .addInjectionPoint(ClassType.create(DotName.createSimple(ExecutorService.class)))
+                        .createWith(
                                 recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
                                         micrometerPresent && mcpBuildTimeConfiguration.clients().get(client).metricsEnabled()))
                         .done());
