@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -63,14 +64,14 @@ public class McpRecorder {
         McpRecorder.claudeConfigContents = contents;
     }
 
-    public Supplier<McpClient> mcpClientSupplier(String key,
+    public Function<SyntheticCreationalContext<McpClient>, McpClient> mcpClientSupplier(String key,
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
             Supplier<Vertx> vertx,
             boolean addMetrics) {
-        return new Supplier<McpClient>() {
+        return new Function<>() {
             @Override
-            public McpClient get() {
+            public McpClient apply(SyntheticCreationalContext<McpClient> context) {
                 McpTransport transport;
                 McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.getValue().clients().get(key);
                 List<McpRoot> initialRoots = new ArrayList<>();
@@ -90,6 +91,7 @@ public class McpRecorder {
                                 .command(command)
                                 .logEvents(runtimeConfig.logResponses().orElse(false))
                                 .environment(runtimeConfig.environment())
+                                .executorService(context.getInjectedReference(ExecutorService.class))
                                 .build();
                     }
                     case HTTP -> {
