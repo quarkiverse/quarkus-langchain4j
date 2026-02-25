@@ -268,8 +268,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                                 return null;
                                             });
                                 } else {
-                                    future.completeExceptionally(
-                                            new RuntimeException("Unexpected status code: " + response.result().statusCode()));
+                                    response.result().bodyHandler(bodyBuffer -> {
+                                        String responseString = bodyBuffer.toString();
+                                        future.completeExceptionally(
+                                                new RuntimeException("Unexpected status code: " + response.result().statusCode()
+                                                        + ", body: " + responseString));
+                                    });
                                 }
                             }
                         });
