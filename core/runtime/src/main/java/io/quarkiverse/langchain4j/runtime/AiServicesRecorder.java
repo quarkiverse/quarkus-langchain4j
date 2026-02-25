@@ -333,6 +333,9 @@ public class AiServicesRecorder {
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
 
+                    aiServiceContext.eventListenerRegistrar
+                            .shouldThrowExceptionOnEventError(info.shouldThrowExceptionOnEventError());
+
                     return aiServiceContext;
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
