@@ -274,6 +274,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-log-requests-curl[`quarkus.langchain4j.watsonx.log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-enable-integration[`quarkus.langchain4j.watsonx.enable-integration`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.watsonx.enable-integration+++[]
@@ -1785,6 +1806,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__M
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-watsonx_quarkus-langchain4j-watsonx-model-name-log-requests-curl[`quarkus.langchain4j.watsonx."model-name".log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.watsonx."model-name".log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the watsonx.ai client should log requests as cURL commands.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_WATSONX__MODEL_NAME__LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

@@ -107,6 +107,13 @@ public interface McpClientRuntimeConfig {
     Optional<String> tlsConfigurationName();
 
     /**
+     * Static HTTP headers to include in all requests to the MCP server.
+     * This only applies to MCP clients using the HTTP or streamable HTTP transport.
+     */
+    @ConfigDocMapKey("header-name")
+    Map<String, String> header();
+
+    /**
      * Whether to cache the tool list obtained from the MCP server.
      * When set to true (the default), the tool list is cached until the server notifies of changes
      * or the cache is manually evicted. When false, the client always fetches a fresh tool list from the server.

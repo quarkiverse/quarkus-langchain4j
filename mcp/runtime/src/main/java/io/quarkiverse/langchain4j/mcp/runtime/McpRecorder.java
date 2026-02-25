@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -18,6 +19,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpClientListener;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
@@ -62,14 +64,14 @@ public class McpRecorder {
         McpRecorder.claudeConfigContents = contents;
     }
 
-    public Supplier<McpClient> mcpClientSupplier(String key,
+    public Function<SyntheticCreationalContext<McpClient>, McpClient> mcpClientSupplier(String key,
             McpTransportType mcpTransportType,
             ShutdownContext shutdown,
             Supplier<Vertx> vertx,
             boolean addMetrics) {
-        return new Supplier<McpClient>() {
+        return new Function<>() {
             @Override
-            public McpClient get() {
+            public McpClient apply(SyntheticCreationalContext<McpClient> context) {
                 McpTransport transport;
                 McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.getValue().clients().get(key);
                 List<McpRoot> initialRoots = new ArrayList<>();
@@ -80,6 +82,7 @@ public class McpRecorder {
                     }
                 }
                 Optional<TlsConfiguration> tlsConfiguration = resolveTlsConfiguration(runtimeConfig.tlsConfigurationName());
+                Optional<McpHeadersSupplier> mcpHeadersSupplier = resolveMcpHeadersSupplier();
                 transport = switch (mcpTransportType) {
                     case STDIO -> {
                         List<String> command = runtimeConfig.command().orElseThrow(() -> new ConfigurationException(
@@ -88,31 +91,41 @@ public class McpRecorder {
                                 .command(command)
                                 .logEvents(runtimeConfig.logResponses().orElse(false))
                                 .environment(runtimeConfig.environment())
+                                .executorService(context.getInjectedReference(ExecutorService.class))
                                 .build();
                     }
-                    case HTTP -> new QuarkusHttpMcpTransport.Builder()
-                            .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
-                                    "MCP client configuration named " + key + " is missing the 'url' property")))
-                            .logRequests(runtimeConfig.logRequests().orElse(false))
-                            .logResponses(runtimeConfig.logResponses().orElse(false))
-                            .tlsConfiguration(tlsConfiguration.orElse(null))
-                            .mcpClientName(key)
-                            .timeout(runtimeConfig.toolExecutionTimeout())
-                            .build();
+                    case HTTP -> {
+                        QuarkusHttpMcpTransport.Builder httpBuilder = new QuarkusHttpMcpTransport.Builder()
+                                .sseUrl(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
+                                        "MCP client configuration named " + key + " is missing the 'url' property")))
+                                .logRequests(runtimeConfig.logRequests().orElse(false))
+                                .logResponses(runtimeConfig.logResponses().orElse(false))
+                                .tlsConfiguration(tlsConfiguration.orElse(null))
+                                .mcpClientName(key)
+                                .timeout(runtimeConfig.toolExecutionTimeout());
+                        if (!runtimeConfig.header().isEmpty()) {
+                            httpBuilder.headers(runtimeConfig.header());
+                        }
+                        yield httpBuilder.build();
+                    }
                     case STREAMABLE_HTTP -> {
                         HttpClientOptions httpClientOptions = new HttpClientOptions();
                         tlsConfiguration.ifPresent(tls -> {
                             TlsConfigUtils.configure(httpClientOptions, tls);
                         });
-                        yield new QuarkusStreamableHttpMcpTransport.Builder()
+                        QuarkusStreamableHttpMcpTransport.Builder streamableBuilder = new QuarkusStreamableHttpMcpTransport.Builder()
                                 .url(runtimeConfig.url().orElseThrow(() -> new ConfigurationException(
                                         "MCP client configuration named " + key + " is missing the 'url' property")))
                                 .logRequests(runtimeConfig.logRequests().orElse(false))
                                 .logResponses(runtimeConfig.logResponses().orElse(false))
                                 .httpClient(vertx.get().createHttpClient(httpClientOptions))
                                 .mcpClientName(key)
-                                .timeout(runtimeConfig.toolExecutionTimeout())
-                                .build();
+                                .timeout(runtimeConfig.toolExecutionTimeout());
+                        if (!runtimeConfig.header().isEmpty()) {
+                            streamableBuilder.headers(runtimeConfig.header());
+                        }
+                        mcpHeadersSupplier.ifPresent(streamableBuilder::headers);
+                        yield streamableBuilder.build();
                     }
                     case WEBSOCKET -> {
                         SSLContext sslContext = null;
@@ -181,6 +194,14 @@ public class McpRecorder {
                         exposeResourcesAsTools);
             }
         };
+    }
+
+    private Optional<McpHeadersSupplier> resolveMcpHeadersSupplier() {
+        if (Arc.container() != null) {
+            McpHeadersSupplier supplier = Arc.container().select(McpHeadersSupplier.class).orNull();
+            return Optional.ofNullable(supplier);
+        }
+        return Optional.empty();
     }
 
     private Optional<TlsConfiguration> resolveTlsConfiguration(Optional<String> tlsConfigurationName) {

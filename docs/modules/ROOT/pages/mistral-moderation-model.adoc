@@ -9,14 +9,7 @@ Mistral provides moderation models to detect harmful or unsafe content in user i
 
 Same setup as chat/embedding models. You must provide a valid API key.
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-mistral-ai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-mistral-ai]
 
 == Configuration
 

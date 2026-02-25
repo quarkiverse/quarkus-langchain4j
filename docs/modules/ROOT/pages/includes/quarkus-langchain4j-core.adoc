@@ -204,6 +204,27 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests-curl[`quarkus.langchain4j.log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether clients should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_LOG_REQUESTS_CURL+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-timeout]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-timeout[`quarkus.langchain4j.timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.timeout+++[]

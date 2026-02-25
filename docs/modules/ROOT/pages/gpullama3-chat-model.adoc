@@ -64,14 +64,7 @@ The TornadoVM installation:
 
 To integrate the GPULlama3 chat model into your Quarkus application, add the following dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-gpu-llama3</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-gpu-llama3]
 
 IMPORTANT: If no other LLM extension is configured, xref:ai-services.adoc[AI Services] will automatically use the GPU-accelerated GPULlama3!
 

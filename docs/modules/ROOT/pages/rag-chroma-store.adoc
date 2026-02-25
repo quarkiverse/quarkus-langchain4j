@@ -12,14 +12,7 @@ This guide explains how to configure and use Chroma as an embedding-aware docume
 
 To enable Chroma integration in your Quarkus project, add the following Maven dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-chroma</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-chroma]
 
 == Dev Services Support
 

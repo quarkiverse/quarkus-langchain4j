@@ -26,14 +26,7 @@ NOTE: In dev mode, the `quarkus-langchain4j-pgvector` extension will automatical
 
 To enable PGVector integration in your Quarkus project, add the following Maven dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-pgvector</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-pgvector]
 
 This extension requires a configured Quarkus datasource.
 For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide].

@@ -32,6 +32,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
+import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -315,6 +316,13 @@ public class AiServicesRecorder {
                                 info.chatMemorySeederClassName())
                                 .getConstructor().newInstance());
                     }
+
+                    if (info.systemMessageProviderClassName() != null) {
+                        quarkusAiServices.systemMessageProvider((SystemMessageProvider) loadClass(
+                                info.systemMessageProviderClassName())
+                                .getConstructor().newInstance());
+                    }
+
                     if (info.maxSequentialToolInvocations() != null && info.maxSequentialToolInvocations() > 0) {
                         quarkusAiServices.maxSequentialToolInvocations(info.maxSequentialToolInvocations());
                     }

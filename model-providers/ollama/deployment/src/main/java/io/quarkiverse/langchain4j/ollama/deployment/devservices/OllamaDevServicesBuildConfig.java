@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.ollama.deployment.devservices;
 
+import java.util.OptionalInt;
+
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.smallrye.config.WithDefault;
 
@@ -25,4 +27,12 @@ public interface OllamaDevServicesBuildConfig {
      */
     @WithDefault(OLLAMA_IMAGE)
     String imageName();
+
+    /**
+     * The port that the dev service should be exposed on.
+     * <p>
+     * <strong>Default:</strong> A random free port.
+     * </p>
+     */
+    OptionalInt port();
 }

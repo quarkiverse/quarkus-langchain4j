@@ -130,6 +130,12 @@ public class LangChain4jDotNames {
 
     static final DotName SEED_MEMORY = DotName.createSimple(SeedMemory.class);
 
+    static final DotName NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.NoSystemMessageProviderSupplier.class);
+
+    static final DotName BEAN_IF_EXISTS_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
+            RegisterAiService.BeanIfExistsSystemMessageProviderSupplier.class);
+
     static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
     static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);
 

@@ -91,6 +91,29 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++ollama/ollama:latest+++`
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-port]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-devservices-port[`quarkus.langchain4j.ollama.devservices.port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.devservices.port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The port that the dev service should be exposed on.
+
+*Default:* A random free port.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_DEVSERVICES_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-chat-model-model-id[`quarkus.langchain4j.ollama.chat-model.model-id`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.ollama.chat-model.model-id+++[]
@@ -233,6 +256,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-log-requests-curl[`quarkus.langchain4j.ollama.log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Ollama client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA_LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -746,6 +790,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MO
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-ollama_quarkus-langchain4j-ollama-model-name-log-requests-curl[`quarkus.langchain4j.ollama."model-name".log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.ollama."model-name".log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Ollama client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_OLLAMA__MODEL_NAME__LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

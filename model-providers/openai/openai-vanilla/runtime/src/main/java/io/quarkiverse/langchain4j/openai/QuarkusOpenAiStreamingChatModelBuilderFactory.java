@@ -17,6 +17,7 @@ public class QuarkusOpenAiStreamingChatModelBuilderFactory implements OpenAiStre
 
         private String configName;
         private String tlsConfigurationName;
+        private boolean logCurl;
 
         private Proxy proxy;
 
@@ -35,10 +36,16 @@ public class QuarkusOpenAiStreamingChatModelBuilderFactory implements OpenAiStre
             return this;
         }
 
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         @Override
         public OpenAiStreamingChatModel build() {
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
+            AdditionalPropertiesHack.setLogCurl(logCurl);
             return super.build();
         }
     }

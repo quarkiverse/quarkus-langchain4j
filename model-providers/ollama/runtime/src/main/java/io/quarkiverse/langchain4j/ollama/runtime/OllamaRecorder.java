@@ -198,6 +198,7 @@ public class OllamaRecorder {
                     .timeout(ollamaConfig.timeout().orElse(Duration.ofSeconds(10)))
                     .logRequests(firstOrDefault(false, chatModelConfig.logRequests(), ollamaConfig.logRequests()))
                     .logResponses(firstOrDefault(false, chatModelConfig.logResponses(), ollamaConfig.logResponses()))
+                    .logCurl(firstOrDefault(false, ollamaConfig.logRequestsCurl()))
                     .model(ollamaFixedConfig.chatModel().modelId())
                     .options(optionsBuilder.build())
                     .configName(NamedConfigUtil.isDefault(configName) ? null : configName);

@@ -40,14 +40,7 @@ quarkus.redis.devservices.image-name=your/custom/image
 
 To enable Redis integration in your Quarkus project, add the following Maven dependency:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-redis</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-redis]
 
 This extension builds on top of the https://quarkus.io/guides/redis[Quarkus Redis client].
 Ensure the default Redis data source is properly configured* For more details, refer to:

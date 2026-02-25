@@ -128,8 +128,6 @@ public class ChatMemoryStoreHitCountTest {
         var hitCounts = CustomChatMemoryStore.measureHitCounts(() -> {
             service.chat("123", "Say hello");
         });
-        // The extra hits will likely be eliminated once https://github.com/langchain4j/langchain4j/pull/4416 goes
-        // in, and we update DefaultCommittableChatMemory.commit to use the set method to commit the changes.
-        assertThat(hitCounts).isEqualTo(new HitCounts(3, 2, 1));
+        assertThat(hitCounts).isEqualTo(new HitCounts(1, 1, 0));
     }
 }

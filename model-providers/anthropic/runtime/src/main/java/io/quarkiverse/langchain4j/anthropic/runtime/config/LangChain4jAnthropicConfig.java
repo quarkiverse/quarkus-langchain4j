@@ -55,6 +55,12 @@ public interface LangChain4jAnthropicConfig {
         String version();
 
         /**
+         * If set to {@code true}, the {@code "anthopic-beta"} header will never be sent
+         */
+        @ConfigDocDefault("false")
+        Optional<Boolean> disableBetaHeader();
+
+        /**
          * Timeout for Anthropic calls
          */
         @ConfigDocDefault("10s")
@@ -74,6 +80,13 @@ public interface LangChain4jAnthropicConfig {
         @ConfigDocDefault("false")
         @WithDefault("${quarkus.langchain4j.log-responses}")
         Optional<Boolean> logResponses();
+
+        /**
+         * Whether the Anthropic client should log requests as cURL commands
+         */
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests-curl}")
+        Optional<Boolean> logRequestsCurl();
 
         /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Anthropic

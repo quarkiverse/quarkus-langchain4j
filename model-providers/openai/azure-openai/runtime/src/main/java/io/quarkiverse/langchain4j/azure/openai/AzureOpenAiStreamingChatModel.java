@@ -6,6 +6,7 @@ import static dev.langchain4j.internal.Utils.isNullOrEmpty;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toFunctions;
 import static dev.langchain4j.model.openai.internal.OpenAiUtils.toOpenAiMessages;
+import static dev.langchain4j.model.openai.internal.OpenAiUtils.toTools;
 import static io.quarkiverse.langchain4j.azure.openai.Consts.DEFAULT_USER_AGENT;
 import static java.time.Duration.ofSeconds;
 
@@ -69,7 +70,13 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
 
     private static final Logger log = Logger.getLogger(AzureOpenAiStreamingChatModel.class);
 
+    /**
+     * Minimum Azure API version that supports the 'tools' parameter instead of the deprecated 'functions' parameter.
+     */
+    private static final String TOOLS_MIN_API_VERSION = "2023-12-01";
+
     private final OpenAiClient client;
+    private final String apiVersion;
     private final Double temperature;
     private final Double topP;
     private final Integer maxTokens;
@@ -94,9 +101,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             String responseFormat,
             Boolean logRequests,
             Boolean logResponses,
+            Boolean logCurl,
             String configName,
             List<ChatModelListener> listeners) {
         this.listeners = listeners;
+        this.apiVersion = apiVersion;
         timeout = getOrDefault(timeout, ofSeconds(60));
 
         this.client = QuarkusOpenAiClient.builder()
@@ -109,6 +118,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .proxy(proxy)
                 .logRequests(logRequests)
                 .logStreamingResponses(logResponses)
+                .logCurl(logCurl != null && logCurl)
                 .userAgent(DEFAULT_USER_AGENT)
                 .azureAdToken(adToken)
                 .azureApiKey(apiKey)
@@ -145,7 +155,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         Integer inputTokenCount = tokenizer == null ? null : tokenizer.estimateTokenCountInMessages(messages);
 
         if (!isNullOrEmpty(toolSpecifications)) {
-            requestBuilder.functions(toFunctions(toolSpecifications));
+            if (supportsTools()) {
+                requestBuilder.tools(toTools(toolSpecifications, false));
+            } else {
+                requestBuilder.functions(toFunctions(toolSpecifications));
+            }
         }
 
         ChatCompletionRequest request = requestBuilder.build();
@@ -272,6 +286,20 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                 .build();
     }
 
+    /**
+     * Returns {@code true} if the configured Azure API version supports the {@code tools} parameter.
+     * The {@code tools} parameter was introduced in Azure API version {@code 2023-12-01-preview}.
+     * Older API versions only support the deprecated {@code functions} parameter.
+     */
+    private boolean supportsTools() {
+        if (apiVersion == null) {
+            return false;
+        }
+        // Strip any suffix like "-preview" for comparison, e.g. "2023-12-01-preview" -> "2023-12-01"
+        String normalized = apiVersion.length() > 10 ? apiVersion.substring(0, 10) : apiVersion;
+        return normalized.compareTo(TOOLS_MIN_API_VERSION) >= 0;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -293,6 +321,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
         private String responseFormat;
         private Boolean logRequests;
         private Boolean logResponses;
+        private Boolean logCurl;
         private String configName;
         private List<ChatModelListener> listeners = Collections.emptyList();
 
@@ -390,6 +419,11 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
             return this;
         }
 
+        public Builder logCurl(Boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         public Builder configName(String configName) {
             this.configName = configName;
             return this;
@@ -416,6 +450,7 @@ public class AzureOpenAiStreamingChatModel implements StreamingChatModel {
                     responseFormat,
                     logRequests,
                     logResponses,
+                    logCurl,
                     configName,
                     listeners);
         }

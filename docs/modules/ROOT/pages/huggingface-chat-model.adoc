@@ -11,14 +11,7 @@ https://huggingface.co/[Hugging Face] is a leading platform in the field of natu
 
 To use Hugging Face chat models in your Quarkus application, add the following extension:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-hugging-face</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hugging-face]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Hugging Face chat model.
 

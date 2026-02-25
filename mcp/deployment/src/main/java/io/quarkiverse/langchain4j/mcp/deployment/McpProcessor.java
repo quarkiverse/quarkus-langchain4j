@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpHeadersSupplier;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -166,7 +168,8 @@ public class McpProcessor {
                         .unremovable()
                         // TODO: should we allow other scopes?
                         .scope(ApplicationScoped.class)
-                        .supplier(
+                        .addInjectionPoint(ClassType.create(DotName.createSimple(ExecutorService.class)))
+                        .createWith(
                                 recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
                                         micrometerPresent && mcpBuildTimeConfiguration.clients().get(client).metricsEnabled()))
                         .done());
@@ -242,6 +245,7 @@ public class McpProcessor {
     @BuildStep
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
+        unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
     }
 
 }

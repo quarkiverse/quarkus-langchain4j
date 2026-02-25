@@ -10,9 +10,12 @@ import '@vaadin/progress-bar';
 import '@vaadin/text-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/dialog';
 import 'qui-alert';
 import { JsonRpc } from 'jsonrpc';
 import { systemMessages } from 'build-time-data';
+import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import { msg, updateWhenLocaleChanges } from 'localization';
 
 export class QwcChat extends LitElement {
 
@@ -27,14 +30,32 @@ export class QwcChat extends LitElement {
             margin-right: 15px;
         }
 
-        .systemMessagePane {
+        .header {
             display: flex;
-            padding: var(--lumo-space-s) var(--lumo-space-m);
-            gap: 10px;
+            justify-content: flex-end;
+            padding: var(--lumo-space-s);
+            gap: var(--lumo-space-s);
         }
 
-        .systemMessageInput {
+        .chatContainer {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .chatContainerEmpty {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .emptyStateInput {
             width: 100%;
+            max-width: 600px;
         }
 
         .systemMessage {
@@ -50,42 +71,37 @@ export class QwcChat extends LitElement {
         }
         .show {
             visibility: visible;
-        }    
-        
-        .remove {
-            display: none;
-        }
-        .add {
-            display: block;
         }
 
+        vaadin-message-list {
+            flex: 1;
+            overflow: auto;
+        }
     `;
 
     static properties = {
         _unfilteredChatItems: {state: true},
-        _chatItems: {state: true},
         _progressBarClass: {state: true},
-        _newConversationButtonClass: {state: true},
         _systemMessage: {state: true},
         _systemMessages: {state: true},
-        _systemMessageDisabled: {state: true},
         _ragEnabled: {state: true},
         _streamingChatSupported: {state: true},
-        _streaminChatEnabled: {state: true},
+        _streamingChatEnabled: {state: true},
         _showToolRelatedMessages: {state: true},
-        _observer: {state:false},
+        _showSettingsDialog: {state: true},
+        _observer: {state: false},
     }
 
     constructor() {
         super();
+        updateWhenLocaleChanges(this);
         this._showToolRelatedMessages = true;
         this._ragEnabled = true;
         this._systemMessages = systemMessages;
         this._systemMessage = systemMessages.length == 1 ? systemMessages[0] : "";
-        this._hideProgressBar();
-        this._beginInputOfNewSystemMessage();
+        this._progressBarClass = "hide";
         this._unfilteredChatItems = [];
-        this._chatItems = [];
+        this._showSettingsDialog = false;
         this.jsonRpc.reset({systemMessage: this._systemMessage});
         this._streamingChatSupported = this.jsonRpc.isStreamingChatSupported();
         this._streamingChatEnabled = this._streamingChatSupported && !this._ragEnabled;
@@ -104,93 +120,140 @@ export class QwcChat extends LitElement {
         super.connectedCallback();
         this._connect();
     }
-    
+
     disconnectedCallback() {
         this._disconnect();
         super.disconnectedCallback();
     }
-    
+
+    get _chatItems() {
+        return this._unfilteredChatItems.filter((item) => {
+            if (item.userName === "Me" || item.userName === "AI" || item.userName === "Error") {
+                return true;
+            } else if (this._showToolRelatedMessages && item.userName === "Tools") {
+                return true;
+            } else if (item.userName === "System") {
+                return true;
+            }
+            return false;
+        });
+    }
+
+    get _hasMessages() {
+        return this._unfilteredChatItems.length > 0;
+    }
+
     render() {
-        this._filterChatItems();
         return html`
-            <div><vaadin-checkbox checked label="Show tool-related messages"
-                                  @change="${(event) => {
-                                      this._showToolRelatedMessages = event.target.checked;
-                                      this.render();
-                                  }}"/></div>
-            <div><vaadin-checkbox checked label="Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)"
-                                  @change="${(event) => {
-                                      this._ragEnabled = event.target.checked;
-                                      this._streamingChatEnabled = this._streamingChatEnabled && !this._ragEnabled;
-                                      this.render();
-                                  }}"/></div>
-            <div><vaadin-checkbox label="Enable Streaming Chat"
-                                  class="${this._streamingChatSupported ? 'show' : 'hide'}"
-                                  ?checked="${this._streamingChatEnabled}"
-                                  ?disabled="${!this._streamingChatSupported}"
-                                  @change="${(event) => {
-                                      this._streamingChatEnabled = event.target.checked;
-                                      this.render();
-                                  }}"/></div>
-            ${this._renderSystemPane()}
-            <vaadin-message-list .items="${this._chatItems}"></vaadin-message-list>
-            <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
-            <vaadin-message-input @submit="${this._handleSendChat}"></vaadin-message-input>
+            ${this._renderSettingsDialog()}
+            <div class="header">
+                <vaadin-button theme="tertiary" @click="${this._startNewConversation}">
+                    <vaadin-icon icon="vaadin:plus" slot="prefix"></vaadin-icon>
+                    ${msg('New conversation', { id: 'chat-new-conversation' })}
+                </vaadin-button>
+                <vaadin-button theme="tertiary" @click="${() => this._showSettingsDialog = true}">
+                    <vaadin-icon icon="vaadin:cog" slot="prefix"></vaadin-icon>
+                    ${msg('Settings', { id: 'chat-settings' })}
+                </vaadin-button>
+            </div>
+            ${this._hasMessages ? this._renderChatView() : this._renderEmptyState()}
         `;
     }
 
-    _renderSystemPane(){
-        return html`<div class="systemMessagePane">
-            <vaadin-button class="${this._newConversationButtonClass}" @click="${this._beginInputOfNewSystemMessage}">Start a new conversation</vaadin-button>
-            <vaadin-text-field class="systemMessageInput"
-                    placeholder="(Optional). Changing this will start a new conversation"
-                    @keypress="${this._checkForEnterOrTab}" 
-                    @focusout="${this._checkForEnterOrTab}"
-                    @input="${this._populateSystemMessage}" 
-                    value="${this._systemMessage}" 
-                    ?disabled=${this._systemMessageInputFieldDisabled}>
-                    <span slot="prefix">System message: </span> 
-            </vaadin-text-field>
-            </div>`;
-    }
-   
-    _checkForEnterOrTab(e){
-        if ((e.which == 13 || e.which == 0)){
-            this._cementSystemMessage();
-            this.shadowRoot.querySelector('.systemMessageInput').focus();
-        }
+    _renderEmptyState() {
+        return html`
+            <div class="chatContainerEmpty">
+                <vaadin-message-input class="emptyStateInput" @submit="${this._handleSendChat}"></vaadin-message-input>
+            </div>
+        `;
     }
 
-    _populateSystemMessage(e){
-        if(e.target.value.trim() === ''){
+    _renderChatView() {
+        return html`
+            <div class="chatContainer">
+                <vaadin-message-list .items="${this._chatItems}"></vaadin-message-list>
+                <vaadin-progress-bar class="${this._progressBarClass}" indeterminate></vaadin-progress-bar>
+                <vaadin-message-input @submit="${this._handleSendChat}"></vaadin-message-input>
+            </div>
+        `;
+    }
+
+    _renderSettingsDialog() {
+        return html`<vaadin-dialog
+            header-title="${msg('Chat Settings', { id: 'chat-settings-title' })}"
+            resizable
+            draggable
+            .opened="${this._showSettingsDialog}"
+            @opened-changed="${(e) => {
+                this._showSettingsDialog = e.detail.value;
+            }}"
+            ${dialogHeaderRenderer(() => html`
+                <vaadin-button theme="tertiary" @click="${() => { this._showSettingsDialog = false; }}">
+                    <vaadin-icon icon="font-awesome-solid:xmark"></vaadin-icon>
+                </vaadin-button>
+            `, [])}
+            ${dialogRenderer(() => html`
+                <vaadin-vertical-layout theme="spacing" style="width: 500px; max-width: 80vw;">
+                    <vaadin-checkbox
+                        ?checked="${this._showToolRelatedMessages}"
+                        label="${msg('Show tool-related messages', { id: 'chat-show-tool-messages' })}"
+                        @change="${(event) => {
+                            this._showToolRelatedMessages = event.target.checked;
+                            this.requestUpdate();
+                        }}">
+                    </vaadin-checkbox>
+
+                    <vaadin-checkbox
+                        ?checked="${this._ragEnabled}"
+                        label="${msg('Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)', { id: 'chat-enable-rag' })}"
+                        @change="${(event) => {
+                            this._ragEnabled = event.target.checked;
+                            this._streamingChatEnabled = this._streamingChatEnabled && !this._ragEnabled;
+                        }}">
+                    </vaadin-checkbox>
+
+                    ${this._streamingChatSupported ? html`
+                        <vaadin-checkbox
+                            ?checked="${this._streamingChatEnabled}"
+                            label="${msg('Enable Streaming Chat', { id: 'chat-enable-streaming' })}"
+                            @change="${(event) => {
+                                this._streamingChatEnabled = event.target.checked;
+                            }}">
+                        </vaadin-checkbox>
+                    ` : ''}
+
+                    <vaadin-text-field
+                        style="width: 100%;"
+                        label="${msg('System message', { id: 'chat-system-message' })}"
+                        helper-text="${msg('Applied when starting a new conversation', { id: 'chat-system-message-helper' })}"
+                        placeholder="${msg('Optional system message', { id: 'chat-system-message-placeholder' })}"
+                        .value="${this._systemMessage}"
+                        @input="${this._populateSystemMessage}">
+                    </vaadin-text-field>
+                </vaadin-vertical-layout>
+            `, [this._showToolRelatedMessages, this._ragEnabled, this._streamingChatEnabled, this._systemMessage])}
+        ></vaadin-dialog>`;
+    }
+
+    _populateSystemMessage(e) {
+        if (e.target.value.trim() === '') {
             this._systemMessage = "";
-        }else{
+        } else {
             this._systemMessage = e.target.value;
         }
     }
 
-    _beginInputOfNewSystemMessage(){
-        this._enableSystemMessageInputField();
-        this._hideNewConversationButton();
+    _startNewConversation() {
         this._clearHistory();
-    }
-
-    _cementSystemMessage() {
-        if (!this._systemMessageInputFieldDisabled) {
-            this._disableSystemMessageInputField();
-            this._showNewConversationButton();
-            this._clearHistory();
-            if (this._systemMessage && this._systemMessage.trim().length > 0) {
-                this._addSystemMessage(this._systemMessage);
-            }
-            this.jsonRpc.reset({systemMessage: this._systemMessage});
+        if (this._systemMessage && this._systemMessage.trim().length > 0) {
+            this._addSystemMessage(this._systemMessage);
         }
+        this.jsonRpc.reset({systemMessage: this._systemMessage});
     }
 
     _handleSendChat(e) {
         let message = e.detail.value;
         if (message && message.trim().length > 0) {
-            this._cementSystemMessage();
             var indexUserMessage = this._addUserMessage(message);
             this._showProgressBar();
 
@@ -204,7 +267,6 @@ export class QwcChat extends LitElement {
                                 this._showError(jsonRpcResponse.result.error);
                                 this._hideProgressBar();
                             } else if (jsonRpcResponse.result.augmentedMessage) {
-                                // replace the last user message with the augmented message
                                 this._updateMessage(indexUserMessage, jsonRpcResponse.result.augmentedMessage);
                             } else if (jsonRpcResponse.result.toolExecutionRequest) {
                                 var item = jsonRpcResponse.result.toolExecutionRequest;
@@ -220,8 +282,8 @@ export class QwcChat extends LitElement {
                             } else if (jsonRpcResponse.result.message) {
                                 this._updateMessage(index, jsonRpcResponse.result.message);
                                 this._hideProgressBar();
-                            } else { // a new token from the stream
-                                if(index === null) {
+                            } else {
+                                if (index === null) {
                                     index = this._addBotMessage(msg);
                                 }
                                 msg += jsonRpcResponse.result.token;
@@ -245,13 +307,10 @@ export class QwcChat extends LitElement {
                 });
             }
         }
-
     }
 
     _showResponse(jsonRpcResponse) {
         if (jsonRpcResponse.result === false) {
-            // the JsonRPC method threw an exception, this should generally
-            // not happen, but just in case...
             this._showError(jsonRpcResponse);
         } else {
             if (jsonRpcResponse.result.error) {
@@ -265,8 +324,7 @@ export class QwcChat extends LitElement {
 
     _showError(error) {
         var errorString = JSON.stringify(error);
-        if(errorString === '{}') {
-            // assume the error is a string
+        if (errorString === '{}') {
             errorString = error;
         }
         this._addErrorMessage(errorString);
@@ -275,24 +333,24 @@ export class QwcChat extends LitElement {
     _processResponse(items) {
         this._unfilteredChatItems = [];
         items.forEach((item) => {
-            if(item.type === "AI") {
-                if(item.message) {
+            if (item.type === "AI") {
+                if (item.message) {
                     this._addBotMessage(item.message);
                 }
-                if(item.toolExecutionRequests) {
+                if (item.toolExecutionRequests) {
                     var toolMessage = "Request to execute the following tools:\n";
                     item.toolExecutionRequests.forEach((toolExecutionRequest) => {
-                        toolMessage += `Request ID = ${toolExecutionRequest.id}, 
-tool name = ${toolExecutionRequest.name}, 
+                        toolMessage += `Request ID = ${toolExecutionRequest.id},
+tool name = ${toolExecutionRequest.name},
 arguments = ${toolExecutionRequest.arguments}\n`;
                     });
                     this._addToolMessage(toolMessage);
                 }
-            } else if(item.type === "USER") {
+            } else if (item.type === "USER") {
                 this._addUserMessage(item.message);
-            } else if(item.type === "SYSTEM") {
+            } else if (item.type === "SYSTEM") {
                 this._addSystemMessage(item.message);
-            } else if (item.type === "TOOL_EXECUTION_RESULT"){
+            } else if (item.type === "TOOL_EXECUTION_RESULT") {
                 this._addToolMessage(`Tool execution result for request ID = ${item.toolExecutionResult.id},
 tool name = ${item.toolExecutionResult.toolName},
 status = ${item.toolExecutionResult.text}`);
@@ -300,33 +358,20 @@ status = ${item.toolExecutionResult.text}`);
         });
     }
 
-    _filterChatItems(){
-        this._chatItems = this._unfilteredChatItems.filter((item) => {
-            if(item.userName === "Me" || item.userName === "AI" || item.userName === "Error"){
-                return true;
-            }else if(this._showToolRelatedMessages && item.userName === "Tools"){
-                return true;
-            }else if(item.userName === "System"){
-                return true;
-            }
-            return false;
-        });
-    }
-
-    _addToolMessage(message){
+    _addToolMessage(message) {
         this._addStyledMessage(message, "Tools", 9, "toolMessage");
     }
 
-    _addErrorMessage(message){
+    _addErrorMessage(message) {
         this._addStyledMessage(message, "Error", 7, "errorMessage");
     }
 
-    _addSystemMessage(message){
+    _addSystemMessage(message) {
         this._addStyledMessage(message, "System", 5, "systemMessage");
     }
 
-    _addBotMessage(message){
-      return this._addMessage(message, "AI", 3);
+    _addBotMessage(message) {
+        return this._addMessage(message, "AI", 3);
     }
 
     _updateMessage(index, message) {
@@ -334,35 +379,29 @@ status = ${item.toolExecutionResult.text}`);
         this._unfilteredChatItems = [...this._unfilteredChatItems];
     }
 
-    _addUserMessage(message){
+    _addUserMessage(message) {
         return this._addMessage(message, "Me", 1);
     }
 
-    _addStyledMessage(message, user, colorIndex, className){
+    _addStyledMessage(message, user, colorIndex, className) {
         let newItem = this._createNewItem(message, user, colorIndex);
         newItem.className = className;
         this._addMessageItem(newItem);
     }
 
-    _addMessage(message, user, colorIndex){
-       return this._addMessageItem(this._createNewItem(message, user, colorIndex));
+    _addMessage(message, user, colorIndex) {
+        return this._addMessageItem(this._createNewItem(message, user, colorIndex));
     }
 
     _createNewItem(message, user, colorIndex) {
         return {
             text: message,
-            // FIXME: figure out how to store the correct timestamp
-            // for each message? This is hard because we retrieve
-            // the messages from the ChatMemory, which doesn't support
-            // storing additional metadata with messages
-            // time: new Date().toLocaleString(),
             userName: user,
             userColorIndex: colorIndex,
-          };
+        };
     }
 
     _clearHistory() {
-        this._chatItems = [];
         this._unfilteredChatItems = [];
     }
 
@@ -370,34 +409,18 @@ status = ${item.toolExecutionResult.text}`);
         var newIndex = this._unfilteredChatItems.length;
         this._unfilteredChatItems = [
             ...this._unfilteredChatItems,
-            newItem];
-      return newIndex;
+            newItem
+        ];
+        return newIndex;
     }
 
-    _hideNewConversationButton(){
-        this._newConversationButtonClass = "remove";
-    }
-
-    _showNewConversationButton(){
-        this._newConversationButtonClass = "add";
-    }
-
-    _hideProgressBar(){
+    _hideProgressBar() {
         this._progressBarClass = "hide";
     }
 
-    _showProgressBar(){
+    _showProgressBar() {
         this._progressBarClass = "show";
     }
-
-    _enableSystemMessageInputField(){
-        this._systemMessageInputFieldDisabled = null;
-    }
-
-    _disableSystemMessageInputField(){
-        this._systemMessageInputFieldDisabled = "disabled";
-    }
-
 }
 
 customElements.define('qwc-chat', QwcChat);

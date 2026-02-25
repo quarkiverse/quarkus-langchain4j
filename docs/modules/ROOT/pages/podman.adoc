@@ -22,14 +22,7 @@ See https://github.com/containers/podman-desktop-extension-ai-lab?tab=readme-ov-
 
 Add the OpenAI extension to your project:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-openai]
 
 Even though this is not an actual OpenAI deployment, the API is compatible and works seamlessly with this extension.
 

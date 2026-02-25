@@ -91,6 +91,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++2023-06-01+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-disable-beta-header]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-disable-beta-header[`quarkus.langchain4j.anthropic.disable-beta-header`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.disable-beta-header+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to `true`, the `"anthopic-beta"` header will never be sent
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_DISABLE_BETA_HEADER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_DISABLE_BETA_HEADER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-timeout]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-timeout[`quarkus.langchain4j.anthropic.timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic.timeout+++[]
@@ -149,6 +170,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-log-requests-curl[`quarkus.langchain4j.anthropic.log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Anthropic client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
@@ -584,6 +626,27 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++2023-06-01+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-disable-beta-header]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-disable-beta-header[`quarkus.langchain4j.anthropic."model-name".disable-beta-header`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".disable-beta-header+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If set to `true`, the `"anthopic-beta"` header will never be sent
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__DISABLE_BETA_HEADER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__DISABLE_BETA_HEADER+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-timeout]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-timeout[`quarkus.langchain4j.anthropic."model-name".timeout`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".timeout+++[]
@@ -642,6 +705,27 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_RESPONSES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests-curl]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-log-requests-curl[`quarkus.langchain4j.anthropic."model-name".log-requests-curl`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".log-requests-curl+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the Anthropic client should log requests as cURL commands
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_REQUESTS_CURL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__LOG_REQUESTS_CURL+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

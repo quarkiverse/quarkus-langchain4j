@@ -62,9 +62,6 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
 
     @Override
     public void commit() {
-        delegate.clear(); // remove the original messages as this class keeps the entire state
-        for (ChatMessage newMessage : newMessages) {
-            delegate.add(newMessage);
-        }
+        delegate.set(newMessages);
     }
 }

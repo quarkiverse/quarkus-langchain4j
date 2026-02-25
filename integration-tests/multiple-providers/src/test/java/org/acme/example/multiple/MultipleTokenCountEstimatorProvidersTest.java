@@ -7,9 +7,9 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.watsonx.WatsonxChatModel;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.azure.openai.AzureOpenAiChatModel;
-import io.quarkiverse.langchain4j.watsonx.WatsonxChatModel;
 import io.quarkus.arc.ClientProxy;
 import io.quarkus.test.junit.QuarkusTest;
 

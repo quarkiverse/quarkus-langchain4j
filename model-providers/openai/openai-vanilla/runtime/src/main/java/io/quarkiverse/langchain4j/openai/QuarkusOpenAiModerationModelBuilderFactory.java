@@ -17,6 +17,7 @@ public class QuarkusOpenAiModerationModelBuilderFactory implements OpenAiModerat
 
         private String configName;
         private String tlsConfigurationName;
+        private boolean logCurl;
 
         private Proxy proxy;
 
@@ -35,10 +36,16 @@ public class QuarkusOpenAiModerationModelBuilderFactory implements OpenAiModerat
             return this;
         }
 
+        public Builder logCurl(boolean logCurl) {
+            this.logCurl = logCurl;
+            return this;
+        }
+
         @Override
         public OpenAiModerationModel build() {
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
+            AdditionalPropertiesHack.setLogCurl(logCurl);
             return super.build();
         }
     }

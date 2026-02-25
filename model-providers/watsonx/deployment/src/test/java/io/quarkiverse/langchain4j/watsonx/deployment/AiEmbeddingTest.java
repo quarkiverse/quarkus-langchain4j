@@ -25,13 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.ibm.watsonx.ai.embedding.EmbeddingRequest;
 
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import io.quarkiverse.langchain4j.watsonx.bean.EmbeddingRequest;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class AiEmbeddingTest extends WireMockAbstract {
@@ -99,7 +99,7 @@ public class AiEmbeddingTest extends WireMockAbstract {
 
         var input = "Embedding THIS!";
         EmbeddingRequest request = new EmbeddingRequest(DEFAULT_EMBEDDING_MODEL, null, PROJECT_ID,
-                List.of(input, input, input), null);
+                List.of(input, input, input), null, null);
 
         mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 200)
                 .body(mapper.writeValueAsString(request))
@@ -163,7 +163,7 @@ public class AiEmbeddingTest extends WireMockAbstract {
 
         Function<List<String>, EmbeddingRequest> createRequest = (List<String> elementsToEmbed) -> {
             return new EmbeddingRequest(DEFAULT_EMBEDDING_MODEL, null, PROJECT_ID, elementsToEmbed,
-                    null);
+                    null, null);
         };
 
         var list = IntStream.rangeClosed(1, 2001).mapToObj(String::valueOf).collect(Collectors.toList());
@@ -190,12 +190,9 @@ public class AiEmbeddingTest extends WireMockAbstract {
     }
 
     private List<Float> mockEmbeddingServer(String input) throws Exception {
-        mockIAMBuilder(200)
-                .response(BEARER_TOKEN, new Date())
-                .build();
 
         EmbeddingRequest request = new EmbeddingRequest(DEFAULT_EMBEDDING_MODEL, null, PROJECT_ID,
-                List.of(input), null);
+                List.of(input), null, null);
 
         mockWatsonxBuilder(URL_WATSONX_EMBEDDING_API, 200)
                 .body(mapper.writeValueAsString(request))

@@ -24,36 +24,15 @@ You can use any supported model provider by adding the appropriate extension to 
 
 For example, to use OpenAI:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-  <groupId>io.quarkiverse.langchain4j</groupId>
-  <artifactId>quarkus-langchain4j-openai</artifactId>
-  <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-openai]
 
 To use Anthropic (Claude):
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-  <groupId>io.quarkiverse.langchain4j</groupId>
-  <artifactId>quarkus-langchain4j-anthropic</artifactId>
-  <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-anthropic]
 
 To use Ollama:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-  <groupId>io.quarkiverse.langchain4j</groupId>
-  <artifactId>quarkus-langchain4j-ollama</artifactId>
-  <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-ollama]
 
 For other providers, see xref:models.adoc[Models Serving].
 

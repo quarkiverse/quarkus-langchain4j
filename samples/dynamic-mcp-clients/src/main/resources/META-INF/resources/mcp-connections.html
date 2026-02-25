@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Connections</title>
+    <script src="/_static/htmx.org/dist/htmx.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .connection-list {
+            list-style: none;
+        }
+
+        .connection-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-info {
+            flex: 1;
+        }
+
+        .connection-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .connection-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .htmx-swapping {
+            opacity: 0;
+            transition: opacity 200ms ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MCP Connections</h1>
+            <a href="/" class="back-link">← Back to Home</a>
+        </header>
+
+        <div class="content">
+            <div class="panel">
+                <h2>Add New Connection</h2>
+                <div id="form-feedback"></div>
+                <form id="connection-form"
+                      hx-post="/api/mcp-connections"
+                      hx-target="#form-feedback"
+                      hx-swap="innerHTML">
+                    <div class="form-group">
+                        <label for="name">Connection Name</label>
+                        <input type="text" id="name" name="name" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transportType">Transport Type</label>
+                        <select id="transportType" name="transportType">
+                            <option value="STDIO">STDIO</option>
+                            <option value="STREAMABLE_HTTP">Streamable HTTP</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="command-group">
+                        <label for="command">Command (for example: uvx mcp-server-time)</label>
+                        <input type="text" id="command" name="command" />
+                    </div>
+
+                    <div class="form-group" id="url-group" style="display: none;">
+                        <label for="url">Server URL</label>
+                        <input type="url" id="url" name="url" placeholder="e.g., http://localhost:8080/mcp" />
+                    </div>
+
+                    <button type="submit">Add Connection</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>Active Connections</h2>
+                <div id="connections-list"
+                     hx-get="/api/mcp-connections"
+                     hx-trigger="load, formSuccess from:#connection-form"
+                     hx-swap="innerHTML">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle between STDIO and HTTP fields
+        document.getElementById('transportType').addEventListener('change', function(e) {
+            const commandGroup = document.getElementById('command-group');
+            const urlGroup = document.getElementById('url-group');
+            const commandInput = document.getElementById('command');
+            const urlInput = document.getElementById('url');
+
+            if (e.target.value === 'STDIO') {
+                commandGroup.style.display = 'block';
+                urlGroup.style.display = 'none';
+                commandInput.required = true;
+                urlInput.required = false;
+            } else {
+                commandGroup.style.display = 'none';
+                urlGroup.style.display = 'block';
+                commandInput.required = false;
+                urlInput.required = true;
+            }
+        });
+
+        // Handle form success and trigger connection list refresh
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'form-feedback') {
+                const feedback = evt.detail.target;
+                if (feedback.querySelector('.success')) {
+                    // Reset the form
+                    document.getElementById('connection-form').reset();
+                    // Trigger event for connections list refresh
+                    htmx.trigger('#connection-form', 'formSuccess');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

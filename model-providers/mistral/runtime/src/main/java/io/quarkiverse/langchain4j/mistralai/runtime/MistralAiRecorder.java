@@ -19,6 +19,7 @@ import dev.langchain4j.model.mistralai.MistralAiModerationModel;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import dev.langchain4j.model.moderation.DisabledModerationModel;
 import dev.langchain4j.model.moderation.ModerationModel;
+import io.quarkiverse.langchain4j.mistralai.QuarkusMistralAiClient;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.EmbeddingModelConfig;
 import io.quarkiverse.langchain4j.mistralai.runtime.config.LangChain4jMistralAiConfig;
@@ -72,9 +73,12 @@ public class MistralAiRecorder {
                 builder.randomSeed(chatModelConfig.randomSeed().getAsInt());
             }
 
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
             return new Supplier<>() {
                 @Override
                 public ChatModel get() {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
                     return builder.build();
                 }
             };
@@ -124,9 +128,12 @@ public class MistralAiRecorder {
                 builder.randomSeed(chatModelConfig.randomSeed().getAsInt());
             }
 
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
             return new Supplier<>() {
                 @Override
                 public StreamingChatModel get() {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
                     return builder.build();
                 }
             };
@@ -196,9 +203,12 @@ public class MistralAiRecorder {
                     .logResponses(firstOrDefault(false, moderationModelConfig.logResponses(), mistralAiConfig.logResponses()))
                     .timeout(mistralAiConfig.timeout().orElse(Duration.ofSeconds(10)));
 
+            var logCurl = firstOrDefault(false, mistralAiConfig.logRequestsCurl());
+
             return new Supplier<>() {
                 @Override
                 public ModerationModel get() {
+                    QuarkusMistralAiClient.setLogCurlHint(logCurl);
                     return builder.build();
                 }
             };

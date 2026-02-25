@@ -17,9 +17,9 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jaxb</artifactId>
+         <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-watsonx</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>

@@ -16,14 +16,7 @@ include::./openai-chat-model.adoc[tags=openai-prerequisites]
 
 To use OpenAI image models in your Quarkus application, add the `quarkus-langchain4j-openai` extension:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-openai]
 
 If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically use the configured OpenAI image model.
 

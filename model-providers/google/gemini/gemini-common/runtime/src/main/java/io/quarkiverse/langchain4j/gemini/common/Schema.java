@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.gemini.common;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Schema {
@@ -130,6 +131,7 @@ public class Schema {
         }
     }
 
+    @JsonIgnore
     public boolean isEffectiveEmptyObject() {
         if (type == Type.OBJECT) {
             if (properties.isEmpty()) {

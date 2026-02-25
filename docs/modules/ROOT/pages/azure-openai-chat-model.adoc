@@ -34,14 +34,7 @@ quarkus.langchain4j.azure-openai.ad-token=
 
 Add the `quarkus-langchain4j-azure-openai` extension to your project:
 
-[source,xml,subs=attributes+]
-----
-<dependency>
-    <groupId>io.quarkiverse.langchain4j</groupId>
-    <artifactId>quarkus-langchain4j-azure-openai</artifactId>
-    <version>{project-version}</version>
-</dependency>
-----
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-azure-openai]
 
 If no other LLM extension is present, xref:ai-services.adoc[AI Services] will automatically use the configured Azure OpenAI chat model.
 

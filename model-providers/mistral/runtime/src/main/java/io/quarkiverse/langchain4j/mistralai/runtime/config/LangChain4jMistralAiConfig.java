@@ -90,6 +90,13 @@ public interface LangChain4jMistralAiConfig {
         Optional<Boolean> logResponses();
 
         /**
+         * Whether the Mistral client should log requests as cURL commands
+         */
+        @ConfigDocDefault("false")
+        @WithDefault("${quarkus.langchain4j.log-requests-curl}")
+        Optional<Boolean> logRequestsCurl();
+
+        /**
          * Whether to enable the integration. Defaults to {@code true}, which means requests are made to the Mistral AI
          * provider.
          * Set to {@code false} to disable all requests.
