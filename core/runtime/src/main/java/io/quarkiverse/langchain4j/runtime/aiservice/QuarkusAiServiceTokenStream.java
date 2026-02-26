@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -50,6 +51,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final Context cxtx;
     private final boolean switchToWorkerThreadForToolExecution;
     private final boolean switchToWorkerForEmission;
+    private final AtomicBoolean cancelled;
 
     private Consumer<String> partialResponseHandler;
     private Consumer<PartialThinking> partialThinkingHandler;
@@ -80,7 +82,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             QuarkusAiServiceContext context, InvocationContext invocationContext,
             Object memoryId, Context ctxt, boolean switchToWorkerThreadForToolExecution,
             boolean switchToWorkerForEmission, AiServiceMethodCreateInfo methodCreateInfo,
-            Object[] methodArgs) {
+            Object[] methodArgs, AtomicBoolean cancelled) {
         this.messages = ensureNotEmpty(messages, "messages");
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
@@ -94,6 +96,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.cxtx = ctxt; // If set, it means we need to handle the context propagation.
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution; // If true, we need to switch to a worker thread to execute tools.
         this.switchToWorkerForEmission = switchToWorkerForEmission;
+        this.cancelled = cancelled;
     }
 
     @Override
@@ -186,7 +189,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 toolExecutors,
                 switchToWorkerThreadForToolExecution,
                 switchToWorkerForEmission,
-                cxtx, methodCreateInfo, methodArgs);
+                cxtx, methodCreateInfo, methodArgs,
+                cancelled);
 
         if (contentsHandler != null && retrievedContents != null) {
             contentsHandler.accept(retrievedContents);
