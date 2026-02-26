@@ -125,6 +125,11 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
         return ids;
     }
 
+    @Override
+    public void addAll(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
+        this.addAllInternal(ids, embeddings, embedded);
+    }
+
     private void addAllInternal(List<String> ids, List<Embedding> embeddings, List<TextSegment> embedded) {
         if (ids.isEmpty() || ids.size() != embeddings.size() || (embedded != null && embedded.size() != embeddings.size())) {
             throw new IllegalArgumentException("ids, embeddings and embedded must be non-empty and of the same size");
@@ -189,9 +194,10 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                     var score = document.getDouble(scoreFieldName);
                     var id = document.getString(ID);
                     var text = document.getString(textFieldName);
+                    var textSegment = text != null? TextSegment.from(text) : null;
                     var vectorData = document.get(vectorFieldName, Float32BinaryVector.class);
                     var vector = vectorData.getData();
-                    result.add(new EmbeddingMatch<>(score, id, Embedding.from(vector), TextSegment.from(text)));
+                    result.add(new EmbeddingMatch<>(score, id, Embedding.from(vector), textSegment));
                 }
             }
             return new EmbeddingSearchResult<>(result);
