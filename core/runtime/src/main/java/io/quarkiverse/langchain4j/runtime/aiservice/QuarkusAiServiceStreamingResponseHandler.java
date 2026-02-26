@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jboss.logging.Logger;
@@ -89,6 +90,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
     private final AiServiceMethodCreateInfo methodCreateInfo;
     private final Object[] methodArgs;
     private final ExecutorService executor;
+    private final AtomicBoolean cancelled;
     private volatile StreamingHandle streamingHandle = NoopStreamingHandle.INSTANCE;
 
     QuarkusAiServiceStreamingResponseHandler(ChatRequest chatRequest, QuarkusAiServiceContext context,
@@ -110,7 +112,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             boolean switchToWorkerForEmission,
             Context cxtx,
             AiServiceMethodCreateInfo methodCreateInfo,
-            Object[] methodArgs) {
+            Object[] methodArgs,
+            AtomicBoolean cancelled) {
         this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = ensureNotNull(context, "context");
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
@@ -136,6 +139,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.switchToWorkerForEmission = switchToWorkerForEmission;
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
+        this.cancelled = cancelled;
         if (executionContext == null) {
             // We do not have a context, but we still need to make sure we are not blocking the event loop and ordered
             // is respected.
@@ -156,7 +160,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             Consumer<Throwable> errorHandler, List<ChatMessage> temporaryMemory, TokenUsage sum,
             List<ToolSpecification> toolSpecifications, Map<String, ToolExecutor> toolExecutors,
             boolean mustSwitchToWorkerThread, boolean switchToWorkerForEmission, Context executionContext,
-            ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs) {
+            ExecutorService executor, AiServiceMethodCreateInfo methodCreateInfo, Object[] methodArgs,
+            AtomicBoolean cancelled) {
         this.chatRequest = ensureNotNull(chatRequest, "chatRequest");
         this.context = context;
         this.invocationContext = ensureNotNull(invocationContext, "invocationContext");
@@ -179,6 +184,7 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         this.executor = executor;
         this.methodCreateInfo = methodCreateInfo;
         this.methodArgs = methodArgs;
+        this.cancelled = cancelled;
     }
 
     private <T> void fireInvocationComplete(T result) {
@@ -220,6 +226,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     @Override
     public void onPartialResponse(String partialResponse) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
         execute(new Runnable() {
             @Override
             public void run() {
@@ -231,6 +241,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     @Override
     public void onPartialThinking(PartialThinking partialThinking) {
+        if (isCancelled()) {
+            streamingHandle.cancel();
+            return;
+        }
         if (partialThinkingHandler != null) {
             execute(new Runnable() {
                 @Override
@@ -388,6 +402,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
 
     @Override
     public void onCompleteResponse(ChatResponse completeResponse) {
+        if (isCancelled()) {
+            shutdown();
+            return;
+        }
         fireResponseReceivedEvent(completeResponse);
         AiMessage aiMessage = completeResponse.aiMessage();
 
@@ -403,8 +421,20 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
             executeTools(new Runnable() {
                 @Override
                 public void run() {
+                    if (isCancelled()) {
+                        shutdown();
+                        return;
+                    }
                     addToMemory(aiMessage);
                     for (ToolExecutionRequest toolExecutionRequest : aiMessage.toolExecutionRequests()) {
+                        if (isCancelled()) {
+                            // Fill cancelled tools with error results to keep memory consistent:
+                            // every tool request must have a matching tool result
+                            ToolExecutionResultMessage cancelledResult = ToolExecutionResultMessage.from(
+                                    toolExecutionRequest, "Tool execution was cancelled");
+                            QuarkusAiServiceStreamingResponseHandler.this.addToMemory(cancelledResult);
+                            continue;
+                        }
                         // Call before tool execution handler
                         if (beforeToolExecutionHandler != null) {
                             BeforeToolExecution beforeToolExecution = BeforeToolExecution.builder()
@@ -439,6 +469,11 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             toolExecuteHandler.accept(toolExecution);
                         }
                         QuarkusAiServiceStreamingResponseHandler.this.addToMemory(toolExecutionResultMessage);
+                    }
+
+                    if (isCancelled()) {
+                        shutdown();
+                        return;
                     }
 
                     DefaultChatRequestParameters.Builder<?> parametersBuilder = ChatRequestParameters.builder();
@@ -480,7 +515,8 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
                             toolSpecifications,
                             toolExecutors,
                             mustSwitchToWorkerThread, switchToWorkerForEmission, executionContext, executor, methodCreateInfo,
-                            methodArgs);
+                            methodArgs,
+                            cancelled);
 
                     fireRequestIssuedEvent(chatRequest);
                     effectiveStreamingChatModel.chat(chatRequest, handler);
@@ -531,6 +567,10 @@ public class QuarkusAiServiceStreamingResponseHandler implements StreamingChatRe
         if (executor != null) {
             executor.shutdown();
         }
+    }
+
+    private boolean isCancelled() {
+        return cancelled != null && cancelled.get();
     }
 
     private void addToMemory(ChatMessage chatMessage) {

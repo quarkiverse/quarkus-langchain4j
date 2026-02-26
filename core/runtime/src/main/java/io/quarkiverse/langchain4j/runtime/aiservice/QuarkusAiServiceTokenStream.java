@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -50,6 +51,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
     private final Context cxtx;
     private final boolean switchToWorkerThreadForToolExecution;
     private final boolean switchToWorkerForEmission;
+    private final AtomicBoolean cancelled;
 
     private Consumer<String> partialResponseHandler;
     private Consumer<PartialThinking> partialThinkingHandler;
@@ -80,7 +82,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
             QuarkusAiServiceContext context, InvocationContext invocationContext,
             Object memoryId, Context ctxt, boolean switchToWorkerThreadForToolExecution,
             boolean switchToWorkerForEmission, AiServiceMethodCreateInfo methodCreateInfo,
-            Object[] methodArgs) {
+            Object[] methodArgs, AtomicBoolean cancelled) {
         this.messages = ensureNotEmpty(messages, "messages");
         this.toolSpecifications = copyIfNotNull(toolSpecifications);
         this.toolExecutors = copyIfNotNull(toolExecutors);
@@ -94,6 +96,7 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         this.cxtx = ctxt; // If set, it means we need to handle the context propagation.
         this.switchToWorkerThreadForToolExecution = switchToWorkerThreadForToolExecution; // If true, we need to switch to a worker thread to execute tools.
         this.switchToWorkerForEmission = switchToWorkerForEmission;
+        this.cancelled = cancelled;
     }
 
     @Override
@@ -186,7 +189,8 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
                 toolExecutors,
                 switchToWorkerThreadForToolExecution,
                 switchToWorkerForEmission,
-                cxtx, methodCreateInfo, methodArgs);
+                cxtx, methodCreateInfo, methodArgs,
+                cancelled);
 
         if (contentsHandler != null && retrievedContents != null) {
             contentsHandler.accept(retrievedContents);
@@ -208,16 +212,12 @@ public class QuarkusAiServiceTokenStream implements TokenStream {
         }
     }
 
-    /**
-     * Returns the StreamingHandle that can be used to cancel the underlying stream.
-     * <p>
-     * Returns {@code null} if streaming has not started yet, or a {@link NoopStreamingHandle}
-     * if the handler has not received any partial responses.
-     *
-     * @apiNote This uses langchain4j's experimental StreamingHandle API (since 1.8.0)
-     */
-    public StreamingHandle getStreamingHandle() {
-        return handler != null ? handler.getStreamingHandle() : null;
+    StreamingHandle getStreamingHandle() {
+        QuarkusAiServiceStreamingResponseHandler currentHandler = handler;
+        if (currentHandler == null) {
+            return NoopStreamingHandle.INSTANCE;
+        }
+        return currentHandler.getStreamingHandle();
     }
 
     private void validateConfiguration() {
