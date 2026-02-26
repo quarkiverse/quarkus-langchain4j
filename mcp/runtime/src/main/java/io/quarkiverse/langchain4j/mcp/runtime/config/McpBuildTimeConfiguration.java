@@ -19,6 +19,13 @@ import io.smallrye.config.WithParentName;
 public interface McpBuildTimeConfiguration {
 
     /**
+     * Whether MCP integration is enabled.
+     * If disabled, no MCP clients, registry clients, ToolProvider or MCP health check will be registered.
+     */
+    @WithDefault("true")
+    boolean enabled();
+
+    /**
      * Configured MCP clients
      */
     @ConfigDocSection

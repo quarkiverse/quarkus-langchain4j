@@ -8,6 +8,12 @@ import io.smallrye.config.WithName;
 public interface McpClientBuildTimeConfig {
 
     /**
+     * Whether this MCP client is enabled.
+     */
+    @WithDefault("true")
+    boolean enabled();
+
+    /**
      * Transport type
      */
     @WithDefault("stdio")
