@@ -74,6 +74,10 @@ public class McpRecorder {
             public McpClient apply(SyntheticCreationalContext<McpClient> context) {
                 McpTransport transport;
                 McpClientRuntimeConfig runtimeConfig = mcpRuntimeConfiguration.getValue().clients().get(key);
+                if (runtimeConfig == null) {
+                    throw new ConfigurationException(
+                            "MCP client configuration named " + key + " has no runtime configuration");
+                }
                 List<McpRoot> initialRoots = new ArrayList<>();
                 if (runtimeConfig.roots().isPresent()) {
                     for (String kvPair : runtimeConfig.roots().get()) {

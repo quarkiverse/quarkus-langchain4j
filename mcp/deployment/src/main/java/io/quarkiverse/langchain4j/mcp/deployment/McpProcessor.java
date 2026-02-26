@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,6 +40,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpRecorder;
 import io.quarkiverse.langchain4j.mcp.runtime.McpRegistryClientName;
 import io.quarkiverse.langchain4j.mcp.runtime.config.LocalLaunchParams;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpBuildTimeConfiguration;
+import io.quarkiverse.langchain4j.mcp.runtime.config.McpClientBuildTimeConfig;
 import io.quarkiverse.langchain4j.mcp.runtime.config.McpTransportType;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
@@ -68,11 +70,15 @@ public class McpProcessor {
     private static final DotName MCP_CLIENT_NAME = DotName.createSimple(McpClientName.class);
     private static final DotName MCP_REGISTRY_CLIENT_NAME = DotName.createSimple(McpRegistryClientName.class);
     private static final DotName TRACER = DotName.createSimple(Tracer.class);
+    private static final Set<String> RESERVED_MCP_SECTION_NAMES = Set.of("health", "registry-client");
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @BuildStep
     public void generateMcpConfigFileContents(McpBuildTimeConfiguration mcpBuildTimeConfiguration,
             BuildProducer<McpConfigFileContentsBuildItem> producer) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
+        }
         if (mcpBuildTimeConfiguration.configFile().isEmpty()) {
             return;
         }
@@ -136,6 +142,9 @@ public class McpProcessor {
             CoreVertxBuildItem vertxBuildItem,
             BuildProducer<RuntimeInitializedClassBuildItem> runtimeInitializedClasses,
             McpRecorder recorder) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
+        }
         boolean micrometerPresent = metricsCapability.isPresent()
                 && metricsCapability.get().metricsSupported(MetricsFactory.MICROMETER);
         if (!micrometerPresent) {
@@ -143,15 +152,24 @@ public class McpProcessor {
             runtimeInitializedClasses.produce(
                     new RuntimeInitializedClassBuildItem("io.quarkiverse.langchain4j.mcp.runtime.MetricsMcpListener"));
         }
+        Map<String, McpClientBuildTimeConfig> rawConfiguredClients = mcpBuildTimeConfiguration.clients();
+        final Map<String, McpClientBuildTimeConfig> configuredClients = rawConfiguredClients == null ? Collections.emptyMap()
+                : rawConfiguredClients;
         Map<String, McpTransportType> clients = new HashMap<>();
-        if (mcpBuildTimeConfiguration.clients() != null && !mcpBuildTimeConfiguration.clients().isEmpty()) {
-            mcpBuildTimeConfiguration.clients().forEach((name, config) -> clients.put(name, config.transportType()));
-        }
-        if (maybeMcpConfigFileContents.isPresent()) {
-            maybeMcpConfigFileContents.get().getContents().keySet().forEach(name -> {
-                clients.put(name, McpTransportType.STDIO);
+        if (!configuredClients.isEmpty()) {
+            configuredClients.forEach((name, config) -> {
+                if (isConfigurableClient(name) && config.enabled()) {
+                    clients.put(name, config.transportType());
+                }
             });
         }
+        maybeMcpConfigFileContents.ifPresent(
+                mcpConfigFileContentsBuildItem -> mcpConfigFileContentsBuildItem.getContents().keySet().forEach(name -> {
+                    McpClientBuildTimeConfig config = configuredClients.get(name);
+                    if (config == null || config.enabled()) {
+                        clients.put(name, McpTransportType.STDIO);
+                    }
+                }));
         if (!clients.isEmpty()) {
             // generate MCP clients
             List<AnnotationInstance> qualifiers = new ArrayList<>();
@@ -171,7 +189,8 @@ public class McpProcessor {
                         .addInjectionPoint(ClassType.create(DotName.createSimple(ExecutorService.class)))
                         .createWith(
                                 recorder.mcpClientSupplier(client, transportType, shutdown, vertxBuildItem.getVertx(),
-                                        micrometerPresent && mcpBuildTimeConfiguration.clients().get(client).metricsEnabled()))
+                                        micrometerPresent && configuredClients.containsKey(client)
+                                                && configuredClients.get(client).metricsEnabled()))
                         .done());
             });
             // generate a tool provider if configured to do so
@@ -204,6 +223,9 @@ public class McpProcessor {
             McpBuildTimeConfiguration mcpBuildTimeConfiguration,
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             McpRecorder recorder) {
+        if (!mcpBuildTimeConfiguration.enabled()) {
+            return;
+        }
         mcpBuildTimeConfiguration.registryClients().forEach((clientName, x) -> {
             AnnotationInstance qualifier = AnnotationInstance.builder(MCP_REGISTRY_CLIENT_NAME)
                     .add("value", clientName)
@@ -246,6 +268,10 @@ public class McpProcessor {
     public void addMcpAuthProvider(BuildProducer<UnremovableBeanBuildItem> unremovableProducer) {
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpClientAuthProvider.class));
         unremovableProducer.produce(UnremovableBeanBuildItem.beanTypes(McpHeadersSupplier.class));
+    }
+
+    private static boolean isConfigurableClient(String clientName) {
+        return !RESERVED_MCP_SECTION_NAMES.contains(clientName);
     }
 
 }
