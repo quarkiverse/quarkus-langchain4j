@@ -106,6 +106,7 @@ import io.quarkiverse.langchain4j.PdfUrl;
 import io.quarkiverse.langchain4j.VideoUrl;
 import io.quarkiverse.langchain4j.response.ResponseAugmenterParams;
 import io.quarkiverse.langchain4j.runtime.ContextLocals;
+import io.quarkiverse.langchain4j.runtime.JavaElementUriBuilder;
 import io.quarkiverse.langchain4j.runtime.PreventsErrorHandlerExecution;
 import io.quarkiverse.langchain4j.runtime.QuarkusServiceOutputParser;
 import io.quarkiverse.langchain4j.runtime.ResponseSchemaUtil;
@@ -899,10 +900,21 @@ public class AiServiceMethodImplementationSupport {
         templateParams.put("chat_memory", previousChatMessages);
         Optional<String> maybeText = systemMessageInfo.text();
         if (maybeText.isPresent()) {
-            return Optional.of(PromptTemplate.from(maybeText.get()).apply(templateParams).toSystemMessage());
+            String templateName = getTemplateName(createInfo.getInterfaceName(), createInfo.getMethodName(), true);
+            return Optional.of(PromptTemplate.from(maybeText.get(), templateName).apply(templateParams).toSystemMessage());
         } else {
             return Optional.empty();
         }
+    }
+
+    private static String getTemplateName(String interfaceName, String methodName, boolean userMessage) {
+        return JavaElementUriBuilder
+                .builder(interfaceName)
+                .setMethod(methodName)
+                .setAnnotation(userMessage ? dev.langchain4j.service.UserMessage.class.getName()
+                        : dev.langchain4j.service.SystemMessage.class.getName())
+                .build()
+                .toString();
     }
 
     private static UserMessage prepareUserMessage(AiServiceContext context, AiServiceMethodCreateInfo createInfo,
@@ -947,7 +959,8 @@ public class AiServiceMethodImplementationSupport {
                         createInfo.getResponseSchemaInfo().outputFormatInstructions());
             }
 
-            Prompt prompt = PromptTemplate.from(templateText).apply(templateVariables);
+            String templateName = getTemplateName(createInfo.getInterfaceName(), createInfo.getMethodName(), false);
+            Prompt prompt = PromptTemplate.from(templateText, templateName).apply(templateVariables);
             List<Content> finalContents = new ArrayList<>();
             finalContents.add(TextContent.from(prompt.text()));
             handleSpecialContentTypes(createInfo, methodArgs, finalContents);
