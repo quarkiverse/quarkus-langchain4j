@@ -15,6 +15,7 @@
 
     <modules>
         <module>evaluation</module>
+        <module>mcp-conformance</module>
     </modules>
 
 

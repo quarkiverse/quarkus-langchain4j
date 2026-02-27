@@ -1,0 +1,1 @@
+java -Dquarkus.langchain4j.mcp.conformance.url=$1 -jar $(dirname "$0")/target/quarkus-app/quarkus-run.jar
