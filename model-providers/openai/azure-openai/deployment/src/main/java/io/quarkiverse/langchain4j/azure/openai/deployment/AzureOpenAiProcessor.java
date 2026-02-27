@@ -15,6 +15,7 @@ import org.jboss.jandex.ParameterizedType;
 import org.jboss.jandex.Type;
 
 import io.quarkiverse.langchain4j.ModelName;
+import io.quarkiverse.langchain4j.auth.ModelAuthProvider;
 import io.quarkiverse.langchain4j.azure.openai.runtime.AzureOpenAiRecorder;
 import io.quarkiverse.langchain4j.deployment.DotNames;
 import io.quarkiverse.langchain4j.deployment.items.ChatModelProviderCandidateBuildItem;
@@ -41,6 +42,20 @@ public class AzureOpenAiProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.RUNTIME_INIT)
+    public void registerDefaultModelAuthProvider(AzureOpenAiRecorder recorder,
+            BuildProducer<SyntheticBeanBuildItem> producer) {
+        producer.produce(
+                SyntheticBeanBuildItem
+                        .configure(ModelAuthProvider.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .defaultBean()
+                        .createWith(recorder.modelAuthProvider())
+                        .done());
     }
 
     @BuildStep

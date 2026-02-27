@@ -50,6 +50,7 @@
     <google-auth-library-oauth2-http.version>1.42.1</google-auth-library-oauth2-http.version>
     <gpu-llama3.version>0.3.3</gpu-llama3.version>
     <smallrye-certificate-generator.version>0.9.2</smallrye-certificate-generator.version>
+    <azure-auth-library-oauth2-http.version>1.18.1</azure-auth-library-oauth2-http.version>
   </properties>
   <dependencyManagement>
     <dependencies>
