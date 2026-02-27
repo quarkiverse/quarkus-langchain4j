@@ -1,18 +1,24 @@
 package io.quarkiverse.langchain4j.sample.assistant.service;
 
-import dev.langchain4j.mcp.McpToolProvider;
-import dev.langchain4j.mcp.client.DefaultMcpClient;
-import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
-import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
-import io.quarkiverse.langchain4j.sample.assistant.dto.McpConnection;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
+import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
+import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
+import io.quarkiverse.langchain4j.mcp.runtime.http.QuarkusStreamableHttpMcpTransport;
+import io.quarkiverse.langchain4j.sample.assistant.dto.McpConnection;
+import io.quarkiverse.langchain4j.sample.assistant.oauth2.BearerMcpAuthClientProvider;
+import io.quarkiverse.langchain4j.sample.assistant.oauth2.McpAuthorization;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClientOptions;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class McpConnectionService {
@@ -21,6 +27,9 @@ public class McpConnectionService {
 
     @Inject
     McpToolProvider mcpToolProvider;
+    
+    @Inject
+    Vertx vertx;
 
     public McpConnection addConnection(io.quarkiverse.langchain4j.sample.assistant.service.McpConnectionRequest request) {
         if (connections.containsKey(request.name())) {
@@ -84,9 +93,20 @@ public class McpConnectionService {
                 if (request.url() == null || request.url().isBlank()) {
                     throw new IllegalArgumentException("URL is required for STREAMABLE_HTTP transport");
                 }
-                StreamableHttpMcpTransport transport = StreamableHttpMcpTransport.builder()
+                QuarkusStreamableHttpMcpTransport.Builder transportBuilder = new QuarkusStreamableHttpMcpTransport.Builder()
                     .url(request.url())
-                    .build();
+                    .httpClient(vertx.createHttpClient(new HttpClientOptions()))
+                    .mcpClientName(request.name());
+                
+                McpAuthorization mcpAuthorization = request.mcpAuthorization();
+                if (request.mcpAuthorization() != null) {
+                    if (mcpAuthorization.accessToken() != null) {
+                        McpClientAuthProvider authProvider = new BearerMcpAuthClientProvider(mcpAuthorization.accessToken());
+                        transportBuilder.mcpClientAuthProvider(authProvider);
+                    }
+                }
+                
+                QuarkusStreamableHttpMcpTransport transport = transportBuilder.build();
                 yield new DefaultMcpClient.Builder()
                     .key(request.name())
                     .transport(transport)

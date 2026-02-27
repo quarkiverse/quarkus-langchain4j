@@ -191,7 +191,7 @@
             <a href="/" class="back-link">← Back to Home</a>
         </header>
 
-        <div class="content">
+        <div class="content" id="main-content">
             <div class="panel">
                 <h2>Add New Connection</h2>
                 <div id="form-feedback"></div>
@@ -208,16 +208,16 @@
                         <label for="transportType">Transport Type</label>
                         <select id="transportType" name="transportType">
                             <option value="STDIO">STDIO</option>
-                            <option value="STREAMABLE_HTTP">Streamable HTTP</option>
+                            <option value="STREAMABLE_HTTP" selected>Streamable HTTP</option>
                         </select>
                     </div>
 
-                    <div class="form-group" id="command-group">
+                    <div class="form-group" id="command-group" style="display: none;">
                         <label for="command">Command (for example: uvx mcp-server-time)</label>
                         <input type="text" id="command" name="command" />
                     </div>
 
-                    <div class="form-group" id="url-group" style="display: none;">
+                    <div class="form-group" id="url-group">
                         <label for="url">Server URL</label>
                         <input type="url" id="url" name="url" placeholder="e.g., http://localhost:8080/mcp" />
                     </div>
@@ -240,13 +240,14 @@
 
     <script>
         // Toggle between STDIO and HTTP fields
-        document.getElementById('transportType').addEventListener('change', function(e) {
+        function updateFormFields() {
+            const transportType = document.getElementById('transportType');
             const commandGroup = document.getElementById('command-group');
             const urlGroup = document.getElementById('url-group');
             const commandInput = document.getElementById('command');
             const urlInput = document.getElementById('url');
 
-            if (e.target.value === 'STDIO') {
+            if (transportType.value === 'STDIO') {
                 commandGroup.style.display = 'block';
                 urlGroup.style.display = 'none';
                 commandInput.required = true;
@@ -257,7 +258,12 @@
                 commandInput.required = false;
                 urlInput.required = true;
             }
-        });
+        }
+
+        document.getElementById('transportType').addEventListener('change', updateFormFields);
+        
+        // Set initial state based on default selection
+        document.addEventListener('DOMContentLoaded', updateFormFields);
 
         // Handle form success and trigger connection list refresh
         document.body.addEventListener('htmx:afterSwap', function(evt) {
@@ -268,7 +274,32 @@
                     document.getElementById('connection-form').reset();
                     // Trigger event for connections list refresh
                     htmx.trigger('#connection-form', 'formSuccess');
+                } else if (feedback.querySelector('.auth-required-panel')) {
+                    // Authentication required - replace the entire content with auth form
+                    const mainContent = document.getElementById('main-content');
+                    const authPanel = feedback.querySelector('.auth-required-panel');
+                    mainContent.innerHTML = authPanel.outerHTML;
                 }
+            }
+        });
+
+        // Check URL parameters for feedback from OAuth flow
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const feedbackDiv = document.getElementById('form-feedback');
+            
+            if (urlParams.has('success')) {
+                const name = urlParams.get('name') || 'Connection';
+                feedbackDiv.innerHTML = '<div class="success">Connection "' + name + '" added successfully!</div>';
+                // Refresh connections list
+                htmx.trigger('#connections-list', 'load');
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (urlParams.has('error')) {
+                const error = urlParams.get('error');
+                feedbackDiv.innerHTML = '<div class="error">' + error + '</div>';
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         });
     </script>
