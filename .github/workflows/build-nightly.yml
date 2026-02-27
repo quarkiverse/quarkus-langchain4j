@@ -41,10 +41,10 @@ jobs:
           PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
           PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
 
-#      - name: Build with Maven (Native)
-#        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
-#        env:
-#          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-#          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
-#          PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
-#          PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
+      - name: Build with Maven in Native mode
+        run: ./mvnw -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip
+        env:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+          PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+          PINECONE_PROJECT_ID: ${{ secrets.PINECONE_PROJECT_ID }}
