@@ -78,6 +78,7 @@ jobs:
                 | grep -v jlama \
                 | grep -v llama3-java \
                 | grep -v gpu-llama3 \
+                | grep -v mcp-conformance \
                 | grep -v in-process-embedding-models \
                 | jq -R -s -c 'split("\n")[:-1]')
 
@@ -311,12 +312,12 @@ jobs:
 
       - name: Prepare for conformance tests
         run: |
-          ./mvnw package -pl testing/mcp-conformance -Dquarkus-langchain4j.version=999-SNAPSHOT
+          ./mvnw package -pl integration-tests/mcp-conformance -Dquarkus-langchain4j.version=999-SNAPSHOT
           npm audit fix
 
       - name: Run MCP conformance tests
         run: |
-          cd testing/mcp-conformance
+          cd integration-tests/mcp-conformance
           npm -y exec -- @modelcontextprotocol/conformance@0.1.15 client --command "sh client-command.sh" --suite all --expected-failures conformance-baseline.yml
           
 
