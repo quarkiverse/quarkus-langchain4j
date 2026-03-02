@@ -1,0 +1,239 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-datasource[`quarkus.langchain4j.hibernate-dynamic.datasource`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.datasource+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-entity-name]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-entity-name[`quarkus.langchain4j.hibernate.entity-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate.entity-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ENTITY_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ENTITY_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-persistence-unit]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-persistence-unit[`quarkus.langchain4j.hibernate.persistence-unit`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate.persistence-unit+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_PERSISTENCE_UNIT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_PERSISTENCE_UNIT+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-table[`quarkus.langchain4j.hibernate-dynamic.table`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++embeddings+++`
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-dimension[`quarkus.langchain4j.hibernate-dynamic.dimension`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.dimension+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DIMENSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DIMENSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-index]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-index[`quarkus.langchain4j.hibernate-dynamic.create-index`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.create-index+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_INDEX+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_INDEX+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-options[`quarkus.langchain4j.hibernate-dynamic.index-options`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.index-options+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_OPTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_OPTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-type[`quarkus.langchain4j.hibernate-dynamic.index-type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.index-type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-table[`quarkus.langchain4j.hibernate-dynamic.create-table`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.create-table+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_TABLE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_TABLE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-drop-table-first]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-drop-table-first[`quarkus.langchain4j.hibernate-dynamic.drop-table-first`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.drop-table-first+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DROP_TABLE_FIRST+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DROP_TABLE_FIRST+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-distance-function[`quarkus.langchain4j.hibernate-dynamic.distance-function`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.distance-function+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DISTANCE_FUNCTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DISTANCE_FUNCTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-distance-function[`quarkus.langchain4j.hibernate.distance-function`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate.distance-function+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DISTANCE_FUNCTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DISTANCE_FUNCTION+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
+|`+++cosine+++`
+
+|===
+

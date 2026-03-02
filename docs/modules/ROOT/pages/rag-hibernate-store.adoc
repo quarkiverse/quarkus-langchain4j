@@ -1,0 +1,153 @@
+= Hibernate Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+Quarkus LangChain4j integrates with Hibernate to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
+This extension enables you to persist and query embedding vectors for document retrieval.
+
+== Prerequisites
+
+To use Hibernate as an Embedding store:
+
+* A supported database with vector search capability is required.
+* A Quarkus datasource must be configured.
+* The embedding vector dimension must match your embedding model.
+
+The currently supported databases are:
+
+* DB2
+* MariaDB
+* MySQL Heatwave
+* PostgreSQL with pgvector
+* Oracle
+* SQL Server
+
+== Dependency
+
+To enable the Hibernate integration in your Quarkus project, add the following Maven dependency:
+
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
+
+This extension requires a configured Quarkus datasource and/or a Hibernate ORM persistence unit.
+For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide] and the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
+
+== Embedding Dimension
+
+You must explicitly configure the dimensionality of the embedding vector:
+
+[source,properties]
+----
+quarkus.langchain4j.hibernate-dynamic.dimension=384
+----
+
+This value depends on the embedding model in use:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Embedding Index
+
+Create-index controls whether the engine should create and use an index over the embeddings table.
+To create an index, depending on your database, you might need the index-options parameter, which is a fine-tuning parameter.
+On PostgreSQL with pgvector, if you set the `create-index=true` you will have to also set e.g. `index-options=lists=1`.
+
+[NOTE]
+====
+This is something you rarely would need in development. 
+====
+
+[source,properties]
+----
+quarkus.langchain4j.hibernate-dynamic.create-index=true
+quarkus.langchain4j.hibernate-dynamic.index-options=lists=10
+----
+
+Higher number of lists values speed up queries by reducing the search space during query time.
+However, it also decreases the region size, which can lead to more recall errors by excluding some points.
+Additionally, more distance comparisons are required to find the closest cluster during step one of the query process.
+
+Here are some recommendations for setting the lists parameter:
+
+* For datasets with less than one million rows, use lists = rows / 1000.
+* For datasets with more than one million rows, use lists = sqrt(rows).
+* It is generally advisable to have at least 10 clusters.
+
+For details about index options configurations, please refer to the documentation of the respective database vendor.
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into your database using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithHibernate.java[]
+----
+
+This example shows how to embed and persist documents using the Hibernate store, enabling efficient similarity search during RAG queries.
+The default entity type that is used for `hibernate-dynamic` configurations is `EmbeddingEntity`.
+Replace the type when defining a custom entity via the `hibernate` configuration.
+
+== Custom entity
+
+When you want to customize the data model or want to reuse an existing entity as source for the `EmbeddingStore`,
+you can make use of the annotations `@Embedding`, `@EmbeddedText`, `@UnmappedMetadata` and `@MetadataAttribute` to mark the
+entity attributes to use by the Hibernate `EmbeddingStore` implementation.
+
+[source,java]
+----
+@Entity
+public class MyEmbeddingEntity {
+    @Id
+    UUID id;
+    @Embedding
+    @Array(length = 384)                // The dimension of the embedding vector based on the embedding model
+    float[] embedding;
+    @EmbeddedText
+    String text;
+    @UnmappedMetadata
+    Map<String, Object> metadata;       // Can be either a Map<String, Object> or a String
+
+    @MetadataAttribute
+    String mimeType;                    // Explicitly mapped. Synchronizes TextSegment#metadata with this attribute
+    @MetadataAttribute
+    String fileName;                    // Explicitly mapped. Synchronizes TextSegment#metadata with this attribute
+}
+----
+
+If you don't specify any `quarkus.langchain4j.hibernate` or `quarkus.langchain4j.hibernate-dynamic` configuration,
+the extension will try to find an entity containing a `@Embedding` annotation and use that and its containing
+persistence unit for the embedding store.
+
+== Configuration
+
+Customize the behavior of the extension using the following configuration options:
+
+include::includes/quarkus-langchain4j-hibernate.adoc[leveloffset=+1,opts=optional]
+
+== How It Works
+
+The Hibernate extension maps each ingested document to an entity. Each entity contains:
+
+* The original text content
+* Optional metadata
+* The vector embedding (stored as a `vector` type column)
+
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector FETCH FIRST N ROWS ONLY`.
+
+== Summary
+
+To use Hibernate as an embedding store with Quarkus LangChain4j:
+
+* Ensure your database is configured correctly for vector search.
+* Add the extension dependency.
+* Configure a datasource and set the correct embedding dimension.
+* Use `HibernateEmbeddingStore` to ingest and retrieve embedded documents.
+
