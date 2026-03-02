@@ -57,3 +57,17 @@ Feel free to contribute to this project by submitting issues or pull requests.
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 
+
+
+## Installation
+
+```bash
+# Installation instructions
+```
+
+
+## Usage
+
+```python
+# Usage examples
+```
