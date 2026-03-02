@@ -151,7 +151,7 @@ public class AiGeminiRecorder {
     }
 
     private String determineBaseUrl(Optional<String> baseUrl) {
-        return baseUrl.orElse("https://generativelanguage.googleapis.com");
+        return baseUrl.orElse("https://generativelanguage.googleapis.com/v1beta");
     }
 
     private void configureThinking(ChatModelConfig chatModelConfig,
