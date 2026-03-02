@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://www.anthropic.com/[Anthropic] is an AI safety and research company. It provides the _Claude_ family of Large Language Models, designed with constitutional AI principles for safe and controllable output.
 

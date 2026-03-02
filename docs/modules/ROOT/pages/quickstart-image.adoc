@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: tutorial
 
 This guide demonstrates how to use Quarkus LangChain4j to extract text from an image using a Large Language Model (LLM). You will create a simple CLI application that loads an image, converts it to a base64 payload, and sends it to a model for text extraction and translation.
 

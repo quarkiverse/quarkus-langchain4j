@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Azure OpenAI is a managed service provided by Microsoft that gives developers access to OpenAI’s Large Language Models (LLMs) via the Azure cloud platform.
 

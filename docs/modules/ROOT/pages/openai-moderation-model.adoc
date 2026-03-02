@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 OpenAI provides a dedicated moderation model designed to detect and filter harmful, offensive, or otherwise inappropriate content in user-generated text.
 These models are particularly useful in public-facing applications where user safety and content compliance are essential.

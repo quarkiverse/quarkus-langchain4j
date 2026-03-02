@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Quarkus LangChain4j supports the Model Context Protocol (MCP) for interacting with MCP-compliant servers that provide and execute tools dynamically.
 

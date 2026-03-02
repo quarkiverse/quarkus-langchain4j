@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Neo4j is a graph database that also supports vector search starting from version 5.x.
 With Quarkus LangChain4j, you can use Neo4j as a vector-capable document store for implementing Retrieval-Augmented Generation (RAG) pipelines.

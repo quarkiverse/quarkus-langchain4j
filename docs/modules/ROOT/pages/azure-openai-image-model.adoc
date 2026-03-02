@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Azure OpenAI provides image generation models that can create or modify images based on natural language prompts. These models enable use cases such as visual storytelling, creative content generation, and image editing workflows.
 

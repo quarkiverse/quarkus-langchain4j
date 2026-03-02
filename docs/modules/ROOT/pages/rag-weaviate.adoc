@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Weaviate is a scalable vector-native database designed for semantic search and Retrieval-Augmented Generation (RAG) use cases.
 This guide explains how to use Weaviate as an embedding store in Quarkus LangChain4j.

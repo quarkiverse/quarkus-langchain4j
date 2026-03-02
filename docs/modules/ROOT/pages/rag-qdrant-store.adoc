@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Qdrant is a high-performance vector database optimized for semantic search and Retrieval-Augmented Generation (RAG) workloads.
 This guide explains how to use Qdrant as a vector-capable document store in Quarkus LangChain4j.

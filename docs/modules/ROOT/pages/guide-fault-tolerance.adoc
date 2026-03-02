@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Quarkus Fault Tolerance helps you make your AI service interactions more robust and resilient to failure.
 This is particularly useful when working with external model providers that may be unavailable or experience latency.

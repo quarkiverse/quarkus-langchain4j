@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 https://developers.redhat.com/products/podman-desktop/podman-ai-lab/[Podman AI Lab] is a local AI development environment provided as an extension to Podman Desktop.
 It simplifies experimentation with AI by providing a curated catalog of models and recipes, all runnable on your local machine via containerized infrastructure.

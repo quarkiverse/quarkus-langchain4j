@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 IBM watsonx.ai also provides access to embedding models that can be used for vector-based similarity search, semantic retrieval, and RAG scenarios.
 

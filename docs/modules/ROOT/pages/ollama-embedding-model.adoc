@@ -2,6 +2,7 @@
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
+:diataxis-type: howto
 
 Ollama supports embedding models suitable for semantic search, document retrieval, and RAG-style workflows.
 These models run locally, just like chat models.
