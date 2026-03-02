@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.runtime.aiservice;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.ChatMessage;
@@ -58,11 +59,17 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
             vertxContext = VertxContext.getOrCreateDuplicatedContext();
         }
 
-        // Create the token stream first so we can capture the reference
-        QuarkusAiServiceTokenStream stream = createTokenStream(processor, vertxContext);
+        // Shared cancellation flag: set by Multi subscription cancellation,
+        // checked by the handler before executing tools or making new chat() calls
+        AtomicBoolean cancelled = new AtomicBoolean(false);
 
-        // Wire cancellation: when the Multi subscription is cancelled, cancel the underlying HTTP stream
+        // Create the token stream first so we can capture the reference
+        QuarkusAiServiceTokenStream stream = createTokenStream(processor, vertxContext, cancelled);
+
+        // Wire cancellation: when the Multi subscription is cancelled, signal the handler
+        // to stop its tool execution loop and immediately cancel the underlying stream.
         Multi<ChatEvent> cancellableMulti = processor.onCancellation().invoke(() -> {
+            cancelled.set(true);
             stream.getStreamingHandle().cancel();
         });
 
@@ -72,10 +79,11 @@ class TokenStreamMulti extends AbstractMulti<ChatEvent> implements Multi<ChatEve
         startTokenStream(stream, vertxContext);
     }
 
-    private QuarkusAiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor, Context vertxContext) {
+    private QuarkusAiServiceTokenStream createTokenStream(UnicastProcessor<ChatEvent> processor, Context vertxContext,
+            AtomicBoolean cancelled) {
         QuarkusAiServiceTokenStream stream = new QuarkusAiServiceTokenStream(messagesToSend, toolSpecifications,
                 toolsExecutors, contents, context, invocationContext, memoryId, vertxContext,
-                switchToWorkerThreadForToolExecution, isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs);
+                switchToWorkerThreadForToolExecution, isCallerRunningOnWorkerThread, methodCreateInfo, methodArgs, cancelled);
         stream
                 .onPartialResponse(chunk -> processor.onNext(new ChatEvent.PartialResponseEvent(chunk)))
                 .onPartialThinking(thinking -> processor.onNext(new ChatEvent.PartialThinkingEvent(thinking.text())))

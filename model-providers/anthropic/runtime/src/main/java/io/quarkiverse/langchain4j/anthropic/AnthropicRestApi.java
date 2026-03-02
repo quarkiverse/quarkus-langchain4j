@@ -19,6 +19,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
@@ -30,10 +31,12 @@ import org.jboss.resteasy.reactive.common.providers.serialisers.AbstractJsonMess
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
+import dev.langchain4j.exception.HttpException;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
 import io.quarkiverse.langchain4j.QuarkusJsonCodecFactory;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import io.smallrye.mutiny.Multi;
 
 @Path("")
@@ -53,6 +56,14 @@ public interface AnthropicRestApi {
     @POST
     @RestStreamElementType(MediaType.APPLICATION_JSON)
     Multi<AnthropicStreamingData> streamMessage(AnthropicCreateMessageRequest request, @BeanParam ApiMetadata apiMetadata);
+
+    @ClientExceptionMapper
+    static RuntimeException toException(Response response) {
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            return new HttpException(response.getStatus(), response.readEntity(String.class));
+        }
+        return null;
+    }
 
     class ApiMetadata {
         @HeaderParam(API_KEY_HEADER)
