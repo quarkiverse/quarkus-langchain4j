@@ -100,6 +100,8 @@
 *** xref:rag-neo4j.adoc[Neo4j]
 *** xref:rag-oracle-store.adoc[Oracle Database]
 *** xref:rag-pgvector-store.adoc[PgVector (PostgreSQL)]
+*** xref:rag-generic-store.adoc[Generic]
+*** xref:rag-hibernate-orm-store.adoc[Hibernate ORM]
 *** xref:rag-pinecone-store.adoc[Pinecone]
 *** xref:rag-qdrant-store.adoc[Qdrant]
 *** xref:rag-redis.adoc[Redis]

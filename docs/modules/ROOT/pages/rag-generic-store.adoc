@@ -1,0 +1,182 @@
+= Generic Embedding Store
+
+include::./includes/attributes.adoc[]
+include::./includes/customization.adoc[]
+
+The Quarkus LangChain4j Hibernate ORM extension provides a generic embedding store, that works with Hibernate ORM, to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
+This extension enables you to persist and query embedding vectors for document retrieval and is based on the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate[LangChain4j Hibernate ORM integration].
+
+Contrary to other embedding store extensions, this extension has various advantages thanks to its usage of Hibernate ORM:
+
+* Support multiple databases through a unified configuration and user API
+* Advanced queries based on HQL and JPA Criteria
+
+If you need to customize the metadata, consider defining a custom Hibernate ORM entity.
+For details, take a look into the xref:rag-hibernate-orm-store.adoc[Hibernate ORM Embedding store documentation].
+
+== Prerequisites
+
+To use the Generic Embedding store:
+
+* A supported database with vector search capability is required.
+* A Quarkus datasource must be configured.
+* The embedding vector dimension must match the dimension of vectors produced by your embedding model.
+
+The currently supported databases are:
+
+* DB2
+* MariaDB
+* MySQL Heatwave
+* PostgreSQL with pgvector
+* Oracle
+* SQL Server
+
+== Dependency
+
+To enable the LangChain4j Hibernate ORM extension in your Quarkus project, add the following Maven dependency:
+
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
+
+This extension requires a configured Quarkus datasource and a Hibernate ORM persistence unit.
+For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide] and the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
+
+NOTE: Please beware that if you're using PostgreSQL, you have to make sure that the `pgvector` extension is available.
+This can be done through Quarkus DevServices by configuring `quarkus.datasource.devservices.image-name=pgvector/pgvector:pg17`.
+
+== How It Works
+
+The extension maps each ingested document to an entity. Each entity contains:
+
+* The original text content
+* Optional metadata
+* The vector embedding (stored as a `vector` type column)
+
+During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector FETCH FIRST N ROWS ONLY`.
+
+== Comparison with quarkus-langchain4j-pgvector extension
+
+The Quarkus LangChain4j Hibernate ORM extension provides similar features to the Quarkus LangChain4j pgvector extension
+and can also be used with pgvector on PostgreSQL.
+
+The major difference is that the Quarkus LangChain4j Hibernate ORM extension is implemented through Hibernate ORM APIs,
+which abstract away the data store details. This extension can thus also be used with other supported data stores.
+
+This also means the same entities defined for use in Quarkus LangChain4j Hibernate ORM can be used in Quarkus Hibernate ORM,
+unlocking additional APIs and addressing additional use cases:
+
+* Managed entities with `Session`
+* Quarkus Panache
+* Jakarta Data repositories
+* ...
+
+[#_embedding_dimension]
+== Embedding Dimension
+
+You must explicitly configure the dimensionality of the embedding vector via:
+
+[source,properties]
+----
+quarkus.langchain4j.generic.dimension=384
+----
+
+This value depends on the embedding model in use. For example:
+
+* `AllMiniLmL6V2QuantizedEmbeddingModel` → 384
+* OpenAI `text-embedding-ada-002` → 1536
+
+[IMPORTANT]
+====
+If the embedding dimension is missing or mismatched, ingestion and retrieval will fail or produce inaccurate results.
+
+If you switch to a different embedding model, ensure the `dimension` value is updated accordingly.
+====
+
+== Embedding Index
+
+The create-index configuration controls whether the engine should create and use an index over the embeddings table.
+To create an index, depending on your database, you might need the index-options parameter, which is a fine-tuning parameter.
+For example, on PostgreSQL with pgvector, if you set `create-index=true` you will have to also set the `lists` index-option (detailed below).
+
+[NOTE]
+====
+This is something you rarely would need in development. 
+====
+
+[source,properties]
+----
+quarkus.langchain4j.generic.create-index=true
+quarkus.langchain4j.generic.index-options=lists=10
+----
+
+Higher number of `lists` values speed up queries by reducing the search space during query time.
+However, it also decreases the region size, which can lead to more recall errors by excluding some points.
+Additionally, more distance comparisons are required to find the closest cluster during step one of the query process.
+
+Here are some recommendations for setting the lists parameter:
+
+* For datasets with less than one million rows, use lists = rows / 1000.
+* For datasets with more than one million rows, use lists = sqrt(rows).
+* It is generally advisable to have at least 10 clusters.
+
+For details about index options configurations, please refer to the documentation of the respective database vendor.
+
+== Usage Example
+
+Once the extension is installed and configured, you can ingest documents into your database using the following code:
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithGenericHibernate.java[]
+----
+
+This example shows how to embed and persist documents using the Generic Embedding Store, enabling efficient similarity search during RAG queries.
+
+== Query Example
+
+Assuming that data was ingested, one of the various `search` methods on the `HibernateEmbeddingStore` can be used
+to search for matching entities.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/QueryExampleWithGenericHibernate.java[]
+----
+
+For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate ORM documentation examples].
+
+== Configuration
+
+Customize the behavior of the extension using one the following configuration `quarkus.langchain4j.generic` options:
+
+include::includes/quarkus-langchain4j-hibernate.adoc[leveloffset=+1,opts=optional]
+
+== Known bugs
+
+When you don't use Hibernate ORM in your application, but use a named datasource for the Generic Embedding Store,
+you might face the following startup error:
+
+[quote]
+Persistence unit '<default>' defines entities [dev.langchain4j.store.embedding.hibernate.EmbeddingEntity],
+but its datasource '<default>' cannot be found: Datasource '<default>' is not configured. To solve this,
+configure datasource '<default>'. Refer to https://quarkus.io/guides/datasource for guidance. Alternatively,
+disable Hibernate ORM by setting 'quarkus.hibernate-orm.enabled=false', and the entities will be ignored.
+
+This error happens, because the Quarkus Hibernate ORM extension thinks that the `EmbeddingEntity` shall be added
+to the default persistence unit and hence activates the default persistence unit. Since it doesn't have a datasource
+available though, it will fail to boot.
+
+You have two solutions:
+
+* Add the configuration option `quarkus.hibernate-orm.datasource=my-ds` to let the default persistence unit use that named datasource
+* Don't use a named datasource, but rely on the default datasource instead
+
+This problem will be fixed in a https://github.com/quarkusio/quarkus/issues/54493[future version of the Quarkus Hibernate ORM extension].
+
+== Summary
+
+To use Hibernate ORM as an embedding store with Quarkus LangChain4j:
+
+* Ensure your database is configured correctly for vector search.
+* Add the extension dependency.
+* Configure a datasource and set the correct embedding dimension.
+* Use `HibernateEmbeddingStore` to ingest and retrieve embedded documents.
+
