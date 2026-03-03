@@ -11,7 +11,8 @@ See xref:mistral-chat-model.adoc[Mistral Chat Models] for prerequisites, includi
 
 Add this dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-mistral-ai]
+:provider-artifact: quarkus-langchain4j-mistral-ai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 == Configuration
 

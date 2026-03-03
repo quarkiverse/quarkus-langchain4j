@@ -41,7 +41,8 @@ Jlama models can be large (several GB) and may take time to download and initial
 
 To integrate Jlama into your Quarkus project, add the following dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-jlama]
+:provider-artifact: quarkus-langchain4j-jlama
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Jlama chat model.
 

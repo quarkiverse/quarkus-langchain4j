@@ -7,6 +7,27 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-enabled[`quarkus.langchain4j.mcp.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether MCP integration is enabled. If disabled, no MCP clients, registry clients, ToolProvider or MCP health check will be registered.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-generate-tool-provider[`quarkus.langchain4j.mcp.generate-tool-provider`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.mcp.generate-tool-provider+++[]
@@ -96,6 +117,27 @@ endif::add-copy-button-to-env-var[]
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp[Configured MCP clients]##
 h|Type
 h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-enabled[`quarkus.langchain4j.mcp."client-name".enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether this MCP client is enabled.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
 
 a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-transport-type[`quarkus.langchain4j.mcp."client-name".transport-type`]##
 ifdef::add-copy-button-to-config-props[]

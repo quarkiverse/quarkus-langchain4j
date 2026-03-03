@@ -22,7 +22,8 @@ For more details, visit: https://docs.pinecone.io/docs/quickstart
 
 Add the following dependency to your `pom.xml`:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-pinecone]
+:provider-artifact: quarkus-langchain4j-pinecone
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 == Configuration
 
