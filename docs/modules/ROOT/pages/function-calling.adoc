@@ -478,7 +478,7 @@ Tool guardrails are useful for:
 
 [NOTE]
 ====
-See xref:tool-guardrails.adoc[Tool Guardrails] for complete documentation.
+See xref:tool-guardrails-concept.adoc[Tool Guardrails] for complete documentation.
 ====
 
 == Summary
@@ -502,7 +502,7 @@ Function calling enables the model to take actions and retrieve external informa
 == Going Further
 
 [.lead]
-* xref:tool-guardrails.adoc[Tool Guardrails] – Validate and control tool invocations
+* xref:tool-guardrails-concept.adoc[Tool Guardrails] – Validate and control tool invocations
 * xref:ai-services.adoc[AI Service Configuration]
 * xref:messages-and-memory.adoc[Memory and Context Management]
 * xref:observability.adoc[Observability of Tool Invocations]
