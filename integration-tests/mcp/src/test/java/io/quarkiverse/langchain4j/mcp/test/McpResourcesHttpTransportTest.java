@@ -37,7 +37,7 @@ class McpResourcesHttpTransportTest extends McpResourcesTestBase {
     @AfterAll
     static void teardown() throws Exception {
         if (process != null && process.isAlive()) {
-            process.destroyForcibly();
+            McpServerHelper.destroyProcessTree(process);
         }
     }
 }

@@ -44,7 +44,7 @@ class McpToolsStreamableHttpTransportTest extends McpToolsTestBase {
     @AfterAll
     static void teardown() throws Exception {
         if (process != null && process.isAlive()) {
-            process.destroyForcibly();
+            McpServerHelper.destroyProcessTree(process);
         }
     }
 
@@ -56,7 +56,7 @@ class McpToolsStreamableHttpTransportTest extends McpToolsTestBase {
         assertDoesNotThrow(() -> mcpClient.checkHealth(), "Health check should pass initially");
 
         // Simulate server crash
-        process.destroyForcibly();
+        McpServerHelper.destroyProcessTree(process);
 
         // Expect failure as server is down
         assertThrows(
