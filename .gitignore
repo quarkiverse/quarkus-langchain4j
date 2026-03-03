@@ -37,6 +37,7 @@ bin/
 .idea/
 
 .claude/
+CLAUDE.md
 
 # NetBeans
 nb-configuration.xml
