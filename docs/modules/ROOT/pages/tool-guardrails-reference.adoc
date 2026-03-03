@@ -218,10 +218,10 @@ Event objects provide access to:
 ====
 Use these metrics to:
 
-* Monitor guardrail success rates and identify problematic tools
-* Track performance and identify slow guardrails
-* Set up alerts for fatal failures indicating system issues
-* Analyze which guardrails are most frequently triggered
+* Monitor guardrail success rates and identify problematic tools.
+* Track performance and identify slow guardrails.
+* Set up alerts for fatal failures indicating system issues.
+* Analyze which guardrails are most frequently triggered.
 ====
 
 == Related Resources

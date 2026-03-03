@@ -4,17 +4,17 @@ include::./includes/attributes.adoc[]
 :diataxis-type: concept
 
 Tool guardrails provide validation and control mechanisms for tool (function) invocations in AI applications.
-Unlike LLM guardrails which validate prompts and responses from the LLM, tool guardrails operate on the **input parameters** and **output results** of tools that the LLM can invoke using xref:function-calling.adoc[function calling].
+Unlike LLM guardrails, which validate prompts and responses from the LLM, tool guardrails operate on the **input parameters** and **output results** of tools that the LLM can invoke using xref:function-calling.adoc[function calling].
 
 [NOTE]
 ====
 Tool guardrails are important for:
 
-* **Security**: Prevent unauthorized access to sensitive operations
-* **Data Validation**: Ensure parameters meet format and business rule requirements
-* **Privacy Protection**: Filter sensitive data from tool outputs
-* **Cost Control**: Limit expensive operations through rate limiting
-* **Reliability**: Prevent malformed requests from causing errors
+* **Security**: Prevent unauthorized access to sensitive operations.
+* **Data Validation**: Ensure parameters meet format and business rule requirements.
+* **Privacy Protection**: Filter sensitive data from tool outputs.
+* **Cost Control**: Limit expensive operations through rate limiting.
+* **Reliability**: Prevent malformed requests from causing errors.
 ====
 
 == How Tool Guardrails Work

@@ -3,7 +3,7 @@
 include::./includes/attributes.adoc[]
 :diataxis-type: howto
 
-This guide provides task-oriented recipes for implementing tool guardrails.
+Use these recipes to add validation and control to your tool invocations.
 For background on what tool guardrails are and how they work, see xref:tool-guardrails-concept.adoc[Understand tool guardrails].
 For the full API reference, see xref:tool-guardrails-reference.adoc[Tool guardrails reference].
 
@@ -57,9 +57,9 @@ public class EmailFormatValidator implements ToolInputGuardrail {
 ====
 When an input guardrail fails:
 
-* The tool is **not executed**
-* The error message is returned to the LLM as the tool result
-* The LLM can retry with corrected parameters
+* The tool is **not executed**.
+* The error message is returned to the LLM as the tool result.
+* The LLM can retry with corrected parameters.
 ====
 
 == Filter Sensitive Data from Output
@@ -113,9 +113,9 @@ public class SensitiveDataFilter implements ToolOutputGuardrail {
 ====
 When an output guardrail modifies the result:
 
-* The **modified** result is returned to the LLM
-* The original tool result is **never** seen by the LLM
-* Multiple output guardrails can chain transformations
+* The **modified** result is returned to the LLM.
+* The original tool result is **never** seen by the LLM.
+* Multiple output guardrails can chain transformations.
 ====
 
 == Chain Multiple Guardrails
@@ -143,9 +143,9 @@ public String sendBulkEmail(String recipients, String subject, String body) {
 ====
 **Execution Order Best Practices:**
 
-* Place **fast, cheap** checks first (format validation)
-* Place **slow, expensive** checks last (database lookups)
-* For output guardrails, order by transformation dependencies
+* Place **fast, cheap** checks first (format validation).
+* Place **slow, expensive** checks last (database lookups).
+* For output guardrails, order by transformation dependencies.
 ====
 
 [IMPORTANT]
@@ -302,6 +302,8 @@ Guardrails are CDI beans and can inject dependencies like `SecurityIdentity`, ma
 
 == Implement Rate Limiting
 
+To throttle tool invocations per user, inject a rate limiter service:
+
 [source,java]
 ----
 @ApplicationScoped
@@ -325,6 +327,8 @@ public class RateLimitGuardrail implements ToolInputGuardrail {
 ----
 
 == Filter PII from Output
+
+To redact personally identifiable information such as SSNs and credit card numbers from tool output:
 
 [source,java]
 ----
@@ -360,6 +364,8 @@ public class PiiFilter implements ToolOutputGuardrail {
 ----
 
 == Limit Output Size
+
+To prevent oversized tool responses from consuming excessive tokens:
 
 [source,java]
 ----

@@ -34,11 +34,11 @@ public class PositiveNumberGuardrail implements ToolInputGuardrail {  // <2>
     }
 }
 ----
-<1> Make it a CDI bean with a scope annotation
-<2> Implement the `ToolInputGuardrail` interface
-<3> Override the `validate` method
-<4> Return failure if validation fails -- the error message goes back to the LLM
-<5> Return success if validation passes -- the tool proceeds normally
+<1> Make it a CDI bean with a scope annotation.
+<2> Implement the `ToolInputGuardrail` interface.
+<3> Override the `validate` method.
+<4> Return failure if validation fails. The error message goes back to the LLM.
+<5> Return success if validation passes. The tool proceeds normally.
 
 == Step 2: Apply the Guardrail to a Tool
 
@@ -57,26 +57,26 @@ public class BankingTools {
     }
 }
 ----
-<1> The guardrail runs before every call to `transfer()`
+<1> The guardrail runs before every call to `transfer()`.
 
 == Step 3: Verify the Behavior
 
 When the LLM invokes `transfer` with a negative amount, the guardrail intercepts the call:
 
-1. The `validate()` method receives the tool arguments as JSON
-2. It detects that `amount` is negative
-3. It returns a failure message: `"Amount must be positive, got: -50"`
-4. The tool method **does not execute**
-5. The LLM receives the error message and can retry with a corrected value
+1. The `validate()` method receives the tool arguments as JSON.
+2. It detects that `amount` is negative.
+3. It returns a failure message: `"Amount must be positive, got: -50"`.
+4. The tool method **does not execute**.
+5. The LLM receives the error message and can retry with a corrected value.
 
 Notice that the guardrail message is written for the LLM, not the end user. Clear, actionable messages help the LLM correct its parameters on the next attempt.
 
 == What You Learned
 
-* Tool guardrails are CDI beans that implement `ToolInputGuardrail` or `ToolOutputGuardrail`
-* The `validate()` method inspects tool arguments and returns `success()` or `failure()`
-* Apply guardrails to tools using the `@ToolInputGuardrails` annotation
-* When a guardrail fails, the tool does not execute and the error message goes to the LLM
+* Tool guardrails are CDI beans that implement `ToolInputGuardrail` or `ToolOutputGuardrail`.
+* The `validate()` method inspects tool arguments and returns `success()` or `failure()`.
+* Apply guardrails to tools using the `@ToolInputGuardrails` annotation.
+* When a guardrail fails, the tool does not execute and the error message goes to the LLM.
 
 == Next Steps
 
