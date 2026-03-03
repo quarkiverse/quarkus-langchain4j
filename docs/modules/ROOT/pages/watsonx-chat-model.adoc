@@ -60,7 +60,8 @@ TIP: You can also use the `QUARKUS_LANGCHAIN4J_WATSONX_API_KEY` environment vari
 
 Add the following dependency to your project:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-watsonx]
+:provider-artifact: quarkus-langchain4j-watsonx
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other extension is installed, xref:ai-services.adoc[AI Services] will automatically use this provider.
 

@@ -16,7 +16,8 @@ Ensure your Neo4j deployment supports this feature.
 
 To enable Neo4j vector store support, add the following dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-neo4j]
+:provider-artifact: quarkus-langchain4j-neo4j
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 This extension depends on the https://github.com/quarkiverse/quarkus-neo4j[`quarkus-neo4j`] extension for Neo4j driver configuration, Dev Services support, and reactive client integration.
 

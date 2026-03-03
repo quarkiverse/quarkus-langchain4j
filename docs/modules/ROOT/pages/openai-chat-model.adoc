@@ -53,7 +53,8 @@ quarkus.langchain4j.openai.api-key=${OPENAI_API_KEY}
 
 To enable OpenAI chat model support, add the following dependency to your `pom.xml`:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-openai]
+:provider-artifact: quarkus-langchain4j-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 [NOTE]
 ====

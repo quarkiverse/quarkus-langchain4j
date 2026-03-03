@@ -1,3 +1,7 @@
+ifndef::provider-artifact[]
+:provider-artifact: quarkus-langchain4j
+endif::[]
+
 [source,xml,subs=attributes+]
 ----
 <dependency>

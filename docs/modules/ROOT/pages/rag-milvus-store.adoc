@@ -16,7 +16,8 @@ Milvus supports approximate nearest neighbor (ANN) search with various indexing 
 
 To enable Milvus integration in your Quarkus project, add the following dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-milvus]
+:provider-artifact: quarkus-langchain4j-milvus
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 == Dev Services Support
 

@@ -15,7 +15,8 @@ To use Anthropic models, you need an API key. Follow the steps on the https://do
 
 To enable Anthropic LLM integration in your project, add the following dependency:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-anthropic]
+:provider-artifact: quarkus-langchain4j-anthropic
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Anthropic chat model.
 

@@ -53,7 +53,8 @@ quarkus.native.additional-build-args=-O3,-march=native
 
 To integrate the Llama3.java chat model into your Quarkus application, add:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-llama3-java]
+:provider-artifact: quarkus-langchain4j-llama3-java
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically use the configured Llama3.java chat model.
 

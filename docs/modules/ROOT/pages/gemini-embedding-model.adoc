@@ -12,7 +12,8 @@ The Gemini platform also provides an embedding model suitable for transforming i
 
 To use it, first add the required dependency to your project:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-ai-gemini]
+:provider-artifact: quarkus-langchain4j-ai-gemini
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other embedding model is configured, xref:ai-services.adoc[AI Services] will automatically use the Gemini embedding model.
 

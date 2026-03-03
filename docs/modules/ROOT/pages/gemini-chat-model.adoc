@@ -10,7 +10,8 @@ It is a good first step for developers to get started with Gemini models.
 
 To use Gemini chat models, add the following dependency to your project:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-ai-gemini]
+:provider-artifact: quarkus-langchain4j-ai-gemini
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 If no other LLM extension is installed, xref:ai-services.adoc[AI Services] will automatically utilize the configured Gemini model.
 

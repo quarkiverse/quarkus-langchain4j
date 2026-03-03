@@ -12,7 +12,8 @@ To use the extension, add the dependency for your preferred model provider.
 
 For example, to use OpenAI:
 
-include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-openai]
+:provider-artifact: quarkus-langchain4j-openai
+include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 
 [NOTE]
 .Want to use another model serving?
