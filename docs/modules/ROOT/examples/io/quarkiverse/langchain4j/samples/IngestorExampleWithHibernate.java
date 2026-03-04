@@ -1,17 +1,17 @@
 package io.quarkiverse.langchain4j.samples;
 
+import static dev.langchain4j.data.document.splitter.DocumentSplitters.recursive;
+
 import java.util.List;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.hibernate.EmbeddingEntity;
 import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
-import io.quarkiverse.langchain4j.pgvector.PgVectorEmbeddingStore;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import static dev.langchain4j.data.document.splitter.DocumentSplitters.recursive;
 
 @ApplicationScoped
 public class IngestorExampleWithHibernate {

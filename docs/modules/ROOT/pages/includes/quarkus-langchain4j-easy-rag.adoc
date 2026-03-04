@@ -46,8 +46,8 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_EASY_RAG_PATH_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`filesystem`, `classpath`
-|`+++filesystem+++`
+a|tooltip:filesystem[The `path()` represents a filesystem reference], tooltip:classpath[The `path()` represents a classpath reference]
+|tooltip:filesystem[The {@link #path()} represents a filesystem reference]
 
 a| [[quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher]] [.property-path]##link:#quarkus-langchain4j-easy-rag_quarkus-langchain4j-easy-rag-path-matcher[`quarkus.langchain4j.easy-rag.path-matcher`]##
 ifdef::add-copy-button-to-config-props[]
