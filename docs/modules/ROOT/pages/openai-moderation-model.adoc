@@ -15,6 +15,7 @@ include::./openai-chat-model.adoc[tags=openai-prerequisites]
 === OpenAI Quarkus Extension
 
 To use OpenAI moderation models in your Quarkus application, add the following dependency:
+
 :provider-artifact: quarkus-langchain4j-openai
 include::./includes/quarkus-langchain4j-maven-dependencies.adoc[]
 

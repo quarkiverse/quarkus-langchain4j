@@ -1,6 +1,9 @@
 ifndef::provider-artifact[]
 :provider-artifact: quarkus-langchain4j
 endif::[]
+ifndef::project-version[]
+:project-version: latest
+endif::[]
 
 [source,xml,subs=attributes+]
 ----
