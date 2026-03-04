@@ -7,8 +7,8 @@
         <version>999-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <artifactId>quarkus-langchain4j-mongodb-parent</artifactId>
-    <name>Quarkus LangChain4j - MongoDB embedding store - Parent</name>
+    <artifactId>quarkus-langchain4j-mongodb-atlas-parent</artifactId>
+    <name>Quarkus LangChain4j - MongoDB Atlas embedding store - Parent</name>
     <packaging>pom</packaging>
 
     <modules>

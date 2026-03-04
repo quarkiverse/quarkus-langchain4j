@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.mongodb.client.MongoClient;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -22,6 +21,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.wildfly.common.Assert;
+
+import com.mongodb.client.MongoClient;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
@@ -35,7 +37,6 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.filter.comparison.*;
 import dev.langchain4j.store.embedding.filter.logical.And;
 import io.quarkus.test.QuarkusUnitTest;
-import org.wildfly.common.Assert;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MongoDBMetadataFilteringTest {
@@ -44,14 +45,14 @@ public class MongoDBMetadataFilteringTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
-                                    """
-                                            quarkus.langchain4j.mongodb.database-name=test
-                                            quarkus.langchain4j.mongodb.index-name=vector_index
-                                            quarkus.mongodb.devservices.enabled=true
-                                            quarkus.langchain4j.mongodb.dimensions=384
-                                            quarkus.compose.devservices.files=compose-devservices.yml
-                                            quarkus.mongodb.devservices.properties.uuidRepresentation = standard
-                                            """),
+                            """
+                                    quarkus.langchain4j.mongodb.database-name=test
+                                    quarkus.langchain4j.mongodb.index-name=vector_index
+                                    quarkus.mongodb.devservices.enabled=true
+                                    quarkus.langchain4j.mongodb.dimensions=384
+                                    quarkus.compose.devservices.files=compose-devservices.yml
+                                    quarkus.mongodb.devservices.properties.uuidRepresentation = standard
+                                    """),
                             "application.properties")
 
             );
@@ -76,8 +77,7 @@ public class MongoDBMetadataFilteringTest {
                 .untilAsserted(() -> {
                     try (var indexCursor = mongoClient.getDatabase("test").getCollection("embeddings")
                             .listSearchIndexes()
-                            .cursor()
-                    ) {
+                            .cursor()) {
 
                         if (indexCursor.hasNext()) {
                             var index = indexCursor.next();
@@ -86,7 +86,6 @@ public class MongoDBMetadataFilteringTest {
                     }
                 });
     }
-
 
     private void ingest(String text, Map<String, Object> metadata) {
         Document document = Document.from(text, Metadata.from(metadata));
