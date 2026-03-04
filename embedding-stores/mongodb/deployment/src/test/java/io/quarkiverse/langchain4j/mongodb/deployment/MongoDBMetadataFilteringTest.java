@@ -1,23 +1,26 @@
 package io.quarkiverse.langchain4j.mongodb.deployment;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.mongodb.client.MongoClient;
 import jakarta.inject.Inject;
 
-import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import dev.langchain4j.data.document.Document;
@@ -32,30 +35,58 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.filter.comparison.*;
 import dev.langchain4j.store.embedding.filter.logical.And;
 import io.quarkus.test.QuarkusUnitTest;
+import org.wildfly.common.Assert;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MongoDBMetadataFilteringTest {
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource(new StringAsset(
-                            """
-                                    quarkus.langchain4j.mongodb.database-name=test
-                                    quarkus.langchain4j.mongodb.index-name=vector_index
-                                    quarkus.mongodb.devservices.enabled=true
-                                    quarkus.mongodb.devservices.properties.uuidRepresentation = standard
-                                    """),
-                            "application.properties"));
+                                    """
+                                            quarkus.langchain4j.mongodb.database-name=test
+                                            quarkus.langchain4j.mongodb.index-name=vector_index
+                                            quarkus.mongodb.devservices.enabled=true
+                                            quarkus.langchain4j.mongodb.dimensions=384
+                                            quarkus.compose.devservices.files=compose-devservices.yml
+                                            quarkus.mongodb.devservices.properties.uuidRepresentation = standard
+                                            """),
+                            "application.properties")
+
+            );
 
     @Inject
     EmbeddingStore<TextSegment> embeddingStore;
 
+    @Inject
+    MongoClient mongoClient;
+
     private static EmbeddingModel embeddingModel;
 
     @BeforeAll
-    public static void initEmbeddingModel() {
+    void ensureEverythingIsReady() {
         embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
+        embeddingStore.removeAll();
+
+        await()
+                .pollInSameThread()
+                .pollInterval(Duration.ofSeconds(2))
+                .ignoreExceptions()
+                .untilAsserted(() -> {
+                    try (var indexCursor = mongoClient.getDatabase("test").getCollection("embeddings")
+                            .listSearchIndexes()
+                            .cursor()
+                    ) {
+
+                        if (indexCursor.hasNext()) {
+                            var index = indexCursor.next();
+                            Assert.assertTrue("READY".equalsIgnoreCase(index.getString("status")));
+                        }
+                    }
+                });
     }
+
 
     private void ingest(String text, Map<String, Object> metadata) {
         Document document = Document.from(text, Metadata.from(metadata));

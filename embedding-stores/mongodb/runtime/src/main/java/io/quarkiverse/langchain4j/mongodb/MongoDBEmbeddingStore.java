@@ -6,9 +6,7 @@ import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.search.SearchPath.fieldPath;
 import static com.mongodb.client.model.search.VectorSearchOptions.approximateVectorSearchOptions;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import org.bson.BinaryVector;
 import org.bson.Document;
@@ -23,6 +21,7 @@ import com.mongodb.client.model.SearchIndexType;
 import com.mongodb.client.model.search.FieldSearchPath;
 import com.mongodb.client.model.search.VectorSearchOptions;
 
+import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
@@ -56,11 +55,22 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
 
         if (!collectionExists) {
             mongoClient.getDatabase(database).createCollection(collection);
-            this.collection = mongoClient.getDatabase(database).getCollection(collection);
-            createSearchIndex(vectorFieldName, dimensions, similaritySearch);
-        } else
-            this.collection = mongoClient.getDatabase(database).getCollection(collection);
+        }
+        this.collection = mongoClient.getDatabase(database).getCollection(collection);
 
+        if (!searchIndexExists(indexName)) {
+            createSearchIndex(vectorFieldName, dimensions, similaritySearch);
+        }
+
+    }
+
+    private boolean searchIndexExists(String indexName) {
+        for (Document index : collection.listSearchIndexes()) {
+            if (indexName.equals(index.getString("name"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void createSearchIndex(String vectorFieldName, int dimensions, SimilaritySearch similaritySearch) {
@@ -194,9 +204,15 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                     var score = document.getDouble(scoreFieldName);
                     var id = document.getString(ID);
                     var text = document.getString(textFieldName);
-                    var textSegment = text != null? TextSegment.from(text) : null;
+                    TextSegment textSegment = null;
                     var vectorData = document.get(vectorFieldName, Float32BinaryVector.class);
                     var vector = vectorData.getData();
+                    var metadata = document.get(metadataFieldName, Document.class);
+
+                    if (text != null) {
+                        textSegment = TextSegment.from(text, Metadata.from(metadata));
+                    }
+
                     result.add(new EmbeddingMatch<>(score, id, Embedding.from(vector), textSegment));
                 }
             }
