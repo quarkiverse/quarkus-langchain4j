@@ -2,8 +2,13 @@
 
 ## Before running any test scenarios
 
+Make sure the testing client application is built. This should happen as part of the build of `quarkus-langchain4j`, 
+but in case you need to do it explicitly in this module (both the properties with version overrides are optional):
+
 ```shell
-mvn package -Dquarkus-langchain4j.version=999-SNAPSHOT # or any other version you want to test
+mvn package \
+  -Dquarkus-langchain4j.version=999-SNAPSHOT  \
+  -Dquarkus.platform.version=3.27.1
 ```
 
 ## Running the tests
