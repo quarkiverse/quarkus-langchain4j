@@ -17,11 +17,11 @@ import dev.langchain4j.agentic.declarative.ContentRetrieverSupplier;
 import dev.langchain4j.agentic.declarative.ErrorHandler;
 import dev.langchain4j.agentic.declarative.ExitCondition;
 import dev.langchain4j.agentic.declarative.HumanInTheLoop;
-import dev.langchain4j.agentic.declarative.HumanInTheLoopResponseSupplier;
 import dev.langchain4j.agentic.declarative.LoopAgent;
 import dev.langchain4j.agentic.declarative.Output;
 import dev.langchain4j.agentic.declarative.ParallelAgent;
 import dev.langchain4j.agentic.declarative.ParallelExecutor;
+import dev.langchain4j.agentic.declarative.ParallelMapperAgent;
 import dev.langchain4j.agentic.declarative.PlannerAgent;
 import dev.langchain4j.agentic.declarative.RetrievalAugmentorSupplier;
 import dev.langchain4j.agentic.declarative.SequenceAgent;
@@ -42,14 +42,15 @@ public final class AgenticLangChain4jDotNames {
     public static final DotName SUPERVISOR_AGENT = DotName.createSimple(SupervisorAgent.class.getName());
     public static final DotName SEQUENCE_AGENT = DotName.createSimple(SequenceAgent.class.getName());
     public static final DotName PARALLEL_AGENT = DotName.createSimple(ParallelAgent.class.getName());
+    public static final DotName PARALLEL_MAPPER_AGENT = DotName.createSimple(ParallelMapperAgent.class.getName());
     public static final DotName LOOP_AGENT = DotName.createSimple(LoopAgent.class.getName());
     public static final DotName CONDITIONAL_AGENT = DotName.createSimple(ConditionalAgent.class.getName());
     public static final DotName PLANNER_AGENT = DotName.createSimple(PlannerAgent.class.getName());
 
     public static final List<DotName> ALL_AGENT_ANNOTATIONS = List.of(AGENT, SUPERVISOR_AGENT, SEQUENCE_AGENT,
-            PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT);
+            PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT, A2A_AGENT);
     public static final List<DotName> AGENT_ANNOTATIONS_WITH_SUB_AGENTS = List.of(SUPERVISOR_AGENT, SEQUENCE_AGENT,
-            PARALLEL_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
+            PARALLEL_AGENT, PARALLEL_MAPPER_AGENT, LOOP_AGENT, CONDITIONAL_AGENT, PLANNER_AGENT);
 
     public static final DotName CHAT_MODEL_SUPPLIER = DotName.createSimple(ChatModelSupplier.class.getName());
     public static final DotName AGENTIC_SCOPE = DotName.createSimple(AgenticScope.class);
@@ -74,8 +75,6 @@ public final class AgenticLangChain4jDotNames {
             .createSimple(ExitCondition.class.getName());
     public static final DotName HUMAN_IN_THE_LOOP = DotName
             .createSimple(HumanInTheLoop.class.getName());
-    public static final DotName HUMAN_IN_THE_LOOP_RESPONSE_SUPPLIER = DotName
-            .createSimple(HumanInTheLoopResponseSupplier.class.getName());
     public static final DotName OUTPUT = DotName
             .createSimple(Output.class.getName());
     public static final DotName PARALLEL_EXECUTOR = DotName

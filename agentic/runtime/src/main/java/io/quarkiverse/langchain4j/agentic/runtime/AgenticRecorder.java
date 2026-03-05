@@ -67,7 +67,7 @@ public class AgenticRecorder {
     private record QuarkusAgenticContextConsumer(SyntheticCreationalContext<Object> cdiContext,
             AiAgentCreateInfo aiAgentCreateInfo)
             implements
-                Consumer<AgenticServices.DeclarativeAgentCreationContext> {
+                Consumer<AgenticServices.DeclarativeAgentCreationContext<?>> {
 
         private static final TypeLiteral<Instance<ToolProvider>> TOOL_PROVIDER_TYPE_LITERAL = new TypeLiteral<>() {
         };
