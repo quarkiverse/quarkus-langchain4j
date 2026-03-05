@@ -7,35 +7,26 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.transaction.Transactional;
+import org.hibernate.query.restriction.Restriction;
 
 @ApplicationScoped
 public class MovieRecommendationService {
 
   @Inject
-  EmbeddingStore<TextSegment> embeddingStore;
+  HibernateEmbeddingStore<Movie> embeddingStore;
 
   @Inject 
   EmbeddingModel embeddingModel;
 
   @Transactional
   public List<Movie> searchSimilarMovies(String overview) {
-    
     Embedding embedding = embeddingModel.embed(overview).content();
-    EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
-    .queryEmbedding(embedding)
-    .minScore(0.5)
-    .maxResults(10)
-    .build();
-
-    return embeddingStore.search(request).matches().stream().map(m -> {
-      Long id = m.embedded().metadata().getLong("id");
-      Movie movie = Movie.findById(id);
-      return movie;
-    }).toList();
-
+    return embeddingStore.query(embedding, 0.5, Restriction.unrestricted());
   }
 }
 

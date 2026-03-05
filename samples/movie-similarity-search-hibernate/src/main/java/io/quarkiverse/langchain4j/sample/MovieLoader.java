@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.sample;
 
+import dev.langchain4j.store.embedding.hibernate.EmbeddingEntity;
+import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,13 +21,14 @@ import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
+import org.hibernate.Hibernate;
 
 @ApplicationScoped
 public class MovieLoader {
 
 
   public void load(@Observes StartupEvent event, @ConfigProperty(name = "movies.file") Path moviesFile,
-                   EmbeddingStore embeddingStore, EmbeddingModel embeddingModel) throws Exception {
+                   HibernateEmbeddingStore<Movie> embeddingStore, EmbeddingModel embeddingModel) throws Exception {
     if (!Files.exists(moviesFile)) {
       throw new IllegalStateException("Missing movies file: " + moviesFile);
     }
@@ -41,9 +44,8 @@ public class MovieLoader {
 
     Files.lines(moviesFile).skip(1).forEach(line -> {
       Movie movie = Movie.fromCsvLine(line);
-      Long id = save(movie).id;
-       
-      Metadata metadata = Metadata.from(Map.of("id", id, "title", movie.title));
+
+      Metadata metadata = Metadata.from(Map.of("title", movie.title, "link", movie.link));
       Document document = Document.from(movie.overview, metadata);
       docs.add(document);
     });
@@ -51,12 +53,6 @@ public class MovieLoader {
     Log.info("Ingesting movies...");
     ingester.ingest(docs);
     Log.info("Application initalized!");
-  }
-
-  @Transactional
-  public Movie save(Movie m) {
-    m.persist();
-    return m;
   }
 
 }

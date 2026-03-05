@@ -1,14 +1,42 @@
 package io.quarkiverse.langchain4j.sample;
 
+import dev.langchain4j.store.embedding.hibernate.EmbeddedText;
+import dev.langchain4j.store.embedding.hibernate.Embedding;
+import dev.langchain4j.store.embedding.hibernate.MetadataAttribute;
+import dev.langchain4j.store.embedding.hibernate.UnmappedMetadata;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Array;
+
 import java.util.List;
+import java.util.UUID;
 
 @Entity
-public class Movie extends PanacheEntity {
+@Table(name = "Movie")
+public class Movie extends PanacheEntityBase {
 
+    @Id
+    @GeneratedValue
+    public Long id;
+
+    @Embedding
+    @Array(length = 384)                // The dimension of the embedding vector based on the embedding model
+    public float[] embedding;
+
+    @MetadataAttribute
     public String link;
+
+    @UnmappedMetadata
+    public String unmappedMetadata;
+
+    @MetadataAttribute
     public String title;
+
+    @EmbeddedText
     public String overview;
 
     public static Movie fromCsvLine(String line) {
@@ -24,7 +52,7 @@ public class Movie extends PanacheEntity {
     }
 
     public static List<Movie> searchByTitleLike(String title) {
-      return find("title like ?1", "%" + title + "%").list();
+        return find("lower(title) like ?1", "%" + title.toLowerCase() + "%").list();
     }
 }
 
