@@ -259,16 +259,20 @@ class HibernateEmbeddingStoreProcessor {
     }
 
     @BuildStep
+    EmbeddingStoreBuildItem embeddingStoreBuildItem() {
+        return new EmbeddingStoreBuildItem();
+    }
+
+    @BuildStep
     @Record(ExecutionTime.RUNTIME_INIT)
     public void createBean(
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             HibernateEmbeddingStoreRecorder recorder,
-            BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             List<PersistenceUnitDescriptorBuildItem> pus,
             List<HibernateEmbeddingStoreMappingBuildItem> mappings,
             JpaModelIndexBuildItem indexBuildItem) {
         for (HibernateEmbeddingStoreMappingBuildItem mapping : mappings) {
-            createBean(beanProducer, recorder, mapping, embeddingStoreProducer, pus, indexBuildItem);
+            createBean(beanProducer, recorder, mapping, pus, indexBuildItem);
         }
     }
 
@@ -276,7 +280,6 @@ class HibernateEmbeddingStoreProcessor {
             BuildProducer<SyntheticBeanBuildItem> beanProducer,
             HibernateEmbeddingStoreRecorder recorder,
             HibernateEmbeddingStoreMappingBuildItem mappingBuildItem,
-            BuildProducer<EmbeddingStoreBuildItem> embeddingStoreProducer,
             List<PersistenceUnitDescriptorBuildItem> pus,
             JpaModelIndexBuildItem indexBuildItem) {
 
@@ -423,8 +426,6 @@ class HibernateEmbeddingStoreProcessor {
                 .addInjectionPoint(ClassType.create(DotName.createSimple(EntityManagerFactory.class)),
                         entityManagerFactoryQualifier)
                 .done());
-
-        embeddingStoreProducer.produce(new EmbeddingStoreBuildItem());
     }
 
     private String attributeName(MethodInfo methodInfo) {
