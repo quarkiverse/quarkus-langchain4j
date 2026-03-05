@@ -34,7 +34,8 @@ For configuration details, refer to the https://quarkus.io/guides/datasource[Qua
 
 == Embedding Dimension
 
-You must explicitly configure the dimensionality of the embedding vector:
+When using the provided `EmbeddingEntity` instead of a custom entity,
+you must explicitly configure the dimensionality of the embedding vector:
 
 [source,properties]
 ----
@@ -92,8 +93,8 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithHi
 ----
 
 This example shows how to embed and persist documents using the Hibernate store, enabling efficient similarity search during RAG queries.
-The default entity type that is used for `hibernate-dynamic` configurations is `EmbeddingEntity`.
-Replace the type when defining a custom entity via the `hibernate` configuration.
+The default entity type that is used for `quarkus.langchain4j.hibernate-dynamic` configurations is `EmbeddingEntity`.
+Replace the type when defining a custom entity via the `quarkus.langchain4j.hibernate` configurations.
 
 == Custom entity
 
