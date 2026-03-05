@@ -62,7 +62,7 @@
 *** xref:openai-image-model.adoc[OpenAI]
 ** Embedding Models
 *** xref:azure-openai-embedding-model.adoc[Azure OpenAI]
-*** xref:gemini-embedding-model.adoc[Anthropic (Claude)]
+*** xref:gemini-embedding-model.adoc[Google Gemini]
 *** xref:huggingface-embedding-model.adoc[HuggingFace]
 *** xref:watsonx-embedding-model.adoc[IBM watsonx.ai]
 *** xref:in-process-embedding.adoc[In-Process Embeddings (ONNX)]
