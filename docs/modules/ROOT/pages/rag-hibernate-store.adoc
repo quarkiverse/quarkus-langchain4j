@@ -143,6 +143,14 @@ The Hibernate extension maps each ingested document to an entity. Each entity co
 
 During retrieval, a similarity search (e.g., cosine distance) is performed using a `SELECT` query with `ORDER BY embedding +<=>+ :query_vector FETCH FIRST N ROWS ONLY`.
 
+== Comparison with quarkus-langchain4j-pgvector extension
+
+The Quarkus LangChain4j Hibernate extension provides similar features to the Quarkus LangChain4j pgvector extension
+and can also be used with pgvector on PostgreSQL.
+
+The major difference is that the Quarkus LangChain4j Hibernate extension is implemented through Hibernate ORM APIs,
+which abstract away the data store details. This extension can thus also be used with other supported data stores.
+
 == Summary
 
 To use Hibernate as an embedding store with Quarkus LangChain4j:
