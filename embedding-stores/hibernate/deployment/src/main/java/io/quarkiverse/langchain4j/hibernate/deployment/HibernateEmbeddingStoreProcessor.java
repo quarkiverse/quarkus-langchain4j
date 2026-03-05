@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.hibernate.deployment;
 
+import static io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME;
 import static io.quarkus.hibernate.orm.deployment.util.HibernateProcessorUtil.setDialectAndStorageEngine;
 
 import java.nio.charset.StandardCharsets;
@@ -43,9 +44,12 @@ import dev.langchain4j.store.embedding.hibernate.EmbeddingEntity;
 import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import dev.langchain4j.store.embedding.hibernate.MetadataAttribute;
 import dev.langchain4j.store.embedding.hibernate.UnmappedMetadata;
+import io.agroal.api.AgroalPoolInterceptor;
 import io.quarkiverse.langchain4j.deployment.EmbeddingStoreBuildItem;
 import io.quarkiverse.langchain4j.hibernate.runtime.DynamicEmbeddingStoreAdditionalMappingContributor;
 import io.quarkiverse.langchain4j.hibernate.runtime.HibernateEmbeddingStoreRecorder;
+import io.quarkiverse.langchain4j.hibernate.runtime.SetupVectorConfigAgroalPoolInterceptor;
+import io.quarkus.agroal.DataSource;
 import io.quarkus.agroal.spi.JdbcDataSourceBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.arc.processor.DotNames;
@@ -79,6 +83,9 @@ import io.quarkus.runtime.configuration.ConfigurationException;
 
 class HibernateEmbeddingStoreProcessor {
 
+    private static final DotName AGROAL_POOL_INTERCEPTOR = DotName.createSimple(AgroalPoolInterceptor.class);
+    private static final DotName SETUP_VECTOR_CONFIG_AGROAL_POOL_INTERCEPTOR = DotName
+            .createSimple(SetupVectorConfigAgroalPoolInterceptor.class);
     private static final DotName HIBERNATE_EMBEDDING_STORE = DotName.createSimple(HibernateEmbeddingStore.class);
     private static final DotName EMBEDDING_ENTITY = DotName.createSimple(EmbeddingEntity.class);
     private static final DotName ENTITY = DotName.createSimple(Entity.class);
@@ -196,14 +203,14 @@ class HibernateEmbeddingStoreProcessor {
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.TABLE_CONFIGURATION,
                     dynamicBuildTimeConfig.table());
             puContributionBuildItemBuildProducer.produce(new JpaModelPersistenceUnitContributionBuildItem(
-                    DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME,
+                    DEFAULT_DYNAMIC_PU_NAME,
                     null,
                     Collections.emptyList(),
                     List.of(MAPPINGS_FILE)));
 
             // Borrowed from HibernateOrmProcessor#collectDialectConfig
             Optional<io.quarkus.datasource.common.runtime.DatabaseKind.SupportedDatabaseKind> supportedDatabaseKind = setDialectAndStorageEngine(
-                    DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME,
+                    DEFAULT_DYNAMIC_PU_NAME,
                     Optional.of(jdbcDataSource.getDbKind()),
                     Optional.empty(),
                     Optional.empty(),
@@ -225,7 +232,7 @@ class HibernateEmbeddingStoreProcessor {
             persistenceUnitDescriptors
                     .produce(new PersistenceUnitDescriptorBuildItem(
                             new QuarkusPersistenceUnitDescriptor(
-                                    DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME,
+                                    DEFAULT_DYNAMIC_PU_NAME,
                                     PersistenceUnitTransactionType.JTA,
                                     Collections.emptyList(),
                                     properties,
@@ -245,7 +252,7 @@ class HibernateEmbeddingStoreProcessor {
                             List.of(xmlMapping),
                             false, false, Optional.of(FormatMapperKind.JACKSON), Optional.empty()));
             mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
-                    DynamicEmbeddingStoreAdditionalMappingContributor.DEFAULT_DYNAMIC_PU_NAME,
+                    DEFAULT_DYNAMIC_PU_NAME,
                     EMBEDDING_ENTITY.toString()));
         } else {
             mappingBuildItemProducer.produce(new HibernateEmbeddingStoreMappingBuildItem(
@@ -426,6 +433,25 @@ class HibernateEmbeddingStoreProcessor {
                 .addInjectionPoint(ClassType.create(DotName.createSimple(EntityManagerFactory.class)),
                         entityManagerFactoryQualifier)
                 .done());
+
+        DatabaseKind langchain4jDatabaseKind = HibernateEmbeddingStoreRecorder.langchain4jDatabaseKind(databaseKind);
+        if (!DEFAULT_DYNAMIC_PU_NAME.equals(mappingBuildItem.getPersistenceUnitName().orElse(null))
+                && langchain4jDatabaseKind != null && langchain4jDatabaseKind.getSetupSql() != null) {
+            AnnotationInstance datasourceQualifier = persistenceUnitDescriptor.getConfig().getDataSource()
+                    .filter(dn -> !"<default>".equals(dn))
+                    .map(dn -> AnnotationInstance.builder(DataSource.class).add("value", dn).build())
+                    .orElse(AnnotationInstance.builder(Default.class).build());
+
+            beanProducer.produce(SyntheticBeanBuildItem
+                    .configure(SETUP_VECTOR_CONFIG_AGROAL_POOL_INTERCEPTOR)
+                    .types(ClassType.create(AGROAL_POOL_INTERCEPTOR))
+                    .setRuntimeInit()
+                    .unremovable()
+                    .scope(ApplicationScoped.class)
+                    .supplier(recorder.setupVectorConfigAgroalPoolInterceptor(langchain4jDatabaseKind.getSetupSql()))
+                    .qualifiers(datasourceQualifier)
+                    .done());
+        }
     }
 
     private String attributeName(MethodInfo methodInfo) {

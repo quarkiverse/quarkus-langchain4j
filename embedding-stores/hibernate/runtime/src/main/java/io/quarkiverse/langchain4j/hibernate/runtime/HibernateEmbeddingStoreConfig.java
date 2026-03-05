@@ -17,4 +17,11 @@ public interface HibernateEmbeddingStoreConfig {
     @WithDefault("COSINE")
     DistanceFunction distanceFunction();
 
+    /**
+     * Whether the vector configuration of the database should be setup e.g. the PG extension should be created on Start.
+     * By Default, if it's dev or test environment the value is overridden to true
+     */
+    @WithDefault("false")
+    Boolean setupVectorConfig();
+
 }

@@ -18,6 +18,7 @@ public class DynamicTest extends LangChain4jPgVectorBaseTest {
                                     "quarkus.hibernate-orm.datasource=embeddings-ds\n" +
                                     "quarkus.langchain4j.hibernate-dynamic.datasource=embeddings-ds\n" +
                                     "quarkus.langchain4j.hibernate-dynamic.dimension=384\n" +
+                                    "quarkus.langchain4j.hibernate-dynamic.create-table=true\n" +
                                     "quarkus.langchain4j.hibernate-dynamic.drop-table-first=true\n" +
                                     "quarkus.class-loading.parent-first-artifacts=ai.djl.huggingface:tokenizers\n" +
                                     "quarkus.log.category.\"io.quarkiverse.langchain4j.hibernate\".level=DEBUG\n\n"),

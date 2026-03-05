@@ -4071,6 +4071,27 @@ endif::add-copy-button-to-env-var[]
 a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
 |`+++cosine+++`
 
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config[`quarkus.langchain4j.hibernate.setup-vector-config`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate.setup-vector-config+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the vector configuration of the database should be setup e.g. the PG extension should be created on Start. By Default, if it's dev or test environment the value is overridden to true
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_SETUP_VECTOR_CONFIG+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_SETUP_VECTOR_CONFIG+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 
 h|[.extension-name]##Quarkus LangChain4j - Hugging Face##
 h|Type

@@ -1,6 +1,7 @@
 package io.quarkiverse.langchain4j.hibernate.runtime;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import jakarta.enterprise.inject.Default;
 import jakarta.persistence.EntityManagerFactory;
@@ -33,15 +34,6 @@ public class HibernateEmbeddingStoreRecorder {
         return new Function<>() {
             @Override
             public HibernateEmbeddingStore<?> apply(SyntheticCreationalContext<HibernateEmbeddingStore<?>> context) {
-                DatabaseKind langchain4jDatabaseKind = switch (databaseKind) {
-                    case "db2" -> DatabaseKind.DB2;
-                    case "mariadb" -> DatabaseKind.MARIADB;
-                    case "mssql" -> DatabaseKind.MSSQL;
-                    case "mysql" -> DatabaseKind.MYSQL;
-                    case "postgres" -> DatabaseKind.POSTGRESQL;
-                    case "oracle" -> DatabaseKind.ORACLE;
-                    default -> null;
-                };
                 EntityManagerFactory entityManagerFactory;
                 if (persistenceUnitName != null) {
                     entityManagerFactory = context.getInjectedReference(
@@ -54,7 +46,7 @@ public class HibernateEmbeddingStoreRecorder {
                 }
 
                 return HibernateEmbeddingStore.builder(entityManagerFactory.getMetamodel().entity(entityName).getJavaType())
-                        .databaseKind(langchain4jDatabaseKind)
+                        .databaseKind(langchain4jDatabaseKind(databaseKind))
                         .sessionFactory(entityManagerFactory.unwrap(SessionFactory.class))
                         .embeddingAttributeName(embeddingAttributeName)
                         .embeddedTextAttributeName(embeddedTextAttributeName)
@@ -63,6 +55,27 @@ public class HibernateEmbeddingStoreRecorder {
                         .distanceFunction(runtimeConfig.getValue().distanceFunction())
                         .build();
             }
+        };
+    }
+
+    public Supplier<SetupVectorConfigAgroalPoolInterceptor> setupVectorConfigAgroalPoolInterceptor(String setupSql) {
+        return new Supplier<>() {
+            @Override
+            public SetupVectorConfigAgroalPoolInterceptor get() {
+                return new SetupVectorConfigAgroalPoolInterceptor(runtimeConfig.getValue(), setupSql);
+            }
+        };
+    }
+
+    public static DatabaseKind langchain4jDatabaseKind(String databaseKind) {
+        return switch (databaseKind) {
+            case "db2" -> DatabaseKind.DB2;
+            case "mariadb" -> DatabaseKind.MARIADB;
+            case "mssql" -> DatabaseKind.MSSQL;
+            case "mysql" -> DatabaseKind.MYSQL;
+            case "postgresql" -> DatabaseKind.POSTGRESQL;
+            case "oracle" -> DatabaseKind.ORACLE;
+            default -> null;
         };
     }
 }
