@@ -63,9 +63,6 @@
                     <name>!platform-deps</name>
                 </property>
             </activation>
-            <properties>
-                <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
-            </properties>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -81,7 +78,7 @@
                 <dependency>
                     <groupId>io.quarkiverse.langchain4j</groupId>
                     <artifactId>quarkus-langchain4j-mcp</artifactId>
-                    <version>${quarkus-langchain4j.version}</version>
+                    <version>${project.version}</version>
                 </dependency>
             </dependencies>
         </profile>
