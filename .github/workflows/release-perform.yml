@@ -28,12 +28,8 @@ jobs:
       version: ${{github.event.inputs.tag || github.ref_name}}
       java_version: 23
   send-notifications:
-    needs: perform-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Post a reminder to the release PR
         run: |
           
@@ -50,17 +46,17 @@ jobs:
             user=$(echo $pull_info | jq -r ".[0].user.login")
             pull_id=$(echo $pull_info | jq -r ".[0].number")
 
-            # Create a comment. Body hack taken from there: https://stackoverflow.com/a/37632617
-            curl -L -X POST \
-            -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/quarkiverse/quarkus-langchain4j/issues/$pull_id/comments \
-            --data @<(cat <<EOF
-            {"body": "@$user Please do not forget to create a PR for Quarkus platform with the new version of Quarkus-langchain4j.
+           # Create a comment. Body hack taken from there: https://stackoverflow.com/a/37632617
+           curl -L -X POST \
+           -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+           -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+           https://api.github.com/repos/quarkiverse/quarkus-langchain4j/issues/$pull_id/comments \
+           --data @<(cat <<EOF
+           {"body": "@$user Please do not forget to create a PR for Quarkus platform with the new version of Quarkus-langchain4j.
 
-            🤖 This message was created automatically.
-            "}
-            EOF
-            )
-        env:
-          INPUT_VERSION : ${{github.event.inputs.tag || github.ref_name}}
+          🤖 This message was created automatically.
+          "}
+          EOF
+          )
+        with:
+          version: ${{github.event.inputs.tag || github.ref_name}}
