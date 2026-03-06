@@ -113,7 +113,6 @@ public class AgenticProcessor {
         validateErrorHandler(iface);
         validateExitCondition(iface);
         validateHumanInTheLoop(iface);
-        validateHumanInTheLoopResponseSupplier(iface);
         validateOutput(iface);
         validateParallelExecutor(iface);
         validateRetrievalAugmentorSupplier(iface);
@@ -258,22 +257,6 @@ public class AgenticProcessor {
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
             validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
-        }
-    }
-
-    private void validateHumanInTheLoopResponseSupplier(ClassInfo iface) {
-        DotName annotationToValidate = AgenticLangChain4jDotNames.HUMAN_IN_THE_LOOP_RESPONSE_SUPPLIER;
-        List<AnnotationInstance> instances = iface
-                .annotations(annotationToValidate);
-        for (AnnotationInstance instance : instances) {
-            if (instance.target().kind() != AnnotationTarget.Kind.METHOD) {
-                log.warnf("Unhandled '@%s' annotation: '%s'", annotationToValidate.withoutPackagePrefix(), instance.target());
-                continue;
-            }
-            MethodInfo method = instance.target().asMethod();
-            validateStaticMethod(method, annotationToValidate);
-            validateNoMethodParameters(method, annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.STRING), annotationToValidate);
         }
     }
 
