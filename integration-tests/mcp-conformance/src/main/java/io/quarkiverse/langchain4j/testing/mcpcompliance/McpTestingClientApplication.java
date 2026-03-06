@@ -1,5 +1,7 @@
 package io.quarkiverse.langchain4j.testing.mcpcompliance;
 
+import jakarta.inject.Inject;
+
 import dev.langchain4j.mcp.client.McpClient;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import io.quarkiverse.langchain4j.testing.mcpcompliance.scenarios.Scenario;
@@ -7,7 +9,6 @@ import io.quarkiverse.langchain4j.testing.mcpcompliance.scenarios.ScenarioInitia
 import io.quarkiverse.langchain4j.testing.mcpcompliance.scenarios.ScenarioToolsCall;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
-import jakarta.inject.Inject;
 
 @QuarkusMain
 public class McpTestingClientApplication implements QuarkusApplication {
@@ -24,7 +25,7 @@ public class McpTestingClientApplication implements QuarkusApplication {
             return 1;
         }
         Scenario scenario;
-        switch(scenarioString) {
+        switch (scenarioString) {
             case "initialize" -> scenario = new ScenarioInitialize();
             case "tools_call" -> scenario = new ScenarioToolsCall();
             default -> {

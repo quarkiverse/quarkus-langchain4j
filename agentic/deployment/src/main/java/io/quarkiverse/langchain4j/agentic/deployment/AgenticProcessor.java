@@ -256,7 +256,6 @@ public class AgenticProcessor {
             }
             MethodInfo method = instance.target().asMethod();
             validateStaticMethod(method, annotationToValidate);
-            validateAllowedReturnTypes(method, Set.of(DotNames.VOID), annotationToValidate);
         }
     }
 
