@@ -2,14 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
-        <version>999-SNAPSHOT</version>
-    </parent>
-
+    <groupId>io.quarkiverse.langchain4j</groupId>
     <artifactId>quarkus-langchain4j-mcp-conformance</artifactId>
     <name>Quarkus LangChain4j - MCP Conformance test client</name>
+    <version>1.0-SNAPSHOT</version>
 
     <properties>
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
@@ -54,13 +50,6 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
