@@ -172,12 +172,7 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
 
         VectorSearchOptions options = approximateVectorSearchOptions(Math.max(100, maxResults * 10));
 
-        if (filter != null) {
-            Bson mongoFilter = filterMapper.map(filter);
-            if (mongoFilter != null) {
-                options.filter(mongoFilter);
-            }
-        }
+
 
         // Create the vectorSearch pipeline stage
         List<Bson> pipeline = new ArrayList<>();
@@ -194,6 +189,15 @@ public class MongoDBEmbeddingStore implements EmbeddingStore<TextSegment> {
                         include(vectorFieldName),
                         include(metadataFieldName),
                         metaVectorSearchScore(scoreFieldName))));
+
+
+        if (filter != null) {
+            Bson mongoFilter = filterMapper.map(filter);
+            if (mongoFilter != null) {
+                pipeline.add(match(mongoFilter));
+            }
+        }
+
         pipeline.add(match(gte(scoreFieldName, minScore)));
 
         try (var iteratorResult = collection.aggregate(pipeline).cursor()) {

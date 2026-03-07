@@ -16,10 +16,7 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.wildfly.common.Assert;
 
@@ -96,7 +93,7 @@ public class MongoDBMetadataFilteringTest {
         ingestor.ingest(document);
     }
 
-    @AfterEach
+    @BeforeEach
     public void clearStore() {
         embeddingStore.removeAll();
     }
@@ -106,7 +103,16 @@ public class MongoDBMetadataFilteringTest {
         ingest("Hello0", Map.of("num1", 0, "num2", 0));
         ingest("Hello1", Map.of("num1", 1, "num2", 1));
         ingest("Hello2", Map.of("num1", 2, "num2", 2));
-
+//        await()
+//                .atMost(Duration.ofSeconds(20))
+//                .ignoreExceptions()
+//                .untilAsserted(() -> {
+//                    var result = embeddingStore.search(EmbeddingSearchRequest.builder()
+//                            .queryEmbedding(embeddingModel.embed("Hello").content()).build());
+//                    assertEquals(3, result.matches().size());
+//                        }
+//
+//                );
         EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
                 .queryEmbedding(embeddingModel.embed("Hello").content())
                 .filter(new IsEqualTo("num1", 0))

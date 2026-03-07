@@ -21,7 +21,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIT;
-import io.quarkus.runtime.Startup;
 import io.quarkus.test.QuarkusUnitTest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -47,7 +46,6 @@ public class MongoDBEmbeddingStoreTest extends EmbeddingStoreIT {
     EmbeddingStore<TextSegment> embeddingStore;
 
     @Inject
-    @Startup
     MongoClient mongoClient;
 
     private static EmbeddingModel embeddingModel;

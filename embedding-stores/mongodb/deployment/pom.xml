@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.quarkiverse.langchain4j</groupId>
-        <artifactId>quarkus-langchain4j-mongodb-atlas-parent</artifactId>
+        <artifactId>quarkus-langchain4j-mongodb-parent</artifactId>
         <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>quarkus-langchain4j-mongodb-deployment</artifactId>
-    <name>Quarkus LangChain4j - MongoDB embedding store - Deployment</name>
+    <name>Quarkus LangChain4j - MongoDB Atlas embedding store - Deployment</name>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>

@@ -20,7 +20,7 @@
         <module>qdrant</module>
         <module>redis</module>
         <module>weaviate</module>
-        <module>mongodb-atlas</module>
+        <module>mongodb</module>
     </modules>
 
 </project>
