@@ -33,6 +33,7 @@ import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRespon
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessageContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingData;
+import dev.langchain4j.model.anthropic.internal.api.AnthropicStreamingException;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicToolResultContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicToolUseContent;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicUsage;
@@ -430,7 +431,7 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         }
 
         private void handleError(AnthropicStreamingData data) {
-            onFailure(new RuntimeException("Got error processing data (%s)".formatted(data)));
+            onFailure(new AnthropicStreamingException(data.error.message, data.error.type));
         }
 
         @Override
