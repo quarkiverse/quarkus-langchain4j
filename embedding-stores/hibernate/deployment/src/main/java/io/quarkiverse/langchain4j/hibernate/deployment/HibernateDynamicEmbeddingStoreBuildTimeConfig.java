@@ -10,7 +10,7 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
 @ConfigRoot(phase = BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.hibernate-dynamic")
+@ConfigMapping(prefix = "quarkus.langchain4j.hibernate-orm-dynamic")
 public interface HibernateDynamicEmbeddingStoreBuildTimeConfig {
 
     /**

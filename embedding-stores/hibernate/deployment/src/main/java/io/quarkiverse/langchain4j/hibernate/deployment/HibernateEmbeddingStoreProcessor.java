@@ -198,8 +198,8 @@ class HibernateEmbeddingStoreProcessor {
 
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.DIMENSION_CONFIGURATION,
                     dynamicBuildTimeConfig.dimension().orElseThrow(() -> new ConfigurationException(
-                            "The config property quarkus.langchain4j.hibernate-dynamic.dimension is required but it could not be found in any config source",
-                            Set.of("quarkus.langchain4j.hibernate-dynamic.dimension"))));
+                            "The config property quarkus.langchain4j.hibernate-orm-dynamic.dimension is required but it could not be found in any config source",
+                            Set.of("quarkus.langchain4j.hibernate-orm-dynamic.dimension"))));
             properties.put(DynamicEmbeddingStoreAdditionalMappingContributor.TABLE_CONFIGURATION,
                     dynamicBuildTimeConfig.table());
             puContributionBuildItemBuildProducer.produce(new JpaModelPersistenceUnitContributionBuildItem(
@@ -350,7 +350,7 @@ class HibernateEmbeddingStoreProcessor {
                         "Unable to find entity classes containing @Embedding annotation for configured HibernateEmbeddingStore");
                 case 1 -> entityClassInfos.get(0);
                 default -> throw new IllegalArgumentException(
-                        "Multiple entity classes containing @Embedding annotation found. Please explicitly configure quarkus.langchain4j.hibernate.entity-name");
+                        "Multiple entity classes containing @Embedding annotation found. Please explicitly configure quarkus.langchain4j.hibernate-orm.entity-name");
             };
         }
 

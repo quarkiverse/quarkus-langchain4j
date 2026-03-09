@@ -8,7 +8,7 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
 @ConfigRoot(phase = RUN_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.hibernate")
+@ConfigMapping(prefix = "quarkus.langchain4j.hibernate-orm")
 public interface HibernateEmbeddingStoreConfig {
 
     /**

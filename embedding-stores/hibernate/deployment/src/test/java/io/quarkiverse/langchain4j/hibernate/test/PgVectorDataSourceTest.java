@@ -34,9 +34,9 @@ public class PgVectorDataSourceTest {
                             "quarkus.datasource.embeddings-ds.devservices.image-name=pgvector/pgvector:pg16\n" +
                                     "quarkus.datasource.embeddings-ds.db-kind=postgresql\n" +
                                     "quarkus.hibernate-orm.datasource=embeddings-ds\n" +
-                                    "quarkus.langchain4j.hibernate-dynamic.create-table=true\n" +
-                                    "quarkus.langchain4j.hibernate-dynamic.datasource=embeddings-ds\n" +
-                                    "quarkus.langchain4j.hibernate-dynamic.dimension=1536\n"),
+                                    "quarkus.langchain4j.hibernate-orm-dynamic.create-table=true\n" +
+                                    "quarkus.langchain4j.hibernate-orm-dynamic.datasource=embeddings-ds\n" +
+                                    "quarkus.langchain4j.hibernate-orm-dynamic.dimension=1536\n"),
                             "application.properties"));
 
     @io.quarkus.agroal.DataSource("embeddings-ds")

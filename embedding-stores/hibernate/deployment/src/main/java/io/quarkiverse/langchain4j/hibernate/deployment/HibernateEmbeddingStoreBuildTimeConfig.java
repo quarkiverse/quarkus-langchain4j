@@ -8,7 +8,7 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 
 @ConfigRoot(phase = BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.langchain4j.hibernate")
+@ConfigMapping(prefix = "quarkus.langchain4j.hibernate-orm")
 public interface HibernateEmbeddingStoreBuildTimeConfig {
 
     /**

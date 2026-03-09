@@ -28,8 +28,8 @@ public class CustomPUTest extends LangChain4jPgVectorBaseTest {
                                     + SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SOURCE + "\"=script-then-metadata\n" +
                                     "quarkus.hibernate-orm.my-pu.unsupported-properties.\""
                                     + SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE + "\"=setup.sql\n" +
-                                    "quarkus.langchain4j.hibernate.persistence-unit=my-pu\n" +
-                                    "quarkus.langchain4j.hibernate.entity-name=GenericEmbeddingEntity\n" +
+                                    "quarkus.langchain4j.hibernate-orm.persistence-unit=my-pu\n" +
+                                    "quarkus.langchain4j.hibernate-orm.entity-name=GenericEmbeddingEntity\n" +
                                     "quarkus.class-loading.parent-first-artifacts=ai.djl.huggingface:tokenizers\n" +
                                     "quarkus.log.category.\"io.quarkiverse.langchain4j.hibernate\".level=DEBUG\n\n"),
                             "application.properties"));

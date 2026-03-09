@@ -7,30 +7,30 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-datasource[`quarkus.langchain4j.hibernate-dynamic.datasource`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-datasource]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-datasource[`quarkus.langchain4j.hibernate-orm-dynamic.datasource`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.datasource+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.datasource+++[]
 endif::add-copy-button-to-config-props[]
 
 
 [.description]
 --
-The name of the configured datasource to use for this store. If not set, the default datasource from the Agroal extension will be used, unless a persistence unit is provided.
+The name of the configured datasource to use for this store. If not set, the default datasource from the Agroal extension will be used.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DATASOURCE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DATASOURCE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DATASOURCE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DATASOURCE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-table[`quarkus.langchain4j.hibernate-dynamic.table`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-table[`quarkus.langchain4j.hibernate-orm-dynamic.table`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.table+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.table+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -40,18 +40,18 @@ The table name for storing embeddings
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_TABLE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_TABLE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_TABLE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_TABLE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |`+++embeddings+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-dimension[`quarkus.langchain4j.hibernate-dynamic.dimension`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-dimension]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-dimension[`quarkus.langchain4j.hibernate-orm-dynamic.dimension`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.dimension+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.dimension+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -61,18 +61,18 @@ The dimension of the embedding vectors. This has to be the same as the dimension
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DIMENSION+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DIMENSION+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DIMENSION+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DIMENSION+++`
 endif::add-copy-button-to-env-var[]
 --
 |int
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-index]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-index[`quarkus.langchain4j.hibernate-dynamic.create-index`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-create-index]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-create-index[`quarkus.langchain4j.hibernate-orm-dynamic.create-index`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.create-index+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.create-index+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -82,18 +82,18 @@ Use index or not
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_INDEX+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_CREATE_INDEX+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_INDEX+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_CREATE_INDEX+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-options[`quarkus.langchain4j.hibernate-dynamic.index-options`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-index-options]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-index-options[`quarkus.langchain4j.hibernate-orm-dynamic.index-options`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.index-options+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.index-options+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -103,18 +103,18 @@ index options
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_OPTIONS+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_INDEX_OPTIONS+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_OPTIONS+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_INDEX_OPTIONS+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-index-type[`quarkus.langchain4j.hibernate-dynamic.index-type`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-index-type]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-index-type[`quarkus.langchain4j.hibernate-orm-dynamic.index-type`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.index-type+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.index-type+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -124,18 +124,18 @@ index type.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_TYPE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_INDEX_TYPE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_INDEX_TYPE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_INDEX_TYPE+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-create-table[`quarkus.langchain4j.hibernate-dynamic.create-table`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-create-table]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-create-table[`quarkus.langchain4j.hibernate-orm-dynamic.create-table`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.create-table+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.create-table+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -145,18 +145,18 @@ Whether the table should be created if not already existing.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_TABLE+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_CREATE_TABLE+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_CREATE_TABLE+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_CREATE_TABLE+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-drop-table-first]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-drop-table-first[`quarkus.langchain4j.hibernate-dynamic.drop-table-first`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-drop-table-first]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-drop-table-first[`quarkus.langchain4j.hibernate-orm-dynamic.drop-table-first`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.drop-table-first+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.drop-table-first+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -166,18 +166,18 @@ Whether the table should be dropped prior to being created.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DROP_TABLE_FIRST+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DROP_TABLE_FIRST+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DROP_TABLE_FIRST+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DROP_TABLE_FIRST+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
 |`+++false+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-dynamic-distance-function[`quarkus.langchain4j.hibernate-dynamic.distance-function`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-dynamic-distance-function[`quarkus.langchain4j.hibernate-orm-dynamic.distance-function`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate-dynamic.distance-function+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm-dynamic.distance-function+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -187,18 +187,18 @@ The distance function to use.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DISTANCE_FUNCTION+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DISTANCE_FUNCTION+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DYNAMIC_DISTANCE_FUNCTION+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DYNAMIC_DISTANCE_FUNCTION+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
 |`+++cosine+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-entity-name]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-entity-name[`quarkus.langchain4j.hibernate.entity-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-entity-name]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-entity-name[`quarkus.langchain4j.hibernate-orm.entity-name`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate.entity-name+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm.entity-name+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -208,18 +208,18 @@ The name of the entity of the configured Hibernate persistence unit to use for t
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ENTITY_NAME+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_ENTITY_NAME+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ENTITY_NAME+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_ENTITY_NAME+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-persistence-unit]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-persistence-unit[`quarkus.langchain4j.hibernate.persistence-unit`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-persistence-unit]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-persistence-unit[`quarkus.langchain4j.hibernate-orm.persistence-unit`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate.persistence-unit+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm.persistence-unit+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -229,18 +229,18 @@ The name of the configured Hibernate persistence unit to use for this store. If 
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_PERSISTENCE_UNIT+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_PERSISTENCE_UNIT+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_PERSISTENCE_UNIT+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_PERSISTENCE_UNIT+++`
 endif::add-copy-button-to-env-var[]
 --
 |string
 |
 
-a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-distance-function[`quarkus.langchain4j.hibernate.distance-function`]##
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-distance-function]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-distance-function[`quarkus.langchain4j.hibernate-orm.distance-function`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate.distance-function+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm.distance-function+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -250,18 +250,18 @@ The distance function to use.
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_DISTANCE_FUNCTION+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DISTANCE_FUNCTION+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_DISTANCE_FUNCTION+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_DISTANCE_FUNCTION+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`cosine`, `euclidean`, `euclidean-squared`, `manhattan`, `inner-product`, `negative-inner-product`, `hamming`, `jaccard`
 |`+++cosine+++`
 
-a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config[`quarkus.langchain4j.hibernate.setup-vector-config`]##
+a| [[quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-setup-vector-config]] [.property-path]##link:#quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-orm-setup-vector-config[`quarkus.langchain4j.hibernate-orm.setup-vector-config`]##
 ifdef::add-copy-button-to-config-props[]
-config_property_copy_button:+++quarkus.langchain4j.hibernate.setup-vector-config+++[]
+config_property_copy_button:+++quarkus.langchain4j.hibernate-orm.setup-vector-config+++[]
 endif::add-copy-button-to-config-props[]
 
 
@@ -271,10 +271,10 @@ Whether the vector configuration of the database should be setup e.g. the PG ext
 
 
 ifdef::add-copy-button-to-env-var[]
-Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_SETUP_VECTOR_CONFIG+++[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_SETUP_VECTOR_CONFIG+++[]
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
-Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_SETUP_VECTOR_CONFIG+++`
+Environment variable: `+++QUARKUS_LANGCHAIN4J_HIBERNATE_ORM_SETUP_VECTOR_CONFIG+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean

@@ -1,14 +1,14 @@
-= Hibernate Embedding Store
+= Hibernate ORM Embedding Store
 
 include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
-Quarkus LangChain4j integrates with Hibernate to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
-This extension enables you to persist and query embedding vectors for document retrieval and is based on the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate[LangChain4j Hibernate integration].
+Quarkus LangChain4j integrates with Hibernate ORM to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
+This extension enables you to persist and query embedding vectors for document retrieval and is based on the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate[LangChain4j Hibernate ORM integration].
 
 == Prerequisites
 
-To use Hibernate as an Embedding store:
+To use Hibernate ORM as an Embedding store:
 
 * A supported database with vector search capability is required.
 * A Quarkus datasource must be configured.
@@ -25,7 +25,7 @@ The currently supported databases are:
 
 == Dependency
 
-To enable the Hibernate integration in your Quarkus project, add the following Maven dependency:
+To enable the Hibernate ORM integration in your Quarkus project, add the following Maven dependency:
 
 include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifact=quarkus-langchain4j-hibernate]
 
@@ -37,10 +37,10 @@ This can be done through Quarkus DevServices by configuring `quarkus.datasource.
 
 == Usage modes
 
-In the "dynamic" mode you can use the provided `EmbeddingEntity` by configuring `quarkus.langchain4j.hibernate-dynamic`
+In the "dynamic" mode you can use the provided `EmbeddingEntity` by configuring `quarkus.langchain4j.hibernate-orm-dynamic`
 properties. This mode is useful to get started quickly, as well as when you don't want to do any data model customizations.
 
-With the "custom" mode you can provide your own Hibernate ORM entity and configure `quarkus.langchain4j.hibernate` properties,
+With the "custom" mode you can provide your own Hibernate ORM entity and configure `quarkus.langchain4j.hibernate-orm` properties,
 or omit configuration altogether if your custom entity has an `@Embedding` annotated vector field.
 
 == Embedding Dimension
@@ -50,7 +50,7 @@ for the "dynamic" mode via:
 
 [source,properties]
 ----
-quarkus.langchain4j.hibernate-dynamic.dimension=384
+quarkus.langchain4j.hibernate-orm-dynamic.dimension=384
 ----
 
 and for custom entities via the `@Array(length = ...)` annotation on the `@Embedding` annotated field.
@@ -81,8 +81,8 @@ This is something you rarely would need in development.
 
 [source,properties]
 ----
-quarkus.langchain4j.hibernate-dynamic.create-index=true
-quarkus.langchain4j.hibernate-dynamic.index-options=lists=10
+quarkus.langchain4j.hibernate-orm-dynamic.create-index=true
+quarkus.langchain4j.hibernate-orm-dynamic.index-options=lists=10
 ----
 
 Higher number of `lists` values speed up queries by reducing the search space during query time.
@@ -98,7 +98,7 @@ Here are some recommendations for setting the lists parameter:
 For details about index options configurations, please refer to the documentation of the respective database vendor.
 
 When using a custom entity, please use schema management tools (like Liquibase or Flyway) to create your indexes.
-Take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#5-custom-hibernate-entity-ddl[LangChain4j Hibernate integration documentation]
+Take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#5-custom-hibernate-entity-ddl[LangChain4j Hibernate ORM integration documentation]
 for details about creating vector search indexes.
 
 == Usage Example
@@ -110,8 +110,8 @@ Once the extension is installed and configured, you can ingest documents into yo
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithHibernate.java[]
 ----
 
-This example shows how to embed and persist documents using the Hibernate store, enabling efficient similarity search during RAG queries.
-The default entity type that is used for `quarkus.langchain4j.hibernate-dynamic` configurations is `EmbeddingEntity`.
+This example shows how to embed and persist documents using the Hibernate ORM store, enabling efficient similarity search during RAG queries.
+The default entity type that is used for `quarkus.langchain4j.hibernate-orm-dynamic` configurations is `EmbeddingEntity`.
 Replace the type with your custom entity type when using the "custom" mode.
 
 == Query Example
@@ -124,13 +124,13 @@ to search for matching entities.
 include::{examples-dir}/io/quarkiverse/langchain4j/samples/QueryExampleWithHibernate.java[]
 ----
 
-For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate documentation examples].
+For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate ORM documentation examples].
 
 == Custom entity
 
 When you want to customize the data model or want to reuse an existing entity as source for the `EmbeddingStore`,
 you can make use of the annotations `@Embedding`, `@EmbeddedText`, `@UnmappedMetadata` and `@MetadataAttribute` to mark the
-entity attributes to use by the Hibernate `EmbeddingStore` implementation.
+entity attributes to use by the Hibernate ORM `EmbeddingStore` implementation.
 
 An embedding entity must at least specify an `@Embedding` attribute and an `@UnmappedMetadata` attribute.
 You may specify an `@EmbeddedText` attribute if a single entity attribute is the source for the embedding vector,
@@ -162,11 +162,11 @@ public class MyEmbeddingEntity {
 }
 ----
 
-If you don't specify any `quarkus.langchain4j.hibernate` or `quarkus.langchain4j.hibernate-dynamic` configuration,
+If you don't specify any `quarkus.langchain4j.hibernate-orm` or `quarkus.langchain4j.hibernate-orm-dynamic` configuration,
 the extension will try to find an entity containing a `@Embedding` annotation and use that and its containing
 persistence unit for the embedding store.
 
-NOTE: In development and test mode, the pgvector extension is automatically enabled (controlled via <<quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config,`quarkus.langchain4j.hibernate.setup-vector-config`>>),
+NOTE: In development and test mode, the pgvector extension is automatically enabled (controlled via <<quarkus-langchain4j-hibernate-orm_quarkus-langchain4j-hibernate-orm-setup-vector-config,`quarkus.langchain4j.hibernate-orm.setup-vector-config`>>),
 but keep in mind to enable the `vector` extension in your PostgreSQL database schema via `create extension if not exists vector;` with a schema management tool like Liquibase or Flyway.
 
 == Configuration
@@ -177,7 +177,7 @@ include::includes/quarkus-langchain4j-hibernate.adoc[leveloffset=+1,opts=optiona
 
 == How It Works
 
-The Hibernate extension maps each ingested document to an entity. Each entity contains:
+The Hibernate ORM extension maps each ingested document to an entity. Each entity contains:
 
 * The original text content
 * Optional metadata
@@ -187,15 +187,15 @@ During retrieval, a similarity search (e.g., cosine distance) is performed using
 
 == Comparison with quarkus-langchain4j-pgvector extension
 
-The Quarkus LangChain4j Hibernate extension provides similar features to the Quarkus LangChain4j pgvector extension
+The Quarkus LangChain4j Hibernate ORM extension provides similar features to the Quarkus LangChain4j pgvector extension
 and can also be used with pgvector on PostgreSQL.
 
-The major difference is that the Quarkus LangChain4j Hibernate extension is implemented through Hibernate ORM APIs,
+The major difference is that the Quarkus LangChain4j Hibernate ORM extension is implemented through Hibernate ORM APIs,
 which abstract away the data store details. This extension can thus also be used with other supported data stores.
 
 == Summary
 
-To use Hibernate as an embedding store with Quarkus LangChain4j:
+To use Hibernate ORM as an embedding store with Quarkus LangChain4j:
 
 * Ensure your database is configured correctly for vector search.
 * Add the extension dependency.
