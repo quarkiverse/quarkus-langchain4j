@@ -1,12 +1,10 @@
 package io.quarkiverse.langchain4j.sample;
 
-import dev.langchain4j.store.embedding.hibernate.EmbeddingEntity;
 import dev.langchain4j.store.embedding.hibernate.HibernateEmbeddingStore;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.transaction.Transactional;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,13 +17,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
-import org.hibernate.Hibernate;
 
 @ApplicationScoped
 public class MovieLoader {
-
 
   public void load(@Observes StartupEvent event, @ConfigProperty(name = "movies.file") Path moviesFile,
                    HibernateEmbeddingStore<Movie> embeddingStore, EmbeddingModel embeddingModel) throws Exception {

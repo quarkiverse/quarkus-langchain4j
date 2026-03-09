@@ -15,7 +15,7 @@ public interface HibernateDynamicEmbeddingStoreBuildTimeConfig {
 
     /**
      * The name of the configured datasource to use for this store. If not set,
-     * the default datasource from the Agroal extension will be used, unless a persistence unit is provided.
+     * the default datasource from the Agroal extension will be used.
      */
     Optional<String> datasource();
 

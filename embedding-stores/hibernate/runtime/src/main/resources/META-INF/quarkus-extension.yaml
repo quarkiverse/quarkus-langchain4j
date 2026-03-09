@@ -6,7 +6,13 @@ metadata:
     - ai
     - langchain4j
     - openai
+    - postgresql
     - pgvector
+    - db2
+    - oracle
+    - mysql
+    - mariadb
+    - sqlserver
     - hibernate
    guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
    categories:

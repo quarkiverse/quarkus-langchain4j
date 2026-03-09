@@ -4,7 +4,7 @@ include::./includes/attributes.adoc[]
 include::./includes/customization.adoc[]
 
 Quarkus LangChain4j integrates with Hibernate to make use of databases supporting vector search for Retrieval-Augmented Generation (RAG).
-This extension enables you to persist and query embedding vectors for document retrieval.
+This extension enables you to persist and query embedding vectors for document retrieval and is based on the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate[LangChain4j Hibernate integration].
 
 == Prerequisites
 
@@ -32,15 +32,28 @@ include::./includes/quarkus-langchain4j-maven-dependencies.adoc[provider-artifac
 This extension requires a configured Quarkus datasource and/or a Hibernate ORM persistence unit.
 For configuration details, refer to the https://quarkus.io/guides/datasource[Quarkus DataSource Guide] and the https://quarkus.io/guides/hibernate-orm[Hibernate ORM Guide].
 
+NOTE: Please beware that if you're using PostgreSQL, you have to make sure that the `pgvector` extension is available.
+This can be done through Quarkus DevServices by configuring `quarkus.datasource.devservices.image-name=pgvector/pgvector:pg17`.
+
+== Usage modes
+
+In the "dynamic" mode you can use the provided `EmbeddingEntity` by configuring `quarkus.langchain4j.hibernate-dynamic`
+properties. This mode is useful to get started quickly, as well as when you don't want to do any data model customizations.
+
+With the "custom" mode you can provide your own Hibernate ORM entity and configure `quarkus.langchain4j.hibernate` properties,
+or omit configuration altogether if your custom entity has an `@Embedding` annotated vector field.
+
 == Embedding Dimension
 
-When using the provided `EmbeddingEntity` instead of a custom entity,
-you must explicitly configure the dimensionality of the embedding vector:
+You must explicitly configure the dimensionality of the embedding vector,
+for the "dynamic" mode via:
 
 [source,properties]
 ----
 quarkus.langchain4j.hibernate-dynamic.dimension=384
 ----
+
+and for custom entities via the `@Array(length = ...)` annotation on the `@Embedding` annotated field.
 
 This value depends on the embedding model in use:
 
@@ -56,6 +69,7 @@ If you switch to a different embedding model, ensure the `dimension` value is up
 
 == Embedding Index
 
+The "dynamic" mode allows you get started easily by creating vector indexes for you automatically.
 Create-index controls whether the engine should create and use an index over the embeddings table.
 To create an index, depending on your database, you might need the index-options parameter, which is a fine-tuning parameter.
 On PostgreSQL with pgvector, if you set the `create-index=true` you will have to also set e.g. `index-options=lists=1`.
@@ -71,7 +85,7 @@ quarkus.langchain4j.hibernate-dynamic.create-index=true
 quarkus.langchain4j.hibernate-dynamic.index-options=lists=10
 ----
 
-Higher number of lists values speed up queries by reducing the search space during query time.
+Higher number of `lists` values speed up queries by reducing the search space during query time.
 However, it also decreases the region size, which can lead to more recall errors by excluding some points.
 Additionally, more distance comparisons are required to find the closest cluster during step one of the query process.
 
@@ -82,6 +96,10 @@ Here are some recommendations for setting the lists parameter:
 * It is generally advisable to have at least 10 clusters.
 
 For details about index options configurations, please refer to the documentation of the respective database vendor.
+
+When using a custom entity, please use schema management tools (like Liquibase or Flyway) to create your indexes.
+Take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#5-custom-hibernate-entity-ddl[LangChain4j Hibernate integration documentation]
+for details about creating vector search indexes.
 
 == Usage Example
 
@@ -94,13 +112,34 @@ include::{examples-dir}/io/quarkiverse/langchain4j/samples/IngestorExampleWithHi
 
 This example shows how to embed and persist documents using the Hibernate store, enabling efficient similarity search during RAG queries.
 The default entity type that is used for `quarkus.langchain4j.hibernate-dynamic` configurations is `EmbeddingEntity`.
-Replace the type when defining a custom entity via the `quarkus.langchain4j.hibernate` configurations.
+Replace the type with your custom entity type when using the "custom" mode.
+
+== Query Example
+
+Assuming that data was ingested, one of the various `search` methods on the `HibernateEmbeddingStore` can be used
+to search for matching entities.
+
+[source,java]
+----
+include::{examples-dir}/io/quarkiverse/langchain4j/samples/QueryExampleWithHibernate.java[]
+----
+
+For further examples, take a look into the https://docs.langchain4j.dev/integrations/embedding-stores/hibernate#examples[LangChain4j Hibernate documentation examples].
 
 == Custom entity
 
 When you want to customize the data model or want to reuse an existing entity as source for the `EmbeddingStore`,
 you can make use of the annotations `@Embedding`, `@EmbeddedText`, `@UnmappedMetadata` and `@MetadataAttribute` to mark the
 entity attributes to use by the Hibernate `EmbeddingStore` implementation.
+
+An embedding entity must at least specify an `@Embedding` attribute and an `@UnmappedMetadata` attribute.
+You may specify an `@EmbeddedText` attribute if a single entity attribute is the source for the embedding vector,
+but it is optional. Note that you require a `@EmbeddedText` attribute if you want to use metadata via the `TextSegment`
+API that is exposed in the search result `EmbeddingMatch`, as well created during ingestion.
+
+To map metadata to attributes/columns rather than JSON payload content, you can annotate entity attributes with `@MetadataAttribute`.
+During ingestion, `TextSegment#metadata` attributes are mapped into dedicated entity attributes if possible,
+while other metadata is stored in the `@UnmappedMetadata` entity attribute.
 
 [source,java]
 ----
@@ -126,6 +165,9 @@ public class MyEmbeddingEntity {
 If you don't specify any `quarkus.langchain4j.hibernate` or `quarkus.langchain4j.hibernate-dynamic` configuration,
 the extension will try to find an entity containing a `@Embedding` annotation and use that and its containing
 persistence unit for the embedding store.
+
+NOTE: In development and test mode, the pgvector extension is automatically enabled (controlled via <<quarkus-langchain4j-hibernate_quarkus-langchain4j-hibernate-setup-vector-config,`quarkus.langchain4j.hibernate.setup-vector-config`>>),
+but keep in mind to enable the `vector` extension in your PostgreSQL database schema via `create extension if not exists vector;` with a schema management tool like Liquibase or Flyway.
 
 == Configuration
 
