@@ -1,13 +1,12 @@
 package io.quarkiverse.langchain4j.react.chatbot;
 
 import java.util.stream.Collectors;
-import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkiverse.langchain4j.watsonx.services.GoogleSearchService;
+import com.ibm.watsonx.ai.tool.builtin.GoogleSearchTool;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -15,7 +14,7 @@ import jakarta.inject.Inject;
 public class Tools {
 
     @Inject
-    GoogleSearchService googleSearchService;
+    GoogleSearchTool googleSearchService;
 
     @Inject
     ObjectMapper objectMapper;
