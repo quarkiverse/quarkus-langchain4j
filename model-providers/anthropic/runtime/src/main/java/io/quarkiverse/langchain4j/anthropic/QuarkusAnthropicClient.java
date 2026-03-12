@@ -250,19 +250,19 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         private void handleUsage(AnthropicUsage usage) {
             if (usage.inputTokens != null) {
-                inputTokenCount.addAndGet(usage.inputTokens);
+                inputTokenCount.set(usage.inputTokens);
             }
 
             if (usage.outputTokens != null) {
-                outputTokenCount.addAndGet(usage.outputTokens);
+                outputTokenCount.set(usage.outputTokens);
             }
 
             if (usage.cacheCreationInputTokens != null) {
-                cacheCreationInputTokens.addAndGet(usage.cacheCreationInputTokens);
+                cacheCreationInputTokens.set(usage.cacheCreationInputTokens);
             }
 
             if (usage.cacheReadInputTokens != null) {
-                cacheReadInputTokens.addAndGet(usage.cacheReadInputTokens);
+                cacheReadInputTokens.set(usage.cacheReadInputTokens);
             }
         }
 

@@ -223,7 +223,7 @@ class AnthropicStreamingChatLanguageModelSmokeTest extends AnthropicSmokeTest {
 
         var tokenUsage = (AnthropicTokenUsage) streamingResponse.get().tokenUsage();
         assertThat(tokenUsage.inputTokenCount()).isEqualTo(14);
-        assertThat(tokenUsage.outputTokenCount()).isEqualTo(42);
+        assertThat(tokenUsage.outputTokenCount()).isEqualTo(41);
         assertThat(tokenUsage.cacheCreationInputTokens()).isEqualTo(100);
         assertThat(tokenUsage.cacheReadInputTokens()).isEqualTo(50);
 
