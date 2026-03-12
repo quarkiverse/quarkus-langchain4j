@@ -15,7 +15,6 @@ import 'qui-alert';
 import { JsonRpc } from 'jsonrpc';
 import { systemMessages } from 'build-time-data';
 import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-import { msg, updateWhenLocaleChanges } from 'localization';
 
 export class QwcChat extends LitElement {
 
@@ -94,7 +93,6 @@ export class QwcChat extends LitElement {
 
     constructor() {
         super();
-        updateWhenLocaleChanges(this);
         this._showToolRelatedMessages = true;
         this._ragEnabled = true;
         this._systemMessages = systemMessages;
@@ -149,11 +147,11 @@ export class QwcChat extends LitElement {
             <div class="header">
                 <vaadin-button theme="tertiary" @click="${this._startNewConversation}">
                     <vaadin-icon icon="vaadin:plus" slot="prefix"></vaadin-icon>
-                    ${msg('New conversation', { id: 'chat-new-conversation' })}
+                    New conversation
                 </vaadin-button>
                 <vaadin-button theme="tertiary" @click="${() => this._showSettingsDialog = true}">
                     <vaadin-icon icon="vaadin:cog" slot="prefix"></vaadin-icon>
-                    ${msg('Settings', { id: 'chat-settings' })}
+                    Settings
                 </vaadin-button>
             </div>
             ${this._hasMessages ? this._renderChatView() : this._renderEmptyState()}
@@ -180,7 +178,7 @@ export class QwcChat extends LitElement {
 
     _renderSettingsDialog() {
         return html`<vaadin-dialog
-            header-title="${msg('Chat Settings', { id: 'chat-settings-title' })}"
+            header-title="Chat Settings"
             resizable
             draggable
             .opened="${this._showSettingsDialog}"
@@ -196,7 +194,7 @@ export class QwcChat extends LitElement {
                 <vaadin-vertical-layout theme="spacing" style="width: 500px; max-width: 80vw;">
                     <vaadin-checkbox
                         ?checked="${this._showToolRelatedMessages}"
-                        label="${msg('Show tool-related messages', { id: 'chat-show-tool-messages' })}"
+                        label="Show tool-related messages"
                         @change="${(event) => {
                             this._showToolRelatedMessages = event.target.checked;
                             this.requestUpdate();
@@ -205,7 +203,7 @@ export class QwcChat extends LitElement {
 
                     <vaadin-checkbox
                         ?checked="${this._ragEnabled}"
-                        label="${msg('Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)', { id: 'chat-enable-rag' })}"
+                        label="Enable Retrieval Augmented Generation (if a RetrievalAugmentor bean exists)"
                         @change="${(event) => {
                             this._ragEnabled = event.target.checked;
                             this._streamingChatEnabled = this._streamingChatEnabled && !this._ragEnabled;
@@ -215,7 +213,7 @@ export class QwcChat extends LitElement {
                     ${this._streamingChatSupported ? html`
                         <vaadin-checkbox
                             ?checked="${this._streamingChatEnabled}"
-                            label="${msg('Enable Streaming Chat', { id: 'chat-enable-streaming' })}"
+                            label="Enable Streaming Chat"
                             @change="${(event) => {
                                 this._streamingChatEnabled = event.target.checked;
                             }}">
@@ -224,9 +222,9 @@ export class QwcChat extends LitElement {
 
                     <vaadin-text-field
                         style="width: 100%;"
-                        label="${msg('System message', { id: 'chat-system-message' })}"
-                        helper-text="${msg('Applied when starting a new conversation', { id: 'chat-system-message-helper' })}"
-                        placeholder="${msg('Optional system message', { id: 'chat-system-message-placeholder' })}"
+                        label="System message"
+                        helper-text="Applied when starting a new conversation"
+                        placeholder="Optional system message"
                         .value="${this._systemMessage}"
                         @input="${this._populateSystemMessage}">
                     </vaadin-text-field>
