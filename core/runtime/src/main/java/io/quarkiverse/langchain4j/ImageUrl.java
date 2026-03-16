@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * <li>URL</li>
  * <li>URI</li>
  * <li>dev.langchain4j.data.image.Image</li>
+ * <li>List&lt;dev.langchain4j.data.image.Image&gt;</li>
  * </ul>
  *
  */
