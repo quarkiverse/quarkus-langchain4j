@@ -34,6 +34,7 @@ import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateIn
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
 import io.quarkiverse.langchain4j.runtime.aiservice.SystemMessageProvider;
 import io.quarkus.arc.Arc;
+import io.quarkus.arc.InstanceHandle;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -352,10 +353,17 @@ public class AiServicesRecorder {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private static <T> Supplier<T> createSupplier(String className) throws InstantiationException, IllegalAccessException,
             InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
-        return (Supplier<T>) Thread
-                .currentThread().getContextClassLoader().loadClass(className)
-                .getConstructor().newInstance();
+        Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+        InstanceHandle<?> instance = Arc.container().instance(clazz);
+        if (instance.isAvailable()) {
+            return (Supplier<T>) instance.get();
+        } else {
+            return (Supplier<T>) clazz
+                    .getConstructor().newInstance();
+        }
+
     }
 }

@@ -346,6 +346,7 @@ public class AiServicesProcessor {
             BuildProducer<DeclarativeAiServiceBuildItem> declarativeAiServiceProducer,
             BuildProducer<ToolProviderMetaBuildItem> toolProviderProducer,
             BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             BuildProducer<GeneratedBeanBuildItem> generatedBeanProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClassProducer) {
         IndexView index = indexBuildItem.getIndex();
@@ -381,18 +382,19 @@ public class AiServicesProcessor {
 
             DotName chatLanguageModelSupplierClassDotName = getSupplierDotName(instance.value("chatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer,
+                            unremovableBeanProducer));
 
             DotName streamingChatLanguageModelSupplierClassDotName = getSupplierDotName(
                     instance.value("streamingChatLanguageModelSupplier"),
                     LangChain4jDotNames.BEAN_STREAMING_CHAT_MODEL_SUPPLIER,
-                    supplierDotName -> validateSupplierAndRegisterForReflection(
+                    supplierDotName -> validateSupplierAndRegister(
                             supplierDotName,
                             index,
-                            reflectiveClassProducer));
+                            reflectiveClassProducer, unremovableBeanProducer));
 
             String chatModelName = chatModelName(instance, chatLanguageModelSupplierClassDotName,
                     streamingChatLanguageModelSupplierClassDotName, chatModelNames);
@@ -412,8 +414,8 @@ public class AiServicesProcessor {
                     if (declaredScope != null) {
                         customRetrievalAugmentorSupplierClassIsABean = true;
                     } else {
-                        validateSupplierAndRegisterForReflection(retrievalAugmentorSupplierClassName, index,
-                                reflectiveClassProducer);
+                        validateSupplierAndRegister(retrievalAugmentorSupplierClassName, index,
+                                reflectiveClassProducer, unremovableBeanProducer);
                     }
                 }
             }
@@ -422,7 +424,8 @@ public class AiServicesProcessor {
             AnnotationValue moderationModelSupplierValue = instance.value("moderationModelSupplier");
             if (moderationModelSupplierValue != null) {
                 moderationModelSupplierClassName = moderationModelSupplierValue.asClass().name();
-                validateSupplierAndRegisterForReflection(moderationModelSupplierClassName, index, reflectiveClassProducer);
+                validateSupplierAndRegister(moderationModelSupplierClassName, index, reflectiveClassProducer,
+                        unremovableBeanProducer);
             }
 
             DotName toolProviderClassName = LangChain4jDotNames.BEAN_IF_EXISTS_TOOL_PROVIDER_SUPPLIER;
@@ -432,7 +435,8 @@ public class AiServicesProcessor {
                     toolProviderClassName = null;
                 } else {
                     toolProviderClassName = toolProviderValue.asClass().name();
-                    validateSupplierAndRegisterForReflection(toolProviderClassName, index, reflectiveClassProducer);
+                    validateSupplierAndRegister(toolProviderClassName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
                     toolProviderInfos.add(new ToolProviderInfo(toolProviderClassName.toString(),
                             declarativeAiServiceClassInfo.simpleName()));
                 }
@@ -468,7 +472,7 @@ public class AiServicesProcessor {
 
             List<ClassInfo> tools = tools(instance, index);
             DotName chatMemoryProviderSupplierClassDotName = chatMemoryProviderSupplierClassDotName(reflectiveClassProducer,
-                    instance, index);
+                    unremovableBeanProducer, instance, index);
             if (!tools.isEmpty() && chatMemoryProviderSupplierClassDotName == null) {
                 throw new IllegalArgumentException("Tool usage requires chat memory. Offending AiService is '"
                         + declarativeAiServiceClassInfo.name() + "'");
@@ -491,7 +495,8 @@ public class AiServicesProcessor {
                 DotName supplierDotName = systemMessageProviderSupplierValue.asClass().name();
                 if (!LangChain4jDotNames.NO_SYSTEM_MESSAGE_PROVIDER_SUPPLIER.equals(supplierDotName)) {
                     systemMessageProviderClassDotName = supplierDotName;
-                    validateSupplierAndRegisterForReflection(systemMessageProviderClassDotName, index, reflectiveClassProducer);
+                    validateSupplierAndRegister(systemMessageProviderClassDotName, index, reflectiveClassProducer,
+                            unremovableBeanProducer);
                 }
             }
 
@@ -505,7 +510,7 @@ public class AiServicesProcessor {
                             retrievalAugmentorSupplierClassName,
                             customRetrievalAugmentorSupplierClassIsABean,
                             moderationModelSupplierClassName,
-                            imageModelSupplierClassName(reflectiveClassProducer, instance, index),
+                            imageModelSupplierClassName(reflectiveClassProducer, unremovableBeanProducer, instance, index),
                             determineChatMemorySeeder(declarativeAiServiceClassInfo, generatedClassOutput),
                             systemMessageProviderClassDotName,
                             cdiScope(customScopes, declarativeAiServiceClassInfo),
@@ -611,17 +616,20 @@ public class AiServicesProcessor {
     }
 
     private DotName imageModelSupplierClassName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         DotName imageModelSupplierClassName = LangChain4jDotNames.BEAN_IF_EXISTS_IMAGE_MODEL_SUPPLIER;
         AnnotationValue imageModelSupplierValue = instance.value("imageModelSupplier");
         if (imageModelSupplierValue != null) {
             imageModelSupplierClassName = imageModelSupplierValue.asClass().name();
-            validateSupplierAndRegisterForReflection(imageModelSupplierClassName, index, reflectiveClassProducer);
+            validateSupplierAndRegister(imageModelSupplierClassName, index, reflectiveClassProducer,
+                    unremovableBeanProducer);
         }
         return imageModelSupplierClassName;
     }
 
     private DotName chatMemoryProviderSupplierClassDotName(BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer,
             AnnotationInstance instance, IndexView index) {
         // the default value depends on whether tools exists or not - if they do, then we require a ChatMemoryProvider bean
         DotName chatMemoryProviderSupplierClassDotName = LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER;
@@ -633,8 +641,8 @@ public class AiServicesProcessor {
                 chatMemoryProviderSupplierClassDotName = null;
             } else if (!chatMemoryProviderSupplierClassDotName
                     .equals(LangChain4jDotNames.BEAN_CHAT_MEMORY_PROVIDER_SUPPLIER)) {
-                validateSupplierAndRegisterForReflection(chatMemoryProviderSupplierClassDotName, index,
-                        reflectiveClassProducer);
+                validateSupplierAndRegister(chatMemoryProviderSupplierClassDotName, index,
+                        reflectiveClassProducer, unremovableBeanProducer);
             }
         }
         return chatMemoryProviderSupplierClassDotName;
@@ -805,8 +813,9 @@ public class AiServicesProcessor {
         return dotName;
     }
 
-    private void validateSupplierAndRegisterForReflection(DotName supplierDotName, IndexView index,
-            BuildProducer<ReflectiveClassBuildItem> producer) {
+    private void validateSupplierAndRegister(DotName supplierDotName, IndexView index,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClassProducer,
+            BuildProducer<UnremovableBeanBuildItem> unremovableBeanProducer) {
         ClassInfo classInfo = index.getClassByName(supplierDotName);
         if (classInfo == null) {
             log.warn("'" + supplierDotName.toString() + "' cannot be indexed"); // TODO: maybe this should be an error
@@ -818,7 +827,9 @@ public class AiServicesProcessor {
                     "Class '" + supplierDotName.toString() + "' which must contain a no-args constructor.");
         }
 
-        producer.produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        reflectiveClassProducer
+                .produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
+        unremovableBeanProducer.produce(UnremovableBeanBuildItem.beanTypes(supplierDotName));
     }
 
     private boolean isImageOrImageResultResult(Type returnType) {

@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -71,10 +73,19 @@ public class DeclarativeSystemMessageProviderTest {
         }
     }
 
+    @Singleton
     public static class MyChatModelSupplier implements Supplier<ChatModel> {
+
+        private MyChatModel myChatModel;
+
+        @PostConstruct
+        public void init() {
+            myChatModel = new MyChatModel();
+        }
+
         @Override
         public ChatModel get() {
-            return new MyChatModel();
+            return myChatModel;
         }
     }
 
