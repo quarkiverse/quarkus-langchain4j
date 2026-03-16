@@ -997,9 +997,26 @@ public class AiServiceMethodImplementationSupport {
                 Type javaType = TypeSignatureParser.parse(parameterInfo.typeDescriptor());
                 if (javaType instanceof ParameterizedType pt) {
                     Type actualTypeArgument = pt.getActualTypeArguments()[0];
-                    if (Content.class.isAssignableFrom(loadClass(actualTypeArgument))) {
+                    Class<?> typeArg = loadClass(actualTypeArgument);
+                    if (Content.class.isAssignableFrom(typeArg)) {
                         for (Object o : list) {
                             handleContent((Content) o, parameterInfo, finalContents);
+                        }
+                    } else if (Image.class.isAssignableFrom(typeArg)) {
+                        for (Object o : list) {
+                            finalContents.add(ImageContent.from((Image) o));
+                        }
+                    } else if (Video.class.isAssignableFrom(typeArg)) {
+                        for (Object o : list) {
+                            finalContents.add(VideoContent.from((Video) o));
+                        }
+                    } else if (Audio.class.isAssignableFrom(typeArg)) {
+                        for (Object o : list) {
+                            finalContents.add(AudioContent.from((Audio) o));
+                        }
+                    } else if (PdfFile.class.isAssignableFrom(typeArg)) {
+                        for (Object o : list) {
+                            finalContents.add(PdfFileContent.from((PdfFile) o));
                         }
                     }
                 }
