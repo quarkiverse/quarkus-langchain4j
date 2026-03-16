@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * <li>URL</li>
  * <li>URI</li>
  * <li>dev.langchain4j.data.audio.Audio</li>
+ * <li>List&lt;dev.langchain4j.data.audio.Audio&gt;</li>
  * </ul>
  *
  */
