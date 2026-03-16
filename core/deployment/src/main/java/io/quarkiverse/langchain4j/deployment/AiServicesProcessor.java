@@ -2197,6 +2197,8 @@ public class AiServicesProcessor {
                         continue;
                     } else if (pdfParamPosition.isPresent() && i == pdfParamPosition.get()) {
                         continue;
+                    } else if (videoParamPosition.isPresent() && i == videoParamPosition.get()) {
+                        continue;
                     } else if (parameter.type().name().equals(INVOCATION_PARAMETERS)) {
                         continue;
                     } else if (parameter.hasAnnotation(LangChain4jDotNames.MEMORY_ID)) {
@@ -2233,8 +2235,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @ImageUrl if the parameter is of type Image
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.IMAGE))
+        // we don't need @ImageUrl if the parameter is of type Image or List<Image>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.IMAGE)
+                        || isListOf(pi.type(), LangChain4jDotNames.IMAGE))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2244,8 +2248,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @AudioUrl if the parameter is of type Image
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.AUDIO))
+        // we don't need @AudioUrl if the parameter is of type Audio or List<Audio>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.AUDIO)
+                        || isListOf(pi.type(), LangChain4jDotNames.AUDIO))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2255,8 +2261,10 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @PdfUrl if the parameter is of type PdfFile
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE))
+        // we don't need @PdfUrl if the parameter is of type PdfFile or List<PdfFile>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.PDF_FILE)
+                        || isListOf(pi.type(), LangChain4jDotNames.PDF_FILE))
                 .map(pi -> (int) pi.position()).findFirst();
     }
 
@@ -2266,9 +2274,21 @@ public class AiServicesProcessor {
         if (result.isPresent()) {
             return result;
         }
-        // we don't need @VideoUrl if the parameter is of type PdfFile
-        return method.parameters().stream().filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO))
+        // we don't need @VideoUrl if the parameter is of type Video or List<Video>
+        return method.parameters().stream()
+                .filter(pi -> pi.type().name().equals(LangChain4jDotNames.VIDEO)
+                        || isListOf(pi.type(), LangChain4jDotNames.VIDEO))
                 .map(pi -> (int) pi.position()).findFirst();
+    }
+
+    private static boolean isListOf(org.jboss.jandex.Type type, DotName elementType) {
+        if (type.kind() == org.jboss.jandex.Type.Kind.PARAMETERIZED_TYPE) {
+            ParameterizedType pt = type.asParameterizedType();
+            return DotNames.LIST.equals(pt.name())
+                    && pt.arguments().size() == 1
+                    && pt.arguments().get(0).name().equals(elementType);
+        }
+        return false;
     }
 
     private void validateImageUrlParam(MethodParameterInfo param) {
@@ -2278,7 +2298,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.IMAGE)) {
+                || typeName.equals(LangChain4jDotNames.IMAGE)
+                || isListOf(type, LangChain4jDotNames.IMAGE)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @ImageUrl type '" + type.name() + "'");
@@ -2286,12 +2307,13 @@ public class AiServicesProcessor {
 
     private void validateAudioUrlParam(MethodParameterInfo param) {
         if (param == null) {
-            throw new IllegalArgumentException("Unhandled @ImageUrl annotation");
+            throw new IllegalArgumentException("Unhandled @AudioUrl annotation");
         }
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.AUDIO)) {
+                || typeName.equals(LangChain4jDotNames.AUDIO)
+                || isListOf(type, LangChain4jDotNames.AUDIO)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @AudioUrl type '" + type.name() + "'");
@@ -2304,7 +2326,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.PDF_FILE)) {
+                || typeName.equals(LangChain4jDotNames.PDF_FILE)
+                || isListOf(type, LangChain4jDotNames.PDF_FILE)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @PdfUrl type '" + type.name() + "'");
@@ -2317,7 +2340,8 @@ public class AiServicesProcessor {
         Type type = param.type();
         DotName typeName = type.name();
         if (typeName.equals(DotNames.STRING) || typeName.equals(DotNames.URI) || typeName.equals(DotNames.URL)
-                || typeName.equals(LangChain4jDotNames.VIDEO)) {
+                || typeName.equals(LangChain4jDotNames.VIDEO)
+                || isListOf(type, LangChain4jDotNames.VIDEO)) {
             return;
         }
         throw new IllegalArgumentException("Unhandled @VideoUrl type '" + type.name() + "'");
