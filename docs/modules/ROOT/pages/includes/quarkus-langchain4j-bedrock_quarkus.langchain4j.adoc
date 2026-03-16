@@ -1358,7 +1358,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_PROMPT_CACHING+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`after-system`, `after-user-message`, `after-tools`
+a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-reasoning[`quarkus.langchain4j.bedrock.chat-model.reasoning`]##
@@ -3369,7 +3369,7 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_PROMPT_CACHING+++`
 endif::add-copy-button-to-env-var[]
 --
-a|`after-system`, `after-user-message`, `after-tools`
+a|`after-system`, `after-user-message`, `after-last-user-message`, `after-tools`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-reasoning[`quarkus.langchain4j.bedrock."model-name".chat-model.reasoning`]##
