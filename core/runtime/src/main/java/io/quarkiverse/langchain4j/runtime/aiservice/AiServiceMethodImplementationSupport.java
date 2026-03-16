@@ -97,6 +97,7 @@ import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.service.tool.ToolProviderRequest;
 import dev.langchain4j.service.tool.ToolProviderResult;
 import dev.langchain4j.spi.ServiceHelper;
@@ -255,12 +256,12 @@ public class AiServiceMethodImplementationSupport {
                 : context.toolService.toolExecutors();
         Set<String> immediateReturnToolNames = Set.of();
 
-        if (context.toolService.toolProvider() != null) {
-            toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
-            toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
+        toolSpecifications = toolSpecifications != null ? new ArrayList<>(toolSpecifications) : new ArrayList<>();
+        toolExecutors = toolExecutors != null ? new HashMap<>(toolExecutors) : new HashMap<>();
+        for (ToolProvider toolProvider : context.toolService.toolProviders()) {
             ToolProviderRequest request = new QuarkusToolProviderRequest(memoryId, userMessage,
                     methodCreateInfo.getMcpClientNames());
-            ToolProviderResult result = context.toolService.toolProvider().provideTools(request);
+            ToolProviderResult result = toolProvider.provideTools(request);
             immediateReturnToolNames = Utils.copy(result.immediateReturnToolNames());
             for (ToolSpecification specification : result.tools().keySet()) {
                 toolSpecifications.add(specification);
