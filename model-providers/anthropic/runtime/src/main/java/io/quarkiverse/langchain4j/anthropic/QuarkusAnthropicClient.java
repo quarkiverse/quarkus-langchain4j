@@ -28,6 +28,7 @@ import org.jboss.resteasy.reactive.client.api.LoggingScope;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.internal.ToolCallBuilder;
+import dev.langchain4j.model.anthropic.AnthropicTokenUsage;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageRequest;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicCreateMessageResponse;
 import dev.langchain4j.model.anthropic.internal.api.AnthropicMessage;
@@ -50,7 +51,6 @@ import dev.langchain4j.model.chat.response.PartialToolCall;
 import dev.langchain4j.model.chat.response.PartialToolCallContext;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.chat.response.StreamingHandle;
-import dev.langchain4j.model.output.TokenUsage;
 import io.quarkiverse.langchain4j.runtime.CurlRequestLogger;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.smallrye.mutiny.subscription.MultiSubscriber;
@@ -172,6 +172,8 @@ public class QuarkusAnthropicClient extends AnthropicClient {
         private final List<String> contents = synchronizedList(new ArrayList<>());
         private final AtomicInteger inputTokenCount = new AtomicInteger();
         private final AtomicInteger outputTokenCount = new AtomicInteger();
+        private final AtomicInteger cacheCreationInputTokens = new AtomicInteger();
+        private final AtomicInteger cacheReadInputTokens = new AtomicInteger();
 
         private volatile String currentContentBlockStartType;
         private final ToolCallBuilder toolCallBuilder = new ToolCallBuilder(-1);
@@ -248,11 +250,19 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
         private void handleUsage(AnthropicUsage usage) {
             if (usage.inputTokens != null) {
-                inputTokenCount.addAndGet(usage.inputTokens);
+                inputTokenCount.set(usage.inputTokens);
             }
 
             if (usage.outputTokens != null) {
-                outputTokenCount.addAndGet(usage.outputTokens);
+                outputTokenCount.set(usage.outputTokens);
+            }
+
+            if (usage.cacheCreationInputTokens != null) {
+                cacheCreationInputTokens.set(usage.cacheCreationInputTokens);
+            }
+
+            if (usage.cacheReadInputTokens != null) {
+                cacheReadInputTokens.set(usage.cacheReadInputTokens);
             }
         }
 
@@ -425,7 +435,12 @@ public class QuarkusAnthropicClient extends AnthropicClient {
 
             return ChatResponse.builder()
                     .aiMessage(aiMessage)
-                    .tokenUsage(new TokenUsage(inputTokenCount.get(), outputTokenCount.get()))
+                    .tokenUsage(AnthropicTokenUsage.builder()
+                            .inputTokenCount(inputTokenCount.get())
+                            .outputTokenCount(outputTokenCount.get())
+                            .cacheCreationInputTokens(cacheCreationInputTokens.get())
+                            .cacheReadInputTokens(cacheReadInputTokens.get())
+                            .build())
                     .finishReason(toFinishReason(stopReason))
                     .build();
         }
