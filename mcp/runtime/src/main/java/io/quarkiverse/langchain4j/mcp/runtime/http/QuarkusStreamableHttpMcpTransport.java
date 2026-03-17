@@ -90,11 +90,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     public CompletableFuture<JsonNode> initialize(McpInitializeRequest request) {
         this.initializeRequest = request;
         McpCallContext ctx = new McpCallContext(null, request);
-        return execute(ctx)
+        return execute(ctx, false, true)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .onItem()
                 .transformToUni(
-                        response -> execute(new McpInitializationNotification()).onItem().transform(ignored -> response))
+                        response -> execute(new McpInitializationNotification(), false, true).onItem()
+                                .transform(ignored -> response))
                 .subscribeAsCompletionStage();
     }
 
@@ -111,44 +112,36 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
     @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpClientMessage operation) {
         McpCallContext context = new McpCallContext(null, operation);
-        return execute(context).subscribeAsCompletionStage();
+        return execute(context, false, true).subscribeAsCompletionStage();
     }
 
     @Override
     public CompletableFuture<JsonNode> executeOperationWithResponse(McpCallContext context) {
-        return execute(context).subscribeAsCompletionStage();
+        return execute(context, false, true).subscribeAsCompletionStage();
     }
 
     @Override
     public void executeOperationWithoutResponse(McpClientMessage operation) {
-        execute(operation).subscribe().with(ignored -> {
+        execute(new McpCallContext(null, operation), false, false).subscribe().with(ignored -> {
         });
     }
 
     @Override
     public void executeOperationWithoutResponse(McpCallContext context) {
-        execute(context).subscribe().with(ignored -> {
+        execute(context, false, false).subscribe().with(ignored -> {
         });
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request) {
-        return execute(new McpCallContext(null, request), false);
+    private Uni<JsonNode> execute(McpClientMessage operation, boolean isRetry, boolean expectsResponse) {
+        return execute(new McpCallContext(null, operation), isRetry, expectsResponse);
     }
 
-    private Uni<JsonNode> execute(McpClientMessage request, boolean retry) {
-        return execute(new McpCallContext(null, request), retry);
-    }
-
-    private Uni<JsonNode> execute(McpCallContext context) {
-        return execute(context, false);
-    }
-
-    private Uni<JsonNode> execute(McpCallContext context, boolean isRetry) {
+    private Uni<JsonNode> execute(McpCallContext context, boolean isRetry, boolean expectsResponse) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
         Uni<JsonNode> uni = Uni.createFrom().completionStage(future);
         Long id = context.message().getId();
         McpClientMessage request = context.message();
-        if (id != null) {
+        if (expectsResponse && id != null) {
             operationHandler.startOperation(id, future);
         }
         String body = null;
@@ -256,7 +249,7 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
                                         return;
                                     }
                                     initialize(initReq).thenAccept(node -> {
-                                        execute(request, true)
+                                        execute(request, true, true)
                                                 .subscribeAsCompletionStage()
                                                 .thenAccept(future::complete)
                                                 .exceptionally(t -> {
