@@ -1,0 +1,100 @@
+= Skills
+
+include::./includes/attributes.adoc[]
+
+https://agentskills.io[Agent Skills] is an open specification for reusable, model-agnostic skill definitions that can be loaded from the filesystem and exposed to an LLM as tools.
+For general information about skills, see the https://docs.langchain4j.dev/tutorials/skills[LangChain4j Skills documentation].
+
+The `quarkus-langchain4j-skills` extension provides integration with the LangChain4j Skills module.
+When configured, it automatically loads skills from specified directories and registers a `SkillsToolProvider` CDI bean that exposes them to your AI services.
+
+NOTE: Only the tool mode is supported for skills at the moment. Shell skills don't have Quarkus integration (yet),
+but you may use the `dev.langchain4j:langchain4j-experimental-skills-shell` module directly if you want.
+
+== Dependency
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkiverse.langchain4j</groupId>
+    <artifactId>quarkus-langchain4j-skills</artifactId>
+</dependency>
+----
+
+== Configuration
+
+The extension is configured via the `quarkus.langchain4j.skills.directories` property,
+which accepts a list of directories from which to load skills.
+Each directory is in the list is a relative or absolute filesystem path.
+
+[source,properties]
+----
+quarkus.langchain4j.skills.directories=skills
+----
+
+Each listed directory is expected to contain subdirectories, where each subdirectory represents a single skill and must contain a `SKILL.md` file with YAML front matter defining the skill's `name` and `description`.
+The body of the file becomes the skill's instructions.
+See the https://agentskills.io[Agent Skills specification] for details on the `SKILL.md` format.
+
+== Example
+
+Given the following directory structure on the classpath:
+
+----
+skills/
+  poem-writing/
+    SKILL.md
+----
+
+With `skills/poem-writing/SKILL.md` containing:
+
+[source,markdown]
+----
+---
+name: poem-writing
+description: Instructions for writing a poem
+---
+
+When asked to write a poem, follow these rules strictly:
+
+1. The poem MUST have exactly 12 lines.
+2. The poem MUST be about a sad mushroom.
+----
+
+And `application.properties`:
+
+[source,properties]
+----
+quarkus.langchain4j.skills.directories=skills
+----
+
+The skills `ToolProvider` is automatically registered as a CDI bean of type `SkillsToolProvider`.
+Any `@RegisterAiService` that uses a `ToolProvider` will pick it up:
+
+[source,java]
+----
+@RegisterAiService
+public interface PoemAiService {
+
+    String chat(String message);
+}
+----
+
+[source,java]
+----
+@Path("/poem")
+public class PoemResource {
+
+    @Inject
+    PoemAiService poemAiService;
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String poem() {
+        return poemAiService.chat(
+                "Activate the poem-writing skill and write a poem following its instructions.");
+    }
+}
+----
+
+A complete working example is available in the https://github.com/quarkiverse/quarkus-langchain4j/tree/main/samples/skills[`skills` sample].
