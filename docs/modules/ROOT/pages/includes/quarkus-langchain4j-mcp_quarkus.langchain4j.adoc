@@ -481,6 +481,48 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check[`quarkus.langchain4j.mcp."client-name".auto-health-check`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".auto-health-check+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether the MCP client should perform health checks regularly and try to reconnect immediately if a connection issue is detected. The default is true.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__AUTO_HEALTH_CHECK+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__AUTO_HEALTH_CHECK+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval]] [.property-path]##link:#quarkus-langchain4j-mcp_quarkus-langchain4j-mcp-client-name-auto-health-check-interval[`quarkus.langchain4j.mcp."client-name".auto-health-check-interval`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.mcp."client-name".auto-health-check-interval+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The interval for automatic health checks (if enabled using the "autoHealthCheck" property). The default is 60 seconds.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__AUTO_HEALTH_CHECK_INTERVAL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_MCP__CLIENT_NAME__AUTO_HEALTH_CHECK_INTERVAL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-langchain4j-mcp_quarkus-langchain4j[icon:question-circle[title=More information about the Duration format]]
+|`+++60S+++`
+
 
 h|[[quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client]] [.section-name.section-level0]##link:#quarkus-langchain4j-mcp_section_quarkus-langchain4j-mcp-registry-client[Configured MCP registry clients]##
 h|Type

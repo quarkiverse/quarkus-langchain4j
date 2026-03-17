@@ -121,4 +121,19 @@ public interface McpClientRuntimeConfig {
      */
     Optional<Boolean> cacheToolList();
 
+    /**
+     * Whether the MCP client should perform health checks regularly and try to reconnect immediately if a connection issue is
+     * detected.
+     * The default is true.
+     */
+    @WithDefault("true")
+    Boolean autoHealthCheck();
+
+    /**
+     * The interval for automatic health checks (if enabled using the "autoHealthCheck" property).
+     * The default is 60 seconds.
+     */
+    @WithDefault("60s")
+    Duration autoHealthCheckInterval();
+
 }
