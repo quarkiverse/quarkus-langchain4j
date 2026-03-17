@@ -87,6 +87,13 @@ public interface ChatModelConfig extends AwsClientConfig {
     HttpClientConfig client();
 
     /**
+     * Guardrail configuration for the chat model.
+     *
+     * @see <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">Amazon Bedrock Guardrails</a>
+     */
+    GuardrailConfig guardrail();
+
+    /**
      * Enables prompt caching to reduce latency and costs for requests with repeated content.
      * You can specify where to place the cache point in the prompt, possible values are {@code AFTER_SYSTEM},
      * {@code AFTER_USER_MESSAGE} or {@code AFTER_TOOLS}.
