@@ -510,6 +510,11 @@ When resolving which client will use which auth provider, these rules are follow
 - Otherwise, if there is a provider without `@McpClientName`, it will be used.
 - If neither of the above is true, no authorization will be applied.
 
+NOTE: Authorization tokens are not propagated to requests related to automatic health checks.
+If using an MCP server that requires authorization to perform a ping/pong operation, you may need
+to disable periodic health checks (`quarkus.langchain4j.mcp.CLIENT_NAME.auto-health-check=false`), otherwise
+the client will unnecessarily attempt reconnects and pollute the log. Generally, this is a problem
+only when using Streamable HTTP.
 
 === Propagating OIDC Access Tokens
 

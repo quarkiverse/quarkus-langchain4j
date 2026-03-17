@@ -164,6 +164,8 @@ public class McpRecorder {
                         .logHandler(new QuarkusDefaultMcpLogHandler(key))
                         .roots(initialRoots)
                         .cacheToolList(runtimeConfig.cacheToolList().orElse(true))
+                        .autoHealthCheck(runtimeConfig.autoHealthCheck())
+                        .autoHealthCheckInterval(runtimeConfig.autoHealthCheckInterval())
                         .build();
                 shutdown.addShutdownTask(client::close);
                 return client;
