@@ -1340,6 +1340,69 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guardrail-identifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guardrail-identifier[`quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-identifier`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the guardrail that you want to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guardrail-version]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-guardrail-version[`quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-version`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.guardrail.guardrail-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version number for the guardrail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-stream-processing-mode]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-guardrail-stream-processing-mode[`quarkus.langchain4j.bedrock.chat-model.guardrail.stream-processing-mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.guardrail.stream-processing-mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The processing mode for streaming requests. Possible values are `SYNC` or `ASYNC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK_CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`sync`, `async`
+|
+
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-chat-model-prompt-caching[`quarkus.langchain4j.bedrock.chat-model.prompt-caching`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.bedrock.chat-model.prompt-caching+++[]
@@ -3349,6 +3412,69 @@ Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_CL
 endif::add-copy-button-to-env-var[]
 --
 |string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guardrail-identifier]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guardrail-identifier[`quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guardrail-identifier`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guardrail-identifier+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The unique identifier of the guardrail that you want to use.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_IDENTIFIER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guardrail-version]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-guardrail-version[`quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guardrail-version`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.guardrail-version+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The version number for the guardrail.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_GUARDRAIL_VERSION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-stream-processing-mode]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-guardrail-stream-processing-mode[`quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.stream-processing-mode`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.bedrock."model-name".chat-model.guardrail.stream-processing-mode+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The processing mode for streaming requests. Possible values are `SYNC` or `ASYNC`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_BEDROCK__MODEL_NAME__CHAT_MODEL_GUARDRAIL_STREAM_PROCESSING_MODE+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`sync`, `async`
 |
 
 a| [[quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching]] [.property-path]##link:#quarkus-langchain4j-bedrock_quarkus-langchain4j-bedrock-model-name-chat-model-prompt-caching[`quarkus.langchain4j.bedrock."model-name".chat-model.prompt-caching`]##
