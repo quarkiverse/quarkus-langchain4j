@@ -1,0 +1,302 @@
+[INFO] Scanning for projects...
+Downloading from central: https://repo.maven.apache.org/maven2/io/sundr/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/net/revelc/code/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/io/quarkus/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/net/revelc/code/formatter/maven-metadata.xml
+Progress (1): 243 BProgress (2): 243 B | 1.4 kB                            Downloaded from central: https://repo.maven.apache.org/maven2/io/quarkus/maven-metadata.xml (1.4 kB at 5.4 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/net/revelc/code/formatter/maven-metadata.xml (243 B at 927 B/s)
+Downloading from central: https://repo.maven.apache.org/maven2/it/ozimov/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/asciidoctor/maven-metadata.xml
+Progress (1): 236 B                   Downloaded from central: https://repo.maven.apache.org/maven2/io/sundr/maven-metadata.xml (236 B at 880 B/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
+Progress (1): 855 B                   Downloaded from central: https://repo.maven.apache.org/maven2/net/revelc/code/maven-metadata.xml (855 B at 3.1 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+Progress (1): 4.6 kBProgress (1): 9.7 kBProgress (1): 14 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (14 kB at 420 kB/s)
+Progress (1): 249 BProgress (2): 249 B | 261 BProgress (3): 249 B | 261 B | 3.1 kBProgress (3): 249 B | 261 B | 7.7 kBProgress (3): 249 B | 261 B | 12 kB Progress (3): 249 B | 261 B | 17 kBProgress (3): 249 B | 261 B | 20 kBProgress (3): 249 B | 261 B | 21 kB                                   Downloaded from central: https://repo.maven.apache.org/maven2/org/asciidoctor/maven-metadata.xml (249 B at 5.3 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/it/ozimov/maven-metadata.xml (261 B at 5.6 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (21 kB at 356 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-dependency-plugin/3.7.0/maven-dependency-plugin-3.7.0.pom
+Progress (1): 747 BProgress (1): 1.7 kBProgress (1): 3.6 kBProgress (1): 8.7 kBProgress (1): 12 kB Progress (1): 16 kBProgress (1): 18 kBProgress (1): 19 kB                   Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-dependency-plugin/3.7.0/maven-dependency-plugin-3.7.0.pom (19 kB at 643 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-dependency-plugin/3.7.0/maven-dependency-plugin-3.7.0.jar
+Progress (1): 0.9/207 kBProgress (1): 2.3/207 kBProgress (1): 3.6/207 kBProgress (1): 5.0/207 kBProgress (1): 6.4/207 kBProgress (1): 7.7/207 kBProgress (1): 9.1/207 kBProgress (1): 10/207 kB Progress (1): 12/207 kBProgress (1): 13/207 kBProgress (1): 15/207 kBProgress (1): 16/207 kBProgress (1): 17/207 kBProgress (1): 19/207 kBProgress (1): 20/207 kBProgress (1): 21/207 kBProgress (1): 23/207 kBProgress (1): 24/207 kBProgress (1): 26/207 kBProgress (1): 27/207 kBProgress (1): 28/207 kBProgress (1): 30/207 kBProgress (1): 31/207 kBProgress (1): 32/207 kBProgress (1): 33/207 kBProgress (1): 34/207 kBProgress (1): 36/207 kBProgress (1): 37/207 kBProgress (1): 38/207 kBProgress (1): 40/207 kBProgress (1): 44/207 kBProgress (1): 48/207 kBProgress (1): 52/207 kBProgress (1): 57/207 kBProgress (1): 61/207 kBProgress (1): 65/207 kBProgress (1): 69/207 kBProgress (1): 73/207 kBProgress (1): 78/207 kBProgress (1): 82/207 kBProgress (1): 86/207 kBProgress (1): 90/207 kBProgress (1): 95/207 kBProgress (1): 99/207 kBProgress (1): 103/207 kBProgress (1): 107/207 kBProgress (1): 112/207 kBProgress (1): 116/207 kBProgress (1): 120/207 kBProgress (1): 124/207 kBProgress (1): 128/207 kBProgress (1): 131/207 kBProgress (1): 135/207 kBProgress (1): 140/207 kBProgress (1): 144/207 kBProgress (1): 148/207 kBProgress (1): 152/207 kBProgress (1): 156/207 kBProgress (1): 161/207 kBProgress (1): 165/207 kBProgress (1): 169/207 kBProgress (1): 173/207 kBProgress (1): 178/207 kBProgress (1): 182/207 kBProgress (1): 186/207 kBProgress (1): 190/207 kBProgress (1): 195/207 kBProgress (1): 199/207 kBProgress (1): 203/207 kBProgress (1): 207 kB                        Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-dependency-plugin/3.7.0/maven-dependency-plugin-3.7.0.jar (207 kB at 4.1 MB/s)
+[INFO] 
+[INFO] --< io.quarkiverse.langchain4j:quarkus-langchain4j-chat-scopes-deployment >--
+[INFO] Building Quarkus LangChain4j - Chat Scopes - Deployment 999-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- dependency:3.7.0:tree (default-cli) @ quarkus-langchain4j-chat-scopes-deployment ---
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-sink-api/1.12.0/doxia-sink-api-1.12.0.pom
+Progress (1): 833 BProgress (1): 1.5 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-sink-api/1.12.0/doxia-sink-api-1.12.0.pom (1.5 kB at 55 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia/1.12.0/doxia-1.12.0.pom
+Progress (1): 756 BProgress (1): 2.2 kBProgress (1): 3.8 kBProgress (1): 8.9 kBProgress (1): 12 kB Progress (1): 15 kBProgress (1): 18 kB                   Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia/1.12.0/doxia-1.12.0.pom (18 kB at 628 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-logging-api/1.12.0/doxia-logging-api-1.12.0.pom
+Progress (1): 845 BProgress (1): 1.5 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-logging-api/1.12.0/doxia-logging-api-1.12.0.pom (1.5 kB at 53 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/reporting/maven-reporting-impl/3.2.0/maven-reporting-impl-3.2.0.pom
+Progress (1): 783 BProgress (1): 2.2 kBProgress (1): 5.4 kBProgress (1): 7.5 kBProgress (1): 7.6 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/reporting/maven-reporting-impl/3.2.0/maven-reporting-impl-3.2.0.pom (7.6 kB at 253 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-integration-tools/1.11.1/doxia-integration-tools-1.11.1.pom
+Progress (1): 800 BProgress (1): 3.3 kBProgress (1): 6.0 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-integration-tools/1.11.1/doxia-integration-tools-1.11.1.pom (6.0 kB at 195 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-dependency-analyzer/1.14.1/maven-dependency-analyzer-1.14.1.pom
+Progress (1): 795 BProgress (1): 2.3 kBProgress (1): 4.8 kBProgress (1): 6.4 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-dependency-analyzer/1.14.1/maven-dependency-analyzer-1.14.1.pom (6.4 kB at 199 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/assertj/assertj-bom/3.25.3/assertj-bom-3.25.3.pom
+Progress (1): 1.0 kBProgress (1): 3.7 kB                    Downloaded from central: https://repo.maven.apache.org/maven2/org/assertj/assertj-bom/3.25.3/assertj-bom-3.25.3.pom (3.7 kB at 160 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-sink-api/1.12.0/doxia-sink-api-1.12.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-logging-api/1.12.0/doxia-logging-api-1.12.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/reporting/maven-reporting-impl/3.2.0/maven-reporting-impl-3.2.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.8.1/commons-lang3-3.8.1.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcore/4.4.14/httpcore-4.4.14.jar
+Progress (1): 0.9/20 kBProgress (2): 0.9/20 kB | 7.7/12 kBProgress (2): 0.9/20 kB | 12 kB    Progress (2): 2.3/20 kB | 12 kBProgress (2): 3.6/20 kB | 12 kBProgress (2): 5.0/20 kB | 12 kBProgress (2): 6.4/20 kB | 12 kBProgress (2): 7.4/20 kB | 12 kBProgress (2): 8.8/20 kB | 12 kB                               Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-sink-api/1.12.0/doxia-sink-api-1.12.0.jar (12 kB at 414 kB/s)
+Progress (1): 10/20 kB                      Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-integration-tools/1.11.1/doxia-integration-tools-1.11.1.jar
+Progress (1): 12/20 kBProgress (1): 13/20 kBProgress (1): 14/20 kBProgress (1): 16/20 kBProgress (1): 17/20 kBProgress (1): 18/20 kBProgress (1): 20 kB   Progress (2): 20 kB | 1.4/502 kB                                Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/reporting/maven-reporting-impl/3.2.0/maven-reporting-impl-3.2.0.jar (20 kB at 697 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-dependency-analyzer/1.14.1/maven-dependency-analyzer-1.14.1.jar
+Progress (1): 2.7/502 kBProgress (1): 4.1/502 kBProgress (1): 5.5/502 kBProgress (1): 6.8/502 kBProgress (1): 8.2/502 kBProgress (1): 9.6/502 kBProgress (1): 11/502 kB Progress (1): 12/502 kBProgress (1): 14/502 kBProgress (1): 15/502 kBProgress (1): 16/502 kBProgress (1): 18/502 kBProgress (1): 19/502 kBProgress (1): 21/502 kBProgress (1): 22/502 kBProgress (1): 23/502 kBProgress (1): 25/502 kBProgress (1): 26/502 kBProgress (1): 27/502 kBProgress (1): 29/502 kBProgress (1): 30/502 kBProgress (1): 31/502 kBProgress (1): 33/502 kBProgress (1): 34/502 kBProgress (1): 36/502 kBProgress (1): 37/502 kBProgress (1): 38/502 kBProgress (1): 40/502 kBProgress (1): 41/502 kBProgress (1): 42/502 kBProgress (1): 44/502 kBProgress (1): 45/502 kBProgress (1): 46/502 kBProgress (1): 48/502 kBProgress (1): 49/502 kBProgress (2): 49/502 kB | 0.9/12 kBProgress (2): 49/502 kB | 2.3/12 kBProgress (2): 49/502 kB | 3.6/12 kBProgress (2): 53/502 kB | 3.6/12 kBProgress (2): 53/502 kB | 5.0/12 kBProgress (2): 53/502 kB | 6.4/12 kBProgress (2): 58/502 kB | 6.4/12 kBProgress (2): 58/502 kB | 7.7/12 kBProgress (2): 58/502 kB | 9.1/12 kBProgress (2): 58/502 kB | 10/12 kB Progress (2): 58/502 kB | 12/12 kBProgress (2): 58/502 kB | 12 kB   Progress (2): 62/502 kB | 12 kBProgress (2): 66/502 kB | 12 kBProgress (2): 70/502 kB | 12 kB                               Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-logging-api/1.12.0/doxia-logging-api-1.12.0.jar (12 kB at 378 kB/s)
+Progress (1): 74/502 kBProgress (1): 78/502 kBProgress (1): 82/502 kBProgress (1): 86/502 kBProgress (1): 90/502 kBProgress (1): 94/502 kBProgress (1): 98/502 kBProgress (1): 103/502 kBProgress (1): 107/502 kBProgress (1): 111/502 kBProgress (1): 115/502 kBProgress (1): 119/502 kBProgress (1): 124/502 kBProgress (1): 128/502 kBProgress (1): 131/502 kBProgress (1): 135/502 kBProgress (1): 140/502 kBProgress (1): 144/502 kBProgress (1): 147/502 kBProgress (1): 152/502 kBProgress (1): 156/502 kBProgress (1): 160/502 kBProgress (1): 164/502 kBProgress (1): 168/502 kBProgress (1): 172/502 kBProgress (1): 176/502 kBProgress (2): 176/502 kB | 7.7/47 kBProgress (2): 176/502 kB | 8.2/47 kBProgress (2): 180/502 kB | 8.2/47 kBProgress (2): 180/502 kB | 25/47 kB Progress (2): 184/502 kB | 25/47 kBProgress (2): 184/502 kB | 41/47 kBProgress (3): 184/502 kB | 41/47 kB | 0.9/42 kBProgress (3): 184/502 kB | 41/47 kB | 2.3/42 kBProgress (3): 184/502 kB | 41/47 kB | 3.6/42 kBProgress (3): 184/502 kB | 47 kB | 3.6/42 kB   Progress (3): 184/502 kB | 47 kB | 5.0/42 kBProgress (3): 184/502 kB | 47 kB | 6.4/42 kBProgress (3): 184/502 kB | 47 kB | 7.7/42 kBProgress (3): 184/502 kB | 47 kB | 9.1/42 kB                                            Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/doxia/doxia-integration-tools/1.11.1/doxia-integration-tools-1.11.1.jar (47 kB at 974 kB/s)
+Progress (2): 184/502 kB | 10/42 kBProgress (2): 189/502 kB | 10/42 kBProgress (2): 189/502 kB | 12/42 kBProgress (2): 193/502 kB | 12/42 kBProgress (2): 193/502 kB | 13/42 kBProgress (2): 197/502 kB | 13/42 kBProgress (2): 197/502 kB | 15/42 kBProgress (2): 197/502 kB | 16/42 kBProgress (2): 201/502 kB | 16/42 kBProgress (2): 201/502 kB | 17/42 kBProgress (2): 205/502 kB | 17/42 kBProgress (2): 205/502 kB | 19/42 kBProgress (2): 205/502 kB | 20/42 kBProgress (2): 209/502 kB | 20/42 kBProgress (2): 209/502 kB | 21/42 kBProgress (2): 209/502 kB | 23/42 kBProgress (2): 209/502 kB | 24/42 kBProgress (2): 209/502 kB | 25/42 kBProgress (2): 209/502 kB | 26/42 kBProgress (2): 209/502 kB | 27/42 kBProgress (2): 213/502 kB | 27/42 kBProgress (2): 213/502 kB | 29/42 kBProgress (2): 213/502 kB | 33/42 kBProgress (2): 221/502 kB | 33/42 kBProgress (2): 221/502 kB | 37/42 kBProgress (2): 230/502 kB | 37/42 kBProgress (2): 230/502 kB | 41/42 kBProgress (2): 230/502 kB | 42 kB   Progress (2): 246/502 kB | 42 kB                                Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-dependency-analyzer/1.14.1/maven-dependency-analyzer-1.14.1.jar (42 kB at 814 kB/s)
+Progress (1): 262/502 kBProgress (1): 279/502 kBProgress (1): 295/502 kBProgress (1): 312/502 kBProgress (1): 328/502 kBProgress (1): 344/502 kBProgress (1): 352/502 kBProgress (1): 369/502 kBProgress (1): 385/502 kBProgress (1): 401/502 kBProgress (1): 418/502 kBProgress (1): 434/502 kBProgress (1): 451/502 kBProgress (1): 467/502 kBProgress (1): 483/502 kBProgress (1): 500/502 kBProgress (1): 502 kB    Progress (2): 502 kB | 0.9/328 kBProgress (2): 502 kB | 2.3/328 kBProgress (2): 502 kB | 3.6/328 kBProgress (2): 502 kB | 5.0/328 kBProgress (2): 502 kB | 6.4/328 kBProgress (2): 502 kB | 7.7/328 kB                                 Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.8.1/commons-lang3-3.8.1.jar (502 kB at 7.6 MB/s)
+Progress (1): 9.1/328 kBProgress (1): 10/328 kB Progress (1): 12/328 kBProgress (1): 13/328 kBProgress (1): 14/328 kBProgress (1): 16/328 kBProgress (1): 17/328 kBProgress (1): 18/328 kBProgress (1): 20/328 kBProgress (1): 21/328 kBProgress (1): 22/328 kBProgress (1): 24/328 kBProgress (1): 25/328 kBProgress (1): 27/328 kBProgress (1): 28/328 kBProgress (1): 29/328 kBProgress (1): 31/328 kBProgress (1): 32/328 kBProgress (1): 33/328 kBProgress (1): 35/328 kBProgress (1): 36/328 kBProgress (1): 38/328 kBProgress (1): 39/328 kBProgress (1): 40/328 kBProgress (1): 42/328 kBProgress (1): 43/328 kBProgress (1): 44/328 kBProgress (1): 46/328 kBProgress (1): 47/328 kBProgress (1): 48/328 kBProgress (1): 50/328 kBProgress (1): 51/328 kBProgress (1): 53/328 kBProgress (1): 54/328 kBProgress (1): 55/328 kBProgress (1): 60/328 kBProgress (1): 64/328 kBProgress (1): 66/328 kBProgress (1): 70/328 kBProgress (1): 74/328 kBProgress (1): 78/328 kBProgress (1): 82/328 kBProgress (1): 86/328 kBProgress (1): 90/328 kBProgress (1): 94/328 kBProgress (1): 99/328 kBProgress (1): 103/328 kBProgress (1): 107/328 kBProgress (1): 111/328 kBProgress (1): 115/328 kBProgress (1): 119/328 kBProgress (1): 123/328 kBProgress (1): 127/328 kBProgress (1): 131/328 kBProgress (1): 135/328 kBProgress (1): 140/328 kBProgress (1): 144/328 kBProgress (1): 147/328 kBProgress (1): 152/328 kBProgress (1): 156/328 kBProgress (1): 160/328 kBProgress (1): 164/328 kBProgress (1): 168/328 kBProgress (1): 173/328 kBProgress (1): 177/328 kBProgress (1): 181/328 kBProgress (1): 185/328 kBProgress (1): 189/328 kBProgress (1): 194/328 kBProgress (1): 198/328 kBProgress (1): 202/328 kBProgress (1): 206/328 kBProgress (1): 211/328 kBProgress (1): 215/328 kBProgress (1): 219/328 kBProgress (1): 235/328 kBProgress (1): 252/328 kBProgress (1): 268/328 kBProgress (1): 285/328 kBProgress (1): 287/328 kBProgress (1): 303/328 kBProgress (1): 319/328 kBProgress (1): 328 kB                        Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/httpcore/4.4.14/httpcore-4.4.14.jar (328 kB at 3.4 MB/s)
+[INFO] io.quarkiverse.langchain4j:quarkus-langchain4j-chat-scopes-deployment:jar:999-SNAPSHOT
+[INFO] +- io.quarkus:quarkus-core-deployment:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-classloader-commons:jar:3.27.2:compile
+[INFO] |  +- org.aesh:readline:jar:2.6:compile
+[INFO] |  |  \- org.fusesource.jansi:jansi:jar:2.4.0:compile
+[INFO] |  +- org.aesh:aesh:jar:2.8.2:compile
+[INFO] |  +- org.apache.commons:commons-lang3:jar:3.18.0:compile
+[INFO] |  +- org.wildfly.common:wildfly-common:jar:2.0.1:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-cpu:jar:2.13.9:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-expression:jar:2.13.9:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-net:jar:2.13.9:compile
+[INFO] |  |  \- io.smallrye.common:smallrye-common-ref:jar:2.13.9:compile
+[INFO] |  +- io.quarkus.gizmo:gizmo:jar:1.9.0:compile
+[INFO] |  |  \- org.ow2.asm:asm-util:jar:9.8:compile
+[INFO] |  |     \- org.ow2.asm:asm-analysis:jar:9.8:compile
+[INFO] |  +- io.quarkus.gizmo:gizmo2:jar:2.0.0.Beta6:compile
+[INFO] |  |  +- io.github.dmlloyd:jdk-classfile-backport:jar:24.0:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-constraint:jar:2.13.9:compile
+[INFO] |  |  \- io.smallrye.common:smallrye-common-resource:jar:2.13.9:compile
+[INFO] |  +- io.smallrye:jandex:jar:3.4.0:compile
+[INFO] |  +- io.smallrye:jandex-gizmo2:jar:3.4.0:compile
+[INFO] |  +- io.smallrye.common:smallrye-common-os:jar:2.13.9:compile
+[INFO] |  +- io.smallrye.common:smallrye-common-process:jar:2.13.9:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-function:jar:2.13.9:compile
+[INFO] |  |  \- org.jboss.logging:jboss-logging:jar:3.6.1.Final:compile
+[INFO] |  +- org.ow2.asm:asm:jar:9.8:compile
+[INFO] |  +- org.ow2.asm:asm-commons:jar:9.8:compile
+[INFO] |  |  \- org.ow2.asm:asm-tree:jar:9.8:compile
+[INFO] |  +- io.quarkus:quarkus-development-mode-spi:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-hibernate-validator-spi:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-class-change-agent:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-bootstrap-core:jar:3.27.2:compile
+[INFO] |  |  +- io.quarkus:quarkus-bootstrap-app-model:jar:3.27.2:compile
+[INFO] |  |  \- io.smallrye.common:smallrye-common-io:jar:2.13.9:compile
+[INFO] |  +- org.eclipse.sisu:org.eclipse.sisu.inject:jar:0.9.0.M4:runtime
+[INFO] |  +- io.quarkus:quarkus-core:jar:3.27.2:compile
+[INFO] |  |  +- jakarta.annotation:jakarta.annotation-api:jar:3.0.0:compile
+[INFO] |  |  +- jakarta.inject:jakarta.inject-api:jar:2.0.1:compile
+[INFO] |  |  +- io.quarkus:quarkus-ide-launcher:jar:3.27.2:compile
+[INFO] |  |  +- io.smallrye.config:smallrye-config:jar:3.13.4:compile
+[INFO] |  |  |  \- io.smallrye.config:smallrye-config-core:jar:3.13.4:compile
+[INFO] |  |  |     +- org.eclipse.microprofile.config:microprofile-config-api:jar:3.1:compile
+[INFO] |  |  |     +- io.smallrye.common:smallrye-common-classloader:jar:2.13.9:compile
+[INFO] |  |  |     \- io.smallrye.config:smallrye-config-common:jar:3.13.4:compile
+[INFO] |  |  +- org.jboss.logmanager:jboss-logmanager:jar:3.1.2.Final:compile
+[INFO] |  |  |  +- jakarta.json:jakarta.json-api:jar:2.1.3:compile
+[INFO] |  |  |  \- org.eclipse.parsson:parsson:jar:1.1.7:compile
+[INFO] |  |  +- org.jboss.threads:jboss-threads:jar:3.9.1:compile
+[INFO] |  |  +- org.slf4j:slf4j-api:jar:2.0.17:compile
+[INFO] |  |  +- org.jboss.slf4j:slf4j-jboss-logmanager:jar:2.0.2.Final:compile
+[INFO] |  |  +- io.quarkus:quarkus-bootstrap-runner:jar:3.27.2:compile
+[INFO] |  |  |  \- org.crac:crac:jar:1.5.0:compile
+[INFO] |  |  \- io.quarkus:quarkus-fs-util:jar:1.1.0:compile
+[INFO] |  +- io.quarkus:quarkus-builder:jar:3.27.2:compile
+[INFO] |  +- org.graalvm.sdk:nativeimage:jar:23.1.2:compile
+[INFO] |  |  \- org.graalvm.sdk:word:jar:23.1.2:compile
+[INFO] |  +- org.junit.platform:junit-platform-launcher:jar:1.13.4:compile
+[INFO] |  |  +- org.junit.platform:junit-platform-engine:jar:1.13.4:compile
+[INFO] |  |  \- org.apiguardian:apiguardian-api:jar:1.1.2:compile
+[INFO] |  \- org.junit.jupiter:junit-jupiter:jar:5.13.4:compile
+[INFO] +- io.quarkus:quarkus-arc-deployment:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-smallrye-context-propagation-spi:jar:3.27.2:compile
+[INFO] |  |  \- org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:jar:1.3:compile
+[INFO] |  +- io.quarkus:quarkus-devui-deployment-spi:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-arc:jar:3.27.2:compile
+[INFO] |  |  \- io.quarkus.arc:arc:jar:3.27.2:compile
+[INFO] |  |     \- jakarta.transaction:jakarta.transaction-api:jar:2.0.1:compile
+[INFO] |  +- io.quarkus:quarkus-arc-dev:jar:3.27.2:compile
+[INFO] |  \- io.quarkus.arc:arc-processor:jar:3.27.2:compile
+[INFO] |     \- io.smallrye.common:smallrye-common-annotation:jar:2.13.9:compile
+[INFO] +- io.quarkus:quarkus-vertx-deployment:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-tls-registry-deployment-spi:jar:3.27.2:compile
+[INFO] |  |  \- io.quarkus:quarkus-tls-registry-spi:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-netty-deployment:jar:3.27.2:compile
+[INFO] |  |  +- io.quarkus:quarkus-netty:jar:3.27.2:compile
+[INFO] |  |  |  +- io.netty:netty-codec:jar:4.1.130.Final:compile
+[INFO] |  |  |  |  \- io.netty:netty-common:jar:4.1.130.Final:compile
+[INFO] |  |  |  +- io.netty:netty-codec-http:jar:4.1.130.Final:compile
+[INFO] |  |  |  +- io.netty:netty-codec-http2:jar:4.1.130.Final:compile
+[INFO] |  |  |  \- io.netty:netty-handler:jar:4.1.130.Final:compile
+[INFO] |  |  |     +- io.netty:netty-resolver:jar:4.1.130.Final:compile
+[INFO] |  |  |     \- io.netty:netty-transport-native-unix-common:jar:4.1.130.Final:compile
+[INFO] |  |  \- io.vertx:vertx-web:jar:4.5.23:compile
+[INFO] |  |     +- io.vertx:vertx-web-common:jar:4.5.23:compile
+[INFO] |  |     +- io.vertx:vertx-auth-common:jar:4.5.23:compile
+[INFO] |  |     +- io.vertx:vertx-bridge-common:jar:4.5.23:compile
+[INFO] |  |     \- io.vertx:vertx-core:jar:4.5.23:compile
+[INFO] |  |        +- io.netty:netty-handler-proxy:jar:4.1.130.Final:compile
+[INFO] |  |        |  \- io.netty:netty-codec-socks:jar:4.1.130.Final:compile
+[INFO] |  |        \- io.netty:netty-resolver-dns:jar:4.1.130.Final:compile
+[INFO] |  |           \- io.netty:netty-codec-dns:jar:4.1.130.Final:compile
+[INFO] |  +- io.quarkus:quarkus-vertx:jar:3.27.2:compile
+[INFO] |  |  +- io.netty:netty-codec-haproxy:jar:4.1.130.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.130.Final:compile
+[INFO] |  |  |  \- io.netty:netty-transport:jar:4.1.130.Final:compile
+[INFO] |  |  +- io.smallrye.common:smallrye-common-vertx-context:jar:2.13.9:compile
+[INFO] |  |  +- io.quarkus:quarkus-mutiny:jar:3.27.2:compile
+[INFO] |  |  |  +- io.quarkus:quarkus-smallrye-context-propagation:jar:3.27.2:compile
+[INFO] |  |  |  |  \- io.smallrye:smallrye-context-propagation:jar:2.2.1:compile
+[INFO] |  |  |  |     +- io.smallrye:smallrye-context-propagation-api:jar:2.2.1:compile
+[INFO] |  |  |  |     \- io.smallrye:smallrye-context-propagation-storage:jar:2.2.1:compile
+[INFO] |  |  |  \- io.smallrye.reactive:mutiny-smallrye-context-propagation:jar:2.9.5:compile
+[INFO] |  |  +- io.quarkus:quarkus-virtual-threads:jar:3.27.2:compile
+[INFO] |  |  +- io.quarkus:quarkus-vertx-latebound-mdc-provider:jar:3.27.2:compile
+[INFO] |  |  +- io.smallrye.reactive:smallrye-mutiny-vertx-core:jar:3.21.3:compile
+[INFO] |  |  |  +- io.smallrye.reactive:smallrye-mutiny-vertx-runtime:jar:3.21.3:compile
+[INFO] |  |  |  \- io.smallrye.reactive:vertx-mutiny-generator:jar:3.21.3:compile
+[INFO] |  |  |     \- io.vertx:vertx-codegen:jar:4.5.23:compile
+[INFO] |  |  \- io.smallrye:smallrye-fault-tolerance-vertx:jar:6.9.3:compile
+[INFO] |  +- io.quarkus:quarkus-virtual-threads-deployment:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-mutiny-deployment:jar:3.27.2:compile
+[INFO] |  |  \- io.quarkus:quarkus-smallrye-context-propagation-deployment:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-jackson-spi:jar:3.27.2:compile
+[INFO] |  +- io.quarkus:quarkus-vertx-deployment-spi:jar:3.27.2:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-databind:jar:2.19.2:compile
+[INFO] |     +- com.fasterxml.jackson.core:jackson-annotations:jar:2.19.2:compile
+[INFO] |     \- com.fasterxml.jackson.core:jackson-core:jar:2.19.2:compile
+[INFO] +- io.quarkus:quarkus-jackson-deployment:jar:3.27.2:compile
+[INFO] |  \- io.quarkus:quarkus-jackson:jar:3.27.2:compile
+[INFO] |     +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.19.2:compile
+[INFO] |     +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.19.2:compile
+[INFO] |     \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.19.2:compile
+[INFO] +- io.quarkiverse.langchain4j:quarkus-langchain4j-core-deployment:jar:999-SNAPSHOT:compile
+[INFO] |  +- io.quarkus:quarkus-qute-deployment:jar:3.27.2:compile
+[INFO] |  |  +- io.quarkus:quarkus-panache-common-deployment:jar:3.27.2:compile
+[INFO] |  |  |  +- io.quarkus:quarkus-panache-common:jar:3.27.2:compile
+[INFO] |  |  |  \- jakarta.validation:jakarta.validation-api:jar:3.1.1:compile
+[INFO] |  |  +- io.quarkus:quarkus-cache-deployment-spi:jar:3.27.2:compile
+[INFO] |  |  |  \- io.quarkus:quarkus-cache-runtime-spi:jar:3.27.2:compile
+[INFO] |  |  +- io.quarkus.qute:qute-generator:jar:3.27.2:compile
+[INFO] |  |  |  \- io.quarkus.qute:qute-core:jar:3.27.2:compile
+[INFO] |  |  \- io.quarkus:quarkus-qute:jar:3.27.2:compile
+[INFO] |  +- io.quarkiverse.langchain4j:quarkus-langchain4j-core:jar:999-SNAPSHOT:compile
+[INFO] |  |  +- io.quarkiverse.langchain4j:quarkus-langchain4j-core-runtime-spi:jar:999-SNAPSHOT:compile
+[INFO] |  |  \- dev.langchain4j:langchain4j:jar:1.12.2:compile
+[INFO] |  |     +- dev.langchain4j:langchain4j-core:jar:1.12.2:compile
+[INFO] |  |     |  \- org.jspecify:jspecify:jar:1.0.0:compile
+[INFO] |  |     \- org.apache.opennlp:opennlp-tools:jar:2.5.4:compile
+[INFO] |  +- io.quarkus:quarkus-devservices-common:jar:3.27.2:compile
+[INFO] |  |  +- com.github.docker-java:docker-java-api:jar:3.4.2:compile
+[INFO] |  |  +- org.testcontainers:testcontainers:jar:1.21.4:compile
+[INFO] |  |  |  +- org.apache.commons:commons-compress:jar:1.28.0:compile
+[INFO] |  |  |  +- org.rnorth.duct-tape:duct-tape:jar:1.0.8:compile
+[INFO] |  |  |  |  \- org.jetbrains:annotations:jar:26.0.2:compile
+[INFO] |  |  |  \- com.github.docker-java:docker-java-transport-zerodep:jar:3.4.2:compile
+[INFO] |  |  |     +- com.github.docker-java:docker-java-transport:jar:3.4.2:compile
+[INFO] |  |  |     \- net.java.dev.jna:jna:jar:5.8.0:compile
+[INFO] |  |  +- io.quarkus:quarkus-junit4-mock:jar:3.27.2:compile
+[INFO] |  |  \- io.quarkus:quarkus-datasource-common:jar:3.27.2:compile
+[INFO] |  \- org.eclipse.microprofile.rest.client:microprofile-rest-client-api:jar:4.0:compile
+[INFO] +- io.quarkiverse.langchain4j:quarkus-langchain4j-chat-scopes:jar:999-SNAPSHOT:compile
+[INFO] +- io.quarkus:quarkus-security-deployment:jar:3.27.2:test
+[INFO] |  +- io.quarkus:quarkus-security-runtime-spi:jar:3.27.2:test
+[INFO] |  +- io.quarkus:quarkus-security:jar:3.27.2:test
+[INFO] |  |  \- jakarta.interceptor:jakarta.interceptor-api:jar:2.2.0:compile
+[INFO] |  \- io.quarkus:quarkus-security-spi:jar:3.27.2:test
+[INFO] +- io.quarkus:quarkus-security-test-utils:jar:3.27.2:test
+[INFO] |  +- io.quarkus.security:quarkus-security:jar:2.2.1:test
+[INFO] |  |  \- io.smallrye.reactive:mutiny:jar:2.9.5:compile
+[INFO] |  |     \- org.jctools:jctools-core:jar:4.0.5:compile
+[INFO] |  +- jakarta.enterprise:jakarta.enterprise.cdi-api:jar:4.1.0:compile
+[INFO] |  |  +- jakarta.enterprise:jakarta.enterprise.lang-model:jar:4.1.0:compile
+[INFO] |  |  \- jakarta.el:jakarta.el-api:jar:6.0.1:compile
+[INFO] |  \- io.rest-assured:rest-assured:jar:5.5.6:test
+[INFO] |     +- org.apache.groovy:groovy:jar:4.0.22:test
+[INFO] |     +- org.apache.groovy:groovy-xml:jar:4.0.22:test
+[INFO] |     +- org.apache.httpcomponents:httpclient:jar:4.5.14:test
+[INFO] |     |  +- org.apache.httpcomponents:httpcore:jar:4.4.16:test
+[INFO] |     |  \- commons-codec:commons-codec:jar:1.19.0:compile
+[INFO] |     +- org.apache.httpcomponents:httpmime:jar:4.5.14:test
+[INFO] |     +- org.hamcrest:hamcrest:jar:2.2:test
+[INFO] |     +- org.ccil.cowan.tagsoup:tagsoup:jar:1.2.1:test
+[INFO] |     +- io.rest-assured:json-path:jar:5.5.6:test
+[INFO] |     |  +- org.apache.groovy:groovy-json:jar:4.0.22:test
+[INFO] |     |  \- io.rest-assured:rest-assured-common:jar:5.5.6:test
+[INFO] |     \- io.rest-assured:xml-path:jar:5.5.6:test
+[INFO] +- io.quarkus:quarkus-junit5:jar:3.27.2:test
+[INFO] |  +- io.quarkus:quarkus-test-common:jar:3.27.2:test
+[INFO] |  |  +- io.quarkus:quarkus-bootstrap-maven-resolver:jar:3.27.2:test
+[INFO] |  |  |  +- io.smallrye.beanbag:smallrye-beanbag-maven:jar:1.5.3:test
+[INFO] |  |  |  |  +- io.smallrye.beanbag:smallrye-beanbag-sisu:jar:1.5.3:test
+[INFO] |  |  |  |  |  \- io.smallrye.beanbag:smallrye-beanbag:jar:1.5.3:test
+[INFO] |  |  |  |  +- javax.inject:javax.inject:jar:1:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-artifact:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-builder-support:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-model:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-model-builder:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-repository-metadata:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-settings:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven.resolver:maven-resolver-api:jar:1.9.24:test
+[INFO] |  |  |  |  +- org.apache.maven.resolver:maven-resolver-impl:jar:1.9.24:test
+[INFO] |  |  |  |  |  \- org.apache.maven.resolver:maven-resolver-named-locks:jar:1.9.24:test
+[INFO] |  |  |  |  +- org.apache.maven.resolver:maven-resolver-spi:jar:1.9.24:test
+[INFO] |  |  |  |  +- org.apache.maven.resolver:maven-resolver-util:jar:1.9.24:test
+[INFO] |  |  |  |  +- org.apache.maven.resolver:maven-resolver-transport-http:jar:1.9.23:test
+[INFO] |  |  |  |  +- org.apache.maven.wagon:wagon-provider-api:jar:3.5.3:test
+[INFO] |  |  |  |  +- org.apache.maven.wagon:wagon-http-shared:jar:3.5.3:test
+[INFO] |  |  |  |  +- org.codehaus.plexus:plexus-interpolation:jar:1.26:test
+[INFO] |  |  |  |  +- org.codehaus.plexus:plexus-utils:jar:3.5.1:test
+[INFO] |  |  |  |  +- org.codehaus.plexus:plexus-xml:jar:4.0.2:test
+[INFO] |  |  |  |  |  \- org.apache.maven:maven-xml-impl:jar:4.0.0-alpha-7:test
+[INFO] |  |  |  |  |     \- org.apache.maven:maven-api-xml:jar:4.0.0-alpha-7:test
+[INFO] |  |  |  |  |        \- org.apache.maven:maven-api-meta:jar:4.0.0-alpha-7:test
+[INFO] |  |  |  |  +- org.codehaus.plexus:plexus-cipher:jar:2.0:test
+[INFO] |  |  |  |  \- org.codehaus.plexus:plexus-sec-dispatcher:jar:2.0:test
+[INFO] |  |  |  +- io.quarkus:quarkus-bootstrap-maven4-resolver:jar:3.27.2:test
+[INFO] |  |  |  +- org.apache.maven:maven-embedder:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-core:jar:3.9.11:test
+[INFO] |  |  |  |  |  \- org.codehaus.plexus:plexus-component-annotations:jar:2.1.0:test
+[INFO] |  |  |  |  +- org.apache.maven:maven-plugin-api:jar:3.9.11:test
+[INFO] |  |  |  |  +- org.apache.maven.shared:maven-shared-utils:jar:3.4.2:test
+[INFO] |  |  |  |  +- com.google.inject:guice:jar:classes:5.1.0:test
+[INFO] |  |  |  |  |  \- aopalliance:aopalliance:jar:1.0:test
+[INFO] |  |  |  |  +- com.google.guava:guava:jar:33.4.8-jre:test
+[INFO] |  |  |  |  +- com.google.guava:failureaccess:jar:1.0.1:test
+[INFO] |  |  |  |  +- javax.annotation:javax.annotation-api:jar:1.3.2:test
+[INFO] |  |  |  |  +- org.codehaus.plexus:plexus-classworlds:jar:2.6.0:test
+[INFO] |  |  |  |  \- commons-cli:commons-cli:jar:1.9.0:test
+[INFO] |  |  |  +- org.eclipse.sisu:org.eclipse.sisu.plexus:jar:0.9.0.M4:test
+[INFO] |  |  |  +- org.apache.maven:maven-settings-builder:jar:3.9.11:test
+[INFO] |  |  |  +- org.apache.maven:maven-resolver-provider:jar:3.9.11:test
+[INFO] |  |  |  +- org.apache.maven.resolver:maven-resolver-connector-basic:jar:1.9.24:test
+[INFO] |  |  |  +- org.apache.maven.resolver:maven-resolver-transport-wagon:jar:1.9.24:test
+[INFO] |  |  |  +- org.apache.maven.wagon:wagon-http:jar:3.5.3:test
+[INFO] |  |  |  \- org.apache.maven.wagon:wagon-file:jar:3.5.3:test
+[INFO] |  |  +- io.quarkus:quarkus-bootstrap-gradle-resolver:jar:3.27.2:test
+[INFO] |  |  +- commons-io:commons-io:jar:2.20.0:compile
+[INFO] |  |  \- org.jboss.logging:commons-logging-jboss-logging:jar:1.0.0.Final:runtime
+[INFO] |  \- io.quarkus:quarkus-junit5-config:jar:3.27.2:test
+[INFO] \- io.quarkus:quarkus-junit5-internal:jar:3.27.2:test
+[INFO]    +- org.jboss.shrinkwrap:shrinkwrap-depchain:pom:1.2.6:test
+[INFO]    |  +- org.jboss.shrinkwrap:shrinkwrap-api:jar:1.2.6:test
+[INFO]    |  +- org.jboss.shrinkwrap:shrinkwrap-spi:jar:1.2.6:test
+[INFO]    |  \- org.jboss.shrinkwrap:shrinkwrap-impl-base:jar:1.2.6:test
+[INFO]    +- org.junit.jupiter:junit-jupiter-api:jar:5.13.4:compile
+[INFO]    |  +- org.opentest4j:opentest4j:jar:1.3.0:compile
+[INFO]    |  \- org.junit.platform:junit-platform-commons:jar:1.13.4:compile
+[INFO]    +- org.junit.jupiter:junit-jupiter-params:jar:5.13.4:compile
+[INFO]    +- org.junit.jupiter:junit-jupiter-engine:jar:5.13.4:runtime
+[INFO]    \- org.awaitility:awaitility:jar:4.3.0:test
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.498 s
+[INFO] Finished at: 2026-03-27T10:22:16-04:00
+[INFO] ------------------------------------------------------------------------

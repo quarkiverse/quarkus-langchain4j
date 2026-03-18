@@ -1,6 +1,8 @@
 package io.quarkiverse.langchain4j.runtime.aiservice;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,6 +16,7 @@ import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.service.AiServiceContext;
 import io.quarkiverse.langchain4j.ModelName;
 import io.quarkiverse.langchain4j.RegisterAiService;
+import io.quarkiverse.langchain4j.spi.DefaultMemoryIdProvider;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InstanceHandle;
 
@@ -23,6 +26,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public ImageModel imageModel;
     public Integer maxSequentialToolExecutions;
     public boolean allowContinuousForcedToolCalling;
+    public DefaultMemoryIdProvider defaultMemoryIdProvider;
 
     // needed by Arc
     public QuarkusAiServiceContext() {
@@ -41,7 +45,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
         clearChatMemory();
     }
 
-    private void clearChatMemory() {
+    public void clearChatMemory() {
         if (hasChatMemory()) {
             chatMemoryService.clearAll();
         }
@@ -63,6 +67,14 @@ public class QuarkusAiServiceContext extends AiServiceContext {
                 chatMemory.clear();
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    public Collection<Object> getAllChatMemoryIds() {
+        if (!hasChatMemory()) {
+            return Collections.emptyList();
+        }
+        return chatMemoryService.getChatMemoryIDs();
     }
 
     /**

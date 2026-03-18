@@ -198,6 +198,12 @@ public class AiServicesProcessor {
             QuarkusAiServiceContext.class, "evictChatMemory", boolean.class, Object.class);
     private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_CHAT_MEMORY = MethodDescriptor.ofMethod(
             QuarkusAiServiceContext.class, "getChatMemory", ChatMemory.class, Object.class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY = MethodDescriptor
+            .ofMethod(
+                    QuarkusAiServiceContext.class, "clearChatMemory", void.class);
+    private static final MethodDescriptor QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS = MethodDescriptor
+            .ofMethod(
+                    QuarkusAiServiceContext.class, "getAllChatMemoryIds", Collection.class);
 
     public static final MethodDescriptor CHAT_MEMORY_SEEDER_CONTEXT_METHOD_NAME = MethodDescriptor
             .ofMethod(ChatMemorySeeder.Context.class, "methodName", String.class);
@@ -979,6 +985,9 @@ public class AiServicesProcessor {
             String systemMessageProviderClassName = (bi.getSystemMessageProviderClassDotName() != null
                     ? bi.getSystemMessageProviderClassDotName().toString()
                     : null);
+            String defaultMemoryIdProviderClassName = (bi.getDefaultMemoryIdProviderClassDotName() != null
+                    ? bi.getDefaultMemoryIdProviderClassDotName().toString()
+                    : null);
 
             // determine whether the method returns Multi<String>
             boolean injectStreamingChatModelBean = false;
@@ -1059,7 +1068,8 @@ public class AiServicesProcessor {
                                     classOutputGuardrails(bi),
                                     maxSequentialToolInvocations,
                                     allowContinuousForcedToolCalling,
-                                    bi.isShouldThrowExceptionOnEventError())))
+                                    bi.isShouldThrowExceptionOnEventError(),
+                                    defaultMemoryIdProviderClassName)))
                     .setRuntimeInit()
                     .addQualifier()
                     .annotation(LangChain4jDotNames.QUARKUS_AI_SERVICE_CONTEXT_QUALIFIER).addValue("value", serviceClassName)
@@ -1587,6 +1597,12 @@ public class AiServicesProcessor {
                                         "Unable to determine the CDI scope of " + iface));
                         DotName scopeInfo = matchingBI.getCdiScope();
                         classCreator.addAnnotation(scopeInfo.toString());
+                        // copy class level interceptor binding annotations
+                        for (AnnotationInstance annotationInstance : iface.declaredAnnotations()) {
+                            if (shouldCopyAnnotation(annotationInstance, index)) {
+                                classCreator.addAnnotation(annotationInstance);
+                            }
+                        }
                         if (matchingBI.getBeanName().isPresent()) {
                             classCreator.addAnnotation(
                                     AnnotationInstance.builder(NAMED).add("value", matchingBI.getBeanName().get()).build());
@@ -1720,6 +1736,24 @@ public class AiServicesProcessor {
                         mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_REMOVE_CHAT_MEMORY_IDS, contextHandle,
                                 mc.getMethodParam(0));
                         mc.returnVoid();
+                    }
+                    // methods from ChatMemoryRemovable.removeAll()
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "removeAll", void.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        mc.invokeVirtualMethod(QUARKUS_AI_SERVICES_CONTEXT_CLEAR_CHAT_MEMORY, contextHandle);
+                        mc.returnVoid();
+                    }
+                    // methods from ChatMemoryRemovable.getAllChatMemoryIds()
+                    {
+                        MethodCreator mc = classCreator.getMethodCreator(
+                                MethodDescriptor.ofMethod(implClassName, "getAllChatMemoryIds", Collection.class));
+                        ResultHandle contextHandle = mc.readInstanceField(contextField, mc.getThis());
+                        ResultHandle result = mc.invokeVirtualMethod(
+                                QUARKUS_AI_SERVICES_CONTEXT_GET_ALL_CHAT_MEMORY_IDS,
+                                contextHandle);
+                        mc.returnValue(result);
                     }
 
                     // methods from ChatMemoryAccess

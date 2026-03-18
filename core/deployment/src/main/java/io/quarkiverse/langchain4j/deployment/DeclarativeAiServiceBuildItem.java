@@ -28,6 +28,7 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
     private final DotName chatMemorySeederClassDotName;
     private final DotName systemMessageProviderClassDotName;
     private final DotName cdiScope;
+    private DotName defaultMemoryIdProviderClassDotName;
     private final String chatModelName;
     private final String moderationModelName;
     private final String imageModelName;
@@ -218,5 +219,13 @@ public final class DeclarativeAiServiceBuildItem extends MultiBuildItem {
 
     public boolean isAllowContinuousForcedToolCalling() {
         return allowContinuousForcedToolCalling;
+    }
+
+    public DotName getDefaultMemoryIdProviderClassDotName() {
+        return defaultMemoryIdProviderClassDotName;
+    }
+
+    public void setDefaultMemoryIdProviderClassDotName(DotName defaultMemoryIdProviderClassDotName) {
+        this.defaultMemoryIdProviderClassDotName = defaultMemoryIdProviderClassDotName;
     }
 }
