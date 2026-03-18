@@ -22,6 +22,7 @@
     <module>mcp-auth-providers</module>
     <module>quarkus-integrations</module>
     <module>rag</module>
+    <module>chat-scopes</module>
     <module>skills</module>
     <module>tools</module>
     <module>codestarts</module>
@@ -342,6 +343,18 @@
                     <dependency>
                         <groupId>io.quarkiverse.langchain4j</groupId>
                         <artifactId>quarkus-langchain4j-chatbot</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>codestarts</classifier>
+                    </dependency>
+                   <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-chat-scopes</artifactId>
+                        <version>${project.version}</version>
+                        <classifier>codestarts</classifier>
+                    </dependency>
+                   <dependency>
+                        <groupId>io.quarkiverse.langchain4j</groupId>
+                        <artifactId>quarkus-langchain4j-chat-scopes-websocket</artifactId>
                         <version>${project.version}</version>
                         <classifier>codestarts</classifier>
                     </dependency>
