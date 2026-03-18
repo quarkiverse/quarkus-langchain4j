@@ -121,25 +121,19 @@ public class McpAuthorizationServerResolver implements TenantConfigResolver {
                     return null;
                 }
                 
-                if (!server.authorizationServerDiscoveryPath.endsWith("/.well-known/openid-configuration")) {
-                    Log.infof("Currently, a secured MCP server can only be imported if its authorization server's"
-                            + " metadata endpoint URL path ends with '/.well-known/openid-configuration'");
-                    return null;
-                }
-                
-                Log.infof("Creating OidcTenantConfig, authServerUrl: %s, discoveryPath: %s", 
+                Log.infof("Creating OidcTenantConfig, authServerUrl: %s, discoveryPath: %s",
                         server.authorizationServerBaseUri(), server.authorizationServerDiscoveryPath());
-                
+
                 ClientIdAndSecret clientIdAndSecret = getClientIdAndSecret(routingContext, formParams);
                 if (clientIdAndSecret == null) {
                     Log.warnf("OAuth2 client id is not available");
                     return null;
                 }
-                
+
                 OidcTenantConfigBuilder builder = OidcTenantConfig.builder()
                         .tenantId(tenantId)
                         .authServerUrl(server.authorizationServerBaseUri())
-                        //.discoveryPath(server.authorizationServerDiscoveryPath())
+                        .discoveryPath(server.authorizationServerDiscoveryPath())
                         .applicationType(ApplicationType.WEB_APP)
                         .clientId(clientIdAndSecret.clientId());
                 
@@ -151,7 +145,7 @@ public class McpAuthorizationServerResolver implements TenantConfigResolver {
                 AuthenticationConfigBuilder authBuilder =  builder.authentication();
                 
                 authBuilder.idTokenRequired(false);
-                //authBuilder.userInfoRequired(false);
+                authBuilder.userInfoRequired(false);
                 
                 if (server.resource() != null) {
                     // MCP Authorization expects that this resource will end up as the token audience value
@@ -194,17 +188,17 @@ public class McpAuthorizationServerResolver implements TenantConfigResolver {
                            String baseUri = authUri.getScheme() + "://" + authUri.getAuthority();
                            
                            return tryDiscoveryEndpoints(metadata.resource(), baseUri, path, List.of(
-                               path + "/.well-known/openid-configuration",    
                                "/.well-known/oauth-authorization-server/" + pathComponent,
-                               "/.well-known/openid-configuration/" + pathComponent
+                               "/.well-known/openid-configuration/" + pathComponent,
+                               path + "/.well-known/openid-configuration"
                            ));
                        } else {
                            // For issuer URLs without path components
                            String baseUri = authUri.getScheme() + "://" + authUri.getAuthority();
                            
                            return tryDiscoveryEndpoints(metadata.resource(), baseUri, null, List.of(
-                               "/.well-known/openid-configuration",
-                               "/.well-known/oauth-authorization-server"
+                               "/.well-known/oauth-authorization-server",
+                               "/.well-known/openid-configuration"
                            ));
                        }
                    }
@@ -305,7 +299,7 @@ public class McpAuthorizationServerResolver implements TenantConfigResolver {
     private ClientIdAndSecret checkFormParameters(MultiMap formParams) {
         String clientId = formParams.get("client_id");
         String clientSecret = formParams.get("client_secret");
-        Log.warnf("client id: %s, client secret:%s", clientId, clientSecret);
+        Log.debugf("client id: %s, client secret:%s", clientId, clientSecret);
         return clientId != null ? new ClientIdAndSecret(clientId, clientSecret) : null;
     }
 

@@ -6,9 +6,9 @@ When you use the chat page, tools from the configured MCP clients will always be
 
 The application currently supports only a single application-scoped chat memory for simplicity.
 
-**NOTE**: The application currently does not store any persistent data. All information about configured MCP clients is lost after a restart. 
+**NOTE**: The application currently does not store any persistent data. All information about configured MCP clients is lost after a restart.
 
-If you would like, you can launch a Quarkus MCP Server with public and secured endpoints in the `dynamic-mcp-clients-server` folder.
+**NOTE**: Connections to both public and secured MCP servers can be added. Currently, secured MCP Servers can be imported only if they are compliant with the latest version of the MCP Authorization specification available at https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization.
 
 ## Running the Demo
 
@@ -39,3 +39,20 @@ and start the application in dev mode as follows:
 ```bash
 mvn quarkus:dev -Dquarkus.langchain4j.ai.gemini.api-key=$API_KEY
 ```
+
+### Quarkus MCP Server
+
+If you would like, you can launch a Quarkus MCP Server with public and secured endpoints in the `dynamic-mcp-clients-server` folder, follow README.md in that folder to add secured and public Quarkus MCP server connections.
+
+### Well-known MCP Servers
+
+To add connections to other well-known MCP servers, follow the corresponding instructions.
+
+For example, to add a GitHub Streamable HTTP MCP Server connection:
+
+* Create a GitHub OAuth2 application, see https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
+* Set `GitHub` name, `https://api.githubcopilot.com/mcp/` URL, press `Add Connection`
+* Enter your GitHub OAuth2 application's client id, secret, and choose one or more scopes from https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps; starting with the `read:user` scope is reasonable
+* Press `Authenticate and Add Connection`, login to GitHub, a connection to the GitHub MCP server will be added
+* Ask the assistant a question such as `What is my profile name`
+
