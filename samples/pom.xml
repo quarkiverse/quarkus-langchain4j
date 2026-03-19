@@ -33,6 +33,7 @@
         <module>guardrails</module>
         <module>weather-agent</module>
         <module>react-chatbot</module>
+        <module>skills</module>
     </modules>
 
     <build>

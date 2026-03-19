@@ -1,0 +1,32 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories]] [.property-path]##link:#quarkus-langchain4j-skills_quarkus-langchain4j-skills-directories[`quarkus.langchain4j.skills.directories`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.skills.directories+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+List of directories from which skills should be loaded. Each entry can be a relative path (resolved against the current working directory) or a classpath resource path.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_SKILLS_DIRECTORIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_SKILLS_DIRECTORIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+|===
+
