@@ -242,9 +242,8 @@ public class AiServicesRecorder {
                             quarkusAiServices.chatMemoryProvider(creationalContext.getInjectedReference(
                                     ChatMemoryProvider.class));
                         } else {
-                            Supplier<? extends ChatMemoryProvider> supplier = (Supplier<? extends ChatMemoryProvider>) loadClass(
-                                    info.chatMemoryProviderSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ChatMemoryProvider> supplier = createSupplier(
+                                    info.chatMemoryProviderSupplierClassName());
                             quarkusAiServices.chatMemoryProvider(supplier.get());
                         }
                     }
@@ -285,9 +284,8 @@ public class AiServicesRecorder {
                                         ModelName.Literal.of(info.moderationModelName())));
                             }
                         } else {
-                            Supplier<? extends ModerationModel> supplier = (Supplier<? extends ModerationModel>) loadClass(
-                                    info.moderationModelSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ModerationModel> supplier = createSupplier(
+                                    info.moderationModelSupplierClassName());
                             quarkusAiServices.moderationModel(supplier.get());
                         }
                     }
@@ -305,9 +303,7 @@ public class AiServicesRecorder {
                             }
 
                         } else {
-                            Supplier<? extends ImageModel> supplier = (Supplier<? extends ImageModel>) loadClass(
-                                    info.imageModelSupplierClassName())
-                                    .getConstructor().newInstance();
+                            Supplier<? extends ImageModel> supplier = createSupplier(info.imageModelSupplierClassName());
                             quarkusAiServices.imageModel(supplier.get());
                         }
                     }
