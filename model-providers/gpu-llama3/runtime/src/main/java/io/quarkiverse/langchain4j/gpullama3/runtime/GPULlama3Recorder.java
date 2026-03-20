@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.gpullama3.runtime;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
@@ -9,6 +10,7 @@ import dev.langchain4j.model.chat.DisabledChatModel;
 import dev.langchain4j.model.chat.DisabledStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import io.quarkiverse.langchain4j.gpullama3.GPULlama3ChatModel;
+import io.quarkiverse.langchain4j.gpullama3.GPULlama3ModelHolder;
 import io.quarkiverse.langchain4j.gpullama3.GPULlama3StreamingChatModel;
 import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3FixedRuntimeConfig;
 import io.quarkiverse.langchain4j.gpullama3.runtime.config.LangChain4jGPULlama3RuntimeConfig;
@@ -24,6 +26,9 @@ public class GPULlama3Recorder {
     private final RuntimeValue<LangChain4jGPULlama3RuntimeConfig> runtimeConfig;
     private final RuntimeValue<LangChain4jGPULlama3FixedRuntimeConfig> fixedRuntimeConfig;
 
+    // One holder per config name — shared between ChatModel and StreamingChatModel
+    private final ConcurrentHashMap<String, GPULlama3ModelHolder> modelHolders = new ConcurrentHashMap<>();
+
     public GPULlama3Recorder(RuntimeValue<LangChain4jGPULlama3RuntimeConfig> runtimeConfig,
             RuntimeValue<LangChain4jGPULlama3FixedRuntimeConfig> fixedRuntimeConfig) {
         this.runtimeConfig = runtimeConfig;
@@ -32,77 +37,41 @@ public class GPULlama3Recorder {
 
     public Supplier<ChatModel> chatModel(String configName) {
         var gpuLlama3Config = correspondingConfig(configName);
-        var gpuLlama3FixedRuntimeConfig = correspondingFixedConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
             LOG.info("Registering GPULlama3ChatModel CDI Bean for config: " + configName);
-            var chatModelConfig = gpuLlama3Config.chatModel();
-
-            var builder = GPULlama3ChatModel.builder()
-                    .modelName(gpuLlama3FixedRuntimeConfig.chatModel().modelName())
-                    .quantization(gpuLlama3FixedRuntimeConfig.chatModel().quantization())
-                    .onGPU(Boolean.TRUE)
-                    .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
-
-            if (chatModelConfig.temperature().isPresent()) {
-                builder.temperature(chatModelConfig.temperature().getAsDouble());
-            }
-            if (chatModelConfig.topP().isPresent()) {
-                builder.topP(chatModelConfig.topP().getAsDouble());
-            }
-            if (chatModelConfig.maxTokens().isPresent()) {
-                builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
-            }
-            if (chatModelConfig.seed().isPresent()) {
-                builder.seed(chatModelConfig.seed().getAsInt());
-            }
-
-            // use the lazy path -> init the model on first call to doChat()
-            return () -> GPULlama3ChatModel.createLazy(builder);
+            return () -> GPULlama3ChatModel.create(getOrCreateHolder(configName));
         } else {
-            return new Supplier<>() {
-                @Override
-                public ChatModel get() {
-                    return new DisabledChatModel();
-                }
-            };
+            return () -> new DisabledChatModel();
         }
     }
 
     public Supplier<StreamingChatModel> streamingChatModel(String configName) {
         var gpuLlama3Config = correspondingConfig(configName);
-        var gpuLlama3FixedRuntimeConfig = correspondingFixedConfig(configName);
 
         if (gpuLlama3Config.enableIntegration()) {
             LOG.info("Registering GPULlama3StreamingChatModel CDI Bean for config: " + configName);
-            var chatModelConfig = gpuLlama3Config.chatModel();
-
-            return () -> {
-                var builder = GPULlama3StreamingChatModel.builder()
-                        .modelName(gpuLlama3FixedRuntimeConfig.chatModel().modelName())
-                        .quantization(gpuLlama3FixedRuntimeConfig.chatModel().quantization())
-                        .onGPU(Boolean.TRUE)
-                        .modelCachePath(fixedRuntimeConfig.getValue().modelsPath());
-
-                if (chatModelConfig.temperature().isPresent()) {
-                    builder.temperature(chatModelConfig.temperature().getAsDouble());
-                }
-                if (chatModelConfig.topP().isPresent()) {
-                    builder.topP(chatModelConfig.topP().getAsDouble());
-                }
-                if (chatModelConfig.maxTokens().isPresent()) {
-                    builder.maxTokens(chatModelConfig.maxTokens().getAsInt());
-                }
-                if (chatModelConfig.seed().isPresent()) {
-                    builder.seed(chatModelConfig.seed().getAsInt());
-                }
-
-                // use the lazy path -> init the model on first call to doChat()
-                return GPULlama3StreamingChatModel.createLazy(builder);
-            };
+            return () -> GPULlama3StreamingChatModel.create(getOrCreateHolder(configName));
         } else {
             return () -> new DisabledStreamingChatModel();
         }
+    }
+
+    private GPULlama3ModelHolder getOrCreateHolder(String configName) {
+        return modelHolders.computeIfAbsent(configName, k -> {
+            var chatModelConfig = correspondingConfig(configName).chatModel();
+            var fixedConfig = correspondingFixedConfig(configName);
+
+            return new GPULlama3ModelHolder(
+                    fixedRuntimeConfig.getValue().modelsPath(),
+                    fixedConfig.chatModel().modelName(),
+                    fixedConfig.chatModel().quantization(),
+                    chatModelConfig.temperature().isPresent() ? chatModelConfig.temperature().getAsDouble() : null,
+                    chatModelConfig.topP().isPresent() ? chatModelConfig.topP().getAsDouble() : null,
+                    chatModelConfig.seed().isPresent() ? chatModelConfig.seed().getAsInt() : null,
+                    chatModelConfig.maxTokens().isPresent() ? chatModelConfig.maxTokens().getAsInt() : null,
+                    Boolean.TRUE);
+        });
     }
 
     private LangChain4jGPULlama3RuntimeConfig.GPULlama3Config correspondingConfig(String configName) {
