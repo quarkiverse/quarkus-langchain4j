@@ -18,8 +18,7 @@
         <quarkus.platform.version>3.27.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.2.5</surefire-plugin.version>
-        <!-- TODO: update when we have a released version that supports skills -->
-        <quarkus-langchain4j.version>1.8.2</quarkus-langchain4j.version>
+        <quarkus-langchain4j.version>999-SNAPSHOT</quarkus-langchain4j.version>
     </properties>
 
     <dependencyManagement>

@@ -3,6 +3,7 @@ package io.quarkiverse.langchain4j.skills.deployment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -16,6 +17,7 @@ import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.service.tool.ToolExecutionResult;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.service.tool.ToolProviderResult;
+import io.quarkiverse.langchain4j.skills.SkillsSystemMessageProvider;
 import io.quarkiverse.langchain4j.skills.runtime.SkillsToolProvider;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -68,5 +70,13 @@ public class SkillsTest {
 
         ToolExecutionResult resourceResult = readResource.executeWithContext(request, null);
         assertThat(resourceResult.resultText()).contains("This is the foobar guide resource content.");
+    }
+
+    @Test
+    void testSkillsSystemMessageProvider() {
+        Optional<String> systemMessage = new SkillsSystemMessageProvider().getSystemMessage(null);
+        assertThat(systemMessage).isPresent();
+        assertThat(systemMessage.get()).contains("You have access to the following skills");
+        assertThat(systemMessage.get()).contains("foobar-skill");
     }
 }
