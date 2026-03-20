@@ -378,6 +378,15 @@
             <module>samples</module>
         </modules>
     </profile>
+    <profile>
+        <id>jdk25</id>
+        <activation>
+            <jdk>[25,)</jdk>
+        </activation>
+        <properties>
+            <gpu-llama3.version>0.4.0-jdk25</gpu-llama3.version>
+        </properties>
+    </profile>
   </profiles>
 
   <!-- 

@@ -11,7 +11,7 @@
     <name>Quarkus LangChain4j - Integration Tests - GPULlama3</name>
     <properties>
         <skipITs>true</skipITs>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>${java.specification.version}</maven.compiler.release>
         <!-- TornadoVM argfile path -->
         <tornado.argfile>${env.TORNADOVM_HOME}/tornado-argfile</tornado.argfile>
     </properties>
