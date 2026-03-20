@@ -2,11 +2,28 @@
 
 #### 1) Install TornadoVM with SDKMAN!:
 
+Choose the SDK that matches your JDK version.
+
+**JDK 21:**
 ```bash
-sdk install tornadovm 2.2.0-opencl
+sdk install java 21.0.2-open
+sdk use java 21.0.2-open
+sdk install tornadovm 3.0.0-opencl
+sdk use tornadovm 3.0.0-opencl
 
 # verify installation
-tonrado --devices
+tornado --devices
+```
+
+**JDK 25:**
+```bash
+sdk install java 25.0.2-open
+sdk use java 25.0.2-open
+sdk install tornadovm 3.0.0-jdk25-opencl
+sdk use tornadovm 3.0.0-jdk25-opencl
+
+# verify installation
+tornado --devices
 ```
 
 Note that SDKMAN! automatically:
@@ -28,7 +45,7 @@ mvn clean install -pl integration-tests/gpu-llama3 -am -DskipTests -Dtornado
 ##### 3.1 Deploy the Quarkus app:
 
 ```bash
-cd ~/quarkus-langchain4j/integration-tests/gpullama3
+cd ~/quarkus-langchain4j/integration-tests/gpu-llama3
 ```
 - For *dev* mode, run:
 ```
