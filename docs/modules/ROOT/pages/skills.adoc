@@ -73,12 +73,19 @@ Any `@RegisterAiService` that uses a `ToolProvider` will pick it up:
 
 [source,java]
 ----
-@RegisterAiService
+@RegisterAiService(systemMessageProviderSupplier = SkillsSystemMessageProvider.class)
 public interface PoemAiService {
 
     String chat(String message);
 }
 ----
+
+NOTE: The `SkillsSystemMessageProvider` (`io.quarkiverse.langchain4j.skills.SkillsSystemMessageProvider`) is a built-in
+sample implementation of `SystemMessageProvider` that generates a system message
+containing the descriptions of all loaded skills. You can implement your own `SystemMessageProvider` (and reuse parts of the
+`SkillsSystemMessageProvider`) if you need to customize the system message further. If you don't specify a system message provider,
+then the LLM might not be aware which skills are available and thus won't be able to use them unless the end user provides the exact
+skill name during the chat.
 
 [source,java]
 ----
