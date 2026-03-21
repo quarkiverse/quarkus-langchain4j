@@ -12,39 +12,35 @@ https://github.com/beehive-lab/gpullama3-quarkus-langchain4j-demo[Here] you can 
 [#_prerequisites]
 == Prerequisites
 
-=== Java Version and TornadoVM
+=== Java Version and TornadoVM SDK
+Provided support for JDK 21 and JDK 25.
+JDK version leads to different TornadoVM SDK.
+Install both with SDKMAN!:
 
-GPULlama3.java requires TornadoVM and *Java 21 or later* due to its use of the https://openjdk.org/jeps/448[Java Vector API].
+.Available TornadoVM backends
+NOTE: opencl, ptx, spirv, full
 
-Install TornadoVM with SDKMAN!:
-
+* JDK 21:
 [source,shell]
 ----
-sdk install tornadovm 2.2.0-opencl
+# Java version
+sdk install java 21.0.2-open
+sdk use java 21.0.2-open
+
+# TornadoVM SDK
+sdk install tornadovm 3.0.0-<backend>
+sdk use tornadovm 3.0.0-<backend>
 ----
-
-Or, manually:
-
-*Linux (x86_64)*
-
+* JDK 25:
 [source,shell]
 ----
-wget https://github.com/beehive-lab/TornadoVM/releases/download/v2.2.0/tornadovm-2.2.0-opencl-linux-amd64.zip
-unzip tornadovm-2.2.0-opencl-linux-amd64.zip
+# Java version
+sdk install java 25.0.2-open
+sdk use java 25.0.2-open
 
-export TORNADOVM_HOME="$(pwd)/tornadovm-2.2.0-opencl"
-export PATH=$TORNADOVM_HOME/bin:$PATH
-----
-
-*macOS (Apple Silicon)*
-
-[source,shell]
-----
-wget https://github.com/beehive-lab/TornadoVM/releases/download/v2.2.0/tornadovm-2.2.0-opencl-mac-aarch64.zip
-unzip tornadovm-2.2.0-opencl-mac-aarch64.zip
-
-export TORNADOVM_HOME="$(pwd)/tornadovm-2.2.0-opencl"
-export PATH=$TORNADOVM_HOME/bin:$PATH
+# TornadoVM SDK
+sdk install tornadovm 3.0.0-jdk25-<backend>
+sdk use tornadovm 3.0.0-jdk25-<backend>
 ----
 
 To verify installation:
@@ -165,7 +161,7 @@ To run your Quarkus application in **dev mode** with TornadoVM:
 [source,xml]
 ----
 <properties>
-    <tornado.argfile>/path/to/tornado-argfile</tornado.argfile>
+    <tornado.argfile>${env.TORNADOVM_HOME}/tornado-argfile</tornado.argfile>
 </properties>
 ----
 +
