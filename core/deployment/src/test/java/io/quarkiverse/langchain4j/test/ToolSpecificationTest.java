@@ -1,8 +1,8 @@
 package io.quarkiverse.langchain4j.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -50,11 +50,23 @@ public class ToolSpecificationTest {
         }
     }
 
+    public static class MetadataTool {
+        @Tool(name = "metadataTool", value = "Tool with metadata", metadata = "{\"foo\": \"bar\", \"baz\": 123}")
+        public void toolCall() {
+
+        }
+
+        @Tool(name = "emptyMetadataTool", value = "Tool with empty metadata", metadata = "")
+        public void toolCallEmptyMetadata() {
+
+        }
+    }
+
     @Test
-    public void testComplexSchema() {
+    void testComplexSchema() {
         List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata().get(TestTool.class.getName());
         assertNotNull(methodCreateInfos);
-        assertTrue(methodCreateInfos.size() > 0);
+        assertFalse(methodCreateInfos.isEmpty());
         assertThat(methodCreateInfos).hasSize(1);
 
         ToolSpecification toolSpecification = methodCreateInfos.get(0).toolSpecification();
@@ -66,6 +78,20 @@ public class ToolSpecificationTest {
         assertThat(schema.properties().get("baseField")).isNotNull();
         assertThat(schema.properties().get("staticBaseField")).isNull();
         assertThat(schema.properties().get("ignoredBaseField")).isNull();
+    }
+
+    @Test
+    void testMetadata() {
+        List<ToolMethodCreateInfo> methodCreateInfos = ToolsRecorder.getMetadata().get(MetadataTool.class.getName());
+        assertNotNull(methodCreateInfos);
+        assertThat(methodCreateInfos).hasSize(2);
+
+        ToolSpecification metadataToolSpecification = methodCreateInfos.get(0).toolSpecification();
+        assertThat(metadataToolSpecification.metadata()).containsEntry("foo", "bar");
+        assertThat(metadataToolSpecification.metadata()).containsEntry("baz", 123);
+
+        ToolSpecification emptyMetadataToolSpecification = methodCreateInfos.get(1).toolSpecification();
+        assertThat(emptyMetadataToolSpecification.metadata()).isEmpty();
     }
 
 }

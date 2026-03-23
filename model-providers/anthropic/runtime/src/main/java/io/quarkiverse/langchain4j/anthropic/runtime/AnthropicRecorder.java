@@ -3,6 +3,10 @@ package io.quarkiverse.langchain4j.anthropic.runtime;
 import static io.quarkiverse.langchain4j.runtime.OptionalUtil.firstOrDefault;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -12,6 +16,7 @@ import jakarta.enterprise.util.TypeLiteral;
 import org.jboss.logging.Logger;
 
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import dev.langchain4j.model.anthropic.AnthropicServerTool;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.DisabledChatModel;
@@ -21,6 +26,7 @@ import dev.langchain4j.model.chat.listener.ChatModelListener;
 import io.quarkiverse.langchain4j.anthropic.QuarkusAnthropicClient;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.ChatModelConfig;
 import io.quarkiverse.langchain4j.anthropic.runtime.config.LangChain4jAnthropicConfig;
+import io.quarkiverse.langchain4j.anthropic.runtime.config.ToolSearchType;
 import io.quarkiverse.langchain4j.runtime.NamedConfigUtil;
 import io.quarkus.arc.SyntheticCreationalContext;
 import io.quarkus.runtime.RuntimeValue;
@@ -35,6 +41,8 @@ public class AnthropicRecorder {
     };
 
     private static final String DUMMY_KEY = "dummy";
+    public static final String ADVANCED_TOOL_USE = "advanced-tool-use-2025-11-20";
+    public static final String INTERLEAVED_THINKING = "interleaved-thinking-2025-05-14";
 
     private final RuntimeValue<LangChain4jAnthropicConfig> runtimeConfig;
 
@@ -103,9 +111,55 @@ public class AnthropicRecorder {
             builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
             builder.cacheTools(chatModelConfig.cacheTools());
 
-            // Add beta header for interleaved thinking if enabled
+            // Collect beta headers from features that need them
+            Set<String> betas = new LinkedHashSet<>();
             if (thinkingConfig.interleaved().orElse(false)) {
-                builder.beta("interleaved-thinking-2025-05-14");
+                betas.add(INTERLEAVED_THINKING);
+            }
+
+            Set<String> metadataKeys = new LinkedHashSet<>();
+            List<AnthropicServerTool> serverTools = new ArrayList<>();
+
+            // Configure tool search if enabled
+            ChatModelConfig.ToolSearchConfig toolSearchConfig = chatModelConfig.toolSearch();
+            if (Boolean.TRUE.equals(toolSearchConfig.enabled())) {
+                ToolSearchType type = ToolSearchType.from(toolSearchConfig.type());
+                serverTools.add(AnthropicServerTool.builder()
+                        .type(type.getToolType())
+                        .name(type.getToolName())
+                        .build());
+                metadataKeys.add("defer_loading");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            // Configure programmatic tool calling if enabled
+            ChatModelConfig.ProgrammaticToolCallingConfig ptcConfig = chatModelConfig.programmaticToolCalling();
+            if (Boolean.TRUE.equals(ptcConfig.enabled())) {
+                serverTools.add(AnthropicServerTool.builder()
+                        .type("code_execution_20250825")
+                        .name("code_execution")
+                        .build());
+                metadataKeys.add("allowed_callers");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            // Configure tool use examples if enabled
+            ChatModelConfig.ToolUseExamplesConfig toolUseExamplesConfig = chatModelConfig.toolUseExamples();
+            if (Boolean.TRUE.equals(toolUseExamplesConfig.enabled())) {
+                metadataKeys.add("input_examples");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            if (!betas.isEmpty()) {
+                builder.beta(String.join(",", betas));
+            }
+
+            if (!metadataKeys.isEmpty()) {
+                builder.toolMetadataKeysToSend(metadataKeys);
+            }
+
+            if (!serverTools.isEmpty()) {
+                builder.serverTools(serverTools);
             }
 
             var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
@@ -191,9 +245,55 @@ public class AnthropicRecorder {
             builder.cacheSystemMessages(chatModelConfig.cacheSystemMessages());
             builder.cacheTools(chatModelConfig.cacheTools());
 
-            // Add beta header for interleaved thinking if enabled
+            // Collect beta headers from features that need them
+            List<String> betas = new ArrayList<>();
             if (thinkingConfig.interleaved().orElse(false)) {
-                builder.beta("interleaved-thinking-2025-05-14");
+                betas.add(INTERLEAVED_THINKING);
+            }
+
+            Set<String> metadataKeys = new LinkedHashSet<>();
+            List<AnthropicServerTool> serverTools = new ArrayList<>();
+
+            // Configure tool search if enabled
+            ChatModelConfig.ToolSearchConfig toolSearchConfig = chatModelConfig.toolSearch();
+            if (Boolean.TRUE.equals(toolSearchConfig.enabled())) {
+                ToolSearchType type = ToolSearchType.from(toolSearchConfig.type());
+                serverTools.add(AnthropicServerTool.builder()
+                        .type(type.getToolType())
+                        .name(type.getToolName())
+                        .build());
+                metadataKeys.add("defer_loading");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            // Configure programmatic tool calling if enabled
+            ChatModelConfig.ProgrammaticToolCallingConfig ptcConfig = chatModelConfig.programmaticToolCalling();
+            if (Boolean.TRUE.equals(ptcConfig.enabled())) {
+                serverTools.add(AnthropicServerTool.builder()
+                        .type("code_execution_20250825")
+                        .name("code_execution")
+                        .build());
+                metadataKeys.add("allowed_callers");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            // Configure tool use examples if enabled
+            ChatModelConfig.ToolUseExamplesConfig toolUseExamplesConfig = chatModelConfig.toolUseExamples();
+            if (Boolean.TRUE.equals(toolUseExamplesConfig.enabled())) {
+                metadataKeys.add("input_examples");
+                betas.add(ADVANCED_TOOL_USE);
+            }
+
+            if (!betas.isEmpty()) {
+                builder.beta(String.join(",", betas));
+            }
+
+            if (!metadataKeys.isEmpty()) {
+                builder.toolMetadataKeysToSend(metadataKeys);
+            }
+
+            if (!serverTools.isEmpty()) {
+                builder.serverTools(serverTools);
             }
 
             var logCurl = firstOrDefault(false, anthropicConfig.logRequestsCurl());
