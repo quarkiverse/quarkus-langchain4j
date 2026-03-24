@@ -16,10 +16,10 @@ import java.lang.annotation.Target;
  *
  * <pre>
  * {@code
- * @RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
+ * &#64;RegisterAiService(chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
  * public interface AudioDescriber {
  *
- *     @UserMessage("Describe the audio")
+ *     &#64;UserMessage("Describe the audio")
  *     Report describe(@AudioUrl String url);
  * }
  * </pre>
