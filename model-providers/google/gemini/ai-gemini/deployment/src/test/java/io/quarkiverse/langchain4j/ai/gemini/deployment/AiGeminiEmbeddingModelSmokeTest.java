@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -28,12 +29,17 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
     private static final String API_KEY = "dummy";
     private static final String EMBED_MODEL_ID = "text-embedding-004";
+    private static final String TASK_TYPE = "RETRIEVAL_QUERY";
+    private static final int OUTPUT_DIMENSION = 7;
 
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.base-url", WiremockAware.wiremockUrlForConfig())
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.api-key", API_KEY)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.embedding-model.task-type", TASK_TYPE)
+            .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.embedding-model.output-dimension",
+                    String.valueOf(OUTPUT_DIMENSION))
             .overrideRuntimeConfigKey("quarkus.langchain4j.ai.gemini.log-requests", "true");
 
     @Inject
@@ -110,5 +116,38 @@ public class AiGeminiEmbeddingModelSmokeTest extends WiremockAware {
 
         float[] response = embeddingModel.embed("Hello World").content().vector();
         assertThat(response).hasSize(7);
+    }
+
+    @Test
+    void testTaskTypeAndOutputDimensionAreAppliedToRequest() {
+        resetMappings();
+        resetRequests();
+
+        wiremock().register(post(urlEqualTo(
+                String.format("/models/%s:embedContent", EMBED_MODEL_ID)))
+                .withHeader("x-goog-api-key", equalTo(API_KEY))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                 {
+                                   "embedding": {
+                                     "values": [
+                                       0.013168517,
+                                       -0.00871193,
+                                       -0.046782672,
+                                       0.00069969177,
+                                       -0.009518872,
+                                       -0.008720178,
+                                       0.06010358
+                                     ]
+                                   }
+                                 }
+                                """)));
+
+        embeddingModel.embed("Hello World").content().vector();
+
+        String requestBody = new String(requestBodyOfSingleRequest(), StandardCharsets.UTF_8);
+        assertThat(requestBody).matches("(?s).*\"taskType\"\\s*:\\s*\"RETRIEVAL_QUERY\".*");
+        assertThat(requestBody).matches("(?s).*\"outputDimensionality\"\\s*:\\s*\"?7\"?.*");
     }
 }
