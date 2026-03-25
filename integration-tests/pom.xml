@@ -9,11 +9,11 @@
   <artifactId>quarkus-langchain4j-integration-tests-parent</artifactId>
   <name>Quarkus LangChain4j - Integration Tests - Parent</name>
   <packaging>pom</packaging>
-    <properties>
-        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.26.3</quarkus.platform.version>
-    </properties>
+  <properties>
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+    <quarkus.platform.version>${quarkus.version}</quarkus.platform.version>
+  </properties>
   <modules>
     <module>anthropic</module>
     <module>openai</module>
@@ -203,6 +203,9 @@
                   <name>platform-deps</name>
               </property>
           </activation>
+          <properties>
+              <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+          </properties>
           <dependencyManagement>
               <dependencies>
                   <dependency>
@@ -232,6 +235,15 @@
 
 <!-- we need test jars for inclusion in the Quarkus Platform -->
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>${quarkus.platform.group-id}</groupId>
+          <artifactId>quarkus-maven-plugin</artifactId>
+          <version>${quarkus.platform.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
