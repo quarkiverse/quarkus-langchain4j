@@ -23,7 +23,7 @@ Your interactions with LLM providers are typically authenticated using API keys 
 === Best Practices
 
 * *Avoid Hardcoding Secrets*: Never embed API keys, tokens, or other credentials directly in your source code, prompts, or user-controlled inputs.
-* *Use Quarkus Vaults*: Store your secrets securely using Quarkus's built-in support for credential management. You can manage secrets in `application.properties` and protect them using the link https://quarkus.io/guides/credentials[Quarkus Credentials Provider].
+* *Use Quarkus Vaults*: Store your secrets securely using Quarkus's built-in support for credential management. You can manage secrets in `application.properties` and protect them with the https://quarkus.io/guides/credentials[Quarkus Credentials Provider].
 
 For example, store your OpenAI API key as property in `application.properties`:
 

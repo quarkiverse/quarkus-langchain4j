@@ -210,7 +210,7 @@ IMPORTANT: Ensure `TORNADOVM_SDK` and the `tornado-argfile` path are correctly s
 
 == Supported Models and Quantizations
 
-The following models have been tested with GPULlama3.java and can be found in link:++https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
+The following models have been tested with GPULlama3.java and can be found in https://huggingface.co/beehive-lab/collections[Beehive Lab's HuggingFace Collections].
 
 [IMPORTANT]
 ====
