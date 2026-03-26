@@ -62,13 +62,29 @@ public class AiGeminiRecorder {
                     .logRequests(firstOrDefault(false, embeddingModelConfig.logRequests(), aiConfig.logRequests()))
                     .logResponses(firstOrDefault(false, embeddingModelConfig.logResponses(), aiConfig.logResponses()));
 
+            if (embeddingModelConfig.taskType().isPresent()) {
+                Optional<GoogleAiEmbeddingModel.TaskType> taskType = Optional.empty();
+                for (GoogleAiEmbeddingModel.TaskType t : GoogleAiEmbeddingModel.TaskType.values()) {
+                    if (t.name().equals(embeddingModelConfig.taskType().get())) {
+                        taskType = Optional.of(t);
+                        break;
+                    }
+                }
+                if (taskType.isPresent()) {
+                    builder.taskType(taskType.get());
+                }
+            }
+            if (embeddingModelConfig.outputDimension().isPresent()) {
+                builder.outputDimensionality(embeddingModelConfig.outputDimension().get());
+            }
             return new Function<>() {
                 @Override
                 public EmbeddingModel apply(SyntheticCreationalContext<EmbeddingModel> context) {
                     throwIfApiKeysNotConfigured(apiKey, isAuthProviderAvailable(context, configName),
                             configName);
                     if (apiKey == null) {
-                        httpClientBuilder.addClientProvider(new ModelAuthProviderFilter(embeddingModelConfig.modelId()));
+                        httpClientBuilder
+                                .addClientProvider(new ModelAuthProviderFilter(embeddingModelConfig.modelId()));
                     }
 
                     return builder.build();
