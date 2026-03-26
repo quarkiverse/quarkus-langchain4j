@@ -45,6 +45,7 @@ public class QuarkusOpenAiChatModelBuilderFactory implements OpenAiChatModelBuil
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             AdditionalPropertiesHack.setLogCurl(logCurl);
+            AdditionalPropertiesHack.setProxy(proxy);
             return super.build();
         }
     }

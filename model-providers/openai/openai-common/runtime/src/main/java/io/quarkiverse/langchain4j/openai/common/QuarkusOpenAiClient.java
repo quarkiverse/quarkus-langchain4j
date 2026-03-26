@@ -388,6 +388,7 @@ public class QuarkusOpenAiClient extends OpenAiClient {
             result.configName(AdditionalPropertiesHack.getAndClearConfigName());
             result.tlsConfigurationName(AdditionalPropertiesHack.getAndClearTlsConfigurationName());
             result.logCurl(AdditionalPropertiesHack.getAndClearLogCurl());
+            result.proxy(AdditionalPropertiesHack.getAndClearProxy());
             return result;
         }
     }
