@@ -1,15 +1,18 @@
 package io.quarkiverse.langchain4j.infinispan.runtime;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.infinispan.protostream.MessageMarshaller;
 
 import io.quarkiverse.langchain4j.infinispan.SchemaAndMarshallerProducer;
 
 /**
- * Marshaller to read and write embeddings to Infinispan
+ * Serializes and deserializes {@link LangchainInfinispanItem} to and from Protobuf
+ * for storage in Infinispan. Handles the embedding vector, text, and metadata collection.
  */
 public class LangchainItemMarshaller implements MessageMarshaller<LangchainInfinispanItem> {
     private final String typeName;
@@ -23,9 +26,15 @@ public class LangchainItemMarshaller implements MessageMarshaller<LangchainInfin
         String id = reader.readString("id");
         float[] floatVector = reader.readFloats("floatVector");
         String text = reader.readString("text");
-        List<String> metadataKeys = reader.readCollection("metadataKeys", new ArrayList<>(), String.class);
-        List<String> metadataValues = reader.readCollection("metadataValues", new ArrayList<>(), String.class);
-        return new LangchainInfinispanItem(id, floatVector, text, metadataKeys, metadataValues);
+        Set<LangchainMetadata> metadata = reader.readCollection("metadata", new HashSet<>(), LangchainMetadata.class);
+
+        Map<String, Object> metadataMap = new HashMap<>();
+        if (metadata != null) {
+            for (LangchainMetadata meta : metadata) {
+                metadataMap.put(meta.getName(), meta.getValue());
+            }
+        }
+        return new LangchainInfinispanItem(id, floatVector, text, metadata, metadataMap);
     }
 
     @Override
@@ -34,8 +43,7 @@ public class LangchainItemMarshaller implements MessageMarshaller<LangchainInfin
         writer.writeString("id", item.getId());
         writer.writeFloats("floatVector", item.getFloatVector());
         writer.writeString("text", item.getText());
-        writer.writeCollection("metadataKeys", item.getMetadataKeys(), String.class);
-        writer.writeCollection("metadataValues", item.getMetadataValues(), String.class);
+        writer.writeCollection("metadata", item.getMetadata(), LangchainMetadata.class);
     }
 
     @Override
