@@ -38,6 +38,7 @@ public class QuarkusOpenAiEmbeddingModelBuilderFactory implements OpenAiEmbeddin
         public OpenAiEmbeddingModel build() {
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
+            AdditionalPropertiesHack.setProxy(proxy);
             return super.build();
         }
     }

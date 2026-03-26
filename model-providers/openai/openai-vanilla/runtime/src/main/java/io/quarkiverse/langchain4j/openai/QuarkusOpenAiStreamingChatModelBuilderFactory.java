@@ -46,6 +46,7 @@ public class QuarkusOpenAiStreamingChatModelBuilderFactory implements OpenAiStre
             AdditionalPropertiesHack.setConfigName(configName);
             AdditionalPropertiesHack.setTlsConfigurationName(tlsConfigurationName);
             AdditionalPropertiesHack.setLogCurl(logCurl);
+            AdditionalPropertiesHack.setProxy(proxy);
             return super.build();
         }
     }
