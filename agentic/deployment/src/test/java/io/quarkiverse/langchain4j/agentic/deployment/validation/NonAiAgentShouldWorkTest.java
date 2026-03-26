@@ -51,7 +51,7 @@ public class NonAiAgentShouldWorkTest {
     public class PlainProcessListAgent {
 
         @Agent(description = "GetSummaries", outputKey = "output")
-        public String getFirst(List<String> aList) {
+        public static String getFirst(List<String> aList) {
             return aList.get(0);
         }
     }
