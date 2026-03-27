@@ -1361,7 +1361,8 @@ endif::add-copy-button-to-config-props[]
 --
 The id of the model to be used.
 
-For all available models, see the https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#reranker-overview[IBM watsonx.ai documentation].
+All available models are listed in the IBM Watsonx.ai documentation at the link:
+https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#reranker-overview[following link].
 
 To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
 
@@ -3055,7 +3056,8 @@ endif::add-copy-button-to-config-props[]
 --
 The id of the model to be used.
 
-For all available models, see the https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#reranker-overview[IBM watsonx.ai documentation].
+All available models are listed in the IBM Watsonx.ai documentation at the link:
+https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&audience=wdp#reranker-overview[following link].
 
 To use a model, locate the `API model_id` column in the table and copy the corresponding model ID.
 
