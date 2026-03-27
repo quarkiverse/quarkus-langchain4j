@@ -1,0 +1,20 @@
+name: LangChain4j Hibernate embedding store
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+description: Provides the Hibernate Embedding store for Quarkus LangChain4j
+metadata:
+   keywords:
+    - ai
+    - langchain4j
+    - openai
+    - postgresql
+    - pgvector
+    - db2
+    - oracle
+    - mysql
+    - mariadb
+    - sqlserver
+    - hibernate
+   guide: "https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html"
+   categories:
+     - "ai"
+   status: "preview"
