@@ -5,7 +5,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import org.assertj.core.api.SoftAssertions;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -30,9 +29,6 @@ public class AiServiceMethodWithGuardrailTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClasses(AiServiceMethodWithGuardrail.class,
                             EverSuccessGuardrail.class, MyChatModel.class));
-
-    @Inject
-    AiServiceMethodWithGuardrail aiServiceMethodWithGuardrail;
 
     @Test
     void shouldLogWarnWhenAiServiceMethodWithGuardrail() {
