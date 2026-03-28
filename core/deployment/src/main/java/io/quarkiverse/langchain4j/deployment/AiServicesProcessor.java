@@ -7,6 +7,10 @@ import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.MEMORY_I
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.NO_RETRIEVAL_AUGMENTOR_SUPPLIER;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.REGISTER_AI_SERVICES;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.SEED_MEMORY;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_INPUT_GUARDRAILS;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAIL;
+import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.TOOL_OUTPUT_GUARDRAILS;
 import static io.quarkiverse.langchain4j.deployment.LangChain4jDotNames.V;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.FORCE_ALLOW;
 import static io.quarkiverse.langchain4j.deployment.MethodParameterAsTemplateVariableAllowance.IGNORE;
@@ -209,6 +213,9 @@ public class AiServicesProcessor {
 
     private static final ServiceOutputParser SERVICE_OUTPUT_PARSER = new QuarkusServiceOutputParser(); // TODO: this might need to be improved
 
+    private static final Set<DotName> GUARDRAIL_ANNOTATIONS = Set.of(
+            TOOL_INPUT_GUARDRAIL, TOOL_INPUT_GUARDRAILS, TOOL_OUTPUT_GUARDRAIL, TOOL_OUTPUT_GUARDRAILS);
+
     @BuildStep
     public void nativeSupport(CombinedIndexBuildItem indexBuildItem,
             List<AiServicesMethodBuildItem> aiServicesMethodBuildItems,
@@ -320,7 +327,32 @@ public class AiServicesProcessor {
                         }
                     }
                 }
+
+                checkGuardrailOnAiServiceMethod(serviceMethodInfo);
             }
+        }
+    }
+
+    /**
+     * Check that the given method does not have any tool guardrail annotations, and logs a warning if it does.
+     */
+    private static void checkGuardrailOnAiServiceMethod(MethodInfo agentAiMethod) {
+        if (agentAiMethod.hasAnnotation(DotNames.TOOL)) {
+            return;
+        }
+
+        List<DotName> dotNames = GUARDRAIL_ANNOTATIONS.stream()
+                .filter(agentAiMethod::hasAnnotation)
+                .toList();
+
+        if (!dotNames.isEmpty()) {
+            log.warnf(
+                    "AI service method '%s#%s' is annotated with %s, but tool guardrail annotations apply only to @Tool methods. "
+                            +
+                            "Please remove the guardrail annotations or annotate the method with @Tool if it's meant to be a tool method.",
+                    agentAiMethod.declaringClass().name(),
+                    agentAiMethod.name(),
+                    dotNames);
         }
     }
 
