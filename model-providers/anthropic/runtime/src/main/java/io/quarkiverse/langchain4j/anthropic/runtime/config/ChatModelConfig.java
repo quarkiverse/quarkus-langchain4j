@@ -98,6 +98,23 @@ public interface ChatModelConfig {
      */
     ThinkingConfig thinking();
 
+    /**
+     * Tool Search Tool, which allows Claude to use search tools to access thousands of tools without consuming its context
+     * window
+     */
+    ToolSearchConfig toolSearch();
+
+    /**
+     * Programmatic tool calling configuration, which allows Claude to invoke tools in a code execution environment reducing the
+     * impact on the model’s context window
+     */
+    ProgrammaticToolCallingConfig programmaticToolCalling();
+
+    /**
+     * Tool Use Examples, which provides a universal standard for demonstrating how to effectively use a given tool
+     */
+    ToolUseExamplesConfig toolUseExamples();
+
     @ConfigGroup
     interface ThinkingConfig {
 
@@ -129,5 +146,59 @@ public interface ChatModelConfig {
          */
         @WithDefault("false")
         Optional<Boolean> interleaved();
+    }
+
+    @ConfigGroup
+    interface ToolSearchConfig {
+
+        /**
+         * Enable Anthropic's Tool Search Tool for on-demand tool discovery.
+         * When enabled, this automatically adds the tool search server tool, sets the
+         * required beta header, and enables the "defer_loading" tool metadata key.
+         * Tools annotated with {@code @Tool(metadata = "{\"defer_loading\": true}")}
+         * will be discovered on demand instead of loaded upfront.
+         */
+        @WithDefault("false")
+        Boolean enabled();
+
+        /**
+         * The type of tool search to use.
+         * Available types: "regex" (default) or "bm25".
+         */
+        @WithDefault("regex")
+        String type();
+    }
+
+    @ConfigGroup
+    interface ProgrammaticToolCallingConfig {
+        /**
+         * Enable Anthropic's Programmatic Tool Calling via the Code Execution server tool.
+         * When enabled, this automatically adds the code execution server tool, the {@code "allowed_callers"}
+         * key is sent with tool definitions, and the required beta header is set.
+         * Claude can orchestrate multiple tool calls from within generated Python code,
+         * keeping intermediate results out of the context window rather than accumulating
+         * them in the conversation, significantly reducing token consumption.
+         * <p>
+         * Tools that should be callable from code must include:
+         * {@code @Tool(metadata = "{\"allowed_callers\": [\"code_execution_20250825\"]}")}
+         */
+        @WithDefault("false")
+        Boolean enabled();
+    }
+
+    @ConfigGroup
+    interface ToolUseExamplesConfig {
+        /**
+         * Enable Anthropic's Tool Use Examples feature.
+         * When enabled, the {@code "input_examples"} key is sent with tool definitions,
+         * and the required beta header is set. Providing concrete input examples alongside
+         * tool schemas helps Claude learn correct parameter usage, formats, and conventions
+         * that cannot be expressed in JSON Schema alone.
+         * <p>
+         * Tools with examples must include:
+         * {@code @Tool(metadata = "{\"input_examples\": [{...}, ...]}")}
+         */
+        @WithDefault("false")
+        Boolean enabled();
     }
 }
