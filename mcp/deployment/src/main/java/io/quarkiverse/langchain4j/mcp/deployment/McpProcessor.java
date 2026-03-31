@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.McpHeadersSupplier;
+import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.registryclient.McpRegistryClient;
 import io.opentelemetry.api.trace.Tracer;
 import io.quarkiverse.langchain4j.deployment.DotNames;
@@ -262,6 +263,7 @@ public class McpProcessor {
                         .produce(ReflectiveClassBuildItem.builder(clazz.name().toString()).fields(true).methods(true).build());
             }
         }
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(McpRoot.class).methods(true).build());
     }
 
     @BuildStep
