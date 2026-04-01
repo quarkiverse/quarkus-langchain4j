@@ -95,6 +95,11 @@ Marks an interface as an AI Service managed by CDI, creating a bean for interact
 |Unset
 | If not set, it uses the streaming support of the configured model.
 
+|`maxSequentialToolInvocations`
+|Maximum number of sequential tool invocations allowed per request.
+|10, but see the note
+|If not set, the value of the `quarkus.langchain4j.ai-service.max-tool-executions` property will be used. The default value of that property is 10.
+
 |===
 
 In most cases, using an empty `@RegisterAiService` is sufficient, as it defaults to the configured model:
