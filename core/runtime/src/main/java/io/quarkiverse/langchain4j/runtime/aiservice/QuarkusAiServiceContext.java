@@ -23,6 +23,7 @@ public class QuarkusAiServiceContext extends AiServiceContext {
     public ImageModel imageModel;
     public Integer maxSequentialToolExecutions;
     public boolean allowContinuousForcedToolCalling;
+    public ChatMemoryCommitStrategy chatMemoryCommitStrategy = ChatMemoryCommitStrategy.DEFAULT;
 
     // needed by Arc
     public QuarkusAiServiceContext() {

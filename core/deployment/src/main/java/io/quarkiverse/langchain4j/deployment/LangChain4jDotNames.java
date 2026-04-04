@@ -136,6 +136,9 @@ public class LangChain4jDotNames {
     static final DotName BEAN_IF_EXISTS_SYSTEM_MESSAGE_PROVIDER_SUPPLIER = DotName.createSimple(
             RegisterAiService.BeanIfExistsSystemMessageProviderSupplier.class);
 
+    static final DotName DEFAULT_CHAT_MEMORY_COMMIT_STRATEGY_SUPPLIER = DotName.createSimple(
+            RegisterAiService.DefaultChatMemoryCommitStrategySupplier.class);
+
     static final DotName HANDLE_TOOL_ARGUMENT_ERROR = DotName.createSimple(HandleToolArgumentError.class);
     static final DotName HANDLE_TOOL_EXECUTION_ERROR = DotName.createSimple(HandleToolExecutionError.class);
 

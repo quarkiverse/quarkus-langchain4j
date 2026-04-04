@@ -258,6 +258,50 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
+[#_chat_memory_commit_strategy]
+== Chat Memory Commit Strategy
+
+By default, Quarkus Langchain4j accumulates messages in memory and only persists them to the `ChatMemoryStore` after the invocation completes successfully.
+This enables seamless `@Retry` support - on failure the uncommitted messages are discarded and the retry starts with a clean slate.
+
+When auto-commit is enabled, each message is persisted to the `ChatMemoryStore` immediately when it is added.
+The store always reflects the current state of the conversation, even if the invocation eventually fails.
+
+You can enable auto-commit by providing a custom `ChatMemoryCommitStrategy` via the `chatMemoryCommitStrategySupplier` attribute on `@RegisterAiService`:
+
+[source,java]
+----
+@RegisterAiService(
+    chatMemoryCommitStrategySupplier = AutoCommitStrategySupplier.class
+)
+public interface MyAssistant {
+    String chat(String message);
+}
+----
+
+The supplier provides a `ChatMemoryCommitStrategy` implementation:
+
+[source,java]
+----
+public class AutoCommitStrategySupplier implements Supplier<ChatMemoryCommitStrategy> {
+    @Override
+    public ChatMemoryCommitStrategy get() {
+        return new ChatMemoryCommitStrategy() {
+            @Override
+            public boolean isAutoCommit() {
+                return true;
+            }
+        };
+    }
+}
+----
+
+The `ChatMemoryCommitStrategy` interface has a single method:
+
+* `isAutoCommit()` - returns `true` to persist messages immediately when they are added, or `false` (the default) to defer until the invocation succeeds.
+
+If no strategy is configured, the default behavior is preserved: accumulate messages in memory and only persist them after a successful invocation.
+
 == Memory Compression and Eviction
 
 LLMs have a token limit — if the full memory exceeds that limit, the prompt will be rejected or truncated.
