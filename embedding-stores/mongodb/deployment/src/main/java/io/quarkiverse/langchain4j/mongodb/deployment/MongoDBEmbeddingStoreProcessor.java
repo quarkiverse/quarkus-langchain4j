@@ -67,16 +67,23 @@ public class MongoDBEmbeddingStoreProcessor {
     }
 
     private boolean hasMongoDBMemoryStoreFeatureWithSameClient(List<FeatureBuildItem> activeFeatures, String clientName) {
+        if (!isMongoDBMemoryStoreFeatureActive(activeFeatures)) {
+            return false;
+        }
+        return isMemoryStoreUsingClient(clientName);
+    }
+
+    private boolean isMongoDBMemoryStoreFeatureActive(List<FeatureBuildItem> activeFeatures) {
         return activeFeatures.stream()
                 .map(FeatureBuildItem::getName)
-                .map(MONGODB_MEMORY_STORE_FEATURE::equals)
-                .filter(isMemoryStoreFeature -> isMemoryStoreFeature)
-                .findFirst()
-                .map(aBoolean -> ConfigProvider.getConfig()
-                        .getOptionalValue("quarkus.langchain4j.memory-store.mongodb.client-name", String.class))
-                .map(memoryStoreClientConfigName -> memoryStoreClientConfigName.orElse("<default>"))
-                .map(memoryStoreClientConfigName -> memoryStoreClientConfigName.equals(clientName))
-                .orElse(false);
+                .anyMatch(MONGODB_MEMORY_STORE_FEATURE::equals);
+    }
+
+    private boolean isMemoryStoreUsingClient(String clientName) {
+        String memoryStoreClient = ConfigProvider.getConfig()
+                .getOptionalValue("quarkus.langchain4j.memory-store.mongodb.client-name", String.class)
+                .orElse("<default>");
+        return memoryStoreClient.equals(clientName);
     }
 
     private boolean shouldCreateDefaultBean(MongoClientBuildTimeConfig mongoClientBuildTimeConfig,
