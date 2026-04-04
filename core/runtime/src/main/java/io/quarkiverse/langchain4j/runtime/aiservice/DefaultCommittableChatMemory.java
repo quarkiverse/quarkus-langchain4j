@@ -60,6 +60,9 @@ class DefaultCommittableChatMemory implements CommittableChatMemory {
         delegate.clear();
     }
 
+    /**
+     * Commits all buffered messages to the delegate by calling {@link ChatMemory#set}.
+     */
     @Override
     public void commit() {
         delegate.set(newMessages);

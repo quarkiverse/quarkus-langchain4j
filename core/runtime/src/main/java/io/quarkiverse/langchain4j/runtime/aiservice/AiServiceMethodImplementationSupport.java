@@ -217,10 +217,8 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = invocationContext.chatMemoryId();
 
         var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId) : null;
-        // we want to defer saving the new messages because the service could fail and be retried
-        // this also avoids fetching data from the remote stores every time we ask for the messages
-        var committableChatMemory = chatMemory != null ? new DefaultCommittableChatMemory(chatMemory)
-                : new NoopChatMemory();
+        CommittableChatMemory committableChatMemory = determineCommittableChatMemory(chatMemory,
+                context.chatMemoryFlushStrategy);
 
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId,
                 committableChatMemory);
@@ -498,6 +496,7 @@ public class AiServiceMethodImplementationSupport {
                     throw IllegalConfigurationException
                             .illegalConfiguration("@Tool with IMMEDIATE return behavior must return a Result");
                 }
+                committableChatMemory.commit();
                 ChatResponse finalResponse = intermediateResponses.remove(intermediateResponses.size() - 1);
                 var result = Result.builder()
                         .content(null)
@@ -814,7 +813,7 @@ public class AiServiceMethodImplementationSupport {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static List<ChatMessage> createMessagesToSendForExistingMemory(Optional<SystemMessage> systemMessage,
             ChatMessage userMessage,
-            ChatMemory chatMemory,
+            CommittableChatMemory chatMemory,
             boolean needsMemorySeed,
             QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo methodCreateInfo) {
@@ -1244,6 +1243,23 @@ public class AiServiceMethodImplementationSupport {
 
         // Otherwise, check if the tool name is in the immediate return set
         return immediateReturnToolNames.contains(toolName);
+    }
+
+    private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory,
+            ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
+        CommittableChatMemory committableChatMemory;
+        if (chatMemory == null) {
+            committableChatMemory = new NoopChatMemory();
+        } else {
+            if (chatMemoryFlushStrategy == ChatMemoryFlushStrategy.IMMEDIATE) {
+                committableChatMemory = new ImmediateFlushChatMemory(chatMemory);
+            } else {
+                // we want to defer saving the new messages because the service could fail and be retried
+                // this also avoids fetching data from the remote stores every time we ask for the messages
+                committableChatMemory = new DefaultCommittableChatMemory(chatMemory);
+            }
+        }
+        return committableChatMemory;
     }
 
     public static class Input {
