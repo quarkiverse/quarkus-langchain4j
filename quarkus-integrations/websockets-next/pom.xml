@@ -12,11 +12,6 @@
     <name>Quarkus LangChain4j - WebSockets Next - Parent</name>
     <packaging>pom</packaging>
 
-    <properties>
-        <!-- Quarkus LangChain4j Websockets Next works with 3.9.0 or higher -->
-        <quarkus.version>3.20.0</quarkus.version>
-    </properties>
-
     <modules>
         <module>deployment</module>
         <module>runtime</module>

@@ -41,6 +41,9 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.langchain4j.agent.tool.ReturnBehavior;
 import dev.langchain4j.agent.tool.Tool;
@@ -102,6 +105,7 @@ import io.quarkus.gizmo.ResultHandle;
 public class ToolProcessor {
 
     private static final DotName TOOL = DotName.createSimple(Tool.class);
+
     private static final DotName TOOL_MEMORY_ID = DotName.createSimple(ToolMemoryId.class);
     private static final DotName JSON_IGNORE = DotName.createSimple(JsonIgnore.class);
     private static final DotName INVOCATION_PARAMETERS = DotName.createSimple(InvocationParameters.class);
@@ -340,6 +344,8 @@ public class ToolProcessor {
 
                     String toolName = getToolName(nameValue, toolMethod);
                     String toolDescription = getToolDescription(descriptionValue);
+
+                    AnnotationValue metadataValue = instance.value("metadata");
                     AnnotationValue returnBehavior = instance.value("returnBehavior");
                     ReturnBehavior returnBehaviorEnum = ReturnBehavior.TO_LLM;
                     if (returnBehavior != null) {
@@ -380,6 +386,20 @@ public class ToolProcessor {
                                     .addProperties(properties)
                                     .required(required)
                                     .build());
+
+                    if (metadataValue != null) {
+                        String metadataJson = metadataValue.asString();
+                        if (!metadataJson.isEmpty()) {
+                            try {
+                                Map<String, Object> toolMetadata = ObjectMapperHolder.OBJECT_MAPPER.readValue(metadataJson,
+                                        ObjectMapperHolder.MAP_TYPE_REF);
+                                builder.metadata(toolMetadata);
+                            } catch (JsonProcessingException e) {
+                                throw new ValidationException("Invalid metadata JSON for tool " + toolName + " in " + className,
+                                        e);
+                            }
+                        }
+                    }
 
                     Map<String, Integer> nameToParamPosition = toolMethod.parameters().stream().collect(
                             Collectors.toMap(MethodParameterInfo::name, i -> Integer.valueOf(i.position())));
@@ -1094,5 +1114,11 @@ public class ToolProcessor {
                 .map(type -> type.name().toString())
                 .distinct()
                 .toList();
+    }
+
+    private static class ObjectMapperHolder {
+        private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+        private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+        };
     }
 }

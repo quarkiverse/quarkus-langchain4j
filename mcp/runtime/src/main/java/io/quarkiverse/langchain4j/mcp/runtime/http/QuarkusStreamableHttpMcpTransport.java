@@ -144,11 +144,12 @@ public class QuarkusStreamableHttpMcpTransport implements McpTransport {
         if (expectsResponse && id != null) {
             operationHandler.startOperation(id, future);
         }
-        String body = null;
+        String body;
         try {
             body = objectMapper.writeValueAsString(request);
         } catch (JsonProcessingException e) {
             future.completeExceptionally(e);
+            return uni;
         }
         if (logRequests) {
             log.info("Request: " + body);
