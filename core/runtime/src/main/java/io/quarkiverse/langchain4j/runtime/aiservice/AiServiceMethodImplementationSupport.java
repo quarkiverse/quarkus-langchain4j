@@ -437,7 +437,7 @@ public class AiServiceMethodImplementationSupport {
             }
 
             AiMessage aiMessage = response.aiMessage();
-            addMessage(committableChatMemory, aiMessage, context);
+            committableChatMemory.add(aiMessage);
 
             if (!aiMessage.hasToolExecutionRequests()) {
                 break;
@@ -482,7 +482,7 @@ public class AiServiceMethodImplementationSupport {
 
             }
             for (ToolExecutionResultMessage toolResult : toolResults) {
-                addMessage(committableChatMemory, toolResult, context);
+                committableChatMemory.add(toolResult);
             }
             if (immediateToolReturn) {
                 if (!TypeUtil.isResult(returnType)) {
@@ -811,7 +811,7 @@ public class AiServiceMethodImplementationSupport {
             QuarkusAiServiceContext context,
             AiServiceMethodCreateInfo methodCreateInfo) {
         if (systemMessage.isPresent()) {
-            addMessage(chatMemory, systemMessage.get(), context);
+            chatMemory.add(systemMessage.get());
         }
 
         if (needsMemorySeed) {
@@ -820,11 +820,11 @@ public class AiServiceMethodImplementationSupport {
             List<ChatMessage> seedChatMessages = context.chatMemorySeeder
                     .seed(new ChatMemorySeeder.Context(methodCreateInfo.getMethodName()));
             for (ChatMessage seedChatMessage : seedChatMessages) {
-                addMessage(chatMemory, seedChatMessage, context);
+                chatMemory.add(seedChatMessage);
             }
         }
 
-        addMessage(chatMemory, userMessage, context);
+        chatMemory.add(userMessage);
         return chatMemory.messages();
     }
 
@@ -1231,15 +1231,6 @@ public class AiServiceMethodImplementationSupport {
 
         // Otherwise, check if the tool name is in the immediate return set
         return immediateReturnToolNames.contains(toolName);
-    }
-
-    private static void addMessage(CommittableChatMemory memory, ChatMessage message,
-            QuarkusAiServiceContext context) {
-        ChatMemoryCommitStrategy commitStrategy = context.chatMemoryCommitStrategy;
-        memory.add(message);
-        if (commitStrategy.isAutoCommit()) {
-            memory.commit();
-        }
     }
 
     public static class Input {
