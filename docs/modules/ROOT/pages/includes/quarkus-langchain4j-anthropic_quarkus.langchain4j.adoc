@@ -559,6 +559,94 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-search-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-search-enabled[`quarkus.langchain4j.anthropic.chat-model.tool-search.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.tool-search.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true`")++}++ will be discovered on demand instead of loaded upfront.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_SEARCH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_SEARCH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-search-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-search-type[`quarkus.langchain4j.anthropic.chat-model.tool-search.type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.tool-search.type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of tool search to use. Available types: "regex" (default) or "bm25".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_SEARCH_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_SEARCH_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++regex+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-programmatic-tool-calling-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-programmatic-tool-calling-enabled[`quarkus.langchain4j.anthropic.chat-model.programmatic-tool-calling.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.programmatic-tool-calling.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Programmatic Tool Calling via the Code Execution server tool. When enabled, this automatically adds the code execution server tool, the `"allowed_callers"` key is sent with tool definitions, and the required beta header is set. Claude can orchestrate multiple tool calls from within generated Python code, keeping intermediate results out of the context window rather than accumulating them in the conversation, significantly reducing token consumption.
+
+Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]++`")++}++
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_PROGRAMMATIC_TOOL_CALLING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_PROGRAMMATIC_TOOL_CALLING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-use-examples-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-chat-model-tool-use-examples-enabled[`quarkus.langchain4j.anthropic.chat-model.tool-use-examples.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic.chat-model.tool-use-examples.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Tool Use Examples feature. When enabled, the `"input_examples"` key is sent with tool definitions, and the required beta header is set. Providing concrete input examples alongside tool schemas helps Claude learn correct parameter usage, formats, and conventions that cannot be expressed in JSON Schema alone.
+
+Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...`, ...++]}++")++}++
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_USE_EXAMPLES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC_CHAT_MODEL_TOOL_USE_EXAMPLES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 h|[[quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic]] [.section-name.section-level0]##link:#quarkus-langchain4j-anthropic_section_quarkus-langchain4j-anthropic[Named model config]##
 h|Type
 h|Default
@@ -1089,6 +1177,94 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC_
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_THINKING_INTERLEAVED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-search-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-search-enabled[`quarkus.langchain4j.anthropic."model-name".chat-model.tool-search.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.tool-search.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Tool Search Tool for on-demand tool discovery. When enabled, this automatically adds the tool search server tool, sets the required beta header, and enables the "defer_loading" tool metadata key. Tools annotated with `@Tool(metadata = "++{\++"defer_loading++\++": true`")++}++ will be discovered on demand instead of loaded upfront.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_SEARCH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_SEARCH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-search-type]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-search-type[`quarkus.langchain4j.anthropic."model-name".chat-model.tool-search.type`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.tool-search.type+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The type of tool search to use. Available types: "regex" (default) or "bm25".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_SEARCH_TYPE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_SEARCH_TYPE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++regex+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-programmatic-tool-calling-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-programmatic-tool-calling-enabled[`quarkus.langchain4j.anthropic."model-name".chat-model.programmatic-tool-calling.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.programmatic-tool-calling.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Programmatic Tool Calling via the Code Execution server tool. When enabled, this automatically adds the code execution server tool, the `"allowed_callers"` key is sent with tool definitions, and the required beta header is set. Claude can orchestrate multiple tool calls from within generated Python code, keeping intermediate results out of the context window rather than accumulating them in the conversation, significantly reducing token consumption.
+
+Tools that should be callable from code must include: `@Tool(metadata = "++{\++"allowed_callers++\++": ++[\++"code_execution_20250825++\++"++]++`")++}++
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_PROGRAMMATIC_TOOL_CALLING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_PROGRAMMATIC_TOOL_CALLING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
+a| [[quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-use-examples-enabled]] [.property-path]##link:#quarkus-langchain4j-anthropic_quarkus-langchain4j-anthropic-model-name-chat-model-tool-use-examples-enabled[`quarkus.langchain4j.anthropic."model-name".chat-model.tool-use-examples.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.anthropic."model-name".chat-model.tool-use-examples.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable Anthropic's Tool Use Examples feature. When enabled, the `"input_examples"` key is sent with tool definitions, and the required beta header is set. Providing concrete input examples alongside tool schemas helps Claude learn correct parameter usage, formats, and conventions that cannot be expressed in JSON Schema alone.
+
+Tools with examples must include: `@Tool(metadata = "++{\++"input_examples++\++": ++[{++...`, ...++]}++")++}++
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_USE_EXAMPLES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_ANTHROPIC__MODEL_NAME__CHAT_MODEL_TOOL_USE_EXAMPLES_ENABLED+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
