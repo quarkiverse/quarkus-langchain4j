@@ -29,7 +29,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.observability.AiServiceEvents;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceClassCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.AiServiceMethodCreateInfo;
-import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryCommitStrategy;
+import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemoryFlushStrategy;
 import io.quarkiverse.langchain4j.runtime.aiservice.ChatMemorySeeder;
 import io.quarkiverse.langchain4j.runtime.aiservice.DeclarativeAiServiceCreateInfo;
 import io.quarkiverse.langchain4j.runtime.aiservice.QuarkusAiServiceContext;
@@ -331,10 +331,10 @@ public class AiServicesRecorder {
 
                     quarkusAiServices.allowContinuousForcedToolCalling(info.allowContinuousForcedToolCalling());
 
-                    if (info.chatMemoryCommitStrategySupplierClassName() != null) {
-                        Supplier<? extends ChatMemoryCommitStrategy> supplier = createSupplier(
-                                info.chatMemoryCommitStrategySupplierClassName());
-                        quarkusAiServices.chatMemoryCommitStrategy(supplier.get());
+                    if (info.chatMemoryFlushStrategySupplierClassName() != null) {
+                        Supplier<? extends ChatMemoryFlushStrategy> supplier = createSupplier(
+                                info.chatMemoryFlushStrategySupplierClassName());
+                        quarkusAiServices.chatMemoryFlushStrategy(supplier.get());
                     }
 
                     aiServiceContext.eventListenerRegistrar
