@@ -213,18 +213,7 @@ public class AiServiceMethodImplementationSupport {
         Object memoryId = invocationContext.chatMemoryId();
 
         var chatMemory = context.hasChatMemory() ? context.chatMemoryService.getOrCreateChatMemory(memoryId) : null;
-        // we want to defer saving the new messages because the service could fail and be retried
-        // this also avoids fetching data from the remote stores every time we ask for the messages
-        CommittableChatMemory committableChatMemory;
-        if (chatMemory != null) {
-            if (context.chatMemoryFlushStrategy == ChatMemoryFlushStrategy.IMMEDIATE) {
-                committableChatMemory = new ImmediateFlushChatMemory(chatMemory);
-            } else {
-                committableChatMemory = new DefaultCommittableChatMemory(chatMemory);
-            }
-        } else {
-            committableChatMemory = new NoopChatMemory();
-        }
+        CommittableChatMemory committableChatMemory = determineCommittableChatMemory(chatMemory, context.chatMemoryFlushStrategy);
 
         Optional<SystemMessage> systemMessage = prepareSystemMessage(methodCreateInfo, methodArgs, context, memoryId,
                 committableChatMemory);
@@ -1228,6 +1217,22 @@ public class AiServiceMethodImplementationSupport {
 
         // Otherwise, check if the tool name is in the immediate return set
         return immediateReturnToolNames.contains(toolName);
+    }
+
+    private static CommittableChatMemory determineCommittableChatMemory(ChatMemory chatMemory, ChatMemoryFlushStrategy chatMemoryFlushStrategy) {
+        CommittableChatMemory committableChatMemory;
+        if (chatMemory == null) {
+            committableChatMemory = new NoopChatMemory();
+        } else {
+            if (chatMemoryFlushStrategy == ChatMemoryFlushStrategy.IMMEDIATE) {
+                committableChatMemory = new ImmediateFlushChatMemory(chatMemory);
+            } else {
+                // we want to defer saving the new messages because the service could fail and be retried
+                // this also avoids fetching data from the remote stores every time we ask for the messages
+                committableChatMemory = new DefaultCommittableChatMemory(chatMemory);
+            }
+        }
+        return committableChatMemory;
     }
 
     public static class Input {
