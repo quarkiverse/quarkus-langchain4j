@@ -854,11 +854,6 @@ public class AiServicesProcessor {
             return;
         }
 
-        if (!classInfo.hasNoArgsConstructor()) {
-            throw new IllegalConfigurationException(
-                    "Class '" + supplierDotName.toString() + "' which must contain a no-args constructor.");
-        }
-
         reflectiveClassProducer
                 .produce(ReflectiveClassBuildItem.builder(supplierDotName.toString()).constructors(true).build());
         unremovableBeanProducer.produce(UnremovableBeanBuildItem.beanTypes(supplierDotName));
