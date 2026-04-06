@@ -258,49 +258,45 @@ This is useful for:
 * distributed services (e.g., multiple Quarkus pods/replicas)
 * external control over retention or eviction
 
-[#_chat_memory_commit_strategy]
-== Chat Memory Commit Strategy
+[#_chat_memory_flush_strategy]
+== Chat Memory Flush Strategy
 
 By default, Quarkus Langchain4j accumulates messages in memory and only persists them to the `ChatMemoryStore` after the invocation completes successfully.
 This enables seamless `@Retry` support - on failure the uncommitted messages are discarded and the retry starts with a clean slate.
 
-When auto-commit is enabled, each message is persisted to the `ChatMemoryStore` immediately when it is added.
+When using `IMMEDIATE` flush, each message is written to the `ChatMemoryStore` immediately when it is added.
 The store always reflects the current state of the conversation, even if the invocation eventually fails.
 
-You can enable auto-commit by providing a custom `ChatMemoryCommitStrategy` via the `chatMemoryCommitStrategySupplier` attribute on `@RegisterAiService`:
+You can enable immediate flushing by providing a `ChatMemoryFlushStrategy` supplier via the `chatMemoryFlushStrategySupplier` attribute on `@RegisterAiService`:
 
 [source,java]
 ----
 @RegisterAiService(
-    chatMemoryCommitStrategySupplier = AutoCommitStrategySupplier.class
+    chatMemoryFlushStrategySupplier = ImmediateFlushStrategySupplier.class
 )
 public interface MyAssistant {
     String chat(String message);
 }
 ----
 
-The supplier provides a `ChatMemoryCommitStrategy` implementation:
+The supplier returns a `ChatMemoryFlushStrategy` enum value:
 
 [source,java]
 ----
-public class AutoCommitStrategySupplier implements Supplier<ChatMemoryCommitStrategy> {
+public class ImmediateFlushStrategySupplier implements Supplier<ChatMemoryFlushStrategy> {
     @Override
-    public ChatMemoryCommitStrategy get() {
-        return new ChatMemoryCommitStrategy() {
-            @Override
-            public boolean isAutoCommit() {
-                return true;
-            }
-        };
+    public ChatMemoryFlushStrategy get() {
+        return ChatMemoryFlushStrategy.IMMEDIATE;
     }
 }
 ----
 
-The `ChatMemoryCommitStrategy` interface has a single method:
+The `ChatMemoryFlushStrategy` enum has two values:
 
-* `isAutoCommit()` - returns `true` to persist messages immediately when they are added, or `false` (the default) to defer until the invocation succeeds.
+* `DEFERRED` (default) - buffer messages in memory and only writes them to the `ChatMemoryStore` after the LLM invocation succeeds.
+* `IMMEDIATE` - writes messages to the `ChatMemoryStore` immediately when they are added.
 
-If no strategy is configured, the default behavior is preserved: accumulate messages in memory and only persist them after a successful invocation.
+If no strategy is configured, the default `DEFERRED` behavior is used.
 
 == Memory Compression and Eviction
 

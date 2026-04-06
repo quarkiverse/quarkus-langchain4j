@@ -532,13 +532,13 @@ public class AiServicesProcessor {
                 }
             }
 
-            DotName chatMemoryCommitStrategySupplierClassDotName = null;
-            AnnotationValue chatMemoryCommitStrategySupplierValue = instance.value("chatMemoryCommitStrategySupplier");
-            if (chatMemoryCommitStrategySupplierValue != null) {
-                DotName supplierDotName = chatMemoryCommitStrategySupplierValue.asClass().name();
-                if (!LangChain4jDotNames.DEFAULT_CHAT_MEMORY_COMMIT_STRATEGY_SUPPLIER.equals(supplierDotName)) {
-                    chatMemoryCommitStrategySupplierClassDotName = supplierDotName;
-                    validateSupplierAndRegister(chatMemoryCommitStrategySupplierClassDotName, index,
+            DotName chatMemoryFlushStrategySupplierClassDotName = null;
+            AnnotationValue chatMemoryFlushStrategySupplierValue = instance.value("chatMemoryFlushStrategySupplier");
+            if (chatMemoryFlushStrategySupplierValue != null) {
+                DotName supplierDotName = chatMemoryFlushStrategySupplierValue.asClass().name();
+                if (!LangChain4jDotNames.DEFAULT_CHAT_MEMORY_FLUSH_STRATEGY_SUPPLIER.equals(supplierDotName)) {
+                    chatMemoryFlushStrategySupplierClassDotName = supplierDotName;
+                    validateSupplierAndRegister(chatMemoryFlushStrategySupplierClassDotName, index,
                             reflectiveClassProducer, unremovableBeanProducer);
                 }
             }
@@ -572,7 +572,7 @@ public class AiServicesProcessor {
                             // we need to make these @DefaultBean because there could be other CDI beans of the same type that need to take precedence
                             impliedRegisterAiServiceTarget.contains(declarativeAiServiceClassInfo.name()),
                             shouldThrowExceptionOnEventError,
-                            chatMemoryCommitStrategySupplierClassDotName));
+                            chatMemoryFlushStrategySupplierClassDotName));
 
         }
         toolProviderProducer.produce(new ToolProviderMetaBuildItem(toolProviderInfos));
@@ -992,8 +992,8 @@ public class AiServicesProcessor {
                     ? bi.getSystemMessageProviderClassDotName().toString()
                     : null);
 
-            String chatMemoryCommitStrategySupplierClassName = (bi.getChatMemoryCommitStrategySupplierClassDotName() != null
-                    ? bi.getChatMemoryCommitStrategySupplierClassDotName().toString()
+            String chatMemoryFlushStrategySupplierClassName = (bi.getChatMemoryFlushStrategySupplierClassDotName() != null
+                    ? bi.getChatMemoryFlushStrategySupplierClassDotName().toString()
                     : null);
 
             // determine whether the method returns Multi<String>
@@ -1057,7 +1057,7 @@ public class AiServicesProcessor {
                                     toolToQualifierMap,
                                     toolProviderSupplierClassName,
                                     chatMemoryProviderSupplierClassName,
-                                    chatMemoryCommitStrategySupplierClassName,
+                                    chatMemoryFlushStrategySupplierClassName,
                                     retrievalAugmentorSupplierClassName,
                                     moderationModelSupplierClassName,
                                     imageModelSupplierClassName,
